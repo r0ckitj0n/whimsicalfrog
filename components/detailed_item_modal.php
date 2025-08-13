@@ -65,7 +65,7 @@ function renderDetailedItemModal($item, $images = [])
     ?>
     <div id="detailedItemModal" class="detailed-item-modal fixed inset-0 hidden flex items-center justify-center" data-action="closeDetailedModalOnOverlay">
         <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full overflow-hidden relative detailed-item-modal-container">
-            <!- Modal Header ->
+            <!-- Modal Header -->
             <div class="modal-header">
                 <div>
                     <h3 class="modal-title"><?php echo htmlspecialchars($item['name'] ?? 'Item Name'); ?></h3>
@@ -73,17 +73,17 @@ function renderDetailedItemModal($item, $images = [])
                 <button data-action="closeDetailedModal" class="room-modal-button">Back to main room</button>
             </div>
             
-            <!- Scrollable Content ->
+            <!-- Scrollable Content -->
             <div class="overflow-y-auto max-h-[95vh]">
                 <div class="p-6">
                     <div class="grid md:grid-cols-2 gap-6">
-                        <!- Left Column - Images ->
+                        <!-- Left Column - Images -->
                         <div class="space-y-3">
-                            <!- Main Image with Click-to-Zoom ->
+                            <!-- Main Image with Click-to-Zoom -->
                             <div class="relative">
-                                <!- Dynamic Badge Container ->
+                                <!-- Dynamic Badge Container -->
                                 <div id="detailedBadgeContainer" class="absolute top-2 left-2 z-10 flex flex-col space-y-1">
-                                    <!- Badges will be dynamically inserted here ->
+                                    <!-- Badges will be dynamically inserted here -->
                                 </div>
                                 
                                 <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
@@ -97,12 +97,12 @@ function renderDetailedItemModal($item, $images = [])
                                               src="<?php echo htmlspecialchars(getImageUrl($item['sku'] ?? '', 'items')); ?>" 
                                               alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
                                               class="w-full h-full object-contain"
-                                              onerror="this.src='/images/placeholder.png';">
+                                              data-fallback-src="/images/items/placeholder.webp">
                                      <?php endif; ?>
                                  </div>
                              </div>
                             
-                            <!- Thumbnail Gallery ->
+                            <!-- Thumbnail Gallery -->
                             <?php if (count($images) > 1): ?>
                             <div class="flex space-x-2 overflow-x-auto">
                                 <?php foreach ($images as $index => $image): ?>
@@ -112,7 +112,7 @@ function renderDetailedItemModal($item, $images = [])
                                     <img src="<?php echo htmlspecialchars(getImageUrl($image['image_path'] ?? '', 'items')); ?>" 
                                          alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?> - Image <?php echo $index + 1; ?>"
                                          class="w-full h-full object-contain rounded"
-                                         onerror="this.src='images/items/placeholder.webp';">
+                                         data-fallback-src="/images/items/placeholder.webp">
                                 </div>
                                 <?php endforeach; ?>
                             </div>
@@ -121,16 +121,16 @@ function renderDetailedItemModal($item, $images = [])
 
                         </div>
                         
-                        <!- Right Column - Item Details ->
+                        <!-- Right Column - Item Details -->
                         <div class="space-y-4">
-                            <!- Header ->
+                            <!-- Header -->
                             <div>
                                 <div class="text-xs text-gray-500 mb-1">
                                     <?php echo htmlspecialchars($item['category'] ?? 'Item'); ?> • SKU: <?php echo htmlspecialchars($item['sku'] ?? 'N/A'); ?>
                                 </div>
                                 <h2 class="text-xl font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($item['name'] ?? 'Item Name'); ?></h2>
                                 
-                                <!- Price Section ->
+                                <!-- Price Section -->
                                 <div id="detailedPriceSection" class="flex items-center space-x-2 mb-3">
                                     <span id="detailedCurrentPrice" class="text-xl font-bold text-green-600">
                                         $<?php echo number_format($item['retailPrice'] ?? 0, 2); ?>
@@ -139,7 +139,7 @@ function renderDetailedItemModal($item, $images = [])
                                     <span id="detailedSavings" class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hidden"></span>
                                 </div>
                                 
-                                <!- Stock Status ->
+                                <!-- Stock Status -->
                                 <div class="flex items-center space-x-2 mb-3">
                                     <?php if (($item['stockLevel'] ?? 0) > 0): ?>
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -159,7 +159,7 @@ function renderDetailedItemModal($item, $images = [])
                                 </div>
                             </div>
                             
-                            <!- Selling Points ->
+                            <!-- Selling Points -->
             <?php 
             $sellingPoints = getSellingPoints($item['sku'] ?? '');
             if (!empty($sellingPoints)): ?>
@@ -185,7 +185,7 @@ function renderDetailedItemModal($item, $images = [])
             </div>
             <?php endif; ?>
                             
-                            <!- Description ->
+                            <!-- Description -->
                             <?php if (hasItemData($item, 'description')): ?>
                             <div>
                                 <h3 class="text-sm font-semibold text-gray-800 mb-1">Description</h3>
@@ -193,9 +193,9 @@ function renderDetailedItemModal($item, $images = [])
                             </div>
                             <?php endif; ?>
                             
-                            <!- Item Options ->
+                            <!-- Item Options -->
                             <div id="detailedOptionsContainer" class="space-y-3">
-                                <!- Gender Selection (First in hierarchy) ->
+                                <!-- Gender Selection (First in hierarchy) -->
                                 <div id="genderSelection" class="hidden">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         Gender/Style: <span class="text-red-500">*</span>
@@ -205,7 +205,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </select>
                                 </div>
                                 
-                                <!- Size Selection (Second in hierarchy) ->
+                                <!-- Size Selection (Second in hierarchy) -->
                                                             <div id="sizeSelection" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Size: <span class="text-red-500">*</span>
@@ -216,7 +216,7 @@ function renderDetailedItemModal($item, $images = [])
                                 <div id="sizeStockInfo" class="text-xs text-gray-500 mt-1"></div>
                             </div>
                                 
-                                <!- Color Selection (Third in hierarchy) ->
+                                <!-- Color Selection (Third in hierarchy) -->
                                                             <div id="colorSelection" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Color: <span class="text-red-500">*</span>
@@ -228,14 +228,14 @@ function renderDetailedItemModal($item, $images = [])
                             </div>
                             </div>
                             
-                            <!- Quantity and Add to Cart ->
+                            <!-- Quantity and Add to Cart -->
                             <?php if (($item['stockLevel'] ?? 0) > 0): ?>
                             <div class="space-y-3 border-t pt-3">
-                                <!- Quantity Selector ->
+                                <!-- Quantity Selector -->
                                 <div class="flex items-center space-x-3">
                                     <label class="text-sm font-medium text-gray-700">Qty:</label>
                                     <div class="flex items-center space-x-2">
-                                        <button data-action="adjustDetailedQuantity" data-params='{"delta":-1}' class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                        <button data-action="adjustDetailedQuantity" data-params='{"delta":-1}' class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors btn--qty btn--qty-dec">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                             </svg>
@@ -245,8 +245,8 @@ function renderDetailedItemModal($item, $images = [])
                                                value="1" 
                                                min="1" 
                                                max="<?php echo $item['stockLevel'] ?? 1; ?>"
-                                               class="w-16 text-center border border-gray-300 rounded py-1 text-sm">
-                                        <button data-action="adjustDetailedQuantity" data-params='{"delta":1}' class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                                               class="w-16 text-center border border-gray-300 rounded py-1 text-sm input--qty">
+                                        <button data-action="adjustDetailedQuantity" data-params='{"delta":1}' class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors btn--qty btn--qty-inc">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                             </svg>
@@ -254,16 +254,16 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                 </div>
                                 
-                                <!- Add to Cart Button ->
+                                <!-- Add to Cart Button -->
                                 <button data-action="addDetailedToCart" data-params='{"sku":"<?php echo htmlspecialchars($item['sku'] ?? ''); ?>"}' 
-                                        class="brand-button wf-add-to-cart-btn w-full py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                                        class="brand-button wf-add-to-cart-btn btn--detailed-add-to-cart w-full py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10m-10 0v6a1 1 0 001 1h8a1 1 0 001-1v-6m-9 0h9"></path>
                                         </svg>
                                         <span>Add to Cart</span>
                                 </button>
                                 
-                                <!- Single Sales Pitch Line ->
+                                <!-- Single Sales Pitch Line -->
                                 <div id="detailedSalesPitch" class="mt-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 text-center">
                                     <div id="detailedSalesPitchText" class="text-sm font-semibold text-blue-800">
                                         ✨ Experience premium quality and style that speaks to your unique personality!
@@ -272,7 +272,7 @@ function renderDetailedItemModal($item, $images = [])
                             </div>
                             <?php endif; ?>
                             
-                            <!- Accordion for Additional Details ->
+                            <!-- Accordion for Additional Details -->
                             <div class="border-t border-gray-200 pt-4">
                                 <button id="additionalInfoToggle" class="w-full flex justify-between items-center text-left text-sm font-semibold text-gray-800 focus:outline-none">
                                     <span>Additional Details</span>
@@ -281,7 +281,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </svg>
                                 </button>
                                 <div id="additionalInfoContent" class="mt-3 space-y-4 hidden">
-                                    <!- Item properties ->
+                                    <!-- Item properties -->
                                     <?php if (hasItemData($item, 'material') || hasItemData($item, 'brand') || hasItemData($item, 'dimensions') || hasItemData($item, 'weight')): ?>
                                     <div>
                                         <strong>Features:</strong>
@@ -289,7 +289,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Material ->
+                                    <!-- Material -->
                                     <?php if (hasItemData($item, 'material')): ?>
                                     <div>
                                         <strong>Material:</strong>
@@ -297,7 +297,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Dimensions ->
+                                    <!-- Dimensions -->
                                     <?php if (hasItemData($item, 'dimensions')): ?>
                                     <div>
                                         <strong>Dimensions:</strong>
@@ -305,7 +305,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Care Instructions ->
+                                    <!-- Care Instructions -->
                                     <?php if (hasItemData($item, 'care_instructions')): ?>
                                     <div>
                                         <strong>Care Instructions:</strong>
@@ -313,7 +313,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Color Options ->
+                                    <!-- Color Options -->
                                     <?php if (hasItemData($item, 'color_options')): ?>
                                     <div>
                                         <strong>Color Options:</strong>
@@ -321,7 +321,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Size Options ->
+                                    <!-- Size Options -->
                                     <?php if (hasItemData($item, 'size_options')): ?>
                                     <div>
                                         <strong>Size Options:</strong>
@@ -329,7 +329,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Production Time ->
+                                    <!-- Production Time -->
                                     <?php if (hasItemData($item, 'production_time')): ?>
                                     <div>
                                         <strong>Production Time:</strong>
@@ -337,7 +337,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Warranty ->
+                                    <!-- Warranty -->
                                     <?php if (hasItemData($item, 'warranty')): ?>
                                     <div>
                                         <strong>Warranty:</strong>
@@ -345,7 +345,7 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- Tags ->
+                                    <!-- Tags -->
                                     <?php if (hasItemData($item, 'tags')): ?>
                                     <div>
                                         <strong>Tags:</strong>
@@ -353,25 +353,25 @@ function renderDetailedItemModal($item, $images = [])
                                     </div>
                                     <?php endif; ?>
                                     
-                                    <!- SKU ->
+                                    <!-- SKU -->
                                     <div>
                                         <strong>SKU:</strong>
                                         <span><?php echo htmlspecialchars($item['sku'] ?? 'N/A'); ?></span>
                                     </div>
                                     
-                                    <!- Category ->
+                                    <!-- Category -->
                                     <div>
                                         <strong>Category:</strong>
                                         <span><?php echo htmlspecialchars($item['category'] ?? 'N/A'); ?></span>
                                     </div>
                                     
-                                    <!- Stock Level ->
+                                    <!-- Stock Level -->
                                     <div>
                                         <strong>Stock Level:</strong>
                                         <span><?php echo $item['stockLevel'] ?? 0; ?> units</span>
                                     </div>
                                     
-                                    <!- Reorder Point ->
+                                    <!-- Reorder Point -->
                                     <?php if (isset($item['reorderPoint']) && $item['reorderPoint'] > 0): ?>
                                     <div>
                                         <strong>Reorder Point:</strong>
@@ -387,7 +387,7 @@ function renderDetailedItemModal($item, $images = [])
         </div>
     </div>
     
-    <!- Zoom functionality is now centralized via openImageViewer ->
+    <!-- Zoom functionality is now centralized via openImageViewer -->
     
     
     

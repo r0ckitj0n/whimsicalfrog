@@ -4,7 +4,7 @@
  */
 
 // Enhanced popup state management
-const popupState = {
+const _popupState = {
     currentProduct: null,
     isVisible: false,
     hideTimeout: null,
@@ -14,7 +14,7 @@ const popupState = {
 };
 
 // Global popup functions
-window.showGlobalPopup = function(element, item) {
+window.showGlobalPopup = function(_element, _item) {
     console.log('Global popup system - showGlobalPopup called');
     // Implementation would go here
 };

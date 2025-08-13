@@ -17,6 +17,11 @@ class AdminInventoryModule {
         this.loadData();
         this.bindEvents();
         this.init();
+
+        // Legacy shim: allow older inline code to call into the module if present
+        try {
+            window.buildComparisonInterface = (aiData, currentMarketingData) => this.buildComparisonInterface(aiData, currentMarketingData);
+        } catch (_) {}
     }
 
     handleDelegatedKeydown(event) {
@@ -709,6 +714,11 @@ class AdminInventoryModule {
         // Expose loaders for compatibility with migrated inline calls
         window.loadItemColors = this.loadItemColors.bind(this);
         window.loadItemSizes = this.loadItemSizes.bind(this);
+        // Expose suggestion helpers for compatibility with legacy inline calls
+        window.loadExistingPriceSuggestion = this.loadExistingPriceSuggestion.bind(this);
+        window.loadExistingViewPriceSuggestion = this.loadExistingViewPriceSuggestion.bind(this);
+        window.loadExistingMarketingSuggestion = this.loadExistingMarketingSuggestion.bind(this);
+        window.displayMarketingSuggestionIndicator = this.displayMarketingSuggestionIndicator.bind(this);
 
         // Initial loads if sections are present
         if (document.getElementById('colorsList')) {
@@ -716,6 +726,15 @@ class AdminInventoryModule {
         }
         if (document.getElementById('sizesList')) {
             this.loadItemSizes();
+        }
+
+        // Ensure SKU is set and initial images load on page load
+        const skuField = document.getElementById('skuEdit') || document.getElementById('skuDisplay') || document.getElementById('sku');
+        if (skuField && skuField.value) {
+            this.currentItemSku = skuField.value;
+        }
+        if (document.getElementById('currentImagesList') && this.currentItemSku) {
+            this.loadCurrentImages(this.currentItemSku, false);
         }
     }
 
@@ -746,6 +765,17 @@ class AdminInventoryModule {
         if (aiAnalysisUpload) {
             aiAnalysisUpload.addEventListener('change', this.handleImageUpload.bind(this));
         }
+
+        // Listen for category updates from other tabs/windows
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'categoriesUpdated') {
+                // Refresh categories and notify
+                if (typeof this.refreshCategoryDropdown === 'function') {
+                    this.refreshCategoryDropdown();
+                }
+                this.showToast('Categories updated! Dropdown refreshed.', 'info');
+            }
+        });
     }
 
     handleKeyDown(event) {
@@ -792,6 +822,12 @@ class AdminInventoryModule {
                     this.itemToDeleteSku = null;
                 }
                 break;
+            case 'apply-selected-comparison':
+                this.applySelectedComparisonChanges();
+                break;
+            case 'close-ai-comparison':
+                this.closeAiComparisonModal();
+                break;
             case 'confirm-delete-item':
                 this.handleConfirmDeleteItem();
                 break;
@@ -805,7 +841,8 @@ class AdminInventoryModule {
                 this.showSizeModal();
                 break;
             case 'set-primary-image':
-                this.setPrimaryImage(id);
+            case 'set-primary':
+                this.setPrimaryImage(id || target.dataset.imageId);
                 break;
             case 'delete-image':
                 this.confirmDeleteImage(id);
@@ -1032,6 +1069,8 @@ class AdminInventoryModule {
             if (setting) {
                 this.updateGlobalMarketingDefault(setting, t.value);
             }
+        } else if (t.id === 'selectAllComparison') {
+            this.toggleSelectAllComparison();
         } else if (t.matches('[data-action="toggle-select-all-comparison"]')) {
             this.toggleSelectAllComparison();
         } else if (t.matches('[data-action="toggle-comparison"]')) {
@@ -2068,29 +2107,201 @@ class AdminInventoryModule {
         window.location.href = currentUrl.toString();
     }
 
+    confirmDeleteImage(imageId) {
+        this.showConfirmationModal('Delete Image', 'Are you sure you want to delete this image? This action cannot be undone.', () => this.deleteImage(imageId));
+    }
+
+
+    async handleImageUpload(event) {
+        const input = event.target;
+        const files = input.files;
+        if (!files || files.length === 0) return;
+
+        // Validate file size (10MB per file)
+        const maxBytes = 10 * 1024 * 1024;
+        const oversized = [...files].filter(f => f.size > maxBytes);
+        if (oversized.length) {
+            const names = oversized.map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`).join(', ');
+            this.showError(`The following files are too large (max 10MB): ${names}`);
+            input.value = '';
+            return;
+        }
+
+        const sku = this.currentItemSku || (document.getElementById('skuEdit')?.value || document.getElementById('skuDisplay')?.value || '');
+        if (!sku) {
+            this.showError('SKU is required');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('sku', sku);
+        for (let i = 0; i < files.length; i++) {
+            formData.append('images[]', files[i]);
+        }
+        const altText = document.getElementById('name')?.value || '';
+        formData.append('altText', altText);
+        const useAI = document.getElementById('useAIProcessing')?.checked ? 'true' : 'false';
+        formData.append('useAIProcessing', useAI);
+
+        const progressContainer = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('uploadProgressBar');
+        if (progressContainer && progressBar) {
+            progressContainer.classList.remove('hidden');
+            progressBar.style.width = '0%';
+        }
+
+        try {
+            const result = await new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/functions/process_multi_image_upload.php');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+                xhr.upload.onprogress = (e) => {
+                    if (!progressBar || !e.lengthComputable) return;
+                    const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
+                    progressBar.style.width = percent + '%';
+                };
+
+                xhr.onload = () => {
+                    if (progressBar) progressBar.style.width = '100%';
+                    try {
+                        const json = JSON.parse(xhr.responseText || '{}');
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            resolve(json);
+                        } else {
+                            reject(new Error(json.error || `HTTP ${xhr.status}`));
+                        }
+                    } catch (e) {
+                        console.error('Invalid JSON from upload:', e, xhr.responseText);
+                        reject(new Error('Server returned invalid response'));
+                    }
+                };
+
+                xhr.onerror = () => {
+                    reject(new Error('Network error during upload'));
+                };
+
+                xhr.send(formData);
+            });
+
+            if (result.success) {
+                this.showSuccess(result.message || `Successfully uploaded ${files.length} image(s)`);
+                input.value = '';
+                const skuToRefresh = sku;
+                if (typeof this.loadCurrentImages === 'function') {
+                    await this.loadCurrentImages(skuToRefresh, false);
+                } else {
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+                if (Array.isArray(result.warnings) && result.warnings.length) {
+                    result.warnings.forEach(w => this.showToast(w, 'info'));
+                }
+            } else {
+                throw new Error(result.error || 'Upload failed');
+            }
+        } catch (error) {
+            this.showError(`Upload failed: ${error.message}`);
+            console.error('Upload error:', error);
+        } finally {
+            if (progressContainer && progressBar) {
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                }, 800);
+            }
+        }
+    }
+
+    async loadCurrentImages(sku, isViewModal = false) {
+        const targetSku = sku || this.currentItemSku;
+        if (!targetSku) return;
+        try {
+            const response = await fetch(`/api/get_item_images.php?sku=${encodeURIComponent(targetSku)}`);
+            const data = await response.json();
+            if (data.success) {
+                this.displayCurrentImages(data.images, isViewModal);
+            } else {
+                const container = document.getElementById('currentImagesList');
+                if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">Failed to load images</div>';
+            }
+        } catch (error) {
+            console.error('Error loading images:', error);
+            const container = document.getElementById('currentImagesList');
+            if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">Error loading images</div>';
+        }
+    }
+
+    displayCurrentImages(images, isViewModal = false) {
+        const container = document.getElementById('currentImagesList');
+        if (!container) return;
+        if (!images || images.length === 0) {
+            container.innerHTML = '<div class="text-gray-500 text-sm col-span-full">No images uploaded yet</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-3 gap-3';
+
+        images.forEach((image) => {
+            const card = document.createElement('div');
+            card.className = 'bg-white border rounded-lg overflow-hidden shadow-sm';
+            card.innerHTML = `
+                <div class="relative">
+                    <img src="${image.image_path}" alt="${image.alt_text || ''}" class="w-full h-32 object-contain bg-gray-50">
+                    ${image.is_primary ? '<div class="absolute top-1 left-1 text-xs bg-green-600 text-white px-1 rounded">Primary</div>' : ''}
+                </div>
+                <div class="p-2 text-xs text-gray-700 truncate" title="${(image.image_path || '').split('/').pop()}">
+                    ${(image.image_path || '').split('/').pop()}
+                </div>
+                ${!isViewModal ? `
+                <div class="p-2 pt-0 flex gap-2">
+                    ${!image.is_primary ? `<button type="button" data-action="set-primary-image" data-sku="${image.sku}" data-id="${image.id}" class="text-xs py-0.5 px-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Primary</button>` : ''}
+                    <button type="button" data-action="delete-image" data-sku="${image.sku}" data-id="${image.id}" class="text-xs py-0.5 px-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">Delete</button>
+                </div>` : ''}
+            `;
+            const imgEl = card.querySelector('img');
+            if (imgEl) {
+                imgEl.addEventListener('error', () => {
+                    imgEl.style.display = 'none';
+                    if (imgEl.parentElement) {
+                        imgEl.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">Image Not Found</div></div>';
+                    }
+                });
+            }
+            grid.appendChild(card);
+        });
+
+        container.appendChild(grid);
+    }
+
     async setPrimaryImage(imageId) {
+        const sku = this.currentItemSku || (document.getElementById('skuEdit')?.value || document.getElementById('skuDisplay')?.value || '');
+        if (!imageId) {
+            this.showError('Missing image ID');
+            return;
+        }
+        if (!sku) {
+            this.showError('SKU is required');
+            return;
+        }
         try {
             const response = await fetch('/api/set_primary_image.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sku: this.currentItemSku, image_id: imageId })
+                body: JSON.stringify({ imageId, sku })
             });
-            const result = await response.json();
-            if (result.success) {
-                this.showSuccess('Primary image updated!');
-                document.querySelectorAll('.image-card').forEach(card => card.classList.remove('border-green-500', 'border-4'));
-                document.querySelector(`.image-card[data-id='${imageId}']`).classList.add('border-green-500', 'border-4');
+            const data = await response.json();
+            if (data.success) {
+                this.showSuccess('Primary image updated');
+                await this.loadCurrentImages(sku, false);
             } else {
-                this.showError(result.error || 'Failed to set primary image.');
+                this.showError(data.error || 'Failed to set primary image');
             }
-        } catch (error) {
-            this.showError('An error occurred. Please try again.');
-            console.error('Set primary image error:', error);
+        } catch (e) {
+            console.error('setPrimaryImage error:', e);
+            this.showError('Failed to set primary image');
         }
-    }
-
-    confirmDeleteImage(imageId) {
-        this.showConfirmationModal('Delete Image', 'Are you sure you want to delete this image? This action cannot be undone.', () => this.deleteImage(imageId));
     }
 
     async deleteImage(imageId) {
@@ -2098,75 +2309,96 @@ class AdminInventoryModule {
             const response = await fetch('/api/delete_item_image.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image_id: imageId })
+                body: JSON.stringify({ imageId })
             });
-            const result = await response.json();
-            if (result.success) {
-                this.showSuccess('Image deleted successfully!');
-                const imageCard = document.querySelector(`.image-card[data-id='${imageId}']`);
-                if (imageCard) {
-                    imageCard.remove();
-                }
+            const data = await response.json();
+            if (data.success) {
+                this.showSuccess(data.message || 'Image deleted');
+                const sku = this.currentItemSku || (document.getElementById('skuEdit')?.value || document.getElementById('skuDisplay')?.value || '');
+                if (sku) await this.loadCurrentImages(sku, false);
             } else {
-                this.showError(result.error || 'Failed to delete image.');
+                this.showError(data.error || 'Failed to delete image');
             }
-        } catch (error) {
-            this.showError('An error occurred. Please try again.');
-            console.error('Delete image error:', error);
-        }
-    }
-
-    async handleImageUpload(event) {
-        const files = event.target.files;
-        if (files.length === 0) return;
-        const formData = new FormData();
-        formData.append('sku', this.currentItemSku);
-        for (let i = 0; i < files.length; i++) {
-            formData.append('images[]', files[i]);
-        }
-        const uploadIndicator = document.getElementById('uploadIndicator');
-        uploadIndicator.classList.remove('hidden');
-        try {
-            const response = await fetch('/api/upload_item_images.php', {
-                method: 'POST',
-                body: formData
-            });
-            const result = await response.json();
-            if (result.success) {
-                this.showSuccess('Images uploaded successfully! Refreshing...');
-                setTimeout(() => window.location.reload(), 1500);
-            } else {
-                this.showError(result.error || 'An error occurred during upload.');
-            }
-        } catch (error) {
-            this.showError('Upload failed. Please check the console for details.');
-            console.error('Upload error:', error);
-        } finally {
-            uploadIndicator.classList.add('hidden');
+        } catch (e) {
+            console.error('deleteImage error:', e);
+            this.showError('Failed to delete image');
         }
     }
 
     async processExistingImagesWithAI() {
-        this.showConfirmationModal('Process Images with AI', 'This will analyze existing images to improve product data. This may take a moment. Continue?', async () => {
+        this.showConfirmationModal('Process Images with AI', 'This will analyze existing images. It may take a moment. Continue?', async () => {
             const button = document.querySelector('[data-action="process-images-ai"]');
-            const originalHtml = button.innerHTML;
-            button.innerHTML = 'Processing...';
-            button.disabled = true;
+            const originalHtml = button ? button.innerHTML : '';
+            if (button) {
+                button.innerHTML = 'Processing...';
+                button.disabled = true;
+            }
+
+            const sku = this.currentItemSku || document.getElementById('skuEdit')?.value || document.getElementById('skuDisplay')?.value || '';
+            if (!sku) {
+                this.showError('SKU is required');
+                if (button) {
+                    button.innerHTML = originalHtml;
+                    button.disabled = false;
+                }
+                return;
+            }
+
+            const self = this;
             try {
-                const response = await fetch(`/api/run_image_analysis.php?sku=${this.currentItemSku}`);
+                if (window.aiProcessingModal && typeof window.aiProcessingModal.show === 'function') {
+                    window.aiProcessingModal.onComplete = async function() {
+                        try {
+                            if (typeof self.loadCurrentImages === 'function') {
+                                await self.loadCurrentImages(sku, false);
+                            }
+                            self.showSuccess('AI processing completed! Images updated.');
+                        } catch (e) {
+                            console.warn('Refresh images after AI complete failed:', e);
+                        }
+                    };
+                    window.aiProcessingModal.onCancel = function() {
+                        self.showInfo('AI processing was cancelled.');
+                    };
+                    window.aiProcessingModal.show();
+                    if (typeof window.aiProcessingModal.updateProgress === 'function') {
+                        window.aiProcessingModal.updateProgress('Analyzing images…');
+                    }
+                }
+
+                const response = await fetch(`/api/run_image_analysis.php?sku=${encodeURIComponent(sku)}`, {
+                    method: 'GET',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 const result = await response.json();
-                if (result.success) {
-                    this.showSuccess('AI processing complete! The page will now reload.');
-                    setTimeout(() => window.location.reload(), 2000);
+                if (!result.success) {
+                    throw new Error(result.error || 'AI processing failed.');
+                }
+
+                // Summarize in modal if available
+                if (window.aiProcessingModal && typeof window.aiProcessingModal.showSuccess === 'function') {
+                    const processed = result.processed || 0;
+                    const skipped = result.skipped || 0;
+                    const errorCount = Array.isArray(result.errors) ? result.errors.length : 0;
+                    window.aiProcessingModal.showSuccess('AI processing finished', [
+                        `Processed: ${processed}`,
+                        `Skipped: ${skipped}`,
+                        errorCount ? `Errors: ${errorCount}` : 'No errors'
+                    ]);
                 } else {
-                    this.showError(result.error || 'AI processing failed.');
+                    this.showSuccess(`AI processing finished. Processed: ${result.processed || 0}, Skipped: ${result.skipped || 0}`);
                 }
             } catch (error) {
-                this.showError('An error occurred during AI processing.');
                 console.error('AI processing error:', error);
+                this.showError('AI processing failed: ' + error.message);
             } finally {
-                button.innerHTML = originalHtml;
-                button.disabled = false;
+                if (button) {
+                    button.innerHTML = originalHtml;
+                    button.disabled = false;
+                }
             }
         });
     }
@@ -2465,23 +2697,68 @@ class AdminInventoryModule {
         }
     }
     
+    // Legacy view helper: if dedicated view IDs exist, toggle them; otherwise fallback to edit IDs
+    async loadExistingViewPriceSuggestion(sku) {
+        if (!sku) return;
+        try {
+            const response = await fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`);
+            const data = await response.json();
+            const viewDisplay = document.getElementById('viewPriceSuggestionDisplay');
+            const viewPlaceholder = document.getElementById('viewPriceSuggestionPlaceholder');
+            if (data.success && data.suggestedPrice) {
+                if (viewDisplay && viewPlaceholder) {
+                    // Minimal view handling
+                    viewPlaceholder.classList.add('hidden');
+                    viewDisplay.classList.remove('hidden');
+                } else {
+                    // Fallback to shared display
+                    this.displayPriceSuggestion(data);
+                }
+            } else {
+                if (viewDisplay && viewPlaceholder) {
+                    viewPlaceholder.classList.remove('hidden');
+                    viewDisplay.classList.add('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading view price suggestion:', error);
+        }
+    }
+    
     async loadExistingMarketingSuggestion(sku) {
         if (!sku) return;
         try {
             const response = await fetch(`/api/get_marketing_suggestion.php?sku=${sku}`);
             const data = await response.json();
             if (data.success && data.exists) {
-                const marketingButton = document.querySelector('#open-marketing-manager-btn') || document.querySelector('[data-action="open-marketing-manager"]');
-                if (!marketingButton) return;
-                const indicator = document.createElement('span');
-                indicator.className = 'suggestion-indicator ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full';
-                indicator.textContent = '💾 Previous';
-                indicator.title = `Previous AI analysis available`;
-                marketingButton.appendChild(indicator);
+                this.displayMarketingSuggestionIndicator(data.suggestion || null);
             }
         } catch (error) {
             console.error('Error loading existing marketing suggestion:', error);
         }
+    }
+
+    displayMarketingSuggestionIndicator(suggestion = null) {
+        const marketingButton = document.querySelector('#open-marketing-manager-btn') || document.querySelector('[data-action="open-marketing-manager"]');
+        if (!marketingButton) return;
+        const existing = marketingButton.querySelector('.suggestion-indicator');
+        if (existing) existing.remove();
+        const indicator = document.createElement('span');
+        indicator.className = 'suggestion-indicator ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full';
+        indicator.textContent = '💾 Previous';
+        try {
+            if (suggestion && suggestion.created_at) {
+                const dt = new Date(suggestion.created_at);
+                indicator.title = `Previous AI analysis available from ${dt.toLocaleDateString()}`;
+            } else {
+                indicator.title = 'Previous AI analysis available';
+            }
+        } catch (_) {
+            indicator.title = 'Previous AI analysis available';
+        }
+        marketingButton.appendChild(indicator);
+        // Store globally for any legacy UI that expects it
+        if (suggestion) window.existingMarketingSuggestion = suggestion;
     }
 
     async generateMarketingCopy() {
@@ -2497,13 +2774,8 @@ class AdminInventoryModule {
             return;
         }
 
-        // Open AI Comparison modal (prefer legacy helper if present)
-        if (window.showAIComparisonModal) {
-            try { window.showAIComparisonModal(); } catch (_) {}
-        } else {
-            const modal = document.getElementById('aiComparisonModal');
-            if (modal) modal.classList.remove('hidden');
-        }
+        // Open AI Comparison modal (Vite-managed)
+        this.openAiComparisonModal();
         const progressText = document.getElementById('aiProgressText');
         if (progressText) progressText.textContent = 'Initializing AI analysis...';
 
@@ -2540,24 +2812,14 @@ class AdminInventoryModule {
             // Store globally for comparison selection helpers
             window.aiComparisonData = data;
 
-            // Populate comparison UI using legacy builder if available
+            // Populate comparison UI using module builder
             const buildUI = async () => {
                 try {
                     const resp = await fetch(`/api/marketing_manager.php?action=get_marketing_data&sku=${encodeURIComponent(sku)}&_t=${Date.now()}`);
                     const current = await resp.json();
-                    if (window.buildComparisonInterface) {
-                        window.buildComparisonInterface(data, current?.data || null);
-                    } else {
-                        // Minimal fallback UI
-                        const contentDiv = document.getElementById('aiComparisonContent');
-                        if (contentDiv) {
-                            contentDiv.innerHTML = '<pre class="text-xs bg-gray-50 p-3 rounded border">' + this.escapeHtml(JSON.stringify(data, null, 2)) + '</pre>';
-                        }
-                    }
+                    this.buildComparisonInterface(data, current?.data || null);
                 } catch (e) {
-                    if (window.buildComparisonInterface) {
-                        window.buildComparisonInterface(data, null);
-                    }
+                    this.buildComparisonInterface(data, null);
                 }
             };
             if (window.collapseAIProgressSection) {
@@ -2597,6 +2859,35 @@ class AdminInventoryModule {
     closeAiComparisonModal() {
         const modal = document.getElementById('aiComparisonModal');
         if (modal) modal.classList.add('hidden');
+    }
+
+    ensureAiComparisonModal() {
+        if (document.getElementById('aiComparisonModal')) return;
+        const modal = document.createElement('div');
+        modal.id = 'aiComparisonModal';
+        modal.className = 'fixed inset-0 z-50 hidden';
+        modal.innerHTML = `
+            <div class="absolute inset-0 bg-black bg-opacity-40" data-action="close-ai-comparison"></div>
+            <div class="relative mx-auto my-8 w-11/12 max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="border-b px-4 py-3 flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-800">AI Content Comparison</h3>
+                    <button type="button" class="text-gray-500 hover:text-gray-700" data-action="close-ai-comparison">✕</button>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div id="aiProgressText" class="text-sm text-gray-500"></div>
+                    <div id="aiComparisonContent" class="space-y-4"></div>
+                </div>
+                <div class="border-t px-4 py-3 bg-gray-50 flex items-center justify-end">
+                    <button id="applyChangesBtn" data-action="apply-selected-comparison" class="hidden bg-blue-600 text-white text-sm rounded px-4 py-2 hover:bg-blue-700">Apply Selected Changes</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    openAiComparisonModal() {
+        this.ensureAiComparisonModal();
+        const modal = document.getElementById('aiComparisonModal');
+        if (modal) modal.classList.remove('hidden');
     }
 
     // ===== Marketing Defaults (migrated from legacy) =====
@@ -2699,6 +2990,110 @@ class AdminInventoryModule {
         }
     }
 
+    // ===== AI Comparison UI Builder (migrated from legacy inline) =====
+    createComparisonCard(fieldKey, fieldLabel, currentValue, suggestedValue) {
+        const cardId = `comparison-${fieldKey}`;
+        return `
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm" data-comparison-card>
+                <div class="flex items-center justify-between">
+                    <h4 class="font-medium text-gray-800">${fieldLabel}</h4>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="${cardId}-checkbox" class="" data-action="toggle-comparison" data-field="${fieldKey}">
+                        <span class="text-sm text-gray-600">Apply AI suggestion</span>
+                    </label>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-gray-50 rounded">
+                        <h5 class="text-sm font-medium text-gray-600">Current</h5>
+                        <p class="text-sm text-gray-800">${currentValue || '<em>No current value</em>'}</p>
+                    </div>
+                    <div class="bg-green-50 rounded">
+                        <h5 class="text-sm font-medium text-green-600">AI Suggested</h5>
+                        <p class="text-sm text-gray-800">${suggestedValue}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    buildComparisonInterface(aiData, currentMarketingData) {
+        const contentDiv = document.getElementById('aiComparisonContent');
+        const applyBtn = document.getElementById('applyChangesBtn');
+        if (!contentDiv) return;
+
+        let html = '<div class="space-y-6">';
+        html += '<div class="text-center">';
+        html += '<h3 class="text-lg font-semibold text-gray-800">🎯 AI Content Comparison</h3>';
+        html += '<p class="text-sm text-gray-600">Review and select which AI-generated content to apply to your item</p>';
+        html += '</div>';
+
+        const availableFields = [];
+
+        // Title comparison
+        if (aiData.title) {
+            const currentTitle = document.getElementById('name')?.value || '';
+            const suggestedTitle = aiData.title;
+            if (currentTitle !== suggestedTitle) {
+                availableFields.push('title');
+                html += this.createComparisonCard('title', 'Item Title', currentTitle, suggestedTitle);
+            }
+        }
+
+        // Description comparison
+        if (aiData.description) {
+            const currentDesc = document.getElementById('description')?.value || '';
+            const suggestedDesc = aiData.description;
+            if (currentDesc !== suggestedDesc) {
+                availableFields.push('description');
+                html += this.createComparisonCard('description', 'Item Description', currentDesc, suggestedDesc);
+            }
+        }
+
+        // Marketing fields comparison - use database values as current
+        const marketingFields = [
+            { key: 'target_audience', label: 'Target Audience', current: currentMarketingData?.target_audience || '', suggested: aiData.targetAudience },
+            { key: 'demographic_targeting', label: 'Demographics', current: currentMarketingData?.demographic_targeting || '', suggested: aiData.marketingIntelligence?.demographic_targeting },
+            { key: 'psychographic_profile', label: 'Psychographics', current: currentMarketingData?.psychographic_profile || '', suggested: aiData.marketingIntelligence?.psychographic_profile }
+        ];
+        marketingFields.forEach(field => {
+            if (field.suggested && field.current !== field.suggested) {
+                availableFields.push(field.key);
+                html += this.createComparisonCard(field.key, field.label, field.current, field.suggested);
+            }
+        });
+
+        // Add select all control if there are available fields
+        if (availableFields.length > 0) {
+            html = html.replace('<div class="space-y-6">', `
+                <div class="space-y-6">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="p-3 flex items-center justify-between">
+                        <div class="text-blue-800 font-medium">Select All Suggested Changes</div>
+                        <label class="flex items-center space-x-2">
+                            <input type="checkbox" id="selectAllComparison">
+                            <span class="text-sm text-blue-700">Select All</span>
+                        </label>
+                    </div>
+                </div>`);
+        }
+
+        // No change state
+        if (availableFields.length === 0) {
+            html += '<div class="text-center text-gray-500">';
+            html += '<p>No changes detected. All AI suggestions match your current content.</p>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+        contentDiv.innerHTML = html;
+
+        // Apply button visibility
+        if (applyBtn) {
+            if (availableFields.length > 0) applyBtn.classList.remove('hidden');
+            else applyBtn.classList.add('hidden');
+        }
+    }
+
     async applySelectedComparisonChanges() {
         const changes = this.selectedComparisonChanges || {};
         const keys = Object.keys(changes);
@@ -2768,7 +3163,7 @@ class AdminInventoryModule {
 
     applyMarketingToItem() {
         // Apply values from Marketing Manager modal and persist via API
-        let sku = this.currentItemSku || document.getElementById('sku')?.value || document.getElementById('skuDisplay')?.textContent;
+        const sku = this.currentItemSku || document.getElementById('sku')?.value || document.getElementById('skuDisplay')?.textContent;
         if (!sku) {
             this.showError('Unable to apply marketing - no item SKU available');
             return;
@@ -3481,10 +3876,30 @@ class AdminInventoryModule {
     showError(message) {
         this.showToast(message, 'error');
     }
+
+    showInfo(message) {
+        this.showToast(message, 'info');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('inventory-data') && document.getElementById('admin-inventory-container')) {
-        new AdminInventoryModule();
+    const shouldInit =
+        document.getElementById('admin-inventory-container') ||
+        document.getElementById('inventory-data') ||
+        document.getElementById('currentImagesList') ||
+        document.getElementById('multiImageUpload') ||
+        document.querySelector('[data-action="process-images-ai"]');
+    if (shouldInit) {
+        const instance = new AdminInventoryModule();
+        try { window.adminInventoryModule = instance; } catch (_) {}
+        if (typeof window.showSuccess !== 'function') {
+            window.showSuccess = (msg) => instance.showSuccess(msg);
+        }
+        if (typeof window.showError !== 'function') {
+            window.showError = (msg) => instance.showError(msg);
+        }
+        if (typeof window.showToast !== 'function') {
+            window.showToast = (msg, type = 'info') => instance.showToast(msg, type);
+        }
     }
 });

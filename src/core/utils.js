@@ -50,7 +50,7 @@ export const Utils = {
 };
 
 // Expose for legacy inline scripts still expecting window.Utils
-// eslint-disable-next-line no-undef
+ 
 if (typeof window !== 'undefined') {
   window.Utils = Utils;
 }

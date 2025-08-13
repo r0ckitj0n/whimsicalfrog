@@ -1,0 +1,2 @@
+# Use lint-staged to process only staged files (concurrent for speed)
+npx lint-staged --concurrent=true

@@ -667,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.dataset.sku = item.sku;
         const imageUrl = item.imageUrl || '/images/items/placeholder.webp';
         card.innerHTML = `
-            <img src="${imageUrl}" alt="${item.name}" class="item-image" onerror="this.src='/images/items/placeholder.webp'">
+            <img src="${imageUrl}" alt="${item.name}" class="item-image" data-fallback-src="/images/items/placeholder.webp">
             <div class="item-name">${item.name}</div>
             <div class="item-sku">${item.sku}</div>
             <div class="item-price">$${parseFloat(item.retailPrice || 0).toFixed(2)}</div>

@@ -90,7 +90,7 @@ class WhimsicalFrogNotifications {
         });
 
         // Prevent event bubbling on button clicks
-        notification.addEventListener('mousedown', (event) => {
+        notification.addEventListener('mousedown', (_event) => {
             console.log(`Notification ${id} mousedown event`);
         });
 
@@ -110,10 +110,44 @@ class WhimsicalFrogNotifications {
                     ${actions ? this.createActions(actions) : ''}
                 </div>
                 ${!persistent ? `
-                    <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})">&times;</button>
+                    <button class="wf-notification-close" type="button" aria-label="Close">&times;</button>
                 ` : ''}
             </div>
         `;
+
+        // Wire up close button without inline handlers
+        if (!persistent) {
+            const closeBtn = notification.querySelector('.wf-notification-close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    this.remove(id);
+                });
+            }
+        }
+
+        // Wire up action buttons without inline handlers
+        if (actions && Array.isArray(actions)) {
+            const btns = notification.querySelectorAll('.wf-notification-action');
+            btns.forEach((btn, idx) => {
+                const action = actions[idx];
+                if (!action) return;
+                btn.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    try {
+                        if (typeof action.onClick === 'function') {
+                            action.onClick(event);
+                        } else if (typeof action.onClick === 'string' && action.onClick.trim()) {
+                            // Backward-compatibility: execute legacy string callback
+                            const fn = new Function(action.onClick);
+                            fn.call(window);
+                        }
+                    } catch (err) {
+                        console.warn('Notification action handler failed', err);
+                    }
+                });
+            });
+        }
 
         // Add pulse effect for emphasis on certain types
         if (type === 'warning' || type === 'error') {
@@ -136,7 +170,7 @@ class WhimsicalFrogNotifications {
         return `
             <div class="wf-notification-actions">
                 ${actions.map(action => `
-                    <button onclick="${action.onClick}" class="wf-notification-action ${action.style === 'primary' ? 'primary' : 'secondary'}">
+                    <button type="button" class="wf-notification-action ${action.style === 'primary' ? 'primary' : 'secondary'}">
                         ${action.text}
                     </button>
                 `).join('')}
@@ -196,7 +230,7 @@ class WhimsicalFrogNotifications {
         return configs[type] || configs.info;
     }
 
-    getDefaultDuration(type) {
+    getDefaultDuration(_type) {
         // All notifications now auto-dismiss after 5 seconds (as requested)
         return 5000;
     }

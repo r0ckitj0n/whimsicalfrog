@@ -2,7 +2,7 @@
 // Modern ES-module replacement for legacy sales-checker.js
 import { apiGet } from '../core/apiClient.js';
 
-/* eslint-disable no-console */
+ 
 
 export async function checkItemSale(sku) {
   try {

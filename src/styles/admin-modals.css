@@ -1,0 +1,66 @@
+/* Admin modal base styles (Vite-managed)
+   Keeps modals consistent without relying on inline utilities only. */
+
+/* Hide when toggled with .hidden (utility-friendly) */
+#testEmailSendModal.hidden,
+#emailTemplateEditModal.hidden,
+#templateAssignmentModal.hidden { display: none; }
+
+/* Overlay ensures full-screen coverage and visual consistency if utilities change */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  z-index: 50; /* play nice with src/styles/z-index.css */
+}
+
+/* Modal panel defaults. Utilities can augment on top. */
+.admin-modal {
+  background: #fff;
+  color: #111827; /* gray-900 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  max-height: 90vh;
+  overflow: hidden; /* keep header/footer fixed */
+}
+
+/* Scrollable body area when used inside a flex column layout */
+.admin-modal .modal-body,
+.admin-modal .flex-1 { overflow-y: auto; }
+
+/* Buttons focus visibility for accessibility */
+.admin-modal button:focus-visible,
+.admin-modal [tabindex]:focus-visible,
+.admin-modal select:focus-visible,
+.admin-modal input:focus-visible,
+.admin-modal textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+
+/* Prevent layout shift on overlay show/hide */
+html.modal-open, body.modal-open { overflow: hidden !important; }
+
+/* Inline field error messaging */
+.form-error {
+  color: #b91c1c; /* red-700 */
+  font-size: 0.875rem; /* text-sm */
+  margin-top: 0.25rem; /* mt-1 */
+}
+.form-error.hidden { display: none; }
+
+/* Invalid form fields visual */
+[aria-invalid="true"] {
+  border-color: #dc2626 !important; /* red-600 */
+  box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.25);
+}
+
+/* Busy state for async buttons */
+[aria-busy="true"] {
+  opacity: 0.75;
+  cursor: wait;
+  pointer-events: none;
+}

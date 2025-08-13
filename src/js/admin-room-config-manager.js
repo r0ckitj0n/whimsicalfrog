@@ -5,7 +5,7 @@
   let currentRoomConfig = {};
 
   const byId = (id) => document.getElementById(id);
-  const qs = (sel) => document.querySelector(sel);
+  const _qs = (sel) => document.querySelector(sel);
 
   function populateForm(config) {
     Object.keys(config || {}).forEach((key) => {

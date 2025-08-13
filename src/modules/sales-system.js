@@ -51,7 +51,7 @@ class SalesSystem {
     }
 
     // Enhanced function to check and display sale pricing
-    async checkAndDisplaySalePrice(item, priceElement, unitPriceElement = null, context = 'popup') {
+    async checkAndDisplaySalePrice(item, priceElement, unitPriceElement = null, _context = 'popup') {
         if (!item || !priceElement) return;
         
         try {

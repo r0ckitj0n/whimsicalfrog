@@ -64,7 +64,7 @@ function renderImageCarousel($itemId, $images = [], $options = [])
                     <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                          alt="<?= htmlspecialchars($image['alt_text'] ?: 'Item image') ?>"
                          class="carousel-img width_100 height_100 object_fit_contain bg_white"
-                         onerror="this.style.display='none'; this.parentElement.innerHTML += '<div class=\'width_100 height_100 display_flex flex_col align_center justify_center bg_f8f9fa color_6b7280 border_radius_normal\'><div class=\'font_size_3rem margin_bottom_10 opacity_07\'>📷</div><div class=\'font_size_0_9 font_weight_500\'>Image Not Found</div></div>';">
+                         data-fallback="placeholder">
                     <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin'] && isset($_GET['page']) && strpos($_GET['page'], 'admin') === 0): ?>
                         <div class="carousel-primary-badge position_absolute top_10 right_10 bg_brand_primary color_white padding_5_10 border_radius_small font_size_12 font_weight_bold">
                             Primary
@@ -95,7 +95,7 @@ function renderImageCarousel($itemId, $images = [], $options = [])
                         <img src="<?= htmlspecialchars($image['image_path']) ?>" 
                              alt="Thumbnail <?= $index + 1 ?>"
                              class="carousel-thumbnail-img width_100 height_100 object_fit_cover"
-                             onerror="this.style.display='none'; this.parentElement.innerHTML = '<div class=\'width_100 height_100 display_flex align_center justify_center bg_f8f9fa color_6b7280 font_size_1_5rem\'>📷</div>';">
+                             data-fallback="thumbnail">
                         <?php if ($image['is_primary'] && isset($GLOBALS['isAdmin']) && $GLOBALS['isAdmin'] && isset($_GET['page']) && strpos($_GET['page'], 'admin') === 0): ?>
                             <div class="position_absolute color_white border_radius_full display_flex align_center justify_center bg_brand_primary top_2 right_2 width_16 height_16 font_size_10">
                                 ⭐

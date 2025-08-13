@@ -77,7 +77,7 @@
           <span class="button-text">CSS Rules</span>
         </button>
         
-        <button id="backgroundManagerBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="backgroundManagerBtn" data-action="open-background-manager"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
@@ -137,7 +137,7 @@
           <span class="button-text">Cart Button Text</span>
         </button>
         
-        <button id="squareSettingsBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="squareSettingsBtn"  class="btn btn-primary btn-block admin-settings-button" data-action="open-square-settings">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m-3-6h6m-6 4h6"></path>
           </svg>
@@ -181,7 +181,7 @@
           <span class="button-text">Logging Status</span>
         </button>
         
-        <button id="receiptSettingsBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="receiptSettingsBtn"  class="btn btn-primary btn-block admin-settings-button" data-action="open-receipt-settings">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
           </svg>
@@ -248,7 +248,7 @@
           <span class="button-text">Help Hints Management</span>
         </button>
         
-        <button id="databaseMaintenanceBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="databaseMaintenanceBtn" data-action="open-db-maintenance" class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
           </svg>
@@ -1617,7 +1617,7 @@ function showExportTools() {
             </label>
         </div>
         <div class="">
-            <button data-action="perform-export" class="bg-pink-600 hover:bg-pink-700 text-white rounded text-sm">
+            <button data-action="perform-export" class="bg-pink-600 hover:bg-pink-700 text-white rounded text-sm btn--db btn--db-export">
                 Export Selected Tables
             </button>
         </div>
@@ -1896,7 +1896,7 @@ function showImportTools() {
                     <div class="text-xs text-gray-600">
                         Upload a .sql file containing INSERT, UPDATE, or other data modification statements.
                     </div>
-                    <button data-action="import-sql" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                    <button data-action="import-sql" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium btn--db btn--db-import-sql">
                         Import SQL File
                     </button>
                 </div>
@@ -1940,7 +1940,7 @@ function showImportTools() {
                         CSV should have columns matching the target table structure. Data will be inserted as new records unless "Replace existing data" is checked.
                     </div>
                     
-                    <button data-action="import-csv" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                    <button data-action="import-csv" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium btn--db btn--db-import-csv">
                         Import CSV Data
                     </button>
                 </div>
@@ -1973,7 +1973,7 @@ function showImportTools() {
                         JSON should contain an array of objects with keys matching table column names.
                     </div>
                     
-                    <button data-action="import-json" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                    <button data-action="import-json" class="bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium btn--db btn--db-import-json">
                         Import JSON Data
                     </button>
                 </div>
@@ -3134,27 +3134,9 @@ Are you sure you want to continue? This action cannot be undone, and you won't b
     }
 }
 
-// Close modal when clicking outside of it
-window.onclick = function(event) {
-    const idModal = document.getElementById('idLegendModal');
-    const mapperModal = document.getElementById('roomMapperModal');
-    const backgroundModal = document.getElementById('backgroundManagerModal');
-    
-    if (event.target == idModal) {
-        closeIdLegendModal();
-    }
-    if (event.target == mapperModal) {
-        closeRoomMapperModal();
-    }
-    if (event.target == backgroundModal) {
-        closeBackgroundManagerModal();
-    }
-    
-    const roomCategoryModal = document.getElementById('roomCategoryManagerModal');
-    if (event.target == roomCategoryModal) {
-        closeRoomCategoryManagerModal();
-    }
-}
+// Legacy window.onclick modal closer removed.
+// Modal overlays now close via delegated handlers in src/js/admin-settings.js
+// using [data-action="overlay-close"] and [data-action="close-admin-modal"].
 
 // Room-Category Manager Functions
 function openRoomCategoryManagerModal(roomNumber = null) {
@@ -3715,7 +3697,7 @@ function displayAreaMappings() {
                         <div class="font-medium text-sm">${mapping.area_selector.replace('.area-', 'Area ')}</div>
                         <div class="text-xs text-gray-600">${typeIcon} ${typeLabel}: ${mapping.mapped_name}${price}</div>
                     </div>
-                    <button onclick="removeAreaMapping(${mapping.id})" class="text-red-500 hover:text-red-700 text-xs">
+                    <button data-action="area-mapping-remove" data-mapping-id="${mapping.id}" class="text-red-500 hover:text-red-700 text-xs">
                         Remove
                     </button>
                 </div>
@@ -6107,6 +6089,7 @@ function createToastNotification(title, message, type = 'info') {
         pointer-events: auto !important;
     `;
     
+    toast.setAttribute('data-toast', '');
     toast.innerHTML = `
         <div >
             <div >
@@ -6116,7 +6099,7 @@ function createToastNotification(title, message, type = 'info') {
                 <div >${title}</div>
                 <div >${message}</div>
             </div>
-            <button onclick="this.parentElement.parentElement.remove()" 
+            <button data-action="toast-dismiss" 
                     >&times;</button>
         </div>
     `;
@@ -6161,10 +6144,10 @@ function showConfirmation(title, message, onConfirm) {
     // Update buttons for confirmation
     const buttonContainer = modal.querySelector('.flex.justify-end');
     buttonContainer.innerHTML = `
-        <button onclick="closeCustomNotification()" class="bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors">
+        <button data-action="modal-cancel" class="bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors">
             Cancel
         </button>
-        <button onclick="confirmAction()" class="bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">
+        <button data-action="modal-confirm" data-callback="pendingConfirmAction" class="bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">
             Confirm
         </button>
     `;
@@ -6186,7 +6169,7 @@ function confirmAction() {
     // Reset buttons back to normal
     const buttonContainer = document.querySelector('#customNotificationModal .flex.justify-end');
     buttonContainer.innerHTML = `
-        <button onclick="closeCustomNotification()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
+        <button data-action="custom-notification-ok" class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
             OK
         </button>
     `;
@@ -6600,11 +6583,11 @@ window.openLoggingStatusModal = function openLoggingStatusModal() {
 
 function createLoggingStatusModal() {
     const modalHtml = `
-        <div id="loggingStatusModal" class="admin-modal-overlay hidden" onclick="closeLoggingStatusModal()">
+        <div id="loggingStatusModal" class="admin-modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content technical-section">
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">📊 Logging System Status</h2>
-                    <button onclick="closeLoggingStatusModal()" class="modal-close">&times;</button>
+                    <button data-action="close-admin-modal" class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div id="loggingStatusContent">
@@ -6731,10 +6714,10 @@ function displayLoggingStatus(status) {
         </div>
 
         <div class="modal-actions">
-            <button onclick="runLogCleanup()" class="btn btn-secondary">
+            <button data-action="run-log-cleanup" class="btn btn-secondary">
                 🧹 Run Log Cleanup
             </button>
-            <button onclick="downloadLogs()" class="btn btn-secondary">
+            <button data-action="download-logs" class="btn btn-secondary">
                 📥 Download Logs
             </button>
         </div>
@@ -6909,11 +6892,11 @@ function escapeHtml(text) {
 </script>
 
 <!-- Room Settings Modal -->
-<div id="roomSettingsModal" class="admin-modal-overlay hidden" onclick="closeRoomSettingsModal()">
+<div id="roomSettingsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings</h2>
-            <button onclick="closeRoomSettingsModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <div class="">
@@ -7026,7 +7009,7 @@ function displayRoomSettingsList(rooms) {
         container.innerHTML = `
             <div class="text-center text-gray-500">
                 <p>No rooms found</p>
-                <button onclick="initializeRoomSettings()" class="bg-cyan-500 hover:bg-cyan-600 text-white rounded flex items-center text-left">
+                <button data-action="initialize-room-settings" class="bg-cyan-500 hover:bg-cyan-600 text-white rounded flex items-center text-left">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                     </svg>
@@ -7084,7 +7067,7 @@ function editRoomSettings(room) {
                 const isCore = coreRooms.includes(room.room_number);
     
     formContainer.innerHTML = `
-        <form onsubmit="saveRoomSettings(event)" class="space-y-4">
+        <form data-action="save-room-settings" class="space-y-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">
                     Room Number ${isCore ? '<span class="text-red-500">*</span>' : ''}
@@ -7143,7 +7126,7 @@ function editRoomSettings(room) {
                     </svg>
                     Save Changes
                 </button>
-                <button type="button" onclick="cancelRoomEdit()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg flex items-center text-left">
+                <button type="button" data-action="cancel-room-edit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg flex items-center text-left">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -7240,7 +7223,7 @@ function showRoomSettingsError(message) {
         <div class="bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
             <div class="flex justify-between items-start">
                 <span class="text-sm">${message}</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700">&times;</button>
+                <button data-action="dismiss-notification" class="text-red-500 hover:text-red-700">&times;</button>
             </div>
         </div>
     `;
@@ -7534,7 +7517,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Custom Notification Modal -->
-<div id="customNotificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" class="hidden" onclick="event.target === event.currentTarget && closeCustomNotification()">
+<div id="customNotificationModal" class="admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] hidden" data-action="overlay-close">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
         <div class="">
             <div class="flex items-center">
@@ -7543,7 +7526,7 @@ function showRoomSettingsSuccess(message) {
             </div>
             <p id="notificationMessage" class="text-gray-600"></p>
             <div class="flex justify-end">
-                <button onclick="closeCustomNotification()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center text-left">
+                <button data-action="custom-notification-ok" class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors flex items-center text-left">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
@@ -7555,11 +7538,11 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Room-Category Visual Mapper Modal -->
-<div id="roomCategoryMapperModal" class="admin-modal-overlay hidden" onclick="closeRoomCategoryMapperModal()">
+<div id="roomCategoryMapperModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🗺️ Room-Category Visual Mapper</h2>
-            <button onclick="closeRoomCategoryMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <div class="">
@@ -7587,11 +7570,11 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Area-Item Mapper Modal -->
-<div id="areaItemMapperModal" class="admin-modal-overlay hidden" onclick="closeAreaItemMapperModal()">
+<div id="areaItemMapperModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🎯 Area-Item Mapper</h2>
-            <button onclick="closeAreaItemMapperModal()" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <div class="">
@@ -7641,7 +7624,7 @@ function showRoomSettingsSuccess(message) {
                                     <option value="">Select category...</option>
                                 </select>
                             </div>
-                            <button onclick="addAreaMapping()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors flex items-center text-left">
+                            <button data-action="area-mapping-add" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-semibold transition-colors flex items-center text-left">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -7681,12 +7664,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- System Configuration Modal -->
-<div id="systemConfigModal" class="admin-modal-overlay hidden" onclick="closeSystemConfigModal()">
+<div id="systemConfigModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content system-config-modal">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">⚙️ System Reference</h2>
-            <button onclick="closeSystemConfigModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
         
         <!-- Body -->
@@ -7705,13 +7688,13 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Maintenance Modal -->
-<div id="databaseMaintenanceModal" class="admin-modal-overlay hidden"  onclick="closeDatabaseMaintenanceModal()">
+<div id="databaseMaintenanceModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-bold text-gray-900">🗄️ Database Maintenance</h3>
-                <button onclick="closeDatabaseMaintenanceModal()" class="text-gray-400 hover:text-gray-600">
+                <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -7722,13 +7705,13 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Database Maintenance Tabs -->
             <div class="admin-tab-bar">
-                <button class="admin-tab active" onclick="switchDatabaseTab(this, 'connection')" data-tab="connection">🔗 Connection Settings</button>
-                <button class="admin-tab" onclick="switchDatabaseTab(this, 'credentials')" data-tab="credentials">🔑 Credentials</button>
-                <button class="admin-tab" onclick="switchDatabaseTab(this, 'ssl')" data-tab="ssl">🔒 SSL/Security</button>
-                <button class="admin-tab" onclick="switchDatabaseTab(this, 'stats')" data-tab="stats">📊 Statistics</button>
-                <button class="admin-tab" onclick="switchDatabaseTab(this, 'backup')" data-tab="backup">💾 Backup</button>
-                <button class="admin-tab" onclick="switchDatabaseTab(this, 'query')" data-tab="query">🔍 Query</button>
-                <button class="admin-tab" onclick="switchDatabaseTab(this, 'tools')" data-tab="tools">🛠️ Tools</button>
+                <button class="admin-tab active" data-action="db-switch-tab" data-tab="connection">🔗 Connection Settings</button>
+                <button class="admin-tab" data-action="db-switch-tab" data-tab="credentials">🔑 Credentials</button>
+                <button class="admin-tab" data-action="db-switch-tab" data-tab="ssl">🔒 SSL/Security</button>
+                <button class="admin-tab" data-action="db-switch-tab" data-tab="stats">📊 Statistics</button>
+                <button class="admin-tab" data-action="db-switch-tab" data-tab="backup">💾 Backup</button>
+                <button class="admin-tab" data-action="db-switch-tab" data-tab="query">🔍 Query</button>
+                <button class="admin-tab" data-action="db-switch-tab" data-tab="tools">🛠️ Tools</button>
             </div>
 
             <!-- Modal Content -->
@@ -7769,7 +7752,7 @@ function showRoomSettingsSuccess(message) {
                             </div>
                         </div>
                         <div class="flex space-x-3">
-                            <button onclick="testDatabaseConnection()" class="bg-green-600 hover:bg-green-700 text-white rounded-md font-medium">
+                            <button data-action="test-db-connection" class="bg-green-600 hover:bg-green-700 text-white rounded-md font-medium">
                                 🧪 Test Connection
                             </button>
                             <div id="connectionTestResult" class="hidden"></div>
@@ -7886,7 +7869,7 @@ function showRoomSettingsSuccess(message) {
                     </div>
                     
                     <div class="">
-                        <button onclick="refreshDatabaseStats()" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium">
+                        <button data-action="refresh-db-stats" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium">
                             🔄 Refresh Statistics
                         </button>
                     </div>
@@ -7900,7 +7883,7 @@ function showRoomSettingsSuccess(message) {
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <button onclick="showDatabaseBackupModal()" class="bg-green-100 hover:bg-green-200 border-2 border-green-300 rounded-lg text-green-800 font-medium transition-colors">
+                        <button data-action="open-db-backup-modal" class="bg-green-100 hover:bg-green-200 border-2 border-green-300 rounded-lg text-green-800 font-medium transition-colors">
                             <div class="flex items-center justify-center">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
@@ -7909,8 +7892,8 @@ function showRoomSettingsSuccess(message) {
                             <div>Backup Database</div>
                             <div class="text-xs text-green-600">Export complete database</div>
                         </button>
-                        
-                        <button onclick="showDatabaseRestoreModal()" class="bg-purple-100 hover:bg-purple-200 border-2 border-purple-300 rounded-lg text-purple-800 font-medium transition-colors">
+
+                        <button data-action="open-db-restore-modal" class="bg-purple-100 hover:bg-purple-200 border-2 border-purple-300 rounded-lg text-purple-800 font-medium transition-colors">
                             <div class="flex items-center justify-center">
                                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -7939,13 +7922,13 @@ function showRoomSettingsSuccess(message) {
                         <!-- Query Actions -->
                         <div class="flex items-center justify-between">
                             <div class="flex space-x-3">
-                                <button onclick="executeQuery()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium">
+                                <button data-action="execute-query" class="bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium btn--db btn--db-query-execute">
                                     ▶️ Execute Query
                                 </button>
-                                <button onclick="clearQuery()" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
+                                <button data-action="clear-query" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium btn--db btn--db-query-clear">
                                     🗑️ Clear
                                 </button>
-                                <button onclick="loadQueryTemplates()" class="bg-green-600 hover:bg-green-700 text-white rounded-md font-medium">
+                                <button data-action="load-query-templates" class="bg-green-600 hover:bg-green-700 text-white rounded-md font-medium btn--db btn--db-query-templates">
                                     📋 Templates
                                 </button>
                             </div>
@@ -7976,33 +7959,33 @@ function showRoomSettingsSuccess(message) {
                         <div id="queryTemplatesModal" class="hidden bg-green-50 border border-green-200 rounded-lg">
                             <h5 class="font-semibold text-green-800">📋 Common Query Templates</h5>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <button onclick="insertTemplate('SELECT * FROM items ORDER BY sku;')" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                <button data-action="insert-template" data-template="SELECT * FROM items ORDER BY sku;" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm btn--db btn--db-template-insert">
                                     <div class="font-medium text-green-800">View All Items</div>
                                     <div class="text-green-600 text-xs">SELECT * FROM items</div>
                                 </button>
-                                <button onclick="insertTemplate('SELECT COUNT(*) as total_orders, SUM(totalAmount) as total_revenue FROM orders;')" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                <button data-action="insert-template" data-template="SELECT COUNT(*) as total_orders, SUM(totalAmount) as total_revenue FROM orders;" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm btn--db btn--db-template-insert">
                                     <div class="font-medium text-green-800">Order Statistics</div>
                                     <div class="text-green-600 text-xs">Count & revenue totals</div>
                                 </button>
-                                <button onclick="insertTemplate('SELECT table_name, table_rows, data_length, index_length FROM information_schema.tables WHERE table_schema = DATABASE();')" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                <button data-action="insert-template" data-template="SELECT table_name, table_rows, data_length, index_length FROM information_schema.tables WHERE table_schema = DATABASE();" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm btn--db btn--db-template-insert">
                                     <div class="font-medium text-green-800">Table Sizes</div>
                                     <div class="text-green-600 text-xs">Show all table information</div>
                                 </button>
-                                <button onclick="insertTemplate('SELECT i.sku, i.name, i.stockLevel, COUNT(oi.sku) as orders_count FROM items i LEFT JOIN order_items oi ON i.sku = oi.sku GROUP BY i.sku ORDER BY orders_count DESC;')" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                <button data-action="insert-template" data-template="SELECT i.sku, i.name, i.stockLevel, COUNT(oi.sku) as orders_count FROM items i LEFT JOIN order_items oi ON i.sku = oi.sku GROUP BY i.sku ORDER BY orders_count DESC;" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm btn--db btn--db-template-insert">
                                     <div class="font-medium text-green-800">Popular Items</div>
                                     <div class="text-green-600 text-xs">Items by order frequency</div>
                                 </button>
-                                <button onclick="insertTemplate('SHOW PROCESSLIST;')" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                <button data-action="insert-template" data-template="SHOW PROCESSLIST;" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm btn--db btn--db-template-insert">
                                     <div class="font-medium text-green-800">Active Connections</div>
                                     <div class="text-green-600 text-xs">Show current processes</div>
                                 </button>
-                                <button onclick="insertTemplate('SELECT table_name, constraint_name, column_name, referenced_table_name, referenced_column_name FROM information_schema.key_column_usage WHERE table_schema = DATABASE() AND referenced_table_name IS NOT NULL;')" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm">
+                                <button data-action="insert-template" data-template="SELECT table_name, constraint_name, column_name, referenced_table_name, referenced_column_name FROM information_schema.key_column_usage WHERE table_schema = DATABASE() AND referenced_table_name IS NOT NULL;" class="text-left bg-white border border-green-200 rounded hover:bg-green-50 text-sm btn--db btn--db-template-insert">
                                     <div class="font-medium text-green-800">Foreign Keys</div>
                                     <div class="text-green-600 text-xs">Show all foreign key relationships</div>
                                 </button>
                             </div>
                             <div class="text-center">
-                                <button onclick="hideQueryTemplates()" class="bg-gray-500 hover:bg-gray-600 text-white rounded text-sm">
+                                <button data-action="hide-query-templates" class="bg-gray-500 hover:bg-gray-600 text-white rounded text-sm btn--db btn--db-template-hide">
                                     Close Templates
                                 </button>
                             </div>
@@ -8031,7 +8014,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Set up tables & default data</p>
                                 </div>
                             </div>
-                            <button onclick="initializeDatabase()" class="w-full bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-init" class="w-full bg-amber-600 hover:bg-amber-700 text-white rounded text-sm font-medium btn--db btn--db-init">
                                 Initialize DB
                             </button>
                         </div>
@@ -8047,7 +8030,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Optimize all database tables</p>
                                 </div>
                             </div>
-                            <button onclick="optimizeAllTables()" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-optimize" class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium btn--db btn--db-optimize">
                                 Optimize Tables
                             </button>
                         </div>
@@ -8063,7 +8046,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Analyze and optimize indexes</p>
                                 </div>
                             </div>
-                            <button onclick="analyzeIndexes()" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-analyze-indexes" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded text-sm font-medium btn--db btn--db-analyze-indexes">
                                 Analyze Indexes
                             </button>
                         </div>
@@ -8079,7 +8062,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Remove orphaned records</p>
                                 </div>
                             </div>
-                            <button onclick="cleanupDatabase()" class="w-full bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-cleanup" class="w-full bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium btn--db btn--db-cleanup">
                                 Clean Database
                             </button>
                         </div>
@@ -8095,7 +8078,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Repair corrupted tables</p>
                                 </div>
                             </div>
-                            <button onclick="repairTables()" class="w-full bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-repair" class="w-full bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium btn--db btn--db-repair">
                                 Repair Tables
                             </button>
                         </div>
@@ -8111,7 +8094,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Analyze database storage</p>
                                 </div>
                             </div>
-                            <button onclick="analyzeDatabaseSize()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-analyze-size" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium btn--db btn--db-analyze-size">
                                 Analyze Size
                             </button>
                         </div>
@@ -8127,7 +8110,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Monitor query performance</p>
                                 </div>
                             </div>
-                            <button onclick="showPerformanceMonitor()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-performance-monitor" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium btn--db btn--db-performance">
                                 View Performance
                             </button>
                         </div>
@@ -8143,7 +8126,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Validate referential integrity</p>
                                 </div>
                             </div>
-                            <button onclick="checkForeignKeys()" class="w-full bg-teal-600 hover:bg-teal-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-check-foreign-keys" class="w-full bg-teal-600 hover:bg-teal-700 text-white rounded text-sm font-medium btn--db btn--db-foreign-keys">
                                 Check Integrity
                             </button>
                         </div>
@@ -8159,7 +8142,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Export specific tables</p>
                                 </div>
                             </div>
-                            <button onclick="showExportTools()" class="w-full bg-pink-600 hover:bg-pink-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-show-export-tools" class="w-full bg-pink-600 hover:bg-pink-700 text-white rounded text-sm font-medium btn--db btn--db-export-tools">
                                 Export Data
                             </button>
                         </div>
@@ -8175,7 +8158,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Import data from files</p>
                                 </div>
                             </div>
-                            <button onclick="showImportTools()" class="w-full bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-show-import-tools" class="w-full bg-violet-600 hover:bg-violet-700 text-white rounded text-sm font-medium btn--db btn--db-import-tools">
                                 Import Data
                             </button>
                         </div>
@@ -8191,7 +8174,7 @@ function showRoomSettingsSuccess(message) {
                                     <p class="text-xs text-gray-600">Browse database structure</p>
                                 </div>
                             </div>
-                            <button onclick="showSchemaBrowser()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-medium">
+                            <button data-action="db-show-schema-browser" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white rounded text-sm font-medium btn--db btn--db-schema-browser">
                                 Browse Schema
                             </button>
                         </div>
@@ -8203,7 +8186,7 @@ function showRoomSettingsSuccess(message) {
                             <div class="border-b border-gray-200 bg-gray-100">
                                 <div class="flex items-center justify-between">
                                     <h5 class="font-semibold text-gray-800">Tool Results</h5>
-                                    <button onclick="clearToolResults()" class="text-gray-500 hover:text-gray-700 text-sm">
+                                    <button data-action="clear-tool-results" class="text-gray-500 hover:text-gray-700 text-sm">
                                         Clear Results
                                     </button>
                                 </div>
@@ -8222,13 +8205,13 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Tool Results Modal -->
-<div id="databaseToolResultsModal" class="admin-modal-overlay hidden"  onclick="closeDatabaseToolResultsModal()">
+<div id="databaseToolResultsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
                 <h3 id="toolResultsModalTitle" class="text-lg font-bold text-gray-900">🛠️ Tool Results</h3>
-                <button onclick="closeDatabaseToolResultsModal()" class="text-gray-400 hover:text-gray-600">
+                <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -8242,7 +8225,7 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Modal Footer -->
             <div class="flex justify-end space-x-3">
-                <button onclick="closeDatabaseToolResultsModal()" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
+                <button data-action="close-admin-modal" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
                     Close
                 </button>
             </div>
@@ -8251,13 +8234,13 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Table View Modal -->
-<div id="tableViewModal" class="admin-modal-overlay hidden" onclick="closeTableViewModal()">
+<div id="tableViewModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="relative top-10 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
                 <h3 id="tableViewTitle" class="text-lg font-bold text-gray-900">🗄️ Table View</h3>
-                <button onclick="closeTableViewModal()" class="text-gray-400 hover:text-gray-600">
+                <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -8273,12 +8256,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- File Explorer Modal -->
-<div id="fileExplorerModal" class="admin-modal-overlay hidden" onclick="closeFileExplorerModal()">
+<div id="fileExplorerModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📁 File Explorer</h2>
-            <button onclick="closeFileExplorerModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
         
         <!-- Body -->
@@ -8295,23 +8278,23 @@ function showRoomSettingsSuccess(message) {
             <!-- Toolbar -->
             <div class="flex items-center justify-between bg-gray-50 rounded-lg">
                 <div class="flex items-center space-x-2">
-                    <button onclick="navigateUp()" id="upButton" class="bg-gray-500 hover:bg-gray-600 text-white rounded text-sm" disabled>
+                    <button data-action="fm-up" id="upButton" class="bg-gray-500 hover:bg-gray-600 text-white rounded text-sm" disabled>
                         ↑ Up
                     </button>
-                    <button onclick="refreshDirectory()" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+                    <button data-action="fm-refresh" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
                         🔄 Refresh
                     </button>
                 </div>
                 <div class="flex items-center">
-                    <button onclick="showBackupModal()" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm font-medium">
+                    <button data-action="open-backup-modal" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm font-medium">
                         💾 Backup Website Files
                     </button>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button onclick="showCreateFolderDialog()" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm">
+                    <button data-action="fm-new-folder" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm">
                         📁+ New Folder
                     </button>
-                    <button onclick="showCreateFileDialog()" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded text-sm">
+                    <button data-action="fm-new-file" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded text-sm">
                         📄+ New File
                     </button>
                 </div>
@@ -8338,10 +8321,10 @@ function showRoomSettingsSuccess(message) {
                     <div class="border-b bg-gray-50 flex items-center justify-between">
                         <h4 class="font-semibold text-gray-800">File Editor</h4>
                         <div id="editorActions" class="hidden space-x-2">
-                            <button onclick="saveFile()" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm">
+                            <button data-action="fm-save-file" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm">
                                 💾 Save
                             </button>
-                            <button onclick="closeEditor()" class="bg-gray-500 hover:bg-gray-600 text-white rounded text-sm">
+                            <button data-action="fm-close-editor" class="bg-gray-500 hover:bg-gray-600 text-white rounded text-sm">
                                 ✕ Close
                             </button>
                         </div>
@@ -8383,13 +8366,13 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Restore Modal -->
-<div id="databaseRestoreModal" class="admin-modal-overlay hidden"  onclick="closeDatabaseRestoreModal()">
+<div id="databaseRestoreModal" class="admin-modal-overlay hidden"  data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
             <div class="flex items-center justify-between">
                 <h3 class="text-lg font-bold text-gray-900">🔄 Database Restore</h3>
-                <button onclick="closeDatabaseRestoreModal()" class="text-gray-400 hover:text-gray-600">
+                <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
@@ -8435,14 +8418,14 @@ function showRoomSettingsSuccess(message) {
                                 </div>
                                 <p class="text-sm text-gray-600">Upload a .sql backup file from your computer</p>
                                 <div class="file-upload-area border-2 border-dashed border-gray-300 rounded-lg text-center hover:border-purple-400 transition-colors">
-                                    <input type="file" id="backupFile" accept=".sql,.txt" class="hidden" onchange="handleFileSelect(event)">
+                                    <input type="file" id="backupFile" accept=".sql,.txt" class="hidden">
                                     <div id="uploadPrompt">
                                         <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                         </svg>
                                         <p class="text-sm text-gray-600">Click to upload or drag and drop</p>
                                         <p class="text-xs text-gray-500">Supports .sql and .txt files</p>
-                                        <button type="button" onclick="document.getElementById('backupFile').click()" class="bg-purple-600 hover:bg-purple-700 text-white rounded text-sm">
+                                        <button type="button" data-action="trigger-backup-file-dialog" class="bg-purple-600 hover:bg-purple-700 text-white rounded text-sm">
                                             Choose File
                                         </button>
                                     </div>
@@ -8452,7 +8435,7 @@ function showRoomSettingsSuccess(message) {
                                         </svg>
                                         <p id="fileName" class="text-sm font-medium text-gray-900"></p>
                                         <p id="fileSize" class="text-xs text-gray-500"></p>
-                                        <button type="button" onclick="clearFileSelection()" class="text-sm text-purple-600 hover:text-purple-800">
+                                        <button type="button" data-action="restore-file-clear" class="text-sm text-purple-600 hover:text-purple-800">
                                             Choose Different File
                                         </button>
                                     </div>
@@ -8571,17 +8554,17 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Modal Footer -->
             <div class="flex justify-between">
-                <button id="restorePrevBtn" onclick="previousRestoreStep()" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium hidden">
+                <button id="restorePrevBtn" data-action="restore-prev" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium hidden">
                     ← Previous
                 </button>
                 <div class="flex space-x-3">
-                    <button onclick="closeDatabaseRestoreModal()" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
+                    <button data-action="close-admin-modal" class="bg-gray-500 hover:bg-gray-600 text-white rounded-md font-medium">
                         Cancel
                     </button>
-                    <button id="restoreNextBtn" onclick="nextRestoreStep()" class="bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium" disabled>
+                    <button id="restoreNextBtn" data-action="restore-next" class="bg-purple-600 hover:bg-purple-700 text-white rounded-md font-medium" disabled>
                         Next →
                     </button>
-                    <button id="restoreExecuteBtn" onclick="executeRestore()" class="bg-red-600 hover:bg-red-700 text-white rounded-md font-medium hidden">
+                    <button id="restoreExecuteBtn" data-action="restore-execute" class="bg-red-600 hover:bg-red-700 text-white rounded-md font-medium hidden">
                         🔄 Start Restore
                     </button>
                 </div>
@@ -8591,12 +8574,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Backup Website Modal -->
-<div id="backupModal" class="admin-modal-overlay hidden" onclick="closeBackupModal()">
+<div id="backupModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">💾 Create Website Backup</h2>
-            <button onclick="closeBackupModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
             
             <!-- Body -->
@@ -8607,7 +8590,7 @@ function showRoomSettingsSuccess(message) {
                     <!-- Backup Options -->
                     <div class="space-y-3">
                         <label class="flex items-start space-x-3 cursor-pointer border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="backupToComputer" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateBackupButton()">
+                            <input type="checkbox" id="backupToComputer" data-action="backup-option-change" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked>
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">💻</span>
@@ -8618,7 +8601,7 @@ function showRoomSettingsSuccess(message) {
                         </label>
                         
                         <label class="flex items-start space-x-3 cursor-pointer border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="backupToCloud" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateBackupButton()">
+                            <input type="checkbox" id="backupToCloud" data-action="backup-option-change" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked>
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">☁️</span>
@@ -8659,8 +8642,8 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Footer -->
             <div class="modal-footer">
-                <button onclick="closeBackupModal()" class="btn btn-secondary">Cancel</button>
-                <button id="createBackupButton" onclick="executeBackup()" class="btn btn-primary">
+                <button data-action="close-admin-modal" class="btn btn-secondary">Cancel</button>
+                <button id="createBackupButton" data-action="execute-backup" class="btn btn-primary">
                     💾 Create Backup
                 </button>
             </div>
@@ -8734,7 +8717,7 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Footer -->
             <div class="modal-footer">
-                <button id="backupProgressCloseBtn" onclick="closeBackupProgressModal()" class="modal-button btn-secondary hidden">
+                <button id="backupProgressCloseBtn" data-action="close-admin-modal" class="modal-button btn-secondary hidden">
                     Close
                 </button>
             </div>
@@ -8743,12 +8726,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Backup Modal -->
-<div id="databaseBackupModal" class="admin-modal-overlay hidden" onclick="closeDatabaseBackupModal()">
+<div id="databaseBackupModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">🗄️ Backup Website Database</h2>
-            <button onclick="closeDatabaseBackupModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
             
             <!-- Body -->
@@ -8759,7 +8742,7 @@ function showRoomSettingsSuccess(message) {
                     <!-- Backup Options -->
                     <div class="space-y-3">
                         <label class="flex items-start space-x-3 cursor-pointer border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="dbBackupToComputer" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
+                            <input type="checkbox" id="dbBackupToComputer" data-action="db-backup-option-change" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked>
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">💻</span>
@@ -8770,7 +8753,7 @@ function showRoomSettingsSuccess(message) {
                         </label>
                         
                         <label class="flex items-start space-x-3 cursor-pointer border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <input type="checkbox" id="dbBackupToCloud" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked onchange="updateDatabaseBackupButton()">
+                            <input type="checkbox" id="dbBackupToCloud" data-action="db-backup-option-change" class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2" checked>
                             <div class="flex-1">
                                 <div class="flex items-center space-x-2">
                                     <span class="text-lg">☁️</span>
@@ -8812,10 +8795,10 @@ function showRoomSettingsSuccess(message) {
             <!-- Footer -->
             <div class="modal-footer">
                 <div class="flex items-center justify-end space-x-3">
-                    <button onclick="closeDatabaseBackupModal()" class="text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                    <button data-action="close-admin-modal" class="text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
                         Cancel
                     </button>
-                    <button id="createDatabaseBackupButton" onclick="executeDatabaseBackup()" class="text-sm font-medium text-white bg-green-500 hover:bg-green-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button id="createDatabaseBackupButton" data-action="execute-db-backup" class="text-sm font-medium text-white bg-green-500 hover:bg-green-600 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                         <span class="flex items-center space-x-2">
                             <span>🗄️</span>
                             <span>Create Database Backup</span>
@@ -8896,7 +8879,7 @@ function displayFileList(items) {
         
         html += `
             <div class="flex items-center justify-between hover:bg-gray-100 rounded cursor-pointer" 
-                 onclick="${item.type === 'directory' ? `loadDirectory('${item.path}')` : `selectFile('${item.path}')`}">
+                 data-action="fm-item" data-type="${item.type}" data-path="${item.path}">
                 <div class="flex items-center flex-1">
                     <span class="">${icon}</span>
                     <div class="flex-1">
@@ -8906,13 +8889,10 @@ function displayFileList(items) {
                 </div>
                 <div class="flex items-center space-x-1">
                     ${item.type === 'file' && item.viewable ? 
-                        `<button onclick="event.stopPropagation(); viewFile('${item.path}')" 
-                                class="text-xs bg-blue-500 hover:bg-blue-600 text-white rounded">View</button>` : ''}
+                        `<button data-action="fm-view-file" data-path="${item.path}" class="text-xs bg-blue-500 hover:bg-blue-600 text-white rounded">View</button>` : ''}
                     ${item.type === 'file' && item.editable ? 
-                        `<button onclick="event.stopPropagation(); editFile('${item.path}')" 
-                                class="text-xs bg-green-500 hover:bg-green-600 text-white rounded">Edit</button>` : ''}
-                    <button onclick="event.stopPropagation(); deleteItem('${item.path}', '${item.type}')" 
-                            class="text-xs bg-red-500 hover:bg-red-600 text-white rounded">Delete</button>
+                        `<button data-action="fm-edit-file" data-path="${item.path}" class="text-xs bg-green-500 hover:bg-green-600 text-white rounded">Edit</button>` : ''}
+                    <button data-action="fm-delete-item" data-path="${item.path}" data-type="${item.type}" class="text-xs bg-red-500 hover:bg-red-600 text-white rounded">Delete</button>
                 </div>
             </div>
         `;
@@ -10026,7 +10006,7 @@ async function loadCSSRules() {
                 <div class="text-red-500 text-4xl">⚠️</div>
                 <p class="text-red-600 text-lg">Failed to load CSS settings</p>
                 <p class="text-sm text-gray-500">${error.message}</p>
-                <button onclick="loadCSSRules()" class="bg-red-500 text-white rounded hover:bg-red-600">
+                <button data-action="css-load-rules" class="bg-red-500 text-white rounded hover:bg-red-600">
                     Try Again
                 </button>
             </div>
@@ -10400,12 +10380,13 @@ function renderGlobalCSSRules(groupedRules) {
                         <input type="color" 
                                class="w-12 h-8 border border-gray-300 rounded cursor-pointer" 
                                value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
-                               onchange="updateColorValue(this, ${rule.id})">
+                               data-action="css-rule-color-change" data-rule-id="${rule.id}">
                         <input type="text" 
                                class="css-rule-input flex-1 border border-gray-300 rounded-md text-sm font-mono"
                                data-rule-id="${rule.id}"
                                data-property="${rule.css_property}"
                                value="${rule.css_value}"
+                               data-action="css-rule-change"
                                placeholder="#87ac3a">
                         <div class="w-8 h-8 rounded border border-gray-300" ></div>
                     </div>
@@ -10417,6 +10398,7 @@ function renderGlobalCSSRules(groupedRules) {
                            data-rule-id="${rule.id}"
                            data-property="${rule.css_property}"
                            value="${rule.css_value}"
+                           data-action="css-rule-change"
                            placeholder="${getPlaceholder(rule.css_property)}">
                 `;
             }
@@ -10582,11 +10564,11 @@ function createColorControl(rule, friendlyName) {
                 <input type="color" 
                        class="w-12 h-10 border border-gray-300 rounded cursor-pointer" 
                        value="${rule.css_value.startsWith('#') ? rule.css_value : '#87ac3a'}"
-                       onchange="updateCSSRule(${rule.id}, this.value)">
+                       data-action="css-rule-color-change" data-rule-id="${rule.id}">
                 <input type="text" 
-                       class="flex-1 border border-gray-300 rounded-md text-sm font-mono"
+                       class="flex-1 border border-gray-300 rounded-md text-sm font-mono css-rule-input"
                        value="${rule.css_value}"
-                       onchange="updateCSSRule(${rule.id}, this.value)"
+                       data-action="css-rule-change" data-rule-id="${rule.id}"
                        placeholder="#87ac3a">
                 <div class="w-8 h-8 rounded border border-gray-300" ></div>
             </div>
@@ -10603,11 +10585,11 @@ function createColorVariableControl(variable, friendlyName) {
                 <input type="color" 
                        class="w-12 h-10 border border-gray-300 rounded cursor-pointer" 
                        value="${variable.variable_value.startsWith('#') ? variable.variable_value : '#87ac3a'}"
-                       onchange="updateCSSVariable('${variable.variable_name}', this.value, 'colors')">
+                       data-action="css-variable-change" data-name="${variable.variable_name}" data-category="colors">
                 <input type="text" 
                        class="flex-1 border border-gray-300 rounded-md text-sm font-mono"
                        value="${variable.variable_value}"
-                       onchange="updateCSSVariable('${variable.variable_name}', this.value, 'colors')"
+                       data-action="css-variable-change" data-name="${variable.variable_name}" data-category="colors"
                        placeholder="#87ac3a">
                 <div class="w-8 h-8 rounded border border-gray-300" ></div>
             </div>
@@ -10626,9 +10608,9 @@ function createButtonControl(rule, friendlyName) {
         <div class="bg-white rounded-lg border">
             <label class="block text-sm font-medium text-gray-700">${friendlyName}</label>
             <input type="text" 
-                   class="w-full border border-gray-300 rounded-md text-sm"
+                   class="w-full border border-gray-300 rounded-md text-sm css-rule-input"
                    value="${rule.css_value}"
-                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   data-action="css-rule-change" data-rule-id="${rule.id}"
                    placeholder="${getPlaceholder(rule.css_property)}">
             <p class="text-xs text-gray-500">${getHelpText(rule.rule_name)}</p>
         </div>
@@ -10640,9 +10622,9 @@ function createTypographyControl(rule, friendlyName) {
         <div class="bg-white rounded-lg border">
             <label class="block text-sm font-medium text-gray-700">${friendlyName}</label>
             <input type="text" 
-                   class="w-full border border-gray-300 rounded-md text-sm"
+                   class="w-full border border-gray-300 rounded-md text-sm css-rule-input"
                    value="${rule.css_value}"
-                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   data-action="css-rule-change" data-rule-id="${rule.id}"
                    placeholder="${getPlaceholder(rule.css_property)}">
             <p class="text-xs text-gray-500">${getHelpText(rule.rule_name)}</p>
         </div>
@@ -10654,9 +10636,9 @@ function createLayoutControl(rule, friendlyName) {
         <div class="bg-white rounded-lg border">
             <label class="block text-sm font-medium text-gray-700">${friendlyName}</label>
             <input type="text" 
-                   class="w-full border border-gray-300 rounded-md text-sm"
+                   class="w-full border border-gray-300 rounded-md text-sm css-rule-input"
                    value="${rule.css_value}"
-                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   data-action="css-rule-change" data-rule-id="${rule.id}"
                    placeholder="${getPlaceholder(rule.css_property)}">
             <p class="text-xs text-gray-500">${getHelpText(rule.rule_name)}</p>
         </div>
@@ -10671,7 +10653,7 @@ function createComponentControl(rule, friendlyName) {
             <div class="bg-white rounded-lg border">
                 <label class="block text-sm font-medium text-gray-700">${friendlyName}</label>
                 <select class="w-full border border-gray-300 rounded-md text-sm"
-                        onchange="updateCSSRule(${rule.id}, this.value)">
+                        data-action="css-rule-change" data-rule-id="${rule.id}">
                     <option value="top-right" ${rule.css_value === 'top-right' ? 'selected' : ''}>Top Right (Default)</option>
                     <option value="top-left" ${rule.css_value === 'top-left' ? 'selected' : ''}>Top Left</option>
                     <option value="top-center" ${rule.css_value === 'top-center' ? 'selected' : ''}>Top Center</option>
@@ -10692,9 +10674,9 @@ function createComponentControl(rule, friendlyName) {
         <div class="bg-white rounded-lg border">
             <label class="block text-sm font-medium text-gray-700">${friendlyName}</label>
             <input type="text" 
-                   class="w-full border border-gray-300 rounded-md text-sm"
+                   class="w-full border border-gray-300 rounded-md text-sm css-rule-input"
                    value="${rule.css_value}"
-                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   data-action="css-rule-change" data-rule-id="${rule.id}"
                    placeholder="${getPlaceholder(rule.css_property)}">
             <p class="text-xs text-gray-500">${getHelpText(rule.rule_name)}</p>
         </div>
@@ -10711,9 +10693,9 @@ function createAdvancedControl(rule, friendlyName) {
         <div class="bg-white rounded-lg border">
             <label class="block text-sm font-medium text-gray-700">${friendlyName}</label>
             <input type="text" 
-                   class="w-full border border-gray-300 rounded-md text-sm font-mono"
+                   class="w-full border border-gray-300 rounded-md text-sm font-mono css-rule-input"
                    value="${rule.css_value}"
-                   onchange="updateCSSRule(${rule.id}, this.value)"
+                   data-action="css-rule-change" data-rule-id="${rule.id}"
                    placeholder="${getPlaceholder(rule.css_property)}">
             <p class="text-xs text-gray-500">${getHelpText(rule.rule_name)}</p>
         </div>
@@ -11199,7 +11181,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- CSS Rules Modal (Fullscreen) -->
-<div id="cssRulesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeCSSRulesModal()">
+<div id="cssRulesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" data-action="overlay-close">
     <div class="bg-white w-full h-full flex flex-col">
         <!-- Header -->
         <div class="flex items-center justify-between border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600 text-white">
@@ -11212,7 +11194,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p class="text-green-100 text-sm">Customize colors, fonts, buttons, and more - no coding required!</p>
                 </div>
             </div>
-            <button onclick="closeCSSRulesModal()" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
+            <button data-action="close-admin-modal" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
         </div>
         
         <!-- Search Bar -->
@@ -11224,10 +11206,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     </svg>
                 </div>
                 <input type="text" 
-                       id="cssSearchInput"
+                       id="cssSearchInput" data-action="css-search-input"
                        class="block w-full border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm"
-                       placeholder="Search for colors, fonts, buttons, etc..."
-                       onkeyup="filterCSSRules(this.value)">
+                       placeholder="Search for colors, fonts, buttons, etc...">
             </div>
             <div id="searchResultsCount" class="text-xs text-gray-500" class="hidden">
                 <!-- Search results count will appear here -->
@@ -11237,31 +11218,31 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Tab Navigation -->
         <div class="bg-white border-b border-gray-200">
             <nav class="flex space-x-6">
-                <button onclick="switchCSSTab('colors')" data-tab="colors" 
+                <button data-action="css-tab" data-tab="colors" 
                         class="css-tab-button border-b-2 border-green-500 text-green-600 text-sm font-medium">
                     🎨 Colors & Branding
                 </button>
-                <button onclick="switchCSSTab('buttons')" data-tab="buttons" 
+                <button data-action="css-tab" data-tab="buttons" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                     🔘 Buttons & Interactive
                 </button>
-                <button onclick="switchCSSTab('typography')" data-tab="typography" 
+                <button data-action="css-tab" data-tab="typography" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                     📝 Text & Fonts
                 </button>
-                <button onclick="switchCSSTab('layout')" data-tab="layout" 
+                <button data-action="css-tab" data-tab="layout" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                     📐 Layout & Spacing
                 </button>
-                <button onclick="switchCSSTab('components')" data-tab="components" 
+                <button data-action="css-tab" data-tab="components" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                     🧩 Components
                 </button>
-                <button onclick="switchCSSTab('tabs')" data-tab="tabs" 
+                <button data-action="css-tab" data-tab="tabs" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                     🗂️ Tabs & Navigation
                 </button>
-                <button onclick="switchCSSTab('advanced')" data-tab="advanced" 
+                <button data-action="css-tab" data-tab="advanced" 
                         class="css-tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                     ⚙️ Advanced
                 </button>
@@ -11285,19 +11266,19 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Footer -->
         <div class="border-t border-gray-200 bg-gray-50 flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <button onclick="resetCSSToDefaults()" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
+                <button data-action="css-reset-defaults" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
                     🔄 Reset to Defaults
                 </button>
-                <button onclick="previewChanges()" class="bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                <button data-action="css-preview" class="bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                     👁️ Preview Changes
                 </button>
             </div>
             <div class="flex items-center space-x-2">
                 <span id="saveStatus" class="text-sm text-gray-500"></span>
-                <button onclick="closeCSSRulesModal()" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+                <button data-action="close-admin-modal" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
                     Cancel
                 </button>
-                <button onclick="saveCSSRules()" class="bg-green-500 text-white rounded hover:bg-green-600 font-medium">
+                <button data-action="css-save" class="bg-green-500 text-white rounded hover:bg-green-600 font-medium">
                     💾 Save All Changes
                 </button>
             </div>
@@ -11306,12 +11287,12 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Template Manager Modal -->
-<div id="templateManagerModal" class="admin-modal-overlay hidden" onclick="closeTemplateManagerModal()">
+<div id="templateManagerModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📋 Template Manager</h2>
-            <button onclick="closeTemplateManagerModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
             
             <!-- Body -->
@@ -11319,27 +11300,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 <!-- Tab Navigation -->
                 <div class="admin-tab-bar">
                     <nav class="flex space-x-4" aria-label="Tabs">
-                        <button onclick="switchTemplateTab('color-templates')" 
+                        <button data-action="tm-switch-tab" 
                                 class="css-category-tab active" 
                                 data-tab="color-templates">
                             🎨 Color Templates
                         </button>
-                        <button onclick="switchTemplateTab('size-templates')" 
+                        <button data-action="tm-switch-tab" 
                                 class="css-category-tab" 
                                 data-tab="size-templates">
                             📏 Size Templates
                         </button>
-                        <button onclick="switchTemplateTab('cost-templates')" 
+                        <button data-action="tm-switch-tab" 
                                 class="css-category-tab" 
                                 data-tab="cost-templates">
                             🧮 Cost Templates
                         </button>
-                        <button onclick="switchTemplateTab('suggestion-history')" 
+                        <button data-action="tm-switch-tab" 
                                 class="css-category-tab" 
                                 data-tab="suggestion-history">
                             📊 History
                         </button>
-                        <button onclick="switchTemplateTab('email-templates')" 
+                        <button data-action="tm-switch-tab" 
                                 class="css-category-tab" 
                                 data-tab="email-templates">
                             📧 Email Templates
@@ -11352,7 +11333,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="">
                         <div class="flex items-center justify-between">
                             <h4 class="text-lg font-semibold text-gray-800">Color Templates</h4>
-                            <button onclick="createNewColorTemplate()" class="btn btn-primary">
+                            <button data-action="tm-create-color-template" class="btn btn-primary">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -11363,7 +11344,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <!-- Category Filter -->
                         <div class="">
                             <label class="block text-sm font-medium text-gray-700">Filter by Category:</label>
-                            <select id="colorTemplateCategoryFilter" onchange="filterColorTemplates()" class="modal-select">
+                            <select id="colorTemplateCategoryFilter" data-action="tm-filter-color-templates" class="modal-select">
                                 <option value="">All Categories</option>
                             </select>
                         </div>
@@ -11386,7 +11367,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="">
                         <div class="flex items-center justify-between">
                             <h4 class="text-lg font-semibold text-gray-800">Size Templates</h4>
-                            <button onclick="createNewSizeTemplate()" class="btn btn-primary">
+                            <button data-action="tm-create-size-template" class="btn btn-primary">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -11397,7 +11378,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <!-- Category Filter -->
                         <div class="">
                             <label class="block text-sm font-medium text-gray-700">Filter by Category:</label>
-                            <select id="sizeTemplateCategoryFilter" onchange="filterSizeTemplates()" class="modal-select">
+                            <select id="sizeTemplateCategoryFilter" data-action="tm-filter-size-templates" class="modal-select">
                                 <option value="">All Categories</option>
                             </select>
                         </div>
@@ -11420,7 +11401,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="">
                         <div class="flex items-center justify-between">
                             <h4 class="text-lg font-semibold text-gray-800">Cost Breakdown Templates</h4>
-                            <button onclick="createNewCostTemplate()" class="btn btn-primary">
+                            <button data-action="tm-create-cost-template" class="btn btn-primary">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
@@ -11452,7 +11433,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <option value="price">Price Suggestions</option>
                                     <option value="cost">Cost Suggestions</option>
                                 </select>
-                                <button onclick="refreshSuggestionHistory()" class="btn btn-secondary text-sm">
+                                <button data-action="tm-refresh-suggestion-history" class="btn btn-secondary text-sm">
                                     🔄 Refresh
                                 </button>
                             </div>
@@ -11477,7 +11458,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="flex items-center justify-between">
                             <h4 class="text-lg font-semibold text-gray-800">Email Templates</h4>
                             <div class="flex space-x-2">
-                                <select id="emailTemplateTypeFilter" onchange="filterEmailTemplates()" class="modal-select">
+                                <select id="emailTemplateTypeFilter" data-action="tm-filter-email-templates" class="modal-select">
                                     <option value="">All Template Types</option>
                                     <option value="order_confirmation">Order Confirmation</option>
                                     <option value="admin_notification">Admin Notification</option>
@@ -11485,7 +11466,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <option value="password_reset">Password Reset</option>
                                     <option value="custom">Custom</option>
                                 </select>
-                                <button onclick="createNewEmailTemplate()" class="btn btn-primary">
+                                <button data-action="tm-create-email-template" class="btn btn-primary">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
@@ -11618,11 +11599,11 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- Template Assignment Modal -->
-<div id="templateAssignmentModal" class="admin-modal-overlay hidden" onclick="closeTemplateAssignmentModal()">
+<div id="templateAssignmentModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Change Template Assignment</h2>
-            <button onclick="closeTemplateAssignmentModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -11640,42 +11621,14 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         
         <div class="modal-footer">
-            <button type="button" onclick="closeTemplateAssignmentModal()" class="btn btn-secondary">Cancel</button>
-            <button type="button" onclick="saveTemplateAssignment()" class="btn btn-primary">Save Assignment</button>
+            <button type="button" data-action="close-admin-modal" class="btn btn-secondary">Cancel</button>
+            <button type="button" data-action="save-template-assignment" class="btn btn-primary">Save Assignment</button>
         </div>
     </div>
 </div>
 
 <script>
-// Template Manager Functions
-function openTemplateManagerModal() {
-    document.getElementById('templateManagerModal').classList.remove('hidden');
-    loadColorTemplates();
-    loadSizeTemplates();
-    loadCostTemplates();
-    loadSuggestionHistory();
-    loadEmailTemplates();
-}
-
-function closeTemplateManagerModal() {
-    document.getElementById('templateManagerModal').classList.add('hidden');
-}
-
-function switchTemplateTab(tabName) {
-    // Update tab buttons
-    document.querySelectorAll('.css-category-tab').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    
-    // Show/hide content
-    document.querySelectorAll('.css-category-content').forEach(content => {
-        content.classList.add('hidden');
-    });
-    
-    document.getElementById(`${tabName}-tab`).classList.remove('hidden');
-}
+// Template Manager functions migrated to Vite module (src/js/admin-settings.js)
 
 async function loadCostTemplates() {
     const loading = document.getElementById('costTemplatesLoading');
@@ -11727,8 +11680,8 @@ function renderCostTemplates(templates) {
                     </div>
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="editCostTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                    <button onclick="deleteCostTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                    <button data-action="tm-edit-cost-template" data-id="${template.id}" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button data-action="tm-delete-cost-template" data-id="${template.id}" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
                 </div>
             </div>
             
@@ -11890,10 +11843,10 @@ function renderEmailTemplates(templates = null) {
                     </div>
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="previewEmailTemplate(${template.id})" class="text-green-600 hover:text-green-800 text-sm">Preview</button>
-                    <button onclick="sendTestEmail(${template.id})" class="text-purple-600 hover:text-purple-800 text-sm">Test</button>
-                    <button onclick="editEmailTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                    <button onclick="deleteEmailTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                    <button data-action="tm-preview-email-template" data-id="${template.id}" class="text-green-600 hover:text-green-800 text-sm">Preview</button>
+                    <button data-action="tm-send-test-email" data-id="${template.id}" class="text-purple-600 hover:text-purple-800 text-sm">Test</button>
+                    <button data-action="tm-edit-email-template" data-id="${template.id}" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button data-action="tm-delete-email-template" data-id="${template.id}" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
                 </div>
             </div>
             
@@ -11923,7 +11876,7 @@ function renderEmailTemplateAssignments(assignments) {
             <div class="bg-white rounded border border-gray-200">
                 <div class="flex items-center justify-between">
                     <h6 class="font-medium text-gray-800">${emailType.name}</h6>
-                    <button onclick="changeTemplateAssignment('${emailType.key}')" class="text-xs text-blue-600 hover:text-blue-800">
+                    <button data-action="open-template-assignment" data-email-type="${emailType.key}" class="text-xs text-blue-600 hover:text-blue-800">
                         Change
                     </button>
                 </div>
@@ -11986,37 +11939,8 @@ async function deleteEmailTemplate(templateId) {
     }
 }
 
-async function previewEmailTemplate(templateId) {
-    try {
-        const response = await fetch(`/api/email_templates.php?action=preview&template_id=${templateId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            showEmailTemplatePreviewModal(data.preview);
-        } else {
-            showError('Failed to preview template: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Error previewing email template:', error);
-        showError('Error previewing email template');
-    }
-}
+// previewEmailTemplate moved to Vite module (src/js/admin-settings.js)
 
-async function changeTemplateAssignment(emailType) {
-    try {
-        const response = await fetch('/api/email_templates.php?action=get_all');
-        const data = await response.json();
-        
-        if (data.success) {
-            showTemplateAssignmentModal(emailType, data.templates);
-        } else {
-            showError('Failed to load templates: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Error loading templates:', error);
-        showError('Error loading templates');
-    }
-}
 // sendTestEmail function moved to email_manager.php for centralization
 
 // ========== COLOR TEMPLATE MANAGEMENT ==========
@@ -12100,8 +12024,8 @@ function renderColorTemplates(templates = null) {
                     </div>
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="editColorTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                    <button onclick="deleteColorTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                    <button data-action="tm-edit-color-template" data-id="${template.id}" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button data-action="tm-delete-color-template" data-id="${template.id}" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
                 </div>
             </div>
             
@@ -12269,8 +12193,8 @@ function renderSizeTemplates(templates = null) {
                     </div>
                 </div>
                 <div class="flex space-x-2">
-                    <button onclick="editSizeTemplate(${template.id})" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                    <button onclick="deleteSizeTemplate(${template.id})" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                    <button data-action="tm-edit-size-template" data-id="${template.id}" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                    <button data-action="tm-delete-size-template" data-id="${template.id}" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
                 </div>
             </div>
             
@@ -12401,15 +12325,15 @@ function showColorTemplateEditModal(template = null) {
 
 function createColorTemplateEditModal() {
     const modalHTML = `
-        <div id="colorTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeColorTemplateEditModal()">
+        <div id="colorTemplateEditModal" class="admin-modal-overlay hidden" data-action="close-color-template-modal">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 id="colorTemplateEditTitle" class="modal-title">Edit Color Template</h2>
-                    <button onclick="closeColorTemplateEditModal()" class="modal-close">&times;</button>
+                    <button data-action="close-color-template-modal" class="modal-close">&times;</button>
                 </div>
                 
                 <div class="modal-body" >
-                    <form id="colorTemplateEditForm" onsubmit="saveColorTemplate(event)">
+                    <form id="colorTemplateEditForm" data-action="save-color-template">
                         <input type="hidden" id="colorTemplateId" name="template_id">
                         
                         <!-- Template Details -->
@@ -12444,7 +12368,7 @@ function createColorTemplateEditModal() {
                         <div class="">
                             <div class="flex items-center justify-between">
                                 <h4 class="text-lg font-semibold text-gray-800">Colors</h4>
-                                <button type="button" onclick="addColorToTemplate()" class="btn btn-primary">
+                                <button type="button" data-action="color-template-add-color" class="btn btn-primary">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
@@ -12460,7 +12384,7 @@ function createColorTemplateEditModal() {
                 </div>
                 
                 <div class="modal-footer">
-                    <button type="button" onclick="closeColorTemplateEditModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" data-action="close-color-template-modal" class="btn btn-secondary">Cancel</button>
                     <button type="submit" form="colorTemplateEditForm" class="btn btn-primary">Save Template</button>
                 </div>
             </div>
@@ -12498,11 +12422,11 @@ function addColorToTemplate(colorData = null) {
                         <input type="color" name="colors[${index}][color_code]" 
                                class="w-12 h-8 border border-gray-300 rounded cursor-pointer"
                                value="${colorData?.color_code || '#ff0000'}"
-                               onchange="updateColorPreview(${index}, this.value)">
+                               data-action="color-picker-change" data-index="${index}">
                         <input type="text" name="colors[${index}][color_code_text]" 
                                class="flex-1 border border-gray-300 rounded text-sm font-mono"
                                placeholder="#ff0000" value="${colorData?.color_code || '#ff0000'}"
-                               onchange="updateColorPicker(${index}, this.value)">
+                               data-action="color-text-change" data-index="${index}">
                     </div>
                 </div>
                 <div>
@@ -12512,7 +12436,7 @@ function addColorToTemplate(colorData = null) {
                            value="${colorData?.display_order || index}">
                 </div>
                 <div class="flex items-end">
-                    <button type="button" onclick="removeColorFromTemplate(${index})" 
+                    <button type="button" data-action="color-template-remove-color" data-index="${index}"
                             class="bg-red-500 text-white rounded text-sm hover:bg-red-600">
                         Remove
                     </button>
@@ -12661,15 +12585,15 @@ function showSizeTemplateEditModal(template = null) {
 
 function createSizeTemplateEditModal() {
     const modalHTML = `
-        <div id="sizeTemplateEditModal" class="admin-modal-overlay hidden" onclick="closeSizeTemplateEditModal()">
+        <div id="sizeTemplateEditModal" class="admin-modal-overlay hidden" data-action="close-size-template-modal">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 id="sizeTemplateEditTitle" class="modal-title">Edit Size Template</h2>
-                    <button onclick="closeSizeTemplateEditModal()" class="modal-close">&times;</button>
+                    <button data-action="close-size-template-modal" class="modal-close">&times;</button>
                 </div>
                 
                 <div class="modal-body" >
-                    <form id="sizeTemplateEditForm" onsubmit="saveSizeTemplate(event)">
+                    <form id="sizeTemplateEditForm" data-action="save-size-template">
                         <input type="hidden" id="sizeTemplateId" name="template_id">
                         
                         <!-- Template Details -->
@@ -12704,7 +12628,7 @@ function createSizeTemplateEditModal() {
                         <div class="">
                             <div class="flex items-center justify-between">
                                 <h4 class="text-lg font-semibold text-gray-800">Sizes</h4>
-                                <button type="button" onclick="addSizeToTemplate()" class="btn btn-primary">
+                                <button type="button" data-action="size-template-add-size" class="btn btn-primary">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                     </svg>
@@ -12720,7 +12644,7 @@ function createSizeTemplateEditModal() {
                 </div>
                 
                 <div class="modal-footer">
-                    <button type="button" onclick="closeSizeTemplateEditModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="button" data-action="close-size-template-modal" class="btn btn-secondary">Cancel</button>
                     <button type="submit" form="sizeTemplateEditForm" class="btn btn-primary">Save Template</button>
                 </div>
             </div>
@@ -12771,7 +12695,7 @@ function addSizeToTemplate(sizeData = null) {
                            value="${sizeData?.display_order || index}">
                 </div>
                 <div class="flex items-end">
-                    <button type="button" onclick="removeSizeFromTemplate(${index})" 
+                    <button type="button" data-action="size-template-remove-size" data-index="${index}" 
                             class="bg-red-500 text-white rounded text-sm hover:bg-red-600">
                         Remove
                     </button>
@@ -12860,12 +12784,12 @@ async function saveSizeTemplate(event) {
 </script>
 
 <!-- Marketing Analytics Modal -->
-<div id="marketingAnalyticsModal" class="admin-modal-overlay hidden" onclick="closeMarketingAnalyticsModal()">
+<div id="marketingAnalyticsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📈 Marketing Analytics Dashboard</h2>
-            <button onclick="closeMarketingAnalyticsModal()" class="modal-close">&times;</button>
+            <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
         <!-- Body -->
@@ -12876,19 +12800,19 @@ async function saveSizeTemplate(event) {
             <!-- Enhanced Tabs -->
             <div class="marketing-tab-nav">
                 <nav class="flex space-x-2">
-                    <button onclick="switchMarketingTab('campaigns')" data-tab="campaigns" 
+                    <button data-action="switch-marketing-tab" data-tab="campaigns" 
                             class="marketing-tab active">
                         📧 Campaigns
                     </button>
-                    <button onclick="switchMarketingTab('acquisition')" data-tab="acquisition" 
+                    <button data-action="switch-marketing-tab" data-tab="acquisition" 
                             class="marketing-tab">
                         👥 Customer Acquisition
                     </button>
-                    <button onclick="switchMarketingTab('roi')" data-tab="roi" 
+                    <button data-action="switch-marketing-tab" data-tab="roi" 
                             class="marketing-tab">
                         💰 Marketing ROI
                     </button>
-                    <button onclick="switchMarketingTab('social')" data-tab="social" 
+                    <button data-action="switch-marketing-tab" data-tab="social" 
                             class="marketing-tab">
                         📱 Social Media
                     </button>
@@ -13080,10 +13004,10 @@ async function saveSizeTemplate(event) {
         
         <!-- Footer -->
         <div class="modal-footer">
-            <button onclick="refreshMarketingData()" class="btn btn-primary" >
+            <button data-action="refresh-marketing-data" class="btn btn-primary" >
                 🔄 Refresh Data
             </button>
-            <button onclick="closeMarketingAnalyticsModal()" class="btn btn-secondary">
+            <button data-action="close-admin-modal" class="btn btn-secondary">
                 Close
             </button>
         </div>
@@ -13285,7 +13209,7 @@ async function saveSizeTemplate(event) {
                 <div class="">
                     <div class="flex justify-between items-center">
                         <h3 class="text-lg font-semibold text-gray-800">AI-Powered Optimization Suggestions</h3>
-                        <button onclick="generateOptimizationSuggestions()" 
+                        <button data-action="opt-generate-suggestions" 
                                 class="bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium">
                             🤖 Generate New Suggestions
                         </button>
@@ -13409,12 +13333,12 @@ async function saveSizeTemplate(event) {
 </div>
 
 <!-- Business Reports Modal -->
-<div id="businessReportsModal" class="admin-modal-overlay hidden" onclick="closeBusinessReportsModal()">
+<div id="businessReportsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📊 Business Reports Dashboard</h2>
-            <button onclick="closeBusinessReportsModal()" class="modal-close">&times;</button>
+            <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
         <!-- Body -->
@@ -13422,19 +13346,19 @@ async function saveSizeTemplate(event) {
             <!-- Tabs -->
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8">
-                    <button onclick="switchReportsTab('sales')" data-tab="sales" 
+                    <button data-action="switch-reports-tab" data-tab="sales" 
                             class="reports-tab border-b-2 border-blue-500 text-blue-600 text-sm font-medium">
                         💰 Sales Reports
                     </button>
-                    <button onclick="switchReportsTab('inventory')" data-tab="inventory" 
+                    <button data-action="switch-reports-tab" data-tab="inventory" 
                             class="reports-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                         📦 Inventory Analysis
                     </button>
-                    <button onclick="switchReportsTab('financial')" data-tab="financial" 
+                    <button data-action="switch-reports-tab" data-tab="financial" 
                             class="reports-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                         💹 Financial Performance
                     </button>
-                    <button onclick="switchReportsTab('operational')" data-tab="operational" 
+                    <button data-action="switch-reports-tab" data-tab="operational" 
                             class="reports-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 text-sm font-medium">
                         ⚙️ Operations
                     </button>
@@ -13782,7 +13706,7 @@ async function saveSizeTemplate(event) {
         
         <!-- Footer -->
         <div class="modal-footer">
-            <button onclick="closeBusinessReportsModal()" class="btn btn-secondary">
+            <button data-action="close-admin-modal" class="btn btn-secondary">
                 Close
             </button>
         </div>
@@ -14806,7 +14730,7 @@ function displayCategoriesData(categories) {
         <!-- Add Category Form -->
         <div class="bg-white rounded-lg shadow">
             <h3 class="text-lg font-semibold text-gray-800">Add New Category</h3>
-            <form id="addCategoryForm" class="flex gap-2" onsubmit="addCategory(event)">
+            <form id="addCategoryForm" class="flex gap-2" data-action="add-category">
                 <input type="text" id="newCategory" name="newCategory" placeholder="Enter category name..." class="border border-gray-300 rounded" required>
                 <button type="submit" class="bg-green-500 hover:bg-green-600 text-white rounded font-medium flex items-center text-left">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14858,7 +14782,7 @@ function displayCategoriesData(categories) {
                     <td class="whitespace-nowrap">
                         <div class="editable-category font-medium text-gray-900 cursor-pointer hover:bg-gray-100 rounded transition-colors" 
                              data-original="${cat}" 
-                             onclick="startEditCategory(this)" 
+                             data-action="category-edit-name" 
                              title="Click to edit category name">
                             ${cat}
                         </div>
@@ -14867,7 +14791,7 @@ function displayCategoriesData(categories) {
                         <span class="editable-sku-code bg-blue-50 text-blue-800 rounded text-sm font-mono cursor-pointer hover:bg-blue-100 transition-colors" 
                               data-category="${cat}"
                               data-original="${code}"
-                              onclick="startEditSkuCode(this)" 
+                              data-action="category-edit-sku" 
                               title="Click to edit SKU code">
                             ${code}
                         </span>
@@ -14876,7 +14800,7 @@ function displayCategoriesData(categories) {
                         <span class="example-sku bg-gray-100 text-gray-800 rounded text-sm font-mono">${exampleSku}</span>
                     </td>
                     <td class="whitespace-nowrap">
-                        <button onclick="deleteCategory('${cat}')" class="bg-red-500 hover:bg-red-600 text-white rounded text-sm">
+                        <button data-action="category-delete" data-category="${cat}" class="bg-red-500 hover:bg-red-600 text-white rounded text-sm">
                             Delete
                         </button>
                     </td>
@@ -15483,7 +15407,7 @@ function loadMarketingDefaultsTab(contentDiv) {
                 </div>
                 
                 <div class="">
-                    <button onclick="saveMarketingDefaults()" class="bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold">
+                    <button data-action="marketing-save-defaults" class="bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold">
                         💾 Save Marketing Defaults
                     </button>
                 </div>
@@ -15648,8 +15572,8 @@ async function loadCSSVariables() {
                         <div class="border border-gray-200 rounded-lg">
                             <label class="block text-sm font-medium text-gray-700">${variable.variable_name}</label>
                             <div class="flex gap-2">
-                                ${isColor ? `<input type="color" value="${variable.variable_value}" class="w-12 h-8 border border-gray-300 rounded" onchange="updateCSSVariable('${variable.variable_name}', this.value, '${category}')">` : ''}
-                                <input type="text" value="${variable.variable_value}" class="flex-1 border border-gray-300 rounded text-sm" onchange="updateCSSVariable('${variable.variable_name}', this.value, '${category}')">
+                                ${isColor ? `<input type=\"color\" value=\"${variable.variable_value}\" class=\"w-12 h-8 border border-gray-300 rounded\" data-action=\"css-variable-change\" data-name=\"${variable.variable_name}\" data-category=\"${category}\">` : ''}
+                                <input type=\"text\" value=\"${variable.variable_value}\" class=\"flex-1 border border-gray-300 rounded text-sm\" data-action=\"css-variable-change\" data-name=\"${variable.variable_name}\" data-category=\"${category}\">
                             </div>
                             <p class="text-xs text-gray-500">${variable.description || ''}</p>
                         </div>
@@ -15772,10 +15696,10 @@ async function loadGeneralConfig() {
         
         html += `
             <div class="flex justify-end space-x-3 border-t">
-                <button onclick="resetAllSettingsToDefaults()" class="bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
+                <button data-action="business-reset-defaults" class="bg-gray-500 hover:bg-gray-600 text-white rounded-lg">
                     🔄 Reset All to Defaults
                 </button>
-                <button onclick="saveAllBusinessSettings()" class="bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold">
+                <button data-action="business-save-all" class="bg-teal-600 hover:bg-teal-700 text-white rounded-lg font-semibold">
                     💾 Save All Settings
                 </button>
             </div>
@@ -15788,7 +15712,7 @@ async function loadGeneralConfig() {
         document.getElementById('generalConfigContent').innerHTML = `
             <div class="text-center text-red-600">
                 <p>Error loading configuration: ${error.message}</p>
-                <button onclick="loadGeneralConfig()" class="bg-red-600 hover:bg-red-700 text-white rounded">
+                <button data-action="general-config-retry" class="bg-red-600 hover:bg-red-700 text-white rounded">
                     Try Again
                 </button>
             </div>
@@ -15843,7 +15767,7 @@ function generateSettingField(setting) {
                                class="h-8 w-16 rounded border border-gray-300" data-setting-type="color">
                         <input type="text" value="${setting.setting_value}" 
                                 class="flex-1 border border-gray-300 rounded text-sm"
-                                onchange="document.getElementById('${fieldId}').value = this.value">
+                                data-action="sync-to" data-target-id="${fieldId}">
                     </div>
                     <p class="text-xs text-gray-500">${setting.description}</p>
                 </div>
@@ -16054,7 +15978,7 @@ function displayCartButtonTexts(texts) {
                 <span class="bg-green-100 text-green-800 text-xs rounded-full">#${index + 1}</span>
                 <span class="font-medium text-gray-800">"${text}"</span>
             </div>
-            <button onclick="removeCartButtonText(${index})" class="text-red-500 hover:text-red-700">
+            <button data-action="cart-text-remove" data-index="${index}" class="text-red-500 hover:text-red-700">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -16188,11 +16112,11 @@ async function saveCartButtonTexts(texts) {
 
 
 <!-- Cart Button Text Modal -->
-<div id="cartButtonTextModal" class="admin-modal-overlay hidden" onclick="closeCartButtonTextModal()">
+<div id="cartButtonTextModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">🛒 Cart Button Text Variations</h2>
-            <button onclick="closeCartButtonTextModal()" class="modal-close">&times;</button>
+            <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -16218,8 +16142,8 @@ async function saveCartButtonTexts(texts) {
                 <div class="flex gap-2">
                     <input type="text" id="newCartButtonText" placeholder="Enter new cart button text..." 
                            class="flex-1 border border-gray-300 rounded-lg text-sm" 
-                           maxlength="50" onkeypress="if(event.key==='Enter') addCartButtonText()">
-                    <button onclick="addCartButtonText()" class="bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium">
+                           maxlength="50">
+                    <button data-action="cart-text-add" class="bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium">
                         Add Text
                     </button>
                 </div>
@@ -16229,36 +16153,36 @@ async function saveCartButtonTexts(texts) {
             <div class="border-t">
                 <h4 class="font-semibold text-gray-800">Quick Add Popular Options:</h4>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    <button onclick="addQuickCartText('Shop This Now')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Shop This Now</button>
-                    <button onclick="addQuickCartText('Take It Home')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Take It Home</button>
-                    <button onclick="addQuickCartText('Make It Mine')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Make It Mine</button>
-                    <button onclick="addQuickCartText('I Want This')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">I Want This</button>
-                    <button onclick="addQuickCartText('Grab It Now')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Grab It Now</button>
-                    <button onclick="addQuickCartText('Choose This One')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Choose This One</button>
+                    <button data-action="cart-text-quick-add" data-text="Shop This Now" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Shop This Now</button>
+                    <button data-action="cart-text-quick-add" data-text="Take It Home" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Take It Home</button>
+                    <button data-action="cart-text-quick-add" data-text="Make It Mine" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Make It Mine</button>
+                    <button data-action="cart-text-quick-add" data-text="I Want This" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">I Want This</button>
+                    <button data-action="cart-text-quick-add" data-text="Grab It Now" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Grab It Now</button>
+                    <button data-action="cart-text-quick-add" data-text="Choose This One" class="bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm">Choose This One</button>
                 </div>
             </div>
         </div>
         
         <div class="modal-footer">
-            <button onclick="resetToDefaults()" class="btn btn-secondary">Reset to Defaults</button>
-            <button onclick="closeCartButtonTextModal()" class="btn btn-primary">Close</button>
+            <button data-action="cart-text-reset" class="btn btn-secondary">Reset to Defaults</button>
+            <button data-action="close-admin-modal" class="btn btn-primary">Close</button>
         </div>
     </div>
 </div>
 
 <!-- Sales Admin Modal -->
-<div id="salesAdminModal" class="admin-modal-overlay hidden" onclick="closeSalesAdminModal()">
+<div id="salesAdminModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header" >
             <h2 class="modal-title">💰 Sales Administration</h2>
-            <button onclick="closeSalesAdminModal()" class="modal-close">&times;</button>
+            <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
         <div class="modal-body">
             <!-- Sales List Header -->
             <div class="flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-gray-800">Manage Sales & Promotions</h3>
-                <button onclick="openCreateSaleModal()" class="btn btn-primary">
+                <button data-action="open-create-sale-modal" class="btn btn-primary">
                     ➕ Create New Sale
                 </button>
             </div>
@@ -16272,11 +16196,11 @@ async function saveCartButtonTexts(texts) {
 </div>
 
 <!-- Create/Edit Sale Modal -->
-<div id="createSaleModal" class="admin-modal-overlay hidden" onclick="closeCreateSaleModal()">
+<div id="createSaleModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section">
         <div class="admin-modal-header section-header" >
             <h2 id="createSaleModalTitle" class="modal-title">🎯 Create New Sale</h2>
-            <button onclick="closeCreateSaleModal()" class="modal-close">&times;</button>
+            <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
         <form id="saleForm" class="modal-body space-y-6">
@@ -16329,10 +16253,10 @@ async function saveCartButtonTexts(texts) {
                 
                 <!-- Quick Selection Controls -->
                 <div class="flex items-center space-x-4">
-                    <button type="button" onclick="selectAllItems()" class="text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded border border-green-300">
+                    <button type="button" data-action="sale-select-all" class="text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded border border-green-300">
                         ✓ Select All
                     </button>
-                    <button type="button" onclick="deselectAllItems()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 rounded border border-gray-300">
+                    <button type="button" data-action="sale-deselect-all" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 rounded border border-gray-300">
                         ✗ Deselect All
                     </button>
                 </div>
@@ -16367,7 +16291,7 @@ async function saveCartButtonTexts(texts) {
             
             <!-- Form Actions -->
             <div class="modal-footer">
-                <button type="button" onclick="closeCreateSaleModal()" class="btn btn-secondary">Cancel</button>
+                <button type="button" data-action="close-admin-modal" class="btn btn-secondary">Cancel</button>
                 <button type="submit" class="btn btn-primary">
                     <span id="submitButtonText">Create Sale</span>
                 </button>
@@ -16377,7 +16301,7 @@ async function saveCartButtonTexts(texts) {
 </div>
 
 <!-- Dashboard Configuration Modal -->
-<div id="dashboardConfigModal" class="admin-modal-overlay dashboard-modal" class="hidden" onclick="closeDashboardConfigModal()">
+<div id="dashboardConfigModal" class="admin-modal-overlay dashboard-modal" class="hidden" data-action="overlay-close">
     <div class="admin-modal-content dashboard-config-modal">
         <!-- Header -->
         <div class="admin-modal-header section-header">
@@ -16391,7 +16315,7 @@ async function saveCartButtonTexts(texts) {
                     <div id="dashboardAutoSaveIndicator" class="bg-blue-100 text-blue-700 rounded-full text-sm hidden">
                         💾 Auto-saving...
                     </div>
-                    <button onclick="closeDashboardConfigModal()" class="modal-close">&times;</button>
+                    <button class="modal-close" data-action="close-admin-modal">&times;</button>
                 </div>
             </div>
         </div>
@@ -16437,11 +16361,11 @@ async function saveCartButtonTexts(texts) {
 </div>
 
 <!-- Categories Modal -->
-<div id="categoriesModal" class="admin-modal-overlay hidden" onclick="closeCategoriesModal()">
+<div id="categoriesModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content categories-modal">
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📂 Category Management</h2>
-            <button onclick="closeCategoriesModal()" class="modal-close">&times;</button>
+            <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -16455,11 +16379,11 @@ async function saveCartButtonTexts(texts) {
 <!-- Database Tables Modal -->
 <!-- Fourth CSS block removed - styles moved to button-styles.css -->
 
-<div id="databaseTablesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" class="hidden">
+<div id="databaseTablesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" class="hidden" data-action="overlay-close">
     <div class="bg-white shadow-xl w-full h-full overflow-hidden">
         <div class="flex justify-between items-center border-b bg-gray-100">
             <h2 class="text-xl font-semibold text-gray-800">🗄️ Database Tables Management</h2>
-            <button onclick="closeDatabaseTablesModal()" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded">
+            <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -16480,13 +16404,13 @@ async function saveCartButtonTexts(texts) {
                 <!-- Tab Navigation -->
                 <div class="border-b bg-gray-100">
                     <nav class="flex space-x-1">
-                        <button onclick="switchDatabaseTab('data')" class="db-tab font-medium text-sm rounded-t-lg bg-white border-t border-l border-r border-gray-300 text-blue-600 shadow-sm">
+                        <button data-action="db-tab" data-tab="data" class="db-tab font-medium text-sm rounded-t-lg bg-white border-t border-l border-r border-gray-300 text-blue-600 shadow-sm">
                             Table Data
                         </button>
-                        <button onclick="switchDatabaseTab('query')" class="db-tab font-medium text-sm rounded-t-lg bg-gray-50 border-t border-l border-r border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800">
+                        <button data-action="db-tab" data-tab="query" class="db-tab font-medium text-sm rounded-t-lg bg-gray-50 border-t border-l border-r border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                             Query Tool
                         </button>
-                        <button onclick="switchDatabaseTab('docs')" class="db-tab font-medium text-sm rounded-t-lg bg-gray-50 border-t border-l border-r border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800">
+                        <button data-action="db-tab" data-tab="docs" class="db-tab font-medium text-sm rounded-t-lg bg-gray-50 border-t border-l border-r border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800">
                             Documentation
                         </button>
                     </nav>
@@ -16521,7 +16445,7 @@ async function saveCartButtonTexts(texts) {
                                 <h4 class="font-medium text-gray-700">Table Data</h4>
                                 <div class="flex items-center space-x-2 text-sm">
                                     <span class="text-gray-600">Rows per page:</span>
-                                    <select id="rowsPerPage" onchange="changeRowsPerPage()" class="border border-gray-300 rounded">
+                                    <select id="rowsPerPage" data-action="db-change-rows-per-page" class="border border-gray-300 rounded">
                                         <option value="25">25</option>
                                         <option value="50" selected>50</option>
                                         <option value="100">100</option>
@@ -16542,11 +16466,11 @@ async function saveCartButtonTexts(texts) {
                                     Showing <span id="showingStart">0</span> to <span id="showingEnd">0</span> of <span id="totalRows">0</span> rows
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                    <button id="prevPage" onclick="previousPage()" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <button id="prevPage" data-action="db-prev-page" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                                         Previous
                                     </button>
                                     <span id="pageInfo" class="text-sm text-gray-600">Page 1 of 1</span>
-                                    <button id="nextPage" onclick="nextPage()" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <button id="nextPage" data-action="db-next-page" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                                         Next
                                     </button>
                                 </div>
@@ -16566,7 +16490,7 @@ async function saveCartButtonTexts(texts) {
                                     placeholder="SELECT * FROM items WHERE category = 'T-Shirts' LIMIT 10;"></textarea>
                             </div>
                             
-                            <button onclick="executeQuery()" class="bg-blue-500 hover:bg-blue-600 text-white rounded">
+                            <button data-action="db-execute-query" class="bg-blue-500 hover:bg-blue-600 text-white rounded btn--db btn--db-query-execute">
                                 Execute Query
                             </button>
                         </div>
@@ -16697,17 +16621,17 @@ function displaySalesList(sales) {
                             ${sale.status.toUpperCase()}
                         </span>
                         <div class="flex space-x-1">
-                            <button onclick="openCreateSaleModal(${sale.id})" class="text-blue-600 hover:bg-blue-50 rounded" title="Edit Sale">
+                            <button data-action="sale-edit" data-sale-id="${sale.id}" class="text-blue-600 hover:bg-blue-50 rounded" title="Edit Sale">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </button>
-                            <button onclick="toggleSaleActive(${sale.id})" class="text-yellow-600 hover:bg-yellow-50 rounded" title="Toggle Active">
+                            <button data-action="sale-toggle-active" data-sale-id="${sale.id}" class="text-yellow-600 hover:bg-yellow-50 rounded" title="Toggle Active">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path>
                                 </svg>
                             </button>
-                            <button onclick="deleteSale(${sale.id})" class="text-red-600 hover:bg-red-50 rounded" title="Delete Sale">
+                            <button data-action="sale-delete" data-sale-id="${sale.id}" class="text-red-600 hover:bg-red-50 rounded" title="Delete Sale">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -16768,7 +16692,7 @@ function displayItemsList(items, selectedItems = []) {
     // Render selected items
     selectedItemsList.innerHTML = selectedItemsData.length > 0 ? selectedItemsData.map(item => `
         <div class="bg-white rounded border border-green-200 hover:border-green-300 transition-colors cursor-pointer" 
-             onclick="toggleItemSelection('${item.sku}', false)">
+             data-action="toggle-item-selection" data-sku="${item.sku}" data-select="false">
             <div class="flex items-center justify-between">
                 <div>
                     <div class="font-medium text-gray-900">${item.name}</div>
@@ -16784,7 +16708,7 @@ function displayItemsList(items, selectedItems = []) {
     // Render available items
     availableItemsList.innerHTML = availableItemsData.length > 0 ? availableItemsData.map(item => `
         <div class="bg-white rounded border border-orange-200 hover:border-orange-300 transition-colors cursor-pointer" 
-             onclick="toggleItemSelection('${item.sku}', true)">
+             data-action="toggle-item-selection" data-sku="${item.sku}" data-select="true">
             <div class="flex items-center justify-between">
                 <div>
                     <div class="font-medium text-gray-900">${item.name}</div>
@@ -17188,7 +17112,7 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
                         <tr>
                             ${columns.map(col => `
                                 <th class="text-left cursor-pointer hover:bg-gray-100 border-b border-gray-200" 
-                                    onclick="sortTableData('${tableName}', '${col}', '${orderDir === 'ASC' ? 'DESC' : 'ASC'}')">
+                                    data-action="db-sort" data-table="${tableName}" data-col="${col}" data-order="${orderDir === 'ASC' ? 'DESC' : 'ASC'}">
                                     <div class="flex items-center space-x-1">
                                         <span class="font-medium text-gray-900">${col}</span>
                                         <span class="text-gray-400">
@@ -17212,11 +17136,11 @@ async function loadTableData(tableName, limit = 50, offset = 0, orderBy = '', or
                                                data-column="${col}" 
                                                data-row-index="${rowIndex}" 
                                                data-original-value="${value || ''}"
-                                               onclick="startCellEdit(this, '${tableName}')">
+                                               data-action="db-start-cell-edit" data-table="${tableName}">
                                         <div>${displayValue}</div>
                                         <div class="cell-actions">
-                                            <button class="save-btn" onclick="saveCellEdit(this, event)" title="Save">✓</button>
-                                            <button class="cancel-btn" onclick="cancelCellEdit(this, event)" title="Cancel">✕</button>
+                                            <button class="save-btn" data-action="db-save-cell-edit" title="Save">✓</button>
+                                            <button class="cancel-btn" data-action="db-cancel-cell-edit" title="Cancel">✕</button>
                                         </div>
                                     </td>`;
                                 }).join('')}
@@ -17724,11 +17648,11 @@ function renderHelpHintsTable() {
             <td class="text-sm text-gray-500">${new Date(hint.updated_at).toLocaleDateString()}</td>
             <td class="text-sm">
                 <div class="flex space-x-1">
-                    <button onclick="editHelpHint(${hint.id})" class="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
-                    <button onclick="toggleHelpHint(${hint.id})" class="text-${hint.is_active ? 'orange' : 'green'}-600 hover:text-${hint.is_active ? 'orange' : 'green'}-800 text-xs">
-                        ${hint.is_active ? 'Disable' : 'Enable'}
+                    <button data-action="help-edit-hint" data-id="${hint.id}" class="text-blue-600 hover:text-blue-800 text-xs">Edit</button>
+                    <button data-action="help-toggle-hint" data-id="${hint.id}" class="text-${hint.is_active ? 'orange' : 'green'}-600 hover:text-${hint.is_active ? 'orange' : 'green'}-800 text-xs">
+                        ${hint.is_active ? 'Deactivate' : 'Activate'}
                     </button>
-                    <button onclick="deleteHelpHint(${hint.id})" class="text-red-600 hover:text-red-800 text-xs">Delete</button>
+                    <button data-action="help-delete-hint" data-id="${hint.id}" class="text-red-600 hover:text-red-800 text-xs">Delete</button>
                 </div>
             </td>
         `;
@@ -18059,7 +17983,7 @@ async function toggleGlobalTooltips() {
 </script>
 
 <!-- Help Hints Management Modal -->
-<div id="helpHintsModal" class="admin-modal-overlay hidden"  onclick="closeHelpHintsModal()">
+<div id="helpHintsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <!-- Modal Header -->
         <div class="flex justify-between items-center border-b border-gray-200 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
@@ -18067,7 +17991,7 @@ async function toggleGlobalTooltips() {
                 <h2 class="text-2xl font-bold">💡 Help Hints Management</h2>
                 <p class="text-purple-100 text-sm">Manage hover tooltips for admin interface elements</p>
             </div>
-            <button onclick="closeHelpHintsModal()" class="text-white hover:text-purple-200 text-3xl font-bold">&times;</button>
+            <button class="text-white hover:text-purple-200 text-3xl font-bold" data-action="close-admin-modal">&times;</button>
         </div>
 
         <!-- Global Settings -->
@@ -18080,7 +18004,7 @@ async function toggleGlobalTooltips() {
                 <div class="flex items-center space-x-3">
                     <span class="text-sm font-medium text-gray-700">Tooltips Globally:</span>
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="globalTooltipsEnabled" class="sr-only peer" onchange="toggleGlobalTooltips()">
+                        <input type="checkbox" id="globalTooltipsEnabled" class="sr-only peer" data-action="help-toggle-global-tooltips">
                         <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
                     <span id="globalTooltipsStatus" class="text-sm font-medium text-gray-700">Enabled</span>
@@ -18116,7 +18040,7 @@ async function toggleGlobalTooltips() {
                 <!-- Page Filter -->
                 <div class="flex items-center space-x-2">
                     <label for="pageContextFilter" class="text-sm font-medium text-gray-700">Filter by Page:</label>
-                    <select id="pageContextFilter" onchange="filterHelpHints()" class="border border-gray-300 rounded-md text-sm">
+                    <select id="pageContextFilter" data-action="help-filter-hints" class="border border-gray-300 rounded-md text-sm">
                         <option value="">All Pages</option>
                     </select>
                 </div>
@@ -18128,13 +18052,13 @@ async function toggleGlobalTooltips() {
                         <option value="activate">Activate All</option>
                         <option value="deactivate">Deactivate All</option>
                     </select>
-                    <button onclick="bulkToggleHints()" class="bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm">
+                    <button data-action="help-bulk-apply" class="bg-orange-500 hover:bg-orange-600 text-white rounded-md text-sm">
                         Apply
                     </button>
                 </div>
 
                 <!-- Create New -->
-                <button onclick="showHelpHintForm()" class="bg-green-500 hover:bg-green-600 text-white rounded-md text-sm flex items-center">
+                <button data-action="help-show-form" class="bg-green-500 hover:bg-green-600 text-white rounded-md text-sm flex items-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
@@ -18143,12 +18067,12 @@ async function toggleGlobalTooltips() {
 
                 <!-- Import/Export -->
                 <div class="flex items-center space-x-2">
-                    <button onclick="exportHelpHints()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
+                    <button data-action="help-export" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
                         Export
                     </button>
                     <div class="relative">
-                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importHelpHints()">
-                        <button onclick="document.getElementById('importFile').click()" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded-md text-sm">
+                        <input type="file" id="importFile" accept=".json" class="hidden" data-action="help-import-file">
+                        <button data-action="help-trigger-import" class="bg-indigo-500 hover:bg-indigo-600 text-white rounded-md text-sm">
                             Import
                         </button>
                     </div>
@@ -18188,14 +18112,14 @@ async function toggleGlobalTooltips() {
                 <div class="">
                     <div class="flex justify-between items-center">
                         <h3 id="formTitle" class="text-lg font-semibold text-gray-800">Create New Help Hint</h3>
-                        <button onclick="hideHelpHintForm()" class="text-gray-500 hover:text-gray-700">
+                        <button data-action="help-hide-form" class="text-gray-500 hover:text-gray-700">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
 
-                    <form onsubmit="event.preventDefault(); saveHelpHint();" class="space-y-4">
+                    <form class="space-y-4" data-action="help-save-form">
                         <!-- Element ID -->
                         <div>
                             <label for="hintElementId" class="block text-sm font-medium text-gray-700">
@@ -18260,7 +18184,7 @@ async function toggleGlobalTooltips() {
                             <button type="submit" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white rounded-md text-sm font-medium">
                                 Save Hint
                             </button>
-                            <button type="button" onclick="hideHelpHintForm()" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md text-sm font-medium">
+                            <button type="button" data-action="help-hide-form" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-md text-sm font-medium">
                                 Cancel
                             </button>
                         </div>
@@ -18285,11 +18209,11 @@ async function toggleGlobalTooltips() {
 
 
 <!-- Website Logs Modal -->
-<div id="websiteLogsModal" class="modal-overlay" class="hidden">
+<div id="websiteLogsModal" class="modal-overlay" class="hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>Website Logs Management</h2>
-            <button onclick="closeWebsiteLogsModal()" class="modal-close-btn">×</button>
+            <button class="modal-close-btn" data-action="close-admin-modal">×</button>
         </div>
         
         <!-- Global Search -->
@@ -18310,7 +18234,7 @@ async function toggleGlobalTooltips() {
                         <option value="database">Database Logs</option>
                         <option value="files">File Logs</option>
                     </select>
-                    <button onclick="searchAllLogs()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
+                    <button data-action="logs-search" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
                         Search
                     </button>
                 </div>
@@ -18321,7 +18245,7 @@ async function toggleGlobalTooltips() {
         <div class="bg-blue-50 border-b border-blue-200">
             <div class="flex items-start space-x-3">
                 <div class="flex-shrink-0">
-                    <svg class="w-5 h-5 text-blue-500 mt-0\.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
@@ -18364,7 +18288,7 @@ async function toggleGlobalTooltips() {
                         <div class="flex items-center space-x-3">
                             <div class="flex items-center space-x-2">
                                 <label for="logLimit" class="text-sm text-gray-600">Show:</label>
-                                <select id="logLimit" onchange="refreshCurrentLog()" class="border border-gray-300 rounded text-sm">
+                                <select id="logLimit" data-action="logs-refresh-current" class="border border-gray-300 rounded text-sm">
                                     <option value="50">50 entries</option>
                                     <option value="100" selected>100 entries</option>
                                     <option value="250">250 entries</option>
@@ -18372,25 +18296,25 @@ async function toggleGlobalTooltips() {
                                 </select>
                             </div>
                             <div class="flex items-center space-x-1">
-                                <button onclick="refreshCurrentLog()" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
+                                <button data-action="logs-refresh" class="bg-blue-500 hover:bg-blue-600 text-white rounded text-sm">
                                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                     </svg>
                                     Refresh
                                 </button>
-                                <button onclick="downloadCurrentLog()" id="downloadLogBtn" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm" class="hidden">
+                                <button data-action="logs-download" id="downloadLogBtn" class="bg-green-500 hover:bg-green-600 text-white rounded text-sm" class="hidden">
                                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                     </svg>
                                     Download
                                 </button>
-                                <button onclick="clearCurrentLog()" id="clearLogBtn" class="bg-red-500 hover:bg-red-600 text-white rounded text-sm" class="hidden">
+                                <button data-action="logs-clear" id="clearLogBtn" class="bg-red-500 hover:bg-red-600 text-white rounded text-sm" class="hidden">
                                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
                                     Clear
                                 </button>
-                                <button onclick="cleanupOldLogs()" id="cleanupOldLogsBtn" class="bg-orange-500 hover:bg-orange-600 text-white rounded text-sm">
+                                <button data-action="logs-cleanup" id="cleanupOldLogsBtn" class="bg-orange-500 hover:bg-orange-600 text-white rounded text-sm">
                                     <svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -18429,10 +18353,10 @@ async function toggleGlobalTooltips() {
                             <span id="logEntriesInfo">Showing 0 - 0 of 0 entries</span>
                         </div>
                         <div class="flex space-x-2">
-                            <button onclick="previousLogPage()" id="prevPageBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                            <button data-action="logs-prev-page" id="prevPageBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
                                 Previous
                             </button>
-                            <button onclick="nextLogPage()" id="nextPageBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                            <button data-action="logs-next-page" id="nextPageBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
                                 Next
                             </button>
                         </div>
@@ -18446,7 +18370,7 @@ async function toggleGlobalTooltips() {
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2>Search Results</h2>
-                    <button onclick="closeSearchResults()" class="modal-close-btn">×</button>
+                    <button class="modal-close-btn" data-action="close-admin-modal">×</button>
                 </div>
                 <div class="">
                     <div id="searchResultsContent">
@@ -18463,7 +18387,7 @@ async function toggleGlobalTooltips() {
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>📚 Help Documentation</h2>
-            <button onclick="closeHelpDocumentationModal()" class="modal-close-btn">×</button>
+            <button class="modal-close-btn" data-action="close-admin-modal">×</button>
         </div>
         
         <!-- Search and Navigation Bar -->
@@ -18482,10 +18406,10 @@ async function toggleGlobalTooltips() {
                     <select id="categoryFilter" class="border border-gray-300 rounded-md text-sm">
                         <option value="all">All Categories</option>
                     </select>
-                    <button onclick="searchDocumentation()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
+                    <button data-action="docs-search" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
                         Search
                     </button>
-                    <button onclick="generateGlossary()" class="bg-green-500 hover:bg-green-600 text-white rounded-md text-sm">
+                    <button data-action="docs-generate-glossary" class="bg-green-500 hover:bg-green-600 text-white rounded-md text-sm">
                         Generate Glossary
                     </button>
                 </div>
@@ -18543,10 +18467,10 @@ async function toggleGlobalTooltips() {
                             <span id="documentInfo">Document information will appear here</span>
                         </div>
                         <div class="flex space-x-2">
-                            <button onclick="previousDocument()" id="prevDocBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                            <button data-action="docs-prev-doc" id="prevDocBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
                                 ← Previous
                             </button>
-                            <button onclick="nextDocument()" id="nextDocBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
+                            <button data-action="docs-next-doc" id="nextDocBtn" class="bg-white border border-gray-300 rounded text-sm hover:bg-gray-50" disabled>
                                 Next →
                             </button>
                         </div>
@@ -18556,11 +18480,11 @@ async function toggleGlobalTooltips() {
         </div>
         
         <!-- Search Results Modal -->
-        <div id="searchResultsModal" class="modal-overlay" class="hidden">
+        <div id="searchResultsModal" class="modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2>🔍 Search Results</h2>
-                    <button onclick="closeSearchResults()" class="modal-close-btn">×</button>
+                    <button class="modal-close-btn" data-action="close-admin-modal">×</button>
                 </div>
                 <div class="">
                     <div id="searchResultsContent">
@@ -18571,11 +18495,11 @@ async function toggleGlobalTooltips() {
         </div>
         
         <!-- Glossary Modal -->
-        <div id="glossaryModal" class="modal-overlay" class="hidden">
+        <div id="glossaryModal" class="modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2>📖 Documentation Glossary</h2>
-                    <button onclick="closeGlossaryModal()" class="modal-close-btn">×</button>
+                    <button class="modal-close-btn" data-action="close-admin-modal">×</button>
                 </div>
                 <div class="">
                     <div id="glossaryContent">
@@ -18588,11 +18512,11 @@ async function toggleGlobalTooltips() {
 </div>
 
 <!-- Documentation Hub Modal -->
-<div id="documentationHubModal" class="modal-overlay" class="hidden">
+<div id="documentationHubModal" class="modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>📚 Documentation Hub</h2>
-            <button onclick="closeDocumentationHubModal()" class="modal-close-btn">×</button>
+            <button class="modal-close-btn" data-action="close-admin-modal">×</button>
         </div>
         
         <div class="">
@@ -18614,7 +18538,7 @@ async function toggleGlobalTooltips() {
                             <p class="text-sm text-gray-600">
                                 Comprehensive system overview, database schema, architecture documentation, and technical references for WhimsicalFrog.
                             </p>
-                            <button onclick="openSystemDocumentationModal(); closeDocumentationHubModal();" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
+                            <button data-action="open-system-documentation" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm">
                                 View System Reference
                             </button>
                         </div>
@@ -18634,7 +18558,7 @@ async function toggleGlobalTooltips() {
                             <p class="text-sm text-gray-600">
                                 Interactive documentation system with search functionality, auto-generated glossaries, and comprehensive guides for all features.
                             </p>
-                            <button onclick="openHelpDocumentationModal(); closeDocumentationHubModal();" class="bg-green-500 hover:bg-green-600 text-white rounded-md text-sm">
+                            <button data-action="open-help-documentation" class="bg-green-500 hover:bg-green-600 text-white rounded-md text-sm">
                                 Browse Help Documentation
                             </button>
                         </div>
@@ -18645,11 +18569,11 @@ async function toggleGlobalTooltips() {
                 <div class="border border-gray-200 rounded-lg bg-gray-50">
                     <h3 class="text-lg font-medium text-gray-900">Quick Access</h3>
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="openSystemConfigModal(); closeDocumentationHubModal();" class="text-left bg-white border border-gray-200 rounded hover:border-blue-500 transition-colors">
+                        <button data-action="quick-open-system-config" class="text-left bg-white border border-gray-200 rounded hover:border-blue-500 transition-colors">
                             <div class="text-sm font-medium text-gray-900">System Config</div>
                             <div class="text-xs text-gray-500">Technical settings</div>
                         </button>
-                        <button onclick="openDatabaseTablesModal(); closeDocumentationHubModal();" class="text-left bg-white border border-gray-200 rounded hover:border-blue-500 transition-colors">
+                        <button data-action="open-database-tables" class="text-left bg-white border border-gray-200 rounded hover:border-blue-500 transition-colors">
                             <div class="text-sm font-medium text-gray-900">Database Tables</div>
                             <div class="text-xs text-gray-500">Database structure</div>
                         </button>
@@ -18659,17 +18583,17 @@ async function toggleGlobalTooltips() {
         </div>
         
         <div class="modal-footer">
-            <button onclick="closeDocumentationHubModal()" class="btn btn-secondary">Close</button>
+            <button class="btn btn-secondary" data-action="close-admin-modal">Close</button>
         </div>
     </div>
 </div>
 
 <!-- Square Settings Modal -->
-<div id="squareSettingsModal" class="modal-overlay" class="hidden" onclick="closeSquareSettingsModal()">
+<div id="squareSettingsModal" class="modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>Square Integration Settings</h2>
-            <button onclick="closeSquareSettingsModal()" class="close-button">×</button>
+            <button data-action="close-admin-modal" class="close-button">×</button>
         </div>
         
         <div class="modal-body">
@@ -18760,7 +18684,7 @@ async function toggleGlobalTooltips() {
 
                 <!-- Test Connection Button -->
                 <div class="border-t">
-                    <button type="button" onclick="testSquareConnection()" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md">
+                    <button type="button" data-action="square-test-connection" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md">
                         Test Connection
                     </button>
                     <span id="connectionResult" class="text-sm"></span>
@@ -18769,11 +18693,11 @@ async function toggleGlobalTooltips() {
         </div>
 
         <div class="modal-footer">
-            <button onclick="saveSquareSettings()" class="btn btn-primary">Save Settings</button>
-            <button onclick="syncItemsToSquare()" class="bg-green-500 hover:bg-green-600 text-white rounded-md">
+            <button data-action="square-save-settings" class="btn btn-primary">Save Settings</button>
+            <button data-action="square-sync-items" class="bg-green-500 hover:bg-green-600 text-white rounded-md">
                 Sync Items Now
             </button>
-            <button onclick="closeSquareSettingsModal()" class="btn btn-secondary">Cancel</button>
+            <button data-action="close-admin-modal" class="btn btn-secondary">Cancel</button>
         </div>
     </div>
 </div>
@@ -18925,25 +18849,25 @@ function updateConnectionStatus(isConnected, lastSync) {
 </script>
 
 <!-- Receipt Settings Modal -->
-<div id="receiptSettingsModal" class="modal-overlay" class="hidden" onclick="closeReceiptSettingsModal()">
+<div id="receiptSettingsModal" class="modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Receipt Message Settings</h2>
-            <button onclick="closeReceiptSettingsModal()" class="modal-close">×</button>
+            <button data-action="close-admin-modal" class="modal-close">×</button>
         </div>
         
         <!-- Tab Navigation at Top -->
         <div class="admin-tab-bar" >
-            <button class="admin-tab active" data-tab="shipping" onclick="switchReceiptTab('shipping')">
+            <button class="admin-tab active" data-tab="shipping" data-action="receipt-tab">
                 🚚 Shipping Methods
             </button>
-            <button class="admin-tab" data-tab="items" onclick="switchReceiptTab('items')">
+            <button class="admin-tab" data-tab="items" data-action="receipt-tab">
                 📦 Item Count
             </button>
-            <button class="admin-tab" data-tab="categories" onclick="switchReceiptTab('categories')">
+            <button class="admin-tab" data-tab="categories" data-action="receipt-tab">
                 🏷️ Categories
             </button>
-            <button class="admin-tab" data-tab="default" onclick="switchReceiptTab('default')">
+            <button class="admin-tab" data-tab="default" data-action="receipt-tab">
                 📄 Default
             </button>
         </div>
@@ -18965,7 +18889,7 @@ function updateConnectionStatus(isConnected, lastSync) {
             <div id="shippingTab" class="receipt-tab-content active">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-semibold text-gray-800">🚚 Shipping Method Messages</h3>
-                    <button onclick="addShippingMessage()" class="btn-primary btn-sm">
+                    <button data-action="receipt-add-shipping" class="btn-primary btn-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -18981,7 +18905,7 @@ function updateConnectionStatus(isConnected, lastSync) {
             <div id="itemsTab" class="receipt-tab-content">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-semibold text-gray-800">📦 Item Count Messages</h3>
-                    <button onclick="addItemCountMessage()" class="btn-primary btn-sm">
+                    <button data-action="receipt-add-item-count" class="btn-primary btn-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -18997,7 +18921,7 @@ function updateConnectionStatus(isConnected, lastSync) {
             <div id="categoriesTab" class="receipt-tab-content">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-semibold text-gray-800">🏷️ Category-Specific Messages</h3>
-                    <button onclick="addCategoryMessage()" class="btn-primary btn-sm">
+                    <button data-action="receipt-add-category" class="btn-primary btn-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
@@ -19026,13 +18950,13 @@ function updateConnectionStatus(isConnected, lastSync) {
         </div>
         
         <div class="modal-footer">
-            <button onclick="saveReceiptSettings()" class="btn btn-primary">
+            <button data-action="receipt-save-settings" class="btn btn-primary">
                 💾 Save Settings
             </button>
-            <button onclick="initializeReceiptDefaults()" class="btn btn-info">
+            <button data-action="receipt-init-defaults" class="btn btn-info">
                 🔄 Initialize Defaults
             </button>
-            <button onclick="closeReceiptSettingsModal()" class="btn btn-secondary">
+            <button data-action="close-admin-modal" class="btn btn-secondary">
                 Cancel
             </button>
         </div>
@@ -19131,7 +19055,7 @@ function createMessageHTML(message, type) {
                     <span class="font-medium text-gray-800">${message.condition_value}</span>
                     ${aiLabel}
                 </div>
-                <button onclick="deleteReceiptMessage(${message.id})" class="text-red-500 hover:text-red-700 text-sm" title="Delete Message">
+                <button class="text-red-500 hover:text-red-700 text-sm" title="Delete Message" data-action="receipt-delete-message" data-message-id="${message.id}">
                     🗑️
                 </button>
             </div>
@@ -19141,20 +19065,20 @@ function createMessageHTML(message, type) {
                     <label class="block text-xs font-medium text-gray-600">Title:</label>
                     <input type="text" class="w-full text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500" 
                            value="${message.message_title}" 
-                           onchange="updateMessageField(${message.id}, 'message_title', this.value)"
+                           data-action="receipt-update-field" data-message-id="${message.id}" data-field="message_title"
                            placeholder="Enter title...">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-600">Message:</label>
                     <textarea class="w-full text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-500" 
                               rows="3"
-                              onchange="updateMessageField(${message.id}, 'message_content', this.value)"
+                              data-action="receipt-update-field" data-message-id="${message.id}" data-field="message_content"
                               placeholder="Enter message content...">${message.message_content}</textarea>
                 </div>
             </div>
             
             <div class="flex justify-end">
-                <button onclick="generateAIMessage(${message.id}, '${type}')" class="btn-secondary btn-sm">
+                <button class="btn-secondary btn-sm" data-action="receipt-generate-ai" data-message-id="${message.id}" data-type="${type}">
                     🤖 Generate with AI
                 </button>
             </div>
@@ -19354,18 +19278,18 @@ function openGlobalColorSizeModal() {
 
 function createGlobalColorSizeModal() {
     const modalHtml = `
-        <div id="globalColorSizeModal" class="admin-modal-overlay hidden" onclick="closeGlobalColorSizeModal()">
+        <div id="globalColorSizeModal" class="admin-modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content">
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">👥 Gender, Size & Color Management</h2>
-                    <button onclick="closeGlobalColorSizeModal()" class="modal-close">&times;</button>
+                    <button class="modal-close" data-action="close-modal" data-target="#globalColorSizeModal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="tabs-container">
                         <div class="tab-buttons" >
-                            <button class="tab-button active" onclick="switchGlobalTab('genders')" >👥 Global Genders</button>
-                            <button class="tab-button" onclick="switchGlobalTab('colors')" >🎨 Global Colors</button>
-                            <button class="tab-button" onclick="switchGlobalTab('sizes')" >📏 Global Sizes</button>
+                            <button class="tab-button active" data-action="switch-global-tab" data-tab="genders" >👥 Global Genders</button>
+                            <button class="tab-button" data-action="switch-global-tab" data-tab="colors" >🎨 Global Colors</button>
+                            <button class="tab-button" data-action="switch-global-tab" data-tab="sizes" >📏 Global Sizes</button>
                         </div>
                         
                         <!-- Global Genders Tab -->
@@ -19374,7 +19298,7 @@ function createGlobalColorSizeModal() {
                             <!-- Add Gender Form -->
                             <div id="addGenderForm" >
                                 <h4 >Add New Gender</h4>
-                                <form onsubmit="saveGlobalGender(event)" >
+                                <form data-action="save-global-gender" >
                                     <div class="form-group">
                                         <label >Gender Name</label>
                                         <input type="text" id="newGenderName" placeholder="e.g., Unisex, Men, Women" required >
@@ -19389,13 +19313,13 @@ function createGlobalColorSizeModal() {
                                     </div>
                                     <div class="form-actions" >
                                         <button type="submit" class="btn btn-success" >Save Gender</button>
-                                        <button type="button" onclick="cancelAddGender()" class="btn btn-secondary" >Cancel</button>
+                                        <button type="button" data-action="cancel-add-gender" class="btn btn-secondary" >Cancel</button>
                                     </div>
                                 </form>
                             </div>
                             
                                                          <!-- Add Gender Button -->
-                             <button onclick="showAddGenderForm()" class="btn btn-primary" >
+                             <button data-action="show-add-gender-form" class="btn btn-primary" >
                                  ➕ Add New Gender
                              </button>
                              
@@ -19409,17 +19333,17 @@ function createGlobalColorSizeModal() {
 
                             
                             <div class="action-bar" >
-                                <button onclick="showAddColorForm()" class="btn btn-primary" >
+                                <button data-action="show-add-color-form" class="btn btn-primary" >
                                     <i class="fas fa-plus"></i> Add New Color
                                 </button>
-                                <select id="colorCategoryFilter" onchange="filterColorsByCategory()" class="form-select" >
+                                <select id="colorCategoryFilter" data-action="filter-color-category" class="form-select" >
                                     <option value="">All Categories</option>
                                 </select>
                             </div>
                             
                             <div id="addColorForm" class="form-section" >
                                 <h4 >Add New Global Color</h4>
-                                <form onsubmit="saveGlobalColor(event)">
+                                <form data-action="save-global-color">
                                     <div class="form-grid" >
                                         <div class="form-group">
                                             <label >Color Name *</label>
@@ -19444,7 +19368,7 @@ function createGlobalColorSizeModal() {
                                     </div>
                                     <div class="form-actions" >
                                         <button type="submit" class="btn btn-success" >Save Color</button>
-                                        <button type="button" onclick="cancelAddColor()" class="btn btn-secondary" >Cancel</button>
+                                        <button type="button" data-action="cancel-add-color" class="btn btn-secondary" >Cancel</button>
                                     </div>
                                 </form>
                             </div>
@@ -19459,17 +19383,17 @@ function createGlobalColorSizeModal() {
 
                             
                             <div class="action-bar" >
-                                <button onclick="showAddSizeForm()" class="btn btn-primary" >
+                                <button data-action="show-add-size-form" class="btn btn-primary" >
                                     <i class="fas fa-plus"></i> Add New Size
                                 </button>
-                                <select id="sizeCategoryFilter" onchange="filterSizesByCategory()" class="form-select" >
+                                <select id="sizeCategoryFilter" data-action="filter-size-category" class="form-select" >
                                     <option value="">All Categories</option>
                                 </select>
                             </div>
                             
                             <div id="addSizeForm" class="form-section" >
                                 <h4 >Add New Global Size</h4>
-                                <form onsubmit="saveGlobalSize(event)">
+                                <form data-action="save-global-size">
                                     <div class="form-grid" >
                                         <div class="form-group">
                                             <label >Size Name *</label>
@@ -19494,7 +19418,7 @@ function createGlobalColorSizeModal() {
                                     </div>
                                     <div class="form-actions" >
                                         <button type="submit" class="btn btn-success" >Save Size</button>
-                                        <button type="button" onclick="cancelAddSize()" class="btn btn-secondary" >Cancel</button>
+                                        <button type="button" data-action="cancel-add-size" class="btn btn-secondary" >Cancel</button>
                                     </div>
                                 </form>
                             </div>
@@ -19683,8 +19607,8 @@ function displayGlobalColors(colors) {
                 <div class="grid-cell" >${color.description || '-'}</div>
                 <div class="grid-cell" >${color.display_order}</div>
                 <div class="grid-cell">
-                    <button onclick="editGlobalColor(${color.id})" class="btn btn-sm btn-outline" >Edit</button>
-                    <button onclick="deleteGlobalColor(${color.id})" class="btn btn-sm btn-danger" >Delete</button>
+                    <button data-action="edit-global-color" data-id="${color.id}" class="btn btn-sm btn-outline" >Edit</button>
+                    <button data-action="delete-global-color" data-id="${color.id}" class="btn btn-sm btn-danger" >Delete</button>
                 </div>
             </div>
         `;
@@ -19727,8 +19651,8 @@ function displayGlobalSizes(sizes) {
                 <div class="grid-cell" >${size.description || '-'}</div>
                 <div class="grid-cell" >${size.display_order}</div>
                 <div class="grid-cell">
-                    <button onclick="editGlobalSize(${size.id})" class="btn btn-sm btn-outline" >Edit</button>
-                    <button onclick="deleteGlobalSize(${size.id})" class="btn btn-sm btn-danger" >Delete</button>
+                    <button data-action="edit-global-size" data-id="${size.id}" class="btn btn-sm btn-outline" >Edit</button>
+                    <button data-action="delete-global-size" data-id="${size.id}" class="btn btn-sm btn-danger" >Delete</button>
                 </div>
             </div>
         `;
@@ -19934,8 +19858,8 @@ function displayGlobalGenders(genders) {
                 <div class="grid-cell" >${gender.description || '-'}</div>
                 <div class="grid-cell" >${gender.display_order}</div>
                 <div class="grid-cell">
-                    <button onclick="editGlobalGender(${gender.id})" class="btn btn-sm btn-outline" >Edit</button>
-                    <button onclick="deleteGlobalGender(${gender.id})" class="btn btn-sm btn-danger" >Delete</button>
+                    <button data-action="edit-global-gender" data-id="${gender.id}" class="btn btn-sm btn-outline" >Edit</button>
+                    <button data-action="delete-global-gender" data-id="${gender.id}" class="btn btn-sm btn-danger" >Delete</button>
                 </div>
             </div>
         `;
@@ -20986,123 +20910,16 @@ async function saveEmailTemplate() {
     }
 }
 
-function showEmailTemplatePreviewModal(preview) {
-    const modal = document.getElementById('emailTemplatePreviewModal');
-    const iframe = document.getElementById('emailPreviewFrame');
-    const subjectSpan = document.getElementById('previewSubject');
-    
-    subjectSpan.textContent = preview.subject;
-    
-    // Create a blob URL for the iframe content
-    const blob = new Blob([preview.html_content], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    iframe.src = url;
-    
-    modal.classList.remove('hidden');
-    
-    // Clean up the blob URL when modal is closed
-    setTimeout(() => {
-        URL.revokeObjectURL(url);
-    }, 1000);
-}
-
-function closeEmailTemplatePreviewModal() {
-    document.getElementById('emailTemplatePreviewModal').classList.add('hidden');
-}
-
-function showTemplateAssignmentModal(emailType, templates) {
-    const modal = document.getElementById('templateAssignmentModal');
-    const select = document.getElementById('assignmentTemplateSelect');
-    const typeSpan = document.getElementById('assignmentEmailType');
-    const descSpan = document.getElementById('assignmentEmailDescription');
-    
-    const emailTypeInfo = {
-        'order_confirmation': { name: 'Order Confirmation', description: 'Sent to customers when they place orders' },
-        'admin_notification': { name: 'Admin Notification', description: 'Sent to admins when new orders are received' },
-        'welcome': { name: 'Welcome Email', description: 'Sent to new users when they register' },
-        'password_reset': { name: 'Password Reset', description: 'Sent when users request password reset' }
-    };
-    
-    const typeInfo = emailTypeInfo[emailType] || { name: emailType, description: 'Custom email type' };
-    
-    typeSpan.textContent = typeInfo.name;
-    descSpan.textContent = typeInfo.description;
-    
-    // Populate template select
-    select.innerHTML = '<option value="">No template assigned</option>';
-    
-    // Filter templates by type (or show all if custom)
-    const applicableTemplates = templates.filter(t => 
-        t.template_type === emailType || t.template_type === 'custom'
-    );
-    
-    applicableTemplates.forEach(template => {
-        const option = document.createElement('option');
-        option.value = template.id;
-        option.textContent = `${template.template_name} (${template.template_type})`;
-        select.appendChild(option);
-    });
-    
-    // Store current email type for saving
-    modal.dataset.emailType = emailType;
-    
-    modal.classList.remove('hidden');
-}
-
-function closeTemplateAssignmentModal() {
-    document.getElementById('templateAssignmentModal').classList.add('hidden');
-}
-
-async function saveTemplateAssignment() {
-    const modal = document.getElementById('templateAssignmentModal');
-    const select = document.getElementById('assignmentTemplateSelect');
-    const emailType = modal.dataset.emailType;
-    const templateId = select.value;
-    
-    if (!emailType) {
-        showError('Email type not specified');
-        return;
-    }
-    
-    if (!templateId) {
-        showError('Please select a template');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/api/email_templates.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'set_assignment',
-                email_type: emailType,
-                template_id: templateId
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess('Template assignment updated successfully!');
-            closeTemplateAssignmentModal();
-            loadEmailTemplates();
-        } else {
-            showError('Failed to update assignment: ' + data.error);
-        }
-    } catch (error) {
-        console.error('Error updating template assignment:', error);
-        showError('Error updating template assignment');
-    }
-}
+// Email template preview modal functions moved to Vite module (src/js/admin-settings.js)
 
 </script>
 
 <!-- System Documentation Modal -->
-<div id="systemDocumentationModal" class="admin-modal-overlay hidden" onclick="closeSystemDocumentationModal()">
+<div id="systemDocumentationModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📚 System Documentation</h2>
-            <button onclick="closeSystemDocumentationModal()" class="modal-close">&times;</button>
+            <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -21110,10 +20927,10 @@ async function saveTemplateAssignment() {
                 <div class="flex items-center justify-between">
                     <h4 class="text-lg font-semibold text-gray-800">WhimsicalFrog System Documentation</h4>
                     <div class="flex space-x-2">
-                        <button onclick="exportDocumentation()" class="btn btn-secondary">
+                        <button class="btn btn-secondary" data-action="export-documentation">
                             📥 Export Documentation
                         </button>
-                        <button onclick="refreshDocumentation()" class="btn btn-primary">
+                        <button class="btn btn-primary" data-action="refresh-documentation">
                             🔄 Refresh
                         </button>
                     </div>
@@ -21127,7 +20944,7 @@ async function saveTemplateAssignment() {
         </div>
         
         <div class="modal-footer">
-            <button onclick="closeSystemDocumentationModal()" class="btn btn-secondary">Close</button>
+            <button class="btn btn-secondary" data-action="close-admin-modal">Close</button>
         </div>
     </div>
 </div>
@@ -21159,11 +20976,11 @@ function showCleanupConfirmation(title, question, description, safetyLevel, safe
                        safetyType === 'warning' ? 'text-orange-600' : 'text-red-600';
     
     const confirmationHtml = `
-        <div id="cleanupConfirmationModal" class="admin-modal-overlay hidden" onclick="closeCleanupConfirmation()">
+        <div id="cleanupConfirmationModal" class="admin-modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">${title}</h2>
-                    <button onclick="closeCleanupConfirmation()" class="modal-close">&times;</button>
+                    <button class="modal-close" data-action="close-cleanup-confirmation">&times;</button>
                 </div>
                 
                 <div class="modal-body">
@@ -21181,10 +20998,10 @@ function showCleanupConfirmation(title, question, description, safetyLevel, safe
                 </div>
                 
                 <div class="modal-footer">
-                    <button onclick="closeCleanupConfirmation()" class="modal-button btn-secondary">
+                    <button class="modal-button btn-secondary" data-action="close-cleanup-confirmation">
                         Cancel
                     </button>
-                    <button onclick="confirmCleanupAction()" class="btn btn-primary">
+                    <button class="btn btn-primary" data-action="confirm-cleanup-action">
                         Proceed
                     </button>
                 </div>
@@ -21216,11 +21033,11 @@ async function confirmCleanupAction() {
 // Special dangerous confirmation for Start Over
 function showStartOverConfirmation() {
     const confirmationHtml = `
-        <div id="startOverConfirmationModal" class="admin-modal-overlay hidden" onclick="closeStartOverConfirmation()">
+        <div id="startOverConfirmationModal" class="admin-modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header bg-red-50">
                     <h2 class="modal-title text-red-800">⚠️ DANGER: Start Over</h2>
-                    <button onclick="closeStartOverConfirmation()" class="modal-close">&times;</button>
+                    <button class="modal-close" data-action="close-startover-confirmation">&times;</button>
                 </div>
                 
                 <div class="modal-body">
@@ -21242,8 +21059,7 @@ function showStartOverConfirmation() {
                         </label>
                         <input type="text" id="startOverConfirmText" class="modal-input w-full" 
                                placeholder="Type START OVER to confirm" 
-                               onkeyup="checkStartOverConfirmation()"
-                               >
+                               data-action="startover-input">
                     </div>
                     
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -21255,10 +21071,10 @@ function showStartOverConfirmation() {
                 </div>
                 
                 <div class="modal-footer">
-                    <button onclick="closeStartOverConfirmation()" class="modal-button btn-secondary">
+                    <button class="modal-button btn-secondary" data-action="close-startover-confirmation">
                         Cancel
                     </button>
-                    <button id="startOverProceedBtn" onclick="executeStartOver()" 
+                    <button id="startOverProceedBtn" data-action="startover-proceed" 
                             class="btn btn-danger" disabled>
                         Start Over (IRREVERSIBLE)
                     </button>
@@ -21380,28 +21196,28 @@ function displaySystemAnalysis(analysis) {
                 <h4 class="font-semibold text-gray-800">📋 Cleanup Actions Available</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div class="space-y-2">
-                        <button onclick="cleanupStaleFiles()" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
+                        <button data-action="cleanup-stale-files" class="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors">
                             🗑️ Clean Stale Files
                         </button>
                         <p class="text-xs text-gray-600">Remove backup and temporary files (Very Safe)</p>
                     </div>
                     
                     <div class="space-y-2">
-                        <button onclick="removeUnusedCode()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors">
+                        <button data-action="remove-unused-code" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition-colors">
                             💬 Remove Stale Comments
                         </button>
                         <p class="text-xs text-gray-600">Remove TODO/FIXME/DEBUG comments (Very Safe)</p>
                     </div>
                     
                     <div class="space-y-2">
-                        <button onclick="optimizeDatabase()" class="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
+                        <button data-action="optimize-database" class="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors">
                             ⚡ Optimize Database
                         </button>
                         <p class="text-xs text-gray-600">Optimize all database tables (Very Safe)</p>
                     </div>
                     
                     <div class="space-y-2">
-                        <button onclick="showStartOverConfirmation()" class="w-full bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
+                        <button data-action="show-start-over-confirmation" class="w-full bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">
                             ⚠️ Start Over
                         </button>
                         <p class="text-xs text-gray-600">⚠️ Wipe all data except admin accounts (DANGEROUS)</p>
@@ -21419,11 +21235,11 @@ function showDatabaseOptimizationResults(data) {
     const errors = data.errors || [];
     
     let resultsHtml = `
-        <div id="optimizationResultsModal" class="admin-modal-overlay hidden" onclick="closeOptimizationResults()">
+        <div id="optimizationResultsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">⚡ Database Optimization Results</h2>
-                    <button onclick="closeOptimizationResults()" class="modal-close">&times;</button>
+                    <button class="modal-close" data-action="close-admin-modal">&times;</button>
                 </div>
                 
                 <div class="modal-body">
@@ -21516,7 +21332,7 @@ function showDatabaseOptimizationResults(data) {
                 </div>
                 
                 <div class="modal-footer">
-                    <button onclick="closeOptimizationResults()" class="btn btn-primary">
+                    <button data-action="close-optimization-results" class="btn btn-primary">
                         Close
                     </button>
                 </div>
@@ -21551,11 +21367,11 @@ function showCleanupResults(title, data) {
         }
         
         let resultsHtml = `
-        <div id="cleanupResultsModal" class="admin-modal-overlay hidden" onclick="closeCleanupResults()">
+        <div id="cleanupResultsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">${title}</h2>
-                    <button onclick="closeCleanupResults()" class="modal-close">&times;</button>
+                    <button class="modal-close" data-action="close-admin-modal">&times;</button>
                 </div>
                 
                 <div class="modal-body">
@@ -21640,7 +21456,7 @@ function showCleanupResults(title, data) {
                 </div>
                 
                 <div class="modal-footer">
-                    <button onclick="closeCleanupResults()" class="btn btn-primary">
+                    <button class="btn btn-primary" data-action="close-admin-modal">
                         Close
                     </button>
                 </div>
@@ -21741,7 +21557,7 @@ async function loadDashboardConfiguration() {
                 <div class="text-red-500">⚠️</div>
                 <p class="text-red-600">Failed to load dashboard configuration</p>
                 <p class="text-sm text-gray-500">${error.message}</p>
-                <button onclick="loadDashboardConfiguration()" class="bg-green-500 text-white rounded hover:bg-green-600">
+                <button data-action="retry-load-dashboard-config" class="bg-green-500 text-white rounded hover:bg-green-600">
                     Retry
                 </button>
             </div>
@@ -21783,7 +21599,7 @@ function renderCurrentSections(sections, container) {
                             </div>
                         </div>
                         <div class="section-item-controls">
-                            <select onchange="updateSectionWidth('${section.section_key}', this.value)" 
+                            <select data-action="dashboard-section-width-change" data-section-key="${section.section_key}"
                                     class="width-selector" title="Section width">
                                 <option value="full-width" ${(section.width_class || 'half-width') === 'full-width' ? 'selected' : ''}>Full</option>
                                 <option value="half-width" ${(section.width_class || 'half-width') === 'half-width' ? 'selected' : ''}>Half</option>
@@ -21820,7 +21636,7 @@ async function loadAvailableSections(container) {
             <div class="bg-red-50 rounded-lg border border-red-200">
                 <p class="text-red-600">Failed to load available sections</p>
                 <p class="text-sm text-gray-500">${error.message}</p>
-                <button onclick="loadAvailableSections(document.getElementById('availableSectionsList'))" class="bg-red-500 text-white text-sm rounded hover:bg-red-600">
+                <button data-action="retry-load-available-sections" data-target-id="availableSectionsList" class="bg-red-500 text-white text-sm rounded hover:bg-red-600">
                     Retry
                 </button>
             </div>
@@ -22576,7 +22392,7 @@ async function loadDocumentationList() {
                 <div class="text-4xl">⚠️</div>
                 <p class="text-sm font-medium">Error loading documentation</p>
                 <p class="text-xs">${error.message}</p>
-                <button onclick="loadDocumentationList()" class="bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">
+                <button data-action="retry-load-doc-list" class="bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">
                     Retry
                 </button>
             </div>
@@ -22619,7 +22435,7 @@ function renderDocumentsList() {
             const globalIndex = allDocuments.findIndex(d => d.filename === doc.filename);
             html += `
                 <div class="doc-item rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-colors"
-                     onclick="viewDocument(${globalIndex})" data-doc-index="${globalIndex}">
+                     data-action="view-document" data-doc-index="${globalIndex}">
                     <div class="flex items-start justify-between">
                         <div class="flex-1 min-w-0">
                             <h5 class="text-sm font-medium text-gray-900" title="${doc.title}">${doc.title}</h5>
@@ -22783,7 +22599,7 @@ function renderDocumentContent(doc) {
         doc.sections.forEach(section => {
             const indent = (section.level - 1) * 20;
             html += `
-                <div class="flex items-center text-sm hover:text-blue-600 cursor-pointer"  onclick="scrollToSection('${section.anchor}')">
+                <div class="flex items-center text-sm hover:text-blue-600 cursor-pointer"  data-action="scroll-doc-section" data-anchor="${section.anchor}">
                     <span class="">${'#'.repeat(section.level)}</span>
                     <span>${section.title}</span>
                 </div>
@@ -23188,7 +23004,7 @@ function renderLogsList() {
         logsByCategory[category].forEach(log => {
             const isActive = currentLogType === log.type;
             html += `
-                <div onclick="selectLog('${log.type}')" 
+                <div data-action="select-log" data-log-type="${log.type}" 
                      class="cursor-pointer rounded-lg border transition-all ${isActive ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-gray-200 hover:bg-gray-50' }">
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
@@ -23522,7 +23338,7 @@ function showSearchResults(results, query) {
                         ${highlightSearchTerm(formatLogMessage(result.message), query)}
                     </div>
                     <div class="">
-                        <button onclick="viewLogEntry('${result.log_type}', '${result.id}')" 
+                        <button data-action="view-log-entry" data-log-type="${result.log_type}" data-entry-id="${result.id}" 
                                 class="text-sm text-blue-600 hover:text-blue-800">
                             View in Log →
                         </button>
@@ -23671,7 +23487,7 @@ function displayServerBackups(backups) {
     backups.forEach(backup => {
         html += `
             <div class="backup-file-item border border-gray-200 rounded-lg cursor-pointer" 
-                 onclick="selectServerBackup('${backup.filename}', '${backup.path}')">
+                 data-action="select-server-backup" data-filename="${backup.filename}" data-path="${backup.path}">
                 <div class="flex items-center justify-between">
                     <div>
                         <div class="font-medium text-sm text-gray-900">${backup.filename}</div>
@@ -23989,18 +23805,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- System Cleanup Modal -->
-<div id="systemCleanupModal" class="admin-modal-overlay hidden" onclick="closeSystemCleanupModal()">
+<div id="systemCleanupModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">🧹 System Cleanup</h2>
-            <button onclick="closeSystemCleanupModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
         
         <div class="modal-body">
             <div class="">
                 <div class="flex items-center justify-between">
                     <h4 class="text-lg font-semibold text-gray-800">System Health & Cleanup</h4>
-                    <button onclick="runSystemAnalysis()" class="btn btn-primary">
+                    <button data-action="run-system-analysis" class="btn btn-primary">
                         🔄 Refresh Analysis
                     </button>
                 </div>
@@ -24025,17 +23841,17 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         
         <div class="modal-footer">
-            <button onclick="closeSystemCleanupModal()" class="btn btn-secondary">Close</button>
+            <button data-action="close-admin-modal" class="btn btn-secondary">Close</button>
         </div>
     </div>
 </div>
 
 <!-- Start Over Confirmation Modal -->
-<div id="startOverConfirmModal" class="admin-modal-overlay hidden" onclick="closeStartOverConfirmModal()">
+<div id="startOverConfirmModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">⚠️ START OVER - DANGER ZONE</h2>
-            <button onclick="closeStartOverConfirmModal()" class="modal-close">&times;</button>
+            <button data-action="close-admin-modal" class="modal-close">&times;</button>
         </div>
         
         <div class="modal-body">
@@ -24062,8 +23878,8 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
         
         <div class="modal-footer">
-            <button onclick="closeStartOverConfirmModal()" class="btn btn-secondary">Cancel</button>
-            <button onclick="executeStartOver()" class="btn btn-danger">🔥 START OVER</button>
+            <button data-action="close-admin-modal" class="btn btn-secondary">Cancel</button>
+            <button data-action="execute-start-over" class="btn btn-danger">🔥 START OVER</button>
         </div>
     </div>
 </div>

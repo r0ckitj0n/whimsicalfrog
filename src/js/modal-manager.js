@@ -57,7 +57,7 @@ console.log('Loading modal-manager.js...');
     console.log('[WFModals] initialized');
 })();
 
-function closeModal() {
+function _closeModal() {
     document.getElementById('deleteConfirmModal').classList.remove('show');
 }
 

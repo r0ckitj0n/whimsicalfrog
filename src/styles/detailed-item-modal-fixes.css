@@ -33,7 +33,7 @@
 
 /* Fix Add to Cart button width */
 .detailed-item-modal .wf-add-to-cart-btn,
-.detailed-item-modal button[data-action="addDetailedToCart"] {
+.detailed-item-modal .btn--detailed-add-to-cart {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -74,13 +74,10 @@
 }
 
 /* FINAL NUCLEAR FIX: Absolutely minimal quantity buttons */
-.detailed-item-modal button[data-action="adjustDetailedQuantity"],
-.detailed-item-modal button[data-action="decreaseQuantity"],
-.detailed-item-modal button[data-action="increaseQuantity"],
-.detailed-item-modal .quantity-selector button,
-.detailed-item-modal .flex button[data-action*="Quantity"],
-.detailed-item-modal-container button[data-action="adjustDetailedQuantity"],
-button[data-action="adjustDetailedQuantity"] {
+.detailed-item-modal .btn--qty,
+.detailed-item-modal .quantity-selector .btn--qty,
+.detailed-item-modal .flex .btn--qty,
+.detailed-item-modal-container .btn--qty {
     /* Absolutely minimal sizing */
     width: 14px !important;
     min-width: 14px !important;
@@ -117,8 +114,8 @@ button[data-action="adjustDetailedQuantity"] {
 }
 
 /* Target SVG icons inside buttons to make them smaller */
-.detailed-item-modal button[data-action="adjustDetailedQuantity"] svg,
-.detailed-item-modal .quantity-selector button svg {
+.detailed-item-modal .btn--qty svg,
+.detailed-item-modal .quantity-selector .btn--qty svg {
     width: 8px !important;
     height: 8px !important;
     flex-shrink: 0 !important;
@@ -155,12 +152,11 @@ button[data-action="adjustDetailedQuantity"] {
     box-sizing: border-box !important;
 }
 
-/* Make quantity input field narrower - target correct ID */
-.detailed-item-modal input[name="quantity"],
-.detailed-item-modal input#detailedQuantity,
-.detailed-item-modal .quantity-selector input[type="number"],
-.detailed-item-modal input[type="number"],
-.detailed-item-modal-container input#detailedQuantity {
+/* Make quantity input field narrower - target semantic class */
+.detailed-item-modal .input--qty,
+.detailed-item-modal .quantity-selector input.input--qty,
+.detailed-item-modal input.input--qty,
+.detailed-item-modal-container .input--qty {
     width: 30px !important;
     min-width: 30px !important;
     max-width: 30px !important;
@@ -172,7 +168,7 @@ button[data-action="adjustDetailedQuantity"] {
 }
 
 /* Ensure the quantity selector container doesn't cause overflow */
-.detailed-item-modal .flex:has(button[data-action="adjustDetailedQuantity"]) {
+.detailed-item-modal .flex:has(.btn--qty) {
     display: inline-flex !important;
     gap: 2px !important;
     max-width: 100px !important;

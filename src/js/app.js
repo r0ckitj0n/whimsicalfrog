@@ -13,8 +13,8 @@ import RoomModalManager from '../modules/room-modal-manager.js';
 import SearchSystem from '../modules/search-system.js';
 import SalesSystem from '../modules/sales-system.js';
 import WhimsicalFrogUtils from '../modules/utilities.js';
-import MainApplication from './main-application.js';
-import ShopPage from './shop.js';
+import _MainApplication from './main-application.js';
+import _ShopPage from './shop.js';
 
 // Critical missing modules for core functionality
 import './dynamic-background-loader.js';  // Background loading
@@ -225,6 +225,9 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
                 // Room config manager
                 'room_config_manager': 'room-config-manager',
                 'room-config-manager': 'room-config-manager',
+                // Cost breakdown manager
+                'cost_breakdown_manager': 'cost-breakdown-manager',
+                'cost-breakdown-manager': 'cost-breakdown-manager',
             };
             if (aliases[section]) section = aliases[section];
 
@@ -242,6 +245,7 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
                 'db-status': () => import('./admin-db-status.js'),
                 'db-web-manager': () => import('./admin-db-web-manager.js'),
                 'room-config-manager': () => import('./admin-room-config-manager.js'),
+                'cost-breakdown-manager': () => import('./admin-cost-breakdown-manager.js'),
             };
 
             const load = loaders[section] || (() => import('./admin-dashboard.js'));

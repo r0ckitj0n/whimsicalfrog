@@ -53,7 +53,7 @@ class RoomMainManager {
         console.log(`🚪 Found ${doorElements.length} door elements`);
         
         // Ensure doors are clickable and properly positioned
-        doorElements.forEach((door, index) => {
+        doorElements.forEach((door, _index) => {
             door.style.cursor = 'pointer';
             door.style.pointerEvents = 'auto';
             

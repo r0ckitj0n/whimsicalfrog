@@ -190,7 +190,7 @@ $messageType = $_GET['type'] ?? '';
                         </td>
                                             <td class="editable" data-field="name"><?= htmlspecialchars($item['name'] ?? '') ?></td>
                     <td class="editable" data-field="category"><?= htmlspecialchars($item['category'] ?? '') ?></td>
-                    <td><?= htmlspecialchars($item['sku'] ?? '') ?></td> <!- SKU not typically inline editable ->
+                    <td><?= htmlspecialchars($item['sku'] ?? '') ?></td> <!-- SKU not typically inline editable -->
                     <td class="editable" data-field="stockLevel"><?= htmlspecialchars($item['stockLevel'] ?? '0') ?></td>
                     <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint'] ?? '0') ?></td>
                         <td class="editable" data-field="costPrice">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
@@ -233,7 +233,7 @@ $messageType = $_GET['type'] ?? '';
 
 <?php if ($modalMode === 'view' && $editItem): ?>
 <div class="modal-outer" id="inventoryModalOuter">
-    <!- Navigation Arrows ->
+    <!-- Navigation Arrows -->
     <button id="prevItemBtn" data-action="navigate-item" data-direction="prev" class="nav-arrow left" title="Previous item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
@@ -305,14 +305,14 @@ $messageType = $_GET['type'] ?? '';
                     <label for="description" class="block text-gray-700">Description</label>
                     <textarea id="description" name="description" class="block w-full border border-gray-300 rounded bg-gray-100" rows="2" readonly><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                 </div>
-                                    <!- Item Images Section - Same layout as edit modal ->
+                                    <!-- Item Images Section - Same layout as edit modal -->
 <div class="images-section-container" id="imagesSection">
                     
-                    <!- Current Images Display ->
+                    <!-- Current Images Display -->
                     <div id="currentImagesContainer" class="current-images-section">
                         <div class="text-sm text-gray-600">Current Images:</div>
                         <div id="currentImagesList" class="w-full">
-                            <!- Current images will be loaded here with dynamic layout ->
+                            <!-- Current images will be loaded here with dynamic layout -->
                             <div class="text-center text-gray-500 text-sm" id="viewModalImagesLoading">Loading images...</div>
                         </div>
                     </div>
@@ -321,12 +321,12 @@ $messageType = $_GET['type'] ?? '';
 
             <div class="modal-form-suggestions-column">
                 <div class="suggestions-container">
-                    <!- Cost Breakdown Section ->
+                    <!-- Cost Breakdown Section -->
                     <div class="cost-breakdown-wrapper">
                         <div class="cost-breakdown">
                             <h3>Cost Breakdown</h3>
                             
-                            <!- Suggested Cost Display - Moved to top with price styling ->
+                            <!-- Suggested Cost Display - Moved to top with price styling -->
                             <div class="bg-green-50 rounded border border-green-200">
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-green-700 font-medium">Suggested Cost:</span>
@@ -353,26 +353,26 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                             </div>
                             <?php endforeach; ?>
-                            <div class="cost-totals" class="hidden">
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+                            <div class="cost-totals hidden">
+                                <div class="cost-total-row hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
                             </div>
                         </div>
                     </div>
                 
-                    <!- Price Suggestion Section for View Modal ->
+                    <!-- Price Suggestion Section for View Modal -->
                     <div class="price-suggestion-wrapper">
                         <div class="price-suggestion bg-white border border-gray-200 rounded-lg">
                             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                                 <span class="">🎯</span> Price Suggestion
                             </h3>
                             
-                            <!- Price Suggestion Display ->
+                            <!-- Price Suggestion Display -->
                             <div id="viewPriceSuggestionDisplay" class="hidden">
                                 
-                                <!- Suggested Price Display ->
+                                <!-- Suggested Price Display -->
                                 <div class="bg-green-50 rounded border border-green-200">
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
@@ -380,11 +380,11 @@ $messageType = $_GET['type'] ?? '';
                                     </div>
                                 </div>
                                 
-                                <!- Reasoning Section ->
+                                <!-- Reasoning Section -->
                                 <div class="">
                                     <h4 class="font-semibold text-gray-700 text-sm">AI Reasoning</h4>
                                     <div class="" id="viewReasoningList">
-                                        <!- Reasoning items will be rendered here by JavaScript ->
+                                        <!-- Reasoning items will be rendered here by JavaScript -->
                                     </div>
                                 </div>
                                 
@@ -394,7 +394,7 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                             </div>
                             
-                                        <!- Price Suggestion Placeholder ->
+                                        <!-- Price Suggestion Placeholder -->
             <div id="viewPriceSuggestionPlaceholder" class="bg-gray-50 border border-gray-200 rounded-lg">
                 <div class="text-center text-gray-500">
                     <div class="text-2xl">🎯</div>
@@ -418,7 +418,7 @@ $messageType = $_GET['type'] ?? '';
 
 <?php if ($modalMode === 'add' || ($modalMode === 'edit' && $editItem)): ?>
 <div class="modal-outer" id="inventoryModalOuter">
-    <!- Navigation Arrows (only show for edit mode, not add mode) ->
+    <!-- Navigation Arrows (only show for edit mode, not add mode) -->
     <?php if ($modalMode === 'edit'): ?>
     <button id="prevItemBtn" data-action="navigate-item" data-direction="prev" class="nav-arrow left" title="Previous item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -444,9 +444,9 @@ $messageType = $_GET['type'] ?? '';
                 <input type="hidden" name="itemSku" value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
             <?php endif; ?>
 
-            <!- 3-Grid Layout: Top Row (2 boxes) + Bottom Row (1 full-width box) ->
+            <!-- 3-Grid Layout: Top Row (2 boxes) + Bottom Row (1 full-width box) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!- Left Box: Item Information ->
+                <!-- Left Box: Item Information -->
                 <div class="bg-white border border-gray-200 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                         <span class="">📝</span> Item Information
@@ -470,7 +470,7 @@ $messageType = $_GET['type'] ?? '';
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label for="categoryEdit" class="block text-gray-700">Category *</label>
-                                <select id="categoryEdit" name="category" class="block w-full border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'class="hidden"' : '' ?>
+                                <select id="categoryEdit" name="category" class="block w-full border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?> <?= $modalMode === 'add' ? 'hidden' : '' ?>" required
                                         data-tooltip="Which category does this belong to? If you can't figure this out, maybe running a business isn't for you.">
                                     <option value="">Select Category</option>
                                     <?php foreach ($categories as $cat): ?>
@@ -552,9 +552,9 @@ $messageType = $_GET['type'] ?? '';
                                       data-tooltip="Describe your item. Be more creative than 'It's good' or 'People like it'. Your customers have questions, and this is where you answer them."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                         </div>
 
-                        <!- Item Images Section ->
+                        <!-- Item Images Section -->
                         <div class="images-section-container" id="imagesSection">
-                            <!- Current Images Display ->
+                            <!-- Current Images Display -->
                             <div id="currentImagesContainer" class="current-images-section">
                                 <div class="flex justify-between items-center">
                                     <div class="text-sm text-gray-600">Current Images:</div>
@@ -563,11 +563,11 @@ $messageType = $_GET['type'] ?? '';
                                     </button>
                                 </div>
                                 <div id="currentImagesList" class="w-full">
-                                    <!- Current images will be loaded here with dynamic layout ->
+                                    <!-- Current images will be loaded here with dynamic layout -->
                                 </div>
                             </div>
                             
-                            <!- Multi-Image Upload Section - Only show in edit/add mode ->
+                            <!-- Multi-Image Upload Section - Only show in edit/add mode -->
                             <div class="multi-image-upload-section" >
                                 <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden" data-action="multi-image-upload">
                                 <?php if ($modalMode === 'add'): ?>
@@ -606,8 +606,8 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                         </div>
 
-                        <!- Structure Analysis & Redesign Section (conditionally displayed) ->
-                        <div id="structureAnalysisSection" class="structure-analysis-section" class="hidden">
+                        <!-- Structure Analysis & Redesign Section (conditionally displayed) -->
+                        <div id="structureAnalysisSection" class="structure-analysis-section hidden">
                             <div class="bg-yellow-50 border border-yellow-200 rounded-lg">
                                 <div class="flex items-start">
                                     <div class="flex-shrink-0">
@@ -641,14 +641,14 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                 </div>
 
-                <!- Right Box: Cost & Price Suggestions ->
+                <!-- Right Box: Cost & Price Suggestions -->
                 <div class="bg-white border border-gray-200 rounded-lg">
                     <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                         <span class="">💰</span> Cost & Price Analysis
                     </h3>
                     
                     <div class="suggestions-container">
-                        <!- Cost Breakdown Section ->
+                        <!-- Cost Breakdown Section -->
                         <div class="cost-breakdown-wrapper">
                             <div class="cost-breakdown">
                                 <h3 class="text-lg font-semibold text-gray-800 flex items-center">
@@ -663,7 +663,7 @@ $messageType = $_GET['type'] ?? '';
                                     <div id="step-badge-2" class="step-badge step-badge-2 pulse hidden"></div>
                                 </div>
                                 
-                                <!- Suggested Cost Display - Moved to top with price styling ->
+                                <!-- Suggested Cost Display - Moved to top with price styling -->
                                 <div class="bg-green-50 rounded border border-green-200">
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm text-green-700 font-medium">Suggested Cost:</span>
@@ -678,7 +678,7 @@ $messageType = $_GET['type'] ?? '';
                                     </button>
                                 </div>
                                 
-                                <!- Template Selection Section ->
+                                <!-- Template Selection Section -->
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg">
                                     <div class="flex items-center justify-between">
                                         <h4 class="font-medium text-blue-800 text-sm">📋 Cost Templates</h4>
@@ -688,7 +688,7 @@ $messageType = $_GET['type'] ?? '';
                                     </div>
                                     
                                     <div id="templateSection" class="hidden space-y-3">
-                                        <!- Load Template ->
+                                        <!-- Load Template -->
                                         <div class="flex gap-2">
                                             <select id="templateSelect" class="flex-1 border border-blue-300 rounded text-xs">
                                                 <option value="">Choose a template...</option>
@@ -698,25 +698,24 @@ $messageType = $_GET['type'] ?? '';
                                             </button>
                                         </div>
                                         
-                                        <!- Save Template ->
+                                        <!-- Save Template -->
                                         <div class="flex gap-2">
                                             <input type="text" id="templateName" placeholder="Template name..." class="flex-1 border border-blue-300 rounded text-xs">
                                             <button type="button" data-action="save-as-template" class="bg-green-600 text-white rounded text-xs hover:bg-green-700">
                                                 Save as Template
                                             </button>
                                         </div>
-                                        
+                                    </div>
                                         <div class="text-xs text-blue-600">
-                                            💡 Load existing templates or save current breakdown as a reusable template
+                                            Load existing templates or save current breakdown as a reusable template
                                         </div>
                                     </div>
-                                </div>
                                 
                                 <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
                                 <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
                                     <h4 class="font-semibold text-gray-700 text-sm"><?= ucfirst($costType); ?></h4>
                                     <div class="" id="<?= $costType; ?>List" >
-                                        <!- Cost items will be rendered here by JavaScript ->
+                                        <!-- Cost items will be rendered here by JavaScript -->
                                     </div>
                                     <button type="button" class="add-cost-btn" data-action="add-cost-item" data-cost-type="<?= $costType; ?>" 
                                             id="add-<?= $costType; ?>-btn" data-tooltip="<?php
@@ -726,26 +725,27 @@ $messageType = $_GET['type'] ?? '';
                                                     'energy' => 'Add electricity, gas, and other utilities used in production. Because apparently even the power company wants a cut of your profits.',
                                                     'equipment' => 'Add tool depreciation, equipment rental, and machinery costs. That expensive printer, cutting machine, or whatever gadget you convinced yourself was \"essential\" for the business.'
                                                 ];
-                                    echo $tooltips[$costType] ?? 'Add cost items for this category.';
-                                    ?>">
+                                                echo $tooltips[$costType] ?? 'Add cost items for this category.';
+                                            ?>">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
                                         Add <?php
-                                    $labels = ['materials' => 'Material', 'labor' => 'Labor', 'energy' => 'Energy', 'equipment' => 'Equipment'];
-                                    echo $labels[$costType] ?? ucfirst($costType);
-                                    ?>
+                                            $labels = ['materials' => 'Material', 'labor' => 'Labor', 'energy' => 'Energy', 'equipment' => 'Equipment'];
+                                            echo $labels[$costType] ?? ucfirst($costType);
+                                        ?>
                                     </button>
                                 </div>
                                 <?php endforeach; ?>
-                                                            <div class="cost-totals" class="hidden">
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
-                                <div class="cost-total-row" class="hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+                                
+                                <div class="cost-totals hidden">
+                                <div class="cost-total-row hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!- Price Suggestion Section ->
+                        <!-- Price Suggestion Section -->
                         <div class="price-suggestion-wrapper">
                             <div class="price-suggestion bg-white border border-gray-200 rounded-lg">
                                 <h3 class="text-lg font-semibold text-gray-800 flex items-center">
@@ -760,10 +760,10 @@ $messageType = $_GET['type'] ?? '';
                                     <div id="step-badge-3" class="step-badge step-badge-3 pulse hidden"></div>
                                 </div>
                                 
-                                <!- Price Suggestion Display ->
+                                <!-- Price Suggestion Display -->
                                 <div id="priceSuggestionDisplay" class="hidden">
                                     
-                                    <!- Suggested Price Display ->
+                                    <!-- Suggested Price Display -->
                                     <div class="bg-green-50 rounded border border-green-200">
                                         <div class="flex justify-between items-center">
                                             <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
@@ -776,11 +776,11 @@ $messageType = $_GET['type'] ?? '';
                                         Apply to Retail Price
                                     </button>
                                     
-                                    <!- Reasoning Section ->
+                                    <!-- Reasoning Section -->
                                     <div class="">
                                         <h4 class="font-semibold text-gray-700 text-sm">AI Reasoning</h4>
                                         <div class="" id="reasoningList">
-                                            <!- Reasoning items will be rendered here by JavaScript ->
+                                            <!-- Reasoning items will be rendered here by JavaScript -->
                                         </div>
                                     </div>
                                     
@@ -790,7 +790,7 @@ $messageType = $_GET['type'] ?? '';
                                     </div>
                                 </div>
                                 
-                                <!- Price Suggestion Placeholder ->
+                                <!-- Price Suggestion Placeholder -->
                                 <div id="priceSuggestionPlaceholder" class="bg-gray-50 border border-gray-200 rounded-lg">
                                     <div class="text-center text-gray-500">
                                         <div class="text-2xl">🎯</div>
@@ -804,7 +804,7 @@ $messageType = $_GET['type'] ?? '';
                 </div>
             </div>
 
-            <!- Bottom Box: Gender, Size & Color Management (Full Width) ->
+            <!-- Bottom Box: Gender, Size & Color Management (Full Width) -->
             <div class="bg-white border border-gray-200 rounded-lg" >
                 <div class="gender-size-color-management-section">
                     <div class="flex justify-between items-center">
@@ -816,17 +816,17 @@ $messageType = $_GET['type'] ?? '';
                         </div>
                     </div>
                     
-                    <!- Requirement Notice ->
+                    <!-- Requirement Notice -->
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg">
                         <div class="text-sm text-yellow-800">
                             <strong>⚠️ Publication Requirements:</strong> Items must have at least one gender, size, and color assigned before they can be set to "Live" status.
                         </div>
                     </div>
                     
-                    <!- Management Sections ->
+                    <!-- Management Sections -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
-                        <!- Gender Management ->
+                        <!-- Gender Management -->
                         <div class="gender-section">
                             <div class="flex justify-between items-center">
                                 <h4 class="text-md font-semibold text-gray-700 flex items-center">
@@ -841,7 +841,7 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                         </div>
                         
-                        <!- Size Management ->
+                        <!-- Size Management -->
                         <div class="size-section">
                             <div class="flex justify-between items-center">
                                 <h4 class="text-md font-semibold text-gray-700 flex items-center">
@@ -856,7 +856,7 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                         </div>
                         
-                        <!- Color Management ->
+                        <!-- Color Management -->
                         <div class="color-section">
                             <div class="flex justify-between items-center">
                                 <h4 class="text-md font-semibold text-gray-700 flex items-center">
@@ -878,7 +878,7 @@ $messageType = $_GET['type'] ?? '';
                         
                     </div>
                     
-                    <!- Stock Summary ->
+                    <!-- Stock Summary -->
                     <div id="stockSummary" class="bg-gray-50 border border-gray-200 rounded-lg">
                         <div class="text-sm text-gray-600" id="stockSummaryText">Stock summary will update as you add gender, size, and color options.</div>
                     </div>
@@ -931,7 +931,7 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
-<div id="deleteConfirmModal" class="cost-modal"> <!- Reusing cost-modal style for delete confirm ->
+<div id="deleteConfirmModal" class="cost-modal"> <!-- Reusing cost-modal style for delete confirm -->
     <div class="cost-modal-content max-w-sm">
         <h2 class="text-md font-bold text-gray-800">Confirm Delete</h2>
         <p class="text-sm text-gray-600">Are you sure you want to delete this item? This action cannot be undone.</p>
@@ -942,13 +942,13 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
-<!- Cost Item Delete Confirmation Modal ->
+<!-- Cost Item Delete Confirmation Modal -->
 <div id="deleteCostConfirmModal" class="cost-modal">
 
-<!- Marketing Manager Modal ->
+<!-- Marketing Manager Modal -->
 <div id="marketingManagerModal" class="admin-modal-overlay hidden" >
     <div class="admin-modal-content">
-        <!- Modal Header ->
+        <!-- Modal Header -->
         <div class="admin-modal-header" >
             <div class="flex items-center">
                 <h2 class="text-xl font-bold text-white">🎯 Marketing Manager</h2>
@@ -957,11 +957,11 @@ $messageType = $_GET['type'] ?? '';
             <button data-action="close-marketing-manager" class="modal-close">&times;</button>
         </div>
         
-        <!- Tab Navigation ->
+        <!-- Tab Navigation -->
         <div class="admin-tab-bar">
             <div class="flex items-center">
                 <div id="marketingItemImageHeader" class="flex-shrink-0">
-                    <!- Primary image will be loaded here ->
+                    <!-- Primary image will be loaded here -->
                 </div>
                 <div class="flex space-x-4 overflow-x-auto">
                     <button id="contentTab" data-action="show-marketing-tab" class="css-category-tab active" data-tab="content">
@@ -983,7 +983,7 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
         
-        <!- AI Help Text - Below Tab Buttons ->
+        <!-- AI Help Text - Below Tab Buttons -->
         <div class="bg-blue-50 border-b border-blue-200">
             <div class="flex items-center text-sm text-blue-700">
                 <span class="">💡</span>
@@ -991,14 +991,14 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
         
-        <!- Content Area ->
+        <!-- Content Area -->
         <div class="modal-body" >
             <div id="marketingManagerContent">
-                <!- Content will be loaded dynamically ->
+                <!-- Content will be loaded dynamically -->
             </div>
         </div>
         
-        <!- Footer ->
+        <!-- Footer -->
         <div class="modal-footer">
             <div class="flex space-x-3">
                 <button data-action="apply-marketing-to-item" 
@@ -1016,16 +1016,16 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
-<!- AI Content Comparison Modal ->
+<!-- AI Content Comparison Modal -->
 <div id="aiComparisonModal" class="admin-modal-overlay hidden">
     <div class="admin-modal-content">
-        <!- Fixed Header ->
+        <!-- Fixed Header -->
         <div class="admin-modal-header" >
             <h2 class="modal-title">🤖 AI Content Comparison & Selection</h2>
             <button data-action="close-ai-comparison-modal" class="modal-close">&times;</button>
         </div>
         
-        <!- AI Analysis Progress Section (Collapsible) ->
+        <!-- AI Analysis Progress Section (Collapsible) -->
         <div id="aiAnalysisProgressSection" class="bg-gradient-to-r from-blue-50 to-purple-50 border-b flex-shrink-0 transition-all duration-500 overflow-hidden" >
             <div class="sm:px-6">
                 <div class="flex items-center justify-between">
@@ -1036,12 +1036,12 @@ $messageType = $_GET['type'] ?? '';
                     <span id="aiProgressText" class="text-xs text-gray-600">Initializing...</span>
                 </div>
                 
-                <!- Progress Bar ->
+                <!-- Progress Bar -->
                 <div class="w-full bg-gray-200 rounded-full h-2">
                     <div id="aiProgressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300" ></div>
                 </div>
                 
-                <!- Detailed Progress Steps ->
+                <!-- Detailed Progress Steps -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                     <div id="step1-analyze" class="flex items-center gap-1 rounded bg-white/50">
                         <div class="w-3 h-3 rounded-full bg-gray-300"></div>
@@ -1059,7 +1059,7 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
         
-        <!- Scrollable Content Area ->
+        <!-- Scrollable Content Area -->
         <div class="flex-1 overflow-y-scroll min-h-0">
             <div class="sm:p-6">
                 <div id="aiComparisonContent" class="space-y-4">
@@ -1068,7 +1068,7 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
         
-        <!- Fixed Footer ->
+        <!-- Fixed Footer -->
         <div class="modal-footer">
             <div class="flex justify-between items-center">
                 <div class="text-sm text-gray-600">
@@ -1087,14 +1087,14 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
-<!- Cost Item Delete Confirmation Modal ->
+<!-- Cost Item Delete Confirmation Modal -->
 <div id="deleteCostConfirmModal" class="cost-modal">
     <div class="cost-modal-content max-w-sm">
         <h2 class="text-md font-bold text-red-600">Delete Cost Item</h2>
         <p class="text-sm text-gray-600" id="deleteCostConfirmText">Are you sure you want to delete this cost item? This action cannot be undone.</p>
         <div class="flex justify-end space-x-2">
-            <button type="button" class="py-1\.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" data-action="close-cost-delete-modal">Cancel</button>
-            <button type="button" id="confirmCostDeleteBtn" class="py-1\.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+            <button type="button" class="py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" data-action="close-cost-delete-modal">Cancel</button>
+            <button type="button" id="confirmCostDeleteBtn" class="py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
                 <span class="button-text">Delete</span>
                 <span class="loading-spinner hidden">⏳</span>
             </button>
@@ -1148,7 +1148,7 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                 </div>
                 
-                <!- Quick Select Options ->
+                <!-- Quick Select Options -->
                 <div class="bg-gray-50 rounded-lg border border-gray-200">
                     <h4 class="font-medium text-gray-800">⚡ Quick Select Options</h4>
                     <div class="flex flex-wrap gap-2">
@@ -1167,15 +1167,15 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                 </div>
                 
-                <!- Action Buttons ->
+                <!-- Action Buttons -->
                 <div class="flex flex-col gap-3">
-                    <!- Primary Action: Apply Total to Cost Field ->
+                    <!-- Primary Action: Apply Total to Cost Field -->
                     <button data-action="apply-suggested-cost-to-field" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                             class="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200">
                         💰 Use Total Cost ($${parseFloat(suggestionData.suggestedCost).toFixed(2)}) in Cost Price Field
                     </button>
                     
-                    <!- Detailed Breakdown Actions ->
+                    <!-- Detailed Breakdown Actions -->
                     <div class="border-t border-gray-200">
                         <p class="text-sm text-gray-600 text-center">Or manage detailed cost breakdown:</p>
                         <div class="flex flex-col sm:flex-row gap-2">
@@ -1183,29 +1183,25 @@ $messageType = $_GET['type'] ?? '';
                                     class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white rounded-lg font-medium shadow transition-all duration-200 text-sm">
                                 🔄 Replace Current Cost Breakdown
                             </button>
-                            
                             <div class="flex flex-col sm:flex-row gap-2">
                                 <button data-action="apply-selected-cost-fields" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
-                                        class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium shadow transition-all duration-200 text-sm">
-                                    ➕ Add Selected to Breakdown
+                                        class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg font-medium shadow transition-all duration-200 text-sm">
+                                    ✅ Apply Selected Cost Fields
                                 </button>
-                                
-                                <button data-action="close-cost-suggestion-choice-dialog" 
-                                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-200 text-sm">
-                                    ❌ Cancel
+                                <button data-action="sync-cost-fields-from-form" class="w-full bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 font-medium text-sm">
+                                    🔁 Sync from Form Fields
                                 </button>
                             </div>
                         </div>
+                        <div class="text-xs text-gray-500 text-center space-y-1">
+                            <div>🔄 <strong>Replace:</strong> Deletes all current cost items and creates new ones with AI values</div>
+                            <div>➕ <strong>Add:</strong> Only selected fields will be added. Unselected fields keep their current values.</div>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="text-xs text-gray-500 text-center space-y-1">
-                    <div>🔄 <strong>Replace:</strong> Deletes all current cost items and creates new ones with AI values</div>
-                    <div>➕ <strong>Add:</strong> Only selected fields will be added. Unselected fields keep their current values.</div>
                 </div>
             </div>
         </div>
-    `;
+        `;
     
     document.body.appendChild(modal);
     
@@ -1614,7 +1610,7 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
             </div>
             
             <div class="overflow-y-auto flex-1 custom-scrollbar" >
-                <!- AI Analysis Summary ->
+                <!-- AI Analysis Summary -->
                 <div class="bg-green-50 rounded-lg border border-green-200">
                     <h3 class="font-semibold text-gray-800 flex items-center">
                         <span class="">🤖</span> AI Pricing Analysis
@@ -1626,11 +1622,11 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                     </div>
                 </div>
                 
-                <!- Side by Side Comparison ->
+                <!-- Side by Side Comparison -->
                 <div class="">
                     <h3 class="font-semibold text-gray-800">💰 Price Comparison</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!- Current Price Column ->
+                        <!-- Current Price Column -->
                         <div class="bg-gray-50 rounded-lg border border-gray-200">
                             <h4 class="font-semibold text-gray-700 text-center">📊 Current Price</h4>
                             <div class="space-y-3">
@@ -1649,7 +1645,7 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                             </div>
                         </div>
                         
-                        <!- AI Suggested Price Column ->
+                        <!-- AI Suggested Price Column -->
                         <div class="bg-green-50 rounded-lg border border-green-200">
                             <h4 class="font-semibold text-green-700 text-center">🤖 AI Suggested Price</h4>
                             <div class="space-y-3">
@@ -1670,7 +1666,7 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                     </div>
                 </div>
                 
-                <!- Pricing Components Breakdown ->
+                <!-- Pricing Components Breakdown -->
                 ${suggestionData.components && suggestionData.components.length > 0 ? `
                 <div class="">
                     <h3 class="font-semibold text-gray-800">🔍 Pricing Components Analysis</h3>
@@ -1690,7 +1686,7 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                 </div>
                 ` : ''}
                 
-                <!- Price Selection ->
+                <!-- Price Selection -->
                 <div class="">
                     <h3 class="font-semibold text-gray-800">🎯 Choose Your Pricing Strategy</h3>
                     <div class="bg-yellow-50 rounded-lg border border-yellow-200">
@@ -1737,7 +1733,7 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                     </div>
                 ` : ''}
                 
-                <!- Action Buttons ->
+                <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button data-action="apply-selected-price-choice" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                             class="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200">
@@ -1840,79 +1836,8 @@ function applySuggestedPriceAnalysis(buttonElement) {
     applySelectedPriceChoice(buttonElement);
 }
 
-async function applySuggestedCostBreakdown(buttonElement) {
-    // Get suggestion data from the button's data attribute
-    const suggestionData = JSON.parse(buttonElement.dataset.suggestion);
-    
-    // Close the choice dialog
-    closeCostSuggestionChoiceDialog();
-    
-    // Show loading state
-    showInfo( 'Applying AI cost breakdown...');
-    
-    try {
-        // Populate the cost breakdown with the suggestion and save to database
-        await populateCostBreakdownFromSuggestion(suggestionData);
-        
-        showSuccess( `✅ AI cost breakdown applied and saved! Total: $${suggestionData.suggestedCost} (${suggestionData.confidence} confidence)`);
-    } catch (error) {
-        console.error('Error applying cost breakdown:', error);
-        showError( 'Failed to apply cost breakdown');
-    }
-}
+// Cost suggestion helpers migrated to Vite module (src/js/admin-inventory.js)
 
-async function useSuggestedCost() {
-    const nameField = document.getElementById('name');
-    const descriptionField = document.getElementById('description');
-    const categoryField = document.getElementById('categoryEdit');
-    
-    if (!nameField || !nameField.value.trim()) {
-        showError( 'Item name is required for cost suggestion');
-        return;
-    }
-    
-    // Show loading state
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '🔍 Analyzing...';
-    button.disabled = true;
-    
-    // Gather item data
-    const itemData = {
-        name: nameField.value.trim(),
-        description: descriptionField ? descriptionField.value.trim() : '',
-        category: categoryField ? categoryField.value : '',
-        sku: currentItemSku || ''
-    };
-    
-    try {
-        // Call the cost suggestion API
-        const response = await fetch('/api/suggest_cost.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(itemData)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Show choice dialog with the new figures
-            showCostSuggestionChoiceDialog(data);
-        } else {
-            showError( data.error || 'Failed to get cost suggestion');
-        }
-    } catch (error) {
-        console.error('Error getting cost suggestion:', error);
-        showError( 'Failed to connect to cost suggestion service');
-    } finally {
-        // Restore button state
-        button.innerHTML = originalText;
-        button.disabled = false;
-    }
-}
 
 async function useSuggestedPrice() {
     console.log('🎯 useSuggestedPrice() called - generating NEW price suggestion');
@@ -2580,385 +2505,7 @@ function clearViewPriceSuggestion() {
         reasoningList.innerHTML = '';
     }
 }
-
-function loadExistingViewPriceSuggestion(sku) {
-    if (!sku) return;
-    
-    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`)
-    .then(response => response.json())
-    .then(data => {// Debug log
-        if (data.success && data.suggestedPrice) {
-            displayViewPriceSuggestion(data);
-        } else {
-            // Show placeholder if no existing suggestion
-            const placeholder = document.getElementById('viewPriceSuggestionPlaceholder');
-            const display = document.getElementById('viewPriceSuggestionDisplay');
-            if (placeholder) placeholder.classList.remove('hidden');
-            if (display) display.classList.add('hidden');
-        }
-    })
-    .catch(error => {
-        console.error('Error loading view price suggestion:', error);
-        // Show placeholder on error
-        const placeholder = document.getElementById('viewPriceSuggestionPlaceholder');
-        const display = document.getElementById('viewPriceSuggestionDisplay');
-        if (placeholder) placeholder.classList.remove('hidden');
-        if (display) display.classList.add('hidden');
-    });
-}
-
-// View-specific functions removed - view modal now uses same functions as edit modal
-
-function loadExistingPriceSuggestion(sku) {
-    if (!sku) return;
-    
-    fetch(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`)
-    .then(response => response.json())
-    .then(data => {// Debug log
-        if (data.success && data.suggestedPrice) {displayPriceSuggestion(data);
-        } else {
-            console.log('ℹ️ No existing price suggestion found (this is normal) - showing placeholder');
-            // Show placeholder if no existing suggestion
-            const placeholder = document.getElementById('priceSuggestionPlaceholder');
-            const display = document.getElementById('priceSuggestionDisplay');
-            if (placeholder) placeholder.classList.remove('hidden');
-            if (display) display.classList.add('hidden');
-        }
-    })
-    .catch(error => {
-        console.error('Error loading price suggestion:', error);
-        // Show placeholder on error
-        const placeholder = document.getElementById('priceSuggestionPlaceholder');
-        const display = document.getElementById('priceSuggestionDisplay');
-        if (placeholder) placeholder.classList.remove('hidden');
-        if (display) display.classList.add('hidden');
-    });
-}
-
-function loadExistingCostSuggestion(sku) {
-    // This function is kept for potential future use but currently not needed
-    // since we populate the cost breakdown directly instead of showing inline display
-    return;
-}
-
-function loadExistingMarketingSuggestion(sku) {
-    if (!sku) return;
-    
-    fetch(`/api/get_marketing_suggestion.php?sku=${encodeURIComponent(sku)}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.exists) {
-            displayMarketingSuggestionIndicator(data.suggestion);
-        }
-    })
-    .catch(error => {
-        console.error('Error loading marketing suggestion:', error);
-    });
-}
-
-function displayMarketingSuggestionIndicator(suggestion) {
-    // Find the marketing copy button
-    const marketingButton = document.querySelector('#open-marketing-manager-btn') || document.querySelector('[data-action="open-marketing-manager"]');
-    if (!marketingButton) return;
-    
-    // Add indicator that previous suggestion exists
-    const existingIndicator = marketingButton.querySelector('.suggestion-indicator');
-    if (existingIndicator) {
-        existingIndicator.remove();
-    }
-    
-    const indicator = document.createElement('span');
-    indicator.className = 'suggestion-indicator ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full';
-    indicator.innerHTML = '💾 Previous';
-    indicator.title = `Previous AI analysis available from ${new Date(suggestion.created_at).toLocaleDateString()}`;
-    
-    marketingButton.appendChild(indicator);
-    
-    // Store the suggestion data for potential reuse
-    window.existingMarketingSuggestion = suggestion;
-}
-
-async function populateCostBreakdownFromSuggestion(suggestionData) {
-    // Clear existing cost breakdown from both UI and database
-    await clearCostBreakdownCompletely();
-    
-    // Initialize cost breakdown if not already done
-    if (!costBreakdown) {
-        costBreakdown = {
-            materials: {},
-            labor: {},
-            energy: {},
-            equipment: {},
-            totals: {}
-        };
-    }
-    
-    const currentSku = currentItemSku;
-    
-    // Populate each category from the suggestion breakdown
-    const breakdown = suggestionData.breakdown;
-    
-    // Materials
-    if (breakdown.materials > 0) {
-        const materialId = 'material_' + Date.now();
-        costBreakdown.materials[materialId] = {
-            name: 'Suggested Materials',
-            cost: breakdown.materials
-        };
-        addCostItemToUI('materials', materialId, 'Suggested Materials', breakdown.materials);
-        
-        // Save to database
-        await saveCostItemToDatabase('materials', {
-            inventoryId: currentSku,
-            name: 'Suggested Materials',
-            cost: breakdown.materials
-        });
-    }
-    
-    // Labor
-    if (breakdown.labor > 0) {
-        const laborId = 'labor_' + Date.now();
-        costBreakdown.labor[laborId] = {
-            name: 'Suggested Labor',
-            cost: breakdown.labor
-        };
-        addCostItemToUI('labor', laborId, 'Suggested Labor', breakdown.labor);
-        
-        // Save to database
-        await saveCostItemToDatabase('labor', {
-            inventoryId: currentSku,
-            description: 'Suggested Labor',
-            cost: breakdown.labor
-        });
-    }
-    
-    // Energy
-    if (breakdown.energy > 0) {
-        const energyId = 'energy_' + Date.now();
-        costBreakdown.energy[energyId] = {
-            name: 'Suggested Energy',
-            cost: breakdown.energy
-        };
-        addCostItemToUI('energy', energyId, 'Suggested Energy', breakdown.energy);
-        
-        // Save to database
-        await saveCostItemToDatabase('energy', {
-            inventoryId: currentSku,
-            description: 'Suggested Energy',
-            cost: breakdown.energy
-        });
-    }
-    
-    // Equipment
-    if (breakdown.equipment > 0) {
-        const equipmentId = 'equipment_' + Date.now();
-        costBreakdown.equipment[equipmentId] = {
-            name: 'Suggested Equipment',
-            cost: breakdown.equipment
-        };
-        addCostItemToUI('equipment', equipmentId, 'Suggested Equipment', breakdown.equipment);
-        
-        // Save to database
-        await saveCostItemToDatabase('equipment', {
-            inventoryId: currentSku,
-            description: 'Suggested Equipment',
-            cost: breakdown.equipment
-        });
-    }
-    
-    // Calculate and update totals
-    const totals = {
-        materialTotal: breakdown.materials || 0,
-        laborTotal: breakdown.labor || 0,
-        energyTotal: breakdown.energy || 0,
-        equipmentTotal: breakdown.equipment || 0,
-        suggestedCost: suggestionData.suggestedCost
-    };
-    
-    // Update totals display
-    updateTotalsDisplay(totals);
-    
-    // Show the cost breakdown section if it's hidden
-    const costBreakdownSection = document.getElementById('costBreakdownSection');
-    if (costBreakdownSection && costBreakdownSection.classList.contains('hidden')) {
-        costBreakdownSection.classList.remove('hidden');
-    }
-    
-    // Add a note about the suggestion
-    const noteElement = document.createElement('div');
-    noteElement.className = 'mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800';
-    noteElement.innerHTML = `
-        <strong>💡 AI Suggestion Applied & Saved:</strong> ${suggestionData.reasoning}
-        <br><small>Confidence: ${suggestionData.confidence} • Cost breakdown has been saved to database</small>
-    `;
-    
-    // Remove any existing suggestion note
-    const existingNote = document.querySelector('.cost-suggestion-note');
-    if (existingNote) {
-        existingNote.remove();
-    }
-    
-    // Add the note to the cost breakdown section
-    noteElement.classList.add('cost-suggestion-note');
-    const costTotalsDiv = document.getElementById('costTotals');
-    if (costTotalsDiv) {
-        costTotalsDiv.parentNode.insertBefore(noteElement, costTotalsDiv.nextSibling);
-    }
-}
-
-function clearCostBreakdown() {
-    // Clear the data
-    if (costBreakdown) {
-        costBreakdown.materials = {};
-        costBreakdown.labor = {};
-        costBreakdown.energy = {};
-        costBreakdown.equipment = {};
-        costBreakdown.totals = {};
-    }
-    
-    // Clear the UI lists
-    ['materials', 'labor', 'energy', 'equipment'].forEach(category => {
-        const listElement = document.getElementById(`${category}List`);
-        if (listElement) {
-            listElement.innerHTML = '<p class="text-gray-500 text-xs italic">No items added yet.</p>';
-        }
-    });
-    
-    // Clear totals display
-    updateTotalsDisplay({ 
-        materialTotal: 0, 
-        laborTotal: 0, 
-        energyTotal: 0, 
-        equipmentTotal: 0, 
-        suggestedCost: 0 
-    });
-    
-    // Remove any existing suggestion note
-    const existingNote = document.querySelector('.cost-suggestion-note');
-    if (existingNote) {
-        existingNote.remove();
-    }
-}
-
-async function clearCostBreakdownCompletely() {
-    // First clear the UI and local data
-    clearCostBreakdown();
-    
-    // Then clear from database
-    if (currentItemSku) {
-        try {
-            const response = await fetch('functions/functions/process_cost_breakdown.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'clear_all',
-                    inventoryId: currentItemSku
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (!result.success) {
-                console.error('Failed to clear cost breakdown from database:', result.error);
-                showWarning( 'UI cleared but database may still contain old cost data');
-                return false;
-            }
-            
-            return true;
-        } catch (error) {
-            console.error('Error clearing cost breakdown from database:', error);
-            showWarning( 'UI cleared but database may still contain old cost data');
-            return false;
-        }
-    }
-}
-
-function addCostItemToUI(category, itemId, itemName, itemCost) {
-    const listElement = document.getElementById(`${category}List`);
-    if (!listElement) {
-        console.error(`Could not find list element for category: ${category}`);
-        return;
-    }
-    
-    // Remove the "No items added yet" message if it exists
-    const noItemsMsg = listElement.querySelector('.text-gray-500');
-    if (noItemsMsg) {
-        noItemsMsg.remove();
-    }
-    
-    // Create the item element
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'cost-item';
-    itemDiv.innerHTML = `
-        <span class="cost-item-name" title="${htmlspecialchars(itemName)}">${htmlspecialchars(itemName)}</span>
-        <div class="cost-item-actions">
-            <span class="cost-item-value">$${parseFloat(itemCost).toFixed(2)}</span>
-            <button type="button" class="delete-cost-btn" data-id="${itemId}" data-type="${category}" title="Delete this cost item">×</button>
-        </div>
-    `;
-    
-    listElement.appendChild(itemDiv);
-}
-
-function updateCostTotals() {
-    // This function is used elsewhere in the code, so we'll create it as an alias
-    // Calculate totals from the current costBreakdown data
-    if (!costBreakdown) {
-        updateTotalsDisplay({ 
-            materialTotal: 0, 
-            laborTotal: 0, 
-            energyTotal: 0, 
-            equipmentTotal: 0, 
-            suggestedCost: 0 
-        });
-        return;
-    }
-    
-    const totals = {
-        materialTotal: Object.values(costBreakdown.materials || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0),
-        laborTotal: Object.values(costBreakdown.labor || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0),
-        energyTotal: Object.values(costBreakdown.energy || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0),
-        equipmentTotal: Object.values(costBreakdown.equipment || {}).reduce((sum, item) => sum + parseFloat(item.cost || 0), 0)
-    };
-    
-    totals.suggestedCost = totals.materialTotal + totals.laborTotal + totals.energyTotal + totals.equipmentTotal;
-    
-    updateTotalsDisplay(totals);
-}
-
-async function saveCostItemToDatabase(costType, data) {
-    try {
-        const response = await fetch('functions/functions/process_cost_breakdown.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                inventoryId: data.inventoryId,
-                costType: costType,
-                name: data.name,
-                description: data.description,
-                cost: data.cost
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            console.error('Failed to save cost item:', result.error);
-            showError( 'Failed to save cost item: ' + result.error);
-            return false;
-        }
-        
-        return true;
-    } catch (error) {
-        console.error('Error saving cost item:', error);
-        showError( 'Error saving cost item: ' + error.message);
-        return false;
-    }
-}
+// Cost breakdown helpers migrated to Vite module (src/js/admin-inventory.js)
 
 function generateMarketingCopy() {
     const nameField = document.getElementById('name');
@@ -3045,9 +2592,9 @@ function showMarketingIntelligenceModal(data) {
                 </button>
             </div>
             
-            <!- Primary Content ->
+            <!-- Primary Content -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!- Enhanced Title & Description ->
+                <!-- Enhanced Title & Description -->
                 <div class="space-y-4">
                     <div class="bg-blue-50 rounded-lg">
                         <h4 class="font-semibold text-gray-800 flex items-center">
@@ -3070,7 +2617,7 @@ function showMarketingIntelligenceModal(data) {
                     </div>
                 </div>
                 
-                <!- Target Audience & Keywords ->
+                <!-- Target Audience & Keywords -->
                 <div class="space-y-4">
                     <div class="bg-purple-50 rounded-lg">
                         <h4 class="font-semibold text-gray-800 flex items-center">
@@ -3092,7 +2639,7 @@ function showMarketingIntelligenceModal(data) {
                 </div>
             </div>
             
-            <!- Marketing Intelligence Tabs ->
+            <!-- Marketing Intelligence Tabs -->
             <div class="border-b border-gray-200">
                 <nav class="-mb-px flex space-x-8">
                     <button data-action="show-marketing-tab" data-tab="selling" class="marketing-tab-btn active border-b-2 border-purple-500 font-medium text-sm text-purple-600">
@@ -3110,9 +2657,9 @@ function showMarketingIntelligenceModal(data) {
                 </nav>
             </div>
             
-            <!- Tab Content ->
+            <!-- Tab Content -->
             <div id="marketing-tab-content">
-                <!- Selling Points Tab ->
+                <!-- Selling Points Tab -->
                 <div id="tab-selling" class="marketing-tab-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-green-50 rounded-lg">
@@ -3134,7 +2681,7 @@ function showMarketingIntelligenceModal(data) {
                     </div>
                 </div>
                 
-                <!- Competitive Edge Tab ->
+                <!-- Competitive Edge Tab -->
                 <div id="tab-competitive" class="marketing-tab-content hidden">
                     <div class="bg-red-50 rounded-lg">
                         <h5 class="font-semibold text-gray-800">🏆 Competitive Advantages</h5>
@@ -3148,7 +2695,7 @@ function showMarketingIntelligenceModal(data) {
                     </div>
                 </div>
                 
-                <!- Conversion Tab ->
+                <!-- Conversion Tab -->
                 <div id="tab-conversion" class="marketing-tab-content hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="bg-orange-50 rounded-lg">
@@ -3176,7 +2723,7 @@ function showMarketingIntelligenceModal(data) {
                     </div>
                 </div>
                 
-                <!- Marketing Channels Tab ->
+                <!-- Marketing Channels Tab -->
                 <div id="tab-channels" class="marketing-tab-content hidden">
                     <div class="bg-indigo-50 rounded-lg">
                         <h5 class="font-semibold text-gray-800">📢 Recommended Marketing Channels</h5>
@@ -3191,7 +2738,7 @@ function showMarketingIntelligenceModal(data) {
                 </div>
             </div>
             
-            <!- AI Analysis Summary ->
+            <!-- AI Analysis Summary -->
             <div class="bg-gray-50 rounded-lg">
                 <h4 class="font-semibold text-gray-800 flex items-center">
                     <span class="">🧠</span> AI Analysis Summary
@@ -3783,323 +3330,11 @@ window.addEventListener('storage', function(e) {
     }
 });
 
-// Multi-Image Upload Functions
-let selectedFiles = [];
+// The module binds to #multiImageUpload and manages validation, progress, upload, and refresh.
 
-// Handle file selection and auto-upload
-document.getElementById('multiImageUpload')?.addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-    
-    // Validate file sizes before upload (10MB = 10 * 1024 * 1024 bytes)
-    const maxFileSize = 10 * 1024 * 1024;
-    const oversizedFiles = files.filter(file => file.size > maxFileSize);
-    
-    if (oversizedFiles.length > 0) {
-        const fileNames = oversizedFiles.map(file => `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`).join(', ');
-        showError( `The following files are too large (max 10MB allowed): ${fileNames}`);
-        // Clear the file input
-        this.value = '';
-        return;
-    }
-    
-    // Show progress indicator
-    const progressContainer = document.getElementById('uploadProgress');
-    const progressBar = document.getElementById('uploadProgressBar');
-    progressContainer.classList.remove('hidden');
-    progressBar.style.width = '0%';
-    
-    // Auto-upload the selected files
-    autoUploadImages(files);
-});
+// AI image processing is handled by the Vite module via data-action="process-images-ai".
 
-function autoUploadImages(files) {const sku = (document.getElementById('skuEdit') || document.getElementById('skuDisplay'))?.value;if (!sku) {
-        console.error('No SKU found');
-        showError( 'SKU is required');
-        hideUploadProgress();
-        return;
-    }
-    
-    const formData = new FormData();
-    files.forEach((file, index) => {formData.append('images[]', file);
-    });
-    
-    formData.append('sku', sku);
-    formData.append('altText', document.getElementById('name')?.value || '');
-    formData.append('useAIProcessing', document.getElementById('useAIProcessing')?.checked ? 'true' : 'false');// Update progress bar
-    const progressBar = document.getElementById('uploadProgressBar');
-    progressBar.style.width = '25%';
-    
-    fetch('/functions/process_multi_image_upload.php', {
-        method: 'POST',
-        body: formData,
-        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    })
-    .then(response => {progressBar.style.width = '75%';
-        return response.text(); // Get as text first to see what we're getting
-    })
-    .then(text => {progressBar.style.width = '100%';
-        
-        try {
-            const data = JSON.parse(text);if (data.success) {
-                showSuccess( data.message || `Successfully uploaded ${files.length} image(s)`);
-                
-                // Clear the file input
-                document.getElementById('multiImageUpload').value = '';
-                
-                // Refresh current images display
-                loadCurrentImages(sku);
-                
-            } else {
-                console.error('Upload failed:', data.error);
-                showError( data.error || 'Upload failed');
-            }
-            
-            if (data.warnings && data.warnings.length > 0) {
-                data.warnings.forEach(warning => {
-                    console.warn('Upload warning:', warning);
-                    showWarning( warning);
-                });
-            }
-        } catch (e) {
-            console.error('Failed to parse JSON response:', e);
-            console.error('Raw response:', text.substring(0, 500));
-            showError( 'Server returned invalid response: ' + text.substring(0, 100));
-        }
-    })
-    .catch(error => {
-        console.error('Upload fetch error:', error);
-        showError( 'Upload failed: ' + error.message);
-    })
-    .finally(() => {
-        // Hide progress after a short delay
-        setTimeout(() => {
-            hideUploadProgress();
-        }, 1000);
-    });
-}
-
-function hideUploadProgress() {
-    const progressContainer = document.getElementById('uploadProgress');
-    const progressBar = document.getElementById('uploadProgressBar');
-    progressContainer.classList.add('hidden');
-    progressBar.style.width = '0%';
-}
-
-// AI Processing Functions
-async function processExistingImagesWithAI() {
-    const sku = (document.getElementById('skuEdit') || document.getElementById('skuDisplay'))?.value;
-    
-    if (!sku) {
-        showError( 'SKU is required');
-        return;
-    }
-    
-    try {
-        // Set up completion callback
-        window.aiProcessingModal.onComplete = function() {
-            // Refresh current images display
-            loadCurrentImages(sku);
-            showSuccess( 'AI processing completed! Images have been updated.');
-        };
-        
-        // Set up cancel callback
-        window.aiProcessingModal.onCancel = function() {
-            showInfo( 'AI processing was cancelled.');
-        };
-        
-        // Start processing
-        const response = await fetch('/api/functions/process_image_ai.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                action: 'process_uploaded_image',
-                sku: sku,
-                options: {
-                    convertToWebP: true,
-                    quality: 90,
-                    preserveTransparency: true,
-                    useAI: true,
-                    fallbackTrimPercent: 0.05
-                }
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.success) {
-            throw new Error(data.error || 'Processing failed');
-        }
-        
-        // Show results
-        window.aiProcessingModal.show();
-        window.aiProcessingModal.showSuccess(
-            `Successfully processed ${data.processed_images} image(s)`,
-            [`Processed ${data.processed_images} images`, 'All images optimized with AI edge detection']
-        );
-        
-    } catch (error) {
-        console.error('AI processing error:', error);
-        showError( 'AI processing failed: ' + error.message);
-    }
-}
-
-function loadCurrentImages(sku, isViewModal = false) {
-    if (!sku) return;
-    
-    fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Use the same function for both edit and view modals
-            displayCurrentImages(data.images, isViewModal);
-        } else {
-            console.error('Failed to load images:', data.error);
-            const container = document.getElementById('currentImagesList');
-            const loadingDiv = document.getElementById('viewModalImagesLoading') || document.getElementById('currentImagesLoading');
-            if (loadingDiv) loadingDiv.remove();
-            if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">Failed to load images</div>';
-        }
-    })
-    .catch(error => {
-        console.error('Error loading images:', error);
-        const container = document.getElementById('currentImagesList');
-        const loadingDiv = document.getElementById('viewModalImagesLoading') || document.getElementById('currentImagesLoading');
-        if (loadingDiv) loadingDiv.remove();
-        if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">Error loading images</div>';
-    });
-}
-
-// Removed duplicate loadThumbnailImage function - using the one below
-
-function displayCurrentImages(images, isViewModal = false) {
-    const container = document.getElementById('currentImagesList');
-    
-    if (!images || images.length === 0) {
-        container.innerHTML = '<div class="text-gray-500 text-sm col-span-full">No images uploaded yet</div>';
-        return;
-    }
-    
-    container.innerHTML = '';
-    
-    // Determine carousel type and track ID
-    const carouselType = isViewModal ? 'view' : 'edit';
-    const trackId = isViewModal ? 'viewCarouselTrack' : 'editCarouselTrack';
-    
-    // Create carousel container
-    const carouselContainer = document.createElement('div');
-    carouselContainer.className = 'image-carousel-container relative';
-    carouselContainer.style.width = '100%';
-    carouselContainer.innerHTML = `
-        <div class="image-carousel-wrapper overflow-hidden" >
-            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="${trackId}">
-                <!- Images will be added here ->
-            </div>
-        </div>
-        ${images.length > 3 ? `
-            <button type="button" class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" data-action="move-carousel" data-type="${carouselType}" data-direction="-1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
-            <button type="button" class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" data-action="move-carousel" data-type="${carouselType}" data-direction="1">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </button>
-        ` : ''}
-    `;
-    
-    const track = carouselContainer.querySelector(`#${trackId}`);
-    
-    // Add all images to the carousel track
-    images.forEach((image, index) => {
-        const imageDiv = document.createElement('div');
-        imageDiv.className = 'carousel-slide flex-shrink-0';
-        // Use fixed pixel width to show exactly 3 images - calculate based on container
-        // Container is ~506px, so each slide should be ~155px to fit 3 with gaps
-        imageDiv.style.width = '155px';
-        imageDiv.style.marginRight = '15px';// Action buttons only for edit modal
-        const actionButtons = isViewModal ? '' : `
-            <div class="flex gap-1 flex-wrap">
-                        ${!image.is_primary ? `<button type="button" data-action="set-primary" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0\.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
-                                  <button type="button" data-action="delete-image" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0\.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
-            </div>
-        `;
-        
-        imageDiv.innerHTML = `
-            <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full">
-                <div class="relative carousel-image-container" >
-                    <img src="${image.image_path}" alt="${image.alt_text}" 
-                         class="w-full h-full object-contain bg-gray-50 carousel-image">
-                </div>
-                <div class="bg-gray-50">
-                    ${!isViewModal ? `<div class="text-xs text-gray-700 font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>` : ''}
-                    ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
-                    ${actionButtons}
-                </div>
-            </div>
-        `;
-        // Add programmatic error handling (no inline attributes)
-        const imgEl = imageDiv.querySelector('img.carousel-image');
-        if (imgEl) {
-            imgEl.addEventListener('error', () => {
-                imgEl.style.display = 'none';
-                if (imgEl.parentElement) {
-                    imgEl.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">Image Not Found</div></div>';
-                }
-            });
-        }
-        track.appendChild(imageDiv);
-    });
-    
-    // Set the track width based on number of images using fixed pixel widths
-    // Each slide is 155px + 15px margin = 170px per slide
-    let trackWidth;
-    if (images.length <= 3) {
-        trackWidth = '100%';
-    } else {
-        // Calculate total width needed: (slides * 155px) + ((slides-1) * 15px gaps)
-        const totalWidth = (images.length * 155) + ((images.length - 1) * 15);
-        trackWidth = totalWidth + 'px';
-    }
-    track.style.width = trackWidth;
-    
-    // Debug: Force container to show only 3 images worth of width
-    const wrapper = track.parentElement;
-    if (wrapper && images.length > 3) {
-        // 3 images * 155px + 2 gaps * 15px = 495px
-        wrapper.style.width = '495px';
-        wrapper.style.maxWidth = '495px';}container.appendChild(carouselContainer);
-    
-    // Initialize carousel position
-    const positionVar = isViewModal ? 'viewCarouselPosition' : 'editCarouselPosition';
-    window[positionVar] = 0;
-    
-    // Images now have fixed height, no normalization needed
-    
-    // Debug: Check actual container and track dimensions
-    setTimeout(() => {
-        const containerWidth = container.offsetWidth;
-        const trackElement = document.getElementById(trackId);
-        const trackWidth = trackElement ? trackElement.offsetWidth : 'not found';
-        const slides = trackElement ? trackElement.querySelectorAll('.carousel-slide') : [];if (slides.length > 0) {console.log(`- First slide computed width: ${getComputedStyle(slides[0]).width}`);
-        }
-    }, 200);
-    
-    // Update carousel navigation visibility
-    updateCarouselNavigation(carouselType, images.length);}
-
-// Helper functions removed - now using carousel layout
-
-// displayViewModalImages function removed - now using unified displayCurrentImages function
+// Image list loading and rendering is handled by the Vite module.
 
 function loadThumbnailImage(sku, container) {
     if (!sku || !container) {
@@ -4157,42 +3392,8 @@ function loadThumbnailImage(sku, container) {
     });
 }
 
-// Load current images when modal opens and handle thumbnails
+// Load thumbnails for inventory list
 document.addEventListener('DOMContentLoaded', function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const editId = urlParams.get('edit');
-    const viewId = urlParams.get('view');
-    
-    if (modalMode === 'edit' && editId) {
-        // Wait a bit for the DOM to be fully ready
-        setTimeout(() => {
-            const skuField = document.getElementById('skuEdit') || document.getElementById('skuDisplay');
-            if (skuField && skuField.value) {loadCurrentImages(skuField.value, false);
-            } else {}
-        }, 200);
-    } else if (modalMode === 'view' && viewId) {
-        // Load images for view modal
-        setTimeout(() => {
-            // For view modal, get the SKU from the readonly field
-            const skuField = document.getElementById('skuDisplay');
-            if (skuField && skuField.value) {loadCurrentImages(skuField.value, true);
-            } else {const container = document.getElementById('currentImagesList');
-                const loadingDiv = document.getElementById('viewModalImagesLoading');
-                if (loadingDiv) loadingDiv.remove();
-                if (container) container.innerHTML = '<div class="text-center text-gray-500 text-sm">No SKU available</div>';
-            }
-        }, 200);
-    }
-    
-    // ===== IMAGE SYSTEM ARCHITECTURE =====
-    // Current system uses:
-    // 1. Database: item_images table with SKU-based relationships
-    // 2. API: get_item_images.php returns images for a given SKU
-    // 3. Frontend: thumbnail containers with data-sku attributes
-    // 4. JavaScript: loadThumbnailImage() function fetches from API
-    // This system is WORKING CORRECTLY - no mismatch between components
-
-    // Load thumbnails for inventory list
     const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
     thumbnailContainers.forEach((container, index) => {
         const sku = container.dataset.sku;
@@ -4503,214 +3704,7 @@ function updateCarouselNavigation(type, totalSlides) {
         nextBtn.style.display = currentPosition >= maxPosition ? 'none' : 'block';}
 }
 
-// Cost Breakdown Template Functions
-function toggleTemplateSection() {
-    const section = document.getElementById('templateSection');
-    const toggleText = document.getElementById('templateToggleText');
-    
-    if (section.classList.contains('hidden')) {
-        section.classList.remove('hidden');
-        toggleText.textContent = 'Hide Templates';
-        loadTemplateList();
-    } else {
-        section.classList.add('hidden');
-        toggleText.textContent = 'Show Templates';
-    }
-}
-
-function loadTemplateList() {
-    const select = document.getElementById('templateSelect');
-    const categoryField = document.getElementById('categoryEdit');
-    const category = categoryField ? categoryField.value : '';
-    
-    // Clear existing options
-    select.innerHTML = '<option value="">Choose a template...</option>';
-    
-    // Build URL with optional category filter
-    let url = '/api/cost_breakdown_templates.php?action=list';
-    if (category) {
-        url += `&category=${encodeURIComponent(category)}`;
-    }
-    
-    fetch(url)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.templates) {
-            data.templates.forEach(template => {
-                const option = document.createElement('option');
-                option.value = template.id;
-                option.textContent = `${template.template_name}${template.category ? ` (${template.category})` : ''}`;
-                select.appendChild(option);
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error loading templates:', error);
-        showError( 'Failed to load templates');
-    });
-}
-
-function loadTemplate() {
-    const select = document.getElementById('templateSelect');
-    const templateId = select.value;
-    
-    if (!templateId) {
-        showError( 'Please select a template to load');
-        return;
-    }
-    
-    fetch(`/api/cost_breakdown_templates.php?action=get&id=${templateId}`)
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && data.template) {
-            applyTemplateToBreakdown(data.template);
-            showSuccess( `Template "${data.template.template_name}" loaded successfully!`);
-        } else {
-            showError( data.error || 'Failed to load template');
-        }
-    })
-    .catch(error => {
-        console.error('Error loading template:', error);
-        showError( 'Failed to load template');
-    });
-}
-
-function applyTemplateToBreakdown(template) {
-    // Clear existing cost breakdown
-    ['materials', 'labor', 'energy', 'equipment'].forEach(costType => {
-        const list = document.getElementById(`${costType}List`);
-        if (list) {
-            list.innerHTML = '';
-        }
-    });
-    
-    // Apply template data
-    const costTypes = ['materials', 'labor', 'energy', 'equipment'];
-    costTypes.forEach(costType => {
-        if (template[costType] && Array.isArray(template[costType])) {
-            template[costType].forEach(item => {
-                addCostItemFromTemplate(costType, item);
-            });
-        }
-    });
-    
-    // Recalculate totals
-    updateCostTotals();
-}
-
-function addCostItemFromTemplate(costType, itemData) {
-    const list = document.getElementById(`${costType}List`);
-    if (!list) return;
-    
-    const costItem = document.createElement('div');
-    costItem.className = 'cost-item';
-    
-    const nameSpan = document.createElement('span');
-    nameSpan.className = 'cost-item-name';
-    nameSpan.textContent = itemData.name || '';
-    
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'cost-item-actions';
-    
-    const valueSpan = document.createElement('span');
-    valueSpan.className = 'cost-item-value';
-    valueSpan.textContent = `$${parseFloat(itemData.cost || 0).toFixed(2)}`;
-    
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'cost-item-edit';
-    editBtn.innerHTML = '✏️';
-    // Use delegated handler via data-action instead of inline onclick
-    editBtn.setAttribute('data-action', 'open-cost-modal');
-    editBtn.setAttribute('data-category', costType);
-    editBtn.setAttribute('data-id', costItem);
-    
-    const deleteBtn = document.createElement('button');
-    deleteBtn.type = 'button';
-    deleteBtn.className = 'cost-item-delete';
-    deleteBtn.innerHTML = '🗑️';
-    // Use delegated handler via data-action instead of inline onclick
-    deleteBtn.setAttribute('data-action', 'delete-cost-item');
-    deleteBtn.setAttribute('data-category', costType);
-    deleteBtn.setAttribute('data-id', costItem);
-    
-    actionsDiv.appendChild(valueSpan);
-    actionsDiv.appendChild(editBtn);
-    actionsDiv.appendChild(deleteBtn);
-    
-    costItem.appendChild(nameSpan);
-    costItem.appendChild(actionsDiv);
-    
-    // Store the data
-    costItem.dataset.name = itemData.name || '';
-    costItem.dataset.cost = itemData.cost || '0';
-    costItem.dataset.unit = itemData.unit || '';
-    
-    list.appendChild(costItem);
-}
-
-function saveAsTemplate() {
-    const templateNameField = document.getElementById('templateName');
-    const categoryField = document.getElementById('categoryEdit');
-    const nameField = document.getElementById('name');
-    
-    const templateName = templateNameField.value.trim();
-    if (!templateName) {
-        showError( 'Please enter a template name');
-        return;
-    }
-    
-    // Gather current cost breakdown data
-    const templateData = {
-        template_name: templateName,
-        description: `Template created from ${nameField ? nameField.value : 'item'}`,
-        category: categoryField ? categoryField.value : '',
-        sku: currentItemSku || '',
-        materials: [],
-        labor: [],
-        energy: [],
-        equipment: []
-    };
-    
-    // Extract cost data from current breakdown
-    ['materials', 'labor', 'energy', 'equipment'].forEach(costType => {
-        const list = document.getElementById(`${costType}List`);
-        if (list) {
-            const items = list.querySelectorAll('.cost-item');
-            items.forEach(item => {
-                templateData[costType].push({
-                    name: item.dataset.name || '',
-                    cost: parseFloat(item.dataset.cost || '0'),
-                    unit: item.dataset.unit || ''
-                });
-            });
-        }
-    });
-    
-    // Save template
-    fetch('/api/cost_breakdown_templates.php?action=save_from_breakdown', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify(templateData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccess( `Template "${templateName}" saved successfully!`);
-            templateNameField.value = '';
-            loadTemplateList(); // Refresh the template list
-        } else {
-            showError( data.error || 'Failed to save template');
-        }
-    })
-    .catch(error => {
-        console.error('Error saving template:', error);
-        showError( 'Failed to save template');
-    });
-}
+// Cost breakdown template functions migrated to Vite module (src/js/admin-inventory.js); inline toggle/list removed.
 
 // Global change tracking system for marketing manager
 let originalMarketingData = {};
@@ -4964,99 +3958,11 @@ function resetMarketingChangeTracking() {
 
 // Marketing Manager Functions
 
-// Enhanced modal visibility functions
-function showMarketingModal() {
-    const modal = document.getElementById('marketingManagerModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.add('show');
-        modal.classList.remove('hidden');}
-}
+// Enhanced modal visibility functions (handled by Vite module in src/js/admin-inventory.js)
 
-function hideMarketingModal() {
-    const modal = document.getElementById('marketingManagerModal');
-    if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        modal.classList.add('hidden');}
-}
+// openMarketingManager handled by AdminInventoryModule in src/js/admin-inventory.js
 
-function openMarketingManager() {if (!currentItemSku) {
-        showValidation('No item selected. Please select an item first.');
-        return;
-    }
-    
-    // Get the modal
-    const modal = document.getElementById('marketingManagerModal');if (!modal) {
-        console.error('Marketing Manager modal not found');
-        return;
-    }
-    
-    // Remove any existing classes that might hide it
-    modal.className = '';
-    
-    // Professional styling with guaranteed visibility
-    modal.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: rgba(0, 0, 0, 0.75) !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        z-index: 50000 !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        padding: 1rem !important;
-    `;
-    
-    // Professional modal content styling
-    const modalContent = modal.querySelector('.bg-white');
-    if (modalContent) {
-        modalContent.style.cssText = `
-            background: white !important;
-            border-radius: 0.75rem !important;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
-            width: 100% !important;
-            max-width: 72rem !important;
-            max-height: 95vh !important;
-            display: flex !important;
-            flex-direction: column !important;
-            overflow: hidden !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            position: relative !important;
-            z-index: 50001 !important;
-        `;}
-    
-    // Force it to the front of the DOM (this was the key fix!)
-    document.body.appendChild(modal);
-    
-    // Update the SKU indicator in the header
-    const skuIndicator = document.getElementById('currentEditingSku');
-    if (skuIndicator) {
-        skuIndicator.textContent = currentItemSku;
-    }// Load the item image in the header
-    loadMarketingItemImage();
-    
-    // Load marketing data and show content tab
-    loadMarketingData();
-    showMarketingManagerTab('content');
-}
-
-function closeMarketingManager() {
-    const modal = document.getElementById('marketingManagerModal');
-    if (modal) {
-        modal.style.display = 'none';// Clear any unsaved changes warning if needed
-        hasMarketingChanges = false;
-        hasTitleChanges = false;
-        hasDescriptionChanges = false;
-    }
-}
+// closeMarketingManager handled by AdminInventoryModule in src/js/admin-inventory.js
 
 function applyMarketingToItem() {// Get the marketing title and description fields
     const marketingTitle = document.getElementById('marketingTitle');
@@ -5287,7 +4193,7 @@ function loadSellingTab(contentDiv) {
                             <button data-action="add-list-item" data-field="selling_points" class="text-green-600 hover:text-green-800 text-sm">+ Add</button>
                         </div>
                         <div id="sellingPointsList" class="space-y-2 max-h-40 overflow-y-auto">
-                            <!- Dynamic content ->
+                            <!-- Dynamic content -->
                         </div>
                         <input type="text" id="newSellingPoint" placeholder="Enter new selling point..." class="w-full border border-green-200 rounded" data-add-enter-field="selling_points">
                     </div>
@@ -5298,7 +4204,7 @@ function loadSellingTab(contentDiv) {
                             <button data-action="add-list-item" data-field="competitive_advantages" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
                         </div>
                         <div id="competitiveAdvantagesList" class="space-y-2 max-h-40 overflow-y-auto">
-                            <!- Dynamic content ->
+                            <!-- Dynamic content -->
                         </div>
                         <input type="text" id="newCompetitiveAdvantage" placeholder="What makes you better..." class="w-full border border-red-200 rounded" data-add-enter-field="competitive_advantages">
                     </div>
@@ -5310,7 +4216,7 @@ function loadSellingTab(contentDiv) {
                         <button data-action="add-list-item" data-field="customer_benefits" class="text-yellow-600 hover:text-yellow-800 text-sm">+ Add</button>
                     </div>
                     <div id="customerBenefitsList" class="space-y-2 max-h-40 overflow-y-auto">
-                        <!- Dynamic content ->
+                        <!-- Dynamic content -->
                     </div>
                     <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full border border-yellow-200 rounded" data-add-enter-field="customer_benefits">
                 </div>
@@ -5333,7 +4239,7 @@ function loadSEOTab(contentDiv) {
                         <button data-action="add-list-item" data-field="seo_keywords" class="text-blue-600 hover:text-blue-800 text-sm">+ Add</button>
                     </div>
                     <div id="seoKeywordsList" class="space-y-2 max-h-40 overflow-y-auto">
-                        <!- Dynamic content ->
+                        <!-- Dynamic content -->
                     </div>
                     <input type="text" id="newSEOKeyword" placeholder="Enter keyword or phrase..." class="w-full border border-blue-200 rounded" data-add-enter-field="seo_keywords">
                 </div>
@@ -5382,7 +4288,7 @@ function loadConversionTab(contentDiv) {
                             <button data-action="add-list-item" data-field="call_to_action_suggestions" class="text-orange-600 hover:text-orange-800 text-sm">+ Add</button>
                         </div>
                         <div id="callToActionsList" class="space-y-2 max-h-40 overflow-y-auto">
-                            <!- Dynamic content ->
+                            <!-- Dynamic content -->
                         </div>
                         <input type="text" id="newCallToAction" placeholder="Get Yours Today, Buy Now, etc..." class="w-full border border-orange-200 rounded" data-add-enter-field="call_to_action_suggestions">
                     </div>
@@ -5393,7 +4299,7 @@ function loadConversionTab(contentDiv) {
                             <button data-action="add-list-item" data-field="urgency_factors" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
                         </div>
                         <div id="urgencyFactorsList" class="space-y-2 max-h-40 overflow-y-auto">
-                            <!- Dynamic content ->
+                            <!-- Dynamic content -->
                         </div>
                         <input type="text" id="newUrgencyFactor" placeholder="Limited time, while supplies last..." class="w-full border border-red-200 rounded" data-add-enter-field="urgency_factors">
                     </div>
@@ -5405,7 +4311,7 @@ function loadConversionTab(contentDiv) {
                         <button data-action="add-list-item" data-field="conversion_triggers" class="text-purple-600 hover:text-purple-800 text-sm">+ Add</button>
                     </div>
                     <div id="conversionTriggersList" class="space-y-2 max-h-40 overflow-y-auto">
-                        <!- Dynamic content ->
+                        <!-- Dynamic content -->
                     </div>
                     <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full border border-purple-200 rounded" data-add-enter-field="conversion_triggers">
                 </div>
@@ -5447,7 +4353,7 @@ function loadMarketingItemImage() {
                 '<img src="' + primaryImage.image_path + '" ' +
                      'alt="' + currentItemSku + '" ' +
                      'class="w-full h-full object-cover hover:scale-105 transition-transform duration-200" ' +
-                     'onerror="this.parentElement.innerHTML=\'<div class=\\\'w-full h-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs\\\'>📷</div>\'">' +
+                     'data-fallback="placeholder">' +
             '</div>';
         } else {// Show placeholder
             headerContainer.innerHTML = '<div class="w-40 h-40 rounded-lg border-2 border-gray-200 bg-gray-100 flex flex-col items-center justify-center shadow-lg">' +
@@ -6732,7 +5638,7 @@ function createComparisonCard(fieldKey, fieldLabel, currentValue, suggestedValue
 
 // migrated: AI comparison selection handlers managed by AdminInventoryModule
 </script>
-<script>
+<!-- MIGRATED: Inline inventory helpers removed; now handled by Vite module at src/js/admin-inventory.js
 // AI Content Comparison Modal Functions (cleaned up)
 window.aiComparisonData = {};
 let totalFields = 0;
@@ -6754,38 +5660,7 @@ function handleModalBackdropClick(event, modalId) {
     }
 }
 
-// Make functions globally accessible for inline onclick handlers
-// Marketing Manager Button Event Listener
-document.addEventListener("DOMContentLoaded", function() {
-    document.addEventListener("click", function(event) {
-        if (event.target && event.target.id === "open-marketing-manager-btn") {
-            if (typeof openMarketingManager === "function") {
-                openMarketingManager();
-            } else {
-                console.error("openMarketingManager function not found");
-            }
-        }
-    });
-});
-
-// Make functions globally accessible
-window.openMarketingManager = openMarketingManager;
-window.closeMarketingManager = closeMarketingManager;
-
-
-// Clean Marketing Manager Event Listener (single instance) 
-document.addEventListener("click", function(event) {
-    if (event.target && event.target.id === "open-marketing-manager-btn") {
-        event.preventDefault();
-        event.stopPropagation();// Don't close the edit modal - just open Marketing Manager on top
-        if (typeof openMarketingManager === "function") {
-            openMarketingManager();
-        } else {
-            console.error("openMarketingManager function not found");
-        }
-        return false; // Prevent any other event handlers
-    }
-});
+// Legacy global listeners for #open-marketing-manager-btn removed; use data-action="open-marketing-manager" and delegated handlers in src/js/admin-inventory.js
 
 // Color Management Functions
 
@@ -7086,9 +5961,9 @@ function createColorModal() {
                     <form id="colorForm">
                         <input type="hidden" id="colorId" name="colorId">
                         
-                        <!- Two-column layout ->
+                        <!-- Two-column layout -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <!- Left Column: Color Selection & Basic Info ->
+                            <!-- Left Column: Color Selection & Basic Info -->
                             <div class="space-y-4">
                                 <div>
                                     <label for="globalColorSelect" class="block text-sm font-medium text-gray-700">
@@ -7105,11 +5980,11 @@ function createColorModal() {
                                     </div>
                                 </div>
                                 
-                                <!- Hidden fields populated by global color selection ->
+                                <!-- Hidden fields populated by global color selection -->
                                 <input type="hidden" id="colorName" name="colorName">
                                 <input type="hidden" id="colorCode" name="colorCode">
                                 
-                                <!- Display selected color ->
+                                <!-- Display selected color -->
                                 <div id="selectedColorPreview" class="hidden">
                                     <label class="block text-sm font-medium text-gray-700">Selected Color Preview</label>
                                     <div class="flex items-center space-x-3 bg-gray-50 rounded-lg">
@@ -7139,20 +6014,20 @@ function createColorModal() {
                                 </div>
                             </div>
                             
-                            <!- Right Column: Image Selection & Preview ->
+                            <!-- Right Column: Image Selection & Preview -->
                             <div class="space-y-4">
-                                <!- Available Images Grid (moved to top) ->
+                                <!-- Available Images Grid (moved to top) -->
                                 <div id="availableImagesGrid">
                                     <label class="block text-sm font-medium text-gray-700">
                                         Available Images
                                         <span class="text-xs text-gray-500 font-normal">(click to select for this color)</span>
                                     </label>
                                     <div class="grid grid-cols-4 gap-3 max-h-48 overflow-y-auto border border-gray-200 rounded bg-gray-50">
-                                        <!- Images will be populated here ->
+                                        <!-- Images will be populated here -->
                                     </div>
                                 </div>
                                 
-                                <!- Image Preview ->
+                                <!-- Image Preview -->
                                 <div id="imagePreviewContainer" class="hidden">
                                     <label class="block text-sm font-medium text-gray-700">Selected Image Preview</label>
                                     <div class="border border-gray-300 rounded-lg bg-gray-50">
@@ -7166,12 +6041,12 @@ function createColorModal() {
                                     </div>
                                 </div>
                                 
-                                <!- Hidden field for storing selected image path ->
+                                <!-- Hidden field for storing selected image path -->
                                 <input type="hidden" id="colorImagePath" name="colorImagePath" value="">
                             </div>
                         </div>
                         
-                        <!- Action Buttons ->
+                        <!-- Action Buttons -->
                         <div class="flex justify-end space-x-3 border-t border-gray-200">
                             <button type="button" data-action="close-color-modal" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
@@ -7967,13 +6842,12 @@ async function loadSizeModalColors() {
     try {
         const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${currentItemSku}`);
         const data = await response.json();
-        
         const colorSelect = document.getElementById('sizeColorId');
         if (!colorSelect) return;
-        
+
         // Clear existing options except the first one
         colorSelect.innerHTML = '<option value="">General Size (No specific color)</option>';
-        
+
         if (data.success && data.colors && data.colors.length > 0) {
             data.colors.forEach(color => {
                 if (color.is_active == 1) {
@@ -8223,7 +7097,7 @@ function createRestructureModal(proposal) {
     
     modal.innerHTML = `
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <!- Fixed Header ->
+            <!-- Fixed Header -->
             <div class="border-b border-gray-200 flex-shrink-0">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800">✅ Current Size/Color Structure</h2>
@@ -8235,11 +7109,11 @@ function createRestructureModal(proposal) {
                 </div>
             </div>
             
-            <!- Scrollable Content ->
+            <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1" >
                 
                 
-                <!- Summary Section ->
+                <!-- Summary Section -->
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
                     <div class="flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-800">✅ Hierarchy is CORRECT</h3>
@@ -8249,7 +7123,7 @@ function createRestructureModal(proposal) {
                     </div>
                     <p class="text-sm text-gray-700">${message}</p>
                     
-                    <!- Structure Info ->
+                    <!-- Structure Info -->
                     <div class="bg-white bg-opacity-70 rounded-lg">
                         <div class="text-sm">
                             <strong>Hierarchy:</strong> Item → Sizes → Colors → Stock<br>
@@ -8258,14 +7132,14 @@ function createRestructureModal(proposal) {
                     </div>
                 </div>
                 
-                <!- Content Sections ->
+                <!-- Content Sections -->
                 <div class="">
-                    <!- Size-Color Combinations ->
+                    <!-- Size-Color Combinations -->
                     <div>
                         <div class="flex items-center justify-between">
                             <h4 class="font-semibold text-gray-700 flex items-center">
                                 📦 Size-Color Combinations
-                                <span class="text-sm text-gray-500">(${totalCombinations} active combinations)</span>
+                                <span class="text-sm text-gray-500">${totalCombinations} active combinations</span>
                             </h4>
                         </div>
                         
@@ -8303,11 +7177,11 @@ function createRestructureModal(proposal) {
                 </div>
             </div>
             
-            <!- Fixed Footer ->
+            <!-- Fixed Footer -->
             <div class="border-t border-gray-200 flex-shrink-0 bg-gray-50">
                 <div class="flex items-center justify-between">
                     <div class="text-sm text-gray-600">
-                        <span>✅ Structure is correct: Sizes → Colors → Stock</span>
+                        <span class="bg-white rounded shadow-sm">✅ Structure is correct: Sizes → Colors → Stock</span>
                     </div>
                     <div class="flex gap-3">
                         <button type="button" data-action="close-restructure-modal" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
@@ -8536,7 +7410,7 @@ function createStructureViewModal(data) {
     
     modal.innerHTML = `
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <!- Fixed Header ->
+            <!-- Fixed Header -->
             <div class="border-b border-gray-200 flex-shrink-0">
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800">👀 Current Structure View</h2>
@@ -8548,7 +7422,7 @@ function createStructureViewModal(data) {
                 </div>
             </div>
             
-            <!- Scrollable Content ->
+            <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1" >
                 
                 
@@ -8595,7 +7469,7 @@ function createStructureViewModal(data) {
                 `}
             </div>
             
-            <!- Fixed Footer ->
+            <!-- Fixed Footer -->
             <div class="border-t border-gray-200 flex-shrink-0">
                 <div class="flex justify-center">
                     <button type="button" data-action="close-structure-view-modal" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
@@ -8645,7 +7519,7 @@ async function checkAndShowStructureAnalysis() {
     }
 }
 
-</script>
+-->
 
 
 

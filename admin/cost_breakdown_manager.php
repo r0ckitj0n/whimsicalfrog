@@ -46,17 +46,11 @@ if (!empty($selectedItemId)) {
     }
 }
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cost Breakdown Manager - Whimsical Frog</title>
-
-    
-</head>
-<body>
-    <!- Toast Notification ->
+<?php
+ $page = 'admin/cost-breakdown-manager';
+ include_once dirname(__DIR__) . '/partials/header.php';
+?>
+    <!-- Toast Notification -->
     <div id="toast" class="toast-notification"></div>
     
     <div class="">
@@ -67,7 +61,7 @@ if (!empty($selectedItemId)) {
             </a>
         </div>
         
-        <!- Item Selection ->
+        <!-- Item Selection -->
         <div class="card-standard">
             <h2 class="text-brand-primary">Select Inventory Item</h2>
             <div class="flex flex-col md:flex-row gap-4">
@@ -89,9 +83,9 @@ if (!empty($selectedItemId)) {
             </div>
         </div>
         
-        <!- Cost Breakdown Display ->
+        <!-- Cost Breakdown Display -->
         <div id="costBreakdownContainer" class="<?php echo empty($selectedItemId) ? 'hidden' : ''; ?>">
-            <!- Item Details ->
+            <!-- Item Details -->
             <div class="card-standard">
                 <div class="flex justify-between items-center">
                     <h2 class="text-brand-primary" id="itemNameDisplay">
@@ -118,11 +112,11 @@ if (!empty($selectedItemId)) {
                 </div>
             </div>
             
-            <!- Cost Breakdown Sections ->
+            <!-- Cost Breakdown Sections -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!- Left Column: Materials and Labor ->
+                <!-- Left Column: Materials and Labor -->
                 <div>
-                    <!- Materials Section ->
+                    <!-- Materials Section -->
                     <div class="card-standard">
                         <div class="flex justify-between items-center">
                             <h3 class="text-brand-primary">Materials</h3>
@@ -132,27 +126,22 @@ if (!empty($selectedItemId)) {
                         </div>
                         
                         <div id="materialsList" class="mt-4 space-y-2">
-                            <!- Materials will be loaded here via JavaScript ->
+                            <!-- Materials will be loaded here via JavaScript -->
                             <div class="text-center text-gray-500 italic" id="noMaterialsMsg">
                                 No materials added yet
                             </div>
                         </div>
                     </div>
                     
-                    <!- Labor Section ->
+                    <!-- Labor Section -->
                     <div class="card-standard">
                         <div class="flex justify-between items-center">
                             <h3 class="text-brand-primary">Labor</h3>
-                            <button id="addLaborBtn" class="btn-brand text-sm">
-                                + Add Labor
-                            <h3 class="text-lg font-semibold text-gray-700">Labor</h3>
-                            <button id="addLaborBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
-                                Add Labor
-                            </button>
+                            <button id="addLaborBtn" class="btn-brand text-sm">+ Add Labor</button>
                         </div>
                         
                         <div id="laborList" class="divide-y divide-gray-200">
-                            <!- Labor items will be loaded here via JavaScript ->
+                            <!-- Labor items will be loaded here via JavaScript -->
                             <div class="text-center text-gray-500 italic" id="noLaborMsg">
                                 No labor costs added yet
                             </div>
@@ -160,9 +149,9 @@ if (!empty($selectedItemId)) {
                     </div>
                 </div>
                 
-                <!- Right Column: Energy and Totals ->
+                <!-- Right Column: Energy and Totals -->
                 <div>
-                    <!- Energy Section ->
+                    <!-- Energy Section -->
                     <div class="bg-white rounded-lg shadow-md">
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-semibold text-gray-700">Energy</h3>
@@ -172,14 +161,14 @@ if (!empty($selectedItemId)) {
                         </div>
                         
                         <div id="energyList" class="divide-y divide-gray-200">
-                            <!- Energy items will be loaded here via JavaScript ->
+                            <!-- Energy items will be loaded here via JavaScript -->
                             <div class="text-center text-gray-500 italic" id="noEnergyMsg">
                                 No energy costs added yet
                             </div>
                         </div>
                     </div>
                     
-                    <!- Cost Summary ->
+                    <!-- Cost Summary -->
                     <div class="card-standard">
                         <h3 class="text-brand-primary">Cost Summary</h3>
                         <div class="space-y-2 mt-4">
@@ -216,7 +205,7 @@ if (!empty($selectedItemId)) {
             </div>
         </div>
         
-        <!- Empty State ->
+        <!-- Empty State -->
         <div id="emptyStateContainer" class="<?php echo !empty($selectedItemId) ? 'hidden' : ''; ?> bg-white rounded-lg shadow-md text-center">
             <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
@@ -226,7 +215,7 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
-    <!- Add/Edit Material Modal ->
+    <!-- Add/Edit Material Modal -->
     <div id="materialModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center">
@@ -259,7 +248,7 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
-    <!- Add/Edit Labor Modal ->
+    <!-- Add/Edit Labor Modal -->
     <div id="laborModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center">
@@ -292,7 +281,7 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
-    <!- Add/Edit Energy Modal ->
+    <!-- Add/Edit Energy Modal -->
     <div id="energyModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center">
@@ -325,7 +314,7 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
-    <!- Delete Confirmation Modal ->
+    <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center">
@@ -348,7 +337,7 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
-    <!- Update Cost Price Confirmation Modal ->
+    <!-- Update Cost Price Confirmation Modal -->
     <div id="updateCostModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center">
@@ -379,7 +368,7 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
-    <script>
+    <script type="text/plain" data-migrated="vite-admin-cost-breakdown">
         // Global variables
         let currentItemId = '<?php echo $selectedItemId; ?>';
         let costBreakdown = {
@@ -974,5 +963,4 @@ if (!empty($selectedItemId)) {
                 .replace(/'/g, "&#039;");
         }
     </script>
-</body>
-</html>
+<?php include_once dirname(__DIR__) . '/partials/footer.php'; ?>

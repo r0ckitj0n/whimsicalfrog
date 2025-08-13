@@ -7,11 +7,19 @@
     "dev": "touch hot && vite --port 5176",
     "stop": "rm hot",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --cache --cache-location .cache/eslint/",
+    "lint:fix": "eslint . --fix --cache --cache-location .cache/eslint/",
+    "prefix-unused": "node scripts/auto-prefix-unused.mjs --run-eslint",
+    "prefix-unused:write": "node scripts/auto-prefix-unused.mjs --run-eslint --write",
+    "prepare": "husky install"
   },
   "devDependencies": {
     "@babel/parser": "^7.28.0",
+    "eslint": "^9.11.1",
     "glob": "^11.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
     "postcss": "^8.5.6",
     "postcss-selector-parser": "^7.1.0",
     "recast": "^0.23.11",
@@ -21,5 +29,11 @@
   "dependencies": {
     "chart.js": "^4.5.0",
     "sortablejs": "^1.15.6"
+  },
+  "lint-staged": {
+    "**/*.{js,mjs,cjs}": [
+      "node scripts/auto-prefix-unused.mjs --run-eslint --write",
+      "eslint --max-warnings=0 --cache --cache-location .cache/eslint/ --no-warn-ignored"
+    ]
   }
 }

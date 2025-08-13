@@ -106,7 +106,7 @@ class AdminOrdersModule {
         }
     }
 
-    async addItemToOrder(sku, name, price) {
+    async addItemToOrder(sku, name, _price) {
         const quantity = prompt(`Enter quantity for ${name}:`, '1');
         if (!quantity || isNaN(quantity) || Number(quantity) <= 0) {
             return;

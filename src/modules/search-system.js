@@ -290,7 +290,7 @@ class SearchSystem {
         // Setup result links
         const resultLinks = body.querySelectorAll('.search-result-title');
         resultLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
+            link.addEventListener('click', (_e) => {
                 // Close search modal when clicking a result
                 this.close();
             });

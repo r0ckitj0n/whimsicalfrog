@@ -101,16 +101,10 @@ class DOMUtils {
      */
     static createLoadingSpinner(message = 'Loading...') {
         return `
-            <div class="loading-spinner" style="display: flex; align-items: center; justify-content: center; padding: 20px;">
-                <div style="width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #333; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 10px;"></div>
+            <div class="wf-loading">
+                <div class="wf-spinner"></div>
                 <span>${this.escapeHtml(message)}</span>
             </div>
-            <style>
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            </style>
         `;
     }
 
@@ -121,7 +115,7 @@ class DOMUtils {
      */
     static createErrorMessage(message) {
         return `
-            <div class="error-message" style="background: #fee; border: 1px solid #fcc; color: #a00; padding: 10px; border-radius: 4px; margin: 10px 0;">
+            <div class="wf-alert wf-alert--error">
                 <strong>Error:</strong> ${this.escapeHtml(message)}
             </div>
         `;
@@ -134,7 +128,7 @@ class DOMUtils {
      */
     static createSuccessMessage(message) {
         return `
-            <div class="success-message" style="background: #efe; border: 1px solid #cfc; color: #060; padding: 10px; border-radius: 4px; margin: 10px 0;">
+            <div class="wf-alert wf-alert--success">
                 <strong>Success:</strong> ${this.escapeHtml(message)}
             </div>
         `;
@@ -147,52 +141,20 @@ class DOMUtils {
      * @param {number} duration - Duration in ms
      */
     static showToast(message, type = 'info', duration = 3000) {
-        const colors = {
-            success: { bg: '#4caf50', text: 'white' },
-            error: { bg: '#f44336', text: 'white' },
-            info: { bg: '#2196f3', text: 'white' },
-            warning: { bg: '#ff9800', text: 'white' }
-        };
-
-        const color = colors[type] || colors.info;
-
+        const valid = ['success', 'error', 'info', 'warning'];
+        const typeClass = valid.includes(type) ? type : 'info';
         const toast = document.createElement('div');
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${color.bg};
-            color: ${color.text};
-            padding: 12px 20px;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            font-size: 14px;
-            max-width: 300px;
-            word-wrap: break-word;
-            transition: opacity 0.3s ease, transform 0.3s ease;
-            transform: translateX(100%);
-            opacity: 0;
-        `;
+        toast.className = `wf-toast wf-toast--${typeClass}`;
         toast.textContent = message;
-
         document.body.appendChild(toast);
 
-        // Animate in
-        setTimeout(() => {
-            toast.style.transform = 'translateX(0)';
-            toast.style.opacity = '1';
-        }, 10);
+        // Animate in via CSS class
+        requestAnimationFrame(() => toast.classList.add('wf-toast--show'));
 
         // Animate out and remove
         setTimeout(() => {
-            toast.style.transform = 'translateX(100%)';
-            toast.style.opacity = '0';
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 300);
+            toast.classList.remove('wf-toast--show');
+            setTimeout(() => toast.remove(), 300);
         }, duration);
 
         return toast;
@@ -246,39 +208,19 @@ class DOMUtils {
      */
     static confirm(message, title = 'Confirm') {
         return new Promise((resolve) => {
-            // Create modal overlay
+            // Create modal overlay and dialog using CSS classes
             const overlay = document.createElement('div');
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.5);
-                z-index: 10001;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            `;
+            overlay.className = 'wf-overlay';
 
-            // Create dialog
             const dialog = document.createElement('div');
-            dialog.style.cssText = `
-                background: white;
-                padding: 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                max-width: 400px;
-                width: 90%;
-                text-align: center;
-            `;
+            dialog.className = 'wf-dialog';
 
             dialog.innerHTML = `
-                <h3 style="margin: 0 0 15px 0; color: #333;">${this.escapeHtml(title)}</h3>
-                <p style="margin: 0 0 20px 0; color: #666;">${this.escapeHtml(message)}</p>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button class="confirm-btn" style="background: #2196f3; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Confirm</button>
-                    <button class="cancel-btn" style="background: #999; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <h3 class="wf-dialog-title">${this.escapeHtml(title)}</h3>
+                <p class="wf-dialog-message">${this.escapeHtml(message)}</p>
+                <div class="wf-dialog-actions">
+                    <button class="confirm-btn wf-btn wf-btn-primary">Confirm</button>
+                    <button class="cancel-btn wf-btn wf-btn-muted">Cancel</button>
                 </div>
             `;
 
@@ -311,7 +253,7 @@ class DOMUtils {
 
             // Focus confirm button
             setTimeout(() => {
-                dialog.querySelector('.confirm-btn').focus();
+                dialog.querySelector('.confirm-btn')?.focus();
             }, 100);
         });
     }

@@ -32,7 +32,14 @@ class SettingsExtractor:
         self.backup_dir = Path("/Users/jongraves/Documents/Websites/WhimsicalFrog - Backups")
         self.current_inventory = SettingsInventory()
         self.backup_inventory = SettingsInventory()
+        self._skip_dirnames = {
+            'node_modules', '.git', 'dist', 'build', 'coverage', '.next', '.cache', 'vendor'
+        }
         
+    def should_skip(self, path: Path) -> bool:
+        """Return True if this path should be skipped based on directory parts."""
+        return any(part in self._skip_dirnames for part in path.parts)
+
     def extract_css_rules(self, css_content, source_file):
         """Extract all CSS rules and properties"""
         rules = {}
@@ -280,8 +287,8 @@ class SettingsExtractor:
             print(f"❌ Directory not found: {directory}")
             return
         
-        css_files = list(directory.rglob("*.css"))
-        js_files = list(directory.rglob("*.js"))
+        css_files = [p for p in directory.rglob("*.css") if p.is_file() and not self.should_skip(p)]
+        js_files = [p for p in directory.rglob("*.js") if p.is_file() and not self.should_skip(p)]
         
         print(f"   Found {len(css_files)} CSS files, {len(js_files)} JS files")
         
@@ -379,8 +386,10 @@ class SettingsExtractor:
     
     def generate_missing_css_file(self, missing_settings):
         """Generate CSS file with missing settings"""
-        output_file = self.base_dir / "css" / "comprehensive-missing-styles.css"
-        
+        output_file = self.base_dir / "src" / "styles" / "recovered" / "comprehensive-missing-styles.css"
+        # Ensure output directory exists
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
         with open(output_file, 'w') as f:
             f.write("/* COMPREHENSIVE MISSING STYLES - GENERATED FROM BACKUP ANALYSIS */\n\n")
             
@@ -424,8 +433,10 @@ class SettingsExtractor:
     
     def generate_missing_js_file(self, missing_settings):
         """Generate JavaScript file with missing settings"""
-        output_file = self.base_dir / "js" / "comprehensive-missing-functions.js"
-        
+        output_file = self.base_dir / "src" / "recovered" / "comprehensive-missing-functions.js"
+        # Ensure output directory exists
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
         with open(output_file, 'w') as f:
             f.write("/* COMPREHENSIVE MISSING JAVASCRIPT - GENERATED FROM BACKUP ANALYSIS */\n\n")
             
@@ -447,7 +458,9 @@ class SettingsExtractor:
     
     def generate_analysis_report(self, missing_settings):
         """Generate comprehensive analysis report"""
-        report_file = self.base_dir / "analysis-report.json"
+        report_file = self.base_dir / "logs" / "analysis-report.json"
+        # Ensure logs directory exists
+        report_file.parent.mkdir(parents=True, exist_ok=True)
         
         report = {
             'analysis_timestamp': str(Path().resolve()),
@@ -504,8 +517,8 @@ class SettingsExtractor:
         
         # Scan current project
         print("\n📊 PHASE 1: CURRENT PROJECT INVENTORY")
-        self.scan_directory(self.base_dir / "css", self.current_inventory, "Current CSS")
-        self.scan_directory(self.base_dir / "js", self.current_inventory, "Current JS")
+        self.scan_directory(self.base_dir / "src" / "styles", self.current_inventory, "Current CSS")
+        self.scan_directory(self.base_dir / "src", self.current_inventory, "Current JS")
         
         # Scan backup locations
         print("\n📊 PHASE 2: BACKUP INVENTORY")

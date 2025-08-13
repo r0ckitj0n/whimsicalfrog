@@ -63,7 +63,7 @@ class CartSystem {
         }
 
         const existingIndex = this.state.items.findIndex(cartItem => cartItem.sku === item.sku);
-        let addedQuantity = parseInt(item.quantity) || 1;
+        const addedQuantity = parseInt(item.quantity) || 1;
         let isNewItem = false;
 
         if (existingIndex >= 0) {
@@ -97,7 +97,7 @@ class CartSystem {
     // Show add to cart notifications
     showAddToCartNotifications(item, addedQuantity, totalQuantity, isNewItem) {
         const itemName = item.name || item.sku || 'Item';
-        const price = parseFloat(item.price) || 0;
+        const _price = parseFloat(item.price) || 0;
         
         // Main notification
         let message = `${itemName} `;

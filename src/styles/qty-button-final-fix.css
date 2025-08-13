@@ -22,8 +22,8 @@
 }
 
 /* 3. Target the quantity row container specifically */
-.detailed-item-modal .flex:has(button[data-action="adjustDetailedQuantity"]),
-.detailed-item-modal-container .flex:has(button[data-action="adjustDetailedQuantity"]),
+.detailed-item-modal .flex:has(.btn--qty),
+.detailed-item-modal-container .flex:has(.btn--qty),
 .detailed-item-modal .quantity-selector,
 .detailed-item-modal-container .quantity-selector {
     display: inline-flex !important;
@@ -35,10 +35,10 @@
 }
 
 /* 4. Make quantity buttons absolutely tiny */
-button[data-action="adjustDetailedQuantity"],
-.detailed-item-modal button[data-action="adjustDetailedQuantity"],
-.detailed-item-modal-container button[data-action="adjustDetailedQuantity"],
-.modal-body button[data-action="adjustDetailedQuantity"] {
+.btn--qty,
+.detailed-item-modal .btn--qty,
+.detailed-item-modal-container .btn--qty,
+.modal-body .btn--qty {
     /* Tiny size */
     width: 12px !important;
     min-width: 12px !important;
@@ -75,9 +75,9 @@ button[data-action="adjustDetailedQuantity"],
 }
 
 /* 5. Make SVG icons inside buttons tiny */
-button[data-action="adjustDetailedQuantity"] svg,
-.detailed-item-modal button[data-action="adjustDetailedQuantity"] svg,
-.detailed-item-modal-container button[data-action="adjustDetailedQuantity"] svg {
+.btn--qty svg,
+.detailed-item-modal .btn--qty svg,
+.detailed-item-modal-container .btn--qty svg {
     width: 6px !important;
     height: 6px !important;
     display: block !important;
@@ -85,10 +85,10 @@ button[data-action="adjustDetailedQuantity"] svg,
 }
 
 /* 6. Make quantity input tiny */
-input#detailedQuantity,
-.detailed-item-modal input#detailedQuantity,
-.detailed-item-modal-container input#detailedQuantity,
-.modal-body input#detailedQuantity {
+.input--qty,
+.detailed-item-modal .input--qty,
+.detailed-item-modal-container .input--qty,
+.modal-body .input--qty {
     width: 25px !important;
     min-width: 25px !important;
     max-width: 25px !important;

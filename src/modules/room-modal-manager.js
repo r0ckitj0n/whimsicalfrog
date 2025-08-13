@@ -178,6 +178,15 @@ class RoomModalManager {
                 }
             }
         });
+
+        // Delegated: refresh page action for error state
+        document.addEventListener('click', (e) => {
+            const refreshBtn = e.target.closest('[data-action="refresh-page"]');
+            if (refreshBtn) {
+                e.preventDefault();
+                window.location.reload();
+            }
+        });
         
         console.log('[Room] Event listeners registered successfully');
     }
@@ -248,7 +257,7 @@ class RoomModalManager {
                 <div class="error">
                     <h3>Unable to load room ${roomNumber}</h3>
                     <p>Please try again later.</p>
-                    <button onclick="window.location.reload()">Refresh Page</button>
+                    <button type="button" data-action="refresh-page">Refresh Page</button>
                 </div>
             `);
         } finally {

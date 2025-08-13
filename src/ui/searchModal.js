@@ -3,7 +3,7 @@
 import { apiGet } from '../core/apiClient.js';
 import { cart } from '../commerce/cartSystem.js';
 
-/* global document window alert */
+/* global document, window */
 
 class SearchModal {
   constructor() {
@@ -96,7 +96,7 @@ class SearchModal {
     data.results.forEach(item => {
       const stockClass = item.in_stock ? 'in-stock' : 'out-of-stock';
       const disabled = !item.in_stock ? 'disabled' : '';
-      html += `<div class="search-result-item"><div class="search-result-clickable" data-sku="${item.sku}"><img src="${item.image_url}" alt="${item.name}" class="search-result-image" onerror="this.src='/images/items/placeholder.webp'"/><div class="search-result-content"><h3>${item.name}</h3><p class="${stockClass}">${item.stock_status}</p><span>${item.formatted_price}</span></div></div><div class="search-result-actions"><button class="search-add-to-cart-btn" data-sku="${item.sku}" ${disabled}>${item.in_stock ? 'Add to Cart' : 'Out of Stock'}</button></div></div>`;
+      html += `<div class="search-result-item"><div class="search-result-clickable" data-sku="${item.sku}"><img src="${item.image_url}" alt="${item.name}" class="search-result-image" data-fallback-src="/images/items/placeholder.webp"/><div class="search-result-content"><h3>${item.name}</h3><p class="${stockClass}">${item.stock_status}</p><span>${item.formatted_price}</span></div></div><div class="search-result-actions"><button class="search-add-to-cart-btn" data-sku="${item.sku}" ${disabled}>${item.in_stock ? 'Add to Cart' : 'Out of Stock'}</button></div></div>`;
     });
     html += '</div>';
     body.innerHTML = html;

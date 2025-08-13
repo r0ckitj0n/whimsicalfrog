@@ -215,7 +215,7 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
     <div class="text-center">
         <div class="flex justify-center items-center">
             <img src="images/logos/logo_whimsicalfrog.webp" alt="<?php echo htmlspecialchars($businessName); ?> Logo" class="header-logo" 
-                 onerror="this.onerror=null; this.src='images/logos/logo_whimsicalfrog.png';">
+                 data-fallback-src="/images/logos/logo_whimsicalfrog.png">
             <div>
                 <h1 class="text-brand-primary"><?php echo htmlspecialchars($businessName); ?></h1>
                 <p class="text-brand-secondary"><?php echo htmlspecialchars($businessTagline); ?></p>

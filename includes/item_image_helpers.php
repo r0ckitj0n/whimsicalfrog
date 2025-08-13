@@ -287,21 +287,16 @@ function renderItemImageDisplay($sku, $options = [])
     if (count($images) === 1 || !$opts['showCarousel']) {
         // Single image display
         $image = $images[0];
-        return '<div class="item-single-image ' . $opts['className'] . '" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . ';">
-            <img src="' . htmlspecialchars($image['image_path']) . '" 
-                 alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
-                 onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<div class=\\\'item-image-placeholder\\\'><div class=\\\'placeholder-icon\\\'>📷</div><div class=\\\'placeholder-text\\\'>Image Not Found</div></div>\';">
-        </div>';
+        return '<div class="item-single-image ' . $opts['className'] . '" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">' .
+               '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" data-fallback="placeholder">' .
+               '</div>';
     }
 
     // Multiple images - use simple carousel (simplified implementation)
     $carouselHtml = '<div class="item-image-carousel" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">';
     foreach ($images as $index => $image) {
         $activeClass = $index === 0 ? ' active' : '';
-        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" 
-                             alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
-                             class="' . $activeClass . '"
-                             onerror="this.style.display=\'none\'; this.parentElement.innerHTML+=\'<div class=\\\'item-image-placeholder\\\'><div class=\\\'placeholder-icon\\\'>📷</div><div class=\\\'placeholder-text\\\'>Image Not Found</div></div>\';">';
+        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" class="' . $activeClass . '" data-fallback="placeholder">';
     }
     $carouselHtml .= '</div>';
     return $carouselHtml;
@@ -312,7 +307,7 @@ function getPrimaryImageUrl($sku)
     global $pdo;
 
     try {
-        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE item_sku = ? AND is_primary = 1 LIMIT 1");
+        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? AND is_primary = 1 LIMIT 1");
         $stmt->execute([$sku]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -321,7 +316,7 @@ function getPrimaryImageUrl($sku)
         }
 
         // Try to get any image for this SKU
-        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE item_sku = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? LIMIT 1");
         $stmt->execute([$sku]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -342,7 +337,7 @@ function getAllImagesForSku($sku)
     global $pdo;
 
     try {
-        $stmt = $pdo->prepare("SELECT * FROM item_images WHERE item_sku = ? ORDER BY is_primary DESC, id ASC");
+        $stmt = $pdo->prepare("SELECT * FROM item_images WHERE sku = ? ORDER BY is_primary DESC, id ASC");
         $stmt->execute([$sku]);
         $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

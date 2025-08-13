@@ -1,9 +1,15 @@
 export default [
   {
-    files: ["js/**/*.js"],
     ignores: [
       "backups/**",
       "node_modules/**",
+      "dist/**",
+      "src/recovered/**"
+    ],
+  },
+  {
+    files: ["src/**/*.js", "scripts/**/*.js", "scripts/**/*.cjs"],
+    ignores: [
       "js/bundle.js", // generated bundle; skip linting
       "js/sales-checker.js" // generated popup duplication; skip linting
     ],
@@ -12,7 +18,15 @@ export default [
       sourceType: "module",
     },
     rules: {
-      "no-unused-vars": "error",
+      "no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrors": "none",
+          "ignoreRestSiblings": true
+        }
+      ],
       "no-unreachable": "error",
       "prefer-const": "warn",
     },

@@ -49,7 +49,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
 
 
 
-    <!- Navigation Tabs ->
+    <!-- Navigation Tabs -->
     <?php
     // The $adminSection variable is now passed from index.php
     // Default to 'dashboard' if it's empty or not set.
@@ -95,7 +95,7 @@ $tabs = [
     </div>
     <?php endif; ?>
 
-    <!- Dynamic Section Content ->
+    <!-- Dynamic Section Content -->
     <div id="admin-section-content">
         <?php
         switch ($currentSection) {

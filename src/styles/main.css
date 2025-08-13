@@ -17,12 +17,19 @@
 /* Additional styles previously imported directly in js/app.js */
 @import './recovered_components.css';
 @import './recovered_missing.css';
+/* TEMP: Quarantined due to syntax errors in recovered CSS. Re-enable after cleanup. */
+/* @import '../../backups/unused_styles/comprehensive-missing-styles.css'; */
+@import './recovered/clean/recovered-slice-1.css';
 @import './room-modal-popup-fixes.css';
 @import './room-modal-header.css';
 @import './detailed-item-modal-fixes.css';
 @import './modal-fixes.css';
 @import './login-modal.css';
+@import './admin-modals.css';
 @import './legacy_missing_admin.css';
+@import './admin-db-tools.css';
+@import './admin-inventory.css';
+@import './utilities-ui.css';
 
 /* Center title and intro text inside the green contact card */
 body[data-page='contact'] .wf-contact-card h1,

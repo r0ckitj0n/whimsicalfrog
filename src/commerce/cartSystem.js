@@ -2,7 +2,7 @@
 // Modern ES-module version of the WhimsicalFrog cart system.
 // Exports a singleton `cart` object and bridges it to `window.cart` for legacy code.
 
-/* eslint-disable no-console */
+ 
 
 const STORAGE_KEY = 'whimsical_frog_cart';
 

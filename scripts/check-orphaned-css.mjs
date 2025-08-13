@@ -8,6 +8,25 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
 const posix = (p) => p.split(path.sep).join('/');
+const hasFlag = (flag) => process.argv.includes(flag);
+const WRITE = hasFlag('--write');
+
+async function ensureDir(dir) {
+  await fs.mkdir(dir, { recursive: true });
+}
+
+function ts() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return (
+    d.getFullYear().toString() +
+    pad(d.getMonth() + 1) +
+    pad(d.getDate()) + '-' +
+    pad(d.getHours()) +
+    pad(d.getMinutes()) +
+    pad(d.getSeconds())
+  );
+}
 
 async function readFileSafe(absPath) {
   try { return await fs.readFile(absPath, 'utf8'); } catch { return ''; }
@@ -110,12 +129,42 @@ async function main() {
   const orphans = [...allCss].filter((p) => !referenced.has(p));
 
   if (orphans.length) {
-    console.error('\nOrphaned CSS detected (not referenced by JS/TS or CSS @import):');
-    for (const p of orphans) console.error('  -', p);
-    console.error('\nSuggested actions:');
-    console.error('  1) If needed, import the file from src/styles/main.css or a JS entry.');
-    console.error('  2) If unused, move it to backups/unused_styles/.');
-    process.exitCode = 1;
+    if (!WRITE) {
+      console.error('\nOrphaned CSS detected (not referenced by JS/TS or CSS @import):');
+      for (const p of orphans) console.error('  -', p);
+      console.error('\nSuggested actions:');
+      console.error('  1) If needed, import the file from src/styles/main.css or a JS entry.');
+      console.error('  2) If unused, move it to backups/unused_styles/.');
+      console.error('     (Tip: run this script with --write to auto-archive)');
+      process.exitCode = 1;
+      return;
+    }
+    // Write mode: move to backups/unused_styles/ preserving relative path under src/styles/
+    const backupRoot = path.join(projectRoot, 'backups', 'unused_styles');
+    await ensureDir(backupRoot);
+    console.log(`\n--write enabled. Archiving ${orphans.length} orphan(s) to ${posix(path.relative(projectRoot, backupRoot))}`);
+    for (const rel of orphans) {
+      // Expect rel like 'src/styles/...' — compute path under backups/unused_styles/
+      const relFromStyles = rel.startsWith('src/styles/') ? rel.slice('src/styles/'.length) : path.basename(rel);
+      const srcAbs = path.join(projectRoot, rel);
+      const destAbsBase = path.join(backupRoot, relFromStyles);
+      const destDir = path.dirname(destAbsBase);
+      await ensureDir(destDir);
+      let destAbs = destAbsBase;
+      // If destination exists, add timestamp suffix before extension
+      try {
+        await fs.access(destAbs);
+        const ext = path.extname(destAbsBase);
+        const baseNoExt = destAbsBase.slice(0, -ext.length);
+        destAbs = `${baseNoExt}.backup-${ts()}${ext}`;
+      } catch {
+        // does not exist; ok
+      }
+      await fs.rename(srcAbs, destAbs);
+      console.log(`  moved: ${rel} -> ${posix(path.relative(projectRoot, destAbs))}`);
+    }
+    console.log('✅ Archive complete.');
+    process.exitCode = 0;
   } else {
     console.log('✅ No orphaned CSS detected.');
   }

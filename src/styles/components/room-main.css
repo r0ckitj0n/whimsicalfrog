@@ -1,8 +1,14 @@
-/* CRITICAL MISSING ROOM MAIN CSS - Extracted from legacy_bigfiles/css/room-main.css */
-/* This contains essential main room page styles with fullscreen positioning and door area functionality */
+/* =============================================================
+   Room Main Feature (Consolidated)
+   Merged from:
+   - src/styles/legacy_missing_room_main.css
+   - src/styles/room-main-header-fixes.css
+   Managed by Vite
+   ============================================================= */
 
 /* ==============================================
    FULLSCREEN MAIN ROOM SYSTEM
+   (from legacy_missing_room_main.css)
    ============================================== */
 
 /* Fullscreen Main Room Styles */
@@ -17,7 +23,7 @@
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-    z-index: var(--z-base); /* Lower than header z-index (2800) */
+    z-index: var(--z-base);
     overflow: hidden;
 }
 
@@ -30,23 +36,24 @@
     width: 100%;
     height: 120px; /* Gradient height */
     background: linear-gradient(to bottom, rgb(0 0 0 / 70%) 0%, rgb(0 0 0 / 40%) 50%, transparent 100%);
-    z-index: var(--z-base); /* Lower than header z-index (2800) */
+    z-index: var(--z-base); /* Lower than header z-index */
     pointer-events: none; /* Allow clicks through to doors */
 }
 
 /* Room page header visibility fixes */
 .room-page-header {
-    background: rgb(0 0 0 / 70%); /* Ensure header has background for visibility */
+    background: rgb(0 0 0 / 70%);
     backdrop-filter: blur(5px);
 }
 
 .room-page-header * {
-    color: var(--brand-primary); /* Ensure all text is visible */
-    text-shadow: 1px 1px 2px rgb(0 0 0 / 80%); /* Add text shadow for contrast */
+    color: var(--brand-primary);
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 80%);
 }
 
 /* ==============================================
    DOOR AREA SYSTEM
+   (from legacy_missing_room_main.css)
    ============================================== */
 
 /* Essential door area positioning styles */
@@ -54,7 +61,7 @@
     position: absolute;
     cursor: pointer;
     transition: all 0.3s ease;
-    z-index: var(--z-door-areas); /* Use centralized z-index */
+    z-index: var(--z-door-areas);
 }
 
 .door-area:hover {
@@ -101,6 +108,7 @@
 
 /* ==============================================
    DOOR POSITIONING SYSTEM
+   (from legacy_missing_room_main.css)
    ============================================== */
 
 /* Main Room Door Positioning */
@@ -121,49 +129,46 @@
 }
 
 /* Initial door positioning to prevent flash/swap effect */
-/* These are set to prevent elements from starting in wrong positions */
-/* JavaScript will override these with properly scaled coordinates */
-
 .door-area.area-1 {
-    top: 19.2%; /* 243/1280 * 100% */
-    left: 2.3%; /* 30/1280 * 100% */
-    width: 18.3%; /* 234/1280 * 100% */
-    height: 26.0%; /* 233/896 * 100% */
+    top: 19.2%;
+    left: 2.3%;
+    width: 18.3%;
+    height: 26.0%;
 }
 
 .door-area.area-2 {
-    top: 45.0%; /* 403/896 * 100% */
-    left: 30.5%; /* 390/1280 * 100% */
-    width: 15.8%; /* 202/1280 * 100% */
-    height: 26.9%; /* 241/896 * 100% */
+    top: 45.0%;
+    left: 30.5%;
+    width: 15.8%;
+    height: 26.9%;
 }
 
 .door-area.area-3 {
-    top: 30.2%; /* 271/896 * 100% */
-    left: 58.8%; /* 753/1280 * 100% */
-    width: 13.3%; /* 170/1280 * 100% */
-    height: 26.2%; /* 235/896 * 100% */
+    top: 30.2%;
+    left: 58.8%;
+    width: 13.3%;
+    height: 26.2%;
 }
 
 .door-area.area-4 {
-    top: 17.5%; /* 157/896 * 100% */
-    left: 38.0%; /* 486/1280 * 100% */
-    width: 14.8%; /* 190/1280 * 100% */
-    height: 25.7%; /* 230/896 * 100% */
+    top: 17.5%;
+    left: 38.0%;
+    width: 14.8%;
+    height: 25.7%;
 }
 
 .door-area.area-5 {
-    top: 32.5%; /* 291/896 * 100% */
-    left: 78.2%; /* 1001/1280 * 100% */
-    width: 15.4%; /* 197/1280 * 100% */
-    height: 28.5%; /* 255/896 * 100% */
+    top: 32.5%;
+    left: 78.2%;
+    width: 15.4%;
+    height: 28.5%;
 }
 
 /* ==============================================
    DOOR INTERACTION STATES
+   (from legacy_missing_room_main.css)
    ============================================== */
 
-/* Door Interaction States */
 .door-area.touch-active {
     transform: scale(1.02);
     transition: transform 0.2s ease;
@@ -182,9 +187,9 @@
 
 /* ==============================================
    DOOR ACCESSIBILITY
+   (from legacy_missing_room_main.css)
    ============================================== */
 
-/* Door Accessibility */
 .door-area[tabindex="0"] {
     outline: 2px solid transparent;
     outline-offset: 2px;
@@ -197,9 +202,9 @@
 
 /* ==============================================
    ERROR STATES
+   (from legacy_missing_room_main.css)
    ============================================== */
 
-/* Error message styling */
 .no-doors-message {
     position: absolute;
     top: 50%;
@@ -215,4 +220,46 @@
     font-weight: 600;
     text-shadow: 1px 1px 2px rgb(0 0 0 / 80%);
     box-shadow: 0 4px 12px rgb(0 0 0 / 50%);
+}
+
+/* ==============================================
+   ROOM MAIN HEADER FIXES
+   (from room-main-header-fixes.css)
+   Keep after base to ensure intended precedence
+   ============================================== */
+
+/* Fix page header gradient - black at top fading to transparent at bottom */
+.main-room-section::before {
+    background: linear-gradient(to bottom, black 0%, transparent 100%) !important;
+    z-index: 1 !important; /* Lower than header content */
+}
+
+/* Remove text shadow from page header text and increase z-index */
+.room-page-header * {
+    text-shadow: none !important;
+    z-index: 100 !important; /* Higher than header background */
+    position: relative !important;
+}
+
+/* Ensure header text and links are above the gradient */
+.site-header,
+.site-header *,
+.header-container,
+.header-container *,
+.header-content,
+.header-content * {
+    z-index: 200 !important; /* Even higher than page header text */
+    position: relative !important;
+}
+
+/* Additional specificity for navigation links */
+.nav-links,
+.nav-links *,
+.nav-link,
+.logo-link,
+.logo-text,
+.cart-link {
+    z-index: 300 !important;
+    position: relative !important;
+    text-shadow: none !important;
 }

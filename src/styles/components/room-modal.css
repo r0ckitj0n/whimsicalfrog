@@ -44,3 +44,397 @@
 
 /* Brand font globally (preserved for parity) */
 html, body, input, button, select, textarea { font-family: var(--font-primary, 'Merienda', cursive) !important; }
+
+/* ==============================================
+   MERGED: ROOM MODAL STATE MANAGEMENT (from legacy_missing_room_modal.css)
+   ============================================== */
+/* Hide legacy modal elements when room modal is active */
+body.modal-open #productModal,
+body.modal-open #productModal .modal-content,
+body.modal-open #productModal #modalContent,
+body.modal-open .modal:not(.room-modal-overlay, #detailedItemModal),
+body.modal-open .modal-content:not(.room-modal-container),
+body.modal-open .modal-overlay:not(.room-modal-overlay, #detailedItemModal),
+body.modal-open #quantityModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: var(--z-index-behind);
+    transform: scale(0);
+}
+
+/* Hide detailed item modal ONLY when room modal is active, not when the detailed modal itself is open */
+body.modal-open:has(.room-modal-overlay.show) #detailedItemModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: var(--z-index-behind);
+    transform: scale(0);
+}
+
+/* Fallback for browsers that don't support :has() - use a specific class for room modal state */
+body.room-modal-open #detailedItemModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: var(--z-index-behind);
+    transform: scale(0);
+}
+
+/* Allow item popup to work within room modal - it has its own z-index management */
+body.modal-open #itemPopup.in-room-modal {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: var(--z-index-god-mode);
+    transform: scale(1);
+}
+
+/* ==============================================
+   MERGED: ROOM MODAL CONTAINER SYSTEM (from legacy_missing_room_modal.css)
+   ============================================== */
+.room-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-index-modal);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.room-modal-overlay.show { opacity: 1; visibility: visible; }
+
+.room-modal-container {
+    position: relative;
+    width: min(95vw, min(95vh * 1.43, 1200px));
+    aspect-ratio: 1280 / 896;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%);
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.room-modal-overlay.show .room-modal-container { transform: scale(1); }
+
+.room-modal-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+/* ==============================================
+   MERGED: ROOM MODAL CONTROLS (from legacy_missing_room_modal.css)
+   ============================================== */
+.room-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    z-index: var(--z-index-overlay);
+    transition: all 0.2s ease;
+}
+
+.room-modal-close:hover { background: rgba(0, 0, 0, 0.9); transform: scale(1.1); }
+
+.room-title-overlay {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    max-width: 300px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    z-index: var(--z-index-overlay);
+    backdrop-filter: blur(4px);
+}
+
+.room-title-overlay h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+.room-title-overlay p { margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9; }
+
+/* Selective fix: hide legacy title overlays inside modal; header title is used */
+.room-title-overlay { display: none !important; }
+
+/* ==============================================
+   MERGED: ROOM MODAL NAVIGATION (from legacy_missing_room_modal.css)
+   ============================================== */
+.room-modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    z-index: var(--z-index-overlay);
+    transition: all 0.2s ease;
+}
+
+.room-modal-nav:hover { background: rgba(0, 0, 0, 0.9); transform: translateY(-50%) scale(1.1); }
+.room-modal-nav.prev { left: 1rem; }
+.room-modal-nav.next { right: 1rem; }
+.room-modal-nav:disabled { opacity: 0.5; cursor: not-allowed; }
+.room-modal-nav:disabled:hover { background: rgba(0, 0, 0, 0.7); transform: translateY(-50%) scale(1); }
+
+/* ==============================================
+   MERGED: ROOM MODAL LOADING STATES (from legacy_missing_room_modal.css)
+   ============================================== */
+.room-modal-loading {
+    position: absolute;
+    inset: 0;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    z-index: var(--z-index-content);
+}
+.room-modal-loading.hidden { display: none !important; }
+.room-modal-iframe.hidden { display: none !important; }
+
+.room-modal-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid var(--brand-primary, #87ac3a);
+    border-radius: 50%;
+    animation: room-modal-spin 1s linear infinite;
+}
+
+@keyframes room-modal-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.room-modal-loading-text { margin-top: 1rem; color: #6b7280; font-size: 0.875rem; }
+
+/* ==============================================
+   MERGED: ROOM MODAL ERROR STATES (from legacy_missing_room_modal.css)
+   ============================================== */
+.room-modal-error {
+    position: absolute;
+    inset: 0;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    z-index: var(--z-index-content);
+    padding: 2rem;
+    text-align: center;
+}
+
+.room-modal-error-icon {
+    width: 64px;
+    height: 64px;
+    background: #fee2e2;
+    color: #dc2626;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.room-modal-error-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; margin-bottom: 0.5rem; }
+.room-modal-error-message { color: #6b7280; margin-bottom: 1.5rem; line-height: 1.5; }
+
+.room-modal-error-retry {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.room-modal-error-retry:hover { background: #6b8e23; transform: translateY(-1px); }
+
+/* ==============================================
+   MERGED: ROOM MODAL RESPONSIVE DESIGN (from legacy_missing_room_modal.css)
+   ============================================== */
+@media (max-width: 768px) {
+    .room-modal-container { width: min(98vw, min(98vh * 1.43, 800px)); aspect-ratio: 1280 / 896; }
+    .room-modal-close { width: 36px; height: 36px; font-size: 18px; }
+    .room-modal-nav { width: 44px; height: 44px; font-size: 18px; }
+    .room-title-overlay { max-width: 250px; padding: 0.5rem 0.75rem; top: 0.75rem; left: 0.75rem; }
+    .room-title-overlay h2 { font-size: 1.125rem; }
+    .room-title-overlay p { font-size: 0.75rem; }
+}
+
+@media (max-width: 480px) {
+    .room-modal-container { width: min(96vw, min(96vh * 1.43, 600px)); aspect-ratio: 1280 / 896; }
+    .room-modal-nav { width: 40px; height: 40px; font-size: 16px; }
+    .room-title-overlay { position: static; margin: 0.5rem; max-width: none; }
+}
+
+/* ==============================================
+   MERGED: CONFIG FORM INTEGRATION (from legacy_missing_room_modal.css)
+   ============================================== */
+.config-form-container {
+    display: none;
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 1rem;
+    backdrop-filter: blur(4px);
+    z-index: var(--z-index-overlay);
+}
+.config-form-container.show { display: block; }
+.config-form-toggle {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    z-index: var(--z-index-overlay);
+    transition: all 0.2s ease;
+}
+.config-form-toggle:hover { background: rgba(0, 0, 0, 0.9); }
+
+/* ==============================================
+   MERGED: HEADER STRUCTURE AND ICONS (from room-modal-header.css)
+   ============================================== */
+.room-modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-room-modal-header, 2450);
+    pointer-events: none;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.back-button-container {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    pointer-events: auto;
+    z-index: var(--z-room-buttons, 55);
+}
+
+.room-modal-back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand-primary, #87ac3a);
+    color: var(--white, #ffffff);
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: var(--radius-lg, 12px);
+    backdrop-filter: var(--backdrop-blur-sm, blur(4px));
+    box-shadow: var(--shadow-md, 0 4px 8px rgba(0,0,0,0.1));
+    min-width: 120px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    pointer-events: auto;
+    text-decoration: none;
+}
+.room-modal-back-btn:hover { background: var(--brand-secondary, #6d8a2e); transform: translateY(-1px); box-shadow: var(--shadow-lg, 0 8px 16px rgba(0,0,0,0.15)); }
+.room-modal-back-btn:active { transform: translateY(0); box-shadow: var(--shadow-md, 0 4px 8px rgba(0,0,0,0.1)); }
+
+/* Product Icons in Room Modal (base) */
+.room-overlay-wrapper .room-product-icon {
+    position: absolute;
+    top: var(--icon-top, 0);
+    left: var(--icon-left, 0);
+    width: var(--icon-width, 80px);
+    height: var(--icon-height, 80px);
+    cursor: pointer;
+    z-index: 10;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --original-top: var(--icon-top, 0px);
+    --original-left: var(--icon-left, 0px);
+    --original-width: var(--icon-width, 80px);
+    --original-height: var(--icon-height, 80px);
+}
+.room-overlay-wrapper .room-product-icon:hover { transform: scale(1.1); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); z-index: 15; }
+.room-overlay-wrapper .room-product-icon-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+
+/* Room Overlay Wrapper Background */
+.room-overlay-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-image: var(--room-bg-image, none);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    min-height: 500px;
+}
+
+/* ==============================================
+   SELECTIVE FIXES (from room-modal-header-fixes.css)
+   ============================================== */
+.room-modal-overlay .room-modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: transparent;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    z-index: var(--z-index-room-modal-header, 2450);
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: none;
+    min-height: 60px;
+}
+
+.room-modal-title { font-size: 1.4rem; font-weight: bold; margin: 0; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); color: white; line-height: 1.2; }
+.room-modal-content .room-content-area { margin-top: 60px; padding-top: 10px; }

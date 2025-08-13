@@ -60,9 +60,12 @@ This ensures no inline styles are introduced and code style is enforced.
 - Script: `scripts/check-orphaned-css.mjs`
 - Purpose: Detect CSS files in `src/styles/` that are not referenced by any JS/TS import or by `@import` chains starting from `src/styles/main.css`.
 - Run locally: `npm run check:css:orphans`
+- Auto-archive: `npm run check:css:orphans:write` will move reported orphans to `backups/unused_styles/` preserving their relative path from `src/styles/`. If a filename collision occurs, a timestamp suffix is added.
 - If any orphans are reported, either:
   - Import them from `src/styles/main.css` if they are needed, or
   - Archive them to `backups/unused_styles/` (preferred over deletion).
+
+Note: CI runs the non-write variant only to prevent destructive moves in pull requests.
 
 ## Migration Playbook
 

@@ -4,15 +4,11 @@
 /* Main site styles - this contains all the compiled CSS for the site */
 @import url('./site-base.css');
 
-/* Room modal header fixes */
-@import url('./room-modal-header-fixes.css');
-
-/* Room main header fixes */
-@import url('./room-main-header-fixes.css');
-@import url('./legacy_missing_room_main.css');
+/* Room main (consolidated) */
+@import url('./components/room-main.css');
 
 /* Comprehensive quantity button fix to eliminate horizontal scrollbar */
-@import url('./qty-button-final-fix.css');
+@import url('./components/qty-button.css');
 
 /* Additional styles previously imported directly in js/app.js */
 @import url('./recovered_components.css');
@@ -22,11 +18,10 @@
 @import url('./recovered/clean/recovered-slice-1.css');
 @import url('./components/popup.css');
 @import url('./components/room-modal.css');
-@import url('./room-modal-header.css');
-@import url('./detailed-item-modal-fixes.css');
+@import url('./components/detailed-item-modal.css');
 @import url('./components/search-modal.css');
 @import url('./sales-system.css');
-@import url('./modal-fixes.css');
+@import url('./components/modal.css');
 @import url('./login-modal.css');
 @import url('./admin-modals.css');
 @import url('./legacy_missing_admin.css');

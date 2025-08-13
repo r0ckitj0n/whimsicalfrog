@@ -3,10 +3,7 @@
  * Handles responsive modal overlays for room content - Vite compatible
  * Recovered and consolidated from legacy files
  */
-
-import '../styles/legacy_missing_room_modal.css';
-import '../styles/room-modal-header.css';
-import '../styles/room-modal-header-fixes.css';
+ 
 
 // Runtime-injected style classes (no inline styles or element-level CSS var writes)
 const ROOM_MODAL_STYLE_ID = 'room-modal-runtime-classes';

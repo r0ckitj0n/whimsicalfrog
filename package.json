@@ -13,6 +13,7 @@
     "lint:css": "stylelint \"src/styles/**/*.css\"",
     "lint:css:fix": "stylelint \"src/styles/**/*.css\" --fix",
     "guard:styles": "node scripts/disallow-inline-styles.mjs",
+    "check:css:orphans": "node scripts/check-orphaned-css.mjs",
     "prefix-unused": "node scripts/auto-prefix-unused.mjs --run-eslint",
     "prefix-unused:write": "node scripts/auto-prefix-unused.mjs --run-eslint --write",
     "prepare": "husky install"

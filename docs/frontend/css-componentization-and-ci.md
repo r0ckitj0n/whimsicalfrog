@@ -37,6 +37,7 @@ If you need styling, pass a semantic class via `$class` and define rules in a co
 - ESLint: `npm run lint`
 - Stylelint: `npm run lint:css`
 - Inline-style guard: `npm run guard:styles`
+- Orphaned CSS checker: `npm run check:css:orphans`
 
 These run locally via pre-commit hooks and in CI on pushes/PRs.
 
@@ -49,9 +50,19 @@ npm ci || npm install
 npm run guard:styles
 npm run lint
 npm run lint:css
+npm run check:css:orphans
 ```
 
 This ensures no inline styles are introduced and code style is enforced.
+
+## Orphaned CSS Checker
+
+- Script: `scripts/check-orphaned-css.mjs`
+- Purpose: Detect CSS files in `src/styles/` that are not referenced by any JS/TS import or by `@import` chains starting from `src/styles/main.css`.
+- Run locally: `npm run check:css:orphans`
+- If any orphans are reported, either:
+  - Import them from `src/styles/main.css` if they are needed, or
+  - Archive them to `backups/unused_styles/` (preferred over deletion).
 
 ## Migration Playbook
 

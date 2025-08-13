@@ -35,3 +35,6 @@ jobs:
 
       - name: Run Stylelint
         run: npm run lint:css
+      
+      - name: Check orphaned CSS
+        run: npm run check:css:orphans

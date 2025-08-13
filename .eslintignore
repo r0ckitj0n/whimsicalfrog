@@ -1,0 +1,4 @@
+backups/
+backups/**
+node_modules/
+dist/

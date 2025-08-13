@@ -33,7 +33,7 @@
   "lint-staged": {
     "**/*.{js,mjs,cjs}": [
       "node scripts/auto-prefix-unused.mjs --run-eslint --write",
-      "eslint --max-warnings=0 --cache --cache-location .cache/eslint/ --no-warn-ignored"
+      "eslint --max-warnings=0 --cache --cache-location .cache/eslint/"
     ]
   }
 }

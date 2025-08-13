@@ -464,7 +464,7 @@ const POSModule = {
                 <input type="number" id="cashReceived" placeholder="0.00" class="pos-cash-input">
                 <div id="quickAmountButtons"></div>
                 <div id="changeDue">Change: $0.00</div>
-                <div id="insufficientFunds" style="display: none; color: red;">Insufficient funds</div>
+                <div id="insufficientFunds" class="form-error hidden">Insufficient funds</div>
                 <button id="acceptCashBtn" class="btn btn-primary" data-action="accept-cash" data-total="${total}" disabled>Accept</button>`;
             this.showPOSModal('Cash Payment', message, 'info');
             this.generateQuickAmountButtons(total);
@@ -491,6 +491,14 @@ const POSModule = {
         document.getElementById('changeDue').textContent = `Change: $${Math.max(0, change).toFixed(2)}`;
         const acceptBtn = document.getElementById('acceptCashBtn');
         acceptBtn.disabled = cashReceived < total;
+        const insufficientEl = document.getElementById('insufficientFunds');
+        if (insufficientEl) {
+            if (cashReceived < total) {
+                insufficientEl.classList.remove('hidden');
+            } else {
+                insufficientEl.classList.add('hidden');
+            }
+        }
     },
 
     setCashAmount(amount) {

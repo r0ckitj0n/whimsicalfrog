@@ -30,7 +30,7 @@ class SearchSystem {
         }
 
         const modalHTML = `
-            <div id="searchModal" class="search-modal" style="display: none;">
+            <div id="searchModal" class="search-modal">
                 <div class="search-modal-content">
                     <div class="search-modal-header">
                         <h2 class="search-modal-title">Search Results</h2>
@@ -44,92 +44,7 @@ class SearchSystem {
         `;
         
         document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        // Add basic styling
-        const style = document.createElement('style');
-        style.textContent = `
-            .search-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.7);
-                z-index: 9998;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .search-modal-content {
-                background: white;
-                border-radius: 8px;
-                max-width: 90vw;
-                max-height: 90vh;
-                overflow: auto;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                min-width: 500px;
-            }
-            .search-modal-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 16px 20px;
-                border-bottom: 1px solid #eee;
-                background: #f8f9fa;
-                border-radius: 8px 8px 0 0;
-            }
-            .search-modal-title {
-                margin: 0;
-                font-size: 18px;
-            }
-            .search-modal-close {
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                padding: 0;
-                width: 30px;
-                height: 30px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .search-modal-body {
-                padding: 20px;
-                min-height: 200px;
-            }
-            .search-result-item {
-                border-bottom: 1px solid #eee;
-                padding: 15px 0;
-            }
-            .search-result-item:last-child {
-                border-bottom: none;
-            }
-            .search-result-title {
-                font-weight: bold;
-                margin-bottom: 5px;
-                color: #007bff;
-                text-decoration: none;
-            }
-            .search-result-title:hover {
-                text-decoration: underline;
-            }
-            .search-result-description {
-                color: #666;
-                font-size: 14px;
-            }
-            .search-loading {
-                text-align: center;
-                padding: 40px;
-                color: #666;
-            }
-            .search-no-results {
-                text-align: center;
-                padding: 40px;
-                color: #666;
-            }
-        `;
-        document.head.appendChild(style);
+        // Styles are managed via Vite CSS: src/styles/components/search-modal.css
     }
 
     setupReferences() {
@@ -299,8 +214,10 @@ class SearchSystem {
 
     open() {
         if (this.modal) {
-            this.modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            this.modal.classList.add('show');
+            // lock scroll using shared admin modal convention
+            document.documentElement.classList.add('modal-open');
+            document.body.classList.add('modal-open');
             
             // Focus search input in modal if it exists
             const modalSearchInput = this.modal.querySelector('input[type="search"], .search-input');
@@ -312,8 +229,9 @@ class SearchSystem {
 
     close() {
         if (this.modal) {
-            this.modal.style.display = 'none';
-            document.body.style.overflow = '';
+            this.modal.classList.remove('show');
+            document.documentElement.classList.remove('modal-open');
+            document.body.classList.remove('modal-open');
         }
 
         // Emit search closed event
@@ -325,7 +243,7 @@ class SearchSystem {
     }
 
     isOpen() {
-        return this.modal && this.modal.style.display !== 'none';
+        return !!(this.modal && this.modal.classList.contains('show'));
     }
 
     escapeHtml(text) {

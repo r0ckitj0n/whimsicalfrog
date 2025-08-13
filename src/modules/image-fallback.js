@@ -21,7 +21,7 @@
     }
 
     if (behavior === 'placeholder') {
-      img.style.display = 'none';
+      img.classList.add('hidden');
       const ph = document.createElement('div');
       ph.className = 'width_100 height_100 display_flex flex_col align_center justify_center bg_f8f9fa color_6b7280 border_radius_normal';
       ph.innerHTML = "<div class='font_size_3rem margin_bottom_10 opacity_07'>📷</div><div class='font_size_0_9 font_weight_500'>Image Not Found</div>";
@@ -30,7 +30,7 @@
     }
 
     if (behavior === 'thumbnail') {
-      img.style.display = 'none';
+      img.classList.add('hidden');
       const ph = document.createElement('div');
       ph.className = 'width_100 height_100 display_flex align_center justify_center bg_f8f9fa color_6b7280 font_size_1_5rem';
       ph.textContent = '📷';
@@ -40,7 +40,7 @@
     }
 
     // Default: just hide if nothing else specified
-    img.style.display = 'none';
+    img.classList.add('hidden');
   }
 
   function bind(root = document) {

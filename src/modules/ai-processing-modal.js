@@ -1,5 +1,22 @@
 // AI Processing Modal Module (Vite-managed)
 // Initializes the AIProcessingModal class if the modal exists on the page
+// Runtime-injected width classes for AI progress bar (no inline styles)
+const AI_PW_STYLE_ID = 'ai-progress-width-classes';
+const aiPwPercents = new Set();
+function ensureAiProgressWidthClass(percent) {
+  const p = Math.max(0, Math.min(100, Math.round(Number(percent) || 0)));
+  const cls = `ai-pw-${p}`;
+  if (aiPwPercents.has(p)) return cls;
+  let styleEl = document.getElementById(AI_PW_STYLE_ID);
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = AI_PW_STYLE_ID;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.appendChild(document.createTextNode(`.${cls}{width:${p}%;}`));
+  aiPwPercents.add(p);
+  return cls;
+}
 
 class AIProcessingModal {
   constructor() {
@@ -13,6 +30,7 @@ class AIProcessingModal {
     this.closeBtn = document.getElementById('aiProcessingCloseBtn');
 
     this.currentProcessing = null;
+    this._progressClass = null;
     this.setupEventListeners();
   }
 
@@ -60,7 +78,7 @@ class AIProcessingModal {
   }
 
   reset() {
-    if (this.progressBar) this.progressBar.style.width = '0%';
+    if (this.progressBar) this.applyProgressWidth(0);
 
     for (let i = 1; i <= 3; i++) {
       this.resetStep(i);
@@ -97,7 +115,17 @@ class AIProcessingModal {
   }
 
   updateProgress(percent) {
-    if (this.progressBar) this.progressBar.style.width = `${percent}%`;
+    this.applyProgressWidth(percent);
+  }
+
+  applyProgressWidth(percent) {
+    if (!this.progressBar) return;
+    const cls = ensureAiProgressWidthClass(percent);
+    if (this._progressClass && this._progressClass !== cls) {
+      this.progressBar.classList.remove(this._progressClass);
+    }
+    this.progressBar.classList.add(cls);
+    this._progressClass = cls;
   }
 
   updateStep(stepNumber, status, isComplete = false, isError = false) {

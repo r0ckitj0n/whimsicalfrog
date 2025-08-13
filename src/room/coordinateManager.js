@@ -4,6 +4,25 @@
 
 import { apiGet } from '../core/apiClient.js';
 
+// Runtime-injected classes for positioned clickable areas
+const POS_STYLE_ID = 'wf-room-pos-runtime';
+function getPosStyleEl(){
+  let el = document.getElementById(POS_STYLE_ID);
+  if (!el){ el = document.createElement('style'); el.id = POS_STYLE_ID; document.head.appendChild(el); }
+  return el;
+}
+const posClassCache = new Map(); // key t_l_w_h -> class
+function ensurePosClass({top,left,width,height}){
+  const t = Math.round(top)||0, l = Math.round(left)||0, w = Math.round(width)||0, h = Math.round(height)||0;
+  const key = `${t}_${l}_${w}_${h}`;
+  if (posClassCache.has(key)) return posClassCache.get(key);
+  const idx = posClassCache.size + 1;
+  const cls = `roompos-${idx}`;
+  getPosStyleEl().appendChild(document.createTextNode(`.${cls}{position:absolute;top:${t}px;left:${l}px;width:${w}px;height:${h}px;}`));
+  posClassCache.set(key, cls);
+  return cls;
+}
+
 function getWrapper() {
   return document.querySelector('.room-overlay-wrapper');
 }
@@ -34,10 +53,17 @@ function scaleAndPositionAreas(wrapper, imageW, imageH, areas) {
   areas.forEach(a => {
     const el = wrapper.querySelector(a.selector);
     if (el) {
-      el.style.top = `${a.top * sy + offY}px`;
-      el.style.left = `${a.left * sx + offX}px`;
-      el.style.width = `${a.width * sx}px`;
-      el.style.height = `${a.height * sy}px`;
+      const cls = ensurePosClass({
+        top: a.top * sy + offY,
+        left: a.left * sx + offX,
+        width: a.width * sx,
+        height: a.height * sy
+      });
+      if (el.dataset.posClass && el.dataset.posClass !== cls){
+        el.classList.remove(el.dataset.posClass);
+      }
+      el.classList.add(cls);
+      el.dataset.posClass = cls;
     }
   });
 }

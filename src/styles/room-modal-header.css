@@ -124,8 +124,8 @@
 .room-overlay-wrapper .room-product-icon {
     position: absolute;
     /* Use CSS custom properties for initial positioning */
-    top: var(--icon-top, 0px);
-    left: var(--icon-left, 0px);
+    top: var(--icon-top, 0);
+    left: var(--icon-left, 0);
     width: var(--icon-width, 80px);
     height: var(--icon-height, 80px);
     cursor: pointer;

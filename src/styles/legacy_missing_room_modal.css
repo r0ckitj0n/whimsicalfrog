@@ -211,6 +211,10 @@ body.modal-open #itemPopup.in-room-modal {
     z-index: var(--z-index-content);
 }
 
+/* Hidden state overrides for JS class toggling */
+.room-modal-loading.hidden { display: none !important; }
+.room-modal-iframe.hidden { display: none !important; }
+
 .room-modal-spinner {
     width: 50px;
     height: 50px;

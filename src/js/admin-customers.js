@@ -128,9 +128,9 @@ const AdminCustomersModule = {
 
         if (!prevBtn || !nextBtn || customers.length === 0 || idx === -1) return;
 
-        // Show buttons and set helpful titles
-        prevBtn.style.display = 'block';
-        nextBtn.style.display = 'block';
+        // Show buttons and set helpful titles via class toggles
+        prevBtn.classList.remove('hidden');
+        nextBtn.classList.remove('hidden');
 
         const counter = `${idx + 1} of ${customers.length}`;
         const prevIndex = idx > 0 ? idx - 1 : customers.length - 1;

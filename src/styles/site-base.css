@@ -1,5 +1,5 @@
 /* Import room modal CSS */
-@import './legacy_missing_room_modal.css';
+@import url('./legacy_missing_room_modal.css');
 
 :root {
     /* ==========================================================================
@@ -227,7 +227,13 @@
     --admin-text-primary: #1f2937;
     --admin-text-secondary: #6b7280;
     --admin-warning-bg: #fef3c7;
-}:root {
+    --admin-nav-active-bg: #3b82f6;
+    --admin-nav-hover-bg: #e5e7eb;
+    --admin-sidebar-bg: #ffffff;
+    --admin-success-bg: #d1fae5;
+    --admin-text-primary: #1f2937;
+    --admin-text-secondary: #6b7280;
+    --admin-warning-bg: #fef3c7;
     /* Invert grays */
     --gray-50: #171717;
     --gray-100: #262626;
@@ -239,28 +245,23 @@
     --gray-700: #e5e5e5;
     --gray-800: #f5f5f5;
     --gray-900: #f9f9f9;
-    /* Component-specific dark overrides */;
+    /* Component-specific dark overrides */
     --card-bg: var(--gray-800);
     --card-border: 1px solid var(--gray-700);
     --card-title-color: var(--gray-100);
     --card-text-color: var(--gray-400);
     --scrollbar-track-color: var(--gray-800);
-}:root {
     --transition-fast: none;
     --transition-base: none;
     --transition-slow: none;
-    --animation-duration-fast: 1ms; /* Use 1ms to avoid breaking logic that depends on transitionend event */;
+    --animation-duration-fast: 1ms; /* Use 1ms to avoid breaking logic that depends on transitionend event */
     --animation-duration-base: 1ms;
     --animation-duration-slow: 1ms;
     --animation-easing: ease;
-}:root {
-    ;
-    ;
     --room-container-width: 1280px;
     --room-container-height: 896px;
     --room-bg-size: 1280px 896px;
-}:root {
-    /* Popup Variables - Database-driven customizable values */;
+    /* Popup Variables - Database-driven customizable values */
     --popup-bg-color: #fff;
     --popup-border-color: #8B4513;
     --popup-border-width: 3px;
@@ -269,9 +270,9 @@
     --popup-padding: 15px;
     --popup-min-width: 280px;
     --popup-max-width: 450px;
-    /* Popup should appear above room modal overlay (z-index ~2400) */;
+    /* Popup should appear above room modal overlay (z-index ~2400) */
     --popup-z-index: 2600;
-    /* Popup Text Variables */;
+    /* Popup Text Variables */
     --popup-title-color: #556B2F;
     --popup-title-size: 16px;
     --popup-title-weight: bold;
@@ -281,31 +282,29 @@
     --popup-description-size: 12px;
     --popup-price-color: #6B8E23;
     --popup-price-size: 18px;
-    /* Enhanced Popup Variables */;
+    /* Enhanced Popup Variables */
     --popup-enhanced-bg-color: #fff;
     --popup-enhanced-border-radius: 20px;
     --popup-enhanced-shadow: 0 12px 40px rgb(0 0 0 / 40%);
     --popup-enhanced-min-width: 400px;
     --popup-enhanced-max-width: 600px;
     --popup-enhanced-padding: 20px;
-    /* Button Variables */;
+    /* Button Variables */
     --button-bg-primary: #87ac3a;
     --button-bg-primary-hover: #a3cc4a;
     --button-text-primary: #fff;
     --button-border-radius: 8px;
-}:root {
-    /* Room Container Variables */;
+    /* Room Container Variables */
     --room-container-width: 1280px;
     --room-container-height: 896px;
     --room-bg-size: 1280px 896px;
-}:root {
-    /* Brand Colors */;
+    /* Brand Colors */
     --brand-primary: #87ac3a;
     --brand-secondary: #6b8e23;
     --brand-accent: #9cb244;
     --brand-dark: #4a5d1e;
     --brand-light: #a8c755;
-    /* UI Colors */;
+    /* UI Colors */
     --white: #fff;
     --black: #000;
     --gray-50: #f9f9f9;
@@ -481,10 +480,9 @@
     margin: 0.5rem 0;
 }/* Room Product Icons */
 .room-product-icon {
-    /* Default dimensions as fallback only */;
+    /* Default dimensions as fallback only */
     --icon-width: 80px;
     --icon-height: 80px;
-    ;
     position: absolute;
     cursor: pointer;
     z-index: var(--z-content-overlay);
@@ -855,7 +853,7 @@
 .page-content,
 .main-content,
 .content-wrapper {
-    /* Use CSS variable for header height to ensure proper responsive spacing */;
+    /* Use CSS variable for header height to ensure proper responsive spacing */
     margin-top: calc(var(--header-height, 80px) + 10px);
     padding-top: 10px;
 }
@@ -1454,10 +1452,9 @@ html, body {
     position: relative;
 }/* Room Product Icon Styles - Centralized */
 .room-product-icon {
-    /* Default dimensions as fallback only */;
+    /* Default dimensions as fallback only */
     --icon-width: 80px;
     --icon-height: 80px;
-    ;
     position: absolute;
     cursor: pointer;
     z-index: var(--z-content-overlay);
@@ -1978,7 +1975,8 @@ html, body {
     padding: 0;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
     border: 0;
 }/* Additional utility classes as needed */
 
@@ -3856,7 +3854,7 @@ body {
     font-size: 0.875rem;
     line-height: 1.5;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }/* Search results highlighting */
 mark {
     background: #fef08a !important;
@@ -4012,7 +4010,7 @@ mark {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    overflow-x: none;
+    overflow-x: hidden;
 }/* Custom scrollbar styling for dashboard sections */
 .section-drop-zone::-webkit-scrollbar {
     width: 8px;
@@ -4043,10 +4041,6 @@ mark {
     scrollbar-color: rgba(16, 185, 129, 0.4) rgba(16, 185, 129, 0.1);
 }.available-drop-zone {
     scrollbar-color: rgba(245, 158, 11, 0.4) rgba(245, 158, 11, 0.1);
-}.current-drop-zone {
-    background: transparent;
-}.available-drop-zone {
-    background: transparent;
 }.section-drop-zone.drag-over {
     border-style: solid;
     border-width: 3px;
@@ -4154,18 +4148,20 @@ mark {
 }
 }
 
-@media (max-width: 640px) {.dashboard-section-column {
-    min-height: 300px;
-}.section-drop-zone {
-    min-height: 250px;
-    max-height: 300px;
-}/* Make scrollbar thinner on mobile */
-    .section-drop-zone::-webkit-scrollbar {
-    width: 6px;
-}
+@media (max-width: 640px) {
+ .dashboard-section-column {
+     min-height: 300px;
+ }
+ .section-drop-zone {
+     min-height: 250px;
+     max-height: 300px;
+ }
+ /* Make scrollbar thinner on mobile */
+ .section-drop-zone::-webkit-scrollbar {
+     width: 6px;
+ }
 }/* Improved modal sizing for other settings modals */
 .admin-modal-content {
-    ;
     /* DUPLICATE: max-width: fit-content; */
     width: auto;
     min-width: 600px;
@@ -4298,7 +4294,7 @@ mark {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -1px rgb(0 0 0 / 6%);
 }/* Ensure cart page body doesn't create unnecessary scrollbars */;
 body:has(#cartPage) {
-    overflow-x: none;
+    overflow-x: hidden;
 }/* Compact Room Modal Content (for room add-to-cart modals) */
 .room-modal-content {
     background: white;
@@ -4448,7 +4444,7 @@ body:has(#cartPage) {
     position: absolute;
 }/* Position variants based on CSS variable */
 .modal-close {
-    /* Default to top-right */;
+    /* Default to top-right */
     top: var(--modal-close-top, 10px);
     right: var(--modal-close-right, 15px);
 }/* Position-specific classes that can be applied based on -modal-close-position */
@@ -4630,8 +4626,8 @@ body:has(#cartPage) {
     align-items: center;
     gap: 8px;
 }.modal-button:focus {
-    ring: 2px solid;
-    ring-offset: 2px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
 }.modal-button.btn-primary {
     background: #87ac3a;
     color: white;
@@ -4640,7 +4636,7 @@ body:has(#cartPage) {
     background: #6b8e23;
     border-color: #6b8e23;
 }.modal-button.btn-primary:focus {
-    ring-color: #87ac3a;
+    outline-color: #87ac3a;
 }.modal-button.btn-secondary {
     background: #f3f4f6;
     color: #374151;
@@ -4648,7 +4644,7 @@ body:has(#cartPage) {
 }.modal-button.btn-secondary:hover {
     background: #e5e7eb;
 }.modal-button.btn-secondary:focus {
-    ring-color: #9ca3af;
+    outline-color: #9ca3af;
 }.modal-button.btn-danger {
     background: #ef4444;
     color: white;
@@ -4657,7 +4653,7 @@ body:has(#cartPage) {
     background: #dc2626;
     border-color: #dc2626;
 }.modal-button.btn-danger:focus {
-    ring-color: #ef4444;
+    outline-color: #ef4444;
 }.modal-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -4675,8 +4671,8 @@ body:has(#cartPage) {
     align-items: center;
     gap: 8px;
 }.confirmation-modal-button:focus {
-    ring: 2px solid;
-    ring-offset: 2px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
 }.confirmation-modal-button.cancel {
     background: #f3f4f6;
     color: #374151;
@@ -4684,21 +4680,21 @@ body:has(#cartPage) {
 }.confirmation-modal-button.cancel:hover {
     background: #e5e7eb;
 }.confirmation-modal-button.cancel:focus {
-    ring-color: #9ca3af;
+    outline-color: #9ca3af;
 }.confirmation-modal-button.confirm {
     background: #87ac3a;
     color: white;
 }.confirmation-modal-button.confirm:hover {
     background: #6b8e23;
 }.confirmation-modal-button.confirm:focus {
-    ring-color: #87ac3a;
+    outline-color: #87ac3a;
 }.confirmation-modal-button.danger {
     background: #ef4444;
     color: white;
 }.confirmation-modal-button.danger:hover {
     background: #dc2626;
 }.confirmation-modal-button.danger:focus {
-    ring-color: #ef4444;
+    outline-color: #ef4444;
 }.confirmation-modal-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -5172,9 +5168,7 @@ body.modal-open {
 }
 /* ORPHANED PROPERTY: body:has(.modal-overlay:not(.hidden)),; */
 /* ORPHANED PROPERTY: body:has(#detailedItemModal:not(.hidden)),; */
-body:has(#quantityModal:not(.hidden)) {
-    /* Room title overlay styles moved to centralized room-modal.css */
-}/* Ensure modal content is above modal overlay */
+/* Ensure modal content is above modal overlay */
 .modal-content,
 .admin-modal-content {
     position: relative;
@@ -5275,7 +5269,6 @@ body:has(#quantityModal:not(.hidden)) {
     margin: 0.5rem;
 }.structure-analysis-section .flex.space-x-2 {
     flex-direction: column;
-    space-x: 0;
     gap: 0.5rem;
 }.structure-analysis-section .flex.space-x-2 button {
     width: 100%;
@@ -7447,7 +7440,7 @@ input[type="checkbox"].color-checkbox:checked {
     color: #374151; ;
     flex-grow: 1; ;
     margin-right: 6px; ;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }.cost-item-value {
     font-weight: 600; ;
     color: #1f2937; ;
@@ -8041,8 +8034,7 @@ input[type="checkbox"].color-checkbox:checked {
 .admin-modal-overlay .db-tab,
 .admin-modal-overlay .receipt-tab,
 .admin-modal-overlay .tab-button,
-.admin-modal-overlay button[data-tab],
-.admin-modal-overlay button[onclick*="Tab"] {
+.admin-modal-overlay .admin-tab {
     position: relative;
     margin-right: var(--tab-margin-right, 2px);
     border-radius: var(--tab-border-radius-top, 8px 8px 0 0);
@@ -8062,8 +8054,7 @@ input[type="checkbox"].color-checkbox:checked {
 .admin-modal-overlay .db-tab.bg-white,
 .admin-modal-overlay .receipt-tab.active,
 .admin-modal-overlay .tab-button.active,
-.admin-modal-overlay button[data-tab].active,
-.admin-modal-overlay button[onclick*="Tab"].active {
+.admin-modal-overlay .admin-tab.active {
     background: var(--tab-active-bg, #dcfce7);
     color: var(--tab-active-text, #166534);
     border-color: var(--tab-active-border, #87ac3a);
@@ -9573,7 +9564,7 @@ input[type="checkbox"].color-checkbox:checked {
 }
 
 /* High Contrast Mode */
-@media (prefers-contrast: high) {.card {
+@media (prefers-contrast: more) {.card {
     border-width: 2px;
 }.item-badge {
     border: 2px solid white;
@@ -10229,7 +10220,7 @@ input[type="checkbox"].color-checkbox:checked {
 }
 
 /* High Contrast Mode Support */
-@media (prefers-contrast: high) {.footer-link,
+@media (prefers-contrast: more) {.footer-link,
     .footer-social-icon {
     border: 1px solid currentcolor;
 }
@@ -10327,6 +10318,7 @@ input[type="checkbox"].color-checkbox:checked {
     top: 24px;
     right: 24px;
     ;
+    z-index: 2147483647;
     pointer-events: none;
     max-width: 420px;
     width: 100%;
@@ -10350,7 +10342,12 @@ input[type="checkbox"].color-checkbox:checked {
     position: relative;
     overflow: hidden;
     cursor: pointer;
-}.wf-notification:hover {
+}
+.wf-notification.is-visible {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+}
+.wf-notification:hover {
     transform: translateX(0) scale(1.02);
 }/* Notification Types */
 .wf-success-notification {
@@ -12737,7 +12734,7 @@ div #confirmAddToCart,
     border-color: #e5e7eb;
     color: #9ca3af;
     cursor: not-allowed;
-}.form-input:readonly {
+}.form-input:read-only {
     background-color: #f9fafb;
     border-color: #e5e7eb;
 }/* Input Sizes */
@@ -13017,7 +13014,7 @@ div #confirmAddToCart,
 }
 
 /* High Contrast Mode */
-@media (prefers-contrast: high) {.form-input,
+@media (prefers-contrast: more) {.form-input,
     .form-select {
     border-width: 2px;
 }.form-check-input {
@@ -13163,7 +13160,7 @@ div #confirmAddToCart,
 
 /*Ensure cart page body doesn't create unnecessary scrollbars */;
 body:has(#cartPage) {
-    overflow-x: none;
+    overflow-x: hidden;
 }/* --- chunk: chunk-9.css --- */
 
 /*Compact Room Modal Content (for room add-to-cart modals) */
@@ -13286,7 +13283,7 @@ body:has(#cartPage) {
 /*Position variants based on CSS variable */
 .modal-close {
     /* --- chunk: chunk-21.css --- */
-    /*Default to top-right */;
+    /*Default to top-right */
     top: var(--modal-close-top, 10px);
     right: var(--modal-close-right, 15px);
 }/* --- chunk: chunk-22.css --- */
@@ -15602,7 +15599,7 @@ img {
     position: absolute;
     width: 100%;
     height: 100%;
-    background: currentColor;
+    background: currentcolor;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     z-index: 1;
 }.modal-badge.shape-hexagon span {
@@ -16285,7 +16282,7 @@ body.modal-open #itemPopup.in-room-modal {
 }.overflow-visible {
     overflow: visible;
 }.overflow-x-hidden {
-    overflow-x: none;
+    overflow-x: hidden;
 }.overflow-y-auto {
     overflow-y: auto;
 }/* ==============================================
@@ -16760,12 +16757,14 @@ body.modal-open #itemPopup.in-room-modal {
     margin-bottom: 1rem;
 }
 
-@media print {.card {
-    box-shadow: none;
-    border: 1px solid #000;
-    break-inside: avoid;
+@media print {
+ .card {
+     box-shadow: none;
+     border: 1px solid #000;
+     break-inside: avoid;
+ }
 }
-}/* ==============================================
+/* ==============================================
    FOOTER SYSTEM
    ============================================== */
 
@@ -16774,8 +16773,6 @@ body.modal-open #itemPopup.in-room-modal {
     text-decoration: none;
     transition: color 0.3s ease;
     font-size: var(--footer-font-size);
-}.footer-logo {
-    /* Footer branding styles */
 }/* ==============================================
    ITEM IMAGE CAROUSEL
    ============================================== */
@@ -18028,11 +18025,11 @@ body.modal-open #itemPopup.in-room-modal {
 }.width_0 {
     width: 0%;
 }.header-gradient-brand {
-    background: linear-gradient(180deg,;
+    background: linear-gradient(180deg,
     rgba(0, 0, 0, 0.4) 0%,
     rgba(0, 0, 0, 0.2) 50%,
     rgba(0, 0, 0, 0.1) 100%
-    )
+    );
 }.bg-gradient-brand-primary {
     background: linear-gradient(135deg, var(--brand-primary) 0%, #6b8e23 100%);
 }.bg-gradient-brand-horizontal {
@@ -18115,7 +18112,7 @@ body.modal-open #itemPopup.in-room-modal {
     top: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(180deg,;
+    background: linear-gradient(180deg,
     rgba(0, 0, 0, 0.4) 0%,
     rgba(0, 0, 0, 0.2) 50%,
     rgba(0, 0, 0, 0.1) 100%
@@ -18305,7 +18302,7 @@ body.modal-open #itemPopup.in-room-modal {
     top: 100%;
     left: 0;
     right: 0;
-    background: linear-gradient(180deg,;
+    background: linear-gradient(180deg,
     rgba(0, 0, 0, 0.9) 0%,
     rgba(0, 0, 0, 0.8) 50%,
     rgba(0, 0, 0, 0.7) 100%
@@ -19718,7 +19715,7 @@ body.modal-open #itemPopup.in-room-modal {
     font-size: 0.875rem;
     line-height: 1.5;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }mark {
     background: #fef08a !important;
     padding: 0.125rem 0.25rem;
@@ -19862,7 +19859,7 @@ body.modal-open #itemPopup.in-room-modal {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    overflow-x: none;
+    overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
 }.section-drop-zone::-webkit-scrollbar {
@@ -20463,7 +20460,7 @@ body.modal-open #itemPopup.in-room-modal {
     color: #374151;
     flex-grow: 1;
     margin-right: 6px;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }.cost-item-value {
     font-weight: 600;
     color: #1f2937;
@@ -21013,41 +21010,40 @@ body.modal-open #itemPopup.in-room-modal {
     position: absolute;
     top: 16px;
     right: 20px;
-}.admin-modal-overlay .analytics-tab,
-.admin-modal-overlay .css-category-tab,
-.admin-modal-overlay .db-tab,
-.admin-modal-overlay .receipt-tab,
-.admin-modal-overlay .tab-button,
-.admin-modal-overlay button[data-tab],
-.admin-modal-overlay button[onclick*="Tab"] {
-    position: relative;
-    margin-right: var(--tab-margin-right, 2px);
-    border-radius: var(--tab-border-radius-top, 8px 8px 0 0);
-    border: 1px solid var(--tab-border-color, #d1d5db);
-    border-bottom: none;
-    padding: var(--tab-padding, 8px 16px);
-    background: var(--tab-inactive-bg, #f9fafb);
-    color: var(--tab-inactive-text, #6b7280);
-    font-weight: var(--tab-font-weight, 500);
-    font-size: var(--tab-font-size, 14px);
-    transition: var(--tab-transition, all 0.2s ease);
-    cursor: pointer;
-    min-width: auto;
-}.admin-modal-overlay .analytics-tab.border-blue-500,
-.admin-modal-overlay .analytics-tab.border-b-2.border-blue-500,
-.admin-modal-overlay .css-category-tab.active,
-.admin-modal-overlay .db-tab.bg-white,
-.admin-modal-overlay .receipt-tab.active,
-.admin-modal-overlay .tab-button.active,
-.admin-modal-overlay button[data-tab].active,
-.admin-modal-overlay button[onclick*="Tab"].active {
-    background: var(--tab-active-bg, #dcfce7);
-    color: var(--tab-active-text, #166534);
-    border-color: var(--tab-active-border, #87ac3a);
-    border-bottom: 1px solid var(--tab-active-bg, #dcfce7);
-    margin-bottom: -1px;
-    font-weight: var(--tab-active-font-weight, 600);
-}#databaseTablesModal .db-scrollable {
+ }.admin-modal-overlay .analytics-tab,
+ .admin-modal-overlay .css-category-tab,
+ .admin-modal-overlay .db-tab,
+ .admin-modal-overlay .receipt-tab,
+ .admin-modal-overlay .tab-button,
+ .admin-modal-overlay .admin-tab {
+     position: relative;
+     margin-right: var(--tab-margin-right, 2px);
+     border-radius: var(--tab-border-radius-top, 8px 8px 0 0);
+     border: 1px solid var(--tab-border-color, #d1d5db);
+     border-bottom: none;
+     padding: var(--tab-padding, 8px 16px);
+     background: var(--tab-inactive-bg, #f9fafb);
+     color: var(--tab-inactive-text, #6b7280);
+     font-weight: var(--tab-font-weight, 500);
+     font-size: var(--tab-font-size, 14px);
+     transition: var(--tab-transition, all 0.2s ease);
+     cursor: pointer;
+     min-width: auto;
+ }.admin-modal-overlay .analytics-tab.border-blue-500,
+ .admin-modal-overlay .analytics-tab.border-b-2.border-blue-500,
+ .admin-modal-overlay .css-category-tab.active,
+ .admin-modal-overlay .db-tab.bg-white,
+ .admin-modal-overlay .receipt-tab.active,
+ .admin-modal-overlay .tab-button.active,
+ .admin-modal-overlay .admin-tab.active {
+     background: var(--tab-active-bg, #dcfce7);
+     color: var(--tab-active-text, #166534);
+     border-color: var(--tab-active-border, #87ac3a);
+     border-bottom: 1px solid var(--tab-active-bg, #dcfce7);
+     margin-bottom: -1px;
+     font-weight: var(--tab-active-font-weight, 600);
+ }
+#databaseTablesModal .db-scrollable {
     scrollbar-width: thin;
     scrollbar-color: #9ca3af #f3f4f6;
     overflow: auto scroll;
@@ -24775,7 +24771,7 @@ body.modal-open #itemPopup.visible {
     border-color: #e5e7eb;
     color: #9ca3af;
     cursor: not-allowed;
-}.form-input:readonly {
+}.form-input:read-only {
     background-color: #f9fafb;
     border-color: #e5e7eb;
 }.form-input-sm {
@@ -26715,7 +26711,8 @@ input[type="checkbox"].color-checkbox:checked {
     padding: 0;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
     border: 0;
 }/* ========================================
    ARCHIVED STYLES RECOVERY (June 17, 2025)
@@ -26852,7 +26849,7 @@ input[type="checkbox"].color-checkbox:checked {
 
 /* === MISSING HEADER VARIABLES === */
 :root {
-    /* Header Background & Navigation */;
+    /* Header Background & Navigation */
     --header-bg-light: #f8fafc;
     --header-bg-accent: #e6f4d7;
     --header-nav-bg-start: rgba(0,0,0,0.85);
@@ -26860,21 +26857,22 @@ input[type="checkbox"].color-checkbox:checked {
     --header-nav-bg-end: rgba(0,0,0,0.01);
     --header-shadow: 0 2px 8px rgba(0,0,0,0.04);
     --header-text-primary: #87ac3a;
-    /* Navigation Links */;
+    /* Navigation Links */
     --nav-link-color: var(--brand-primary, #87ac3a);
     --nav-link-active-color: var(--brand-primary, #87ac3a);
-    /* Z-Index Hierarchy */;
+    /* Z-Index Hierarchy */
     --z-tooltip: 10000;
     --z-modal: 9000;
     --z-dropdown: 8000;
     --z-navigation: 1000;
     --z-header: 1000;
     --z-content: 1;
-    /* Transitions */;
+    /* Transitions */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
-}/* === CRITICAL MODAL STYLES === */
+}
+/* === CRITICAL MODAL STYLES === */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -28690,7 +28688,7 @@ body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
     font-size: 0.875rem;
     line-height: 1.5;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }/* Search results highlighting */
 mark {
     background: #fef08a !important;
@@ -28846,7 +28844,7 @@ mark {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    overflow-x: none;
+    overflow-x: hidden;
 }/* Custom scrollbar styling for dashboard sections */
 .section-drop-zone::-webkit-scrollbar {
     width: 8px;
@@ -28988,18 +28986,21 @@ mark {
 }
 }
 
-@media (max-width: 640px) {.dashboard-section-column {
-    min-height: 300px;
-}.section-drop-zone {
-    min-height: 250px;
-    max-height: 300px;
-}/* Make scrollbar thinner on mobile */
+@media (max-width: 640px) {
+    .dashboard-section-column {
+        min-height: 300px;
+    }
+    .section-drop-zone {
+        min-height: 250px;
+        max-height: 300px;
+    }
+    /* Make scrollbar thinner on mobile */
     .section-drop-zone::-webkit-scrollbar {
-    width: 6px;
+        width: 6px;
+    }
 }
-}/* Improved modal sizing for other settings modals */
+/* Improved modal sizing for other settings modals */
 .admin-modal-content {
-    ;
     /* DUPLICATE: max-width: fit-content; */
     width: auto;
     min-width: 600px;
@@ -29133,7 +29134,7 @@ mark {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -1px rgb(0 0 0 / 6%);
 }/* Ensure cart page body doesn't create unnecessary scrollbars */;
 body:has(#cartPage) {
-    overflow-x: none;
+    overflow-x: hidden;
 }/* Compact Room Modal Content (for room add-to-cart modals) */
 .room-modal-content {
     background: white;
@@ -29283,7 +29284,7 @@ body:has(#cartPage) {
     position: absolute;
 }/* Position variants based on CSS variable */
 .modal-close {
-    /* Default to top-right */;
+    /* Default to top-right */
     top: var(--modal-close-top, 10px);
     right: var(--modal-close-right, 15px);
 }/* Position-specific classes that can be applied based on -modal-close-position */
@@ -29465,8 +29466,8 @@ body:has(#cartPage) {
     align-items: center;
     gap: 8px;
 }.modal-button:focus {
-    ring: 2px solid;
-    ring-offset: 2px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
 }.modal-button.btn-primary {
     background: #87ac3a;
     color: white;
@@ -29475,7 +29476,7 @@ body:has(#cartPage) {
     background: #6b8e23;
     border-color: #6b8e23;
 }.modal-button.btn-primary:focus {
-    ring-color: #87ac3a;
+    outline-color: #87ac3a;
 }.modal-button.btn-secondary {
     background: #f3f4f6;
     color: #374151;
@@ -29483,7 +29484,7 @@ body:has(#cartPage) {
 }.modal-button.btn-secondary:hover {
     background: #e5e7eb;
 }.modal-button.btn-secondary:focus {
-    ring-color: #9ca3af;
+    outline-color: #9ca3af;
 }.modal-button.btn-danger {
     background: #ef4444;
     color: white;
@@ -29492,7 +29493,7 @@ body:has(#cartPage) {
     background: #dc2626;
     border-color: #dc2626;
 }.modal-button.btn-danger:focus {
-    ring-color: #ef4444;
+    outline-color: #ef4444;
 }.modal-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -29510,8 +29511,8 @@ body:has(#cartPage) {
     align-items: center;
     gap: 8px;
 }.confirmation-modal-button:focus {
-    ring: 2px solid;
-    ring-offset: 2px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
 }.confirmation-modal-button.cancel {
     background: #f3f4f6;
     color: #374151;
@@ -29519,21 +29520,21 @@ body:has(#cartPage) {
 }.confirmation-modal-button.cancel:hover {
     background: #e5e7eb;
 }.confirmation-modal-button.cancel:focus {
-    ring-color: #9ca3af;
+    outline-color: #9ca3af;
 }.confirmation-modal-button.confirm {
     background: #87ac3a;
     color: white;
 }.confirmation-modal-button.confirm:hover {
     background: #6b8e23;
 }.confirmation-modal-button.confirm:focus {
-    ring-color: #87ac3a;
+    outline-color: #87ac3a;
 }.confirmation-modal-button.danger {
     background: #ef4444;
     color: white;
 }.confirmation-modal-button.danger:hover {
     background: #dc2626;
 }.confirmation-modal-button.danger:focus {
-    ring-color: #ef4444;
+    outline-color: #ef4444;
 }.confirmation-modal-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -30001,15 +30002,12 @@ body.modal-open {
 .compact-modal-content,
 .fullscreen-modal-content {
     overflow: hidden auto;
-    --webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
 }.modal-hidden {
     display: none;
 }
-/* ORPHANED PROPERTY: body:has(.modal-overlay:not(.hidden)),; */
-/* ORPHANED PROPERTY: body:has(#detailedItemModal:not(.hidden)),; */
-body:has(#quantityModal:not(.hidden)) {
-    /* Room title overlay styles moved to centralized room-modal.css */
-}/* Ensure modal content is above modal overlay */
+
+/* Ensure modal content is above modal overlay */
 .modal-content,
 .admin-modal-content {
     position: relative;
@@ -30110,7 +30108,6 @@ body:has(#quantityModal:not(.hidden)) {
     margin: 0.5rem;
 }.structure-analysis-section .flex.space-x-2 {
     flex-direction: column;
-    space-x: 0;
     gap: 0.5rem;
 }.structure-analysis-section .flex.space-x-2 button {
     width: 100%;
@@ -31350,10 +31347,9 @@ html, body {
     position: relative;
 }/* Room Product Icon Styles - Centralized */
 .room-product-icon {
-    /* Default dimensions as fallback only */;
+    /* Default dimensions as fallback only */
     --icon-width: 80px;
     --icon-height: 80px;
-    ;
     position: absolute;
     cursor: pointer;
     z-index: var(--z-content-overlay);
@@ -31669,7 +31665,7 @@ html, body {
 /* All styling can be customized through Admin Settings > Global CSS Rules */
 
 :root {
-    /* Popup Variables - Fallback values, will be overridden by Global CSS Rules */;
+    /* Popup Variables - Fallback values, will be overridden by Global CSS Rules */
     --popup-bg-color: #fff;
     --popup-border-color: #8B4513;
     --popup-border-width: 3px;
@@ -31678,9 +31674,9 @@ html, body {
     --popup-padding: 15px;
     --popup-min-width: 280px;
     --popup-max-width: 450px;
-    /* Popup should appear above room modal overlay (z-index ~2400) */;
+    /* Popup should appear above room modal overlay (z-index ~2400) */
     --popup-z-index: 2600;
-    /* Popup Text Variables */;
+    /* Popup Text Variables */
     --popup-title-color: #556B2F;
     --popup-title-size: 16px;
     --popup-title-weight: bold;
@@ -31690,19 +31686,20 @@ html, body {
     --popup-description-size: 12px;
     --popup-price-color: #6B8E23;
     --popup-price-size: 18px;
-    /* Enhanced Popup Variables */;
+    /* Enhanced Popup Variables */
     --popup-enhanced-bg-color: #fff;
     --popup-enhanced-border-radius: 20px;
     --popup-enhanced-shadow: 0 12px 40px rgb(0 0 0 / 40%);
     --popup-enhanced-min-width: 400px;
     --popup-enhanced-max-width: 600px;
     --popup-enhanced-padding: 20px;
-    /* Button Variables */;
+    /* Button Variables */
     --button-bg-primary: #87ac3a;
     --button-bg-primary-hover: #a3cc4a;
     --button-text-primary: #fff;
     --button-border-radius: 8px;
-}/* Ensure popups always appear above any modal overlay */
+}
+/* Ensure popups always appear above any modal overlay */
 .item-popup,
 .item-popup-legacy,
 .item-popup-enhanced {
@@ -32909,8 +32906,8 @@ div #confirmAddToCart,
 
 /* Room CSS Variables - managed by Global CSS Rules */
 :root {
-    ;
-    ;
+    
+    
     --room-container-width: 1280px;
     --room-container-height: 896px;
     --room-bg-size: 1280px 896px;
@@ -33540,7 +33537,7 @@ div #confirmAddToCart,
 .page-content,
 .main-content,
 .content-wrapper {
-    /* Use CSS variable for header height to ensure proper responsive spacing */;
+    /* Use CSS variable for header height to ensure proper responsive spacing */
     margin-top: calc(var(--header-height, 80px) + 10px);
     padding-top: 10px;
 }
@@ -35264,7 +35261,7 @@ div #confirmAddToCart,
     font-size: 0.875rem;
     line-height: 1.5;
     white-space: pre-wrap;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }/* Search results highlighting */
 mark {
     background: #fef08a !important;
@@ -35420,7 +35417,7 @@ mark {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
-    overflow-x: none;
+    overflow-x: hidden;
 }/* Custom scrollbar styling for dashboard sections */
 .section-drop-zone::-webkit-scrollbar {
     width: 8px;
@@ -35547,50 +35544,61 @@ mark {
 }
 
 /* Responsive adjustments for dashboard config */
-@media (max-width: 1023px) {.dashboard-config-layout {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-}.dashboard-config-modal {
-    width: 98vw !important;
-    max-width: none !important;
-}.dashboard-section-column {
-    min-height: 400px;
-}.section-drop-zone {
-    min-height: 300px;
-    max-height: 350px;
-}
+@media (max-width: 1023px) {
+    .dashboard-config-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    .dashboard-config-modal {
+        width: 98vw !important;
+        max-width: none !important;
+    }
 }
 
-@media (max-width: 640px) {.dashboard-section-column {
-    min-height: 300px;
-}.section-drop-zone {
-    min-height: 250px;
-    max-height: 300px;
-}/* Make scrollbar thinner on mobile */
+@media (max-width: 640px) {
+    .dashboard-section-column {
+        min-height: 300px;
+    }
+    .section-drop-zone {
+        min-height: 250px;
+        max-height: 300px;
+    }
+    /* Make scrollbar thinner on mobile */
     .section-drop-zone::-webkit-scrollbar {
-    width: 6px;
+        width: 6px;
+    }
 }
-}/* Improved modal sizing for other settings modals */
+
+/* Improved modal sizing for other settings modals */
 .admin-modal-content {
-    ;
     /* DUPLICATE: max-width: fit-content; */
     width: auto;
     min-width: 600px;
     max-width: 90vw;
-}/* Specific sizing for different modal types */
+}
+
+/* Specific sizing for different modal types */
 .admin-modal-content.categories-modal {
     max-width: 800px;
-}.admin-modal-content.room-settings-modal {
+}
+
+.admin-modal-content.room-settings-modal {
     max-width: 900px;
-}.admin-modal-content.global-css-modal {
+}
+
+.admin-modal-content.global-css-modal {
     max-width: 1000px;
-}.admin-modal-content.website-config-modal {
+}
+.admin-modal-content.website-config-modal {
     max-width: 1100px;
-}.admin-modal-content.business-settings-modal {
+}
+.admin-modal-content.business-settings-modal {
     max-width: 1000px;
-}.admin-modal-content.system-config-modal {
+}
+.admin-modal-content.system-config-modal {
     max-width: 1000px;
-}/* Extracted from admin_inventory.php.bak (backup) */
+}
+/* Extracted from admin_inventory.php.bak (backup) */
 /* Toast notifications handled by global utility classes */
 
     /* Inventory table styles handled by global utility classes */
@@ -36137,7 +36145,7 @@ mark {
     color: #374151; ;
     flex-grow: 1; ;
     margin-right: 6px; ;
-    word-break: break-word;
+    overflow-wrap: break-word;
 }.cost-item-value {
     font-weight: 600; ;
     color: #1f2937; ;
@@ -36752,8 +36760,7 @@ mark {
 .admin-modal-overlay .db-tab,
 .admin-modal-overlay .receipt-tab,
 .admin-modal-overlay .tab-button,
-.admin-modal-overlay button[data-tab],
-.admin-modal-overlay button[onclick*="Tab"] {
+.admin-modal-overlay .admin-tab {
     position: relative;
     margin-right: var(--tab-margin-right, 2px);
     border-radius: var(--tab-border-radius-top, 8px 8px 0 0);
@@ -36773,16 +36780,15 @@ mark {
 .admin-modal-overlay .db-tab.bg-white,
 .admin-modal-overlay .receipt-tab.active,
 .admin-modal-overlay .tab-button.active,
-.admin-modal-overlay button[data-tab].active,
-.admin-modal-overlay button[onclick*="Tab"].active {
+.admin-modal-overlay .admin-tab.active {
     background: var(--tab-active-bg, #dcfce7);
     color: var(--tab-active-text, #166534);
     border-color: var(--tab-active-border, #87ac3a);
     border-bottom: 1px solid var(--tab-active-bg, #dcfce7);
-    ;
     margin-bottom: -1px;
     font-weight: var(--tab-active-font-weight, 600);
-}/* Database Tables Modal Specific Styles */
+}
+/* Database Tables Modal Specific Styles */
 #databaseTablesModal .db-scrollable {
     scrollbar-width: thin;
     scrollbar-color: #9ca3af #f3f4f6;
@@ -38345,7 +38351,7 @@ mark {
 }
 
 /* High Contrast Mode */
-@media (prefers-contrast: high) {.card {
+@media (prefers-contrast: more) {.card {
     border-width: 2px;
 }.item-badge {
     border: 2px solid white;
@@ -38980,7 +38986,7 @@ mark {
 }
 
 /* High Contrast Mode Support */
-@media (prefers-contrast: high) {.footer-link,
+@media (prefers-contrast: more) {.footer-link,
     .footer-social-icon {
     border: 1px solid currentcolor;
 }
@@ -41565,7 +41571,7 @@ div #confirmAddToCart,
     border-color: #e5e7eb;
     color: #9ca3af;
     cursor: not-allowed;
-}.form-input:readonly {
+}.form-input:read-only {
     background-color: #f9fafb;
     border-color: #e5e7eb;
 }/* Input Sizes */
@@ -41845,7 +41851,7 @@ div #confirmAddToCart,
 }
 
 /* High Contrast Mode */
-@media (prefers-contrast: high) {.form-input,
+@media (prefers-contrast: more) {.form-input,
     .form-select {
     border-width: 2px;
 }.form-check-input {
@@ -42003,7 +42009,7 @@ div #confirmAddToCart,
 
 /*Ensure cart page body doesn't create unnecessary scrollbars */;
 body:has(#cartPage) {
-    overflow-x: none;
+    overflow-x: hidden;
 }/* --- chunk: chunk-9.css --- */
 
 /*Compact Room Modal Content (for room add-to-cart modals) */
@@ -42175,7 +42181,7 @@ body:has(#cartPage) {
 /*Position variants based on CSS variable */
 .modal-close {
     /* --- chunk: chunk-21.css --- */
-    /*Default to top-right */;
+    /*Default to top-right */
     top: var(--modal-close-top, 10px);
     right: var(--modal-close-right, 15px);
 }/* --- chunk: chunk-22.css --- */
@@ -43678,7 +43684,7 @@ input[type="checkbox"].color-checkbox:checked {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -1px rgb(0 0 0 / 6%);
 }/* Ensure cart page body doesn't create unnecessary scrollbars */;
 body:has(#cartPage) {
-    overflow-x: none;
+    overflow-x: hidden;
 }/* Compact Room Modal Content (for room add-to-cart modals) */
 .room-modal-content {
     background: white;
@@ -43828,7 +43834,7 @@ body:has(#cartPage) {
     position: absolute;
 }/* Position variants based on CSS variable */
 .modal-close {
-    /* Default to top-right */;
+    /* Default to top-right */
     top: var(--modal-close-top, 10px);
     right: var(--modal-close-right, 15px);
 }/* Position-specific classes that can be applied based on -modal-close-position */
@@ -46206,7 +46212,8 @@ img {
     padding: 0;
     margin: -1px;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
     border: 0;
 }/* Additional utility classes as needed */
 
@@ -46570,18 +46577,21 @@ img {
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-base) ease;
-}.btn-brand:hover {
+}
+.btn-brand:hover {
     background-color: var(--button-bg-primary-hover);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
-}.card-standard {
+}
+.card-standard {
     background-color: var(--card-bg);
     border: var(--card-border);
     border-radius: var(--card-border-radius);
     box-shadow: var(--card-shadow);
     padding: var(--card-padding);
     transition: all var(--transition-base) ease;
-}.card-standard:hover {
+}
+.card-standard:hover {
     box-shadow: var(--card-shadow-hover);
     transform: translateY(-2px);
 }

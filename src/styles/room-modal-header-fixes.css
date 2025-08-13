@@ -62,7 +62,6 @@
 
 /* White backing via pseudo so it never gets overridden */
 .room-modal-overlay .room-product-icon::before {
-    z-index:0;
     content: '';
     position: absolute;
     inset: 0;

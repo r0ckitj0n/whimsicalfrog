@@ -59,7 +59,7 @@ class AdminOrdersModule {
             case 'close-modal':
                  // Generic close for any modal with this pattern
                 const modal = event.target.closest('.modal-overlay');
-                if (modal) modal.style.display = 'none';
+                if (modal) modal.classList.add('hidden');
                 break;
         }
     }
@@ -67,7 +67,7 @@ class AdminOrdersModule {
     initModal() {
         const orderModal = document.getElementById('orderModal');
         if (this.modalMode && orderModal) {
-            orderModal.style.display = 'flex';
+            orderModal.classList.remove('hidden');
         }
     }
 
@@ -76,14 +76,14 @@ class AdminOrdersModule {
         const orderIdInput = document.getElementById('delete_order_id');
         if (modal && orderIdInput) {
             orderIdInput.value = orderId;
-            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
         }
     }
 
     closeDeleteModal() {
         const modal = document.getElementById('deleteConfirmModal');
         if (modal) {
-            modal.style.display = 'none';
+            modal.classList.add('hidden');
         }
     }
 
@@ -102,7 +102,7 @@ class AdminOrdersModule {
     showAddItemModal() {
         const modal = document.getElementById('addItemModal');
         if (modal) {
-            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
         }
     }
 

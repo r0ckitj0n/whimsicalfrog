@@ -5,6 +5,26 @@
 import WF from './whimsical-frog-core.js';
 import { debounce } from './utils.js';
 
+// Runtime helpers for height equalization without inline styles
+const WFSHOP_EQH = { styleEl: null, rules: new Set() };
+function ensureEqHStyleEl() {
+    if (!WFSHOP_EQH.styleEl) {
+        WFSHOP_EQH.styleEl = document.createElement('style');
+        WFSHOP_EQH.styleEl.id = 'wf-shop-eqh-styles';
+        document.head.appendChild(WFSHOP_EQH.styleEl);
+    }
+    return WFSHOP_EQH.styleEl;
+}
+function buildEqHClassName(h) {
+    return `wf-eqh-h${h}`;
+}
+function ensureEqHRule(className, h) {
+    if (WFSHOP_EQH.rules.has(className)) return;
+    const css = `#productsGrid .${className} { height: ${h}px; }`;
+    ensureEqHStyleEl().appendChild(document.createTextNode(css));
+    WFSHOP_EQH.rules.add(className);
+}
+
 const ShopPage = {
     init() {
         this.categoryButtons = document.querySelectorAll('.category-btn');
@@ -53,15 +73,30 @@ const ShopPage = {
 
         if (visibleCards.length === 0) return;
 
-        // Reset heights to allow natural reflow
-        visibleCards.forEach(card => { card.style.height = 'auto'; });
+        // Reset previous height classes to allow natural reflow
+        visibleCards.forEach(card => {
+            const prev = card.dataset.wfEqhClass;
+            if (prev) {
+                card.classList.remove(prev);
+                delete card.dataset.wfEqhClass;
+            }
+        });
 
         // Allow the browser to reflow and calculate natural heights
         requestAnimationFrame(() => {
             const maxHeight = Math.max(...visibleCards.map(card => card.offsetHeight));
     
             if (maxHeight > 0) {
-                visibleCards.forEach(card => { card.style.height = `${maxHeight}px`; });
+                const h = Math.round(maxHeight);
+                const className = buildEqHClassName(h);
+                ensureEqHRule(className, h);
+                visibleCards.forEach(card => {
+                    // Remove any stale class first (in case card becomes visible from previous group)
+                    const prev = card.dataset.wfEqhClass;
+                    if (prev && prev !== className) card.classList.remove(prev);
+                    if (!card.classList.contains(className)) card.classList.add(className);
+                    card.dataset.wfEqhClass = className;
+                });
             }
         });
     }

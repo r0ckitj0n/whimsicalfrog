@@ -60,21 +60,21 @@
     "src": "images/backgrounds/background_room_main.webp"
   },
   "src/entries/admin-dashboard.js": {
-    "file": "assets/js/admin-dashboard.js-VQ1WXx75.js",
+    "file": "assets/js/admin-dashboard.js-DhjTgHlz.js",
     "name": "js/admin-dashboard.js",
     "src": "src/entries/admin-dashboard.js",
     "isEntry": true,
     "isDynamicEntry": true
   },
   "src/entries/admin-inventory.js": {
-    "file": "assets/js/admin-inventory.js-BTnZ337M.js",
+    "file": "assets/js/admin-inventory.js-BdJTqza9.js",
     "name": "js/admin-inventory.js",
     "src": "src/entries/admin-inventory.js",
     "isEntry": true,
     "isDynamicEntry": true
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-BnMFlhLm.js",
+    "file": "assets/js/app.js-B4hOOJU8.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -96,10 +96,11 @@
       "src/js/admin-db-status.js",
       "src/js/admin-db-web-manager.js",
       "src/js/admin-room-config-manager.js",
+      "src/js/admin-cost-breakdown-manager.js",
       "src/entries/admin-dashboard.js"
     ],
     "css": [
-      "assets/app-6-8CXY8-.css"
+      "assets/app-B3dwzeWn.css"
     ],
     "assets": [
       "assets/background_room_main-CD7UiX_S.webp",
@@ -124,8 +125,14 @@
     "src": "src/js/admin-categories.js",
     "isDynamicEntry": true
   },
+  "src/js/admin-cost-breakdown-manager.js": {
+    "file": "assets/admin-cost-breakdown-manager-jTYVdOtY.js",
+    "name": "admin-cost-breakdown-manager",
+    "src": "src/js/admin-cost-breakdown-manager.js",
+    "isDynamicEntry": true
+  },
   "src/js/admin-customers.js": {
-    "file": "assets/admin-customers-CVcZiYjm.js",
+    "file": "assets/admin-customers-ZvJP5CJA.js",
     "name": "admin-customers",
     "src": "src/js/admin-customers.js",
     "isDynamicEntry": true
@@ -152,13 +159,13 @@
     ]
   },
   "src/js/admin-orders.js": {
-    "file": "assets/admin-orders-CKuoBxab.js",
+    "file": "assets/admin-orders-DKHFuglB.js",
     "name": "admin-orders",
     "src": "src/js/admin-orders.js",
     "isDynamicEntry": true
   },
   "src/js/admin-pos.js": {
-    "file": "assets/admin-pos-DuYEvZ-S.js",
+    "file": "assets/admin-pos-D35b-zkd.js",
     "name": "admin-pos",
     "src": "src/js/admin-pos.js",
     "isDynamicEntry": true
@@ -173,13 +180,13 @@
     ]
   },
   "src/js/admin-room-config-manager.js": {
-    "file": "assets/admin-room-config-manager-Wz8M00z8.js",
+    "file": "assets/admin-room-config-manager-CD_y9dNV.js",
     "name": "admin-room-config-manager",
     "src": "src/js/admin-room-config-manager.js",
     "isDynamicEntry": true
   },
   "src/js/admin-settings.js": {
-    "file": "assets/admin-settings-CCwuHW0E.js",
+    "file": "assets/admin-settings-UCQvnvI6.js",
     "name": "admin-settings",
     "src": "src/js/admin-settings.js",
     "isDynamicEntry": true
@@ -197,7 +204,7 @@
     "isDynamicEntry": true
   },
   "src/js/pages/register-page.js": {
-    "file": "assets/register-page-rNc9KzKa.js",
+    "file": "assets/register-page-C4nNINHS.js",
     "name": "register-page",
     "src": "src/js/pages/register-page.js",
     "isDynamicEntry": true

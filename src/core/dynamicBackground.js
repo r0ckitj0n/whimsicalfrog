@@ -4,6 +4,31 @@
 
 import { apiGet } from './apiClient.js';
 
+// Runtime-injected CSS classes for background images
+const DYNBG_STYLE_ID = 'wf-dynbg-runtime';
+function getDynBgStyleEl(){
+  let el = document.getElementById(DYNBG_STYLE_ID);
+  if (!el){
+    el = document.createElement('style');
+    el.id = DYNBG_STYLE_ID;
+    document.head.appendChild(el);
+  }
+  return el;
+}
+
+const dynBgClassMap = new Map(); // url -> className
+function ensureDynBgClass(imageUrl){
+  if (!imageUrl) return null;
+  if (dynBgClassMap.has(imageUrl)) return dynBgClassMap.get(imageUrl);
+  const idx = dynBgClassMap.size + 1;
+  const cls = `dynbg-${idx}`;
+  const styleEl = getDynBgStyleEl();
+  // Use both CSS var and direct background-image for robustness
+  styleEl.appendChild(document.createTextNode(`.${cls}{--dynamic-bg-url:url('${imageUrl}');background-image:url('${imageUrl}');}`));
+  dynBgClassMap.set(imageUrl, cls);
+  return cls;
+}
+
 /**
  * Fetches room mapping from get_room_data API and returns a page->room map.
  */
@@ -59,7 +84,14 @@ export async function loadDynamicBackground() {
     let container = document.querySelector('.fullscreen-container') || document.getElementById('mainContent');
     if (!container) container = document.body;
 
-    container.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
+    const bgCls = ensureDynBgClass(imageUrl);
+    if (container.dataset.bgClass && container.dataset.bgClass !== bgCls){
+      container.classList.remove(container.dataset.bgClass);
+    }
+    if (bgCls){
+      container.classList.add(bgCls);
+      container.dataset.bgClass = bgCls;
+    }
     container.classList.add('bg-container', 'mode-fullscreen', 'dynamic-bg-loaded');
     document.body.classList.add('dynamic-bg-active');
   } catch (err) {

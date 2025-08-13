@@ -54,6 +54,36 @@ class UnifiedPopupSystem {
     });
   }
 
+  // Runtime helpers: class-based positioning (no inline styles)
+  static _POS = { styleEl: null, rules: new Set() };
+  static _ensureStyleEl() {
+    if (!UnifiedPopupSystem._POS.styleEl) {
+      const el = document.createElement('style');
+      el.id = 'wf-globalpopup-styles';
+      document.head.appendChild(el);
+      UnifiedPopupSystem._POS.styleEl = el;
+    }
+    return UnifiedPopupSystem._POS.styleEl;
+  }
+  static _className(t, l) {
+    return `wf-gp-t${Math.round(t)}-l${Math.round(l)}`;
+  }
+  static _ensureRule(cls, t, l) {
+    if (UnifiedPopupSystem._POS.rules.has(cls)) return;
+    const css = `.item-popup.${cls}{position:absolute;top:${Math.round(t)}px !important;left:${Math.round(l)}px !important;}`;
+    UnifiedPopupSystem._ensureStyleEl().appendChild(document.createTextNode(css));
+    UnifiedPopupSystem._POS.rules.add(cls);
+  }
+  _applyPosition(top, left) {
+    if (!this.popupEl) return;
+    const prev = this.popupEl.dataset.wfGpPosClass;
+    if (prev) this.popupEl.classList.remove(prev);
+    const cls = UnifiedPopupSystem._className(top, left);
+    UnifiedPopupSystem._ensureRule(cls, top, left);
+    this.popupEl.classList.add(cls);
+    this.popupEl.dataset.wfGpPosClass = cls;
+  }
+
   show(anchorEl, item) {
     // Prevent redundant show calls for the same anchor – avoids flashing
     if (this.popupEl && this.popupEl.classList.contains('visible') && anchorEl === this._lastAnchor) {
@@ -131,8 +161,7 @@ class UnifiedPopupSystem {
         console.warn('[globalPopup] failed iframe adjustment', err);
       }
     }
-    this.popupEl.style.top = `${top}px`;
-    this.popupEl.style.left = `${left}px`;
+    this._applyPosition(top, left);
 
     // Show invisibly to measure size then clamp
     this.popupEl.classList.remove('hidden');
@@ -146,14 +175,13 @@ class UnifiedPopupSystem {
       if (newLeft < 0) newLeft = 8;
       if (r.bottom > window.innerHeight) newTop = window.innerHeight - r.height - 8;
       if (newTop < 0) newTop = 8;
-      this.popupEl.style.left = `${newLeft}px`;
-      this.popupEl.style.top = `${newTop}px`;
+      this._applyPosition(newTop, newLeft);
 
       // Reveal popup now that it is positioned
       this.popupEl.classList.remove('measuring');
       this.popupEl.classList.add('visible');
     });
-    console.log('[globalPopup] positioned popup at:', { top: this.popupEl.style.top, left: this.popupEl.style.left });
+    console.log('[globalPopup] positioned popup at:', { top, left });
 
     // Hide any other stale popups
     document.querySelectorAll('.item-popup.visible').forEach(el => {

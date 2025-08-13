@@ -96,8 +96,8 @@ async function openOrderDetailsModal(orderId) {
 
         if (result.success && result.order) {
             updateOrderModalContent(result.order, result.items || []);
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
+            modal.classList.remove('hidden');
+            document.body.classList.add('wf-no-scroll');
         } else {
             throw new Error(result.error || 'Failed to load order details');
         }
@@ -110,8 +110,8 @@ async function openOrderDetailsModal(orderId) {
 function closeOrderDetailsModal() {
     const modal = document.getElementById('orderDetailsModal');
     if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
+        modal.classList.add('hidden');
+        document.body.classList.remove('wf-no-scroll');
     }
 }
 

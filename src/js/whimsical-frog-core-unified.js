@@ -318,13 +318,40 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
         setTimeout(init, 0);
     }
 
+    // Runtime helpers for class-based image heights (no inline styles)
+    const WF_IMG_H = { styleEl: null, rules: new Set() };
+    function imgHEnsureStyleEl() {
+        if (!WF_IMG_H.styleEl) {
+            WF_IMG_H.styleEl = document.createElement('style');
+            WF_IMG_H.styleEl.id = 'wf-img-height-styles';
+            document.head.appendChild(WF_IMG_H.styleEl);
+        }
+        return WF_IMG_H.styleEl;
+    }
+    function imgHClassName(h) {
+        return `wf-img-h${h}`;
+    }
+    function imgHEnsureRule(cls, h) {
+        if (WF_IMG_H.rules.has(cls)) return;
+        const css = `img.${cls} { height: ${h}px; }`;
+        imgHEnsureStyleEl().appendChild(document.createTextNode(css));
+        WF_IMG_H.rules.add(cls);
+    }
+
     // Setup image heights based on data attributes
     function setupImageHeights() {
         const images = document.querySelectorAll('img[data-height]');
         images.forEach(img => {
-            const height = img.getAttribute('data-height');
-            if (height) {
-                img.style.height = height + 'px';
+            const height = parseInt(img.getAttribute('data-height'), 10);
+            if (Number.isFinite(height)) {
+                // Remove previous class and any inline height, then apply class-based height
+                const prev = img.dataset.wfImgHClass;
+                if (prev) img.classList.remove(prev);
+                img.style.removeProperty('height');
+                const cls = imgHClassName(height);
+                imgHEnsureRule(cls, height);
+                img.classList.add(cls);
+                img.dataset.wfImgHClass = cls;
             }
         });
     }

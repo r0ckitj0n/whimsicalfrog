@@ -120,7 +120,6 @@
                             const modal = document.getElementById('detailedItemModal');
                             if (modal) {
                                 modal.classList.remove('hidden');
-                                modal.style.display = 'flex';
                                 // Lock scroll via centralized WFModals helper
                                 if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
                                     window.WFModals.lockScroll();

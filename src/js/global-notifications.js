@@ -21,17 +21,6 @@ class WhimsicalFrogNotifications {
             this.container = document.createElement('div');
             this.container.id = 'wf-notification-container';
             this.container.className = 'wf-notification-container';
-            
-            // Use CSS variables for container styling with fallbacks
-            this.container.style.cssText = `
-                position: var(-notification-container-position, fixed);
-                top: var(-notification-container-top, 24px);
-                right: var(-notification-container-right, 24px);
-                z-index: var(-notification-container-zindex, 2147483647);
-                pointer-events: none;
-                max-width: var(-notification-container-width, 420px);
-                width: 100%;
-            `;
             document.body.appendChild(this.container);
         }
         
@@ -59,10 +48,9 @@ class WhimsicalFrogNotifications {
         this.container.appendChild(notification);
         this.notifications.set(id, notification);
 
-        // Trigger animation
+        // Trigger animation via class toggle
         requestAnimationFrame(() => {
-            notification.style.opacity = '1';
-            notification.style.transform = 'var(-notification-transform-show, translateX(0) scale(1))';
+            notification.classList.add('is-visible');
         });
 
         // Auto-remove if not persistent and autoHide is enabled
@@ -240,8 +228,9 @@ class WhimsicalFrogNotifications {
         const notification = this.notifications.get(id);
         if (notification && notification.parentElement) {
             console.log(`Removing notification ${id} from DOM`);
-            notification.style.opacity = '0';
-            notification.style.transform = 'var(-notification-transform-enter, translateX(100%) scale(0.9))';
+            // Drive exit animation via CSS class
+            notification.classList.remove('is-visible');
+            notification.classList.add('slide-out');
             
             setTimeout(() => {
                 if (notification.parentElement) {

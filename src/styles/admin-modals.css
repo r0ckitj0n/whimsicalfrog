@@ -43,6 +43,7 @@
 
 /* Prevent layout shift on overlay show/hide */
 html.modal-open, body.modal-open { overflow: hidden !important; }
+body.wf-no-scroll { overflow: hidden !important; }
 
 /* Inline field error messaging */
 .form-error {

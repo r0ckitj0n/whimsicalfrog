@@ -43,7 +43,7 @@
     const container = byId('configFormContainer');
     const roomNumber = roomSelect ? roomSelect.value : '';
     if (!roomNumber) {
-      if (container) container.style.display = 'none';
+      if (container && container.classList) container.classList.add('hidden');
       return;
     }
 
@@ -53,7 +53,7 @@
       if (data.success) {
         currentRoomConfig = data.config || {};
         populateForm(currentRoomConfig);
-        if (container) container.style.display = 'block';
+        if (container && container.classList) container.classList.remove('hidden');
         const roomNumberEl = byId('roomNumber');
         if (roomNumberEl) roomNumberEl.value = roomNumber;
       } else {
@@ -143,7 +143,7 @@
       loadRoomConfig();
     } else {
       const container = byId('configFormContainer');
-      if (container) container.style.display = 'none';
+      if (container && container.classList) container.classList.add('hidden');
     }
   }
 

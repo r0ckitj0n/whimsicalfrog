@@ -4,6 +4,8 @@
  * Recovered and consolidated from legacy files
  */
 
+import '../styles/cart-system.css';
+
 class CartSystem {
     constructor() {
         this.state = {
@@ -132,33 +134,23 @@ class CartSystem {
 
         // Fallback notification system
         const notification = document.createElement('div');
-        notification.className = `cart-notification notification-${type}`;
+        notification.className = 'cart-notification';
+        // Map type to semantic classes
+        if (type === 'success') notification.classList.add('is-success');
+        else if (type === 'error') notification.classList.add('is-error');
+        else notification.classList.add('is-info');
         notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-            color: white;
-            padding: 12px 20px;
-            border-radius: 4px;
-            z-index: 10000;
-            font-size: 14px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-        `;
 
         document.body.appendChild(notification);
         
         // Animate in
         setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
+            notification.classList.add('show');
         }, 100);
 
         // Remove after duration
         setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
+            notification.classList.remove('show');
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.parentNode.removeChild(notification);
@@ -234,7 +226,7 @@ class CartSystem {
         const counters = document.querySelectorAll('.cart-count, .cart-counter, #cart-count');
         counters.forEach(counter => {
             counter.textContent = this.state.count;
-            counter.style.display = this.state.count > 0 ? 'inline' : 'none';
+            counter.classList.toggle('hidden', this.state.count === 0);
         });
 
         // Update cart total

@@ -46,69 +46,26 @@ export class RoomModalManager {
     // Header - positioned in top right corner with back button on left
     const header = document.createElement('div');
     header.className = 'room-modal-header';
-    header.style.cssText = `
-      position: absolute;
-      top: 0;
-      right: 0;
-      left: 0;
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
-      padding: 15px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      z-index: 10000;
-      border-radius: 8px 8px 0 0;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-    `;
 
     const backBtnWrap = document.createElement('div');
     backBtnWrap.className = 'back-button-container';
     const backBtn = document.createElement('button');
-    backBtn.className = 'room-modal-button';
+    backBtn.className = 'room-modal-back-btn';
     backBtn.textContent = '← Back to Main Room';
-    backBtn.style.cssText = `
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    `;
-    backBtn.onmouseover = () => backBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-    backBtn.onmouseout = () => backBtn.style.background = 'rgba(255, 255, 255, 0.1)';
     backBtn.onclick = () => this.hide();
     backBtnWrap.appendChild(backBtn);
 
     const titleOverlay = document.createElement('div');
     titleOverlay.className = 'room-title-overlay';
     titleOverlay.id = 'roomTitleOverlay';
-    titleOverlay.style.cssText = `
-      flex-grow: 1;
-      text-align: right;
-      margin-left: 20px;
-    `;
 
     const roomTitle = document.createElement('h1');
     roomTitle.id = 'roomTitle';
     roomTitle.textContent = 'Loading…';
-    roomTitle.style.cssText = `
-      margin: 0;
-      font-size: 1.4rem;
-      font-weight: bold;
-      color: white;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
-    `;
 
     const roomDesc = document.createElement('div');
     roomDesc.className = 'room-description';
     roomDesc.id = 'roomDescription';
-    roomDesc.style.cssText = `
-      margin: 5px 0 0 0;
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.8);
-    `;
     titleOverlay.append(roomTitle, roomDesc);
 
     header.append(backBtnWrap, titleOverlay);
@@ -122,7 +79,7 @@ export class RoomModalManager {
     // Iframe
     const iframe = document.createElement('iframe');
     iframe.id = 'roomModalFrame';
-    iframe.className = 'room-modal-frame';
+    iframe.className = 'room-modal-iframe hidden';
     iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin');
 
     this.content.append(header, loading, iframe);
@@ -151,7 +108,6 @@ export class RoomModalManager {
     this.currentRoomNumber = roomNumber;
     this.isLoading = true;
 
-    this.overlay.style.display = 'flex';
     document.body.classList.add('room-modal-open');
     if (window.WFModals && typeof WFModals.lockScroll === 'function') {
       WFModals.lockScroll();
@@ -194,7 +150,6 @@ export class RoomModalManager {
     setTimeout(() => {
       const iframe = document.getElementById('roomModalFrame');
       if (iframe) iframe.src = 'about:blank';
-      this.overlay.style.display = 'none';
       this.currentRoomNumber = null;
     }, 250);
   }
@@ -206,8 +161,8 @@ export class RoomModalManager {
     const titleEl = document.getElementById('roomTitle');
     const descEl = document.getElementById('roomDescription');
 
-    spinner.style.display = 'flex';
-    iframe.style.opacity = '0';
+    spinner.classList.remove('hidden');
+    iframe.classList.add('hidden');
     iframe.src = 'about:blank';
 
     try {
@@ -221,13 +176,13 @@ export class RoomModalManager {
       console.error(`[RoomModalManager] error loading room ${roomNumber}:`, err);
       titleEl.textContent = 'Error';
       descEl.textContent = 'Could not load content.';
-      spinner.style.display = 'none';
+      spinner.classList.add('hidden');
       return;
     }
 
     iframe.onload = () => {
-      spinner.style.display = 'none';
-      iframe.style.opacity = '1';
+      spinner.classList.add('hidden');
+      iframe.classList.remove('hidden');
       // Emit event for external hooks (e.g., analytics)
       eventBus.emit('roomModalLoaded', { roomNumber });
     };

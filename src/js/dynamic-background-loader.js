@@ -1,6 +1,25 @@
 // Dynamic Background Loading for Room Pages
+import { apiGet } from '../core/apiClient.js';
 console.log('🚪 [DBG] dynamic-background-loader.js loaded');
-async function loadRoomBackground(roomType) {
+
+// Runtime-injected background classes
+const RBG_STYLE_ID = 'wf-room-dynbg-runtime';
+function getBgStyleEl(){
+  let el = document.getElementById(RBG_STYLE_ID);
+  if (!el){ el = document.createElement('style'); el.id = RBG_STYLE_ID; document.head.appendChild(el); }
+  return el;
+}
+const bgClassCache = new Map(); // url -> class
+function ensureBgClass(url){
+  if (!url) return null;
+  if (bgClassCache.has(url)) return bgClassCache.get(url);
+  const idx = bgClassCache.size + 1;
+  const cls = `roombg-${idx}`;
+  getBgStyleEl().appendChild(document.createTextNode(`.${cls}{--dynamic-bg-url:url('${url}');background-image:url('${url}');}`));
+  bgClassCache.set(url, cls);
+  return cls;
+}
+export async function loadRoomBackground(roomType) {
     
     try {
         // Check if we're coming from main room - if so, use main room background
@@ -13,7 +32,44 @@ async function loadRoomBackground(roomType) {
             console.log('Coming from main room - using CSS room background with main room body background');
             return;
         }
-        
+        // If no roomType provided, try to auto-detect similar to autoLoadRoomBackground
+        if (!roomType) {
+            const landingPage = document.querySelector('#landingPage');
+            if (landingPage) {
+                roomType = 'landing';
+            } else {
+                // Attempt detection via available room data
+                try {
+                    const roomData = await apiGet('/api/get_room_coordinates.php');
+                    const roomTypeMapping = roomData?.data?.roomTypeMapping || {};
+                    const roomDoors = roomData?.data?.roomDoors || [];
+                    const roomContainer = document.querySelector('[data-room-name]');
+                    if (roomContainer) {
+                        const roomName = roomContainer.getAttribute('data-room-name');
+                        const matchingRoom = roomDoors.find(room => 
+                            room.room_name?.toLowerCase() === roomName?.toLowerCase() ||
+                            room.door_label?.toLowerCase() === roomName?.toLowerCase()
+                        );
+                        if (matchingRoom) {
+                            roomType = roomTypeMapping[matchingRoom.room_number];
+                        }
+                    }
+                    if (!roomType) {
+                        const currentPage = (new URLSearchParams(window.location.search)).get('page') || '';
+                        if (currentPage && roomTypeMapping[currentPage.replace('room','')]) {
+                            roomType = currentPage;
+                        }
+                    }
+                } catch(e) {
+                    console.warn('[DBG] Auto-detect failed to fetch room data', e);
+                }
+            }
+        }
+        if (!roomType) {
+            console.log('No roomType detected; aborting dynamic room background.');
+            return;
+        }
+
         // Normal room background loading
         const data = await apiGet(`/api/get_background.php?room_type=${roomType}`);
         
@@ -29,10 +85,16 @@ async function loadRoomBackground(roomType) {
     : document.getElementById('mainRoomPage') || document.getElementById('landingPage');
             
             if (roomWrapper) {
-                // Apply computed background image URL
-                roomWrapper.style.backgroundImage = `url('${imageUrl}')`;
+                // Apply computed background image via class
+                const bgCls = ensureBgClass(imageUrl);
+                if (roomWrapper.dataset.bgClass && roomWrapper.dataset.bgClass !== bgCls){
+                    roomWrapper.classList.remove(roomWrapper.dataset.bgClass);
+                }
+                if (bgCls){
+                    roomWrapper.classList.add(bgCls);
+                    roomWrapper.dataset.bgClass = bgCls;
+                }
                 roomWrapper.classList.add('dynamic-room-bg-loaded');
-                
                 console.log(`Dynamic room background loaded: ${background.background_name} (${imageUrl})`);
             } else {
                 console.log('Room wrapper not found, using fallback background');

@@ -45,14 +45,14 @@ class AdminInventoryModule {
             const colorsLoading = document.getElementById('colorsLoading');
             if (colorsLoading) {
                 colorsLoading.textContent = 'No SKU available';
-                colorsLoading.style.display = 'block';
+                colorsLoading.classList.remove('hidden');
             }
             return;
         }
         const colorsLoading = document.getElementById('colorsLoading');
         if (colorsLoading) {
             colorsLoading.textContent = 'Loading colors...';
-            colorsLoading.style.display = 'block';
+            colorsLoading.classList.remove('hidden');
         }
         try {
             const res = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
@@ -72,7 +72,7 @@ class AdminInventoryModule {
     renderColors(colors) {
         const colorsList = document.getElementById('colorsList');
         const colorsLoading = document.getElementById('colorsLoading');
-        if (colorsLoading) colorsLoading.style.display = 'none';
+        if (colorsLoading) colorsLoading.classList.add('hidden');
         if (!colorsList) return;
         if (!Array.isArray(colors) || colors.length === 0) {
             colorsList.innerHTML = '<div class="text-center text-gray-500 text-sm">No colors defined. Click "Add Color" to get started.</div>';
@@ -101,11 +101,10 @@ class AdminInventoryModule {
             const isActive = color.is_active == 1;
             const activeClass = isActive ? 'bg-white' : 'bg-gray-100 opacity-75';
             const activeText = isActive ? '' : ' (Inactive)';
-            const swatchStyle = color.color_code ? `style=\"background-color: ${color.color_code}\"` : '';
             return `
                 <div class="color-item flex items-center justify-between border border-gray-200 rounded-lg ${activeClass}">
                     <div class="flex items-center space-x-3">
-                        <div class="color-swatch w-8 h-8 rounded-full border-2 border-gray-300" ${swatchStyle}></div>
+                        <div class="color-swatch w-8 h-8 rounded-full border-2 border-gray-300" ${color.color_code ? `data-color="${color.color_code}"` : ''}></div>
                         <div>
                             <div class="font-medium text-gray-800">${color.color_name}${activeText}</div>
                             <div class="text-sm text-gray-500 flex items-center">
@@ -128,6 +127,31 @@ class AdminInventoryModule {
             `;
         }).join('');
         colorsList.innerHTML = html;
+        // Apply dynamic color classes to swatches (no inline styles)
+        colorsList.querySelectorAll('.color-swatch[data-color]').forEach(el => {
+            const raw = el.getAttribute('data-color');
+            if (!raw) return;
+            const hex = (raw || '').trim().toLowerCase();
+            const norm = hex.startsWith('#') ? hex : `#${hex}`;
+            const six = norm.length === 4
+                ? `#${norm[1]}${norm[1]}${norm[2]}${norm[2]}${norm[3]}${norm[3]}`
+                : norm;
+            const key = six.replace('#','');
+            const cls = `color-var-${key}`;
+            // Ensure a single stylesheet defines the class
+            const set = (window.__wfInventoryColorClasses ||= new Set());
+            let styleEl = document.getElementById('inventory-color-classes');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'inventory-color-classes';
+                document.head.appendChild(styleEl);
+            }
+            if (!set.has(cls)) {
+                styleEl.textContent += `\n.${cls}{--swatch-color:${six};}`;
+                set.add(cls);
+            }
+            el.classList.add(cls);
+        });
     }
 
     // Color modal creation/show helpers
@@ -273,7 +297,7 @@ class AdminInventoryModule {
                     img.alt = image.image_path;
                     img.className = 'w-full h-20 object-cover rounded border border-gray-200 hover:border-green-400 transition-colors';
                     img.onerror = () => {
-                        img.style.display = 'none';
+                        img.classList.add('hidden');
                         img.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">Image Not Found</div></div>';
                     };
                     const label = document.createElement('div');
@@ -289,10 +313,10 @@ class AdminInventoryModule {
                     imgContainer.appendChild(label);
                     gridContainer.appendChild(imgContainer);
                 });
-                availableImagesGrid.style.display = 'block';
+                availableImagesGrid.classList.remove('hidden');
             } else {
                 gridContainer.innerHTML = '<div class="col-span-4 text-center text-gray-500"><div class="text-3xl">📷</div><div class="text-sm">No images available for this item</div></div>';
-                availableImagesGrid.style.display = 'block';
+                availableImagesGrid.classList.remove('hidden');
             }
         } catch (error) {
             console.error('Error loading available images:', error);
@@ -326,7 +350,7 @@ class AdminInventoryModule {
                 : `/images/items/${selectedImagePath}`;
             imagePreview.src = previewSrc;
             imagePreview.onerror = () => {
-                imagePreview.style.display = 'none';
+                imagePreview.classList.add('hidden');
                 imagePreview.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">No Image Available</div></div>';
             };
             if (imagePreviewName) imagePreviewName.textContent = selectedImagePath;
@@ -430,7 +454,7 @@ class AdminInventoryModule {
     renderSizes(sizes) {
         const sizesList = document.getElementById('sizesList');
         const sizesLoading = document.getElementById('sizesLoading');
-        if (sizesLoading) sizesLoading.style.display = 'none';
+        if (sizesLoading) sizesLoading.classList.add('hidden');
         if (!sizesList) return;
         if (!Array.isArray(sizes) || sizes.length === 0) {
             sizesList.innerHTML = '<div class="text-center text-gray-500 text-sm">No sizes defined. Click "Add Size" to get started.</div>';
@@ -463,7 +487,7 @@ class AdminInventoryModule {
             if (Object.keys(grouped).length > 1) {
                 html += `
                     <div class="font-medium text-gray-700 flex items-center">
-                        ${group.color_code ? `<div class=\"w-4 h-4 rounded border\" style=\"background-color: ${group.color_code}\"></div>` : ''}
+                        ${group.color_code ? `<div class=\"w-4 h-4 rounded border color-dot\" data-color=\"${group.color_code}\"></div>` : ''}
                         ${group.color_name}
                     </div>
                 `;
@@ -499,6 +523,30 @@ class AdminInventoryModule {
             });
         });
         sizesList.innerHTML = html;
+        // Apply dynamic color classes to color dots (no inline styles)
+        sizesList.querySelectorAll('.color-dot[data-color]').forEach(el => {
+            const raw = el.getAttribute('data-color');
+            if (!raw) return;
+            const hex = (raw || '').trim().toLowerCase();
+            const norm = hex.startsWith('#') ? hex : `#${hex}`;
+            const six = norm.length === 4
+                ? `#${norm[1]}${norm[1]}${norm[2]}${norm[2]}${norm[3]}${norm[3]}`
+                : norm;
+            const key = six.replace('#','');
+            const cls = `color-var-${key}`;
+            const set = (window.__wfInventoryColorClasses ||= new Set());
+            let styleEl = document.getElementById('inventory-color-classes');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'inventory-color-classes';
+                document.head.appendChild(styleEl);
+            }
+            if (!set.has(cls)) {
+                styleEl.textContent += `\n.${cls}{--swatch-color:${six};}`;
+                set.add(cls);
+            }
+            el.classList.add(cls);
+        });
     }
 
     async loadColorOptions() {
@@ -1099,7 +1147,26 @@ class AdminInventoryModule {
                 colorNameInput.value = colorData.name;
                 colorCodeInput.value = colorData.code || '#000000';
                 if (selectedColorPreview) selectedColorPreview.classList.remove('hidden');
-                if (colorPreviewSwatch) colorPreviewSwatch.style.backgroundColor = colorData.code || '#000000';
+                if (colorPreviewSwatch) {
+                    const raw = (colorData.code || '#000000').toLowerCase().trim();
+                    const norm = raw.startsWith('#') ? raw : `#${raw}`;
+                    const six = norm.length === 4
+                        ? `#${norm[1]}${norm[1]}${norm[2]}${norm[2]}${norm[3]}${norm[3]}`
+                        : norm;
+                    const key = six.replace('#','');
+                    const cls = `color-var-${key}`;
+                    // Remove any previous color-var-* classes
+                    colorPreviewSwatch.className = colorPreviewSwatch.className
+                        .split(' ')
+                        .filter(c => !/^color-var-[0-9a-fA-F]{6}$/.test(c))
+                        .join(' ');
+                    // Ensure stylesheet exists and class is registered
+                    const set = (window.__wfInventoryColorClasses ||= new Set());
+                    let styleEl = document.getElementById('inventory-color-classes');
+                    if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'inventory-color-classes'; document.head.appendChild(styleEl); }
+                    if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{--swatch-color:${six};}`; set.add(cls); }
+                    colorPreviewSwatch.classList.add(cls);
+                }
                 if (colorPreviewName) colorPreviewName.textContent = colorData.name;
                 if (colorPreviewCode) colorPreviewCode.textContent = colorData.code || 'No color code';
             } catch (e) {
@@ -1340,12 +1407,36 @@ class AdminInventoryModule {
                         <div class="flex flex-wrap gap-2">
                             ${data.template.colors.map(color => `
                                 <div class=\"flex items-center gap-1 text-xs\">
-                                    <div class=\"w-4 h-4 rounded border border-gray-300\" style=\"background:${color.color_code || '#000'}\"></div>
+                                    <div class=\"w-4 h-4 rounded border border-gray-300 color-dot\" ${color.color_code ? `data-color=\"${color.color_code}\"` : ''}></div>
                                     <span>${color.color_name}</span>
                                 </div>
                             `).join('')}
                         </div>
                     `;
+                    // Apply dynamic color classes to preview dots (no inline styles)
+                    previewContainer.querySelectorAll('.color-dot[data-color]').forEach(el => {
+                        const raw = el.getAttribute('data-color');
+                        if (!raw) return;
+                        const hex = (raw || '').trim().toLowerCase();
+                        const norm = hex.startsWith('#') ? hex : `#${hex}`;
+                        const six = norm.length === 4
+                            ? `#${norm[1]}${norm[1]}${norm[2]}${norm[2]}${norm[3]}${norm[3]}`
+                            : norm;
+                        const key = six.replace('#','');
+                        const cls = `color-var-${key}`;
+                        const set = (window.__wfInventoryColorClasses ||= new Set());
+                        let styleEl = document.getElementById('inventory-color-classes');
+                        if (!styleEl) {
+                            styleEl = document.createElement('style');
+                            styleEl.id = 'inventory-color-classes';
+                            document.head.appendChild(styleEl);
+                        }
+                        if (!set.has(cls)) {
+                            styleEl.textContent += `\n.${cls}{--swatch-color:${six};}`;
+                            set.add(cls);
+                        }
+                        el.classList.add(cls);
+                    });
                 }
             }
         } catch (e) {
@@ -1701,7 +1792,7 @@ class AdminInventoryModule {
             if (newValue == currentValue) { restoreElement(); return; }
             try {
                 input.disabled = true;
-                input.style.opacity = '0.6';
+                input.classList.add('is-busy');
                 let apiUrl, updateData;
                 if (type === 'color') {
                     apiUrl = '/api/item_colors.php?action=update_stock';
@@ -1924,18 +2015,12 @@ class AdminInventoryModule {
 
         const iconContainer = event.target.closest('.info-icon-container');
         if (!iconContainer) return;
-        iconContainer.style.position = 'relative';
+        iconContainer.classList.add('inv-relative');
 
         // Loading tooltip
         const loading = document.createElement('div');
         loading.className = 'pricing-tooltip absolute z-50 bg-gray-800 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs';
-        loading.style.cssText = `
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100%);
-            word-wrap: break-word;
-            line-height: 1.4;
-        `;
+        loading.classList.add('tt-top-center');
         loading.innerHTML = `
             <div class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
             <div class="flex items-center space-x-2">
@@ -1951,14 +2036,7 @@ class AdminInventoryModule {
 
             const tooltip = document.createElement('div');
             tooltip.className = 'pricing-tooltip absolute z-50 bg-gray-800 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs';
-            tooltip.style.cssText = `
-                top: -10px;
-                left: 50%;
-                transform: translateX(-50%) translateY(-100%);
-                word-wrap: break-word;
-                line-height: 1.4;
-                pointer-events: auto;
-            `;
+            tooltip.classList.add('tt-top-center');
             tooltip.innerHTML = `
                 <div class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
                 <div class="font-semibold text-blue-200">${data.title}</div>
@@ -1995,17 +2073,11 @@ class AdminInventoryModule {
 
         const iconContainer = event.target.closest('.info-icon-container');
         if (!iconContainer) return;
-        iconContainer.style.position = 'relative';
+        iconContainer.classList.add('inv-relative');
 
         const tooltip = document.createElement('div');
         tooltip.className = 'pricing-tooltip absolute z-50 bg-gray-800 text-white text-xs rounded-lg p-3 shadow-lg max-w-xs';
-        tooltip.style.cssText = `
-            left: 25px;
-            top: -10px;
-            white-space: normal;
-            line-height: 1.4;
-            pointer-events: auto;
-        `;
+        tooltip.classList.add('tt-left-offset');
 
         const titles = {
             'cost_plus': 'Cost-Plus Pricing',
@@ -2070,8 +2142,9 @@ class AdminInventoryModule {
 
         this[positionVar] = currentPosition;
 
-        const translateX = -(currentPosition * 170); // 155px + 15px margin
-        track.style.transform = `translateX(${translateX}px)`;
+        const translateX = currentPosition * 170; // 155px + 15px margin
+        const viewport = track.parentElement;
+        if (viewport) viewport.scrollLeft = translateX;
         this.updateCarouselNavigation(type, totalSlides);
     }
 
@@ -2086,8 +2159,8 @@ class AdminInventoryModule {
         const slidesToShow = 3;
         const currentPosition = this[positionVar] || 0;
         const maxPosition = Math.max(0, totalSlides - slidesToShow);
-        if (prevBtn) prevBtn.style.display = currentPosition === 0 ? 'none' : 'block';
-        if (nextBtn) nextBtn.style.display = currentPosition >= maxPosition ? 'none' : 'block';
+        if (prevBtn) prevBtn.classList.toggle('hidden', currentPosition === 0);
+        if (nextBtn) nextBtn.classList.toggle('hidden', currentPosition >= maxPosition);
     }
 
     navigateToItem(direction) {
@@ -2147,7 +2220,19 @@ class AdminInventoryModule {
         const progressBar = document.getElementById('uploadProgressBar');
         if (progressContainer && progressBar) {
             progressContainer.classList.remove('hidden');
-            progressBar.style.width = '0%';
+            // dynamic width class helper
+            const ensureWidthClass = (el, percent) => {
+                const p = Math.max(0, Math.min(100, Math.round(percent)));
+                const set = (window.__wfInvWidthClasses ||= new Set());
+                let styleEl = document.getElementById('inventory-dynamic-widths');
+                if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'inventory-dynamic-widths'; document.head.appendChild(styleEl); }
+                const cls = `w-p-${p}`;
+                if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{width:${p}%}`; set.add(cls); }
+                // remove previous width class
+                (el.className || '').split(' ').forEach(c => { if (/^w-p-\d{1,3}$/.test(c)) el.classList.remove(c); });
+                el.classList.add(cls);
+            };
+            ensureWidthClass(progressBar, 0);
         }
 
         try {
@@ -2159,11 +2244,34 @@ class AdminInventoryModule {
                 xhr.upload.onprogress = (e) => {
                     if (!progressBar || !e.lengthComputable) return;
                     const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
-                    progressBar.style.width = percent + '%';
+                    // apply dynamic width class
+                    const ensureWidthClass = (el, p) => {
+                        const val = Math.max(0, Math.min(100, Math.round(p)));
+                        const set = (window.__wfInvWidthClasses ||= new Set());
+                        let styleEl = document.getElementById('inventory-dynamic-widths');
+                        if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'inventory-dynamic-widths'; document.head.appendChild(styleEl); }
+                        const cls = `w-p-${val}`;
+                        if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{width:${val}%}`; set.add(cls); }
+                        (el.className || '').split(' ').forEach(c => { if (/^w-p-\d{1,3}$/.test(c)) el.classList.remove(c); });
+                        el.classList.add(cls);
+                    };
+                    ensureWidthClass(progressBar, percent);
                 };
 
                 xhr.onload = () => {
-                    if (progressBar) progressBar.style.width = '100%';
+                    if (progressBar) {
+                        const ensureWidthClass = (el, p) => {
+                            const val = Math.max(0, Math.min(100, Math.round(p)));
+                            const set = (window.__wfInvWidthClasses ||= new Set());
+                            let styleEl = document.getElementById('inventory-dynamic-widths');
+                            if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'inventory-dynamic-widths'; document.head.appendChild(styleEl); }
+                            const cls = `w-p-${val}`;
+                            if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{width:${val}%}`; set.add(cls); }
+                            (el.className || '').split(' ').forEach(c => { if (/^w-p-\d{1,3}$/.test(c)) el.classList.remove(c); });
+                            el.classList.add(cls);
+                        };
+                        ensureWidthClass(progressBar, 100);
+                    }
                     try {
                         const json = JSON.parse(xhr.responseText || '{}');
                         if (xhr.status >= 200 && xhr.status < 300) {
@@ -2206,7 +2314,18 @@ class AdminInventoryModule {
             if (progressContainer && progressBar) {
                 setTimeout(() => {
                     progressContainer.classList.add('hidden');
-                    progressBar.style.width = '0%';
+                    // reset width to 0%
+                    const ensureWidthClass = (el, p) => {
+                        const val = Math.max(0, Math.min(100, Math.round(p)));
+                        const set = (window.__wfInvWidthClasses ||= new Set());
+                        let styleEl = document.getElementById('inventory-dynamic-widths');
+                        if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'inventory-dynamic-widths'; document.head.appendChild(styleEl); }
+                        const cls = `w-p-${val}`;
+                        if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{width:${val}%}`; set.add(cls); }
+                        (el.className || '').split(' ').forEach(c => { if (/^w-p-\d{1,3}$/.test(c)) el.classList.remove(c); });
+                        el.classList.add(cls);
+                    };
+                    ensureWidthClass(progressBar, 0);
                 }, 800);
             }
         }
@@ -2263,7 +2382,7 @@ class AdminInventoryModule {
             const imgEl = card.querySelector('img');
             if (imgEl) {
                 imgEl.addEventListener('error', () => {
-                    imgEl.style.display = 'none';
+                    imgEl.classList.add('hidden');
                     if (imgEl.parentElement) {
                         imgEl.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">Image Not Found</div></div>';
                     }
@@ -2670,8 +2789,8 @@ class AdminInventoryModule {
         const suggestedPrice = display.dataset.suggestedPrice;
         if (suggestedPrice) {
             retailPriceField.value = parseFloat(suggestedPrice).toFixed(2);
-            retailPriceField.style.backgroundColor = '#dcfce7';
-            setTimeout(() => { retailPriceField.style.backgroundColor = ''; }, 2000);
+            retailPriceField.classList.add('flash-highlight-green');
+            setTimeout(() => { retailPriceField.classList.remove('flash-highlight-green'); }, 2000);
             this.showSuccess('Suggested price applied!');
         }
     }
@@ -3145,8 +3264,8 @@ class AdminInventoryModule {
                         const targetField = document.getElementById(fieldKey === 'title' ? 'name' : 'description');
                         if (targetField) {
                             targetField.value = changes[fieldKey];
-                            targetField.style.backgroundColor = '#f0fdf4';
-                            setTimeout(() => { targetField.style.backgroundColor = ''; }, 3000);
+                            targetField.classList.add('flash-highlight-green-light');
+                            setTimeout(() => { targetField.classList.remove('flash-highlight-green-light'); }, 3000);
                         }
                     }
                 });
@@ -3209,16 +3328,16 @@ class AdminInventoryModule {
             const nameField = document.getElementById('name');
             if (nameField) {
                 nameField.value = titleVal;
-                nameField.style.backgroundColor = '#f0fdf4';
-                setTimeout(() => { nameField.style.backgroundColor = ''; }, 3000);
+                nameField.classList.add('flash-highlight-green-light');
+                setTimeout(() => { nameField.classList.remove('flash-highlight-green-light'); }, 3000);
             }
         }
         if (descVal) {
             const descField = document.getElementById('description');
             if (descField) {
                 descField.value = descVal;
-                descField.style.backgroundColor = '#f0fdf4';
-                setTimeout(() => { descField.style.backgroundColor = ''; }, 3000);
+                descField.classList.add('flash-highlight-green-light');
+                setTimeout(() => { descField.classList.remove('flash-highlight-green-light'); }, 3000);
             }
         }
 
@@ -3346,8 +3465,8 @@ class AdminInventoryModule {
         `;
         listEl.appendChild(itemDiv);
         // Highlight newly added
-        itemDiv.style.backgroundColor = '#f0fdf4';
-        setTimeout(() => { itemDiv.style.backgroundColor = ''; }, 800);
+        itemDiv.classList.add('flash-highlight-green-light');
+        setTimeout(() => { itemDiv.classList.remove('flash-highlight-green-light'); }, 800);
     }
 
     async handleAddListItem(fieldName) {
@@ -3511,8 +3630,8 @@ class AdminInventoryModule {
                 return;
             }
             if (el) {
-                el.style.backgroundColor = '#f0fdf4';
-                setTimeout(() => { el.style.backgroundColor = ''; }, 800);
+                el.classList.add('flash-highlight-green-light');
+                setTimeout(() => { el.classList.remove('flash-highlight-green-light'); }, 800);
             }
             this.showSuccess('Field saved');
         } catch (err) {
@@ -3669,8 +3788,8 @@ class AdminInventoryModule {
         const nameField = document.getElementById('name');
         if (!nameField) return;
         nameField.value = title;
-        nameField.style.backgroundColor = '#f3e8ff';
-        setTimeout(() => { nameField.style.backgroundColor = ''; }, 2000);
+        nameField.classList.add('flash-highlight-purple');
+        setTimeout(() => { nameField.classList.remove('flash-highlight-purple'); }, 2000);
         this.showSuccess('Title applied! Remember to save your changes.');
     }
 
@@ -3678,8 +3797,8 @@ class AdminInventoryModule {
         const descriptionField = document.getElementById('description');
         if (!descriptionField) return;
         descriptionField.value = description;
-        descriptionField.style.backgroundColor = '#f3e8ff';
-        setTimeout(() => { descriptionField.style.backgroundColor = ''; }, 2000);
+        descriptionField.classList.add('flash-highlight-purple');
+        setTimeout(() => { descriptionField.classList.remove('flash-highlight-purple'); }, 2000);
         this.showSuccess('Description applied! Remember to save your changes.');
     }
 
@@ -3764,8 +3883,8 @@ class AdminInventoryModule {
             const suggestedCostValue = parseFloat(suggestedCostText) || 0;
             if (suggestedCostValue > 0) {
                 costPriceField.value = suggestedCostValue.toFixed(2);
-                costPriceField.style.backgroundColor = '#dbeafe';
-                setTimeout(() => { costPriceField.style.backgroundColor = ''; }, 2000);
+                costPriceField.classList.add('flash-highlight-blue');
+                setTimeout(() => { costPriceField.classList.remove('flash-highlight-blue'); }, 2000);
                 this.showSuccess('Suggested cost applied to Cost Price field!');
             } else {
                 this.showError('No suggested cost available.');
@@ -3780,8 +3899,8 @@ class AdminInventoryModule {
             if (costPriceField) {
                 const suggestedCost = parseFloat(suggestionData.suggestedCost) || 0;
                 costPriceField.value = suggestedCost.toFixed(2);
-                costPriceField.style.backgroundColor = '#dcfce7';
-                setTimeout(() => { costPriceField.style.backgroundColor = ''; }, 3000);
+                costPriceField.classList.add('flash-highlight-green');
+                setTimeout(() => { costPriceField.classList.remove('flash-highlight-green'); }, 3000);
                 this.closeCostSuggestionChoiceDialog();
                 this.showSuccess(`AI suggested cost of $${suggestedCost.toFixed(2)} applied!`);
             }
@@ -3864,7 +3983,7 @@ class AdminInventoryModule {
         toast.textContent = message;
         container.appendChild(toast);
         setTimeout(() => {
-            toast.style.opacity = '0';
+            toast.classList.add('fade-out');
             setTimeout(() => toast.remove(), 500);
         }, 3000);
     }

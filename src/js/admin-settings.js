@@ -974,7 +974,6 @@ function openAISettingsModal() {
   const modal = document.getElementById('aiSettingsModal');
   if (!modal) return;
   modal.classList.remove('hidden');
-  modal.style.display = 'flex';
   try { if (typeof loadAISettings === 'function') loadAISettings(); } catch (_) {}
   try { loadAIProviders(); } catch (_) {}
   try { if (typeof loadContentToneOptions === 'function') loadContentToneOptions(); } catch (_) {}
@@ -984,7 +983,6 @@ function openAISettingsModal() {
 function closeAISettingsModal() {
   const modal = document.getElementById('aiSettingsModal');
   if (!modal) return;
-  modal.style.display = 'none';
   modal.classList.add('hidden');
 }
 
@@ -1384,7 +1382,7 @@ async function loadSystemConfiguration() {
     const contentDiv = document.getElementById('systemConfigContent');
     
     // Show loading state
-    loadingDiv.style.display = 'block';
+    if (loadingDiv && loadingDiv.classList) loadingDiv.classList.remove('hidden');
     
     try {
         const response = await fetch('/api/get_system_config.php');
@@ -1394,7 +1392,7 @@ async function loadSystemConfiguration() {
             const data = result.data;
             
             // Hide loading and populate content
-            loadingDiv.style.display = 'none';
+            if (loadingDiv && loadingDiv.classList) loadingDiv.classList.add('hidden');
             contentDiv.innerHTML = generateSystemConfigHTML(data);
         } else {
             throw new Error(result.error || 'Failed to load system configuration');
@@ -1710,7 +1708,8 @@ window.openDatabaseMaintenanceModal = function openDatabaseMaintenanceModal() {
         modal.classList.add('show');
     }
     // Hide loading and show connection tab by default
-    document.getElementById('databaseMaintenanceLoading').style.display = 'none';
+    const dbLoading = document.getElementById('databaseMaintenanceLoading');
+    if (dbLoading && dbLoading.classList) dbLoading.classList.add('hidden');
     switchDatabaseTab(document.querySelector('[data-tab="connection"]'), 'connection');
     // Also load the current configuration immediately
     loadCurrentDatabaseConfig();
@@ -1721,7 +1720,7 @@ async function _loadDatabaseInformation() {
     const contentDiv = document.getElementById('databaseMaintenanceContent');
     
     // Show loading state
-    loadingDiv.style.display = 'block';
+    if (loadingDiv && loadingDiv.classList) loadingDiv.classList.remove('hidden');
     
     try {
         const response = await fetch('/api/get_database_info.php');
@@ -1731,7 +1730,7 @@ async function _loadDatabaseInformation() {
             const data = result.data;
             
             // Hide loading and populate content
-            loadingDiv.style.display = 'none';
+            if (loadingDiv && loadingDiv.classList) loadingDiv.classList.add('hidden');
             contentDiv.innerHTML = generateDatabaseMaintenanceHTML(data);
         } else {
             throw new Error(result.error || 'Failed to load database information');
@@ -3085,8 +3084,8 @@ async function testSSLConnection(ev) {
      const loading = document.getElementById('colorTemplatesLoading');
      const list = document.getElementById('colorTemplatesList');
      if (!loading || !list) return;
-     loading.style.display = 'block';
-     list.style.display = 'none';
+     if (loading.classList) loading.classList.remove('hidden');
+     if (list.classList) list.classList.add('hidden');
      try {
          const response = await fetch('/api/color_templates.php?action=get_all');
          const data = await response.json();
@@ -3100,8 +3099,8 @@ async function testSSLConnection(ev) {
          console.error('Error loading color templates:', error);
          if (list) list.innerHTML = '<div class="text-red-600 text-center">Failed to load color templates</div>';
      } finally {
-         loading.style.display = 'none';
-         list.style.display = 'block';
+         if (loading && loading.classList) loading.classList.add('hidden');
+         if (list && list.classList) list.classList.remove('hidden');
      }
  }
  
@@ -3428,8 +3427,8 @@ async function testSSLConnection(ev) {
      const loading = document.getElementById('sizeTemplatesLoading');
      const list = document.getElementById('sizeTemplatesList');
      if (!loading || !list) return;
-     loading.style.display = 'block';
-     list.style.display = 'none';
+     if (loading.classList) loading.classList.remove('hidden');
+     if (list.classList) list.classList.add('hidden');
      try {
          const response = await fetch('/api/size_templates.php?action=get_all');
          const data = await response.json();
@@ -3443,8 +3442,8 @@ async function testSSLConnection(ev) {
          console.error('Error loading size templates:', error);
          if (list) list.innerHTML = '<div class="text-red-600 text-center">Failed to load size templates</div>';
      } finally {
-         loading.style.display = 'none';
-         list.style.display = 'block';
+         if (loading && loading.classList) loading.classList.add('hidden');
+         if (list && list.classList) list.classList.remove('hidden');
      }
  }
  

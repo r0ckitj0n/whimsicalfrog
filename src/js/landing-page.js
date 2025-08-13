@@ -46,6 +46,34 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
+    // Runtime-injected CSS classes for positions
+    const runtime = { styleEl: null, rules: new Set() };
+    function ensureStyleEl() {
+        if (!runtime.styleEl) {
+            runtime.styleEl = document.createElement('style');
+            runtime.styleEl.id = 'landing-page-runtime-styles';
+            document.head.appendChild(runtime.styleEl);
+        }
+        return runtime.styleEl;
+    }
+    function roundRectVals(top, left, width, height) {
+        return {
+            t: Math.round(top),
+            l: Math.round(left),
+            w: Math.round(width),
+            h: Math.round(height)
+        };
+    }
+    function buildClassName({ t, l, w, h }) {
+        return `lp-pos-t${t}-l${l}-w${w}-h${h}`;
+    }
+    function ensureRuleFor(className, rect) {
+        if (runtime.rules.has(className)) return;
+        const css = `#landingPage .${className} { top:${rect.t}px; left:${rect.l}px; width:${rect.w}px; height:${rect.h}px; }`;
+        ensureStyleEl().appendChild(document.createTextNode(css));
+        runtime.rules.add(className);
+    }
+
     function positionAreas() {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
@@ -66,12 +94,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         areaCoordinates.forEach(area => {
             const element = document.querySelector(area.selector);
-            if (element) {
-                element.style.top = `${(area.top * scale) + offsetY}px`;
-                element.style.left = `${(area.left * scale) + offsetX}px`;
-                element.style.width = `${area.width * scale}px`;
-                element.style.height = `${area.height * scale}px`;
+            if (!element) return;
+            const rect = roundRectVals((area.top * scale) + offsetY, (area.left * scale) + offsetX, area.width * scale, area.height * scale);
+            const className = buildClassName(rect);
+            ensureRuleFor(className, rect);
+
+            const prev = element.dataset.lpPosClass;
+            if (prev && prev !== className) {
+                element.classList.remove(prev);
             }
+            if (!element.classList.contains(className)) {
+                element.classList.add(className);
+            }
+            element.dataset.lpPosClass = className;
         });
     }
 

@@ -9,6 +9,26 @@
 
 console.log('🎯 Loading Simple Room Coordinate System...');
 
+// Runtime CSS class injection for coordinate-based positioning (no inline styles)
+const WF_RCM = { styleEl: null, rules: new Set() };
+function rcmEnsureStyleEl() {
+    if (!WF_RCM.styleEl) {
+        WF_RCM.styleEl = document.createElement('style');
+        WF_RCM.styleEl.id = 'wf-rcm-styles';
+        document.head.appendChild(WF_RCM.styleEl);
+    }
+    return WF_RCM.styleEl;
+}
+function rcmClassName(t, l, w, h) {
+    return `wf-rcm-t${t}-l${l}-w${w}-h${h}`;
+}
+function rcmEnsureRule(cls, t, l, w, h) {
+    if (WF_RCM.rules.has(cls)) return;
+    const css = `.room-overlay-wrapper .${cls} { position: absolute; top: ${t}px; left: ${l}px; width: ${w}px; height: ${h}px; }`;
+    rcmEnsureStyleEl().appendChild(document.createTextNode(css));
+    WF_RCM.rules.add(cls);
+}
+
 // Simple coordinate system that just scales from database size to display size
 function simpleCoordinateSystem(roomType) {
     console.log(`🎯 Initializing simple coordinate system for ${roomType}...`);
@@ -69,12 +89,16 @@ function applySimpleCoordinates(coordinates) {
             const left = Math.round(coord.left * scaleFactor);
             const width = Math.round(coord.width * scaleFactor);
             const height = Math.round(coord.height * scaleFactor);
-            
-            item.style.position = 'absolute';
-            item.style.top = `${top}px`;
-            item.style.left = `${left}px`;
-            item.style.width = `${width}px`;
-            item.style.height = `${height}px`;
+
+            // Remove any previously applied coordinate class
+            const prev = item.dataset.wfRcmPosClass;
+            if (prev) item.classList.remove(prev);
+
+            // Ensure and apply class-based positioning
+            const cls = rcmClassName(top, left, width, height);
+            rcmEnsureRule(cls, top, left, width, height);
+            item.classList.add(cls);
+            item.dataset.wfRcmPosClass = cls;
             
             console.log(`✅ Item ${index}: positioned at ${left},${top} (${width}x${height})`);
         } else {

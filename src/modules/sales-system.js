@@ -4,6 +4,41 @@
  * Recovered and consolidated from legacy files
  */
 
+import '../styles/sales-system.css';
+
+// Runtime-injected classes for popup positioning (no inline styles)
+const SALES_PP_STYLE_ID = 'sales-popup-position-classes';
+const salesPopupLefts = new Set();
+const salesPopupTops = new Set();
+function ensureSalesPopupLeftClass(px) {
+  const p = Math.max(0, Math.round((Number(px) || 0) / 5) * 5);
+  const cls = `pp-left-${p}`;
+  if (salesPopupLefts.has(p)) return cls;
+  let styleEl = document.getElementById(SALES_PP_STYLE_ID);
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = SALES_PP_STYLE_ID;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.appendChild(document.createTextNode(`.${cls}{left:${p}px;}`));
+  salesPopupLefts.add(p);
+  return cls;
+}
+function ensureSalesPopupTopClass(px) {
+  const p = Math.max(0, Math.round((Number(px) || 0) / 5) * 5);
+  const cls = `pp-top-${p}`;
+  if (salesPopupTops.has(p)) return cls;
+  let styleEl = document.getElementById(SALES_PP_STYLE_ID);
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = SALES_PP_STYLE_ID;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.appendChild(document.createTextNode(`.${cls}{top:${p}px;}`));
+  salesPopupTops.add(p);
+  return cls;
+}
+
 class SalesSystem {
     constructor() {
         this.hoverTimeout = null;
@@ -79,14 +114,14 @@ class SalesSystem {
                 const discountText = `${validDiscountPercentage}% off`;
                 priceElement.innerHTML = `
                     <span class="sale-price">$${salePrice.toFixed(2)}</span>
-                    <span class="original-price" style="text-decoration: line-through; color: #999; margin-left: 8px;">$${originalPrice.toFixed(2)}</span>
-                    <span class="discount-badge" style="background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.8em; margin-left: 8px;">${discountText}</span>
+                    <span class="original-price">$${originalPrice.toFixed(2)}</span>
+                    <span class="discount-badge">${discountText}</span>
                 `;
                 
                 if (unitPriceElement) {
                     unitPriceElement.innerHTML = `
                         <span class="sale-price">$${salePrice.toFixed(2)}</span>
-                        <span class="original-price" style="text-decoration: line-through; color: #999; margin-left: 5px;">$${originalPrice.toFixed(2)}</span>
+                        <span class="original-price">$${originalPrice.toFixed(2)}</span>
                     `;
                 }
                 
@@ -128,23 +163,9 @@ class SalesSystem {
         const saleBadge = document.createElement('div');
         saleBadge.className = 'sale-badge';
         saleBadge.textContent = `${discountPercentage}% OFF`;
-        saleBadge.style.cssText = `
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #e74c3c;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            z-index: 10;
-        `;
 
         // Ensure parent has relative positioning
-        if (getComputedStyle(itemCard).position === 'static') {
-            itemCard.style.position = 'relative';
-        }
+        itemCard.classList.add('has-sale-badge');
 
         itemCard.appendChild(saleBadge);
     }
@@ -152,7 +173,7 @@ class SalesSystem {
     // Product hover popup functionality
     hidePopup() {
         if (this.currentPopup) {
-            this.currentPopup.style.display = 'none';
+            this.currentPopup.classList.remove('show');
         }
     }
 
@@ -182,7 +203,7 @@ class SalesSystem {
                 priceHtml = `
                     <div class="popup-price">
                         <span class="sale-price">$${salePrice.toFixed(2)}</span>
-                        <span class="original-price" style="text-decoration: line-through; color: #999;">$${originalPrice.toFixed(2)}</span>
+                        <span class="original-price">$${originalPrice.toFixed(2)}</span>
                         <span class="discount-badge">${saleData.discountPercentage}% OFF</span>
                     </div>
                 `;
@@ -197,24 +218,11 @@ class SalesSystem {
                     <h3 class="popup-title">${this.escapeHtml(item.name || item.sku)}</h3>
                 </div>
                 <div class="popup-body">
-                    ${item.image ? `<img src="${item.image}" alt="${this.escapeHtml(item.name || item.sku)}" style="max-width: 100px; height: auto; margin-bottom: 10px;">` : ''}
+                    ${item.image ? `<img src="${item.image}" alt="${this.escapeHtml(item.name || item.sku)}" class="popup-image">` : ''}
                     ${priceHtml}
                     ${item.description ? `<p class="popup-description">${this.escapeHtml(item.description)}</p>` : ''}
                     <button class="add-to-cart-popup" data-sku="${item.sku}">Add to Cart</button>
                 </div>
-            `;
-
-            // Style the popup
-            popup.style.cssText = `
-                position: absolute;
-                background: white;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                padding: 15px;
-                max-width: 300px;
-                z-index: 1000;
-                font-size: 14px;
             `;
 
         } catch (error) {
@@ -246,8 +254,18 @@ class SalesSystem {
             top = rect.top + window.scrollY - popupRect.height - 10;
         }
 
-        popup.style.top = `${top}px`;
-        popup.style.left = `${left}px`;
+        const leftCls = ensureSalesPopupLeftClass(left);
+        const topCls = ensureSalesPopupTopClass(top);
+        // Remove previous classes if any
+        if (popup.dataset.ppLeftClass && popup.dataset.ppLeftClass !== leftCls) {
+            popup.classList.remove(popup.dataset.ppLeftClass);
+        }
+        if (popup.dataset.ppTopClass && popup.dataset.ppTopClass !== topCls) {
+            popup.classList.remove(popup.dataset.ppTopClass);
+        }
+        popup.classList.add(leftCls, topCls);
+        popup.dataset.ppLeftClass = leftCls;
+        popup.dataset.ppTopClass = topCls;
     }
 
     setupEventListeners() {
@@ -289,7 +307,7 @@ class SalesSystem {
 
                 await this.updatePopupContent(popup, item);
                 this.positionPopup(productElement, popup);
-                popup.style.display = 'block';
+                popup.classList.add('show');
                 this.currentPopup = popup;
 
                 // Setup popup hover events
@@ -351,7 +369,7 @@ class SalesSystem {
                             const salePrice = this.calculateSalePrice(originalPrice, saleData.discountPercentage);
                             priceElement.innerHTML = `
                                 <span class="sale-price">$${salePrice.toFixed(2)}</span>
-                                <span class="original-price" style="text-decoration: line-through; color: #999; font-size: 0.9em;">$${originalPrice.toFixed(2)}</span>
+                                <span class="original-price">$${originalPrice.toFixed(2)}</span>
                             `;
                         }
                     }

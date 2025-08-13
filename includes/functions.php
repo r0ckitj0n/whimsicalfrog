@@ -53,7 +53,8 @@ try {
  * @param string $originalPath The path to the original image (e.g., 'images/my_image.png').
  * @param string $altText The alt text for the image.
  * @param string $class Optional CSS classes for the image tag.
- * @param string $style Optional inline styles for the image tag.
+ * @param string $style Deprecated: inline styles are not allowed. This parameter is ignored.
+ * @deprecated The $style parameter is ignored to comply with no-inline-styles policy.
  * @return string The HTML <img> tag.
  */
 function getImageTag($imagePath, $altText = '', $class = '', $style = '')
@@ -69,7 +70,8 @@ function getImageTag($imagePath, $altText = '', $class = '', $style = '')
         : $pathInfo['filename'];
 
     $classAttr = !empty($class) ? ' class="' . htmlspecialchars($class) . '"' : '';
-    $styleAttr = !empty($style) ? ' ' : '';
+    // Inline styles are disallowed; $style is ignored.
+    $styleAttr = '';
 
     // If already WebP, just return img tag
     if ($extension === 'webp') {

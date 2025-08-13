@@ -66,7 +66,7 @@ ready(() => {
         const redirectUrl = isMobileDevice() ? '/?page=shop' : '/?page=room_main';
         const destinationName = isMobileDevice() ? 'shop' : 'main room';
 
-        if (form) form.style.display = 'none';
+        if (form) form.classList.add('hidden');
         if (successMessage) {
           successMessage.innerHTML = `
             <strong>Welcome ${data.userData.firstName || data.userData.username}!</strong><br>

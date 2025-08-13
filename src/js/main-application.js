@@ -93,11 +93,38 @@ const MainApplication = {
 
                 const imageUrl = `/images/${filename}?v=${Date.now()}`;
 
+                // Runtime-injected background class helper (scoped to this module)
+                const STYLE_ID = 'wf-modal-dynbg-classes';
+                function getStyleEl(){
+                    let el = document.getElementById(STYLE_ID);
+                    if (!el){ el = document.createElement('style'); el.id = STYLE_ID; document.head.appendChild(el); }
+                    return el;
+                }
+                const map = (window.__wfModalBgClassMap ||= new Map());
+                function ensureBgClass(url){
+                    if (!url) return null;
+                    if (map.has(url)) return map.get(url);
+                    const idx = map.size + 1;
+                    const cls = `modalbg-${idx}`;
+                    getStyleEl().appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--dynamic-bg-url:url('${url}');background-image:url('${url}');}`));
+                    map.set(url, cls);
+                    return cls;
+                }
+
+                // Pick the correct container inside the overlay for the background
                 const overlay = document.querySelector('.room-modal-overlay');
-                if (overlay) {
-                    overlay.style.setProperty('--dynamic-bg-url', `url('${imageUrl}')`);
+                const container = overlay && (overlay.querySelector('.room-overlay-wrapper') || overlay.querySelector('.room-modal-body'));
+                if (container) {
+                    const bgCls = ensureBgClass(imageUrl);
+                    if (container.dataset.bgClass && container.dataset.bgClass !== bgCls) {
+                        container.classList.remove(container.dataset.bgClass);
+                    }
+                    if (bgCls) {
+                        container.classList.add(bgCls);
+                        container.dataset.bgClass = bgCls;
+                    }
                 } else {
-                    this.WF.log('[MainApplication] Modal overlay not found for background.', 'warn');
+                    this.WF.log('[MainApplication] Modal background container not found.', 'warn');
                 }
             } else {
                 this.WF.log(`[MainApplication] No background found for roomType: ${roomType}`, 'info');

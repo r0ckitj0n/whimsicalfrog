@@ -1,6 +1,6 @@
-/* ==============================================
-   RECOVERED COMPONENT STYLES FROM COMPONENTS.CSS BACKUP
-   ============================================== */
+/* Components Base (migrated from recovered_components.css)
+   Source: src/styles/recovered_components.css
+   Note: Phase 1 staging; duplicates with site-base.css to be deduped in Phase 2. */
 
 /* ===== UNIVERSAL PAGE HEADER ===== */
 /* Consistent header with fade effect used across all pages except rooms 1-5 */
@@ -13,56 +13,67 @@
     background: var(--gradient-header);
     color: var(--brand-primary);
     transition: all 0.3s ease-in-out;
-    --header-height: 80px; /* Default height for padding calculations */;
-}.site-header.universal-page-header .header-container {
+    --header-height: 80px; /* Default height for padding calculations */
+}
+.site-header.universal-page-header .header-container {
     width: 100%;
     padding: 0;
     margin: 0;
-}.site-header.universal-page-header .header-content {
+}
+.site-header.universal-page-header .header-content {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
     width: 100%;
     min-height: var(--header-height);
     padding: 0;
-}/* Left Section: Logo and Navigation */
+}
+/* Left Section: Logo and Navigation */
 .site-header.universal-page-header .header-left {
     display: flex;
     align-items: center;
     gap: 30px;
     justify-self: start;
     padding-left: 20px;
-}.site-header.universal-page-header .logo-link {
+}
+.site-header.universal-page-header .logo-link {
     display: flex;
     align-items: center;
     gap: 12px;
     text-decoration: none;
     color: var(--brand-primary);
     transition: opacity 0.3s ease;
-}.site-header.universal-page-header .logo-link:hover {
+}
+.site-header.universal-page-header .logo-link:hover {
     opacity: 0.9;
-}.site-header.universal-page-header .header-logo {
+}
+.site-header.universal-page-header .header-logo {
     width: 40px;
     height: 40px;
     object-fit: contain;
-}.site-header.universal-page-header .logo-text-container {
+}
+.site-header.universal-page-header .logo-text-container {
     display: flex;
     flex-direction: column;
-}.site-header.universal-page-header .logo-text {
+}
+.site-header.universal-page-header .logo-text {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--brand-primary);
     line-height: 1.2;
-}.site-header.universal-page-header .logo-tagline {
+}
+.site-header.universal-page-header .logo-tagline {
     font-size: 0.875rem;
     color: var(--brand-primary);
     font-weight: 400;
-}/* Navigation Links (Left-justified) */
+}
+/* Navigation Links (Left-justified) */
 .site-header.universal-page-header .nav-links {
     display: flex;
     align-items: center;
     gap: 25px;
-}.site-header.universal-page-header .nav-link {
+}
+.site-header.universal-page-header .nav-link {
     color: var(--brand-primary);
     text-decoration: none;
     font-weight: 500;
@@ -70,28 +81,34 @@
     padding: 8px 12px;
     border-radius: 6px;
     transition: all 0.3s ease;
-}.site-header.universal-page-header .nav-link:hover {
+}
+.site-header.universal-page-header .nav-link:hover {
     background: rgba(255, 255, 255, 0.15);
     transform: translateY(-1px);
-}.site-header.universal-page-header .nav-link.active {
+}
+.site-header.universal-page-header .nav-link.active {
     background: rgba(255, 255, 255, 0.2);
     font-weight: 600;
-}/* Center Section: Search (Centered) */
+}
+/* Center Section: Search (Centered) */
 .site-header.universal-page-header .header-center {
     justify-self: center;
     width: 100%;
     max-width: 400px;
     display: flex;
     justify-content: center;
-}.site-header.universal-page-header .search-container {
+}
+.site-header.universal-page-header .search-container {
     position: relative;
     width: 100%;
     max-width: 300px;
-}.site-header.universal-page-header .search-input-container {
+}
+.site-header.universal-page-header .search-input-container {
     position: relative;
     display: flex;
     align-items: center;
-}.site-header.universal-page-header .search-icon {
+}
+.site-header.universal-page-header .search-icon {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -99,7 +116,8 @@
     width: 20px;
     height: 20px;
     color: var(--brand-primary);
-}.site-header.universal-page-header .search-bar {
+}
+.site-header.universal-page-header .search-bar {
     width: 100%;
     padding: 12px 16px 12px 44px;
     border: 2px solid var(--brand-primary);
@@ -109,27 +127,33 @@
     font-size: 1rem;
     transition: all 0.3s ease;
     outline: none;
-}.site-header.universal-page-header .search-bar:focus {
+}
+.site-header.universal-page-header .search-bar:focus {
     border-color: var(--brand-primary);
     background: transparent;
     box-shadow: 0 0 0 3px rgba(135, 172, 58, 0.2);
-}.site-header.universal-page-header .search-bar::placeholder {
+}
+.site-header.universal-page-header .search-bar::placeholder {
     color: var(--brand-primary);
-}/* Right Section: User Menu and Cart */
+}
+/* Right Section: User Menu and Cart */
 .site-header.universal-page-header .header-right {
     display: flex;
     align-items: center;
     gap: 20px;
     justify-self: end;
     padding-right: 20px;
-}.site-header.universal-page-header .auth-links,
+}
+.site-header.universal-page-header .auth-links,
 .site-header.universal-page-header .user-menu {
     display: flex;
     align-items: center;
     gap: 15px;
-}.site-header.universal-page-header .welcome-message {
+}
+.site-header.universal-page-header .welcome-message {
     color: var(--brand-primary);
-}.site-header.universal-page-header .header-right .nav-link {
+}
+.site-header.universal-page-header .header-right .nav-link {
     color: var(--brand-primary);
     text-decoration: none;
     font-weight: 500;
@@ -137,9 +161,11 @@
     padding: 8px 16px;
     border-radius: 6px;
     transition: all 0.3s ease;
-}.site-header.universal-page-header .header-right .nav-link:hover {
+}
+.site-header.universal-page-header .header-right .nav-link:hover {
     background: rgba(255, 255, 255, 0.15);
-}.site-header.universal-page-header .cart-link {
+}
+.site-header.universal-page-header .cart-link {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -149,19 +175,24 @@
     border-radius: 6px;
     transition: all 0.3s ease;
     font-weight: 500;
-}.site-header.universal-page-header .cart-link:hover {
+}
+.site-header.universal-page-header .cart-link:hover {
     background: rgba(255, 255, 255, 0.15);
-}.site-header.universal-page-header .cart-icon {
+}
+.site-header.universal-page-header .cart-icon {
     width: 20px;
     height: 20px;
-}.site-header.universal-page-header .cart-count {
+}
+.site-header.universal-page-header .cart-count {
     font-weight: 600;
     font-size: 1rem;
     color: var(--brand-primary);
-}.site-header.universal-page-header .cart-total {
+}
+.site-header.universal-page-header .cart-total {
     font-size: 0.9rem;
     color: var(--brand-primary);
-}/* Mobile Menu Toggle */
+}
+/* Mobile Menu Toggle */
 .site-header.universal-page-header .mobile-menu-toggle {
     display: none;
     background: none;
@@ -171,12 +202,16 @@
     border-radius: 6px;
     cursor: pointer;
     transition: background 0.3s ease;
-}.site-header.universal-page-header .mobile-menu-toggle:hover {
+}
+.site-header.universal-page-header .mobile-menu-toggle:hover {
     background: rgba(255, 255, 255, 0.15);
-}.site-header.universal-page-header .mobile-menu-toggle svg {
+}
+.site-header.universal-page-header .mobile-menu-toggle svg {
     width: 24px;
     height: 24px;
-}/* Page Content Positioning */
+}
+
+/* Page Content Positioning */
 .page-content,
 .main-content,
 .content-wrapper {
@@ -189,60 +224,38 @@
    ============================================== */
 
 /* Tablet (Portrait) */
-@media (max-width: 900px) {.site-header.universal-page-header .header-left {
-    padding-left: 15px;
-}.site-header.universal-page-header .header-right {
-    padding-right: 15px;
-}.site-header.universal-page-header .header-center {
-    max-width: 250px;
-}.site-header.universal-page-header .nav-links {
-    gap: 15px;
-}.site-header.universal-page-header .nav-link {
-    font-size: 0.9rem;
-    padding: 6px 10px;
-}
+@media (max-width: 900px) {
+  .site-header.universal-page-header .header-left { padding-left: 15px; }
+  .site-header.universal-page-header .header-right { padding-right: 15px; }
+  .site-header.universal-page-header .header-center { max-width: 250px; }
+  .site-header.universal-page-header .nav-links { gap: 15px; }
+  .site-header.universal-page-header .nav-link { font-size: 0.9rem; padding: 6px 10px; }
 }
 
 /* Mobile (Landscape & Portrait) */
-@media (max-width: 768px) {.site-header.universal-page-header {
-    --header-height: 60px;
-}.site-header.universal-page-header .mobile-menu-toggle {
-    display: block;
-}.site-header.universal-page-header .nav-links {
-    display: none;
-}.site-header.universal-page-header .header-content {
-    grid-template-columns: auto 1fr auto;
-}.site-header.universal-page-header .header-left {
-    padding-left: 10px;
-}.site-header.universal-page-header .header-right {
-    padding-right: 10px;
-}.site-header.universal-page-header .header-center {
-    max-width: 200px;
-}.site-header.universal-page-header .logo-text {
-    font-size: 1.25rem;
-}.site-header.universal-page-header .logo-tagline {
-    font-size: 0.75rem;
-}
+@media (max-width: 768px) {
+  .site-header.universal-page-header { --header-height: 60px; }
+  .site-header.universal-page-header .mobile-menu-toggle { display: block; }
+  .site-header.universal-page-header .nav-links { display: none; }
+  .site-header.universal-page-header .header-content { grid-template-columns: auto 1fr auto; }
+  .site-header.universal-page-header .header-left { padding-left: 10px; }
+  .site-header.universal-page-header .header-right { padding-right: 10px; }
+  .site-header.universal-page-header .header-center { max-width: 200px; }
+  .site-header.universal-page-header .logo-text { font-size: 1.25rem; }
+  .site-header.universal-page-header .logo-tagline { font-size: 0.75rem; }
 }
 
 /* Small Mobile */
-@media (max-width: 480px) {.site-header.universal-page-header .header-left {
-    gap: 15px;
-    padding-left: 8px;
-}.site-header.universal-page-header .header-right {
-    gap: 10px;
-    padding-right: 8px;
-}.site-header.universal-page-header .header-center {
-    max-width: 150px;
-}.site-header.universal-page-header .logo-text {
-    font-size: 1.1rem;
-}.site-header.universal-page-header .search-bar {
-    padding: 10px 14px 10px 40px;
-    font-size: 0.9rem;
-}.site-header.universal-page-header .cart-text {
-    display: none;
+@media (max-width: 480px) {
+  .site-header.universal-page-header .header-left { gap: 15px; padding-left: 8px; }
+  .site-header.universal-page-header .header-right { gap: 10px; padding-right: 8px; }
+  .site-header.universal-page-header .header-center { max-width: 150px; }
+  .site-header.universal-page-header .logo-text { font-size: 1.1rem; }
+  .site-header.universal-page-header .search-bar { padding: 10px 14px 10px 40px; font-size: 0.9rem; }
+  .site-header.universal-page-header .cart-text { display: none; }
 }
-}/* ==============================================
+
+/* ==============================================
    MOBILE MENU
    ============================================== */
 
@@ -254,14 +267,17 @@
     right: 0;
     background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.7) 100%);
     transition: all 0.3s ease-in-out;
-}.site-header.universal-page-header .mobile-menu.active {
+}
+.site-header.universal-page-header .mobile-menu.active {
     display: block;
-}.site-header.universal-page-header .mobile-nav-links {
+}
+.site-header.universal-page-header .mobile-nav-links {
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 15px;
-}.site-header.universal-page-header .mobile-nav-link {
+}
+.site-header.universal-page-header .mobile-nav-link {
     color: var(--brand-primary);
     text-decoration: none;
     font-weight: 500;
@@ -269,10 +285,12 @@
     padding: 12px 16px;
     transition: opacity 0.3s ease;
     display: block;
-}.site-header.universal-page-header .mobile-nav-link:hover,
+}
+.site-header.universal-page-header .mobile-nav-link:hover,
 .site-header.universal-page-header .mobile-nav-link.active {
     opacity: 0.8;
-}.site-header.universal-page-header .mobile-auth-section {
+}
+.site-header.universal-page-header .mobile-auth-section {
     color: var(--brand-primary, #87ac3a);
     padding-top: 15px;
     margin-top: 15px;

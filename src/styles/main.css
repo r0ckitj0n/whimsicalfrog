@@ -11,11 +11,10 @@
 @import url('./components/qty-button.css');
 
 /* Additional styles previously imported directly in js/app.js */
-@import url('./recovered_components.css');
-@import url('./recovered_missing.css');
+@import url('./components/components-base.css');
+@import url('./components/aux-styles.css');
 /* TEMP: Quarantined due to syntax errors in recovered CSS. Re-enable after cleanup. */
 /* @import '../../backups/unused_styles/comprehensive-missing-styles.css'; */
-@import url('./recovered/clean/recovered-slice-1.css');
 @import url('./components/popup.css');
 @import url('./components/room-modal.css');
 @import url('./components/detailed-item-modal.css');

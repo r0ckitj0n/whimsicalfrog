@@ -1,0 +1,46 @@
+/* Room modal styles (Vite-managed)
+   Extracted from room-modal-popup-fixes.css. Focuses on overlay/header/back button and layout.
+*/
+
+/* Keep original dimmed background image when popup is active */
+.room-modal-overlay.popup-active {
+  background-image: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), var(--dynamic-bg-url) !important;
+  background-size: cover !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* Ensure main page header stays above the overlay */
+.site-header,
+.room-page-header { position: relative !important; z-index: 3000 !important; }
+
+/* Optionally ensure universal page header spans full width */
+.site-header.universal-page-header {
+  width: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Ensure header stretches full viewport width */
+.site-header .header-container,
+.site-header.universal-page-header .header-container,
+.header-container {
+  max-width: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Position room modal below header */
+.room-modal-overlay.show { align-items: flex-start !important; padding-top: calc(var(--header-height) + 5px) !important; }
+.room-modal-container { margin-bottom: 5px !important; }
+.room-modal-overlay { padding-bottom: 0 !important; }
+
+/* Room modal back button should not be full-width */
+.room-modal-back-btn { width: auto !important; max-width: max-content !important; display: inline-flex !important; }
+
+/* Brand font globally (preserved for parity) */
+html, body, input, button, select, textarea { font-family: var(--font-primary, 'Merienda', cursive) !important; }

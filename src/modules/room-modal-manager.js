@@ -4,6 +4,49 @@
  * Recovered and consolidated from legacy files
  */
 
+import '../styles/legacy_missing_room_modal.css';
+import '../styles/room-modal-header.css';
+import '../styles/room-modal-header-fixes.css';
+
+// Runtime-injected style classes (no inline styles or element-level CSS var writes)
+const ROOM_MODAL_STYLE_ID = 'room-modal-runtime-classes';
+function getRoomModalStyleEl() {
+    let el = document.getElementById(ROOM_MODAL_STYLE_ID);
+    if (!el) {
+        el = document.createElement('style');
+        el.id = ROOM_MODAL_STYLE_ID;
+        document.head.appendChild(el);
+    }
+    return el;
+}
+
+const roomBgClassMap = new Map(); // url -> className
+function ensureRoomBgClass(imageUrl) {
+    if (!imageUrl) return null;
+    if (roomBgClassMap.has(imageUrl)) return roomBgClassMap.get(imageUrl);
+    const idx = roomBgClassMap.size + 1;
+    const cls = `room-bg-${idx}`;
+    const styleEl = getRoomModalStyleEl();
+    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}');}`));
+    roomBgClassMap.set(imageUrl, cls);
+    return cls;
+}
+
+const iconPosClassMap = new Map(); // key "t-l-w-h" -> className
+function ensureIconPosClass(t, l, w, h) {
+    const top = Math.max(0, Math.round(Number(t) || 0));
+    const left = Math.max(0, Math.round(Number(l) || 0));
+    const width = Math.max(1, Math.round(Number(w) || 1));
+    const height = Math.max(1, Math.round(Number(h) || 1));
+    const key = `${top}-${left}-${width}-${height}`;
+    if (iconPosClassMap.has(key)) return iconPosClassMap.get(key);
+    const cls = `icon-pos-t${top}-l${left}-w${width}-h${height}`;
+    const styleEl = getRoomModalStyleEl();
+    styleEl.appendChild(document.createTextNode(`.room-product-icon.${cls}{--icon-top:${top}px;--icon-left:${left}px;--icon-width:${width}px;--icon-height:${height}px;top:${top}px;left:${left}px;width:${width}px;height:${height}px;}`));
+    iconPosClassMap.set(key, cls);
+    return cls;
+}
+
 class RoomModalManager {
     constructor() {
         this.overlay = null;
@@ -43,7 +86,6 @@ class RoomModalManager {
         // CRITICAL: Ensure modal starts completely hidden
         this.isVisible = false;
         // Let CSS handle ALL styling - do not override admin settings
-        this.overlay.style.display = 'none';
 
         this.content = document.createElement('div');
         this.content.className = 'room-modal-container';
@@ -51,38 +93,11 @@ class RoomModalManager {
 
         const header = document.createElement('div');
         header.className = 'room-modal-header';
-        header.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: transparent;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 10000;
-            pointer-events: auto;
-        `;
 
         // Back button (left side)
         const backButton = document.createElement('button');
         backButton.className = 'room-modal-back-btn bg-primary';
         backButton.innerHTML = '← Back to Main Room';
-        backButton.style.cssText = `
-            align-self: flex-start;
-
-            background-color: var(--button-bg-primary, #87ac3a);
-            border: 1px solid var(--button-bg-primary, #87ac3a);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        `;
 
         // Add click handler to close modal
         backButton.addEventListener('click', (e) => {
@@ -91,36 +106,40 @@ class RoomModalManager {
             this.close();
         });
 
+        // Back button container for positioning
+        const backContainer = document.createElement('div');
+        backContainer.className = 'back-button-container';
+        backContainer.appendChild(backButton);
+
+        // Close button (top-right)
+        const closeButton = document.createElement('button');
+        closeButton.className = 'room-modal-close';
+        closeButton.type = 'button';
+        closeButton.setAttribute('aria-label', 'Close room');
+        closeButton.innerHTML = '&times;';
+        closeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.close();
+        });
+
         // Title container (right side)
         const titleContainer = document.createElement('div');
         titleContainer.className = 'room-modal-title-container';
-        titleContainer.style.cssText = `
-            text-align: right;
-            margin-left: auto;
-            padding: 8px 16px;
-            background: transparent;
-            color: white;
-        `;
         
         const roomTitle = document.createElement('h2');
         roomTitle.className = 'room-modal-title';
         roomTitle.id = 'room-modal-title';
         roomTitle.textContent = 'Loading...';
-        roomTitle.style.cssText = `
-            margin: 0;
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: white;
-            text-align: right;
-        `;
         titleContainer.appendChild(roomTitle);
 
         const body = document.createElement('div');
         body.className = 'room-modal-body';
         // Let CSS handle ALL styling - do not override admin settings
 
-        header.appendChild(backButton);
+        header.appendChild(backContainer);
         header.appendChild(titleContainer);
+        header.appendChild(closeButton);
         this.content.appendChild(header);
         this.content.appendChild(body);
         this.overlay.appendChild(this.content);
@@ -131,7 +150,7 @@ class RoomModalManager {
         console.log('[Room] Setting up event listeners...');
         
         // Close button
-        const closeBtn = this.overlay.querySelector('.room-modal-close-btn');
+        const closeBtn = this.overlay.querySelector('.room-modal-close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.close());
         }
@@ -360,21 +379,22 @@ class RoomModalManager {
                 originalWidth = parseFloat(icon.dataset.originalWidth);
                 originalHeight = parseFloat(icon.dataset.originalHeight);
             } else {
-                // Final fallback: use explicit inline style if available
-                const inlineTop = parseFloat(icon.style.top) || 0;
-                const inlineLeft = parseFloat(icon.style.left) || 0;
-                const inlineWidth = parseFloat(icon.style.width) || 80;
-                const inlineHeight = parseFloat(icon.style.height) || 80;
-                originalTop = inlineTop;
-                originalLeft = inlineLeft;
-                originalWidth = inlineWidth;
-                originalHeight = inlineHeight;
+                // Final fallback: read computed styles (class-based), not inline
+                const cs = getComputedStyle(icon);
+                const cTop = parseFloat(cs.top) || 0;
+                const cLeft = parseFloat(cs.left) || 0;
+                const cWidth = parseFloat(cs.width) || 80;
+                const cHeight = parseFloat(cs.height) || 80;
+                originalTop = cTop;
+                originalLeft = cLeft;
+                originalWidth = cWidth;
+                originalHeight = cHeight;
                 // Store in dataset for future
                 icon.dataset.originalTop = originalTop;
                 icon.dataset.originalLeft = originalLeft;
                 icon.dataset.originalWidth = originalWidth;
                 icon.dataset.originalHeight = originalHeight;
-                console.log(`[Room Modal] Fallback inline coords for icon: top=${originalTop}, left=${originalLeft}, w=${originalWidth}, h=${originalHeight}`);
+                console.log(`[Room Modal] Fallback computed coords for icon: top=${originalTop}, left=${originalLeft}, w=${originalWidth}, h=${originalHeight}`);
             }
 
             // Hover / focus – show popup
@@ -433,7 +453,7 @@ class RoomModalManager {
             const originalImageWidth = 1280;
             const originalImageHeight = 896;
 
-            const roomWrapper = this.overlay.querySelector('.room-overlay-wrapper');
+            const roomWrapper = this.overlay.querySelector('.room-overlay-wrapper') || this.overlay.querySelector('.room-modal-body');
             const loadRoomBackground = async () => {
                 if (!roomWrapper || !rn) return;
                 const roomType = `room${rn}`;
@@ -448,12 +468,14 @@ class RoomModalManager {
                             filename = `backgrounds/${filename}`;
                         }
                         const imageUrl = `/images/${filename}`;
-                        // Prefer CSS variable to let stylesheet control presentation
-                        roomWrapper.style.setProperty('--room-bg-image', `url('${imageUrl}')`);
-                        // Fallback direct background if CSS variable not used
-                        if (!getComputedStyle(roomWrapper).getPropertyValue('--room-bg-image')) {
-                            roomWrapper.style.backgroundImage = `url('${imageUrl}')`;
-                            roomWrapper.classList.add('dynamic-room-bg-loaded');
+                        // Apply background via runtime-injected class (no element-level writes)
+                        const bgCls = ensureRoomBgClass(imageUrl);
+                        if (roomWrapper.dataset.roomBgClass && roomWrapper.dataset.roomBgClass !== bgCls) {
+                            roomWrapper.classList.remove(roomWrapper.dataset.roomBgClass);
+                        }
+                        if (bgCls) {
+                            roomWrapper.classList.add(bgCls);
+                            roomWrapper.dataset.roomBgClass = bgCls;
                         }
                         console.log(`[Room Modal] Background loaded: ${imageUrl}`);
                     }
@@ -489,15 +511,15 @@ class RoomModalManager {
                         oHeight = parseFloat(icon.dataset.originalHeight);
                     } else {
                         const cs = getComputedStyle(icon);
-                        oTop = parseFloat(cs.getPropertyValue('--icon-top')) || parseFloat(icon.style.top) || 0;
-                        oLeft = parseFloat(cs.getPropertyValue('--icon-left')) || parseFloat(icon.style.left) || 0;
-                        oWidth = parseFloat(cs.getPropertyValue('--icon-width')) || parseFloat(icon.style.width) || 80;
-                        oHeight = parseFloat(cs.getPropertyValue('--icon-height')) || parseFloat(icon.style.height) || 80;
+                        oTop = parseFloat(cs.getPropertyValue('--icon-top')) || parseFloat(cs.top) || 0;
+                        oLeft = parseFloat(cs.getPropertyValue('--icon-left')) || parseFloat(cs.left) || 0;
+                        oWidth = parseFloat(cs.getPropertyValue('--icon-width')) || parseFloat(cs.width) || 80;
+                        oHeight = parseFloat(cs.getPropertyValue('--icon-height')) || parseFloat(cs.height) || 80;
                         icon.dataset.originalTop = oTop;
                         icon.dataset.originalLeft = oLeft;
                         icon.dataset.originalWidth = oWidth;
                         icon.dataset.originalHeight = oHeight;
-                        console.log(`[Room Modal] Fallback inline coords for icon: top=${oTop}, left=${oLeft}, w=${oWidth}, h=${oHeight}`);
+                        console.log(`[Room Modal] Fallback computed coords for icon: top=${oTop}, left=${oLeft}, w=${oWidth}, h=${oHeight}`);
                     }
 
                     const sTop = Math.round((oTop * scale) + offsetY);
@@ -505,11 +527,14 @@ class RoomModalManager {
                     const sWidth = Math.round(oWidth * scale);
                     const sHeight = Math.round(oHeight * scale);
 
-                    // Update CSS variables instead of inline layout properties
-                    icon.style.setProperty('--icon-top', sTop + 'px');
-                    icon.style.setProperty('--icon-left', sLeft + 'px');
-                    icon.style.setProperty('--icon-width', sWidth + 'px');
-                    icon.style.setProperty('--icon-height', sHeight + 'px');
+                    // Apply coordinates via runtime-injected class (no element-level writes)
+                    const posCls = ensureIconPosClass(sTop, sLeft, sWidth, sHeight);
+                    if (icon.dataset.iconPosClass && icon.dataset.iconPosClass !== posCls) {
+                        icon.classList.remove(icon.dataset.iconPosClass);
+                    }
+                    icon.classList.add('positioned');
+                    icon.classList.add(posCls);
+                    icon.dataset.iconPosClass = posCls;
                 });
 
                 console.log(`[Room Modal] Scaled ${icons.length} product icons with scale factor: ${scale.toFixed(3)}`);
@@ -544,18 +569,17 @@ class RoomModalManager {
         // Store the previously focused element for restoration later
         this.previouslyFocusedElement = document.activeElement;
         
-        this.overlay.style.display = 'flex';
-        // Add the .show class required by CSS for visibility
+        // Toggle CSS-driven visibility
         this.overlay.classList.add('show');
-        // Force reflow
+        document.body.classList.add('modal-open', 'room-modal-open');
+        // Force reflow (optional)
         this.overlay.offsetHeight;
-        this.overlay.style.opacity = '1';
         // Global scroll lock via centralized helper
         WFModals?.lockScroll?.();
         
         // Set focus to the modal for accessibility
         setTimeout(() => {
-            const closeButton = this.overlay.querySelector('.room-modal-close-btn');
+            const closeButton = this.overlay.querySelector('.room-modal-close');
             if (closeButton) {
                 closeButton.focus();
                 console.log('[Room] 🎭 Focus set to close button for accessibility');
@@ -563,7 +587,6 @@ class RoomModalManager {
         }, 100);
         
         console.log('[Room] 🎭 overlay classList after:', this.overlay.classList.toString());
-        console.log('[Room] 🎭 overlay opacity after:', this.overlay.style.opacity);
         console.log('[Room] 🎭 Modal should now be visible with .show class!');
     }
 
@@ -577,14 +600,13 @@ class RoomModalManager {
             this._resizeHandler = null;
         }
 
-        this.overlay.style.opacity = '0';
         // Remove the .show class to trigger CSS transition
         this.overlay.classList.remove('show');
+        document.body.classList.remove('modal-open', 'room-modal-open');
         
         console.log('[Room] 🎭 overlay classList after show removal:', this.overlay?.classList.toString());
         
         setTimeout(() => {
-            this.overlay.style.display = 'none';
             // Remove scroll lock only if no other modals are open
             WFModals?.unlockScrollIfNoneOpen?.();
             
@@ -613,7 +635,7 @@ class RoomModalManager {
     }
 
     isOpen() {
-        return this.overlay && this.overlay.style.display !== 'none';
+        return this.overlay && this.overlay.classList.contains('show');
     }
 
     preloadRoomContent() {

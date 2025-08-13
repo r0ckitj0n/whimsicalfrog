@@ -29,6 +29,19 @@ export default [
       ],
       "no-unreachable": "error",
       "prefer-const": "warn",
+      // Disallow inline style writes (class-based styling only)
+      // 1) Block assignments to element.style.<prop>
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "AssignmentExpression[left.type='MemberExpression'][left.object.type='MemberExpression'][left.object.property.name='style']",
+          message: "Do not write to inline styles (element.style.*). Use CSS classes managed by Vite.",
+        },
+        {
+          selector: "CallExpression[callee.type='MemberExpression'][callee.property.name='setProperty'][callee.object.type='MemberExpression'][callee.object.property.name='style']",
+          message: "Do not set CSS variables on elements via style.setProperty. Use classes and CSS variables at a higher scope.",
+        }
+      ],
     },
   },
 ];

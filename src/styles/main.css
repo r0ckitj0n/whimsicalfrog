@@ -1,35 +1,38 @@
 /* Z-Index utilities (foundational) */
-@import './z-index.css';
+@import url('./z-index.css');
 
 /* Main site styles - this contains all the compiled CSS for the site */
-@import './site-base.css';
+@import url('./site-base.css');
 
 /* Room modal header fixes */
-@import './room-modal-header-fixes.css';
+@import url('./room-modal-header-fixes.css');
 
 /* Room main header fixes */
-@import './room-main-header-fixes.css';
-@import './legacy_missing_room_main.css';
+@import url('./room-main-header-fixes.css');
+@import url('./legacy_missing_room_main.css');
 
 /* Comprehensive quantity button fix to eliminate horizontal scrollbar */
-@import './qty-button-final-fix.css';
+@import url('./qty-button-final-fix.css');
 
 /* Additional styles previously imported directly in js/app.js */
-@import './recovered_components.css';
-@import './recovered_missing.css';
+@import url('./recovered_components.css');
+@import url('./recovered_missing.css');
 /* TEMP: Quarantined due to syntax errors in recovered CSS. Re-enable after cleanup. */
 /* @import '../../backups/unused_styles/comprehensive-missing-styles.css'; */
-@import './recovered/clean/recovered-slice-1.css';
-@import './room-modal-popup-fixes.css';
-@import './room-modal-header.css';
-@import './detailed-item-modal-fixes.css';
-@import './modal-fixes.css';
-@import './login-modal.css';
-@import './admin-modals.css';
-@import './legacy_missing_admin.css';
-@import './admin-db-tools.css';
-@import './admin-inventory.css';
-@import './utilities-ui.css';
+@import url('./recovered/clean/recovered-slice-1.css');
+@import url('./components/popup.css');
+@import url('./components/room-modal.css');
+@import url('./room-modal-header.css');
+@import url('./detailed-item-modal-fixes.css');
+@import url('./search-modal.css');
+@import url('./sales-system.css');
+@import url('./modal-fixes.css');
+@import url('./login-modal.css');
+@import url('./admin-modals.css');
+@import url('./legacy_missing_admin.css');
+@import url('./admin-db-tools.css');
+@import url('./admin-inventory.css');
+@import url('./utilities-ui.css');
 
 /* Center title and intro text inside the green contact card */
 body[data-page='contact'] .wf-contact-card h1,
@@ -220,7 +223,7 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
   box-shadow: none; /* avoid rectangular shadow */
   overflow: visible;
 }
-.wf-cloud-card, .wf-cloud-card .content { overflow-wrap: anywhere; word-break: break-word; }
+.wf-cloud-card, .wf-cloud-card .content { overflow-wrap: anywhere; }
 .wf-cloud-card .content { position: relative; z-index: 1; max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
 .wf-cloud-card .content p { margin: 0.35em 0; line-height: 1.4; }
 .wf-cloud-card .content > p:first-of-type { margin-top: calc(1.4em * 2); }
@@ -413,7 +416,7 @@ body[data-page='contact'] .content { color: #fff !important; }
   cursor: pointer;
 }
 .wf-reveal .wf-reveal-value { font-weight: 600; color: #111827; }
-.wf-reveal .wf-reveal-value { overflow-wrap: anywhere; word-break: break-word; }
+.wf-reveal .wf-reveal-value { overflow-wrap: anywhere; }
 .wf-reveal .wf-reveal-link { color: var(--primary_color, #87ac3a); text-decoration: none; }
 .wf-reveal .wf-reveal-link:hover { text-decoration: underline; }
 

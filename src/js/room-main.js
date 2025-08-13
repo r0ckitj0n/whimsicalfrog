@@ -3,7 +3,32 @@
  * Handles background loading, door positioning, and modal integration
  */
 
+import '../styles/room-main.css';
+
 console.log('Loading room-main.js...');
+
+// Runtime injected styles for room main
+const RM_STYLE_ID = 'wf-room-main-runtime';
+function getRmStyleEl(){
+    let el = document.getElementById(RM_STYLE_ID);
+    if (!el){ el = document.createElement('style'); el.id = RM_STYLE_ID; document.head.appendChild(el); }
+    return el;
+}
+const bgCache = new Map(); // url -> cls
+function ensureRmBgClass(url){
+    if (!url) return null;
+    if (bgCache.has(url)) return bgCache.get(url);
+    const idx = bgCache.size + 1;
+    const cls = `rm-bg-${idx}`;
+    getRmStyleEl().appendChild(document.createTextNode(`#mainRoomPage.${cls}{--room-bg-url:url('${url}');background-image:url('${url}');}`));
+    bgCache.set(url, cls);
+    return cls;
+}
+let _ensuredUtilityCss = false;
+function ensureUtilityCss(){
+    // No-op: utilities are provided via Vite CSS import (../styles/room-main.css)
+    _ensuredUtilityCss = true;
+}
 
 class RoomMainManager {
     constructor() {
@@ -42,7 +67,15 @@ class RoomMainManager {
         if (mainRoomSection) {
             const bgUrl = mainRoomSection.getAttribute('data-bg-url');
             if (bgUrl) {
-                mainRoomSection.style.setProperty('--room-bg-url', `url('${bgUrl}')`);
+                const cls = ensureRmBgClass(bgUrl);
+                if (mainRoomSection.dataset.bgClass && mainRoomSection.dataset.bgClass !== cls){
+                    mainRoomSection.classList.remove(mainRoomSection.dataset.bgClass);
+                }
+                if (cls){
+                    mainRoomSection.classList.add(cls);
+                    mainRoomSection.dataset.bgClass = cls;
+                }
+                mainRoomSection.classList.add('room-bg-loaded');
                 console.log('🖼️ Main room background loaded:', bgUrl);
             }
         }
@@ -54,8 +87,8 @@ class RoomMainManager {
         
         // Ensure doors are clickable and properly positioned
         doorElements.forEach((door, _index) => {
-            door.style.cursor = 'pointer';
-            door.style.pointerEvents = 'auto';
+            ensureUtilityCss();
+            door.classList.add('door-interactive');
             
             // Add accessibility
             door.setAttribute('tabindex', '0');
@@ -83,8 +116,9 @@ class RoomMainManager {
     }
 
     setupBodyStyles() {
-        // Set body to prevent scrolling in fullscreen mode
-        document.body.style.overflow = 'hidden';
+        // Set body to prevent scrolling in fullscreen mode via class
+        ensureUtilityCss();
+        document.body.classList.add('wf-no-scroll');
         console.log('🚪 Body styles configured for fullscreen mode');
     }
 
@@ -110,7 +144,7 @@ class RoomMainManager {
     setupCleanup() {
         // Clean up when leaving main room
         window.addEventListener('beforeunload', () => {
-            document.body.style.overflow = '';
+            document.body.classList.remove('wf-no-scroll');
         });
     }
 }

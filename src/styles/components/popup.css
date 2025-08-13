@@ -1,0 +1,110 @@
+/* Popup component styles (Vite-managed)
+   Consolidated from room-modal-popup-fixes.css.
+   Positioning remains runtime-injected via classes; this file handles visuals only.
+*/
+
+/* Base popup wrapper visuals */
+.item-popup,
+.item-popup-legacy,
+.item-popup-enhanced {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important; /* ensure rounded corners apply */
+}
+
+/* Inner content reset */
+.item-popup .popup-content,
+.item-popup-legacy .popup-content,
+.item-popup-enhanced .popup-content {
+  padding: 0 !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+/* Remove hover transform and keep background consistent */
+.popup-content:hover {
+  transform: none !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 0 !important;
+}
+
+/* Typography sizing for popup content */
+.item-popup,
+.item-popup * { font-size: 15px !important; line-height: 1.4 !important; }
+
+.item-popup .popup-title,
+.item-popup-legacy .popup-title,
+.item-popup-enhanced .popup-title { font-size: 20px !important; font-weight: 700 !important; }
+
+.item-popup .popup-price,
+.item-popup-legacy .popup-price,
+.item-popup-enhanced .popup-price { font-size: 18px !important; font-weight: 700 !important; margin-top: 4px !important; }
+
+/* Out-of-stock emphasis */
+.item-popup .popup-stock-info.out-of-stock,
+.item-popup-legacy .popup-stock-info.out-of-stock,
+.item-popup-enhanced .popup-stock-info.out-of-stock {
+  color: var(--brand-red, #c62828) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border: 2px solid currentcolor !important;
+  padding: 2px 6px !important;
+  display: inline-block !important;
+  transform: rotate(-6deg);
+}
+
+/* Image sizing */
+.item-popup .popup-image,
+.item-popup-legacy .popup-image,
+.item-popup-enhanced .popup-image { width: 100% !important; max-width: 100% !important; height: auto !important; }
+
+/* Hide image when no valid source to avoid white bars */
+.item-popup .popup-image[src=""],
+.item-popup .popup-image:not([src]),
+.item-popup .popup-image[src="about:blank"] { display: none !important; }
+
+/* Header/layout stacking for narrow popups */
+.item-popup .popup-header,
+.item-popup-legacy .popup-header,
+.item-popup-enhanced .popup-header { display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+
+.item-popup .popup-image-container,
+.item-popup-legacy .popup-image-container,
+.item-popup-enhanced .popup-image-container { width: 100% !important; }
+
+.item-popup .popup-info,
+.item-popup-legacy .popup-info,
+.item-popup-enhanced .popup-info { width: 100% !important; padding: 12px !important; }
+
+/* Buttons: avoid full-width expansions */
+.item-popup .popup-btn,
+.item-popup .popup-btn-primary,
+.item-popup .popup-btn-secondary,
+.item-popup .popup-add-to-cart,
+.popup-add-to-cart,
+.popup-add-btn,
+.popup-add-to-cart-btn {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+
+/* Footer spacing tidy */
+.popup-footer {
+  padding-bottom: 0 !important;
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+  padding: 0 12px 5px !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Remove residual extra height on popup wrapper */
+.item-popup { padding-bottom: 0 !important; min-height: auto !important; height: auto !important; }

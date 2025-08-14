@@ -8896,16 +8896,16 @@ input[type="checkbox"].color-checkbox:checked {
     display: flex;
     align-items: center;
     gap: 1rem;
-}.payment-method-btn[data-method="Cash"] {
+}.payment-method-btn.cash {
     background-color: #4CAF50;
     color: white;
-}.payment-method-btn[data-method="Credit Card"] {
+}.payment-method-btn.credit-card {
     background-color: #2196F3;
     color: white;
-}.payment-method-btn[data-method="Debit Card"] {
+}.payment-method-btn.debit-card {
     background-color: #FF9800;
     color: white;
-}.payment-method-btn[data-method="Check"] {
+}.payment-method-btn.check {
     background-color: #9C27B0;
     color: white;
 }/* ==========================================================================
@@ -9284,7 +9284,7 @@ input[type="checkbox"].color-checkbox:checked {
     flex-direction: column;
     height: 100%;
 }/* Ensure item cards have relative positioning for badges */
-.item-card, [data-sku] {
+.item-card, .cart-item, .search-result-clickable, .thumbnail-container, .search-add-to-cart-btn {
     position: relative;
 }.item-card:hover {
     box-shadow: var(--card-shadow-hover);
@@ -10567,6 +10567,14 @@ input[type="checkbox"].color-checkbox:checked {
 }.payment-method-btn.check {
     background: #9C27B0;
 }.payment-method-btn.check:hover {
+    background: #7b1fa2;
+}.payment-method-btn.card {
+    background: #2196F3;
+}.payment-method-btn.card:hover {
+    background: #1976d2;
+}.payment-method-btn.other {
+    background: #9C27B0;
+}.payment-method-btn.other:hover {
     background: #7b1fa2;
 }.payment-method-btn .icon {
     font-size: 1.5rem;
@@ -21731,16 +21739,16 @@ body.modal-open #itemPopup.in-room-modal {
     background: #4CAF50;
     color: white;
     transition: all 0.2s ease;
-}.payment-method-btn[data-method="Cash"] {
+}.payment-method-btn.cash {
     background-color: #4CAF50;
     color: white;
-}.payment-method-btn[data-method="Credit Card"] {
+}.payment-method-btn.credit-card {
     background-color: #2196F3;
     color: white;
-}.payment-method-btn[data-method="Debit Card"] {
+}.payment-method-btn.debit-card {
     background-color: #FF9800;
     color: white;
-}.payment-method-btn[data-method="Check"] {
+}.payment-method-btn.check {
     background-color: #9C27B0;
     color: white;
 }.btn {
@@ -22037,7 +22045,7 @@ body.modal-open #itemPopup.in-room-modal {
     display: flex;
     flex-direction: column;
     height: 100%;
-}.item-card, [data-sku] {
+}.item-card, .cart-item, .search-result-clickable, .thumbnail-container, .search-add-to-cart-btn {
     position: relative;
 }.item-card:hover {
     box-shadow: var(--card-shadow-hover);
@@ -37683,16 +37691,22 @@ mark {
     display: flex;
     align-items: center;
     gap: 1rem;
-}.payment-method-btn[data-method="Cash"] {
+}.payment-method-btn.cash {
     background-color: #4CAF50;
     color: white;
-}.payment-method-btn[data-method="Credit Card"] {
+}.payment-method-btn.credit-card {
     background-color: #2196F3;
     color: white;
-}.payment-method-btn[data-method="Debit Card"] {
+}.payment-method-btn.debit-card {
     background-color: #FF9800;
     color: white;
-}.payment-method-btn[data-method="Check"] {
+}.payment-method-btn.check {
+    background-color: #9C27B0;
+    color: white;
+}.payment-method-btn.card {
+    background-color: #2196F3;
+    color: white;
+}.payment-method-btn.other {
     background-color: #9C27B0;
     color: white;
 }/* ==========================================================================
@@ -38071,7 +38085,7 @@ mark {
     flex-direction: column;
     height: 100%;
 }/* Ensure item cards have relative positioning for badges */
-.item-card, [data-sku] {
+.item-card, .cart-item, .search-result-clickable, .thumbnail-container, .search-add-to-cart-btn {
     position: relative;
 }.item-card:hover {
     box-shadow: var(--card-shadow-hover);

@@ -441,9 +441,9 @@ const POSModule = {
         const message = `
             <h3>Total Due: $${total.toFixed(2)}</h3>
             <div class="payment-methods">
-                <button class="payment-btn" data-method="Cash">💵 Cash</button>
-                <button class="payment-btn" data-method="Card">💳 Card</button>
-                <button class="payment-btn" data-method="Other">📱 Other</button>
+                <button class="payment-btn payment-method-btn cash" data-method="Cash">💵 Cash</button>
+                <button class="payment-btn payment-method-btn card" data-method="Card">💳 Card</button>
+                <button class="payment-btn payment-method-btn other" data-method="Other">📱 Other</button>
             </div>`;
         return new Promise(resolve => {
             this.showPOSModal('Select Payment Method', message, 'info');

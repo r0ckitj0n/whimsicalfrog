@@ -13,6 +13,7 @@
     "lint:css": "stylelint \"src/styles/**/*.css\"",
     "lint:css:fix": "stylelint \"src/styles/**/*.css\" --fix",
     "guard:styles": "node scripts/disallow-inline-styles.mjs",
+    "guard:templates:css": "node scripts/guard-templates-css.mjs",
     "check:css:orphans": "node scripts/check-orphaned-css.mjs",
     "check:css:orphans:write": "node scripts/check-orphaned-css.mjs --write",
     "check:css:inventory": "node scripts/css-inventory.mjs",

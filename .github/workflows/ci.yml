@@ -30,6 +30,9 @@ jobs:
       - name: Run inline-style guard
         run: npm run guard:styles
 
+      - name: Run template CSS guard
+        run: npm run guard:templates:css
+
       - name: Run ESLint
         run: npm run lint
 

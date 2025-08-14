@@ -104,7 +104,7 @@ body.modal-open #itemPopup.in-room-modal {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: var(--z-index-modal);
+    z-index: var(--z-index-room-modal, 2400);
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
@@ -152,7 +152,7 @@ body.modal-open #itemPopup.in-room-modal {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    z-index: var(--z-index-overlay);
+    z-index: var(--z-index-modal-front, 430);
     transition: all 0.2s ease;
 }
 
@@ -167,7 +167,7 @@ body.modal-open #itemPopup.in-room-modal {
     color: white;
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    z-index: var(--z-index-overlay);
+    z-index: var(--z-index-modal-front, 430);
     backdrop-filter: blur(4px);
 }
 
@@ -195,7 +195,7 @@ body.modal-open #itemPopup.in-room-modal {
     align-items: center;
     justify-content: center;
     font-size: 20px;
-    z-index: var(--z-index-overlay);
+    z-index: var(--z-index-modal-front, 430);
     transition: all 0.2s ease;
 }
 
@@ -216,7 +216,7 @@ body.modal-open #itemPopup.in-room-modal {
     align-items: center;
     justify-content: center;
     border-radius: 12px;
-    z-index: var(--z-index-content);
+    z-index: var(--z-index-modal-content, 420);
 }
 .room-modal-loading.hidden { display: none !important; }
 .room-modal-iframe.hidden { display: none !important; }
@@ -249,7 +249,7 @@ body.modal-open #itemPopup.in-room-modal {
     align-items: center;
     justify-content: center;
     border-radius: 12px;
-    z-index: var(--z-index-content);
+    z-index: var(--z-index-modal-content, 420);
     padding: 2rem;
     text-align: center;
 }
@@ -313,7 +313,7 @@ body.modal-open #itemPopup.in-room-modal {
     border-radius: 8px;
     padding: 1rem;
     backdrop-filter: blur(4px);
-    z-index: var(--z-index-overlay);
+    z-index: var(--z-index-modal-front, 430);
 }
 .config-form-container.show { display: block; }
 .config-form-toggle {
@@ -341,7 +341,7 @@ body.modal-open #itemPopup.in-room-modal {
     top: 0;
     left: 0;
     right: 0;
-    z-index: var(--z-room-modal-header, 2450);
+    z-index: var(--z-index-room-modal-header, 2450);
     pointer-events: none;
     width: 100%;
     max-width: 100%;

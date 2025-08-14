@@ -29,15 +29,14 @@
 @import url('./utilities-ui.css');
 
 /* Center title and intro text inside the green contact card */
-body[data-page='contact'] .wf-contact-card h1,
 body[data-page='contact'] .wf-contact-card .content { text-align: center; }
 /* Center the single-column grid item that contains the form */
 body[data-page='contact'] .grid { justify-items: center; }
 /* Center input text per user request */
-body[data-page='contact'] .wf-contact-form input[type="text"],
-body[data-page='contact'] .wf-contact-form input[type="email"],
-body[data-page='contact'] .wf-contact-form input[type="tel"],
-body[data-page='contact'] .wf-contact-form input[type="subject"],
+body[data-page='contact'] .wf-contact-form input[type="text"] { text-align: center; }
+body[data-page='contact'] .wf-contact-form input[type="email"] { text-align: center; }
+body[data-page='contact'] .wf-contact-form input[type="tel"] { text-align: center; }
+body[data-page='contact'] .wf-contact-form input[type="subject"] { text-align: center; }
 body[data-page='contact'] .wf-contact-form textarea { text-align: center; }
 
 /* Remove container padding that causes off-center feel */
@@ -55,15 +54,15 @@ body[data-page='contact'] .page-content.container { padding-left: 0; padding-rig
 
 
 /* Global: Prevent horizontal scrollbars and ensure safe scaling */
-*, *::before, *::after { box-sizing: border-box; }
-html, body { max-width: 100%; overflow-x: hidden; }
-img, video, canvas, svg { max-width: 100%; height: auto; }
+* { box-sizing: border-box; }
+*::before { box-sizing: border-box; }
+*::after { box-sizing: border-box; }
+video { max-width: 100%; height: auto; }
+canvas { max-width: 100%; height: auto; }
+svg { max-width: 100%; height: auto; }
 /* Global modal scroll lock + stable gutters */
-html { scrollbar-gutter: stable; }
-body.modal-open,
-html.modal-open { overflow: hidden !important; }
 /* Support aliases used in some scripts */
-body.modal-open-overflow-hidden,
+body.modal-open-overflow-hidden { overflow: hidden !important; }
 html.modal-open-overflow-hidden { overflow: hidden !important; }
 body.modal-open-position-fixed { position: fixed; width: 100%; }
 /* Avoid globally forcing max-width on all containers; only prevent overflow-x */
@@ -87,18 +86,15 @@ body.mode-fullscreen .clickable-area img {
   display: block;
 }
 /* Room Main: ensure dynamic background is applied */
-.main-room-section {
-  background-image: var(--dynamic-room-bg-url, var(--room-bg-url)) !important;
-}
-.page-content, .site-wrapper { overflow-x: hidden; }
-.content, .prose { overflow-x: hidden; }
+.site-wrapper { overflow-x: hidden; }
+.content { overflow-x: hidden; }
+.prose { overflow-x: hidden; }
 
 /* Contact page: constrain page width and apply brand background only around content card */
 body[data-page='contact'] .page-content { width: min(100%, 1100px); margin: 0 auto; }
 /* Align the reveal-company wrapper to the same max width as page content */
-body[data-page='contact'] .wf-reveal-company-wrap { width: min(100%, 1100px); margin: 8px auto 6px auto; }
 /* Center the reveal button horizontally within its wrap */
-body[data-page='contact'] .wf-reveal-company-wrap { display: flex; justify-content: center; }
+body[data-page='contact'] .wf-reveal-company-wrap { width: min(100%, 1100px); margin: 8px auto 6px auto; display: flex; justify-content: center; }
 body[data-page='contact'] .wf-contact-card {
   background: var(--primary_color, #87ac3a);
   color: #fff;
@@ -109,8 +105,8 @@ body[data-page='contact'] .wf-contact-card {
   margin-right: auto;
   width: min(100%, 1100px);
 }
-body[data-page='contact'] .wf-contact-card h1,
-body[data-page='contact'] .wf-contact-card p,
+body[data-page='contact'] .wf-contact-card h1 { text-align: center; color: #fff; }
+body[data-page='contact'] .wf-contact-card p { color: #fff; }
 body[data-page='contact'] .wf-contact-card label { color: #fff; }
 body[data-page='contact'] .wf-contact-card .wf-reveal .wf-reveal-label { color: #fff; }
 /* Make reveal button pop on contact page (contrast against green background) */
@@ -172,10 +168,9 @@ body[data-page='contact'] .wf-submit-btn:focus-visible {
 }
 body[data-page='contact'] .wf-submit-btn:disabled { opacity: .7; cursor: not-allowed; filter: grayscale(.1); }
 /* Contact form label + spacing adjustments */
-.wf-contact-form label { font-size: 0.9rem; margin-bottom: 0.25rem; display: inline-block; }
 .wf-contact-form .w-full { width: 100%; }
 /* left-align labels for better readability */
-.wf-contact-form label { text-align: left; width: auto; }
+.wf-contact-form label { font-size: 0.9rem; margin-bottom: 0.25rem; display: inline-block; text-align: left; width: auto; }
 
 /* --- About: Cloud-shaped background behind text (no rectangular card) --- */
 /* Remove Tailwind container constraints on About so the cloud can breathe */
@@ -186,14 +181,6 @@ body.room-bg-main[data-page='about'] .page-content {
   padding-top: clamp(8px, 1.5vh, 16px); /* move content up */
 }
 /* Ensure centering even when room-bg-main is absent */
-body[data-page='about'] .page-content {
-  max-width: none !important;
-  padding-left: 0;
-  padding-right: 0;
-  display: flex;
-  justify-content: center;
-  overflow: visible;
-}
 body[data-page='about'] .page-content .prose {
   max-width: none;
   overflow: visible;
@@ -201,24 +188,10 @@ body[data-page='about'] .page-content .prose {
   flex-direction: column;
   align-items: center; /* center cloud card */
 }
-body[data-page='about'] .page-content { overflow: visible; }
+body[data-page='about'] .page-content { max-width: none !important; padding-left: 0; padding-right: 0; display: flex; justify-content: center; overflow: visible; }
 body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: auto !important; margin-right: auto !important; }
-.wf-cloud-card {
-  position: relative;
-  display: block;            /* allow margin auto centering */
-  width: auto;               /* grow to max-width */
-  max-width: min(2000px, 90vw);
-  margin: clamp(8px, 1.5vh, 16px) auto 0 auto; /* small top margin to pull up */
-  /* Responsive padding around text */
-  padding: clamp(44px, 7.5vw, 168px) clamp(48px, 8.5vw, 188px);
-  min-height: clamp(620px, 62vh, 1100px);
-  /* Cloud rendered via ::after to avoid cropping */
-  background: none;
-  box-shadow: none; /* avoid rectangular shadow */
-  overflow: visible;
-}
-.wf-cloud-card, .wf-cloud-card .content { overflow-wrap: anywhere; }
-.wf-cloud-card .content { position: relative; z-index: 1; max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
+.wf-cloud-card { position: relative; display: block; width: auto; max-width: min(2000px, 90vw); margin: clamp(8px, 1.5vh, 16px) auto 0 auto; padding: clamp(44px, 7.5vw, 168px) clamp(48px, 8.5vw, 188px); min-height: clamp(620px, 62vh, 1100px); background: none; box-shadow: none;  overflow: visible; overflow-wrap: anywhere; }
+.wf-cloud-card .content { overflow-wrap: anywhere; position: relative; z-index: 1; max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
 .wf-cloud-card .content p { margin: 0.35em 0; line-height: 1.4; }
 .wf-cloud-card .content > p:first-of-type { margin-top: calc(1.4em * 2); }
 .wf-cloud-title { margin: 0 0 0.25rem 0; text-align: center; font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 700; color: #111; }
@@ -303,11 +276,6 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
   .wf-contact-form { max-width: 92vw; }
 }
 /* Compact inputs, larger textarea for contact form */
-.wf-contact-form input[type="text"],
-.wf-contact-form input[type="email"],
-.wf-contact-form input[type="tel"],
-.wf-contact-form input[type="subject"],
-.wf-contact-form input:not([type="submit"]),
 .wf-contact-form select {
   height: 36px;
   font-size: 0.95rem;
@@ -323,11 +291,11 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
   border: 1px solid #d1d5db;
 }
 /* Slightly smaller text inputs */
-.wf-contact-form input[type="text"],
-.wf-contact-form input[type="email"],
-.wf-contact-form input[type="tel"],
-.wf-contact-form input[type="subject"],
-.wf-contact-form input:not([type="submit"]) { height: 32px; }
+.wf-contact-form input[type="text"] { font-size: 0.95rem; background: #fff; color: #111; border: 1px solid #d1d5db; height: 32px; }
+.wf-contact-form input[type="email"] { font-size: 0.95rem; background: #fff; color: #111; border: 1px solid #d1d5db; height: 32px; }
+.wf-contact-form input[type="tel"] { font-size: 0.95rem; background: #fff; color: #111; border: 1px solid #d1d5db; height: 32px; }
+.wf-contact-form input[type="subject"] { font-size: 0.95rem; background: #fff; color: #111; border: 1px solid #d1d5db; height: 32px; }
+.wf-contact-form input:not([type="submit"]) { font-size: 0.95rem; background: #fff; color: #111; border: 1px solid #d1d5db; height: 32px; }
 /* Reduce vertical spacing between rows from space-y-4 */
 .wf-contact-form.space-y-4 > * + * { margin-top: 0.75rem; }
 /* Make contact intro copy white regardless of legacy utility classes */
@@ -409,8 +377,7 @@ body[data-page='contact'] .content { color: #fff !important; }
   padding: 4px 8px;
   cursor: pointer;
 }
-.wf-reveal .wf-reveal-value { font-weight: 600; color: #111827; }
-.wf-reveal .wf-reveal-value { overflow-wrap: anywhere; }
+.wf-reveal .wf-reveal-value { font-weight: 600; color: #111827; overflow-wrap: anywhere; }
 .wf-reveal .wf-reveal-link { color: var(--primary_color, #87ac3a); text-decoration: none; }
 .wf-reveal .wf-reveal-link:hover { text-decoration: underline; }
 

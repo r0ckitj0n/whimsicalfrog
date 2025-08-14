@@ -21,7 +21,8 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--button-bg-primary, #87ac3a), white 70%);
 }
 /* ensure nested icon/text inherit brand color */
-.brand-button *, .brand-button svg { color: inherit; fill: currentcolor; }
+.brand-button * { color: inherit; fill: currentcolor; }
+.brand-button svg { color: inherit; fill: currentcolor; }
 
 /* Inventory navigation arrows */
 .nav-arrow {

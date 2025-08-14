@@ -28,28 +28,8 @@
 }
 
 /* Header overlay gradient - dark fade at top, transparent at bottom */
-.main-room-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 120px; /* Gradient height */
-    background: linear-gradient(to bottom, rgb(0 0 0 / 70%) 0%, rgb(0 0 0 / 40%) 50%, transparent 100%);
-    z-index: var(--z-base); /* Lower than header z-index */
-    pointer-events: none; /* Allow clicks through to doors */
-}
 
 /* Room page header visibility fixes */
-.room-page-header {
-    background: rgb(0 0 0 / 70%);
-    backdrop-filter: blur(5px);
-}
-
-.room-page-header * {
-    color: var(--brand-primary);
-    text-shadow: 1px 1px 2px rgb(0 0 0 / 80%);
-}
 
 /* ==============================================
    DOOR AREA SYSTEM
@@ -229,35 +209,57 @@
    ============================================== */
 
 /* Fix page header gradient - black at top fading to transparent at bottom */
-.main-room-section::before {
-    background: linear-gradient(to bottom, black 0%, transparent 100%) !important;
-    z-index: 1 !important; /* Lower than header content */
+.main-room-section::before { /* Lower than header content */ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 120px; pointer-events: none; background: linear-gradient(to bottom, black 0%, transparent 100%) !important; z-index: 1 !important; 
 }
 
 /* Remove text shadow from page header text and increase z-index */
-.room-page-header * {
-    text-shadow: none !important;
-    z-index: 100 !important; /* Higher than header background */
-    position: relative !important;
+.room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: 100 !important;  position: relative !important;
 }
 
 /* Ensure header text and links are above the gradient */
-.site-header,
-.site-header *,
-.header-container,
-.header-container *,
-.header-content,
+.site-header * {
+    z-index: 200 !important; /* Even higher than page header text */
+    position: relative !important;
+}
+.header-container * {
+    z-index: 200 !important; /* Even higher than page header text */
+    position: relative !important;
+}
+.header-content {
+    z-index: 200 !important; /* Even higher than page header text */
+    position: relative !important;
+}
 .header-content * {
     z-index: 200 !important; /* Even higher than page header text */
     position: relative !important;
 }
 
 /* Additional specificity for navigation links */
-.nav-links,
-.nav-links *,
-.nav-link,
-.logo-link,
-.logo-text,
+.nav-links {
+    z-index: 300 !important;
+    position: relative !important;
+    text-shadow: none !important;
+}
+.nav-links * {
+    z-index: 300 !important;
+    position: relative !important;
+    text-shadow: none !important;
+}
+.nav-link {
+    z-index: 300 !important;
+    position: relative !important;
+    text-shadow: none !important;
+}
+.logo-link {
+    z-index: 300 !important;
+    position: relative !important;
+    text-shadow: none !important;
+}
+.logo-text {
+    z-index: 300 !important;
+    position: relative !important;
+    text-shadow: none !important;
+}
 .cart-link {
     z-index: 300 !important;
     position: relative !important;

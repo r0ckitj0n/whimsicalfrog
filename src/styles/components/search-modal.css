@@ -59,5 +59,6 @@
 .search-result-title:hover { text-decoration: underline; }
 .search-result-description { color: #666; font-size: 14px; }
 
-.search-loading,
+.search-loading { text-align: center; padding: 40px; color: #666; }
+
 .search-no-results { text-align: center; padding: 40px; color: #666; }

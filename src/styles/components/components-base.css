@@ -4,22 +4,6 @@
 
 /* ===== UNIVERSAL PAGE HEADER ===== */
 /* Consistent header with fade effect used across all pages except rooms 1-5 */
-
-.site-header.universal-page-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: var(--gradient-header);
-    color: var(--brand-primary);
-    transition: all 0.3s ease-in-out;
-    --header-height: 80px; /* Default height for padding calculations */
-}
-.site-header.universal-page-header .header-container {
-    width: 100%;
-    padding: 0;
-    margin: 0;
-}
 .site-header.universal-page-header .header-content {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -98,16 +82,6 @@
     display: flex;
     justify-content: center;
 }
-.site-header.universal-page-header .search-container {
-    position: relative;
-    width: 100%;
-    max-width: 300px;
-}
-.site-header.universal-page-header .search-input-container {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
 .site-header.universal-page-header .search-icon {
     position: absolute;
     left: 12px;
@@ -143,12 +117,6 @@
     gap: 20px;
     justify-self: end;
     padding-right: 20px;
-}
-.site-header.universal-page-header .auth-links,
-.site-header.universal-page-header .user-menu {
-    display: flex;
-    align-items: center;
-    gap: 15px;
 }
 .site-header.universal-page-header .welcome-message {
     color: var(--brand-primary);
@@ -212,12 +180,6 @@
 }
 
 /* Page Content Positioning */
-.page-content,
-.main-content,
-.content-wrapper {
-    margin-top: calc(var(--header-height, 80px) + 10px);
-    padding-top: 10px;
-}
 
 /* ==============================================
    RESPONSIVE DESIGN
@@ -236,7 +198,6 @@
 @media (max-width: 768px) {
   .site-header.universal-page-header { --header-height: 60px; }
   .site-header.universal-page-header .mobile-menu-toggle { display: block; }
-  .site-header.universal-page-header .nav-links { display: none; }
   .site-header.universal-page-header .header-content { grid-template-columns: auto 1fr auto; }
   .site-header.universal-page-header .header-left { padding-left: 10px; }
   .site-header.universal-page-header .header-right { padding-right: 10px; }
@@ -258,16 +219,6 @@
 /* ==============================================
    MOBILE MENU
    ============================================== */
-
-.site-header.universal-page-header .mobile-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.7) 100%);
-    transition: all 0.3s ease-in-out;
-}
 .site-header.universal-page-header .mobile-menu.active {
     display: block;
 }
@@ -286,12 +237,26 @@
     transition: opacity 0.3s ease;
     display: block;
 }
-.site-header.universal-page-header .mobile-nav-link:hover,
-.site-header.universal-page-header .mobile-nav-link.active {
-    opacity: 0.8;
-}
 .site-header.universal-page-header .mobile-auth-section {
     color: var(--brand-primary, #87ac3a);
     padding-top: 15px;
     margin-top: 15px;
+}
+.site-header.universal-page-header .auth-links {
+    align-items: center;
+    display: flex;
+    gap: 15px;
+    position: relative;
+}
+.site-header.universal-page-header .user-menu {
+    align-items: center;
+    display: flex;
+    gap: 15px;
+    position: relative;
+}
+.site-header.universal-page-header .mobile-nav-link:hover {
+  opacity: 0.8;
+}
+.site-header.universal-page-header .mobile-nav-link.active {
+  opacity: 0.8;
 }

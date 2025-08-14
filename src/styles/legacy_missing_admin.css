@@ -122,39 +122,6 @@
     font-size: 0.875rem;
 }
 
-.admin-form-input,
-.admin-form-textarea,
-.admin-form-select {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-    background: white;
-}
-
-.admin-form-input:focus,
-.admin-form-textarea:focus,
-.admin-form-select:focus {
-    outline: none;
-    border-color: var(--brand-primary, #87ac3a);
-    box-shadow: 0 0 0 2px rgb(135 172 58 / 20%);
-}
-
-.admin-form-input-sm,
-.admin-form-select-sm {
-    padding: 0.5rem;
-    font-size: 0.75rem;
-}
-
-.admin-form-input-sm:focus,
-.admin-form-select-sm:focus {
-    outline: none;
-    border-color: var(--brand-primary);
-    box-shadow: 0 0 0 2px rgb(135 172 58 / 20%);
-}
-
 /* ==============================================
    ADMIN BUTTONS (ENHANCED)
    ============================================== */
@@ -407,9 +374,83 @@
     .admin-table {
         font-size: 0.75rem;
     }
-    
-    .admin-table th,
-    .admin-table td {
-        padding: 0.5rem;
-    }
+}
+
+.admin-form-input-sm {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+}
+
+.admin-form-select-sm {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+}
+
+.admin-form-input-sm:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px rgb(135 172 58 / 20%);
+    outline: none;
+}
+
+.admin-form-select-sm:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px rgb(135 172 58 / 20%);
+    outline: none;
+}
+
+.admin-form-input {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.admin-form-textarea {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.admin-form-select {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.admin-form-input:focus {
+    border-color: var(--brand-primary, #87ac3a);
+    box-shadow: 0 0 0 2px rgb(135 172 58 / 20%);
+    outline: none;
+}
+
+.admin-form-textarea:focus {
+    border-color: var(--brand-primary, #87ac3a);
+    box-shadow: 0 0 0 2px rgb(135 172 58 / 20%);
+    outline: none;
+}
+
+.admin-form-select:focus {
+    border-color: var(--brand-primary, #87ac3a);
+    box-shadow: 0 0 0 2px rgb(135 172 58 / 20%);
+    outline: none;
+}
+
+@media (max-width: 768px) {
+.admin-table th {
+  padding: 0.5rem;
+}
+.admin-table td {
+  padding: 0.5rem;
+}
 }

@@ -2,8 +2,8 @@
    Keeps modals consistent without relying on inline utilities only. */
 
 /* Hide when toggled with .hidden (utility-friendly) */
-#testEmailSendModal.hidden,
-#emailTemplateEditModal.hidden,
+#testEmailSendModal.hidden { display: none; }
+#emailTemplateEditModal.hidden { display: none; }
 #templateAssignmentModal.hidden { display: none; }
 
 /* Overlay ensures full-screen coverage and visual consistency if utilities change */
@@ -28,21 +28,34 @@
 }
 
 /* Scrollable body area when used inside a flex column layout */
-.admin-modal .modal-body,
+.admin-modal .modal-body { overflow-y: auto; }
 .admin-modal .flex-1 { overflow-y: auto; }
 
 /* Buttons focus visibility for accessibility */
-.admin-modal button:focus-visible,
-.admin-modal [tabindex]:focus-visible,
-.admin-modal select:focus-visible,
-.admin-modal input:focus-visible,
+.admin-modal button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+.admin-modal [tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+.admin-modal select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+.admin-modal input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
 .admin-modal textarea:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
 }
 
 /* Prevent layout shift on overlay show/hide */
-html.modal-open, body.modal-open { overflow: hidden !important; }
+html.modal-open { overflow: hidden !important; }
+body.modal-open { overflow: hidden !important; }
 body.wf-no-scroll { overflow: hidden !important; }
 
 /* Inline field error messaging */

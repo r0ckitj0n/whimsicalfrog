@@ -19,13 +19,13 @@
     margin-bottom: 0.75rem;
 }
 
-.detailed-item-modal .flex-shrink-0 {
-    flex-shrink: 0 !important;
-    margin-right: 0.75rem;
-}
-
 /* Fix text overflow in selling points */
-.detailed-item-modal .text-gray-700,
+.detailed-item-modal .text-gray-700 {
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    hyphens: auto !important;
+    max-width: 100% !important;
+}
 .detailed-item-modal .text-gray-600 {
     overflow-wrap: break-word !important;
     word-wrap: break-word !important;
@@ -34,11 +34,6 @@
 }
 
 /* Ensure modal content is scrollable if needed */
-.detailed-item-modal .modal-body {
-    max-height: 80vh;
-    overflow-y: auto;
-    padding-bottom: 2rem;
-}
 
 /* Fix for selling points title */
 .detailed-item-modal h3 {
@@ -48,9 +43,30 @@
 }
 
 /* Fix oversized icons in selling points - aggressive sizing */
-.detailed-item-modal svg,
-.detailed-item-modal .flex-shrink-0 svg,
-.detailed-item-modal .text-green-500 svg,
+.detailed-item-modal svg {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
+}
+.detailed-item-modal .flex-shrink-0 svg {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
+}
+.detailed-item-modal .text-green-500 svg {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
+}
 .detailed-item-modal .text-green-600 svg {
     width: 16px !important;
     height: 16px !important;
@@ -61,34 +77,64 @@
 }
 
 /* Specific targeting for w-3, w-4, w-5, w-6 classes on SVGs */
-.detailed-item-modal svg.w-3,
+.detailed-item-modal svg.w-3 {
+    width: 12px !important;
+    height: 12px !important;
+}
 .detailed-item-modal svg.h-3 {
     width: 12px !important;
     height: 12px !important;
 }
 
-.detailed-item-modal svg.w-4,
+.detailed-item-modal svg.w-4 {
+    width: 16px !important;
+    height: 16px !important;
+}
+
 .detailed-item-modal svg.h-4 {
     width: 16px !important;
     height: 16px !important;
 }
 
-.detailed-item-modal svg.w-5,
+.detailed-item-modal svg.w-5 {
+    width: 20px !important;
+    height: 20px !important;
+}
+
 .detailed-item-modal svg.h-5 {
     width: 20px !important;
     height: 20px !important;
 }
 
-.detailed-item-modal svg.w-6,
+.detailed-item-modal svg.w-6 {
+    width: 24px !important;
+    height: 24px !important;
+}
+
 .detailed-item-modal svg.h-6 {
     width: 24px !important;
     height: 24px !important;
 }
 
 /* Override any container sizes that might affect icons */
-.detailed-item-modal .w-6,
-.detailed-item-modal .h-6,
-.detailed-item-modal .w-5,
+.detailed-item-modal .w-6 {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+}
+.detailed-item-modal .h-6 {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+}
+.detailed-item-modal .w-5 {
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+}
 .detailed-item-modal .h-5 {
     width: 20px !important;
     height: 20px !important;
@@ -97,23 +143,36 @@
 }
 
 /* Fix any icons with inline width/height attributes */
-.detailed-item-modal svg[width],
-.detailed-item-modal svg[height],
-.detailed-item-modal svg[style*="width"],
+.detailed-item-modal svg[width] {
+    width: 16px !important;
+    height: 16px !important;
+}
+.detailed-item-modal svg[height] {
+    width: 16px !important;
+    height: 16px !important;
+}
+.detailed-item-modal svg[style*="width"] {
+    width: 16px !important;
+    height: 16px !important;
+}
 .detailed-item-modal svg[style*="height"] {
     width: 16px !important;
     height: 16px !important;
 }
 
 /* Specific fix for check marks and arrows */
-.detailed-item-modal path[d*="M5 13l4 4L19 7"],  /* Common checkmark path */
-.detailed-item-modal path[d*="M9 5l7 7-7 7"],   /* Common arrow path */
-.detailed-item-modal .flex-shrink-0 {
+.detailed-item-modal path[d*="M5 13l4 4L19 7"] {
+    transform: scale(1) !important;  /* Reset any scaling */
+}
+.detailed-item-modal path[d*="M9 5l7 7-7 7"] {
     transform: scale(1) !important;  /* Reset any scaling */
 }
 
 /* Ensure icon containers don't expand */
 .detailed-item-modal .flex-shrink-0 {
+    transform: scale(1) !important;
+    
+    margin-right: 0.75rem;
     flex-shrink: 0 !important;
     width: 20px !important;
     height: 20px !important;
@@ -159,6 +218,9 @@
 
 /* Prevent horizontal overflow in modal body */
 .detailed-item-modal .modal-body {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-bottom: 2rem;
     overflow-x: hidden !important;
     max-width: 100%;
 }

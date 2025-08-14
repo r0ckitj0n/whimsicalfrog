@@ -11,11 +11,11 @@
 .btn--db-export:hover { background-color: #be185d; }
 
 /* Import */
-.btn--db-import-sql,
-.btn--db-import-csv,
+.btn--db-import-sql { background-color: #7c3aed; color: #fff; }
+.btn--db-import-csv { background-color: #7c3aed; color: #fff; }
 .btn--db-import-json { background-color: #7c3aed; color: #fff; }
-.btn--db-import-sql:hover,
-.btn--db-import-csv:hover,
+.btn--db-import-sql:hover { background-color: #6d28d9; }
+.btn--db-import-csv:hover { background-color: #6d28d9; }
 .btn--db-import-json:hover { background-color: #6d28d9; }
 
 /* Query actions */
@@ -50,17 +50,19 @@
 .btn--db-foreign-keys:hover { background-color: #0f766e; }
 
 /* Open tool modals */
-.btn--db-show-export,
+.btn--db-show-export { background-color: #db2777; color: #fff; }
 .btn--db-export-tools { background-color: #db2777; color: #fff; }
-.btn--db-show-export:hover,
+.btn--db-show-export:hover { background-color: #be185d; }
 .btn--db-export-tools:hover { background-color: #be185d; }
 
-.btn--db-show-import,
+.btn--db-show-import { background-color: #7c3aed; color: #fff; }
+
 .btn--db-import-tools { background-color: #7c3aed; color: #fff; }
-.btn--db-show-import:hover,
+.btn--db-show-import:hover { background-color: #6d28d9; }
 .btn--db-import-tools:hover { background-color: #6d28d9; }
 
-.btn--db-show-schema,
+.btn--db-show-schema { background-color: #0891b2; color: #fff; }
+
 .btn--db-schema-browser { background-color: #0891b2; color: #fff; }
-.btn--db-show-schema:hover,
+.btn--db-show-schema:hover { background-color: #0e7490; }
 .btn--db-schema-browser:hover { background-color: #0e7490; }

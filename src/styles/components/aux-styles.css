@@ -20,7 +20,8 @@
 
 /* Adjust padding for smaller screens where header height is reduced */
 @media (max-width: 768px) {
-  .page-content-container, .fullscreen-container { --header-height: 60px; }
+  .page-content-container { --header-height: 60px; }
+  .fullscreen-container { --header-height: 60px; }
 }
 
 /* Overlay Classes */
@@ -61,7 +62,6 @@
 .card-standard:hover { box-shadow: var(--card-shadow-hover); transform: translateY(-2px); }
 
 /* ADMIN CSS */
-.admin-modal-overlay { align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; background: rgba(0, 0, 0, 0.5); }
 .admin-modal-overlay:not(.show) { display: none !important; }
 .admin-modal-overlay.show { display: flex !important; }
 

@@ -3,7 +3,7 @@
 > touch hot && vite --port 5176 --port 5176
 
 
-  VITE v7.0.6  ready in 88 ms
+  VITE v7.0.6  ready in 90 ms
 
   ➜  Local:   http://localhost:5176/
   ➜  Network: use --host to expose

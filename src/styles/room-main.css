@@ -1,7 +1,4 @@
 /* Room Main utilities (Vite-managed) */
-body.wf-no-scroll {
-  overflow: hidden !important;
-}
 
 .door-interactive {
   cursor: pointer;

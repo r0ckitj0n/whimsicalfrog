@@ -179,3 +179,369 @@
 [Wed Aug 13 20:23:26 2025] [::1]:54092 Accepted
 [Wed Aug 13 20:23:26 2025] [::1]:54092 [200]: GET /
 [Wed Aug 13 20:23:26 2025] [::1]:54092 Closing
+[Wed Aug 13 20:24:31 2025] [::1]:54165 Accepted
+[Wed Aug 13 20:24:31 2025] [::1]:54165 [200]: GET /
+[Wed Aug 13 20:24:31 2025] [::1]:54165 Closing
+[Wed Aug 13 20:25:36 2025] [::1]:54241 Accepted
+[Wed Aug 13 20:25:36 2025] [::1]:54241 [200]: GET /
+[Wed Aug 13 20:25:36 2025] [::1]:54241 Closing
+[Wed Aug 13 20:26:41 2025] [::1]:54315 Accepted
+[Wed Aug 13 20:26:41 2025] [::1]:54315 [200]: GET /
+[Wed Aug 13 20:26:41 2025] [::1]:54315 Closing
+[Wed Aug 13 20:27:47 2025] [::1]:54396 Accepted
+[Wed Aug 13 20:27:47 2025] [::1]:54396 [200]: GET /
+[Wed Aug 13 20:27:47 2025] [::1]:54396 Closing
+[Wed Aug 13 20:28:52 2025] [::1]:55026 Accepted
+[Wed Aug 13 20:28:52 2025] [::1]:55026 [200]: GET /
+[Wed Aug 13 20:28:52 2025] [::1]:55026 Closing
+[Wed Aug 13 20:29:57 2025] [::1]:55679 Accepted
+[Wed Aug 13 20:29:57 2025] [::1]:55679 [200]: GET /
+[Wed Aug 13 20:29:57 2025] [::1]:55679 Closing
+[Wed Aug 13 20:31:02 2025] [::1]:56143 Accepted
+[Wed Aug 13 20:31:02 2025] [::1]:56143 [200]: GET /
+[Wed Aug 13 20:31:02 2025] [::1]:56143 Closing
+[Wed Aug 13 20:32:08 2025] [::1]:56215 Accepted
+[Wed Aug 13 20:32:08 2025] [::1]:56215 [200]: GET /
+[Wed Aug 13 20:32:08 2025] [::1]:56215 Closing
+[Wed Aug 13 20:33:13 2025] [::1]:56286 Accepted
+[Wed Aug 13 20:33:13 2025] [::1]:56286 [200]: GET /
+[Wed Aug 13 20:33:13 2025] [::1]:56286 Closing
+[Wed Aug 13 20:34:18 2025] [::1]:56359 Accepted
+[Wed Aug 13 20:34:18 2025] [::1]:56359 [200]: GET /
+[Wed Aug 13 20:34:18 2025] [::1]:56359 Closing
+[Wed Aug 13 20:35:23 2025] [::1]:56430 Accepted
+[Wed Aug 13 20:35:23 2025] [::1]:56430 [200]: GET /
+[Wed Aug 13 20:35:23 2025] [::1]:56430 Closing
+[Wed Aug 13 20:36:29 2025] [::1]:56516 Accepted
+[Wed Aug 13 20:36:29 2025] [::1]:56516 [200]: GET /
+[Wed Aug 13 20:36:29 2025] [::1]:56516 Closing
+[Wed Aug 13 20:37:34 2025] [::1]:56649 Accepted
+[Wed Aug 13 20:37:34 2025] [::1]:56649 [200]: GET /
+[Wed Aug 13 20:37:34 2025] [::1]:56649 Closing
+[Wed Aug 13 20:38:39 2025] [::1]:56750 Accepted
+[Wed Aug 13 20:38:39 2025] [::1]:56750 [200]: GET /
+[Wed Aug 13 20:38:39 2025] [::1]:56750 Closing
+[Wed Aug 13 20:39:44 2025] [::1]:56852 Accepted
+[Wed Aug 13 20:39:44 2025] [::1]:56852 [200]: GET /
+[Wed Aug 13 20:39:44 2025] [::1]:56852 Closing
+[Wed Aug 13 20:40:50 2025] [::1]:56945 Accepted
+[Wed Aug 13 20:40:50 2025] [::1]:56945 [200]: GET /
+[Wed Aug 13 20:40:50 2025] [::1]:56945 Closing
+[Wed Aug 13 20:41:55 2025] [::1]:57145 Accepted
+[Wed Aug 13 20:41:55 2025] [::1]:57145 [200]: GET /
+[Wed Aug 13 20:41:55 2025] [::1]:57145 Closing
+[Wed Aug 13 20:43:00 2025] [::1]:57302 Accepted
+[Wed Aug 13 20:43:00 2025] [::1]:57302 [200]: GET /
+[Wed Aug 13 20:43:00 2025] [::1]:57302 Closing
+[Wed Aug 13 20:44:05 2025] [::1]:57722 Accepted
+[Wed Aug 13 20:44:05 2025] [::1]:57722 [200]: GET /
+[Wed Aug 13 20:44:05 2025] [::1]:57722 Closing
+[Wed Aug 13 20:45:11 2025] [::1]:57811 Accepted
+[Wed Aug 13 20:45:11 2025] [::1]:57811 [200]: GET /
+[Wed Aug 13 20:45:11 2025] [::1]:57811 Closing
+[Wed Aug 13 20:46:16 2025] [::1]:57883 Accepted
+[Wed Aug 13 20:46:16 2025] [::1]:57883 [200]: GET /
+[Wed Aug 13 20:46:16 2025] [::1]:57883 Closing
+[Wed Aug 13 20:47:21 2025] [::1]:57964 Accepted
+[Wed Aug 13 20:47:21 2025] [::1]:57964 [200]: GET /
+[Wed Aug 13 20:47:21 2025] [::1]:57964 Closing
+[Wed Aug 13 20:48:26 2025] [::1]:58074 Accepted
+[Wed Aug 13 20:48:26 2025] [::1]:58074 [200]: GET /
+[Wed Aug 13 20:48:26 2025] [::1]:58074 Closing
+[Wed Aug 13 20:49:31 2025] [::1]:58471 Accepted
+[Wed Aug 13 20:49:31 2025] [::1]:58471 [200]: GET /
+[Wed Aug 13 20:49:31 2025] [::1]:58471 Closing
+[Wed Aug 13 20:50:37 2025] [::1]:58563 Accepted
+[Wed Aug 13 20:50:37 2025] [::1]:58563 [200]: GET /
+[Wed Aug 13 20:50:37 2025] [::1]:58563 Closing
+[Wed Aug 13 20:51:42 2025] [::1]:59516 Accepted
+[Wed Aug 13 20:51:42 2025] [::1]:59516 [200]: GET /
+[Wed Aug 13 20:51:42 2025] [::1]:59516 Closing
+[Wed Aug 13 20:52:47 2025] [::1]:59616 Accepted
+[Wed Aug 13 20:52:47 2025] [::1]:59616 [200]: GET /
+[Wed Aug 13 20:52:47 2025] [::1]:59616 Closing
+[Wed Aug 13 20:53:52 2025] [::1]:59699 Accepted
+[Wed Aug 13 20:53:52 2025] [::1]:59699 [200]: GET /
+[Wed Aug 13 20:53:52 2025] [::1]:59699 Closing
+[Wed Aug 13 20:54:57 2025] [::1]:59796 Accepted
+[Wed Aug 13 20:54:58 2025] [::1]:59796 [200]: GET /
+[Wed Aug 13 20:54:58 2025] [::1]:59796 Closing
+[Wed Aug 13 20:56:03 2025] [::1]:59898 Accepted
+[Wed Aug 13 20:56:03 2025] [::1]:59898 [200]: GET /
+[Wed Aug 13 20:56:03 2025] [::1]:59898 Closing
+[Wed Aug 13 20:57:08 2025] [::1]:60108 Accepted
+[Wed Aug 13 20:57:08 2025] [::1]:60108 [200]: GET /
+[Wed Aug 13 20:57:08 2025] [::1]:60108 Closing
+[Wed Aug 13 20:58:13 2025] [::1]:60204 Accepted
+[Wed Aug 13 20:58:13 2025] [::1]:60204 [200]: GET /
+[Wed Aug 13 20:58:13 2025] [::1]:60204 Closing
+[Wed Aug 13 20:59:18 2025] [::1]:60276 Accepted
+[Wed Aug 13 20:59:18 2025] [::1]:60276 [200]: GET /
+[Wed Aug 13 20:59:18 2025] [::1]:60276 Closing
+[Wed Aug 13 21:00:24 2025] [::1]:60347 Accepted
+[Wed Aug 13 21:00:24 2025] [::1]:60347 [200]: GET /
+[Wed Aug 13 21:00:24 2025] [::1]:60347 Closing
+[Wed Aug 13 21:01:29 2025] [::1]:60428 Accepted
+[Wed Aug 13 21:01:29 2025] [::1]:60428 [200]: GET /
+[Wed Aug 13 21:01:29 2025] [::1]:60428 Closing
+[Wed Aug 13 21:02:34 2025] [::1]:60510 Accepted
+[Wed Aug 13 21:02:34 2025] [::1]:60510 [200]: GET /
+[Wed Aug 13 21:02:34 2025] [::1]:60510 Closing
+[Wed Aug 13 21:03:39 2025] [::1]:60620 Accepted
+[Wed Aug 13 21:03:39 2025] [::1]:60620 [200]: GET /
+[Wed Aug 13 21:03:39 2025] [::1]:60620 Closing
+[Wed Aug 13 21:04:45 2025] [::1]:60715 Accepted
+[Wed Aug 13 21:04:45 2025] [::1]:60715 [200]: GET /
+[Wed Aug 13 21:04:45 2025] [::1]:60715 Closing
+[Wed Aug 13 21:05:50 2025] [::1]:60808 Accepted
+[Wed Aug 13 21:05:50 2025] [::1]:60808 [200]: GET /
+[Wed Aug 13 21:05:50 2025] [::1]:60808 Closing
+[Wed Aug 13 21:06:55 2025] [::1]:60918 Accepted
+[Wed Aug 13 21:06:55 2025] [::1]:60918 [200]: GET /
+[Wed Aug 13 21:06:55 2025] [::1]:60918 Closing
+[Wed Aug 13 21:08:00 2025] [::1]:61006 Accepted
+[Wed Aug 13 21:08:00 2025] [::1]:61006 [200]: GET /
+[Wed Aug 13 21:08:00 2025] [::1]:61006 Closing
+[Wed Aug 13 21:09:05 2025] [::1]:61105 Accepted
+[Wed Aug 13 21:09:05 2025] [::1]:61105 [200]: GET /
+[Wed Aug 13 21:09:05 2025] [::1]:61105 Closing
+[Wed Aug 13 21:10:11 2025] [::1]:61178 Accepted
+[Wed Aug 13 21:10:11 2025] [::1]:61178 [200]: GET /
+[Wed Aug 13 21:10:11 2025] [::1]:61178 Closing
+[Wed Aug 13 21:11:16 2025] [::1]:61273 Accepted
+[Wed Aug 13 21:11:16 2025] [::1]:61273 [200]: GET /
+[Wed Aug 13 21:11:16 2025] [::1]:61273 Closing
+[Wed Aug 13 21:12:21 2025] [::1]:61377 Accepted
+[Wed Aug 13 21:12:21 2025] [::1]:61377 [200]: GET /
+[Wed Aug 13 21:12:21 2025] [::1]:61377 Closing
+[Wed Aug 13 21:13:26 2025] [::1]:61534 Accepted
+[Wed Aug 13 21:13:26 2025] [::1]:61534 [200]: GET /
+[Wed Aug 13 21:13:26 2025] [::1]:61534 Closing
+[Wed Aug 13 21:14:31 2025] [::1]:61737 Accepted
+[Wed Aug 13 21:14:32 2025] [::1]:61737 [200]: GET /
+[Wed Aug 13 21:14:32 2025] [::1]:61737 Closing
+[Wed Aug 13 21:15:37 2025] [::1]:62038 Accepted
+[Wed Aug 13 21:15:37 2025] [::1]:62038 [200]: GET /
+[Wed Aug 13 21:15:37 2025] [::1]:62038 Closing
+[Wed Aug 13 21:16:42 2025] [::1]:62123 Accepted
+[Wed Aug 13 21:16:42 2025] [::1]:62123 [200]: GET /
+[Wed Aug 13 21:16:42 2025] [::1]:62123 Closing
+[Wed Aug 13 21:17:47 2025] [::1]:62201 Accepted
+[Wed Aug 13 21:17:47 2025] [::1]:62201 [200]: GET /
+[Wed Aug 13 21:17:47 2025] [::1]:62201 Closing
+[Wed Aug 13 21:18:52 2025] [::1]:62283 Accepted
+[Wed Aug 13 21:18:52 2025] [::1]:62283 [200]: GET /
+[Wed Aug 13 21:18:52 2025] [::1]:62283 Closing
+[Wed Aug 13 21:19:58 2025] [::1]:62355 Accepted
+[Wed Aug 13 21:19:58 2025] [::1]:62355 [200]: GET /
+[Wed Aug 13 21:19:58 2025] [::1]:62355 Closing
+[Wed Aug 13 21:21:03 2025] [::1]:62426 Accepted
+[Wed Aug 13 21:21:03 2025] [::1]:62426 [200]: GET /
+[Wed Aug 13 21:21:03 2025] [::1]:62426 Closing
+[Wed Aug 13 21:22:08 2025] [::1]:62511 Accepted
+[Wed Aug 13 21:22:08 2025] [::1]:62511 [200]: GET /
+[Wed Aug 13 21:22:08 2025] [::1]:62511 Closing
+[Wed Aug 13 21:23:13 2025] [::1]:62619 Accepted
+[Wed Aug 13 21:23:13 2025] [::1]:62619 [200]: GET /
+[Wed Aug 13 21:23:13 2025] [::1]:62619 Closing
+[Wed Aug 13 21:24:19 2025] [::1]:62701 Accepted
+[Wed Aug 13 21:24:19 2025] [::1]:62701 [200]: GET /
+[Wed Aug 13 21:24:19 2025] [::1]:62701 Closing
+[Wed Aug 13 21:25:24 2025] [::1]:62791 Accepted
+[Wed Aug 13 21:25:24 2025] [::1]:62791 [200]: GET /
+[Wed Aug 13 21:25:24 2025] [::1]:62791 Closing
+[Wed Aug 13 21:26:29 2025] [::1]:62913 Accepted
+[Wed Aug 13 21:26:29 2025] [::1]:62913 [200]: GET /
+[Wed Aug 13 21:26:29 2025] [::1]:62913 Closing
+[Wed Aug 13 21:27:34 2025] [::1]:63000 Accepted
+[Wed Aug 13 21:27:34 2025] [::1]:63000 [200]: GET /
+[Wed Aug 13 21:27:34 2025] [::1]:63000 Closing
+[Wed Aug 13 21:28:39 2025] [::1]:63207 Accepted
+[Wed Aug 13 21:28:39 2025] [::1]:63207 [200]: GET /
+[Wed Aug 13 21:28:39 2025] [::1]:63207 Closing
+[Wed Aug 13 21:29:45 2025] [::1]:63306 Accepted
+[Wed Aug 13 21:29:45 2025] [::1]:63306 [200]: GET /
+[Wed Aug 13 21:29:45 2025] [::1]:63306 Closing
+[Wed Aug 13 21:30:50 2025] [::1]:63378 Accepted
+[Wed Aug 13 21:30:50 2025] [::1]:63378 [200]: GET /
+[Wed Aug 13 21:30:50 2025] [::1]:63378 Closing
+[Wed Aug 13 21:31:55 2025] [::1]:63451 Accepted
+[Wed Aug 13 21:31:55 2025] [::1]:63451 [200]: GET /
+[Wed Aug 13 21:31:55 2025] [::1]:63451 Closing
+[Wed Aug 13 21:33:00 2025] [::1]:63522 Accepted
+[Wed Aug 13 21:33:00 2025] [::1]:63522 [200]: GET /
+[Wed Aug 13 21:33:00 2025] [::1]:63522 Closing
+[Wed Aug 13 21:34:06 2025] [::1]:63594 Accepted
+[Wed Aug 13 21:34:06 2025] [::1]:63594 [200]: GET /
+[Wed Aug 13 21:34:06 2025] [::1]:63594 Closing
+[Wed Aug 13 21:35:11 2025] [::1]:63665 Accepted
+[Wed Aug 13 21:35:11 2025] [::1]:63665 [200]: GET /
+[Wed Aug 13 21:35:11 2025] [::1]:63665 Closing
+[Wed Aug 13 21:36:16 2025] [::1]:63742 Accepted
+[Wed Aug 13 21:36:16 2025] [::1]:63742 [200]: GET /
+[Wed Aug 13 21:36:16 2025] [::1]:63742 Closing
+[Wed Aug 13 21:37:05 2025] [::1]:63797 Accepted
+[Wed Aug 13 21:37:05 2025] [::1]:63797 [200]: GET /
+[Wed Aug 13 21:37:05 2025] [::1]:63797 Closing
+[Wed Aug 13 21:37:05 2025] [::1]:63798 Accepted
+[Wed Aug 13 21:37:05 2025] [::1]:63798 [200]: GET /images/signs/sign_welcome.webp
+[Wed Aug 13 21:37:05 2025] [::1]:63798 Closing
+[Wed Aug 13 21:37:05 2025] [::1]:63805 Accepted
+[Wed Aug 13 21:37:05 2025] [::1]:63805 [200]: GET /favicon.ico
+[Wed Aug 13 21:37:05 2025] [::1]:63805 Closing
+[Wed Aug 13 21:37:16 2025] [::1]:63819 Accepted
+[Wed Aug 13 21:37:16 2025] [::1]:63819 [200]: GET /room_main
+[Wed Aug 13 21:37:16 2025] [::1]:63819 Closing
+[Wed Aug 13 21:37:16 2025] [::1]:63820 Accepted
+[Wed Aug 13 21:37:16 2025] [::1]:63828 Accepted
+[Wed Aug 13 21:37:16 2025] [::1]:63829 Accepted
+[Wed Aug 13 21:37:16 2025] [::1]:63830 Accepted
+[Wed Aug 13 21:37:16 2025] [::1]:63831 Accepted
+[Wed Aug 13 21:37:16 2025] [::1]:63820 [200]: GET /images/signs/sign_door_room1.webp
+[Wed Aug 13 21:37:16 2025] [::1]:63828 [200]: GET /images/signs/sign_door_room2.webp
+[Wed Aug 13 21:37:16 2025] [::1]:63829 [200]: GET /images/signs/sign_door_room3.webp
+[Wed Aug 13 21:37:16 2025] [::1]:63830 [200]: GET /images/signs/sign_door_room4.webp
+[Wed Aug 13 21:37:16 2025] [::1]:63831 [200]: GET /images/signs/sign_door_room5.webp
+[Wed Aug 13 21:37:16 2025] [::1]:63820 Closing
+[Wed Aug 13 21:37:16 2025] [::1]:63829 Closing
+[Wed Aug 13 21:37:16 2025] [::1]:63828 Closing
+[Wed Aug 13 21:37:16 2025] [::1]:63830 Closing
+[Wed Aug 13 21:37:16 2025] [::1]:63831 Closing
+[Wed Aug 13 21:37:16 2025] [::1]:63833 Accepted
+[Wed Aug 13 21:37:16 2025] [::1]:63833 [200]: GET /favicon.ico
+[Wed Aug 13 21:37:16 2025] [::1]:63833 Closing
+[Wed Aug 13 21:37:21 2025] [::1]:63842 Accepted
+[Wed Aug 13 21:37:21 2025] [::1]:63842 [200]: GET /
+[Wed Aug 13 21:37:21 2025] [::1]:63842 Closing
+[Wed Aug 13 21:38:27 2025] [::1]:63931 Accepted
+[Wed Aug 13 21:38:27 2025] [::1]:63931 [200]: GET /
+[Wed Aug 13 21:38:27 2025] [::1]:63931 Closing
+[Wed Aug 13 21:39:32 2025] [::1]:64050 Accepted
+[Wed Aug 13 21:39:32 2025] [::1]:64050 [200]: GET /
+[Wed Aug 13 21:39:32 2025] [::1]:64050 Closing
+[Wed Aug 13 21:40:37 2025] [::1]:64268 Accepted
+[Wed Aug 13 21:40:37 2025] [::1]:64268 [200]: GET /
+[Wed Aug 13 21:40:37 2025] [::1]:64268 Closing
+[Wed Aug 13 21:41:42 2025] [::1]:64368 Accepted
+[Wed Aug 13 21:41:42 2025] [::1]:64368 [200]: GET /
+[Wed Aug 13 21:41:42 2025] [::1]:64368 Closing
+[Wed Aug 13 21:42:47 2025] [::1]:64493 Accepted
+[Wed Aug 13 21:42:48 2025] [::1]:64493 [200]: GET /
+[Wed Aug 13 21:42:48 2025] [::1]:64493 Closing
+[Wed Aug 13 21:43:53 2025] [::1]:64582 Accepted
+[Wed Aug 13 21:43:53 2025] [::1]:64582 [200]: GET /
+[Wed Aug 13 21:43:53 2025] [::1]:64582 Closing
+[Wed Aug 13 21:44:58 2025] [::1]:64683 Accepted
+[Wed Aug 13 21:44:58 2025] [::1]:64683 [200]: GET /
+[Wed Aug 13 21:44:58 2025] [::1]:64683 Closing
+[Wed Aug 13 21:46:03 2025] [::1]:64770 Accepted
+[Wed Aug 13 21:46:03 2025] [::1]:64770 [200]: GET /
+[Wed Aug 13 21:46:03 2025] [::1]:64770 Closing
+[Wed Aug 13 21:47:08 2025] [::1]:64877 Accepted
+[Wed Aug 13 21:47:08 2025] [::1]:64877 [200]: GET /
+[Wed Aug 13 21:47:08 2025] [::1]:64877 Closing
+[Wed Aug 13 21:48:14 2025] [::1]:64964 Accepted
+[Wed Aug 13 21:48:14 2025] [::1]:64964 [200]: GET /
+[Wed Aug 13 21:48:14 2025] [::1]:64964 Closing
+[Wed Aug 13 21:49:19 2025] [::1]:65173 Accepted
+[Wed Aug 13 21:49:19 2025] [::1]:65173 [200]: GET /
+[Wed Aug 13 21:49:19 2025] [::1]:65173 Closing
+[Wed Aug 13 21:50:24 2025] [::1]:65256 Accepted
+[Wed Aug 13 21:50:24 2025] [::1]:65256 [200]: GET /
+[Wed Aug 13 21:50:24 2025] [::1]:65256 Closing
+[Wed Aug 13 21:51:29 2025] [::1]:65327 Accepted
+[Wed Aug 13 21:51:29 2025] [::1]:65327 [200]: GET /
+[Wed Aug 13 21:51:29 2025] [::1]:65327 Closing
+[Wed Aug 13 21:52:34 2025] [::1]:65417 Accepted
+[Wed Aug 13 21:52:35 2025] [::1]:65417 [200]: GET /
+[Wed Aug 13 21:52:35 2025] [::1]:65417 Closing
+[Wed Aug 13 21:53:40 2025] [::1]:65499 Accepted
+[Wed Aug 13 21:53:40 2025] [::1]:65499 [200]: GET /
+[Wed Aug 13 21:53:40 2025] [::1]:65499 Closing
+[Wed Aug 13 21:54:45 2025] [::1]:49196 Accepted
+[Wed Aug 13 21:54:45 2025] [::1]:49196 [200]: GET /
+[Wed Aug 13 21:54:45 2025] [::1]:49196 Closing
+[Wed Aug 13 21:55:50 2025] [::1]:49285 Accepted
+[Wed Aug 13 21:55:50 2025] [::1]:49285 [200]: GET /
+[Wed Aug 13 21:55:50 2025] [::1]:49285 Closing
+[Wed Aug 13 21:56:55 2025] [::1]:49370 Accepted
+[Wed Aug 13 21:56:55 2025] [::1]:49370 [200]: GET /
+[Wed Aug 13 21:56:55 2025] [::1]:49370 Closing
+[Wed Aug 13 21:58:01 2025] [::1]:49462 Accepted
+[Wed Aug 13 21:58:01 2025] [::1]:49462 [200]: GET /
+[Wed Aug 13 21:58:01 2025] [::1]:49462 Closing
+[Wed Aug 13 21:59:06 2025] [::1]:49585 Accepted
+[Wed Aug 13 21:59:06 2025] [::1]:49585 [200]: GET /
+[Wed Aug 13 21:59:06 2025] [::1]:49585 Closing
+[Wed Aug 13 22:00:11 2025] [::1]:49719 Accepted
+[Wed Aug 13 22:00:11 2025] [::1]:49719 [200]: GET /
+[Wed Aug 13 22:00:11 2025] [::1]:49719 Closing
+[Wed Aug 13 22:01:16 2025] [::1]:49933 Accepted
+[Wed Aug 13 22:01:16 2025] [::1]:49933 [200]: GET /
+[Wed Aug 13 22:01:16 2025] [::1]:49933 Closing
+[Wed Aug 13 22:02:03 2025] [::1]:49990 Accepted
+[Wed Aug 13 22:02:03 2025] [::1]:49990 [200]: GET /room_main
+[Wed Aug 13 22:02:03 2025] [::1]:49990 Closing
+[Wed Aug 13 22:02:03 2025] [::1]:49998 Accepted
+[Wed Aug 13 22:02:03 2025] [::1]:49999 Accepted
+[Wed Aug 13 22:02:03 2025] [::1]:50000 Accepted
+[Wed Aug 13 22:02:03 2025] [::1]:50001 Accepted
+[Wed Aug 13 22:02:03 2025] [::1]:49998 [200]: GET /images/signs/sign_door_room2.webp
+[Wed Aug 13 22:02:03 2025] [::1]:49999 [200]: GET /images/signs/sign_door_room3.webp
+[Wed Aug 13 22:02:03 2025] [::1]:50000 [200]: GET /images/signs/sign_door_room4.webp
+[Wed Aug 13 22:02:03 2025] [::1]:50001 [200]: GET /images/signs/sign_door_room5.webp
+[Wed Aug 13 22:02:03 2025] [::1]:50002 Accepted
+[Wed Aug 13 22:02:03 2025] [::1]:50002 [200]: GET /images/signs/sign_door_room1.webp
+[Wed Aug 13 22:02:03 2025] [::1]:49998 Closing
+[Wed Aug 13 22:02:03 2025] [::1]:49999 Closing
+[Wed Aug 13 22:02:03 2025] [::1]:50000 Closing
+[Wed Aug 13 22:02:03 2025] [::1]:50001 Closing
+[Wed Aug 13 22:02:03 2025] [::1]:50002 Closing
+[Wed Aug 13 22:02:03 2025] [::1]:50003 Accepted
+[Wed Aug 13 22:02:03 2025] [::1]:50003 [200]: GET /favicon.ico
+[Wed Aug 13 22:02:03 2025] [::1]:50003 Closing
+[Wed Aug 13 22:02:11 2025] [::1]:50013 Accepted
+[Wed Aug 13 22:02:11 2025] [::1]:50013 [200]: GET /
+[Wed Aug 13 22:02:11 2025] [::1]:50013 Closing
+[Wed Aug 13 22:02:11 2025] [::1]:50020 Accepted
+[Wed Aug 13 22:02:11 2025] [::1]:50020 [200]: GET /images/signs/sign_welcome.webp
+[Wed Aug 13 22:02:11 2025] [::1]:50020 Closing
+[Wed Aug 13 22:02:11 2025] [::1]:50022 Accepted
+[Wed Aug 13 22:02:11 2025] [::1]:50022 [200]: GET /favicon.ico
+[Wed Aug 13 22:02:11 2025] [::1]:50022 Closing
+[Wed Aug 13 22:02:19 2025] [::1]:50033 Accepted
+[Wed Aug 13 22:02:19 2025] [::1]:50033 [200]: GET /room_main
+[Wed Aug 13 22:02:19 2025] [::1]:50033 Closing
+[Wed Aug 13 22:02:19 2025] [::1]:50040 Accepted
+[Wed Aug 13 22:02:19 2025] [::1]:50043 Accepted
+[Wed Aug 13 22:02:19 2025] [::1]:50040 [200]: GET /images/signs/sign_door_room1.webp
+[Wed Aug 13 22:02:19 2025] [::1]:50040 Closing
+[Wed Aug 13 22:02:19 2025] [::1]:50044 Accepted
+[Wed Aug 13 22:02:19 2025] [::1]:50045 Accepted
+[Wed Aug 13 22:02:19 2025] [::1]:50046 Accepted
+[Wed Aug 13 22:02:19 2025] [::1]:50043 [200]: GET /images/signs/sign_door_room2.webp
+[Wed Aug 13 22:02:19 2025] [::1]:50044 [200]: GET /images/signs/sign_door_room3.webp
+[Wed Aug 13 22:02:19 2025] [::1]:50045 [200]: GET /images/signs/sign_door_room4.webp
+[Wed Aug 13 22:02:19 2025] [::1]:50046 [200]: GET /images/signs/sign_door_room5.webp
+[Wed Aug 13 22:02:19 2025] [::1]:50044 Closing
+[Wed Aug 13 22:02:19 2025] [::1]:50043 Closing
+[Wed Aug 13 22:02:19 2025] [::1]:50045 Closing
+[Wed Aug 13 22:02:19 2025] [::1]:50046 Closing
+[Wed Aug 13 22:02:19 2025] [::1]:50047 Accepted
+[Wed Aug 13 22:02:19 2025] [::1]:50047 [200]: GET /favicon.ico
+[Wed Aug 13 22:02:19 2025] [::1]:50047 Closing
+[Wed Aug 13 22:02:21 2025] [::1]:50051 Accepted
+[Wed Aug 13 22:02:21 2025] [::1]:50051 [200]: GET /
+[Wed Aug 13 22:02:21 2025] [::1]:50051 Closing
+[Wed Aug 13 22:02:22 2025] [::1]:50054 Accepted
+[Wed Aug 13 22:02:22 2025] [::1]:50054 [200]: GET /about
+[Wed Aug 13 22:02:22 2025] [::1]:50054 Closing
+[Wed Aug 13 22:02:22 2025] [::1]:50063 Accepted
+[Wed Aug 13 22:02:22 2025] [::1]:50063 [200]: GET /favicon.ico
+[Wed Aug 13 22:02:22 2025] [::1]:50063 Closing
+[Wed Aug 13 22:03:27 2025] [::1]:50132 Accepted
+[Wed Aug 13 22:03:27 2025] [::1]:50132 [200]: GET /
+[Wed Aug 13 22:03:27 2025] [::1]:50132 Closing
+[Wed Aug 13 22:04:32 2025] [::1]:50203 Accepted
+[Wed Aug 13 22:04:32 2025] [::1]:50203 [200]: GET /
+[Wed Aug 13 22:04:32 2025] [::1]:50203 Closing

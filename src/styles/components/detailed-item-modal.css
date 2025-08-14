@@ -14,14 +14,6 @@
 }
 
 /* Prevent container from stretching to entire viewport width */
-.detailed-item-modal-container {
-    margin: 20px auto !important;  /* small safe margin */
-    width: 75vw !important;   /* Exactly 75% of viewport width */
-    max-width: 75vw !important;   /* Exactly 75% of viewport width */
-    max-height: 90vh !important;
-    overflow-y: auto !important;  /* allow vertical scrolling if needed */
-    overflow-x: hidden !important;  /* prevent horizontal scrolling */
-}
 
 /* Remove any transforms or oversized layout on buttons rendered inside the modal */
 /* maintain original button transform; only adjust sizing */
@@ -32,7 +24,11 @@
 }
 
 /* Fix Add to Cart button width */
-.detailed-item-modal .wf-add-to-cart-btn,
+.detailed-item-modal .wf-add-to-cart-btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
 .detailed-item-modal .btn--detailed-add-to-cart {
     width: 100% !important;
     max-width: 100% !important;
@@ -47,8 +43,7 @@
 }
 
 /* Ensure modal content doesn't overflow */
-.detailed-item-modal .modal-content,
-.detailed-item-modal-container .modal-content {
+.detailed-item-modal .modal-content {
     overflow-x: hidden !important;
     overflow-y: auto !important;
     max-width: 100% !important;
@@ -74,9 +69,111 @@
 }
 
 /* FINAL NUCLEAR FIX: Absolutely minimal quantity buttons */
-.detailed-item-modal .btn--qty,
-.detailed-item-modal .quantity-selector .btn--qty,
-.detailed-item-modal .flex .btn--qty,
+.detailed-item-modal .btn--qty {
+    /* Absolutely minimal sizing */
+    width: 14px !important;
+    min-width: 14px !important;
+    max-width: 14px !important;
+    height: 14px !important;
+    
+    /* Remove ALL padding and margin */
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    /* Override Tailwind utility classes */
+    --tw-space-x-reverse: 0 !important;
+    --tw-space-y-reverse: 0 !important;
+    
+    /* Layout and appearance */
+    border: 1px solid #ccc !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+.detailed-item-modal .quantity-selector .btn--qty {
+    /* Absolutely minimal sizing */
+    width: 14px !important;
+    min-width: 14px !important;
+    max-width: 14px !important;
+    height: 14px !important;
+    
+    /* Remove ALL padding and margin */
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    /* Override Tailwind utility classes */
+    --tw-space-x-reverse: 0 !important;
+    --tw-space-y-reverse: 0 !important;
+    
+    /* Layout and appearance */
+    border: 1px solid #ccc !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+.detailed-item-modal .flex .btn--qty {
+    /* Absolutely minimal sizing */
+    width: 14px !important;
+    min-width: 14px !important;
+    max-width: 14px !important;
+    height: 14px !important;
+    
+    /* Remove ALL padding and margin */
+    padding: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    
+    /* Override Tailwind utility classes */
+    --tw-space-x-reverse: 0 !important;
+    --tw-space-y-reverse: 0 !important;
+    
+    /* Layout and appearance */
+    border: 1px solid #ccc !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
 .detailed-item-modal-container .btn--qty {
     /* Absolutely minimal sizing */
     width: 14px !important;
@@ -114,7 +211,11 @@
 }
 
 /* Target SVG icons inside buttons to make them smaller */
-.detailed-item-modal .btn--qty svg,
+.detailed-item-modal .btn--qty svg {
+    width: 8px !important;
+    height: 8px !important;
+    flex-shrink: 0 !important;
+}
 .detailed-item-modal .quantity-selector .btn--qty svg {
     width: 8px !important;
     height: 8px !important;
@@ -127,7 +228,6 @@
 }
 
 /* NUCLEAR FIX: Completely eliminate horizontal scrollbar at container level */
-.detailed-item-modal-container,
 .detailed-item-modal {
     max-width: 75vw !important;
     width: 75vw !important;
@@ -138,13 +238,14 @@
 }
 
 /* Hide horizontal scrollbar but keep vertical */
-.detailed-item-modal-container::-webkit-scrollbar-x,
+.detailed-item-modal-container::-webkit-scrollbar-x {
+    display: none !important;
+}
 .detailed-item-modal::-webkit-scrollbar-x {
     display: none !important;
 }
 
 /* Force modal body to clip overflow */
-.detailed-item-modal .modal-body,
 .detailed-item-modal-container .modal-body {
     overflow-x: hidden !important;
     overflow-y: visible !important;
@@ -153,9 +254,36 @@
 }
 
 /* Make quantity input field narrower - target semantic class */
-.detailed-item-modal .input--qty,
-.detailed-item-modal .quantity-selector input.input--qty,
-.detailed-item-modal input.input--qty,
+.detailed-item-modal .input--qty {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    text-align: center !important;
+    padding: 1px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 11px !important;
+}
+.detailed-item-modal .quantity-selector input.input--qty {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    text-align: center !important;
+    padding: 1px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 11px !important;
+}
+.detailed-item-modal input.input--qty {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    text-align: center !important;
+    padding: 1px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 11px !important;
+}
 .detailed-item-modal-container .input--qty {
     width: 30px !important;
     min-width: 30px !important;

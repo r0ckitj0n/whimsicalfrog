@@ -37,22 +37,30 @@ function extractProductData(icon) {
   return null;
 }
 
-// Shared hide timer for cross-icon persistence (cleared on mouseover)
-let hideTimer = null;
+// Use global popup scheduling API where available
+function getPopupApi() {
+  return {
+    show: window.showGlobalPopup || (parent && parent.showGlobalPopup),
+    hide: window.hideGlobalPopup || (parent && parent.hideGlobalPopup),
+    scheduleHide: window.scheduleHideGlobalPopup || (parent && parent.scheduleHideGlobalPopup),
+    cancelHide: window.cancelHideGlobalPopup || (parent && parent.cancelHideGlobalPopup),
+  };
+}
 
 /** Delegated hover / click handlers attached to document once. */
 export function attachDelegatedItemEvents() {
-  if (document.body.hasAttribute('data-wf-room-delegated-listeners')) return;
+  if (document.body.hasAttribute('data-wf-room-delegated-listeners')) {
+    console.warn('[eventManager] Delegated listeners already attached; skipping duplicate attachment');
+    return;
+  }
   document.body.setAttribute('data-wf-room-delegated-listeners', 'true');
+  console.log('[eventManager] Delegated listeners attached');
 
   // Use mouseover/mouseout (bubbling) with guards – works reliably in iframes
   document.addEventListener('mouseover', e => {
     // cancel any pending hide since pointer is back over icon or popup
-    if (hideTimer) {
-      clearTimeout(hideTimer);
-      hideTimer = null;
-      console.log('[eventManager] hideTimer cleared due to new mouseover');
-    }
+    const { cancelHide } = getPopupApi();
+    if (typeof cancelHide === 'function') cancelHide();
     // Guard: ensure event.target is an Element that supports closest()
     const targetEl = e.target;
     if (!targetEl || typeof targetEl.closest !== 'function') {
@@ -67,18 +75,32 @@ export function attachDelegatedItemEvents() {
     console.log('[eventManager] found icon element:', icon, 'classes:', icon.className);
     const data = extractProductData(icon);
     console.log('[eventManager] extracted product data:', data);
-    const popupFn = window.showGlobalPopup || (parent && parent.showGlobalPopup);
-    console.log('[eventManager] popup function available:', typeof popupFn);
-    if (typeof popupFn === 'function' && data) {
+    const { show } = getPopupApi();
+    console.log('[eventManager] popup function available:', typeof show);
+    if (typeof show === 'function' && data) {
       if (window.__wfCurrentPopupAnchor !== icon) {
         window.__wfCurrentPopupAnchor = icon;
         console.log('[eventManager] calling popup function with:', icon, data);
-        popupFn(icon, data);
+        show(icon, data);
         attachPopupPersistence(icon);
       }
     } else {
-      console.warn('[eventManager] cannot show popup - function:', typeof popupFn, 'data:', !!data);
+      console.warn('[eventManager] cannot show popup - function:', typeof show, 'data:', !!data);
     }
+  });
+
+  // Schedule hide when leaving icons or popup
+  document.addEventListener('mouseout', e => {
+    const targetEl = e.target;
+    if (!targetEl || typeof targetEl.closest !== 'function') return;
+    const related = e.relatedTarget;
+    const leftIcon = targetEl.closest('.item-icon, .room-product-icon');
+    const leftPopup = targetEl.closest('.item-popup');
+    if (!leftIcon && !leftPopup) return;
+    // If moving into another icon or the popup itself, ignore
+    if (related && (related.closest?.('.item-icon, .room-product-icon') || related.closest?.('.item-popup'))) return;
+    const { scheduleHide } = getPopupApi();
+    if (typeof scheduleHide === 'function') scheduleHide(250);
   });
 
 
@@ -102,20 +124,26 @@ export function attachDelegatedItemEvents() {
 /** For legacy per-icon listeners (called after coordinate positioning). */
 export function setupPopupEventsAfterPositioning() {
   console.log('[eventManager] setupPopupEventsAfterPositioning() called');
+  // If delegated listeners are active, skip per-icon bindings to avoid duplication
+  if (document.body && document.body.hasAttribute('data-wf-room-delegated-listeners')) {
+    console.log('[eventManager] Delegated listeners active; skipping per-icon fallback');
+    return;
+  }
   const icons = document.querySelectorAll('.item-icon, .room-product-icon');
-  console.log('[eventManager] icons found for direct listeners:', icons.length);
+  console.warn('[eventManager] Delegation inactive; attaching legacy per-icon listeners to', icons.length, 'icons');
   icons.forEach(icon => {
     // ensure icon is interactive
     icon.classList.add('clickable-icon');
     const data = extractProductData(icon);
     if (!data) return;
     icon.addEventListener('mouseenter', () => {
-      const fn = window.showGlobalPopup || (parent && parent.showGlobalPopup);
-      if (typeof fn === 'function') fn(icon, data);
+      const { show, cancelHide } = getPopupApi();
+      if (typeof cancelHide === 'function') cancelHide();
+      if (typeof show === 'function') show(icon, data);
     });
     icon.addEventListener('mouseleave', () => {
-      const fn = window.hideGlobalPopup || (parent && parent.hideGlobalPopup);
-      if (typeof fn === 'function') fn();
+      const { scheduleHide } = getPopupApi();
+      if (typeof scheduleHide === 'function') scheduleHide(250);
     });
     icon.addEventListener('click', e => {
       e.preventDefault();
@@ -136,26 +164,17 @@ function attachPopupPersistence(icon) {
   if (!popup || popup.__wfBound) return;
   popup.__wfBound = true;
 
-  let hideTimerId = null;
-
   const clearHide = () => {
-    if (hideTimerId) {
-      clearTimeout(hideTimerId);
-      hideTimerId = null;
-    }
+    const { cancelHide } = getPopupApi();
+    if (typeof cancelHide === 'function') cancelHide();
   };
 
   const scheduleHide = () => {
-    clearHide();
-    hideTimerId = setTimeout(() => {
-      if (icon.matches(':hover') || popup.matches(':hover')) return; // user returned
-      const hideFn = window.hideGlobalPopup || (parent && parent.hideGlobalPopup);
-      if (typeof hideFn === 'function') hideFn();
-      detach();
-    }, 150);
+    const { scheduleHide } = getPopupApi();
+    if (typeof scheduleHide === 'function') scheduleHide(250);
   };
 
-  const detach = () => {
+  const _detach = () => {
     icon.removeEventListener('mouseenter', clearHide);
     icon.removeEventListener('mouseleave', scheduleHide);
     popup.removeEventListener('mouseenter', clearHide);

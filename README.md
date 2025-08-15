@@ -41,4 +41,24 @@ To start both the PHP dev server (http://localhost:8080) and the Vite dev server
 ./scripts/restart_servers.sh
 ```
 
+## Quick Commands (wf)
+
+You can also use the `wf` helper for common operations:
+
+```bash
+# Start servers with monitoring
+./wf start
+
+# Check status
+./wf status
+
+# View recent logs
+./wf logs
+
+# Stop servers and monitor
+./wf stop
+```
+
+The `wf` wrapper uses the scripts under `scripts/` and keeps process names consistent.
+
 Enjoy coding! 🐸

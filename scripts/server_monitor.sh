@@ -194,7 +194,7 @@ show_access_info() {
   echo -e "  - Orders: http://localhost:$PHP_PORT/api/orders.php"
   echo -e "  - Users: http://localhost:$PHP_PORT/api/users.php"
   echo -e "\n${YELLOW}To set up automatic monitoring, add this to your crontab:${NC}"
-  echo -e "*/5 * * * * $WEBSITE_DIR/Scripts/server_monitor.sh monitor >> $LOG_FILE 2>&1"
+  echo -e "*/5 * * * * $WEBSITE_DIR/scripts/server_monitor.sh monitor >> $LOG_FILE 2>&1"
   echo -e "${YELLOW}This will check your PHP server every 5 minutes and restart it if needed.${NC}\n"
 }
 

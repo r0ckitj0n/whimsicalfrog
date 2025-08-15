@@ -9,27 +9,27 @@ cd /Users/jongraves/Documents/Websites/WhimsicalFrog
 case "$1" in
     start)
         echo "🐸 Starting WhimsicalFrog with monitoring..."
-        ./Scripts/start_servers.sh
+        ./scripts/start_servers.sh
         ;;
     stop)
         echo "🐸 Stopping WhimsicalFrog servers and monitor..."
-        ./Scripts/server_monitor.sh stop
-        pkill -f 'Scripts/server_monitor.sh daemon' 2>/dev/null
+        ./scripts/server_monitor.sh stop
+        pkill -f 'scripts/server_monitor.sh daemon' 2>/dev/null
         echo "✅ All servers stopped"
         ;;
     restart)
         echo "🐸 Restarting WhimsicalFrog..."
-        ./Scripts/server_monitor.sh stop
-        pkill -f 'Scripts/server_monitor.sh daemon' 2>/dev/null
+        ./scripts/server_monitor.sh stop
+        pkill -f 'scripts/server_monitor.sh daemon' 2>/dev/null
         sleep 2
-        ./Scripts/start_servers.sh
+        ./scripts/start_servers.sh
         ;;
     status)
         echo "🐸 WhimsicalFrog Server Status:"
-        ./Scripts/server_monitor.sh status
+        ./scripts/server_monitor.sh status
         echo ""
         echo "Monitor Status:"
-        MONITOR_PID=$(pgrep -f "Scripts/server_monitor.sh daemon")
+        MONITOR_PID=$(pgrep -f "scripts/server_monitor.sh daemon")
         if [ -n "$MONITOR_PID" ]; then
             echo "✅ Monitor daemon running (PID: $MONITOR_PID)"
         else
@@ -55,7 +55,7 @@ case "$1" in
         echo "  status  - Check server and monitor status"
         echo "  logs    - Show recent server logs"
         echo ""
-        echo "Website: http://localhost:8000"
+        echo "Website: http://localhost:8080"
         echo "Admin: admin / Pass.123"
         ;;
-esac 
+esac

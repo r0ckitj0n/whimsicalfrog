@@ -1,3 +1,0 @@
-# Deny public access to logs directory
-Options -Indexes
-Require all denied

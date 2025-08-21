@@ -8,7 +8,7 @@
 WEBSITE_DIR="/Users/jongraves/Documents/Websites/WhimsicalFrog"
 PHP_PORT=8080
 # Vite dev server port (must match vite.config.js and hot file)
-VITE_PORT=5199
+VITE_PORT=5176
 LOG_FILE="$WEBSITE_DIR/logs/monitor.log"
 CHECK_INTERVAL=60  # Check every 60 seconds
 
@@ -48,7 +48,7 @@ is_server_responding() {
 start_php_server() {
   cd "$WEBSITE_DIR"
   log "${BLUE}Starting PHP web server on port $PHP_PORT...${NC}"
-  php -S localhost:$PHP_PORT -t . > logs/php_server.log 2>&1 &
+  php -S localhost:$PHP_PORT -t . router.php > logs/php_server.log 2>&1 &
   sleep 2
   if is_port_in_use $PHP_PORT; then
     log "${GREEN}PHP web server started successfully${NC}"

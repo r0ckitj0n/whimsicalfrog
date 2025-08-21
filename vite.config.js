@@ -29,9 +29,9 @@ export default defineConfig({
     },
     server: {
         // Ensure dev server runs on a stable port that matches our PHP helper hot origin
-        port: 5199,
+        port: 5176,
         strictPort: true,
-        host: true, // listen on all addresses (IPv4/IPv6)
+        host: '127.0.0.1', // force IPv4 to avoid ::1/HTTP2 quirks
         // Use HTTP; we proxy via PHP to avoid CORS/TLS issues
         // https: false by default
         cors: true,
@@ -43,9 +43,9 @@ export default defineConfig({
         // Enable HMR so @vite/client can inject CSS and handle updates
         hmr: {
             protocol: 'ws',
-            host: 'localhost',
-            port: 5199,
-            clientPort: 5199,
+            host: '127.0.0.1',
+            port: 5176,
+            clientPort: 5176,
         },
     },
     build: {

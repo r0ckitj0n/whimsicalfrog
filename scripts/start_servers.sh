@@ -40,6 +40,8 @@ if [ -n "$MONITOR_PID" ]; then
   echo -e "\n${GREEN}✓ Server monitor daemon is already running (PID: $MONITOR_PID)${NC}"
 else
   echo -e "\n${YELLOW}Starting server monitor daemon...${NC}"
+  # Ensure logs directory exists
+  mkdir -p logs
   # Start the monitor daemon in the background
   ./scripts/server_monitor.sh daemon > logs/monitor.log 2>&1 &
   DAEMON_PID=$!

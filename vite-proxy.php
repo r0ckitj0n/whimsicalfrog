@@ -12,7 +12,7 @@ if (!$primaryOrigin && file_exists($hotPath)) {
 }
 if (!$primaryOrigin) {
     // Conservative fallback; the hot file should exist in dev
-    $primaryOrigin = 'http://localhost:5199';
+    $primaryOrigin = 'http://localhost:5176';
 }
 
 $path = isset($_GET['path']) ? (string)$_GET['path'] : '';
@@ -24,25 +24,45 @@ if ($path === '') {
     exit;
 }
 
+// Fast-path: Vite's health check endpoint sometimes differs across versions.
+// To avoid hanging or 502s that can confuse @vite/client, answer locally.
+if ($path === '__vite_ping') {
+    http_response_code(200);
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate');
+    header('Pragma: no-cache');
+    header('Access-Control-Allow-Origin: *');
+    echo '';
+    exit;
+}
+
 // Build list of candidate origins to try (helps avoid odd resolver/proxy issues)
 $candidates = [];
 $candidates[] = $primaryOrigin;
-// If primary uses localhost, also try 127.0.0.1 and ::1
+// Always add loopback variants for resilience
 $parsed = parse_url($primaryOrigin);
-if ($parsed && isset($parsed['host'], $parsed['scheme'])) {
+if ($parsed && isset($parsed['scheme'])) {
     $scheme = $parsed['scheme'];
-    $host = $parsed['host'];
     $port = isset($parsed['port']) ? (int)$parsed['port'] : ($scheme === 'https' ? 443 : 80);
-    if ($host === 'localhost') {
-        $candidates[] = sprintf('%s://127.0.0.1:%d', $scheme, $port);
-        $candidates[] = sprintf('%s://[::1]:%d', $scheme, $port);
+    $variants = [
+        sprintf('%s://localhost:%d', $scheme, $port),
+        sprintf('%s://127.0.0.1:%d', $scheme, $port),
+        sprintf('%s://[::1]:%d', $scheme, $port),
+    ];
+    foreach ($variants as $v) {
+        if (!in_array($v, $candidates, true)) { $candidates[] = $v; }
     }
 }
 
+$method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+if ($method !== 'HEAD') { $method = 'GET'; }
+
 $opts = [
     'http' => [
-        'method' => 'GET',
-        'header' => "Accept: */*\r\n",
+        'method' => $method,
+        'header' => "Accept: text/javascript, */*;q=0.1\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Proxy/1.0\r\n",
+        // Ensure HTTP/1.1 to avoid 426 Upgrade Required from some dev servers
+        'protocol_version' => 1.1,
         'ignore_errors' => true,
         'timeout' => 8,
         'follow_location' => 1,
@@ -57,7 +77,16 @@ $contentType = null;
 $body = '';
 foreach ($candidates as $origin) {
     $upstream = rtrim($origin, '/') . '/' . $path;
-    $ctx = stream_context_create($opts);
+    $u = parse_url($upstream);
+    $hostHeader = '';
+    if ($u && !empty($u['host'])) {
+        $hostHeader = $u['host'] . (isset($u['port']) ? ':' . $u['port'] : '');
+    }
+    $hdr = "Accept: text/javascript, */*;q=0.1\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Proxy/1.0\r\n";
+    if ($hostHeader !== '') { $hdr .= 'Host: ' . $hostHeader . "\r\n"; }
+    $perOriginOpts = $opts;
+    $perOriginOpts['http']['header'] = $hdr;
+    $ctx = stream_context_create($perOriginOpts);
     $tryBody = @file_get_contents($upstream, false, $ctx);
 
     $tryStatus = 502;
@@ -77,6 +106,41 @@ foreach ($candidates as $origin) {
         $contentType = $tryType;
         $body = $tryBody;
         break;
+    }
+
+    // If stream method failed or returned non-2xx (e.g., 426), try cURL if available forced to HTTP/1.1
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        $headers = [
+            'Accept: text/javascript, */*;q=0.1',
+            'Accept-Encoding: identity',
+            'Connection: keep-alive',
+            'User-Agent: PHP-Vite-Proxy/1.0',
+        ];
+        // Preserve Host header for localhost/127.0.0.1 consistency
+        if ($hostHeader !== '') { $headers[] = 'Host: ' . $hostHeader; }
+        $curlOpts = [
+            CURLOPT_URL => $upstream,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+        ];
+        if ($method === 'HEAD') { $curlOpts[CURLOPT_NOBODY] = true; }
+        curl_setopt_array($ch, $curlOpts);
+        $respBody = curl_exec($ch);
+        $curlStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $respType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+        if ($respBody !== false && $curlStatus >= 200 && $curlStatus < 300) {
+            $statusCode = $curlStatus;
+            $contentType = $respType ?: $tryType;
+            $body = $respBody;
+            break;
+        }
     }
 }
 

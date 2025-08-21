@@ -251,6 +251,7 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
                 'db-web-manager': () => import('./admin-db-web-manager.js'),
                 'room-config-manager': () => import('./admin-room-config-manager.js'),
                 'cost-breakdown-manager': () => import('./admin-cost-breakdown-manager.js'),
+                'secrets': () => import('./admin-secrets.js'),
             };
 
             const load = loaders[section] || (() => import('./admin-dashboard.js'));

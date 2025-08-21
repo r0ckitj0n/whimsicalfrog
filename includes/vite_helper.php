@@ -39,34 +39,43 @@ function vite(string $entry): string
         $hotContents = @file_get_contents($hotPath);
         $viteOrigin = is_string($hotContents) ? trim($hotContents) : '';
     }
-    if (empty($viteOrigin)) { $viteOrigin = 'http://localhost:5199'; }
+    if (empty($viteOrigin)) { $viteOrigin = 'http://localhost:5176'; }
 
-    // If a hot file exists AND there is no production manifest, we are in a typical local
-    // development scenario. In this case, emit dev tags without probing to avoid the
-    // situation where PHP cannot reach the dev server (e.g., Docker/permissions), which
-    // would otherwise prevent any assets from loading.
-    if (file_exists($hotPath) && !($manifestPath && file_exists($manifestPath))) {
+    // If a hot file exists, we are in development. Emit dev tags directly to the Vite origin
+    // without using the PHP proxy. This avoids proxy overhead and flakiness.
+    if (file_exists($hotPath)) {
         $devEntryMap = [
             'js/app.js' => 'src/entries/app.js',
             'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
             'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
         ];
         $devEntry = $devEntryMap[$entry] ?? $entry;
-        $vite_log('info', 'Vite hot mode (no manifest): emitting dev script tags without probe', [
+        $vite_log('info', 'Vite hot mode: emitting dev script tags directly to origin', [
             'vite_origin' => $viteOrigin,
             'entry' => $entry,
             'dev_entry' => $devEntry,
         ]);
-        return "<script crossorigin=\"anonymous\" type=\"module\" src=\"/vite-proxy.php?path=@vite/client\"></script>\n" .
-               "<script crossorigin=\"anonymous\" type=\"module\" src=\"/vite-proxy.php?path={$devEntry}\"></script>";
+        $origin = rtrim($viteOrigin, '/');
+        return "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
+               "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
     }
 
     // If explicitly forcing dev, try dev server first regardless of manifest (do NOT require hot file)
     if ($forceDev) {
         $probeUrl = rtrim($viteOrigin, '/') . '/@vite/client';
         $ctx = stream_context_create([
-            'http' => ['timeout' => 0.75],
-            'https' => ['timeout' => 0.75],
+            'http' => [
+                'timeout' => 0.75,
+                'protocol_version' => 1.1,
+                'ignore_errors' => true,
+                'header' => "Accept: text/javascript, */*;q=0.1\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Probe/1.0\r\n",
+            ],
+            'https' => [
+                'timeout' => 0.75,
+                'protocol_version' => 1.1,
+                'ignore_errors' => true,
+                'header' => "Accept: text/javascript, */*;q=0.1\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Probe/1.0\r\n",
+            ],
         ]);
         $probe = @file_get_contents($probeUrl, false, $ctx);
 
@@ -79,8 +88,9 @@ function vite(string $entry): string
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
 
-            return "<script crossorigin=\"anonymous\" type=\"module\" src=\"/vite-proxy.php?path=@vite/client\"></script>\n" .
-                   "<script crossorigin=\"anonymous\" type=\"module\" src=\"/vite-proxy.php?path={$devEntry}\"></script>";
+            $origin = rtrim($viteOrigin, '/');
+            return "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
+                   "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
         }
         // else: fall back to production manifest if dev server is not reachable
         $vite_log('warning', 'Vite dev server unreachable while forced; falling back to production assets', [
@@ -89,32 +99,7 @@ function vite(string $entry): string
         ]);
     }
 
-    // Prefer production manifest by default when available; else try dev server without requiring hot file
-    // Additionally, if a 'hot' file exists (our workflow uses it), prefer trying dev server first
-    if (file_exists($hotPath) || !($manifestPath && file_exists($manifestPath) && !$forceDev)) {
-        $probeUrl = rtrim($viteOrigin, '/') . '/@vite/client';
-        $ctx = stream_context_create([
-            'http' => ['timeout' => 0.75],
-            'https' => ['timeout' => 0.75],
-        ]);
-        $probe = @file_get_contents($probeUrl, false, $ctx);
-        if ($probe !== false) {
-            $devEntryMap = [
-                'js/app.js' => 'src/entries/app.js',
-                'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
-                'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
-            ];
-            $devEntry = $devEntryMap[$entry] ?? $entry;
-            return "<script crossorigin=\"anonymous\" type=\"module\" src=\"/vite-proxy.php?path=@vite/client\"></script>\n" .
-                   "<script crossorigin=\"anonymous\" type=\"module\" src=\"/vite-proxy.php?path={$devEntry}\"></script>";
-        }
-        $vite_log('warning', 'Vite dev server unreachable; will try manifest', [
-            'probe_url' => $probeUrl,
-            'vite_origin' => $viteOrigin,
-        ]);
-        // Fall through to manifest
-    }
-
+    // Prefer production manifest by default when not in dev or when forced dev is off and no hot file.
     // In production, we load the bundled assets from the manifest.
     if (!$manifestPath || !file_exists($manifestPath)) {
         $vite_log('warning', 'Vite manifest not found', ['manifest_path' => $manifestPath, 'entry' => $entry]);

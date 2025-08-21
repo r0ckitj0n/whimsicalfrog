@@ -74,7 +74,7 @@
     "isDynamicEntry": true
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-RsYQki1v.js",
+    "file": "assets/js/app.js-BHC4ge4u.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -98,10 +98,11 @@
       "src/js/admin-db-web-manager.js",
       "src/js/admin-room-config-manager.js",
       "src/js/admin-cost-breakdown-manager.js",
+      "src/js/admin-secrets.js",
       "src/entries/admin-dashboard.js"
     ],
     "css": [
-      "assets/app-OG4leAfx.css"
+      "assets/app-CnK8elxf.css"
     ],
     "assets": [
       "assets/background_room_main-CD7UiX_S.webp",
@@ -186,6 +187,12 @@
     "src": "src/js/admin-room-config-manager.js",
     "isDynamicEntry": true
   },
+  "src/js/admin-secrets.js": {
+    "file": "assets/admin-secrets-Dt5zfOdi.js",
+    "name": "admin-secrets",
+    "src": "src/js/admin-secrets.js",
+    "isDynamicEntry": true
+  },
   "src/js/admin-settings.js": {
     "file": "assets/admin-settings-UCQvnvI6.js",
     "name": "admin-settings",
@@ -205,7 +212,7 @@
     "isDynamicEntry": true
   },
   "src/js/pages/payment-page.js": {
-    "file": "assets/payment-page-Cp2w8tjZ.js",
+    "file": "assets/payment-page-Dt4L1hr7.js",
     "name": "payment-page",
     "src": "src/js/pages/payment-page.js",
     "isDynamicEntry": true,

@@ -7,6 +7,7 @@
 
 
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/secret_store.php';
 class EmailHelper
 {
     private static $config = [
@@ -390,6 +391,16 @@ class EmailHelper
                 'from_name' => $settings['from_name'] ?? 'WhimsicalFrog',
                 'reply_to' => $settings['reply_to'] ?? ''
             ];
+
+            // Override sensitive values from secret store if present
+            $secPass = secret_get('smtp_password');
+            if ($secPass !== null && $secPass !== '') {
+                $config['smtp_password'] = $secPass;
+            }
+            $secUser = secret_get('smtp_username');
+            if ($secUser !== null && $secUser !== '') {
+                $config['smtp_username'] = $secUser;
+            }
 
             self::configure($config);
             return true;

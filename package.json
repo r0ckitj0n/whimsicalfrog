@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "printf 'http://localhost:5199' > hot && vite --port 5199 --strictPort",
+    "dev": "printf 'http://127.0.0.1:5176' > hot && vite --host 127.0.0.1 --port 5176 --strictPort",
     "stop": "rm hot",
     "build": "vite build",
     "preview": "vite preview",

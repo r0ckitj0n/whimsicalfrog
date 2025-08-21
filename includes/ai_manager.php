@@ -8,6 +8,7 @@
 
 // Include AI and database dependencies
 require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/secret_store.php';
 require_once __DIR__ . '/../api/ai_providers.php';
 
 /**
@@ -33,7 +34,7 @@ function loadAISettings()
     ];
 
     try {
-        $pdo = Database::getInstance()->getConnection();
+        $pdo = Database::getInstance();
         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
         $stmt->execute();
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -44,6 +45,20 @@ function loadAISettings()
     } catch (Exception $e) {
         error_log("Error loading AI settings: " . $e->getMessage());
         // Return defaults if database is not available
+    }
+
+    // Override sensitive keys from secret store when available
+    $secretKeys = [
+        'openai_api_key',
+        'anthropic_api_key',
+        'google_api_key',
+        'meta_api_key',
+    ];
+    foreach ($secretKeys as $k) {
+        $v = secret_get($k);
+        if ($v !== null && $v !== '') {
+            $defaults[$k] = $v;
+        }
     }
 
     return $defaults;

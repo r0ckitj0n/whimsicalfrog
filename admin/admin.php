@@ -64,6 +64,7 @@ $tabs = [
     'reports' => ['Reports', 'admin-tab-reports'],
     'marketing' => ['Marketing', 'admin-tab-marketing'],
     'settings' => ['Settings', 'admin-tab-settings'],
+    'secrets' => ['Secrets', 'admin-tab-secrets'],
 ];
 ?>
     <?php if ($section !== 'pos'): ?>
@@ -80,7 +81,8 @@ $tabs = [
                 'pos' => 'adminPosTab',
                 'reports' => 'adminReportsTab',
                 'marketing' => 'adminMarketingTab',
-                'settings' => 'adminSettingsTab'
+                'settings' => 'adminSettingsTab',
+                'secrets' => 'adminSecretsTab'
             ];
                 $tooltipId = $tooltipIds[$key] ?? '';
                 $url = ($key === 'dashboard') ? '/admin' : "/admin/{$key}";
@@ -120,6 +122,9 @@ $tabs = [
                 break;
             case 'settings':
                 include 'admin_settings.php';
+                break;
+            case 'secrets':
+                include 'admin_secrets.php';
                 break;
             case 'categories':
                 include 'admin_categories.php';

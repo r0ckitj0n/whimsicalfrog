@@ -32,6 +32,9 @@ sleep 1
 
 # Kill all PHP dev servers
 pkill -f "php -S localhost:" 2>/dev/null || true
+PORT=8080
+# Also kill any process bound to the PHP port directly
+lsof -ti tcp:$PORT | xargs kill -9 2>/dev/null || true
 
 # Wait for ports to be released
 sleep 2
@@ -39,11 +42,12 @@ sleep 2
 ########################################
 # Start PHP server on port $PORT
 ########################################
-PORT=8080
-VITE_PORT=5199
+VITE_PORT=5176
 echo -e "${GREEN}Starting PHP dev server on http://localhost:$PORT${NC}"
 
 # Start server in background using router.php so we can proxy Vite dev paths
+# Ensure the PHP port is free (belt-and-suspenders)
+lsof -ti tcp:$PORT | xargs kill -9 2>/dev/null || true
 php -S localhost:$PORT -t . router.php > logs/php_server.log 2>&1 &
 PHP_PID=$!
 
@@ -68,6 +72,8 @@ if [ ! -d "node_modules" ]; then
   echo -e "${YELLOW}node_modules not found – installing dependencies (this may take a while)...${NC}"
   npm install --silent
 fi
+# Ensure the desired Vite port is free
+lsof -ti tcp:$VITE_PORT | xargs kill -9 2>/dev/null || true
 npm run dev > logs/vite_server.log 2>&1 &
 VITE_PID=$!
 # Wait a moment and check if it started successfully

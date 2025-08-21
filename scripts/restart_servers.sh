@@ -40,11 +40,11 @@ sleep 2
 # Start PHP server on port $PORT
 ########################################
 PORT=8080
-VITE_PORT=5176
+VITE_PORT=5199
 echo -e "${GREEN}Starting PHP dev server on http://localhost:$PORT${NC}"
 
-# Start server in background
-php -S localhost:$PORT -t . > logs/php_server.log 2>&1 &
+# Start server in background using router.php so we can proxy Vite dev paths
+php -S localhost:$PORT -t . router.php > logs/php_server.log 2>&1 &
 PHP_PID=$!
 
 # Wait a moment and check if it started successfully
@@ -68,7 +68,7 @@ if [ ! -d "node_modules" ]; then
   echo -e "${YELLOW}node_modules not found – installing dependencies (this may take a while)...${NC}"
   npm install --silent
 fi
-npm run dev -- --port $VITE_PORT > logs/vite_server.log 2>&1 &
+npm run dev > logs/vite_server.log 2>&1 &
 VITE_PID=$!
 # Wait a moment and check if it started successfully
 sleep 3

@@ -217,8 +217,8 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
             <img src="images/logos/logo_whimsicalfrog.webp" alt="<?php echo htmlspecialchars($businessName); ?> Logo" class="header-logo" 
                  data-fallback-src="/images/logos/logo_whimsicalfrog.png">
             <div>
-                <h1 class="text-brand-primary"><?php echo htmlspecialchars($businessName); ?></h1>
-                <p class="text-brand-secondary"><?php echo htmlspecialchars($businessTagline); ?></p>
+                <h1 class="text-brand-primary wf-brand-font"><?php echo htmlspecialchars($businessName); ?></h1>
+                <p class="text-brand-secondary wf-brand-font"><?php echo htmlspecialchars($businessTagline); ?></p>
             </div>
         </div>
         <div class="text-sm text-brand-secondary">
@@ -241,7 +241,7 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
 
     <!-- Order Info -->
     <div class="text-center">
-        <h2 class="text-brand-primary">Order Receipt</h2>
+        <h2 class="text-brand-primary wf-brand-font">Order Receipt</h2>
         <p class="text-sm text-brand-secondary">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong></p>
         <p class="text-sm text-brand-secondary">Date: <?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></p>
     </div>
@@ -274,15 +274,15 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
 
     <?php if ($pending): ?>
         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 text-sm" role="alert">
-            <p class="font-bold">Thank you for choosing <?php echo htmlspecialchars($businessName); ?>!</p>
+            <p class="font-bold text-brand-primary wf-brand-font">Thank you for choosing <?php echo htmlspecialchars($businessName); ?>!</p>
             <p>Your order is reserved and will be shipped as soon as we receive your payment&nbsp;🙂</p>
             <p class="">Remit payment to:<br><strong>Lisa&nbsp;Lemley</strong><br>1524&nbsp;Red&nbsp;Oak&nbsp;Flats&nbsp;Rd<br>Dahlonega,&nbsp;GA&nbsp;30533</p>
             <p class="">Please include your order&nbsp;ID on the memo line. As soon as we record your payment we'll send a confirmation e-mail and get your items on their way.</p>
         </div>
     <?php else: ?>
-        <div class="card-standard text-brand-secondary text-sm" role="alert">
-            <p class="font-bold"><?= htmlspecialchars($receiptMessage['title']) ?></p>
-            <p><?= htmlspecialchars($receiptMessage['content']) ?></p>
+        <div class="card-standard text-sm" role="alert">
+            <p class="font-bold text-brand-primary wf-brand-font"><?= htmlspecialchars($receiptMessage['title']) ?></p>
+            <p class="text-brand-secondary wf-brand-font"><?= htmlspecialchars($receiptMessage['content']) ?></p>
         </div>
     <?php endif; ?>
 
@@ -291,7 +291,7 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
         <div class="border-t space-y-3">
             <?php if (!empty($salesVerbiage['receipt_thank_you_message'])): ?>
                 <div class="card-standard text-center">
-                    <p class="text-sm text-brand-primary">🎉 <?= htmlspecialchars($salesVerbiage['receipt_thank_you']) ?></p>
+                    <p class="text-sm text-brand-primary">🎉 <?= htmlspecialchars($salesVerbiage['receipt_thank_you_message']) ?></p>
                 </div>
             <?php endif; ?>
             

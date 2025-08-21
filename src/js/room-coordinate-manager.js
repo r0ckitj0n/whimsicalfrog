@@ -112,6 +112,15 @@ window.simpleCoordinateSystem = simpleCoordinateSystem;
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Only run on actual room detail pages; skip on room_main and other pages.
+    // Modal coordinates are handled by RoomModalManager.initializeModalContent().
+    const body = document.body;
+    const page = (body && body.dataset && body.dataset.page) || (window.WF_PAGE_INFO && window.WF_PAGE_INFO.page) || '';
+    const isRoomPage = typeof page === 'string' && /^room\d+$/.test(String(page));
+    if (!isRoomPage) {
+        console.log('🎯 Not a room detail page; coordinate manager idle');
+        return;
+    }
     console.log('🎯 DOM loaded, checking for room type...');
     console.log('🎯 Available window variables:', {
         ROOM_TYPE: window.ROOM_TYPE,

@@ -7,8 +7,8 @@
 # Configuration
 WEBSITE_DIR="/Users/jongraves/Documents/Websites/WhimsicalFrog"
 PHP_PORT=8080
-# Vite dev server port
-VITE_PORT=5176
+# Vite dev server port (must match vite.config.js and hot file)
+VITE_PORT=5199
 LOG_FILE="$WEBSITE_DIR/logs/monitor.log"
 CHECK_INTERVAL=60  # Check every 60 seconds
 
@@ -72,8 +72,8 @@ start_vite_server() {
     log "${YELLOW}node_modules not found – installing dependencies (this may take a while)...${NC}"
     npm install --silent
   fi
-  # Start vite (npm run dev) in background with custom port
-  npm run dev -- --port $VITE_PORT > logs/vite_server.log 2>&1 &
+  # Start vite (npm run dev) in background; vite.config.js sets port and package.json writes the hot file
+  npm run dev > logs/vite_server.log 2>&1 &
   sleep 3
   if is_port_in_use $VITE_PORT; then
     log "${GREEN}Vite dev server started successfully${NC}"

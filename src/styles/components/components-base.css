@@ -4,12 +4,30 @@
 
 /* ===== UNIVERSAL PAGE HEADER ===== */
 /* Consistent header with fade effect used across all pages except rooms 1-5 */
+/* Apply gradient background and define a sensible default header height */
+.site-header.universal-page-header {
+    background: var(--gradient-header);
+    --header-height: 80px;
+    font-family: var(--font-primary, 'Merienda', cursive);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin: 0;
+}
 .site-header.universal-page-header .header-content {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
     width: 100%;
     min-height: var(--header-height);
+    padding: 0;
+}
+.site-header.universal-page-header .header-container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
     padding: 0;
 }
 /* Left Section: Logo and Navigation */
@@ -41,13 +59,13 @@
     flex-direction: column;
 }
 .site-header.universal-page-header .logo-text {
-    font-size: 1.5rem;
+    font-size: 1.65rem;
     font-weight: 700;
     color: var(--brand-primary);
     line-height: 1.2;
 }
 .site-header.universal-page-header .logo-tagline {
-    font-size: 0.875rem;
+    font-size: 0.96rem;
     color: var(--brand-primary);
     font-weight: 400;
 }
@@ -61,7 +79,7 @@
     color: var(--brand-primary);
     text-decoration: none;
     font-weight: 500;
-    font-size: 1rem;
+    font-size: 1.1rem;
     padding: 8px 12px;
     border-radius: 6px;
     transition: all 0.3s ease;
@@ -82,23 +100,35 @@
     display: flex;
     justify-content: center;
 }
+.site-header.universal-page-header .search-container {
+    position: relative; /* Needed for search results positioning */
+    width: 100%;
+    max-width: 300px;
+}
+.site-header.universal-page-header .search-input-container {
+    position: relative; /* Needed for search icon positioning */
+    display: flex;
+    align-items: center;
+}
 .site-header.universal-page-header .search-icon {
     position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 26px;
+    top: 0;
+    bottom: 0;
+    margin: auto 0; /* vertically centered */
+    transform: none;
     width: 20px;
     height: 20px;
     color: var(--brand-primary);
 }
 .site-header.universal-page-header .search-bar {
     width: 100%;
-    padding: 12px 16px 12px 44px;
+    padding: 12px 16px 12px 58px; /* keep ~32px gap from icon (26px + 32px) */
     border: 2px solid var(--brand-primary);
     border-radius: 25px;
     background: transparent;
     color: var(--brand-primary);
-    font-size: 1rem;
+    font-size: 1.1rem;
     transition: all 0.3s ease;
     outline: none;
 }
@@ -125,7 +155,7 @@
     color: var(--brand-primary);
     text-decoration: none;
     font-weight: 500;
-    font-size: 1rem;
+    font-size: 1.1rem;
     padding: 8px 16px;
     border-radius: 6px;
     transition: all 0.3s ease;
@@ -153,11 +183,11 @@
 }
 .site-header.universal-page-header .cart-count {
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: var(--brand-primary);
 }
 .site-header.universal-page-header .cart-total {
-    font-size: 0.9rem;
+    font-size: 0.99rem;
     color: var(--brand-primary);
 }
 /* Mobile Menu Toggle */
@@ -204,6 +234,7 @@
   .site-header.universal-page-header .header-center { max-width: 200px; }
   .site-header.universal-page-header .logo-text { font-size: 1.25rem; }
   .site-header.universal-page-header .logo-tagline { font-size: 0.75rem; }
+  .site-header.universal-page-header .nav-links { display: none; }
 }
 
 /* Small Mobile */
@@ -211,14 +242,24 @@
   .site-header.universal-page-header .header-left { gap: 15px; padding-left: 8px; }
   .site-header.universal-page-header .header-right { gap: 10px; padding-right: 8px; }
   .site-header.universal-page-header .header-center { max-width: 150px; }
-  .site-header.universal-page-header .logo-text { font-size: 1.1rem; }
-  .site-header.universal-page-header .search-bar { padding: 10px 14px 10px 40px; font-size: 0.9rem; }
+  .site-header.universal-page-header .logo-text { font-size: 1.2rem; }
+  .site-header.universal-page-header .search-icon { left: 16px; }
+  .site-header.universal-page-header .search-bar { padding: 10px 14px 10px 44px; font-size: 1rem; }
   .site-header.universal-page-header .cart-text { display: none; }
 }
 
 /* ==============================================
    MOBILE MENU
    ============================================== */
+.site-header.universal-page-header .mobile-menu {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 100%; /* Position below the header */
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.7) 100%);
+    transition: all 0.3s ease-in-out;
+}
 .site-header.universal-page-header .mobile-menu.active {
     display: block;
 }
@@ -259,4 +300,17 @@
 }
 .site-header.universal-page-header .mobile-nav-link.active {
   opacity: 0.8;
+}
+.site-header.universal-page-header .mobile-search {
+    padding: 15px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.site-header.universal-page-header .mobile-search .search-bar {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--brand-primary, #87ac3a);
+    border-radius: 25px;
+    background: transparent;
+    color: var(--brand-primary, #87ac3a);
+    font-size: 1rem;
 }

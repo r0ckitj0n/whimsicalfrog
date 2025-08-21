@@ -8,6 +8,7 @@
   let overlay = null;
   let modal = null;
   let returnTo = null;
+  let lastOpenOptions = {};
 
   function ensureElements() {
     if (overlay && modal) return;
@@ -53,8 +54,9 @@
     form.addEventListener('submit', onSubmitModalForm);
   }
 
-  function openModal(desiredReturn) {
+  function openModal(desiredReturn, opts) {
     ensureElements();
+    lastOpenOptions = opts || {};
     returnTo = desiredReturn || window.location.pathname + window.location.search + window.location.hash;
     try { sessionStorage.setItem('wf_login_return_to', returnTo); } catch (_) {}
     overlay.classList.add('show');
@@ -106,9 +108,29 @@
       }
       if (!target) target = window.location.pathname || '/';
 
-      if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
-      closeModal();
-      setTimeout(() => { window.location.assign(target); }, 700);
+      // Mark client-side state as logged-in for in-page flows
+      try { if (document && document.body) document.body.setAttribute('data-is-logged-in', 'true'); } catch (_) {}
+
+      // Notify listeners about successful login
+      try { window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { serverRedirect, target } })); } catch (_) {}
+
+      // Invoke optional callback if provided
+      try {
+        if (lastOpenOptions && typeof lastOpenOptions.onSuccess === 'function') {
+          lastOpenOptions.onSuccess(target, serverRedirect);
+        }
+      } catch (_) {}
+
+      // Optionally suppress redirect to keep user on current page (e.g., continue checkout flow in-place)
+      const suppress = !!(lastOpenOptions && lastOpenOptions.suppressRedirect === true);
+      if (suppress) {
+        if (window.showSuccess) window.showSuccess('Login successful.');
+        closeModal();
+      } else {
+        if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
+        closeModal();
+        setTimeout(() => { window.location.assign(target); }, 700);
+      }
     } catch (err) {
       if (window.showError) window.showError(err.message || 'Login failed.');
     } finally {

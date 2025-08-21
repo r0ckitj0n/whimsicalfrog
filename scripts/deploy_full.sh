@@ -65,6 +65,7 @@ mirror --reverse --delete --verbose \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
+  --exclude-glob hot \
   --exclude-glob backups/ \
   --exclude-glob Documentation/ \
   --exclude-glob Scripts/ \
@@ -128,14 +129,27 @@ open sftp://$USER:$PASS@$HOST
 ls images/items/TS002A.webp
 ls process_multi_image_upload.php
 ls components/image_carousel.php
+ls dist/.vite/manifest.json
+ls dist/assets
 bye
 EOL
 
 echo -e "${GREEN}📋 Checking if critical files were uploaded...${NC}"
-if lftp -f verify_deployment.txt 2>/dev/null | grep -q "TS002A.webp"; then
+VERIFY_OUT=$(lftp -f verify_deployment.txt 2>/dev/null)
+if echo "$VERIFY_OUT" | grep -q "TS002A.webp"; then
   echo -e "${GREEN}✅ TS002A.webp found on server${NC}"
 else
   echo -e "${YELLOW}⚠️  TS002A.webp not found - may need manual upload${NC}"
+fi
+if echo "$VERIFY_OUT" | grep -q "manifest.json"; then
+  echo -e "${GREEN}✅ dist/.vite/manifest.json found on server${NC}"
+else
+  echo -e "${YELLOW}⚠️  dist/.vite/manifest.json not found - build assets may be missing${NC}"
+fi
+if echo "$VERIFY_OUT" | grep -q "dist/assets"; then
+  echo -e "${GREEN}✅ dist/assets found on server${NC}"
+else
+  echo -e "${YELLOW}⚠️  dist/assets directory not found - build assets may be missing${NC}"
 fi
 
 # Clean up verification script

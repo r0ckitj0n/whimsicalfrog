@@ -61,7 +61,29 @@ if ($pageSlug === 'about' || $pageSlug === 'contact') {
 $segments = explode('/', $pageSlug);
 $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
 ?>
-<body class="<?php echo implode(' ', $bodyClasses); ?>" <?php echo $bodyBgUrl ? 'data-bg-url="' . htmlspecialchars($bodyBgUrl) . '"' : ''; ?> data-page="<?php echo htmlspecialchars($pageSlug); ?>" data-path="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/'); ?>" data-is-admin="<?php echo $isAdmin ? 'true' : 'false'; ?>">
+<?php
+// Determine login status for data attribute
+$__wf_is_logged_in = false;
+if (function_exists('isLoggedIn')) {
+    $__wf_is_logged_in = isLoggedIn();
+} else {
+    $__wf_is_logged_in = isset($_SESSION['user']) || isset($_SESSION['user_id']);
+}
+?>
+<?php
+// Expose user id for authenticated sessions
+$__wf_user_id = null;
+if ($__wf_is_logged_in) {
+    if (function_exists('getUserId')) {
+        $__wf_user_id = getUserId();
+    } elseif (isset($_SESSION['user']['userId'])) {
+        $__wf_user_id = $_SESSION['user']['userId'];
+    } elseif (isset($_SESSION['user_id'])) {
+        $__wf_user_id = $_SESSION['user_id'];
+    }
+}
+?>
+<body class="<?php echo implode(' ', $bodyClasses); ?>" <?php echo $bodyBgUrl ? 'data-bg-url="' . htmlspecialchars($bodyBgUrl) . '"' : ''; ?> data-page="<?php echo htmlspecialchars($pageSlug); ?>" data-path="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/'); ?>" data-is-admin="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-is-logged-in="<?php echo $__wf_is_logged_in ? 'true' : 'false'; ?>" <?php echo $__wf_user_id ? 'data-user-id="' . htmlspecialchars($__wf_user_id) . '"' : ''; ?>>
 <?php
 // Render the visual header component
 include_once dirname(__DIR__) . '/components/header_template.php';

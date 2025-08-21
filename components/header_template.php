@@ -38,7 +38,6 @@ $default_config = [
     'logo_tagline' => 'Enchanted Treasures',
     'logo_image' => 'images/logo.png',
     'navigation_items' => [
-        ['label' => 'Home', 'url' => '/', 'active' => false],
         ['label' => 'Shop', 'url' => '/shop', 'active' => false],
         ['label' => 'About', 'url' => '/about', 'active' => false],
         ['label' => 'Contact', 'url' => '/contact', 'active' => false],
@@ -111,8 +110,9 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
                 <nav class="nav-links" role="navigation" aria-label="Main navigation">
                     <?php foreach ($config['navigation_items'] as $item): ?>
                         <?php
-                        // Skip Shop link as it's now in the right section
-                        if (strtolower($item['label']) === 'shop') continue;
+                        // Skip Shop (rendered on right) and Home (logo already links home)
+                        $label_lc = strtolower($item['label']);
+                        if ($label_lc === 'shop' || $label_lc === 'home') continue;
 
                         $is_active = $item['active'] ?? (rtrim($current_page, '/') === rtrim($item['url'], '/'));
                         ?>
@@ -218,6 +218,8 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
             <div class="mobile-nav-links">
                 <?php foreach ($config['navigation_items'] as $item): ?>
                     <?php
+                    // Skip Home in mobile too
+                    if (strtolower($item['label']) === 'home') continue;
                     $is_active = $item['active'] ?? (rtrim($current_page, '/') === rtrim($item['url'], '/'));
                     ?>
                     <a href="<?php echo htmlspecialchars($item['url']); ?>" 

@@ -24,13 +24,17 @@ import './api-aliases.js';                // Legacy API globals
 import './wait-for-function.js';          // Wait for function utility
 import './modal-manager.js';              // General modal management (WFModals)
 import './global-item-modal.js';
+import '../../js/detailed-item-modal.js'; // Canonical detailed item modal (IIFE registers globals)
 import './global-modals.js';
-import './global-popup.js';              // Modal system
+import './cart-modal.js';                 // Site-wide cart modal overlay
+import '../ui/globalPopup.js';              // Modal system
 import './global-notifications.js';       // Notification system
 import './landing-page.js';               // Landing page functionality
 import './room-main.js';                  // Room main page
 import './analytics.js';
 import './login-modal.js';                // Login modal and flow
+import './payment-modal.js';              // Payment modal for in-place checkout
+import './receipt-modal.js';              // Receipt modal for post-checkout
 //
 import './contact.js';                    // Contact page AJAX submit
 import './reveal-company-modal.js';       // Single-button modal reveal for company info
@@ -165,6 +169,7 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
                 'register': () => import('./pages/register-page.js'),
                 'account_settings': () => import('./pages/account-settings-page.js'),
                 'account-settings': () => import('./pages/account-settings-page.js'),
+                'payment': () => import('./pages/payment-page.js'),
             };
 
             const load = loaders[page];

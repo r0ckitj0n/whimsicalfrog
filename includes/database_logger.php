@@ -451,4 +451,3 @@ function whimsicalfrog_exception_handler($exception)
 // Set error and exception handlers
 set_error_handler('whimsicalfrog_error_handler');
 set_exception_handler('whimsicalfrog_exception_handler');
-?>

@@ -224,11 +224,6 @@ function generateStructuredData($seoData) {
     </section>
 </main>
 
-<?php 
-require_once __DIR__ . '/../components/global_popup.php';
-echo renderGlobalPopup();
-echo renderGlobalPopupCSS();
-?>
 
 <!-- Quantity Modal - Compact with Large Image -->
 <div id="quantityModal" class="modal-overlay hidden">

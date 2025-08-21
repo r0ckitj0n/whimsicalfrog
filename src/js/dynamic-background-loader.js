@@ -38,9 +38,20 @@ export async function loadRoomBackground(roomType) {
             if (landingPage) {
                 roomType = 'landing';
             } else {
+                // Map certain pages explicitly
+                try {
+                    const body = document.body;
+                    const pageSlug = (body && body.dataset && body.dataset.page) ? body.dataset.page : '';
+                    if (pageSlug === 'shop') {
+                        roomType = 'room_main';
+                    }
+                } catch (e) {
+                    // non-fatal
+                }
+
                 // Attempt detection via available room data
                 try {
-                    const roomData = await apiGet('/api/get_room_coordinates.php');
+                    const roomData = await apiGet('/api/get_room_data.php');
                     const roomTypeMapping = roomData?.data?.roomTypeMapping || {};
                     const roomDoors = roomData?.data?.roomDoors || [];
                     const roomContainer = document.querySelector('[data-room-name]');
@@ -81,8 +92,8 @@ export async function loadRoomBackground(roomType) {
                 const prefixedFilename = filename.startsWith('background_') ? filename : `background_${filename}`;
                 const imageUrl = window.location.origin + `/images/backgrounds/${prefixedFilename}?v=${Date.now()}`;
                 const roomWrapper = document.getElementById('modalRoomPage')
-    ? document.querySelector('.room-modal-iframe-container')
-    : document.getElementById('mainRoomPage') || document.getElementById('landingPage');
+    ? (document.querySelector('.room-overlay-wrapper') || document.querySelector('.room-modal-body') || document.querySelector('.room-modal-iframe-container'))
+    : document.getElementById('mainRoomPage') || document.getElementById('landingPage') || document.getElementById('shopPage');
             
             if (roomWrapper) {
                 // Apply computed background image via class
@@ -124,8 +135,7 @@ async function autoLoadRoomBackground() {
         }
         
         // Get dynamic room data from API for non-landing pages
-        // Use available room coordinates API instead of missing room data API
-        const roomData = await apiGet('/api/get_room_coordinates.php');
+        const roomData = await apiGet('/api/get_room_data.php');
         
         if (!roomData.success) {
             console.error('Failed to get room data:', roomData.message);

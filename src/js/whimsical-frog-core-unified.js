@@ -263,6 +263,10 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
 
         WF_CORE.initialized = true;
         log('Core initialization complete');
+        // Ensure ready callbacks execute now that initialization is done
+        // Emit the public API object so legacy callbacks receive `wf`
+        // that contains addModule and other helpers.
+        eventBus.emit('core:ready', window.WhimsicalFrog);
     }
 
     // Expose core system globally BEFORE emitting ready event
@@ -286,10 +290,13 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
         
         // Convenience functions
         ready(callback) {
+            const apiObj = window.WhimsicalFrog;
             if (WF_CORE.initialized) {
-                callback();
+                // Pass API object for legacy signatures: ready(wf => wf.addModule(...))
+                callback(apiObj);
             } else {
-                eventBus.on('core:ready', callback);
+                // Wrap to provide API object regardless of emitter payload
+                eventBus.on('core:ready', () => callback(apiObj));
             }
         }
     };
@@ -300,7 +307,7 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
 
     // NOW emit ready event after aliases are established
     if (WF_CORE.initialized) {
-        eventBus.emit('core:ready', WF_CORE);
+        eventBus.emit('core:ready', window.WhimsicalFrog);
     }
 
     // Global fetch wrapper to include credentials

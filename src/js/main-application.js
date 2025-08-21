@@ -60,7 +60,7 @@ const MainApplication = {
                     window.location.href = data.redirectUrl;
                 } else if (localStorage.getItem('pendingCheckout') === 'true') {
                     localStorage.removeItem('pendingCheckout');
-                    window.location.href = '/checkout';
+                    window.location.href = '/cart';
                 } else {
                     window.location.href = '/dashboard';
                 }

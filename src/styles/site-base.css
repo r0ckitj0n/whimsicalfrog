@@ -2,6 +2,12 @@
    STANDARDIZED CSS CLASSES
    ============================================== */
 
+/* Global reset: remove default browser margins to allow full-bleed header/backgrounds */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
 /* Utility Classes *//* Gradient Classes */
 
 /* ==============================================
@@ -17,16 +23,17 @@
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     z-index: var(--z-navigation);
-    padding: 1rem;
+    padding: 1rem 0; /* remove horizontal padding so content can hug viewport edges */
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }/* Navigation Bar */
-.navigation-bar {
+.shop-navigation-area .navigation-bar {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: 1rem;
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: none; /* allow full-bleed */
+    margin: 0; /* prevent centering constraints */
 }/* Shop Content Area */
 .shop-content-area {
     padding-top: calc(var(--header-height, 80px) + 100px); /* Header + nav space */;
@@ -122,15 +129,11 @@
     width: 100%;
     text-align: center;
     padding: 0.5rem 0;
-}/* Universal Header */.site-header.universal-page-header .logo-container {
-    justify-content: center;
-}.site-header.universal-page-header .logo {
-    height: 45px;
 }/* Shop & Grids */
     .product-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }#shopPage {
-    padding: 0 15px; /* Moderate padding on tablets */;
+    padding: 0; /* Full-bleed on tablets */
 }.shop-page main.page-content {
     padding: 0;
 }.grid-2 {
@@ -2148,8 +2151,6 @@
     transition-duration: 300ms;
 }.width_0 {
     width: 0%;
-}.site-header.universal-page-header .cart-text {
-    display: none;
 }
 
 @keyframes shimmer {0% {
@@ -2773,7 +2774,7 @@ html {
     /* Root aspect ratio removed to prevent clipping */
     /* aspect-ratio: 1280 / 896; */
 }
-body { /* Allow content overflow */;
+body { /* Allow content overflow */
     /* Root aspect ratio removed to prevent clipping */
     /* aspect-ratio: 1280 / 896; */
     font-family: Arial, sans-serif;
@@ -3228,24 +3229,7 @@ body { /* Allow content overflow */;
 /* ===== UNIVERSAL PAGE HEADER ===== */
 /* Consistent header with fade effect used across all pages except rooms 1-5 */
 
-.site-header.universal-page-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: var(--gradient-header);
-    color: var(--brand-primary);
-    transition: all 0.3s ease-in-out;
-    --header-height: 80px; /* Default height for padding calculations */;
-}/* Left Section: Logo and Navigation *//* Navigation Links (Left-justified) *//* Center Section: Search (Centered) */.site-header.universal-page-header .search-container {
-    position: relative; /* Needed for search results positioning */;
-    width: 100%;
-    max-width: 300px;
-}.site-header.universal-page-header .search-input-container {
-    position: relative; /* Needed for search icon positioning */;
-    display: flex;
-    align-items: center;
-}/* Right Section: User Menu and Cart *//* Mobile Menu Toggle *//* Page Content Positioning */
+ /* Header base moved to components/components-base.css (dedup) */
 .page-content {
     /* Use CSS variable for header height to ensure proper responsive spacing */
     margin-top: calc(var(--header-height, 80px) + 10px);
@@ -3270,42 +3254,70 @@ body { /* Allow content overflow */;
 /* Tablet (Portrait) */
 
 /* Mobile (Landscape & Portrait) */
-@media (max-width: 768px) {/* Update header height for smaller screens */.site-header.universal-page-header .nav-links {
-    display: none; /* Hide desktop nav, show hamburger */;
-}
-}
+/* Header responsive nav moved to components/components-base.css (dedup) */
 
 /* Small Mobile *//* ==============================================
    MOBILE MENU
    ==============================================
 */
 
-.site-header.universal-page-header .mobile-menu {
-    display: none; /* Hidden by default */;
-    position: absolute;
-    top: 100%; /* Position below the header */;
-    left: 0;
-    right: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.7) 100%);
-    transition: all 0.3s ease-in-out;
-}.site-header.universal-page-header .mobile-search {
-    padding: 15px 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-}.site-header.universal-page-header .mobile-search .search-bar {
-    width: 100%;
-    padding: 12px 16px;
-    border: 2px solid var(--brand-primary, #87ac3a);
-    border-radius: 25px;
-    background: transparent;
-    color: var(--brand-primary, #87ac3a);
-    font-size: 1rem;
-}/* ==============================================
+/* Header mobile menu styles moved to components/components-base.css (dedup) */
+/* ==============================================
    ADMIN SETTINGS SECTION HEADERS
    ============================================== */
 
 /* Settings Section Headers - Stacked Layout *//* ==============================================
    ADMIN NAVBAR TABS (RESTORED STYLING)
-   ============================================== */
+   ==============================================
+   Centralized CSS for specific UI components like the universal header.
+*/
+
+/* ===== UNIVERSAL PAGE HEADER ===== */
+/* Consistent header with fade effect used across all pages except rooms 1-5 */
+
+ /* Header base moved to components/components-base.css (dedup) */
+.page-content {
+    /* Use CSS variable for header height to ensure proper responsive spacing */
+    margin-top: calc(var(--header-height, 80px) + 10px);
+    padding-top: 10px;
+}
+.main-content {
+    /* Use CSS variable for header height to ensure proper responsive spacing */
+    margin-top: calc(var(--header-height, 80px) + 10px);
+    padding-top: 10px;
+}
+.content-wrapper {
+    /* Use CSS variable for header height to ensure proper responsive spacing */
+    margin-top: calc(var(--header-height, 80px) + 10px);
+    padding-top: 10px;
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ==============================================
+*/
+
+/* Tablet (Portrait) */
+
+/* Mobile (Landscape & Portrait) */
+/* Header responsive nav moved to components/components-base.css (dedup) */
+
+/* Small Mobile *//* ==============================================
+   MOBILE MENU
+   ==============================================
+*/
+
+/* Header mobile menu styles moved to components/components-base.css (dedup) */
+/* ==============================================
+   ADMIN SETTINGS SECTION HEADERS
+   ==============================================
+*/
+
+/* Settings Section Headers - Stacked Layout *//* ==============================================
+   ADMIN NAVBAR TABS (RESTORED STYLING)
+   ==============================================
+*/
+
 
 /* Admin Dashboard Layout *//* Admin Header Card *//* Admin Navigation Tabs - RESTORED TO LAST NIGHT'S STYLING *//* Base Admin Tab Styling *//* Individual Tab Colors - RESTORED LAST NIGHT'S STYLING */
 
@@ -8593,10 +8605,11 @@ body.modal-open #itemPopup.visible {
     align-items: center;
     gap: 8px;
 }.room-modal-button:hover {
-    background: var(--primary-hover, #6b8e23);
+    background: var(--brand-secondary);
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgb(0 0 0 / 30%);
-}.room-modal-button:active {
+}
+.room-modal-button:active {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
 }/* Enhanced styling for back button specifically */
@@ -8610,9 +8623,21 @@ body.modal-open #itemPopup.visible {
 }.back-button-container .room-modal-button:hover {
     
     outline: none;
-    background: var(--brand-primary-hover, #6b8e23);
+    background: var(--brand-secondary);
     border: none !important;
-}/* Room Product Icons in Modal - Use centralized z-index */
+}
+/* Global Button Hover Styles */
+button:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+.button:hover,
+[class*="btn"]:hover {
+    background: var(--brand-secondary);
+    border-color: var(--brand-secondary);
+    color: #fff;
+}
+
+/* Room Product Icons in Modal - Use centralized z-index */
 .room-product-icon { /* Use centralized z-index */ background-color: white; backdrop-filter: blur(2px); --icon-width: 80px; --icon-height: 80px; border-radius: 8px; overflow: hidden; top: var(--icon-top, 0); left: var(--icon-left, 0); width: var(--icon-width, 80px); height: var(--icon-height, 80px); position: absolute; cursor: pointer; transition: all 0.3s ease; z-index: var(--z-room-elements, 15);  background: #ffffff; border: none !important; padding: 0 !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; pointer-events: auto;
 }.room-product-icon:hover { /* Slightly higher on hover */ transform: scale(1.05); background: rgb(255 255 255 / 95%); box-shadow: 0 4px 12px rgb(0 0 0 / 30%); z-index: calc(var(--z-room-elements, 15) + 5); ;
 }.room-product-icon img {
@@ -11772,7 +11797,85 @@ body.image-viewer-open #imageViewerModal {
     left: 0;
     width: 100%;
     height: 100vh;
-}/* Ensure modal content doesn't inherit scroll issues */
+    z-index: var(--z-index-overlay-backdrop);
+}
+.confirmation-modal-overlay.under-header {
+    z-index: calc(var(--z-index-page-header) - 1);
+    align-items: flex-start;
+    padding-top: var(--header-height, 80px);
+}
+/* Checkout/payment overlay: ensure it stacks above room modal using variable */
+.confirmation-modal-overlay.checkout-overlay {
+    z-index: var(--z-index-checkout-overlay, 2500);
+}
+
+/* ===================== Receipt Modal (Screen) ===================== */
+.confirmation-modal.receipt-modal {
+    width: 100%;
+    max-width: 8.5in; /* letter width for visual parity on screen */
+    margin: 20px;
+}
+
+.receipt-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.receipt-modal-header .title {
+    margin: 0;
+    font-size: 1.125rem;
+}
+.receipt-modal-content {
+    background: #fff;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    max-height: calc(100vh - var(--header-height, 80px) - 40px);
+    overflow: auto;
+}
+
+.receipt-loading {
+    padding: 24px;
+    color: var(--color-text-secondary, #4b5563);
+}
+
+/* ===================== Receipt Modal (Print) ===================== */
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  /* Hide everything except the receipt content */
+  body * { visibility: hidden !important; }
+  .receipt-print-root, .receipt-print-root * { visibility: visible !important; }
+
+  /* Remove modal chrome and overlays for clean print */
+  .confirmation-modal-overlay { background: transparent !important; backdrop-filter: none !important; }
+  .receipt-modal-header { display: none !important; }
+
+  /* Expand receipt content to page */
+  .confirmation-modal.receipt-modal,
+  .receipt-modal-content,
+  .receipt-print-root {
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    width: auto !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+}
+/* Ensure modal content doesn't inherit scroll issues */
 .room-modal-content {
     position: relative;
     height: 90vh;

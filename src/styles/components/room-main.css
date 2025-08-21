@@ -208,9 +208,7 @@
    Keep after base to ensure intended precedence
    ============================================== */
 
-/* Fix page header gradient - black at top fading to transparent at bottom */
-.main-room-section::before { /* Lower than header content */ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 120px; pointer-events: none; background: linear-gradient(to bottom, black 0%, transparent 100%) !important; z-index: 1 !important; 
-}
+/* Header gradient is now defined canonically in `.site-header.universal-page-header` via --gradient-header. */
 
 /* Remove text shadow from page header text and increase z-index */
 .room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: 100 !important;  position: relative !important;

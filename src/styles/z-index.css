@@ -34,6 +34,8 @@
   /* -- Room & Special Modals -- */
   --z-index-room-modal: 2400;
   --z-index-room-modal-header: 2450;
+  /* Checkout / Payment overlay (should sit above room modal but below site header overrides) */
+  --z-index-checkout-overlay: 2500;
 
   /* -- Global Notifications & Highest Level -- */
   --z-index-global-notification: 500;

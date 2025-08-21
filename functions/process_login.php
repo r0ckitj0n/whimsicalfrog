@@ -12,6 +12,11 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Start output buffering to capture any unexpected output from includes
+if (!ob_get_level()) {
+    ob_start();
+}
+
 
 // Include the configuration and auth files
 require_once __DIR__ . '/../api/config.php';
@@ -27,12 +32,15 @@ header('Content-Type: application/json');
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
+    // Discard any buffered output to keep response body empty for preflight
+    if (ob_get_length()) { ob_end_clean(); }
     exit;
 }
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
+    if (ob_get_length()) { ob_clean(); }
     echo json_encode(['error' => 'Method not allowed']);
     exit;
 }
@@ -44,6 +52,7 @@ try {
     // Validate required fields
     if (!isset($data['username']) || !isset($data['password'])) {
         http_response_code(400);
+        if (ob_get_length()) { ob_clean(); }
         echo json_encode(['error' => 'Username and password are required']);
         exit;
     }
@@ -89,6 +98,7 @@ try {
         );
 
         // User authenticated successfully
+        if (ob_get_length()) { ob_clean(); }
         echo json_encode([
             'userId' => $user['id'],
             'username' => $user['username'],
@@ -112,6 +122,7 @@ try {
         }
 
         http_response_code(401);
+        if (ob_get_length()) { ob_clean(); }
         echo json_encode(['error' => 'Invalid username or password']);
     }
 
@@ -119,6 +130,7 @@ try {
     // Handle database errors
     error_log("Database error in login: " . $e->getMessage());
     http_response_code(500);
+    if (ob_get_length()) { ob_clean(); }
     echo json_encode([
         'error' => 'Database connection failed',
         'details' => 'Please try again later'
@@ -128,6 +140,7 @@ try {
     // Handle general errors
     error_log("Login error: " . $e->getMessage());
     http_response_code(500);
+    if (ob_get_length()) { ob_clean(); }
     echo json_encode([
         'error' => 'An unexpected error occurred',
         'details' => 'Please try again later'

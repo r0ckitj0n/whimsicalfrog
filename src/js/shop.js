@@ -30,6 +30,7 @@ const ShopPage = {
         this.categoryButtons = document.querySelectorAll('.category-btn');
         this.productCards = document.querySelectorAll('.product-card');
         this.productsGrid = document.getElementById('productsGrid');
+        this.shopNavArea = document.querySelector('#shopPage .shop-navigation-area');
 
         if (!this.productsGrid || this.categoryButtons.length === 0) {
             // Don't run shop-specific logic if the main components aren't on the page
@@ -37,6 +38,10 @@ const ShopPage = {
         }
 
         this.setupEventListeners();
+        // Ensure nav height is reflected in CSS variable before layout calc
+        this.measureNavHeight();
+        this.setupMoreToggles();
+        this.attachModalHandlers();
         // Use a timeout to ensure images are loaded before calculating heights
         setTimeout(() => this.equalizeCardHeights(), 300);
         WF.log('Shop Page module initialized.');
@@ -47,7 +52,119 @@ const ShopPage = {
             btn.addEventListener('click', (e) => this.filterByCategory(e));
         });
 
-        window.addEventListener('resize', debounce(() => this.equalizeCardHeights(), 200));
+        window.addEventListener('resize', debounce(() => {
+            this.measureNavHeight();
+            this.equalizeCardHeights();
+        }, 200));
+    },
+
+    measureNavHeight() {
+        if (!this.shopNavArea) return;
+        // Read actual nav height and expose to CSS
+        const h = this.shopNavArea.offsetHeight;
+        if (h && Number.isFinite(h)) {
+            document.documentElement.style.setProperty('--shop-nav-height', `${h}px`);
+        }
+    },
+
+    setupMoreToggles() {
+        const toggles = this.productsGrid.querySelectorAll('.product-more-toggle');
+        toggles.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Prevent card-level click from triggering modal
+                e.stopPropagation();
+                const button = e.currentTarget;
+                const card = button.closest('.product-card');
+                if (!card) return;
+
+                const isNowExpanded = !card.classList.contains('is-expanded');
+                // Toggle expanded state on the card
+                card.classList.toggle('is-expanded', isNowExpanded);
+
+                // Swap short/full description visibility
+                const shortEl = card.querySelector('.description-text-short');
+                const fullEl = card.querySelector('.description-text-full');
+                if (shortEl) shortEl.style.display = isNowExpanded ? 'none' : '';
+                if (fullEl) fullEl.style.display = isNowExpanded ? '' : 'none';
+
+                // Toggle the additional info block (CSS handles via .is-expanded)
+                // Update button a11y and label
+                button.setAttribute('aria-expanded', String(isNowExpanded));
+                button.textContent = isNowExpanded ? 'Hide Additional Information' : 'Additional Information';
+
+                // When any card is expanded, drop equalization so other rows aren't forced tall
+                if (isNowExpanded) {
+                    this.removeEqualization();
+                } else {
+                    // If no cards remain expanded, optionally re-equalize to keep tidy rows
+                    const anyExpanded = this.productsGrid.querySelector('.product-card.is-expanded');
+                    if (!anyExpanded) {
+                        setTimeout(() => this.equalizeCardHeights(), 50);
+                    }
+                }
+            });
+        });
+    },
+
+    attachModalHandlers() {
+        // Button: Add to Cart opens detailed modal
+        const buttons = this.productsGrid.querySelectorAll('.add-to-cart-btn');
+        buttons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const card = btn.closest('.product-card');
+                if (!card) return;
+                this.openModalForCard(card);
+            });
+        });
+
+        // Card click anywhere else opens detailed modal
+        this.productCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Ignore clicks on interactive elements that manage their own behavior
+                if (e.target.closest('.product-more-toggle, .add-to-cart-btn')) return;
+                this.openModalForCard(card);
+            });
+        });
+    },
+
+    openModalForCard(card) {
+        const sku = (card.dataset && card.dataset.sku) || '';
+        if (!sku) return;
+
+        // Build a lightweight item payload from the card DOM
+        const name = (card.dataset && card.dataset.name) || (card.querySelector('.product-title')?.textContent || '').trim();
+        const priceStr = (card.dataset && card.dataset.price) || '';
+        const price = Number.parseFloat(priceStr) || 0;
+        const stockEl = card.querySelector('.product-stock');
+        const stockLevel = stockEl ? Number.parseInt(stockEl.getAttribute('data-stock') || '0', 10) : 0;
+        const imgEl = card.querySelector('img.product-image');
+        const image = imgEl ? imgEl.getAttribute('src') : '';
+        const fullDescEl = card.querySelector('.description-text-full');
+        const description = fullDescEl ? fullDescEl.textContent.trim() : '';
+
+        const item = {
+            sku,
+            name,
+            price,
+            retailPrice: price,
+            currentPrice: price,
+            stockLevel,
+            image,
+            description
+        };
+
+        // Prefer the unified global modal system
+        if (window.WhimsicalFrog && window.WhimsicalFrog.GlobalModal && typeof window.WhimsicalFrog.GlobalModal.show === 'function') {
+            window.WhimsicalFrog.GlobalModal.show(sku, item);
+        } else if (typeof window.showGlobalItemModal === 'function') {
+            window.showGlobalItemModal(sku, item);
+        } else if (typeof window.showDetailedModal === 'function') {
+            window.showDetailedModal(sku, item);
+        } else {
+            console.warn('[Shop] Global modal system not available');
+        }
     },
 
     filterByCategory(event) {
@@ -69,6 +186,12 @@ const ShopPage = {
     },
 
     equalizeCardHeights() {
+        // If any card is expanded, prefer natural heights
+        if (this.productsGrid.querySelector('.product-card.is-expanded')) {
+            this.removeEqualization();
+            return;
+        }
+
         const visibleCards = Array.from(this.productCards).filter(card => !card.classList.contains('hidden'));
 
         if (visibleCards.length === 0) return;
@@ -97,6 +220,17 @@ const ShopPage = {
                     if (!card.classList.contains(className)) card.classList.add(className);
                     card.dataset.wfEqhClass = className;
                 });
+            }
+        });
+    },
+
+    removeEqualization() {
+        const cards = Array.from(this.productCards);
+        cards.forEach(card => {
+            const prev = card.dataset.wfEqhClass;
+            if (prev) {
+                card.classList.remove(prev);
+                delete card.dataset.wfEqhClass;
             }
         });
     }

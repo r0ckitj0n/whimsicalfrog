@@ -53,6 +53,7 @@ mirror --reverse --delete --verbose \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
+  --exclude-glob hot \
   --exclude-glob backups/ \
   --exclude-glob Documentation/ \
   --exclude-glob Scripts/ \
@@ -99,6 +100,8 @@ open sftp://$USER:$PASS@$HOST
 ls images/items/TS002A.webp
 ls process_multi_image_upload.php
 ls components/image_carousel.php
+ls dist/.vite/manifest.json
+ls dist/assets
 bye
 EOL
 

@@ -1,0 +1,60 @@
+{
+  "counts": {
+    "total": 500
+  },
+  "byCategory": {
+    "other": 38,
+    "exception": 36,
+    "public_php": 49,
+    "php_class": 19,
+    "backend_php": 166,
+    "logs": 12,
+    "config_docs": 6,
+    "public_assets": 164,
+    "backend_data": 5,
+    "backend_scripts": 5
+  },
+  "byDir": {
+    ".": 39,
+    ".github/workflows": 2,
+    ".husky/_": 17,
+    ".husky": 1,
+    "admin": 22,
+    "admin/inventory": 1,
+    "api": 136,
+    "components": 9,
+    "config": 1,
+    "docs": 5,
+    "docs/frontend": 2,
+    "docs/includes": 1,
+    "functions": 20,
+    "images": 2,
+    "images/backgrounds": 16,
+    "images/items": 44,
+    "images/logos": 3,
+    "images/signs": 16,
+    "includes": 34,
+    "logs": 18,
+    "partials": 2,
+    "public": 1,
+    "reports": 1,
+    "scripts": 14,
+    "sections": 2,
+    "src": 1,
+    "src/assets": 1,
+    "src/commerce": 2,
+    "src/core": 8,
+    "src/entries": 3,
+    "src/js": 36,
+    "src/js/pages": 4,
+    "src/modules": 9,
+    "src/room": 3,
+    "src/styles": 12,
+    "src/styles/components": 9,
+    "src/ui": 2,
+    "tests": 1
+  },
+  "notes": [
+    "74 asset(s) proposed for rename that may be referenced from the database. These will require coordinated DB updates."
+  ]
+}

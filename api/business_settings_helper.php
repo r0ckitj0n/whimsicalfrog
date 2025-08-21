@@ -41,7 +41,14 @@ class BusinessSettings
 
         try {
             $pdo = self::getPDO();
-            $stmt = $pdo->prepare("SELECT setting_value, setting_type FROM business_settings WHERE setting_key = ?");
+            // Prefer settings from the 'ecommerce' category when duplicates exist,
+            // then fall back to the most recently updated row.
+            $stmt = $pdo->prepare(
+                "SELECT setting_value, setting_type, category, updated_at
+                 FROM business_settings
+                 WHERE setting_key = ?
+                 ORDER BY (category = 'ecommerce') DESC, updated_at DESC"
+            );
             $stmt->execute([$key]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -298,4 +305,3 @@ function getRandomCartButtonText()
         return 'Add to Cart';
     }
 }
-?> 

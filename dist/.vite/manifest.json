@@ -74,7 +74,7 @@
     "isDynamicEntry": true
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-DLSbPuwC.js",
+    "file": "assets/js/app.js-RsYQki1v.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -84,6 +84,7 @@
       "src/js/pages/register-page.js",
       "src/js/pages/account-settings-page.js",
       "src/js/pages/account-settings-page.js",
+      "src/js/pages/payment-page.js",
       "src/entries/admin-dashboard.js",
       "src/js/admin-customers.js",
       "src/entries/admin-inventory.js",
@@ -100,7 +101,7 @@
       "src/entries/admin-dashboard.js"
     ],
     "css": [
-      "assets/app-i4FuF0mB.css"
+      "assets/app-OG4leAfx.css"
     ],
     "assets": [
       "assets/background_room_main-CD7UiX_S.webp",
@@ -202,6 +203,15 @@
     "name": "cart-page",
     "src": "src/js/pages/cart-page.js",
     "isDynamicEntry": true
+  },
+  "src/js/pages/payment-page.js": {
+    "file": "assets/payment-page-Cp2w8tjZ.js",
+    "name": "payment-page",
+    "src": "src/js/pages/payment-page.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "src/entries/app.js"
+    ]
   },
   "src/js/pages/register-page.js": {
     "file": "assets/register-page-C4nNINHS.js",

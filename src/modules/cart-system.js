@@ -22,6 +22,8 @@ class CartSystem {
     init() {
         this.loadCart();
         this.setupEventListeners();
+        // Ensure header/UI reflects persisted cart immediately on page load
+        this.updateCartDisplay();
         this.state.initialized = true;
         console.log('[Cart] System initialized');
     }
@@ -88,10 +90,15 @@ class CartSystem {
                 this.state.items.find(cartItem => cartItem.sku === item.sku).quantity, isNewItem);
         }
 
-        // Emit cart updated event
+        // Emit cart updated event (both internal bus and DOM event)
         if (window.WhimsicalFrog) {
             window.WhimsicalFrog.emit('cart:updated', { item, action: 'add' });
         }
+        try {
+            window.dispatchEvent(new CustomEvent('cartUpdated', {
+                detail: { item, action: 'add', state: this.getState() }
+            }));
+        } catch (_) {}
 
         return true;
     }
@@ -171,6 +178,11 @@ class CartSystem {
             if (window.WhimsicalFrog) {
                 window.WhimsicalFrog.emit('cart:updated', { item: removedItem, action: 'remove' });
             }
+            try {
+                window.dispatchEvent(new CustomEvent('cartUpdated', {
+                    detail: { item: removedItem, action: 'remove', state: this.getState() }
+                }));
+            } catch (_) {}
             
             return true;
         }
@@ -192,6 +204,11 @@ class CartSystem {
             if (window.WhimsicalFrog) {
                 window.WhimsicalFrog.emit('cart:updated', { item, action: 'update' });
             }
+            try {
+                window.dispatchEvent(new CustomEvent('cartUpdated', {
+                    detail: { item, action: 'update', state: this.getState() }
+                }));
+            } catch (_) {}
             
             return true;
         }
@@ -208,6 +225,11 @@ class CartSystem {
         if (window.WhimsicalFrog) {
             window.WhimsicalFrog.emit('cart:cleared');
         }
+        try {
+            window.dispatchEvent(new CustomEvent('cartUpdated', {
+                detail: { action: 'clear', state: this.getState() }
+            }));
+        } catch (_) {}
     }
 
     // Recalculate total
@@ -222,17 +244,28 @@ class CartSystem {
 
     // Update cart display in UI
     updateCartDisplay() {
-        // Update cart counter
+        // Update cart counter (generic numeric badges)
         const counters = document.querySelectorAll('.cart-count, .cart-counter, #cart-count');
         counters.forEach(counter => {
             counter.textContent = this.state.count;
             counter.classList.toggle('hidden', this.state.count === 0);
         });
 
-        // Update cart total
+        // Update cart total (generic)
         const totals = document.querySelectorAll('.cart-total, #cart-total');
         totals.forEach(total => {
             total.textContent = `$${this.state.total.toFixed(2)}`;
+        });
+
+        // Update header-specific labels (id casing used in PHP header)
+        const countLabels = document.querySelectorAll('#cartCount');
+        countLabels.forEach(el => {
+            const itemText = this.state.count === 1 ? 'item' : 'items';
+            el.textContent = `${this.state.count} ${itemText}`;
+        });
+        const totalLabels = document.querySelectorAll('#cartTotal');
+        totalLabels.forEach(el => {
+            el.textContent = `$${this.state.total.toFixed(2)}`;
         });
 
         // Update cart button states
@@ -261,11 +294,12 @@ class CartSystem {
             }
         });
 
-        // Remove buttons
+        // Remove buttons (robust: handle clicks on child elements)
         document.addEventListener('click', (e) => {
-            if (e.target.matches('.remove-from-cart, [data-action="remove-from-cart"]')) {
+            const el = e.target && e.target.closest && e.target.closest('.remove-from-cart, [data-action="remove-from-cart"], .cart-item-remove');
+            if (el) {
                 e.preventDefault();
-                const sku = e.target.dataset.sku || e.target.closest('[data-sku]')?.dataset.sku;
+                const sku = el.dataset.sku || el.closest('[data-sku]')?.dataset.sku;
                 if (sku) {
                     this.removeItem(sku);
                 }
@@ -296,6 +330,84 @@ class CartSystem {
         }
 
         this.addItem(item);
+    }
+
+    // Render cart contents into the cart page container
+    async renderCart() {
+        const itemsContainer = document.getElementById('cartModalItems') || document.getElementById('cartItems');
+        if (!itemsContainer) return;
+
+        const footerEl = document.getElementById('cartModalFooter');
+        const currency = (v) => `$${(parseFloat(v) || 0).toFixed(2)}`;
+
+        if (!this.state.items.length) {
+            itemsContainer.innerHTML = '<div class="p-6 text-center text-gray-600">Your cart is empty.</div>';
+            if (footerEl) {
+                footerEl.innerHTML = `
+                  <div class="cart-footer-bar">
+                    <div class="cart-subtotal"><span>Subtotal</span><strong>${currency(this.state.total)}</strong></div>
+                    <a class="cart-checkout-btn is-disabled" aria-disabled="true">Checkout</a>
+                  </div>
+                `;
+            }
+            return;
+        }
+
+        const itemsHtml = this.state.items.map(item => {
+            const lineTotal = (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0);
+            const img = item.image ? `<img src="${item.image}" alt="${item.name || item.sku}" class="cart-item-image"/>` : '';
+            const optionBits = [];
+            if (item.optionGender) optionBits.push(item.optionGender);
+            if (item.optionSize) optionBits.push(item.optionSize);
+            if (item.optionColor) optionBits.push(item.optionColor);
+            const optionsHtml = optionBits.length ? `<div class="cart-item-options text-sm text-gray-500">${optionBits.join(' • ')}</div>` : '';
+            return `
+                <div class="cart-item" data-sku="${item.sku}">
+                  ${img}
+                  <div class="cart-item-details">
+                    <div class="cart-item-title">${item.name || item.sku}</div>
+                    ${optionsHtml}
+                    <div class="cart-item-price">${currency(item.price)}</div>
+                  </div>
+                  <div class="cart-item-quantity">
+                    <input type="number" min="0" class="cart-quantity-input" data-sku="${item.sku}" value="${item.quantity}" />
+                  </div>
+                  <div class="cart-item-remove remove-from-cart" data-sku="${item.sku}" aria-label="Remove item" title="Remove">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-trash" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+                      <path d="M10 11v6"></path>
+                      <path d="M14 11v6"></path>
+                      <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </div>
+                  <div class="cart-item-line-total">${currency(lineTotal)}</div>
+                </div>
+              `;
+        }).join('');
+
+        if (footerEl) {
+            // Render items only in the items container; put summary in footer
+            itemsContainer.innerHTML = itemsHtml;
+            const disabledClass = this.state.count > 0 ? '' : 'is-disabled';
+            const checkoutHref = this.state.count > 0 ? ' href="/payment"' : '';
+            footerEl.innerHTML = `
+              <div class="cart-footer-bar">
+                <div class="cart-subtotal"><span>Subtotal</span><strong>${currency(this.state.total)}</strong></div>
+                <a class="cart-checkout-btn ${disabledClass}"${checkoutHref}>Checkout</a>
+              </div>
+            `;
+        } else {
+            // Fallback: legacy summary appended below items
+            const summaryHtml = `
+              <div class="cart-summary">
+                <div class="summary-row"><span>Subtotal</span><span>${currency(this.state.total)}</span></div>
+                <div class="summary-total">Total: <span>${currency(this.state.total)}</span></div>
+                <a class="cart-checkout-btn" href="/payment">Checkout</a>
+              </div>
+            `;
+            itemsContainer.innerHTML = itemsHtml + summaryHtml;
+        }
     }
 
     // Public API methods

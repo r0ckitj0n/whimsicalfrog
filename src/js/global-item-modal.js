@@ -9,6 +9,8 @@
     // Global modal state
     let currentModalItem = null;
     let modalContainer = null;
+    // Cleanup hook for header offset listener
+    let removeHeaderOffsetListener = null;
 
     /**
      * Initialize the global modal system
@@ -95,49 +97,52 @@
             // Check if modal element was created
             const insertedModal = document.getElementById('detailedItemModal');
             console.log('🔧 Modal element found after insertion:', !!insertedModal);
+            // Ensure modal respects page header height
+            if (insertedModal) {
+                setupHeaderOffset(insertedModal);
+            }
             
             // All inline scripts have been removed from the modal component.
-            // The required logic is now in `js/detailed-item-modal.js`,
-            // which will be loaded dynamically below.
-            
+            // The required logic is provided by the canonical detailed modal script,
+            // which is now bundled via Vite (imported in src/js/app.js).
+
             // Store current item data
             currentModalItem = item;
             window.currentDetailedItem = item; // Make it available to the modal script
             console.log('🔧 Current modal item stored');
             
-            // Dynamically load and then execute the modal's specific JS
-            loadScript(`js/detailed-item-modal.js?v=${Date.now()}`, 'detailed-item-modal-script')
-                .then(() => {
-                    console.log('🔧 Detailed item modal script loaded.');
-                    // Wait a moment for scripts to execute, then show the modal
-                    setTimeout(() => {
-                        console.log('🔧 Attempting to show modal...');
-                        if (typeof window.showDetailedModalComponent !== 'undefined') {
-                            console.log('🔧 Using showDetailedModalComponent function');
-                            window.showDetailedModalComponent(sku, item);
-                        } else {
-                            // Fallback to show modal manually
-                            const modal = document.getElementById('detailedItemModal');
-                            if (modal) {
-                                modal.classList.remove('hidden');
-                                // Lock scroll via centralized WFModals helper
-                                if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
-                                    window.WFModals.lockScroll();
-                                }
-                            }
+            // Use the globally-registered function provided by the bundled detailed modal script.
+            // If it's not present for any reason, fall back to a minimal open behavior.
+            console.log('🔧 Attempting to show modal...');
+            if (typeof window.showDetailedModalComponent === 'function') {
+                console.log('🔧 Using showDetailedModalComponent function');
+                window.showDetailedModalComponent(sku, item);
+            } else {
+                console.warn('🔧 showDetailedModalComponent not found; using fallback modal open');
+                const modal = document.getElementById('detailedItemModal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('show');
+                    if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
+                        window.WFModals.lockScroll();
+                    }
+                    modal.addEventListener('click', (e) => {
+                        const outside = !e.target.closest('.detailed-item-modal-container');
+                        const isOverlay = e.target === modal || outside || (e.target && e.target.dataset && e.target.dataset.action === 'closeDetailedModalOnOverlay');
+                        if (!isOverlay) return;
+                        try { closeGlobalItemModal(); } catch (_) { modal.remove(); }
+                        if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
+                            window.WFModals.unlockScrollIfNoneOpen();
                         }
-                        
-                        // Initialize enhanced modal content after modal is shown
-                        setTimeout(() => {
-                            if (typeof window.initializeEnhancedModalContent === 'function') {
-                                window.initializeEnhancedModalContent();
-                            }
-                        }, 100);
-                    }, 50);
-                })
-                .catch(error => {
-                    console.error('🔧 Failed to load detailed item modal script:', error);
-                });
+                    });
+                }
+            }
+            // Initialize enhanced modal content after modal is shown
+            setTimeout(() => {
+                if (typeof window.initializeEnhancedModalContent === 'function') {
+                    window.initializeEnhancedModalContent();
+                }
+            }, 100);
             
         } catch (error) {
             console.error('🔧 Error in showGlobalItemModal:', error);
@@ -157,6 +162,11 @@
         const modal = document.getElementById('detailedItemModal');
         if (modal) {
             modal.remove(); // Use remove() for simplicity
+        }
+        // Remove header offset listener if present
+        if (typeof removeHeaderOffsetListener === 'function') {
+            try { removeHeaderOffsetListener(); } catch (_) {}
+            removeHeaderOffsetListener = null;
         }
         // Unlock scroll if no other modals are open
         if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
@@ -215,25 +225,35 @@
         };
     }
 
+    // loadScript helper removed as the detailed modal script is bundled via Vite and loaded with app.js
+
     /**
-     * Dynamically loads a script and returns a promise.
-     * @param {string} src - The script source URL.
-     * @param {string} id - The ID to give the script element.
-     * @returns {Promise}
+     * Compute and apply header offset so the modal sits below the site header.
+     * Binds a resize listener scoped to the current modal lifecycle.
+     * @param {HTMLElement} modal
      */
-    function loadScript(src, id) {
-        return new Promise((resolve, reject) => {
-            if (document.getElementById(id)) {
-                resolve();
-                return;
+    function setupHeaderOffset(modal) {
+        function computeOffset() {
+            const header = document.querySelector('.site-header.universal-page-header');
+            // Prefer CSS var --header-height if available; fallback to offsetHeight
+            let cssVar = '';
+            if (header) {
+                const styles = getComputedStyle(header);
+                const varVal = styles.getPropertyValue('--header-height').trim();
+                cssVar = varVal || '';
             }
-            const script = document.createElement('script');
-            script.src = src;
-            script.id = id;
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error(`Script load error for ${src}`));
-            document.body.appendChild(script);
-        });
+            let px = 0;
+            if (cssVar && cssVar.endsWith('px')) {
+                px = parseInt(cssVar, 10) || 0;
+            } else if (header) {
+                px = header.offsetHeight || 0;
+            }
+            modal.style.setProperty('--wf-header-offset', px + 'px');
+        }
+        computeOffset();
+        const onResize = () => computeOffset();
+        window.addEventListener('resize', onResize);
+        removeHeaderOffsetListener = () => window.removeEventListener('resize', onResize);
     }
 
     // Initialize on load or immediately if DOM is ready
@@ -244,6 +264,7 @@
     }
 
     // Legacy compatibility - these functions will call the new global system
+    window.showGlobalItemModal = showGlobalItemModal; // Needed for popup click handler
     window.showItemDetails = showGlobalItemModal;
     window.showItemDetailsModal = showGlobalItemModal; // Added alias for legacy support
     window.showDetailedModal = showGlobalItemModal;

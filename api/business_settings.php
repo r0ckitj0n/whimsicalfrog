@@ -2,7 +2,7 @@
 // Business Settings API
 // Handles comprehensive business configuration for website customization
 
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 header('Content-Type: application/json');
@@ -83,6 +83,10 @@ try {
 
         case 'update_multiple_settings':
             updateMultipleSettings($pdo);
+            break;
+
+        case 'upsert_settings':
+            upsertSettings($pdo);
             break;
 
         case 'reset_to_defaults':
@@ -225,6 +229,104 @@ function updateMultipleSettings($pdo)
     } catch (Exception $e) {
         $pdo->rollBack();
         echo json_encode(['success' => false, 'message' => 'Failed to update settings: ' . $e->getMessage()]);
+    }
+}
+/**
+ * Insert or update multiple settings, creating rows if they don't exist
+ * Accepts either JSON body { settings: { key: value, ... }, category?: 'ecommerce' }
+ * or form POST with 'settings' (JSON string) and optional 'category'
+ */
+function upsertSettings($pdo)
+{
+    // Prefer JSON payload
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true);
+
+    $category = 'ecommerce';
+    $settings = null;
+
+    if (is_array($input)) {
+        // Support either flat object or wrapped under 'settings'
+        if (isset($input['settings']) && is_array($input['settings'])) {
+            $settings = $input['settings'];
+        } else {
+            // If not wrapped, assume the object is the settings map
+            $settings = $input;
+        }
+        if (!empty($input['category']) && is_string($input['category'])) {
+            $category = $input['category'];
+        }
+    }
+
+    // Fallback to form POST
+    if ($settings === null) {
+        $category = $_POST['category'] ?? $category;
+        $settingsJson = $_POST['settings'] ?? '';
+        if (!empty($settingsJson)) {
+            $decoded = json_decode($settingsJson, true);
+            if (is_array($decoded)) {
+                $settings = $decoded;
+            }
+        }
+    }
+
+    if (!is_array($settings) || empty($settings)) {
+        echo json_encode(['success' => false, 'message' => 'Settings map is required']);
+        return;
+    }
+
+    $pdo->beginTransaction();
+
+    try {
+        $stmt = $pdo->prepare("\n            INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description)\n            VALUES (:category, :key, :value, :type, :display_name, :description)\n            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), setting_type = VALUES(setting_type), updated_at = CURRENT_TIMESTAMP\n        ");
+
+        $saved = 0;
+        foreach ($settings as $key => $value) {
+            // Infer type and normalize value for storage
+            $type = 'text';
+            if (is_bool($value) || (is_string($value) && in_array(strtolower($value), ['true','false','1','0'], true))) {
+                // Normalize booleans
+                $boolVal = is_bool($value) ? $value : in_array(strtolower($value), ['true','1'], true);
+                $value = $boolVal ? 'true' : 'false';
+                $type = 'boolean';
+            } elseif (is_numeric($value)) {
+                $type = 'number';
+                $value = (string)$value;
+            } elseif (is_array($value)) {
+                $type = 'json';
+                $value = json_encode($value);
+            } else {
+                $type = 'text';
+                $value = (string)$value;
+            }
+
+            $displayName = ucwords(str_replace('_', ' ', (string)$key));
+            $description = 'Business setting ' . (string)$key;
+
+            if ($stmt->execute([
+                ':category' => $category,
+                ':key' => (string)$key,
+                ':value' => $value,
+                ':type' => $type,
+                ':display_name' => $displayName,
+                ':description' => $description,
+            ])) {
+                $saved++;
+            }
+        }
+
+        $pdo->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Upserted {$saved} settings successfully",
+            'updated_count' => $saved,
+            'category' => $category
+        ]);
+
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        echo json_encode(['success' => false, 'message' => 'Failed to upsert settings: ' . $e->getMessage()]);
     }
 }
 // resetToDefaults function moved to data_manager.php for centralization

@@ -7,35 +7,35 @@ function renderGlobalPopup()
     ob_start();
     ?>
     
-    <!- Global Item Popup ->
-    <div id="itemPopup" class="item-popup">
+    <!-- Global Item Popup -->
+    <div id="itemPopup" class="item-popup hidden" aria-hidden="true">
         <div class="popup-content">
-            <!- Sale Badge ->
+            <!-- Sale Badge -->
             <div id="popupSaleBadge" class="popup-sale-badge hidden">
                 <span class="sale-badge">
                     <span id="popupSaleText">SALE</span>
                 </span>
             </div>
 
-            <!- Limited Stock Badge ->
+            <!-- Limited Stock Badge -->
             <div id="popupStockBadge" class="popup-stock-badge hidden">
                 <span class="stock-badge" id="popupStockText">LIMITED STOCK</span>
             </div>
             
-            <!- Product Image ->
+            <!-- Product Image -->
             <div class="popup-image-container">
                 <img id="popupImage" class="popup-image" alt="Product Image" loading="lazy">
+                <!-- Badge overlay container (badges positioned absolutely over the image) -->
+                <div id="popupBadgeContainer" class="popup-badge-container" aria-hidden="true"></div>
             </div>
             
-            <!- Product Info ->
+            <!-- Product Info -->
             <div class="popup-info">
-                <div id="popupCategory" class="popup-category">Category</div>
                 <h3 id="popupTitle" class="popup-title">Product Name</h3>
-                <div id="popupSku" class="popup-sku">SKU: </div>
                 <div id="popupStock" class="popup-stock-info">In Stock</div>
                 <p id="popupDescription" class="popup-description">Product description</p>
                 
-                <!- Price Section ->
+                <!-- Price Section -->
                 <div id="popupPriceSection" class="popup-price-section">
                     <span id="popupCurrentPrice" class="popup-price">$0.00</span>
                     <span id="popupOriginalPrice" class="popup-original-price hidden">$0.00</span>
@@ -43,7 +43,7 @@ function renderGlobalPopup()
                 </div>
             </div>
             
-            <!- Action Buttons ->
+            <!-- Action Buttons -->
             <div class="popup-actions">
                 <button id="popupAddBtn" class="popup-add-btn">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

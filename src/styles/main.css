@@ -1,7 +1,11 @@
 /* Z-Index utilities (foundational) */
+@import url('https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&family=Nunito:wght@400;600;700&display=swap');
 @import url('./z-index.css');
 
-/* Main site styles - this contains all the compiled CSS for the site */
+/* Brand variables (colors and gradients) */
+@import url('./variables.css');
+
+/* Main site styles - this contains all the site styles */
 @import url('./site-base.css');
 
 /* Room main (consolidated) */
@@ -23,10 +27,18 @@
 @import url('./components/modal.css');
 @import url('./login-modal.css');
 @import url('./admin-modals.css');
-@import url('./legacy_missing_admin.css');
+/* Missing file removed to prevent Vite 500 during dev */
+/* @import url('./legacy_missing_admin.css'); */
 @import url('./admin-db-tools.css');
 @import url('./admin-inventory.css');
 @import url('./utilities-ui.css');
+
+/* --- Checkout page layering fix: ensure it appears above room modal overlay --- */
+body[data-page='payment'] #paymentPage,
+body[data-page='payment'] #checkoutRoot {
+  position: relative; /* establish stacking context */
+  z-index: 2600; /* above room modal overlay (~2400), below topmost UI */
+}
 
 /* Center title and intro text inside the green contact card */
 body[data-page='contact'] .wf-contact-card .content { text-align: center; }
@@ -60,6 +72,8 @@ body[data-page='contact'] .page-content.container { padding-left: 0; padding-rig
 video { max-width: 100%; height: auto; }
 canvas { max-width: 100%; height: auto; }
 svg { max-width: 100%; height: auto; }
+/* Remove default browser margins that cause side gaps */
+html, body { margin: 0; padding: 0; }
 /* Global modal scroll lock + stable gutters */
 /* Support aliases used in some scripts */
 body.modal-open-overflow-hidden { overflow: hidden !important; }
@@ -70,7 +84,10 @@ body.modal-open-position-fixed { position: fixed; width: 100%; }
 body.mode-fullscreen #landingPage {
   position: fixed;
   inset: 0;
-  background: none;
+  /* Do not reset background here; allow dynamic background-image from JS */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   z-index: var(--z-base, 1);
   overflow: hidden;
 }
@@ -405,3 +422,144 @@ body[data-page='contact'] .content { color: #fff !important; }
   max-width: 600px;
   margin: 0 auto;
 }
+
+/* --- Receipt specific styles --- */
+/* Make the receipt logo considerably smaller without affecting the site header */
+.receipt-container .header-logo {
+  max-height: 28px;
+  width: auto;
+  object-fit: contain;
+  margin-right: 10px;
+}
+
+/* --- Shop page styles --- */
+/* Navigation area just under the page header */
+#shopPage .shop-navigation-area {
+  /* Ensure fixed nav spans the full viewport width */
+  position: fixed;
+  top: var(--header-height, 80px);
+  left: 0;
+  right: 0;
+  padding: 8px 0;
+  margin: 0;
+  width: auto;
+}
+
+/* Make the shop page span full width with no side padding so left edge hugs viewport */
+body[data-page='shop'] .page-content#shopPage {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+/* Also target the ID directly to defeat media query rules like #shopPage { padding: 0 15px } */
+body[data-page='shop'] #shopPage {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  /* Use full container width (avoid 100vw to prevent horizontal overflow) */
+  width: 100% !important;
+  max-width: none !important;
+}
+
+/* Three-column grid to center the middle filter row */
+#shopPage .navigation-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  width: 100%;
+  max-width: none; /* override site-base constraint so left edge can hug viewport */
+  padding: 0; /* remove any default padding to allow true edge-to-edge */
+  box-sizing: border-box;
+}
+
+/* Neutralize any container-style wrappers within the shop section */
+body[data-page='shop'] #shopPage .container,
+body[data-page='shop'] #shopPage .page-content-container,
+body[data-page='shop'] #shopPage .content,
+body[data-page='shop'] #shopPage .content-wrapper {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Back to Main Room image: top-left and limited height */
+#shopPage .room-main-nav-container { justify-self: start; }
+#shopPage .room-main-nav-image { height: 60px; width: auto; display: block; object-fit: contain; }
+
+/* Center the category filter buttons */
+#shopPage .category-navigation {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Scrollable content area (internal scrollbar while nav stays fixed) */
+#shopPage .shop-content-area {
+  margin-top: 12px;
+  padding-top: var(--shop-nav-height, 100px); /* reserve space equal to fixed nav height */
+  height: calc(100vh - (var(--header-height, 80px) + var(--shop-nav-height, 100px))); /* viewport minus header + nav */
+  min-height: 0; /* defeat any global min-height */
+  overflow-y: auto; /* vertical scroll within product list area */
+  width: 100%;
+  max-width: none; /* ensure full-window width */
+}
+
+/* Remove any residual horizontal padding/margins on scroll area and grid */
+body[data-page='shop'] #shopPage .shop-content-area,
+body[data-page='shop'] #shopPage #productsGrid {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Responsive product grid: fill full width; columns grow to consume space */
+#shopPage #productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  justify-content: stretch; /* tracks fill container width */
+  width: 100%;
+}
+
+/* Product card sizing and internal scroll behavior */
+#shopPage .product-card {
+  width: 100%; /* fill the grid column */
+  max-width: none; /* allow full-width columns */
+  /* Allow card to grow naturally; no internal scroll or clipping */
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e5e7eb; /* gray-300 */
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+}
+
+/* Image area constrained to keep card height predictable */
+#shopPage .product-image-container { display: flex; align-items: center; justify-content: center; max-height: 260px; overflow: hidden; }
+#shopPage .product-image { width: 100%; height: auto; max-height: 240px; object-fit: contain; display: block; }
+
+/* Middle content can scroll inside the card if needed */
+#shopPage .product-content { flex: 1 1 auto; overflow: visible; }
+
+/* Keep price/meta and button accessible at the bottom */
+#shopPage .product-info { margin-top: 8px; }
+#shopPage .product-button { margin-top: 10px; }
+
+/* Additional Information: hidden by default; shown when card is expanded */
+#shopPage .product-extra { display: none; margin-top: 8px; color: #374151; }
+#shopPage .product-card.is-expanded .product-extra { display: block; }
+#shopPage .product-more-toggle { margin-top: 6px; padding: 0; background: transparent; border: none; color: var(--brand-primary, #87ac3a); cursor: pointer; font-weight: 600; }
+#shopPage .product-more-toggle:hover { text-decoration: underline; }

@@ -58,12 +58,28 @@ async function request(method, path, data = null, options = {}) {
         throw new Error(`API Error (${response.status}): ${message}`);
     }
 
-    // If response is OK but empty (e.g. 204 No Content), return null for JSON to avoid parsing errors
+    // If response is OK but empty (e.g. 204 No Content), return null
     if (response.status === 204 || !contentType) {
         return null;
     }
 
-    return isJson ? response.json() : response.text();
+    // Robust JSON handling: tolerate empty body and provide clearer errors
+    if (isJson) {
+        const text = await response.text();
+        const trimmed = (text || '').trim();
+        if (!trimmed) {
+            // Empty JSON body — return empty object so callers can handle gracefully
+            return {};
+        }
+        try {
+            return JSON.parse(trimmed);
+        } catch (parseErr) {
+            console.warn('[api-client] Invalid JSON response', { url, snippet: trimmed.slice(0, 200) });
+            throw new Error('Invalid JSON response from server.');
+        }
+    }
+
+    return response.text();
 }
 
 function get(path, options = {}) {

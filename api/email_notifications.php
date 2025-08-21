@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/../includes/business_settings_helper.php';
+require_once __DIR__ . '/business_settings_helper.php';
 require_once __DIR__ . '/../includes/email_helper.php';
 
 /**
@@ -298,4 +298,3 @@ function logEmailSend($toEmail, $subject, $emailType, $status, $templateId = nul
     }
 }
 // sendTestEmail function moved to email_manager.php for centralization
-?> 

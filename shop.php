@@ -130,7 +130,9 @@ if (!empty($categories)) {
                 $sku = htmlspecialchars($product['sku'] ?? 'NO-SKU');
                 $price = htmlspecialchars($product['price'] ?? '0.00');
                 $stock = (int)($product['stock'] ?? 0);
-                $description = htmlspecialchars(substr($product['description'] ?? 'No description available', 0, 100));
+                $rawDescription = $product['description'] ?? 'No description available';
+                $shortDescription = substr($rawDescription, 0, 100);
+                $hasMore = strlen($rawDescription) > strlen($shortDescription);
 
                 // Get custom button text or use default
                 $customButtonText = !empty($product['custom_button_text']) ?
@@ -143,7 +145,7 @@ if (!empty($categories)) {
                 // Simple formatting
                 $formattedPrice = '$' . number_format((float)$price, 2);
                 ?>
-        <div class="product-card" data-category="<?php echo htmlspecialchars($slug); ?>">
+        <div class="product-card" data-category="<?php echo htmlspecialchars($slug); ?>" data-sku="<?php echo $sku; ?>" data-name="<?php echo $productName; ?>" data-price="<?php echo $price; ?>">
             <!-- Product Image -->
             <div class="product-image-container">
                 <div class="product-image-container" id="image-container-<?php echo $sku; ?>">
@@ -162,48 +164,40 @@ if (!empty($categories)) {
                 <!-- Product Title -->
                 <h3 class="product-title"><?php echo $productName; ?></h3>
 
-                <!-- Product Description - Expandable Middle Section -->
+                <!-- Product Description - Short by default, full on expand -->
                 <div class="product-description">
-                    <p class="description-text"
-                       title="<?php echo htmlspecialchars($description); ?>">
-                        <?php echo htmlspecialchars(substr($description, 0, 100)); ?>
-                        <?php if (strlen($description) > 100): ?>
-                            <span class="read-more">... (more)</span>
-                        <?php endif; ?>
+                    <p class="description-text-short" title="<?php echo htmlspecialchars($shortDescription); ?>">
+                        <?php echo htmlspecialchars($shortDescription); ?><?php echo $hasMore ? '...' : ''; ?>
                     </p>
+                    <p class="description-text-full" style="display:none;" title="<?php echo htmlspecialchars($rawDescription); ?>">
+                        <?php echo htmlspecialchars($rawDescription); ?>
+                    </p>
+                    <button class="product-more-toggle" type="button" aria-expanded="false">Additional Information</button>
                 </div>
             </div>
 
-            <!-- Product Info - Fixed Bottom Section -->
+            <!-- Product Info - Price visible, rest moved to Additional Information -->
             <div class="product-info">
                 <!-- Price - Prominent Display -->
                 <div class="product-price">
                     <?php echo $formattedPrice; ?>
                 </div>
+            </div>
 
-                <!-- Stock Level - Color Coded -->
+            <!-- Additional Information (hidden until expanded) -->
+            <div class="product-extra">
                 <div class="product-stock" data-stock="<?php echo $stock; ?>">
                     Stock: <?php echo $stock; ?>
                 </div>
-
-                <!-- Product Meta - Category and SKU -->
                 <div class="product-meta">
-                    <!-- Category -->
-                    <div class="product-category">
-                        <?php echo htmlspecialchars($categoryLabel); ?>
-                    </div>
-
-                    <!-- SKU -->
-                    <div class="product-sku">
-                        SKU: <?php echo $sku; ?>
-                    </div>
-                </div>
+                    <div class="product-category">Category: <?php echo htmlspecialchars($categoryLabel); ?></div>
+                    <div class="product-sku">SKU: <?php echo $sku; ?></div>
                 </div>
             </div>
 
             <!-- Add to Cart Button - Always at Bottom -->
             <div class="product-button">
-                <button class="add-to-cart-btn"
+                <button class="add-to-cart-btn btn-brand rounded-brand"
                         data-sku="<?php echo $sku; ?>"
                         data-name="<?php echo htmlspecialchars($productName); ?>"
                         data-price="<?php echo $price; ?>"

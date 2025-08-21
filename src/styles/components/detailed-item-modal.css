@@ -6,12 +6,29 @@
 
 /* Ensure overlay stays flex-centred even if later CSS alters display */
 .detailed-item-modal.show {
-    /* remove default tailwind p-4 gap so container sits flush */
-    padding: 0 !important;
+    /* position the overlay below the universal header using a dynamic CSS var */
+    top: var(--wf-header-offset, 0px) !important;
+    bottom: auto !important; /* override Tailwind's inset-0 bottom */
+    height: calc(100vh - var(--wf-header-offset, 0px)) !important;
+    padding-top: 0 !important;
     display: flex !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     justify-content: center !important;
 }
+
+/* ==============================================
+   PRICE STYLING – larger and brand secondary color
+   ============================================== */
+.detailed-item-modal #detailedPriceSection #detailedCurrentPrice {
+    /* approximately 2x the previous text-xl (1.25rem -> 2.5rem) */
+    font-size: 2.5rem !important;
+    line-height: 1.1 !important;
+    color: var(--brand-secondary) !important; /* burnt orange */
+}
+
+/* Utility text color classes scoped to modal */
+.detailed-item-modal .text-brand-primary { color: var(--brand-primary) !important; }
+.detailed-item-modal .text-brand-secondary { color: var(--brand-secondary) !important; }
 
 /* Prevent container from stretching to entire viewport width */
 
@@ -25,14 +42,29 @@
 
 /* Fix Add to Cart button width */
 .detailed-item-modal .wf-add-to-cart-btn {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: auto !important;
+    max-width: none !important;
     box-sizing: border-box !important;
+    white-space: nowrap !important;
 }
 .detailed-item-modal .btn--detailed-add-to-cart {
-    width: 100% !important;
-    max-width: 100% !important;
+    width: auto !important;
+    max-width: none !important;
     box-sizing: border-box !important;
+    white-space: nowrap !important;
+}
+/* When in the qty+cart inline row, allow button to fill remaining space */
+.detailed-item-modal .detailed-qty-and-cart-row .wf-add-to-cart-btn,
+.detailed-item-modal .detailed-qty-and-cart-row .btn--detailed-add-to-cart {
+    width: 100% !important;
+    white-space: nowrap !important;
+}
+/* Hover color for Add to Cart inside modal */
+.detailed-item-modal .wf-add-to-cart-btn:hover,
+.detailed-item-modal .btn--detailed-add-to-cart:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
 }
 
 /* Fix Additional Details button width */
@@ -63,7 +95,7 @@
     display: inline-flex !important;
     align-items: center !important;
     gap: 2px !important;
-    max-width: 100px !important;
+    max-width: 180px !important;
     width: auto !important;
     flex-wrap: nowrap !important;
 }
@@ -71,10 +103,10 @@
 /* FINAL NUCLEAR FIX: Absolutely minimal quantity buttons */
 .detailed-item-modal .btn--qty {
     /* Absolutely minimal sizing */
-    width: 14px !important;
-    min-width: 14px !important;
-    max-width: 14px !important;
-    height: 14px !important;
+    width: 24px !important;    /* 14px -> 24px (~+71%) */
+    min-width: 24px !important;
+    max-width: 24px !important;
+    height: 24px !important;
     
     /* Remove ALL padding and margin */
     padding: 0 !important;
@@ -97,7 +129,7 @@
     justify-content: center !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    font-size: 10px !important;
+    font-size: 17px !important; /* 10px -> 17px */
     line-height: 1 !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
@@ -106,10 +138,10 @@
 }
 .detailed-item-modal .quantity-selector .btn--qty {
     /* Absolutely minimal sizing */
-    width: 14px !important;
-    min-width: 14px !important;
-    max-width: 14px !important;
-    height: 14px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    height: 24px !important;
     
     /* Remove ALL padding and margin */
     padding: 0 !important;
@@ -132,7 +164,7 @@
     justify-content: center !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    font-size: 10px !important;
+    font-size: 17px !important;
     line-height: 1 !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
@@ -141,10 +173,10 @@
 }
 .detailed-item-modal .flex .btn--qty {
     /* Absolutely minimal sizing */
-    width: 14px !important;
-    min-width: 14px !important;
-    max-width: 14px !important;
-    height: 14px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    height: 24px !important;
     
     /* Remove ALL padding and margin */
     padding: 0 !important;
@@ -167,7 +199,7 @@
     justify-content: center !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    font-size: 10px !important;
+    font-size: 17px !important;
     line-height: 1 !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
@@ -176,10 +208,10 @@
 }
 .detailed-item-modal-container .btn--qty {
     /* Absolutely minimal sizing */
-    width: 14px !important;
-    min-width: 14px !important;
-    max-width: 14px !important;
-    height: 14px !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    height: 24px !important;
     
     /* Remove ALL padding and margin */
     padding: 0 !important;
@@ -202,7 +234,7 @@
     justify-content: center !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    font-size: 10px !important;
+    font-size: 17px !important;
     line-height: 1 !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
@@ -212,19 +244,30 @@
 
 /* Target SVG icons inside buttons to make them smaller */
 .detailed-item-modal .btn--qty svg {
-    width: 8px !important;
-    height: 8px !important;
+    width: 14px !important;  /* 8px -> 14px */
+    height: 14px !important;
     flex-shrink: 0 !important;
 }
 .detailed-item-modal .quantity-selector .btn--qty svg {
-    width: 8px !important;
-    height: 8px !important;
+    width: 14px !important;
+    height: 14px !important;
     flex-shrink: 0 !important;
 }
 
-/* Ensure the main image renders as a block element (replaces removed inline style) */
+/* Ensure the main image renders as a block element and constrain height */
 .detailed-item-modal #detailedMainImage {
     display: block !important;
+    height: auto !important;
+    width: 100% !important;
+    object-fit: contain !important;
+    /* About 50px less than the current available modal viewport */
+    max-height: calc(95vh - var(--wf-header-offset, 0px) - 50px) !important;
+}
+
+/* Override the aspect-square wrapper for the main image so it shrinks with the image */
+.detailed-item-modal .aspect-square {
+    aspect-ratio: auto !important;
+    max-height: calc(95vh - var(--wf-header-offset, 0px) - 50px) !important;
 }
 
 /* NUCLEAR FIX: Completely eliminate horizontal scrollbar at container level */
@@ -235,6 +278,7 @@
     overflow-x: hidden !important;
     overflow-y: auto !important;
     box-sizing: border-box !important;
+    z-index: 100002 !important;
 }
 
 /* Hide horizontal scrollbar but keep vertical */
@@ -255,52 +299,96 @@
 
 /* Make quantity input field narrower - target semantic class */
 .detailed-item-modal .input--qty {
-    width: 30px !important;
-    min-width: 30px !important;
-    max-width: 30px !important;
+    width: 52px !important;      /* 30px -> 52px */
+    min-width: 52px !important;
+    max-width: 52px !important;
     text-align: center !important;
-    padding: 1px !important;
+    padding: 1px !important; /* base */
+    padding-top: 6px !important;   /* increase vertical padding */
+    padding-bottom: 6px !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    font-size: 11px !important;
+    font-size: 1.3125rem !important;  /* match 1.5x text size */
+    line-height: 1.2 !important;
+    min-height: 2.25rem !important;   /* ~36px, avoids clipping */
 }
 .detailed-item-modal .quantity-selector input.input--qty {
-    width: 30px !important;
-    min-width: 30px !important;
-    max-width: 30px !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
     text-align: center !important;
     padding: 1px !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    font-size: 11px !important;
+    font-size: 1.3125rem !important;
+    line-height: 1.2 !important;
+    min-height: 2.25rem !important;
 }
 .detailed-item-modal input.input--qty {
-    width: 30px !important;
-    min-width: 30px !important;
-    max-width: 30px !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
     text-align: center !important;
     padding: 1px !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    font-size: 11px !important;
+    font-size: 1.3125rem !important;
+    line-height: 1.2 !important;
+    min-height: 2.25rem !important;
 }
 .detailed-item-modal-container .input--qty {
-    width: 30px !important;
-    min-width: 30px !important;
-    max-width: 30px !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
     text-align: center !important;
     padding: 1px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    font-size: 11px !important;
+    font-size: 1.3125rem !important;
+    line-height: 1.2 !important;
+    min-height: 2.25rem !important;
 }
 
-/* Ensure the quantity selector container doesn't cause overflow */
-.detailed-item-modal .flex:has(.btn--qty) {
-    display: inline-flex !important;
-    gap: 2px !important;
-    max-width: 100px !important;
-    overflow: hidden !important;
+/* Hide native number input spinners inside modal; keep external +/- buttons */
+.detailed-item-modal input[type="number"]::-webkit-outer-spin-button,
+.detailed-item-modal input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0 !important;
+}
+.detailed-item-modal input[type="number"] {
+    -moz-appearance: textfield !important;
+    appearance: textfield !important;
+}
+
+/* Ensure ONLY the quantity selector is constrained, not entire flex rows */
+/* Removed over-broad :has(.btn--qty) rule that collapsed parent rows */
+
+/* Explicit min width for Qty block to prevent collapse */
+.detailed-item-modal .qty-block {
+    min-width: 220px !important;
+}
+
+/* Ensure the combined row aligns as intended */
+.detailed-item-modal .detailed-qty-and-cart-row {
+    align-items: center !important; /* middle-align qty with Add to Cart */
+    justify-content: flex-start !important; /* left-justify row */
+}
+
+/* Make the inline Add to Cart about 3x larger */
+.detailed-item-modal .detailed-qty-and-cart-row .wf-add-to-cart-btn,
+.detailed-item-modal .detailed-qty-and-cart-row .btn--detailed-add-to-cart {
+    padding-top: 1.25rem !important;   /* ~py-5 */
+    padding-bottom: 1.25rem !important;
+    font-size: 1.25rem !important;     /* ~text-xl */
+    line-height: 1.2 !important;
+}
+
+/* 50% larger for stock text and qty label */
+.detailed-item-modal .stock-status-text,
+.detailed-item-modal .qty-label {
+    font-size: 1.3125rem !important; /* 0.875rem * 1.5 */
 }
 
 /* ==============================================

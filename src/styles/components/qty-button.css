@@ -10,23 +10,10 @@
 
 /* 2. Force modal content and body to not overflow */
 
-/* 3. Target the quantity row container specifically */
-.detailed-item-modal-container .flex:has(.btn--qty) {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 1px !important;
-    max-width: 70px !important;
-    overflow: hidden !important;
-    flex-wrap: nowrap !important;
-}
-.detailed-item-modal-container .quantity-selector {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 1px !important;
-    max-width: 70px !important;
-    overflow: hidden !important;
-    flex-wrap: nowrap !important;
-}
+/* 3. Target the quantity row container specifically (DISABLED for detailed modal)
+   These rules collapsed the qty row inside the detailed item modal. Removed. */
+/* .detailed-item-modal-container .flex:has(.btn--qty) { } */
+/* .detailed-item-modal-container .quantity-selector { } */
 
 /* 4. Make quantity buttons absolutely tiny */
 .btn--qty {

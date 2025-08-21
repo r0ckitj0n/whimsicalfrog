@@ -302,4 +302,3 @@ function logDatabaseError($exception, $query = null, $params = [])
 {
     Logger::databaseError($exception, $query, $params);
 }
-?> 

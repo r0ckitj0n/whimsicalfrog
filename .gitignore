@@ -21,3 +21,8 @@ vendor/
 .DS_Store
 .idea/
 .vscode/
+
+# Large files not tracked
+backups/
+logs/
+logs/*.log

@@ -43,7 +43,7 @@ export async function loadRoomBackground(roomType) {
                     const body = document.body;
                     const pageSlug = (body && body.dataset && body.dataset.page) ? body.dataset.page : '';
                     if (pageSlug === 'shop') {
-                        roomType = 'room_main';
+                        roomType = 'shop';
                     }
                 } catch (e) {
                     // non-fatal
@@ -111,6 +111,10 @@ export async function loadRoomBackground(roomType) {
                 console.log('Room wrapper not found, using fallback background');
             }
         } else {
+            if (roomType === 'shop') {
+                console.log('[DBG] No active shop background found; falling back to room_main');
+                return loadRoomBackground('room_main');
+            }
             console.log('Using fallback room background - no dynamic background found');
         }
     } catch (error) {

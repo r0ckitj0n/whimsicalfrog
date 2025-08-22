@@ -2778,7 +2778,7 @@ body { /* Allow content overflow */
     /* Root aspect ratio removed to prevent clipping */
     /* aspect-ratio: 1280 / 896; */
     font-family: Arial, sans-serif;
-    max-width: 1200px;
+    max-width: none;
     line-height: 1.6;
     width: 100%;
     height: 100%;

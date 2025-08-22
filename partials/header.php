@@ -57,6 +57,23 @@ if ($pageSlug === 'about' || $pageSlug === 'contact') {
         }
     }
 }
+
+// Attach database-configurable background for Shop page (fallback to room_main)
+if ($pageSlug === 'shop') {
+    if (function_exists('get_active_background')) {
+        $shopBg = get_active_background('shop');
+        if (!$shopBg) {
+            $shopBg = get_active_background('room_main');
+        }
+        if (!$shopBg) {
+            $shopBg = '/images/backgrounds/background_room_main.webp';
+        }
+        if ($shopBg) {
+            $bodyBgUrl = $shopBg;
+            $bodyClasses[] = 'room-bg-main';
+        }
+    }
+}
 // Page metadata for JS routing
 $segments = explode('/', $pageSlug);
 $isAdmin = isset($segments[0]) && $segments[0] === 'admin';

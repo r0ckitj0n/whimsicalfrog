@@ -4035,6 +4035,7 @@ async function removeAreaMapping(mappingId) {
                         <select id="backgroundRoomSelect" class="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                             <option value="landing">Landing Page</option>
                             <option value="room_main">Main Room</option>
+                            <option value="shop">Shop Page</option>
                             <!-- Dynamic room options populated by JavaScript -->
                         </select>
                     </div>

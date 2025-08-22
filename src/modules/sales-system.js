@@ -44,12 +44,14 @@ class SalesSystem {
         this.hoverTimeout = null;
         this.hideTimeout = null;
         this.currentPopup = null;
+        this.isShopPage = false;
         
         this.init();
     }
 
     init() {
         console.log('[Sales] System initializing...');
+        this.isShopPage = this.detectShopPage();
         this.setupEventListeners();
         this.initializePageSpecificFeatures();
     }
@@ -269,6 +271,12 @@ class SalesSystem {
     }
 
     setupEventListeners() {
+        // Disable hover popups on the shop page
+        if (this.isShopPage) {
+            console.log('[Sales] Skipping hover popups on shop page');
+            return;
+        }
+
         // Product hover events
         document.addEventListener('mouseenter', async (e) => {
             if (!e.target || typeof e.target.closest !== 'function') return;
@@ -347,6 +355,14 @@ class SalesSystem {
 
         // Room page specific functionality
         this.setupRoomHover();
+    }
+
+    detectShopPage() {
+        const currentPage = window.WF_PAGE_INFO?.page || (
+            window.location.pathname === '/' ? 'landing' :
+            window.location.pathname.replace(/^\//, '').split('/')[0]
+        ) || 'landing';
+        return currentPage === 'shop' || window.location.pathname.includes('shop');
     }
 
     async initializeShopPage() {

@@ -38,7 +38,7 @@ async function generatePageRoomMap() {
     if (data.success) {
       const map = {
         room_main: 'room_main',
-        shop: 'room_main',
+        shop: 'shop',
         cart: 'room_main',
         login: 'room_main',
         admin: 'room_main'
@@ -55,7 +55,7 @@ async function generatePageRoomMap() {
   // fallback basic map
   return {
     room_main: 'room_main',
-    shop: 'room_main',
+    shop: 'shop',
     cart: 'room_main',
     login: 'room_main',
     admin: 'room_main'

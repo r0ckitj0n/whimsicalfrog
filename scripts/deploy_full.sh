@@ -47,13 +47,8 @@ else
   echo -e "${GREEN}✅ No changes to commit${NC}"
 fi
 
-# Sync database from local to live
-echo -e "${GREEN}🔄 Syncing database data and structure from local to live...${NC}"
-if php sync_database_smart.php; then
-  echo -e "${GREEN}✅ Database sync completed successfully${NC}"
-else
-  echo -e "${YELLOW}⚠️  Database sync failed - continuing with file deployment...${NC}"
-fi
+# Database sync will be performed after file deployment via API restore (Option A)
+echo -e "${GREEN}🔄 Preparing to overwrite live database from local dump after file deployment...${NC}"
 
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
@@ -130,8 +125,76 @@ fi
 # Clean up permissions script
 rm fix_permissions.txt
 
-# Database sync completed in earlier step
-echo -e "${GREEN}🗄️  Database sync completed in earlier step${NC}"
+# Overwrite live database from local dump (Option A)
+echo -e "${GREEN}🗄️  Creating local database dump and restoring on live...${NC}"
+DB_STATUS="Skipped"
+
+# Local DB connection (matches api/config.php local block)
+LOCAL_DB_HOST="127.0.0.1"
+LOCAL_DB_PORT="3306"
+LOCAL_DB_USER="root"
+LOCAL_DB_PASS="Palz2516!"
+LOCAL_DB_NAME="whimsicalfrog"
+
+DUMP_FILE="local_db_dump_$(date +%Y-%m-%d_%H-%M-%S).sql"
+
+if mysqldump -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+  --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>/dev/null; then
+  echo -e "${GREEN}✅ Local dump created: $DUMP_FILE${NC}"
+
+  echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
+  RESTORE_OUT=$(curl -sS -X POST \
+    -F "admin_token=whimsical_admin_2024" \
+    -F "ignore_errors=1" \
+    -F "backup_file=@$DUMP_FILE;type=application/sql" \
+    "https://whimsicalfrog.us/api/database_maintenance.php?action=restore_database" || true)
+
+  if echo "$RESTORE_OUT" | grep -q '"success":true'; then
+    echo -e "${GREEN}✅ Live database restored from uploaded dump${NC}"
+    DB_STATUS="Restored from uploaded dump"
+  else
+    echo -e "${YELLOW}⚠️  Direct upload restore failed. Falling back to SFTP + server restore...${NC}"
+
+    # Upload dump to server backups/ via SFTP
+    cat > upload_dump.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+mkdir backups
+cd backups
+put "$DUMP_FILE"
+bye
+EOL
+    if lftp -f upload_dump.txt 2>/dev/null; then
+      echo -e "${GREEN}✅ Dump uploaded to server backups/$DUMP_FILE${NC}"
+    else
+      echo -e "${RED}❌ Failed to upload dump to server${NC}"
+    fi
+    rm -f upload_dump.txt
+
+    echo -e "${GREEN}🧩 Triggering server-side restore from backups/$DUMP_FILE...${NC}"
+    RESTORE_OUT=$(curl -sS -X POST \
+      -F "admin_token=whimsical_admin_2024" \
+      -F "ignore_errors=1" \
+      -F "server_backup_path=../backups/$DUMP_FILE" \
+      "https://whimsicalfrog.us/api/database_maintenance.php?action=restore_database" || true)
+
+    if echo "$RESTORE_OUT" | grep -q '"success":true'; then
+      echo -e "${GREEN}✅ Live database restored from server backup file${NC}"
+      DB_STATUS="Restored from server backup file"
+    else
+      echo -e "${RED}❌ Database restore failed${NC}"
+      echo "$RESTORE_OUT" | sed 's/.\{400\}/&\n/g' | head -n 50
+      DB_STATUS="Restore failed"
+    fi
+  fi
+
+  # Clean up local dump file
+  rm -f "$DUMP_FILE"
+else
+  echo -e "${RED}❌ Failed to create local database dump; skipping DB restore${NC}"
+  DB_STATUS="Dump failed"
+fi
 
 # Verify critical files exist on server
 echo -e "${GREEN}🔍 Verifying deployment...${NC}"
@@ -183,7 +246,7 @@ fi
 
 # Final summary
 echo -e "\n${GREEN}📊 Full Deployment Summary:${NC}"
-echo -e "  • Database: ✅ Synced from local to live"
+echo -e "  • Database: ${DB_STATUS}"
 echo -e "  • Files: ✅ Deployed to server"
 echo -e "  • Images: ✅ Included in deployment"
 echo -e "  • Permissions: ✅ Image directory permissions fixed"
@@ -207,13 +270,13 @@ if [ -f "$MANIFEST_PATH" ]; then
 fi
 
 if [ -n "$JS_FILE" ]; then
-  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/$JS_FILE")
+  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/$JS_FILE")
   echo -e "  • JS $JS_FILE -> HTTP $CODE_JS"
 else
   echo -e "  • JS: ⚠️ Unable to resolve app.js hashed file from manifest"
 fi
 if [ -n "$CSS_FILE" ]; then
-  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/$CSS_FILE")
+  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/$CSS_FILE")
   echo -e "  • CSS $CSS_FILE -> HTTP $CODE_CSS"
 else
   echo -e "  • CSS: ⚠️ Unable to resolve first CSS file from manifest"

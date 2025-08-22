@@ -18,8 +18,7 @@ NC='\033[0m' # No Color
 echo -e "${GREEN}🚀 Starting fast file deployment...${NC}"
 echo -e "${GREEN}💾 Backing up website...${NC}"
 curl -s -X POST https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing deployment...${NC}"
-echo -e "${GREEN}🔄 Syncing database data...${NC}"
-php sync_database_smart.php || echo -e "${YELLOW}⚠️  Database data sync failed, continuing deployment...${NC}"
+echo -e "${YELLOW}⏭️  Skipping database updates in fast deploy (use deploy_full.sh for DB restore)${NC}"
 
 # Clean up any stale git lock file
 if [ -f .git/index.lock ]; then

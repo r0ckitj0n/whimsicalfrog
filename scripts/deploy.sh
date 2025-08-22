@@ -89,6 +89,19 @@ fi
 # Clean up lftp commands file
 rm deploy_commands.txt
 
+# Ensure no Vite hot file exists on the live server (prevents accidental dev mode)
+echo -e "${GREEN}🧹 Removing any stray Vite hot file on server...${NC}"
+cat > cleanup_hot.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+rm -f hot
+bye
+EOL
+
+lftp -f cleanup_hot.txt > /dev/null 2>&1 || true
+rm cleanup_hot.txt
+
 # Verify critical files exist on server
 echo -e "${GREEN}🔍 Verifying deployment...${NC}"
 

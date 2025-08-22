@@ -41,23 +41,32 @@ function vite(string $entry): string
     }
     if (empty($viteOrigin)) { $viteOrigin = 'http://localhost:5176'; }
 
-    // If a hot file exists, we are in development. Emit dev tags directly to the Vite origin
-    // without using the PHP proxy. This avoids proxy overhead and flakiness.
+    // If a hot file exists, try dev server. Probe @vite/client to avoid emitting dev tags on live accidentally.
     if (file_exists($hotPath)) {
-        $devEntryMap = [
-            'js/app.js' => 'src/entries/app.js',
-            'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
-            'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
-        ];
-        $devEntry = $devEntryMap[$entry] ?? $entry;
-        $vite_log('info', 'Vite hot mode: emitting dev script tags directly to origin', [
-            'vite_origin' => $viteOrigin,
-            'entry' => $entry,
-            'dev_entry' => $devEntry,
+        $probeUrl = rtrim($viteOrigin, '/') . '/@vite/client';
+        $ctx = stream_context_create([
+            'http' => [ 'timeout' => 0.6, 'ignore_errors' => true ],
+            'https' => [ 'timeout' => 0.6, 'ignore_errors' => true ],
         ]);
-        $origin = rtrim($viteOrigin, '/');
-        return "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
-               "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
+        $probe = @file_get_contents($probeUrl, false, $ctx);
+        if ($probe !== false) {
+            $devEntryMap = [
+                'js/app.js' => 'src/entries/app.js',
+                'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
+                'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
+            ];
+            $devEntry = $devEntryMap[$entry] ?? $entry;
+            $vite_log('info', 'Vite hot mode: emitting dev script tags directly to origin', [
+                'vite_origin' => $viteOrigin,
+                'entry' => $entry,
+                'dev_entry' => $devEntry,
+            ]);
+            $origin = rtrim($viteOrigin, '/');
+            return "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
+                   "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
+        }
+        $vite_log('warning', 'Hot file present but dev server is unreachable; falling back to production assets', [ 'vite_origin' => $viteOrigin ]);
+        // Fall through to production manifest below
     }
 
     // If explicitly forcing dev, try dev server first regardless of manifest (do NOT require hot file)
@@ -152,7 +161,15 @@ function vite(string $entry): string
     }
 
     $asset = $manifest[$resolvedKey];
-    $html = "<script type=\"module\" src=\"/dist/{$asset['file']}\"></script>";
+    // Public base path for live environments served from a subdirectory, e.g., "/wf".
+    // Configure via env WF_PUBLIC_BASE (empty or "/subdir"). Defaults to empty.
+    $publicBase = rtrim((string) getenv('WF_PUBLIC_BASE') ?: '', '/');
+    $distBase = ($publicBase === '' ? '' : $publicBase) . '/dist/';
+    $vite_log('info', 'Vite production base resolved', [
+        'WF_PUBLIC_BASE' => $publicBase,
+        'dist_base' => $distBase,
+    ]);
+    $html = "<script type=\"module\" src=\"{$distBase}{$asset['file']}\"></script>";
 
     // Collect CSS from entry and all imported chunks to ensure complete styles in production
     $visited = [];
@@ -175,7 +192,7 @@ function vite(string $entry): string
     }
     $cssFiles = array_values(array_unique($cssFiles));
     foreach ($cssFiles as $cssFile) {
-        $html .= "<link rel=\"stylesheet\" href=\"/dist/{$cssFile}\">";
+        $html .= "<link rel=\"stylesheet\" href=\"{$distBase}{$cssFile}\">";
     }
 
     return $html;

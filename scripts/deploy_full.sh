@@ -8,6 +8,8 @@ HOST="home419172903.1and1-data.host"
 USER="acc899014616"
 PASS="Palz2516!"
 REMOTE_PATH="/"
+# Optional public base for sites under a subdirectory (e.g., /wf)
+PUBLIC_BASE="${WF_PUBLIC_BASE:-}"
 DB_HOST="whimsicalfrog.com"
 DB_USER="jongraves"
 DB_PASS="Palz2516"
@@ -95,6 +97,19 @@ fi
 # Clean up lftp commands file
 rm deploy_commands.txt
 
+# Ensure no Vite hot file exists on the live server (prevents accidental dev mode)
+echo -e "${GREEN}🧹 Removing any stray Vite hot file on server...${NC}"
+cat > cleanup_hot.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+rm -f hot
+bye
+EOL
+
+lftp -f cleanup_hot.txt > /dev/null 2>&1 || true
+rm cleanup_hot.txt
+
 # Fix image directory permissions
 echo -e "${GREEN}🔧 Fixing image directory permissions...${NC}"
 cat > fix_permissions.txt << EOL
@@ -173,6 +188,36 @@ echo -e "  • Files: ✅ Deployed to server"
 echo -e "  • Images: ✅ Included in deployment"
 echo -e "  • Permissions: ✅ Image directory permissions fixed"
 echo -e "  • Verification: ✅ Completed"
+
+# Verify Vite assets over HTTP using manifest (ensures correct base path and availability)
+echo -e "${GREEN}🔎 Verifying Vite assets over HTTP...${NC}"
+BASE_URL="https://whimsicalfrog.us${PUBLIC_BASE}"
+MANIFEST_PATH="dist/.vite/manifest.json"
+if [ ! -f "$MANIFEST_PATH" ]; then
+  MANIFEST_PATH="dist/manifest.json"
+fi
+JS_FILE=""
+CSS_FILE=""
+if [ -f "$MANIFEST_PATH" ]; then
+  JS_FILE=$(sed -n 's/.*"file":"\([^"]*app.js-[^"]*\)".*/\1/p' "$MANIFEST_PATH" | head -n1)
+  if [ -z "$JS_FILE" ]; then
+    JS_FILE=$(ls -1 dist/assets/js/app.js-*.js 2>/dev/null | head -n1 | sed 's#^dist/##')
+  fi
+  CSS_FILE=$(sed -n 's/.*"css":\["\([^"]*\)".*/\1/p' "$MANIFEST_PATH" | head -n1)
+fi
+
+if [ -n "$JS_FILE" ]; then
+  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/$JS_FILE")
+  echo -e "  • JS $JS_FILE -> HTTP $CODE_JS"
+else
+  echo -e "  • JS: ⚠️ Unable to resolve app.js hashed file from manifest"
+fi
+if [ -n "$CSS_FILE" ]; then
+  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/$CSS_FILE")
+  echo -e "  • CSS $CSS_FILE -> HTTP $CODE_CSS"
+else
+  echo -e "  • CSS: ⚠️ Unable to resolve first CSS file from manifest"
+fi
 
 echo -e "\n${GREEN}🎉 Full deployment completed!${NC}"
 echo -e "${YELLOW}💡 If images still don't appear, wait 5-10 minutes for server cache to clear${NC}"

@@ -41,3 +41,20 @@
   --z-index-global-notification: 500;
   --z-index-god-mode: 9999;
 }
+
+/* Legacy variable aliases for backward compatibility */
+:root {
+  /* Aliases mapping old custom properties to the new z-index scale */
+  --z-base: var(--z-index-base);
+  --z-base-elevated: var(--z-index-content-front);
+  --z-modal: var(--z-index-modal-base);
+  --z-notification: var(--z-index-global-notification);
+  --z-tooltip: var(--z-index-tooltip);
+  --z-navigation: var(--z-index-page-header);
+  --z-door-areas: var(--z-index-content-front);
+  --z-room-buttons: var(--z-index-floating-ui);
+  --z-index-overlay: var(--z-index-overlay-backdrop);
+
+  /* Landing page: ensure it sits above the fixed header */
+  --z-index-landing-page: 110; /* header = 100 */
+}

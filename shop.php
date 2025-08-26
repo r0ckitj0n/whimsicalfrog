@@ -70,13 +70,10 @@ if (!empty($categories)) {
         // The global $page variable is used here, defined in index.php
         if ($page !== 'room_main'):
         ?>
-        <!-- Left Column: Room Main Navigation Image (left-aligned within column) -->
+        <!-- Left Column: Back to Main Room text button (styled like category filters) -->
         <div class="room-main-nav-container">
-            <a href="/room_main" class="room-main-nav-link" title="Go to Main Room">
-                <picture>
-                    <source srcset="images/signs/sign_main.webp" type="image/webp">
-                    <img src="images/signs/sign_main.png" alt="Rooms" class="room-main-nav-image">
-                </picture>
+            <a href="/room_main" class="category-btn btn-chip shop-filter-btn room-main-nav-link" title="Back to Main Room">
+                Back to Main Room
             </a>
         </div>
         <?php endif; ?>
@@ -84,13 +81,13 @@ if (!empty($categories)) {
         <!-- Middle Column: Category Filter Buttons (center-aligned within column) -->
         <div class="category-navigation">
             <!-- All Products button first -->
-            <button class="category-btn category_btn_bg category_btn_color rounded-full border-none transition-colors active"
+            <button type="button" class="category-btn btn-chip shop-filter-btn active"
                     data-category="all">
                 All Products
             </button>
             <!-- Then individual categories in order -->
             <?php foreach ($categories as $slug => $catData): ?>
-                <button class="category-btn category_btn_bg category_btn_color category_btn_hover_bg rounded-full border-none transition-colors"
+                <button type="button" class="category-btn btn-chip shop-filter-btn"
                         data-category="<?php echo htmlspecialchars($slug); ?>">
                     <?php echo htmlspecialchars($catData['label']); ?>
                 </button>

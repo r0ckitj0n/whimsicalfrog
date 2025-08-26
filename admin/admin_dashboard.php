@@ -1,5 +1,7 @@
 <?php
 // Admin Dashboard - Configurable widget-based dashboard
+// IMPORTANT: Initialize API config first so Database globals are set
+require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 try {
@@ -7,10 +9,10 @@ try {
     $dashboardConfig = Database::queryAll('SELECT * FROM dashboard_sections WHERE is_active = 1 ORDER BY display_order ASC');
 
     // Fetch core metrics
-    $totalItems = Database::queryRow('SELECT COUNT(*) as count FROM items')['count'] ?? 0;
-    $totalOrders = Database::queryRow('SELECT COUNT(*) as count FROM orders')['count'] ?? 0;
-    $totalCustomers = Database::queryRow('SELECT COUNT(*) as count FROM users WHERE role != "admin"')['count'] ?? 0;
-    $totalRevenue = Database::queryRow('SELECT SUM(total) as revenue FROM orders')['revenue'] ?? 0;
+    $totalItems = (Database::queryOne('SELECT COUNT(*) as count FROM items')['count'] ?? 0);
+    $totalOrders = (Database::queryOne('SELECT COUNT(*) as count FROM orders')['count'] ?? 0);
+    $totalCustomers = (Database::queryOne('SELECT COUNT(*) as count FROM users WHERE role != "admin"')['count'] ?? 0);
+    $totalRevenue = (Database::queryOne('SELECT SUM(total) as revenue FROM orders')['revenue'] ?? 0);
 
     // Get recent activity
     $recentOrders = Database::queryAll('SELECT o.*, u.username FROM orders o LEFT JOIN users u ON o.userId = u.id ORDER BY o.date DESC LIMIT 5');
@@ -92,20 +94,32 @@ if (empty($dashboardConfig)) {
                 continue;
             }
             $widthClass = $config['width_class'] ?? 'half-width';
+            // Map dashboard section keys to settings card theme classes
+            $themeMap = [
+                'metrics' => 'card-theme-blue',
+                'recent_orders' => 'card-theme-purple',
+                'low_stock' => 'card-theme-red',
+                'inventory_summary' => 'card-theme-emerald',
+                'customer_summary' => 'card-theme-cyan',
+                'marketing_tools' => 'card-theme-amber',
+                'order_fulfillment' => 'card-theme-blue',
+                'reports_summary' => 'card-theme-purple',
+            ];
+            $themeClass = $themeMap[$config['section_key']] ?? 'card-theme-blue';
             ?>
             
-            <div class="dashboard-section bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow draggable-section <?= htmlspecialchars($widthClass) ?>" 
+            <div class="dashboard-section settings-section <?= htmlspecialchars($themeClass) ?> draggable-section <?= htmlspecialchars($widthClass) ?>" 
                  data-section-key="<?= htmlspecialchars($config['section_key']) ?>" 
                  data-order="<?= $config['display_order'] ?>"
                  data-width="<?= htmlspecialchars($widthClass) ?>">
-                <!- Always show title and description for dashboard sections ->
-                <div class="section-header border-b border-gray-100">
+                <!- Card header styled like settings page ->
+                <div class="section-header rounded-lg overflow-hidden">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-800">
+                            <h3 class="section-title text-lg font-semibold">
                                 <?= htmlspecialchars(($config['custom_title'] ?? '') ?: $sectionInfo['title']) ?>
                             </h3>
-                            <p class="text-sm text-gray-600">
+                            <p class="section-description text-sm">
                                 <?= htmlspecialchars(($config['custom_description'] ?? '') ?: $sectionInfo['description']) ?>
                             </p>
                         </div>
@@ -199,7 +213,7 @@ if (empty($dashboardConfig)) {
                         <!- Inventory Summary Section ->
                         <div class="space-y-3">
                             <?php
-                                                         $inventoryStats = Database::queryRow('SELECT 
+                                                         $inventoryStats = Database::queryOne('SELECT 
                                  COUNT(*) as total_items,
                                  COUNT(CASE WHEN stockLevel <= reorderPoint AND stockLevel > 0 THEN 1 END) as low_stock,
                                  COUNT(CASE WHEN stockLevel = 0 THEN 1 END) as out_of_stock,
@@ -235,7 +249,7 @@ if (empty($dashboardConfig)) {
                         <!- Customer Summary Section ->
                         <div class="space-y-3">
                             <?php
-                                                     $customerStats = Database::queryRow('SELECT 
+                                                     $customerStats = Database::queryOne('SELECT 
                                  COUNT(*) as total_customers
                                  FROM users WHERE role != \'admin\'');
                         $recentCustomers = Database::queryAll('SELECT username, email FROM users WHERE role != \'admin\' ORDER BY id DESC LIMIT 3');
@@ -346,10 +360,10 @@ if (empty($dashboardConfig)) {
             $orders = Database::queryAll("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC", $params);
 
             // Get unique values for filter dropdowns
-            $statusOptions = Database::queryAll("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status", [], PDO::FETCH_COLUMN);
-            $paymentMethodOptions = Database::queryAll("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod", [], PDO::FETCH_COLUMN);
-            $shippingMethodOptions = Database::queryAll("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod", [], PDO::FETCH_COLUMN);
-            $paymentStatusOptions = Database::queryAll("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus", [], PDO::FETCH_COLUMN);
+            $statusOptions = array_column(Database::queryAll("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status"), 'order_status');
+            $paymentMethodOptions = array_column(Database::queryAll("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod"), 'paymentMethod');
+            $shippingMethodOptions = array_column(Database::queryAll("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod"), 'shippingMethod');
+            $paymentStatusOptions = array_column(Database::queryAll("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus"), 'paymentStatus');
             ?>
                         
                         <div class="space-y-4">
@@ -461,7 +475,7 @@ if (empty($dashboardConfig)) {
                                                                 class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none"
                                                                 title="Click to view order details">
                                                             <?php
-                                                $totalItems = Database::queryRow("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?", [$order['id']])['total_items'] ?? 0;
+                                                $totalItems = Database::queryOne("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?", [$order['id']])['total_items'] ?? 0;
                                                     echo ($totalItems ?: '0') . ' item' . (($totalItems != 1) ? 's' : '');
                                                     ?>
                                                         </button>

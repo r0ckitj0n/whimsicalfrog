@@ -97,9 +97,9 @@
             // Check if modal element was created
             const insertedModal = document.getElementById('detailedItemModal');
             console.log('🔧 Modal element found after insertion:', !!insertedModal);
-            // Ensure modal respects page header height
+            // Ensure modal respects page header height via class (no inline styles)
             if (insertedModal) {
-                setupHeaderOffset(insertedModal);
+                try { insertedModal.classList.add('admin-modal-offset-under-header'); } catch (_) {}
             }
             
             // All inline scripts have been removed from the modal component.
@@ -227,34 +227,7 @@
 
     // loadScript helper removed as the detailed modal script is bundled via Vite and loaded with app.js
 
-    /**
-     * Compute and apply header offset so the modal sits below the site header.
-     * Binds a resize listener scoped to the current modal lifecycle.
-     * @param {HTMLElement} modal
-     */
-    function setupHeaderOffset(modal) {
-        function computeOffset() {
-            const header = document.querySelector('.site-header.universal-page-header');
-            // Prefer CSS var --header-height if available; fallback to offsetHeight
-            let cssVar = '';
-            if (header) {
-                const styles = getComputedStyle(header);
-                const varVal = styles.getPropertyValue('--header-height').trim();
-                cssVar = varVal || '';
-            }
-            let px = 0;
-            if (cssVar && cssVar.endsWith('px')) {
-                px = parseInt(cssVar, 10) || 0;
-            } else if (header) {
-                px = header.offsetHeight || 0;
-            }
-            modal.style.setProperty('--wf-header-offset', px + 'px');
-        }
-        computeOffset();
-        const onResize = () => computeOffset();
-        window.addEventListener('resize', onResize);
-        removeHeaderOffsetListener = () => window.removeEventListener('resize', onResize);
-    }
+    // Removed setupHeaderOffset (inline CSS variable writes). Using CSS class instead.
 
     // Initialize on load or immediately if DOM is ready
     if (document.readyState === 'loading') {

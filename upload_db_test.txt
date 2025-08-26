@@ -1,0 +1,5 @@
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
+put -O / db_connection_test.php
+bye

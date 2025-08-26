@@ -56,6 +56,7 @@ mirror --reverse --delete --verbose \
   --exclude-glob backups/ \
   --exclude-glob Documentation/ \
   --exclude-glob Scripts/ \
+  --exclude-glob scripts/ \
   --exclude-glob *.log \
   --exclude-glob *.sh \
   --exclude-glob *.plist \

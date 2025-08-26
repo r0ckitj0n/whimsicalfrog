@@ -27,7 +27,8 @@ function ensureEqHRule(className, h) {
 
 const ShopPage = {
     init() {
-        this.categoryButtons = document.querySelectorAll('.category-btn');
+        // Only bind to actual filter buttons in the middle nav, not the back link
+        this.categoryButtons = document.querySelectorAll('.category-navigation .category-btn');
         this.productCards = document.querySelectorAll('.product-card');
         this.productsGrid = document.getElementById('productsGrid');
         this.shopNavArea = document.querySelector('#shopPage .shop-navigation-area');
@@ -63,7 +64,14 @@ const ShopPage = {
         // Read actual nav height and expose to CSS
         const h = this.shopNavArea.offsetHeight;
         if (h && Number.isFinite(h)) {
-            document.documentElement.style.setProperty('--shop-nav-height', `${h}px`);
+            // Inject/update a stylesheet rule for the CSS variable (no inline styles)
+            let styleEl = document.getElementById('wf-shop-nav-css');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'wf-shop-nav-css';
+                document.head.appendChild(styleEl);
+            }
+            styleEl.textContent = `:root { --shop-nav-height: ${Math.round(h)}px; }`;
         }
     },
 
@@ -81,11 +89,11 @@ const ShopPage = {
                 // Toggle expanded state on the card
                 card.classList.toggle('is-expanded', isNowExpanded);
 
-                // Swap short/full description visibility
+                // Swap short/full description visibility without inline styles
                 const shortEl = card.querySelector('.description-text-short');
                 const fullEl = card.querySelector('.description-text-full');
-                if (shortEl) shortEl.style.display = isNowExpanded ? 'none' : '';
-                if (fullEl) fullEl.style.display = isNowExpanded ? '' : 'none';
+                if (shortEl) shortEl.classList.toggle('hidden', isNowExpanded);
+                if (fullEl) fullEl.classList.toggle('hidden', !isNowExpanded);
 
                 // Toggle the additional info block (CSS handles via .is-expanded)
                 // Update button a11y and label

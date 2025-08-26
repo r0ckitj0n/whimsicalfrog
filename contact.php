@@ -5,6 +5,11 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 }
 require_once __DIR__ . '/api/business_settings_helper.php';
 
+// Ensure we read fresh settings (avoid cross-request static cache in FPM)
+if (class_exists('BusinessSettings')) {
+    BusinessSettings::clearCache();
+}
+
 // Generate or fetch CSRF for contact form
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -15,7 +20,7 @@ if (empty($_SESSION['contact_csrf'])) {
 $csrf = $_SESSION['contact_csrf'];
 
 $title = BusinessSettings::get('contact_page_title', 'Contact Us');
-$intro = BusinessSettings::get('contact_page_intro', "<p>Have a question or special request? Send us a message and we'll get back to you soon.</p>");
+$intro = BusinessSettings::get('contact_page_intro', "<p>Have a question or special request?<br>Send us a message and we'll get back to you soon.</p>");
 $businessEmail = BusinessSettings::getBusinessEmail();
 $businessPhone = BusinessSettings::get('business_phone', '');
 $businessAddress = BusinessSettings::get('business_address', '');
@@ -65,19 +70,19 @@ $businessHours = BusinessSettings::get('business_hours', '');
 
           <div>
             <label for="name" class="block font-medium mb-1">Name</label>
-            <input id="name" name="name" type="text" class="w-full border rounded px-3 py-2" required maxlength="100" />
+            <input id="name" name="name" type="text" class="w-full border rounded px-3 py-2" required maxlength="100" autocomplete="name" />
           </div>
           <div>
             <label for="email" class="block font-medium mb-1">Email</label>
-            <input id="email" name="email" type="email" class="w-full border rounded px-3 py-2" required maxlength="255" />
+            <input id="email" name="email" type="email" class="w-full border rounded px-3 py-2" required maxlength="255" autocomplete="email" />
           </div>
           <div>
             <label for="subject" class="block font-medium mb-1">Subject (optional)</label>
-            <input id="subject" name="subject" type="text" class="w-full border rounded px-3 py-2" maxlength="150" />
+            <input id="subject" name="subject" type="text" class="w-full border rounded px-3 py-2" maxlength="150" autocomplete="off" />
           </div>
           <div>
             <label for="message" class="block font-medium mb-1">Message</label>
-            <textarea id="message" name="message" class="w-full border rounded px-3 py-2" rows="6" required maxlength="5000"></textarea>
+            <textarea id="message" name="message" class="w-full border rounded px-3 py-2" rows="5" required maxlength="5000" autocomplete="off"></textarea>
           </div>
           <div>
             <button type="submit" class="wf-submit-btn" id="wf-contact-submit">

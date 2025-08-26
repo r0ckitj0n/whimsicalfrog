@@ -8,7 +8,9 @@ $requestedPath = strtok($requestedUri, '?');
 
 // If Vite hot file exists, proxy Vite dev asset paths via same-origin proxy to avoid CORS/TLS issues
 $hotPath = __DIR__ . '/hot';
-if (file_exists($hotPath)) {
+$disableDevByFlag = file_exists(__DIR__ . '/.disable-vite-dev');
+$disableDevByEnv = getenv('WF_VITE_DISABLE_DEV') === '1';
+if (file_exists($hotPath) && !$disableDevByFlag && !$disableDevByEnv) {
     $pathsToProxy = [
         '/@vite',         // @vite/client, etc.
         '/@id/',          // Vite id mapped modules

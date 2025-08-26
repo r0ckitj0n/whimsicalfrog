@@ -14,13 +14,44 @@ function currency(v) {
 }
 
 function getCartApi() {
-  // Prefer the global cart instance created in app.js
-  return window.WF_Cart || window.cart || null;
+  // Use the unified CartSystem only to avoid legacy conflicts
+  return window.WF_Cart || null;
+}
+
+// Wait until the unified cart is initialized and ready
+async function waitForCartReady(timeout = 1500) {
+  const start = Date.now();
+  return new Promise((resolve) => {
+    const tick = () => {
+      const api = window.WF_Cart;
+      const initialized = !!(api && typeof api.getItems === 'function' && typeof api.getState === 'function' && api.getState()?.initialized === true);
+      if (initialized) return resolve(api);
+      if (Date.now() - start >= timeout) return resolve(api || null);
+      setTimeout(tick, 50);
+    };
+    tick();
+  });
+}
+
+// Read cart items directly from localStorage as a safety fallback
+function getStoredCartItems() {
+  try {
+    const raw = localStorage.getItem('whimsical_frog_cart');
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    return Array.isArray(data?.items) ? data.items : [];
+  } catch (_) {
+    return [];
+  }
 }
 
 ready(() => {
   const body = document.body;
-  if (!body || body.dataset.page !== 'payment') return;
+  const dsPage = body?.dataset?.page || '';
+  const pageSlug = (typeof dsPage === 'string' && dsPage.includes('/'))
+    ? dsPage.split('/').filter(Boolean).pop()
+    : dsPage;
+  if (!body || pageSlug !== 'payment') return;
 
   console.log('[PaymentPage] init');
 
@@ -76,22 +107,53 @@ ready(() => {
   const fZip = document.getElementById('addr_zip');
   const fDefault = document.getElementById('addr_default');
 
-  const userId = body.dataset.userId;
+  let userId = body.dataset.userIdRaw || body.dataset.userId || null;
   if (!userId) {
-    console.error('[PaymentPage] Missing userId on <body data-user-id>');
-    return;
+    console.warn('[PaymentPage] No userId yet; awaiting login-success before loading addresses.');
   }
 
-  const cartApi = getCartApi();
+  let cartApi = getCartApi();
   if (!cartApi) {
-    console.warn('[PaymentPage] Cart API not ready; retrying shortly');
-    setTimeout(() => window.location.reload(), 300);
-    return;
+    console.warn('[PaymentPage] Cart API not ready; waiting for initialization');
+    const onCartInit = async () => {
+      cartApi = getCartApi();
+      if (cartApi) {
+        window.removeEventListener('cartUpdated', onCartInit);
+        await resyncCart('cart-init');
+      }
+    };
+    // CartSystem emits a 'cartUpdated' event with action: 'init' during its init()
+    window.addEventListener('cartUpdated', onCartInit);
+    // Fallback: attempt once more after a short delay in case the event was missed
+    setTimeout(onCartInit, 400);
+    // Additional readiness guard in case init event is missed or delayed
+    waitForCartReady(1200).then((api) => { if (api) resyncCart('cart-ready-promise'); });
   }
 
   let addresses = [];
   let selectedAddressId = null;
   let pricing = { subtotal: 0, shipping: 0, tax: 0, total: 0 };
+
+  // Resolve userId proactively using whoami if it's missing
+  async function resolveUserIdWithFallback(reason = 'init') {
+    try {
+      if (userId) return userId;
+      const res = await apiClient.get('/api/whoami.php');
+      const sidRaw = res?.userIdRaw || res?.userId;
+      if (sidRaw != null && String(sidRaw) !== '') {
+        userId = String(sidRaw);
+        try {
+          document.body?.setAttribute('data-user-id', String(res?.userId ?? ''));
+          document.body?.setAttribute('data-user-id-raw', userId);
+        } catch (_) {}
+        console.debug('[PaymentPage] userId resolved via whoami', { reason, userId });
+        return userId;
+      }
+    } catch (e) {
+      console.warn('[PaymentPage] whoami failed to resolve userId', e);
+    }
+    return null;
+  }
 
   // While the receipt is open, suppress reactive updates on this page
   function isReceiptOpen() {
@@ -99,7 +161,7 @@ ready(() => {
   }
 
   // Square state
-  let sq = {
+  const sq = {
     enabled: false,
     applicationId: null,
     environment: 'sandbox',
@@ -126,7 +188,8 @@ ready(() => {
   }
 
   function ensurePlaceButtonState() {
-    const items = cartApi.getItems ? cartApi.getItems() : [];
+    const api = getCartApi();
+    const items = api?.getItems ? api.getItems() : getStoredCartItems();
     const hasItems = Array.isArray(items) && items.length > 0;
     const pm = getSelectedPaymentMethod();
     const method = shipMethodSel?.value || 'Customer Pickup';
@@ -140,9 +203,29 @@ ready(() => {
     }
   }
 
+  // Force-reload cart state from storage and refresh UI/pricing
+  async function resyncCart(reason = 'manual') {
+    try {
+      const api = getCartApi();
+      if (api && typeof api.refreshFromStorage === 'function') {
+        console.debug('[PaymentPage] Resyncing cart from storage due to:', reason);
+        api.refreshFromStorage();
+        // Keep module-level reference in sync
+        cartApi = api;
+      }
+    } catch (e) {
+      console.warn('[PaymentPage] resyncCart failed', e);
+    }
+    try { renderOrderSummary(); } catch (_) {}
+    try { await updatePricing(); } catch (_) {}
+    try { ensurePlaceButtonState(); } catch (_) {}
+  }
+
   function renderOrderSummary() {
     if (!orderItemsEl || !orderTotalEl) return;
-    const items = cartApi.getItems ? cartApi.getItems() : [];
+    const api = getCartApi();
+    // Use cart API if ready; otherwise read from localStorage to avoid empty UI
+    const items = (api && typeof api.getItems === 'function') ? api.getItems() : getStoredCartItems();
 
     if (!items.length) {
       orderItemsEl.innerHTML = '<div class="py-4 text-brand-secondary">Your cart is empty.</div>';
@@ -183,7 +266,7 @@ ready(() => {
     if (orderSubtotalEl) orderSubtotalEl.textContent = currency(pricing.subtotal);
     if (orderShippingEl) orderShippingEl.textContent = currency(pricing.shipping);
     if (orderTaxEl) orderTaxEl.textContent = currency(pricing.tax);
-    orderTotalEl.textContent = currency(pricing.total || (cartApi.getTotal ? cartApi.getTotal() : 0));
+    orderTotalEl.textContent = currency(pricing.total || (api?.getTotal ? api.getTotal() : 0));
 
     ensurePlaceButtonState();
   }
@@ -234,6 +317,10 @@ ready(() => {
 
   async function loadAddresses() {
     try {
+      if (!userId) {
+        if (addressListEl) addressListEl.innerHTML = '<div class="text-brand-secondary">Sign in to manage shipping addresses.</div>';
+        return;
+      }
       if (addressListEl) addressListEl.innerHTML = '<div class="text-brand-secondary">Loading addresses…</div>';
       const url = `/api/customer_addresses.php?action=get_addresses&user_id=${encodeURIComponent(userId)}`;
       const res = await apiClient.get(url);
@@ -373,7 +460,8 @@ ready(() => {
       return;
     }
     try {
-      const items = cartApi.getItems ? cartApi.getItems() : [];
+      const api = getCartApi();
+      const items = api?.getItems ? api.getItems() : getStoredCartItems();
       // Normalize cart lines -> ensure valid sku and positive quantity
       const lines = (Array.isArray(items) ? items : [])
         .map(i => ({
@@ -403,7 +491,7 @@ ready(() => {
         if (orderTaxEl) orderTaxEl.textContent = currency(pricing.tax);
         if (orderTotalEl) orderTotalEl.textContent = currency(pricing.total);
         // Sanity check: items exist but subtotal is zero -> likely DB retailPrice is 0 or SKUs mismatch
-        const itemsNow = cartApi.getItems ? cartApi.getItems() : [];
+        const itemsNow = api?.getItems ? api.getItems() : [];
         if (Array.isArray(itemsNow) && itemsNow.length > 0 && Number(pricing.subtotal) === 0) {
           console.warn('[PaymentPage] Backend subtotal is $0.00 despite items present. Verify items.retailPrice in DB for SKUs:', payload.itemIds);
         }
@@ -417,7 +505,8 @@ ready(() => {
   }
 
   function buildOrderPayload() {
-    const items = cartApi.getItems ? cartApi.getItems() : [];
+    const api = getCartApi();
+    const items = api?.getItems ? api.getItems() : getStoredCartItems();
     const lines = (Array.isArray(items) ? items : [])
       .map(i => ({
         sku: (i && (i.sku || i.itemId || i.id || '')).toString(),
@@ -451,7 +540,7 @@ ready(() => {
       }
     }
 
-    const total = Number(pricing.total || (cartApi.getTotal ? cartApi.getTotal() : 0));
+    const total = Number(pricing.total || (api?.getTotal ? api.getTotal() : 0));
 
     return {
       customerId: userId,
@@ -511,7 +600,7 @@ ready(() => {
         // Open receipt first so the global flag is set before cart events fire
         try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(res.orderId); } catch(_) {}
         // Defer cart clear to the next tick to ensure the receipt flag is active
-        try { setTimeout(() => { cartApi.clearCart && cartApi.clearCart(); }, 0); } catch(_) {}
+        try { setTimeout(() => { if (cartApi?.clearCart) cartApi.clearCart(); }, 0); } catch(_) {}
         return;
       }
       throw new Error(res?.error || 'Failed to create order.');
@@ -545,6 +634,7 @@ ready(() => {
   // React to cart updates while on page (but ignore while receipt is open)
   const handleCartUpdated = async () => {
     if (isReceiptOpen()) return;
+    console.debug('[PaymentPage] cartUpdated event -> refresh summary/pricing');
     renderOrderSummary();
     await updatePricing();
   };
@@ -552,9 +642,62 @@ ready(() => {
   // When receipt modal closes, refresh summary/pricing once
   window.addEventListener('receiptModalClosed', handleCartUpdated);
 
+  // Resync cart state after authentication or common lifecycle events
+  window.addEventListener('wf:login-success', async (e) => {
+    console.debug('[PaymentPage] wf:login-success received', e?.detail);
+    try {
+      const newId = e?.detail?.userId || document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+      if (newId) userId = String(newId);
+    } catch (_) {}
+    // Fallback: proactively resolve if still missing
+    if (!userId) { await resolveUserIdWithFallback('login-success'); }
+    await waitForCartReady(1500);
+    await resyncCart('login-success');
+    // Schedule a couple of delayed resyncs to catch any late writes/events
+    try { setTimeout(() => { resyncCart('login-success-late-200ms'); }, 200); } catch(_) {}
+    try { setTimeout(() => { resyncCart('login-success-late-800ms'); }, 800); } catch(_) {}
+    loadAddresses();
+  });
+  window.addEventListener('focus', () => { resyncCart('window-focus'); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { resyncCart('visibility-visible'); } });
+  window.addEventListener('pageshow', (e) => { resyncCart(e && e.persisted ? 'pageshow-bfcache' : 'pageshow'); });
+
   // Initial loads
-  renderOrderSummary();
+  resyncCart('initial');
   checkSquareSettings();
-  loadAddresses().finally(() => { updatePricing(); });
+  // Resolve user immediately if the page started already logged in
+  resolveUserIdWithFallback('initial').then(() => {
+    loadAddresses().finally(() => { updatePricing(); });
+  });
+
+  // Observe <body> for login/userId changes to trigger address/pricing reloads
+  try {
+    const observer = new MutationObserver(async (mutations) => {
+      let changed = false;
+      for (const m of mutations) {
+        if (m.type === 'attributes' && (m.attributeName === 'data-user-id' || m.attributeName === 'data-user-id-raw' || m.attributeName === 'data-is-logged-in')) {
+          changed = true;
+        }
+      }
+      if (!changed) return;
+      const uid = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+      if (uid && String(uid) !== String(userId)) {
+        userId = String(uid);
+        console.debug('[PaymentPage] userId changed via body attribute', userId);
+        await loadAddresses();
+        await updatePricing();
+      } else if (!uid) {
+        // Attempt to recover user id if attribute was not set yet
+        const resolved = await resolveUserIdWithFallback('mutation');
+        if (resolved) {
+          await loadAddresses();
+          await updatePricing();
+        }
+      }
+    });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-user-id', 'data-is-logged-in'] });
+  } catch (e) {
+    console.warn('[PaymentPage] Failed to attach MutationObserver for login state', e);
+  }
 })
 ;

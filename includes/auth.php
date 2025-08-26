@@ -9,6 +9,16 @@
 // Include database functions
 require_once __DIR__ . '/database.php';
 
+/**
+ * Ensure PHP session is started before accessing $_SESSION
+ */
+function ensureSessionStarted()
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+}
+
 
 /**
  * Check if user is logged in
@@ -16,6 +26,7 @@ require_once __DIR__ . '/database.php';
  */
 function isLoggedIn()
 {
+    ensureSessionStarted();
     return isset($_SESSION['user']) && !empty($_SESSION['user']);
 }
 
@@ -26,6 +37,7 @@ function isLoggedIn()
  */
 function getCurrentUser()
 {
+    ensureSessionStarted();
     if (!isLoggedIn()) {
         return null;
     }
@@ -108,6 +120,7 @@ function getUsername()
  */
 function requireAuth($redirectTo = null)
 {
+    ensureSessionStarted();
     if (!isLoggedIn()) {
         if ($redirectTo) {
             $_SESSION['redirect_after_login'] = $redirectTo;

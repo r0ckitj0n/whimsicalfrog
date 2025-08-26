@@ -101,12 +101,38 @@ try {
         $subtotal += ((float)$price) * $qty;
     }
 
-    // Shipping rates and logic
-    $freeThreshold = (float) BusinessSettings::get('free_shipping_threshold', 50.00);
-    $localDeliveryFee = (float) BusinessSettings::get('local_delivery_fee', 5.00);
-    $rateUSPS = (float) BusinessSettings::get('shipping_rate_usps', 8.99);
-    $rateFedEx = (float) BusinessSettings::get('shipping_rate_fedex', 12.99);
-    $rateUPS = (float) BusinessSettings::get('shipping_rate_ups', 12.99);
+    // Shipping rates and logic (no code fallbacks)
+    $freeThresholdRaw   = BusinessSettings::get('free_shipping_threshold');
+    $localDeliveryRaw   = BusinessSettings::get('local_delivery_fee');
+    $rateUSPSRaw        = BusinessSettings::get('shipping_rate_usps');
+    $rateFedExRaw       = BusinessSettings::get('shipping_rate_fedex');
+    $rateUPSRaw         = BusinessSettings::get('shipping_rate_ups');
+
+    $requiredShipping = [
+        'free_shipping_threshold' => $freeThresholdRaw,
+        'local_delivery_fee' => $localDeliveryRaw,
+        'shipping_rate_usps' => $rateUSPSRaw,
+        'shipping_rate_fedex' => $rateFedExRaw,
+        'shipping_rate_ups' => $rateUPSRaw,
+    ];
+    foreach ($requiredShipping as $k => $v) {
+        if ($v === null || $v === '') {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => "Missing required setting: {$k}"]);
+            exit;
+        }
+        if (!is_numeric($v)) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => "Invalid numeric setting: {$k}"]);
+            exit;
+        }
+    }
+
+    $freeThreshold   = (float)$freeThresholdRaw;
+    $localDeliveryFee= (float)$localDeliveryRaw;
+    $rateUSPS        = (float)$rateUSPSRaw;
+    $rateFedEx       = (float)$rateFedExRaw;
+    $rateUPS         = (float)$rateUPSRaw;
 
     $shipping = 0.0;
     $method = (string)$shippingMethod;
@@ -128,10 +154,30 @@ try {
         $shipping = $rateUSPS;
     }
 
-    // Tax logic (supports free ZIP-based base state tax as fallback)
-    $taxShipping = (bool) BusinessSettings::get('tax_shipping', false);
+    // Tax logic (no code fallbacks)
+    $taxShippingVal = BusinessSettings::get('tax_shipping');
+    if ($taxShippingVal === null || $taxShippingVal === '') {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Missing required setting: tax_shipping']);
+        exit;
+    }
+    $taxShipping = in_array(strtolower((string)$taxShippingVal), ['1','true','yes'], true);
+
     $settingsEnabled = (bool) BusinessSettings::isTaxEnabled();
-    $settingsRate = (float) BusinessSettings::getTaxRate();
+    $settingsRateRaw = BusinessSettings::getTaxRate();
+    if ($settingsEnabled) {
+        if ($settingsRateRaw === null || $settingsRateRaw === '') {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Missing required setting: tax_rate']);
+            exit;
+        }
+        if (!is_numeric($settingsRateRaw)) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'error' => 'Invalid numeric setting: tax_rate']);
+            exit;
+        }
+    }
+    $settingsRate = (float)$settingsRateRaw;
     $zipForTax = $zip ?: (string) BusinessSettings::get('business_zip', '');
     $zipState = null;
     $zipRate = null;
@@ -154,6 +200,14 @@ try {
     // Total
     $total = round($subtotal + $shipping + $tax, 2);
 
+    // Currency (no code fallback)
+    $currency = BusinessSettings::get('currency_code');
+    if (!$currency) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Missing required setting: currency_code']);
+        exit;
+    }
+
     $response = [
         'success' => true,
         'pricing' => [
@@ -161,7 +215,7 @@ try {
             'shipping' => round($shipping, 2),
             'tax' => $tax,
             'total' => $total,
-            'currency' => BusinessSettings::get('currency_code', 'USD'),
+            'currency' => $currency,
             'zip' => $zip,
             'shippingMethod' => $method,
             'freeShippingThreshold' => $freeThreshold,

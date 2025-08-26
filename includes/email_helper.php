@@ -83,7 +83,7 @@ class EmailHelper
                     $emailType = 'password_reset';
                 }
 
-                DatabaseLogger::logEmail(
+                DatabaseLogger::getInstance()->logEmail(
                     is_array($to) ? implode(', ', $to) : $to,
                     $options['from_email'],
                     $subject,
@@ -96,7 +96,7 @@ class EmailHelper
         } catch (Exception $e) {
             // Log failed email
             if (class_exists('DatabaseLogger')) {
-                DatabaseLogger::logEmail(
+                DatabaseLogger::getInstance()->logEmail(
                     is_array($to) ? implode(', ', $to) : $to,
                     $options['from_email'],
                     $subject,
@@ -237,6 +237,12 @@ class EmailHelper
         self::$mailer->isHTML($options['is_html']);
         self::$mailer->Subject = $subject;
         self::$mailer->Body = $body;
+        // Provide a plain-text alternative for better deliverability
+        if ($options['is_html']) {
+            self::$mailer->AltBody = self::htmlToText($body);
+        } else {
+            self::$mailer->AltBody = $body;
+        }
 
         // Add attachments
         if (!empty($options['attachments'])) {
@@ -258,6 +264,23 @@ class EmailHelper
     }
 
     /**
+     * Convert basic HTML to readable plain text for AltBody
+     */
+    private static function htmlToText($html)
+    {
+        // Normalize line breaks for common tags
+        $text = preg_replace('/<\/(p|div|h[1-6]|li)>/i', "\n", $html);
+        $text = preg_replace('/<(br|br\/)\s*>/i', "\n", $text);
+        // Remove remaining tags
+        $text = strip_tags($text);
+        // Decode HTML entities
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, self::$config['charset']);
+        // Collapse excessive whitespace
+        $text = preg_replace("/\n{3,}/", "\n\n", $text);
+        return trim($text);
+    }
+
+    /**
      * Send template-based email
      */
     public static function sendTemplate($template, $to, $subject, $variables = [], $options = [])
@@ -265,7 +288,17 @@ class EmailHelper
         $templatePath = __DIR__ . '/../templates/email/' . $template . '.php';
 
         if (!file_exists($templatePath)) {
-            throw new Exception("Email template not found: $template");
+            // Graceful fallback: compose a minimal body and log a warning
+            $body = '<!DOCTYPE html><html><body>'
+                . '<p><strong>Notice:</strong> Missing email template: ' . htmlspecialchars($template) . '.</p>'
+                . '<p>This is a fallback message.</p>'
+                . '</body></html>';
+            if (class_exists('Logger')) {
+                Logger::warning('Email template missing; using fallback', ['template' => $template]);
+            } else {
+                error_log('Email template missing; using fallback: ' . $template);
+            }
+            return self::send($to, $subject, $body, $options);
         }
 
         // Extract variables for template

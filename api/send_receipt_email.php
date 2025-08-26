@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/email_config.php';
+require_once __DIR__ . '/../includes/email_helper.php';
+require_once __DIR__ . '/../includes/secret_store.php';
 require_once __DIR__ . '/business_settings_helper.php';
 
 // Enable CORS and JSON response
@@ -53,43 +55,37 @@ try {
     $businessName = BusinessSettings::getBusinessName();
     $subject = 'Receipt for Order #' . $orderData['orderId'] . ' - ' . $businessName;
 
-    // Use the existing email configuration
-    $headers = [
-        'From: ' . FROM_NAME . ' <' . FROM_EMAIL . '>',
-        'Reply-To: ' . FROM_EMAIL,
-        'X-Mailer: PHP/' . phpversion(),
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=UTF-8'
+    // Configure EmailHelper using constants with secret store fallbacks
+    $secUser = secret_get('smtp_username');
+    $secPass = secret_get('smtp_password');
+    EmailHelper::configure([
+        'smtp_enabled'    => defined('SMTP_ENABLED') ? (bool)SMTP_ENABLED : false,
+        'smtp_host'       => defined('SMTP_HOST') ? SMTP_HOST : '',
+        'smtp_port'       => defined('SMTP_PORT') ? (int)SMTP_PORT : 587,
+        'smtp_username'   => (!empty($secUser)) ? $secUser : (defined('SMTP_USERNAME') ? SMTP_USERNAME : ''),
+        'smtp_password'   => (!empty($secPass)) ? $secPass : (defined('SMTP_PASSWORD') ? SMTP_PASSWORD : ''),
+        'smtp_encryption' => defined('SMTP_ENCRYPTION') ? SMTP_ENCRYPTION : 'tls',
+        'from_email'      => defined('FROM_EMAIL') ? FROM_EMAIL : '',
+        'from_name'       => defined('FROM_NAME') ? FROM_NAME : 'WhimsicalFrog',
+        'reply_to'        => defined('FROM_EMAIL') ? FROM_EMAIL : '',
+    ]);
+
+    $options = [
+        'is_html' => true,
+        'from_email' => defined('FROM_EMAIL') ? FROM_EMAIL : '',
+        'from_name' => defined('FROM_NAME') ? FROM_NAME : 'WhimsicalFrog',
+        'reply_to' => defined('FROM_EMAIL') ? FROM_EMAIL : '',
     ];
-
-    // Add BCC if configured
     if (defined('BCC_EMAIL') && BCC_EMAIL) {
-        $headers[] = 'Bcc: ' . BCC_EMAIL;
+        $options['bcc'] = [BCC_EMAIL];
     }
-
-    $headerString = implode("\r\n", $headers);
 
     $success = false;
     $errorMessage = '';
-
-    if (SMTP_ENABLED) {
-        // Use SMTP if enabled
-        try {
-            $success = sendEmailSMTP($input['customerEmail'], $subject, $receiptHTML);
-        } catch (Exception $e) {
-            $errorMessage = 'SMTP failed: ' . $e->getMessage();
-            // Fall back to PHP mail()
-            $success = mail($input['customerEmail'], $subject, $receiptHTML, $headerString);
-            if (!$success) {
-                $errorMessage .= ' (PHP mail() also failed)';
-            }
-        }
-    } else {
-        // Use PHP mail()
-        $success = mail($input['customerEmail'], $subject, $receiptHTML, $headerString);
-        if (!$success) {
-            $errorMessage = 'PHP mail() function failed';
-        }
+    try {
+        $success = EmailHelper::send($input['customerEmail'], $subject, $receiptHTML, $options);
+    } catch (Exception $e) {
+        $errorMessage = $e->getMessage();
     }
 
     if ($success) {
@@ -240,151 +236,5 @@ function generateReceiptEmailContent($orderData)
     </html>';
 }
 
-function sendEmailSMTP($to, $subject, $htmlBody)
-{
-    // Use the same SMTP implementation as the save_email_config.php
-    $host = SMTP_HOST;
-    $port = SMTP_PORT;
-    $username = SMTP_USERNAME;
-    $password = SMTP_PASSWORD;
-    $encryption = SMTP_ENCRYPTION;
-    $fromEmail = FROM_EMAIL;
-    $fromName = FROM_NAME;
-
-    // Connect to SMTP server
-    $socket = stream_socket_client(
-        $host . ':' . $port,
-        $errno,
-        $errstr,
-        30,
-        STREAM_CLIENT_CONNECT
-    );
-
-    if (!$socket) {
-        throw new Exception("Failed to connect to SMTP server $host:$port - $errstr ($errno)");
-    }
-
-    // Function to read SMTP response
-    $readResponse = function () use ($socket) {
-        $response = '';
-        while (($line = fgets($socket, 515)) !== false) {
-            $response .= $line;
-            if (isset($line[3]) && $line[3] == ' ') {
-                break;
-            }
-        }
-        return trim($response);
-    };
-
-    // Initial server greeting
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '220') {
-        fclose($socket);
-        throw new Exception("SMTP server not ready: $response");
-    }
-
-    // EHLO
-    fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("EHLO failed: $response");
-    }
-
-    // Start TLS if requested
-    if ($encryption === 'tls') {
-        fputs($socket, "STARTTLS\r\n");
-        $response = $readResponse();
-        if (substr($response, 0, 3) != '220') {
-            fclose($socket);
-            throw new Exception("STARTTLS failed: $response");
-        }
-
-        // Enable TLS encryption
-        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-            fclose($socket);
-            throw new Exception("Failed to enable TLS encryption");
-        }
-
-        // Send EHLO again after TLS
-        fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
-        $response = $readResponse();
-        if (substr($response, 0, 3) != '250') {
-            fclose($socket);
-            throw new Exception("EHLO after TLS failed: $response");
-        }
-    }
-
-    // Authenticate
-    if ($username && $password) {
-        fputs($socket, "AUTH LOGIN\r\n");
-        $response = $readResponse();
-        if (substr($response, 0, 3) != '334') {
-            fclose($socket);
-            throw new Exception("AUTH LOGIN failed: $response");
-        }
-
-        fputs($socket, base64_encode($username) . "\r\n");
-        $response = $readResponse();
-        if (substr($response, 0, 3) != '334') {
-            fclose($socket);
-            throw new Exception("Username authentication failed: $response");
-        }
-
-        fputs($socket, base64_encode($password) . "\r\n");
-        $response = $readResponse();
-        if (substr($response, 0, 3) != '235') {
-            fclose($socket);
-            throw new Exception("Password authentication failed: $response");
-        }
-    }
-
-    // MAIL FROM
-    fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("MAIL FROM rejected: $response");
-    }
-
-    // RCPT TO
-    fputs($socket, "RCPT TO: <$to>\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("RCPT TO rejected: $response");
-    }
-
-    // DATA
-    fputs($socket, "DATA\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '354') {
-        fclose($socket);
-        throw new Exception("DATA command rejected: $response");
-    }
-
-    // Send email headers and body
-    $email = "From: $fromName <$fromEmail>\r\n";
-    $email .= "To: <$to>\r\n";
-    $email .= "Subject: $subject\r\n";
-    $email .= "MIME-Version: 1.0\r\n";
-    $email .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $email .= "\r\n";
-    $email .= $htmlBody . "\r\n";
-    $email .= ".\r\n";
-
-    fputs($socket, $email);
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("Email delivery failed: $response");
-    }
-
-    // QUIT
-    fputs($socket, "QUIT\r\n");
-    $readResponse();
-    fclose($socket);
-
-    return true;
-}
+// Legacy custom SMTP sender removed; unified on EmailHelper::send()
 ?> 

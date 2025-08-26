@@ -184,6 +184,7 @@ function generateId($prefix, $length = 3)
 
 <div class="admin-content-container admin-marketing-page">
     <div class="admin-filter-section">
+        <div class="admin-filters">
         <form class="admin-filter-form" method="get" action="/admin/marketing">
             
             <input type="date" id="mFrom" name="start_date" class="admin-form-input" 
@@ -192,8 +193,11 @@ function generateId($prefix, $length = 3)
             <input type="date" id="mTo" name="end_date" class="admin-form-input" 
                    value="<?= htmlspecialchars($endInput) ?>">
             
-            <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
+            <span class="admin-actions">
+                <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
+            </span>
         </form>
+        </div>
     </div>
 
     <div class="admin-table-section">

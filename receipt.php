@@ -202,6 +202,7 @@ $pending = ($order['paymentStatus'] === 'Pending');
 // Business info (centralized)
 $businessName     = BusinessSettings::getBusinessName();
 $businessDomain   = BusinessSettings::getBusinessDomain();
+$businessOwner    = BusinessSettings::get('business_owner', '');
 $businessPhone    = BusinessSettings::get('business_phone', '');
 $businessAddress  = BusinessSettings::get('business_address', '');
 $businessUrl      = BusinessSettings::getSiteUrl('');
@@ -222,6 +223,9 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
             </div>
         </div>
         <div class="text-sm text-brand-secondary">
+            <?php if (!empty($businessOwner)): ?>
+                <p><strong>Owner:</strong> <?php echo htmlspecialchars($businessOwner); ?></p>
+            <?php endif; ?>
             <?php if (!empty($businessAddress)): ?>
                 <p><?php echo htmlspecialchars($businessAddress); ?></p>
             <?php endif; ?>
@@ -276,7 +280,11 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 text-sm" role="alert">
             <p class="font-bold text-brand-primary wf-brand-font">Thank you for choosing <?php echo htmlspecialchars($businessName); ?>!</p>
             <p>Your order is reserved and will be shipped as soon as we receive your payment&nbsp;🙂</p>
-            <p class="">Remit payment to:<br><strong>Lisa&nbsp;Lemley</strong><br>1524&nbsp;Red&nbsp;Oak&nbsp;Flats&nbsp;Rd<br>Dahlonega,&nbsp;GA&nbsp;30533</p>
+            <?php 
+                $remitName = !empty($businessOwner) ? $businessOwner : $businessName; 
+                $remitAddress = trim((string)$businessAddress);
+            ?>
+            <p class="">Remit payment to:<br><strong><?php echo htmlspecialchars($remitName); ?></strong><?php if ($remitAddress !== ''): ?><br><?php echo nl2br(htmlspecialchars($remitAddress)); ?><?php endif; ?></p>
             <p class="">Please include your order&nbsp;ID on the memo line. As soon as we record your payment we'll send a confirmation e-mail and get your items on their way.</p>
         </div>
     <?php else: ?>

@@ -132,12 +132,9 @@ $messageType = $_GET['type'] ?? '';
 
 
 <div class="admin-content-container">
-    <div class="admin-content-header">
-        <h1 class="admin-content-title inventory-title">📦 Inventory Management</h1>
-        <p class="admin-content-subtitle">Manage your product inventory, stock levels, and pricing</p>
-    </div>
 
     <div class="admin-filter-section">
+        <div class="admin-filters">
         <form method="GET" action="/admin/inventory" class="admin-filter-form">
             <input type="text" name="search" placeholder="Search..." class="admin-form-input" value="<?= htmlspecialchars($filters['search'] ?? ''); ?>">
             <select name="category" class="admin-form-select">
@@ -152,10 +149,13 @@ $messageType = $_GET['type'] ?? '';
                 <option value="out" <?= ($filters['stock'] === 'out') ? 'selected' : ''; ?>>Out of Stock</option>
                 <option value="in" <?= ($filters['stock'] === 'in') ? 'selected' : ''; ?>>In Stock</option>
             </select>
-            <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
-            <button type="button" data-action="refresh-categories" class="btn btn-secondary admin-filter-button" title="Refresh Categories">🔄</button>
-            <a href="/admin/inventory?add=1" class="btn btn-primary admin-filter-button">Add New Item</a>
+            <span class="admin-actions">
+                <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
+                <button type="button" data-action="refresh-categories" class="btn btn-secondary admin-filter-button btn-icon" title="Refresh Categories">🔄</button>
+                <a href="/admin/inventory?add=1" class="btn btn-primary admin-filter-button">Add New Item</a>
+            </span>
         </form>
+        </div>
     </div>
     
     <?php if ($message): ?>

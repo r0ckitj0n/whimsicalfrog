@@ -74,16 +74,19 @@
     "isDynamicEntry": true
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-BqbFehAn.js",
+    "file": "assets/js/app.js-pHw9tHSg.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
     "dynamicImports": [
-      "src/js/pages/room-page.js",
+      "src/js/pages/payment-page.js",
       "src/js/pages/cart-page.js",
+      "src/js/pages/login-page.js",
       "src/js/pages/register-page.js",
       "src/js/pages/account-settings-page.js",
       "src/js/pages/account-settings-page.js",
+      "src/js/pages/payment-page.js",
+      "src/js/pages/room-page.js",
       "src/js/pages/payment-page.js",
       "src/entries/admin-dashboard.js",
       "src/js/admin-customers.js",
@@ -102,7 +105,7 @@
       "src/entries/admin-dashboard.js"
     ],
     "css": [
-      "assets/app-cy79IAJZ.css"
+      "assets/app-Du5Notjj.css"
     ],
     "assets": [
       "assets/background_room_main-CD7UiX_S.webp",
@@ -194,7 +197,7 @@
     "isDynamicEntry": true
   },
   "src/js/admin-settings.js": {
-    "file": "assets/admin-settings-UCQvnvI6.js",
+    "file": "assets/admin-settings-CDXpvmDj.js",
     "name": "admin-settings",
     "src": "src/js/admin-settings.js",
     "isDynamicEntry": true
@@ -211,8 +214,17 @@
     "src": "src/js/pages/cart-page.js",
     "isDynamicEntry": true
   },
+  "src/js/pages/login-page.js": {
+    "file": "assets/login-page-D5cdVXVS.js",
+    "name": "login-page",
+    "src": "src/js/pages/login-page.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "src/entries/app.js"
+    ]
+  },
   "src/js/pages/payment-page.js": {
-    "file": "assets/payment-page-lINlmlye.js",
+    "file": "assets/payment-page-fK9rC0ee.js",
     "name": "payment-page",
     "src": "src/js/pages/payment-page.js",
     "isDynamicEntry": true,

@@ -40,8 +40,20 @@ const MainApplication = {
     },
 
     handleLoginForm() {
+        // If the dedicated login modal script is present, it already hooks the inline login form
+        // and shows branded notifications. Avoid double-binding to prevent duplicate submissions
+        // and JSON parsing conflicts.
+        if (window.openLoginModal) {
+            this.WF.log('Login modal detected; skipping duplicate inline login handler.');
+            return;
+        }
+
         const form = document.getElementById('loginForm');
         if (!form) return;
+
+        // Guard against multiple attachments
+        if (form.dataset.wfLoginHandler === 'true') return;
+        form.dataset.wfLoginHandler = 'true';
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -52,18 +64,33 @@ const MainApplication = {
             if (errorMessage) errorMessage.classList.add('hidden');
 
             try {
-                // Note: This relies on an api client on the core object.
-                const data = await this.WF.api.post('/functions/process_login.php', { username, password });
-                sessionStorage.setItem('user', JSON.stringify(data.user || data));
+                // Use direct fetch with safe JSON handling to avoid parse errors on empty bodies
+                const res = await fetch('/functions/process_login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                if (!res.ok) {
+                    const err = await this.safeJson(res);
+                    throw new Error(err?.error || 'Login failed.');
+                }
+                const data = await this.safeJsonOk(res);
+                sessionStorage.setItem('user', JSON.stringify((data && (data.user || data)) || {}));
 
-                if (data.redirectUrl) {
-                    window.location.href = data.redirectUrl;
+                // Determine redirect target
+                let target;
+                if (data && data.redirectUrl) {
+                    target = data.redirectUrl;
                 } else if (localStorage.getItem('pendingCheckout') === 'true') {
                     localStorage.removeItem('pendingCheckout');
-                    window.location.href = '/cart';
+                    target = '/cart';
                 } else {
-                    window.location.href = '/dashboard';
+                    target = '/dashboard';
                 }
+
+                // Branded success popup and brief delay for visibility
+                if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
+                setTimeout(() => { window.location.href = target; }, 700);
             } catch (err) {
                 if (errorMessage) {
                     errorMessage.textContent = err.message || 'Invalid username or password.';
@@ -72,6 +99,23 @@ const MainApplication = {
                 console.error('Login failed:', err);
             }
         });
+    },
+
+    // Helpers: tolerant JSON parsing
+    async safeJson(res) {
+        try { return await res.json(); } catch (_) { return null; }
+    },
+    async safeJsonOk(res) {
+        try {
+            const ct = (res.headers && res.headers.get && res.headers.get('content-type')) || '';
+            const text = await res.text();
+            const trimmed = (text || '').trim();
+            if (!ct.includes('application/json')) return {};
+            if (!trimmed) return {};
+            try { return JSON.parse(trimmed); } catch (_) { return {}; }
+        } catch (_) {
+            return {};
+        }
     },
 
     async loadModalBackground(roomType) {

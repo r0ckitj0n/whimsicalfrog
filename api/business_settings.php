@@ -4,6 +4,8 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+// Ensure we can clear cached settings after writes
+@require_once __DIR__ . '/business_settings_helper.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -185,6 +187,10 @@ function updateSetting($pdo)
     $result = $stmt->execute([$value, $key]);
 
     if ($result && $stmt->rowCount() > 0) {
+        // Clear settings cache so subsequent requests see the latest values
+        if (class_exists('BusinessSettings')) {
+            BusinessSettings::clearCache();
+        }
         echo json_encode(['success' => true, 'message' => 'Setting updated successfully']);
     } else {
         echo json_encode(['success' => false, 'message' => 'Failed to update setting or setting not found']);
@@ -219,6 +225,11 @@ function updateMultipleSettings($pdo)
         }
 
         $pdo->commit();
+
+        // Clear settings cache so subsequent requests see the latest values
+        if (class_exists('BusinessSettings')) {
+            BusinessSettings::clearCache();
+        }
 
         echo json_encode([
             'success' => true,
@@ -316,6 +327,11 @@ function upsertSettings($pdo)
         }
 
         $pdo->commit();
+
+        // Clear settings cache so subsequent requests see the latest values
+        if (class_exists('BusinessSettings')) {
+            BusinessSettings::clearCache();
+        }
 
         echo json_encode([
             'success' => true,

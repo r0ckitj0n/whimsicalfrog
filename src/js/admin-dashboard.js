@@ -11,11 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ghostClass: 'sortable-ghost',
             onEnd: async (evt) => {
                 const sections = Array.from(evt.to.children);
-                const order = sections.map((section, index) => ({
-                    key: section.dataset.sectionKey,
-                    order: index + 1
+                const payload = sections.map((section, index) => ({
+                    section_key: section.dataset.sectionKey,
+                    display_order: index + 1
                 }));
-                await saveDashboardOrder(order);
+                await saveDashboardOrder(payload);
             }
         });
     }
@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-async function saveDashboardOrder(order) {
+async function saveDashboardOrder(sections) {
     try {
-        const response = await fetch('/api/dashboard/order', {
+        const response = await fetch('/api/dashboard_sections.php?action=reorder_sections', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ order })
+            body: JSON.stringify({ sections })
         });
         const result = await response.json();
         if (result.success) {

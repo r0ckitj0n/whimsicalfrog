@@ -5,6 +5,7 @@
  */
 
 import '../styles/sales-system.css';
+import { apiGet } from '../core/apiClient.js';
 
 // Runtime-injected classes for popup positioning (no inline styles)
 const SALES_PP_STYLE_ID = 'sales-popup-position-classes';
@@ -59,15 +60,9 @@ class SalesSystem {
     // Check if an item is on sale
     async checkItemSale(itemSku) {
         try {
-            const response = await fetch(`sales.php?action=get_active_sales&item_sku=${itemSku}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
+            const data = await apiGet('sales.php', { action: 'get_active_sales', item_sku: itemSku });
             
-            const data = await response.json();
-            
-            if (data.success && data.sale) {
+            if (data && data.success && data.sale) {
                 return {
                     isOnSale: true,
                     discountPercentage: parseFloat(data.sale.discount_percentage),

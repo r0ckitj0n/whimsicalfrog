@@ -3,52 +3,141 @@
 // Email Configuration for WhimsicalFrog
 // This file handles email sending functionality for order confirmations and notifications
 
-// Include business settings helper for brand colors
+// Include business settings helper for brand colors and email config
 require_once __DIR__ . '/business_settings_helper.php';
+// Use centralized email helper so SMTP and headers are consistent everywhere
+require_once __DIR__ . '/../includes/email_helper.php';
+// Ensure secret_get() is available for pulling SMTP creds securely
+require_once __DIR__ . '/../includes/secret_store.php';
 
-// Email settings
-define('SMTP_ENABLED', true); // Set to true if using SMTP, false for PHP mail() function
-define('FROM_EMAIL', 'orders@whimsicalfrog.us');
-define('FROM_NAME', 'WhimsicalFrog');
-define('ADMIN_EMAIL', 'admin@whimsicalfrog.us'); // Admin notification email
-define('BCC_EMAIL', ''); // Optional BCC email
+// Load dynamic email settings from DB ('email' category) and enforce required presence
+$__wf_email_cfg = BusinessSettings::getByCategory('email');
+if (!is_array($__wf_email_cfg)) {
+    throw new RuntimeException('Email configuration missing: category "email" not found in BusinessSettings');
+}
 
-// SMTP Settings (if SMTP_ENABLED is true) - Optimized for IONOS hosting
-define('SMTP_HOST', 'smtp.ionos.com');
-define('SMTP_PORT', 587);
-define('SMTP_USERNAME', 'orders@whimsicalfrog.us');
-define('SMTP_PASSWORD', 'Palz2516!'); // Configure this through the admin panel
-define('SMTP_ENCRYPTION', 'tls'); // 'tls' or 'ssl'
+// Required fields (no masking fallbacks): derive from canonical business info when possible
+$__wf_FROM_EMAIL = (string)(BusinessSettings::getBusinessEmail());
+$__wf_FROM_NAME  = (string)(BusinessSettings::getBusinessName());
+$__wf_ADMIN_EMAIL= (string)(BusinessSettings::getBusinessEmail());
+$__wf_BCC_EMAIL  = (string)($__wf_email_cfg['bcc_email'] ?? ''); // optional
+$__wf_SMTP_HOST  = (string)($__wf_email_cfg['smtp_host'] ?? '');
+$__wf_SMTP_PORT  = $__wf_email_cfg['smtp_port'] ?? null;
+$__wf_SMTP_ENC   = (string)($__wf_email_cfg['smtp_encryption'] ?? '');
+$__wf_SMTP_ENABLED_VAL = $__wf_email_cfg['smtp_enabled'] ?? null;
+
+// Validate presence
+if ($__wf_FROM_EMAIL === '' || $__wf_FROM_NAME === '' || $__wf_ADMIN_EMAIL === '') {
+    throw new RuntimeException('Email configuration missing: from_email, from_name, and admin_email are required');
+}
+if ($__wf_SMTP_HOST === '' || $__wf_SMTP_PORT === null || $__wf_SMTP_ENC === '' || $__wf_SMTP_ENABLED_VAL === null) {
+    throw new RuntimeException('Email configuration missing: smtp_host, smtp_port, smtp_encryption, and smtp_enabled are required');
+}
+
+// Normalize types
+$__wf_SMTP_PORT = is_numeric($__wf_SMTP_PORT) ? (int)$__wf_SMTP_PORT : (int) $__wf_SMTP_PORT; // will fail if non-numeric
+$__wf_smtpEnabled = is_bool($__wf_SMTP_ENABLED_VAL)
+    ? $__wf_SMTP_ENABLED_VAL
+    : in_array(strtolower((string)$__wf_SMTP_ENABLED_VAL), ['true','1','yes'], true);
+
+// Credentials: prefer secret store; require username/password if SMTP is enabled
+$__wf_secret_user = function_exists('secret_get') ? secret_get('smtp_username') : null;
+$__wf_secret_pass = function_exists('secret_get') ? secret_get('smtp_password') : null;
+$__wf_SMTP_USER   = (string)($__wf_email_cfg['smtp_username'] ?? '');
+$__wf_effective_user = !empty($__wf_secret_user) ? (string)$__wf_secret_user : (string)$__wf_SMTP_USER;
+$__wf_effective_pass = !empty($__wf_secret_pass) ? (string)$__wf_secret_pass : '';
+if ($__wf_smtpEnabled) {
+    if ($__wf_effective_user === '' || $__wf_effective_pass === '') {
+        throw new RuntimeException('SMTP is enabled but smtp_username/password are not configured in secret store or settings');
+    }
+}
+
+// Define constants strictly from config (no code fallbacks)
+define('SMTP_ENABLED', (bool)$__wf_smtpEnabled);
+define('FROM_EMAIL', $__wf_FROM_EMAIL);
+define('FROM_NAME', $__wf_FROM_NAME);
+define('ADMIN_EMAIL', $__wf_ADMIN_EMAIL);
+define('BCC_EMAIL', $__wf_BCC_EMAIL);
+define('SMTP_HOST', $__wf_SMTP_HOST);
+define('SMTP_PORT', $__wf_SMTP_PORT);
+define('SMTP_USERNAME', $__wf_effective_user);
+// SMTP password is stored in the secret store; do not expose from DB beyond this runtime constant
+define('SMTP_PASSWORD', $__wf_effective_pass);
+define('SMTP_ENCRYPTION', $__wf_SMTP_ENC); // 'tls' or 'ssl'
 
 /**
- * Send email using PHP mail() function or SMTP
+ * Build a URL by appending query parameters, preserving existing query and anchors
+ */
+function wf_url_with_params(string $base, array $params): string {
+    if (empty($params)) { return $base; }
+    $parts = parse_url($base);
+    $existing = [];
+    if (!empty($parts['query'])) {
+        parse_str($parts['query'], $existing);
+    }
+    $query = array_merge($existing, $params);
+    $scheme   = $parts['scheme'] ?? null;
+    $host     = $parts['host'] ?? null;
+    $port     = isset($parts['port']) ? ":{$parts['port']}" : '';
+    $user     = $parts['user'] ?? null;
+    $pass     = isset($parts['pass']) ? ":{$parts['pass']}@" : ($user ? '@' : '');
+    $auth     = $user ? $user . $pass : '';
+    $path     = $parts['path'] ?? '';
+    $frag     = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+    $queryStr = http_build_query($query);
+    if ($scheme && $host) {
+        return sprintf('%s://%s%s%s%s?%s%s', $scheme, $auth, $host, $port, $path, $queryStr, $frag);
+    }
+    $delim = (strpos($base, '?') === false) ? '?' : '&';
+    return $base . $delim . $queryStr;
+}
+
+/**
+ * Resolve admin base URL from BusinessSettings, fallback to site base + /?page=admin
+ */
+function wf_get_admin_base(): string {
+    $cfg = (string) BusinessSettings::get('admin_base_url', '');
+    if ($cfg !== '') { return $cfg; }
+    $siteBase = (string) BusinessSettings::getSiteUrl('');
+    if ($siteBase === '') { throw new RuntimeException('Site base URL missing for admin link composition'); }
+    return rtrim($siteBase, '/') . '/?page=admin';
+}
+
+/**
+ * Send email routed through EmailHelper (honors SMTP settings and provides consistent headers)
  */
 function sendEmail($to, $subject, $htmlBody, $plainTextBody = '')
 {
-    $headers = [
-        'From: ' . FROM_NAME . ' <' . FROM_EMAIL . '>',
-        'Reply-To: ' . FROM_EMAIL,
-        'X-Mailer: PHP/' . phpversion(),
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=UTF-8'
+    // Configure central helper from constants
+    // Prefer secrets if present, fallback to constants
+    $secUser = function_exists('secret_get') ? secret_get('smtp_username') : null;
+    $secPass = function_exists('secret_get') ? secret_get('smtp_password') : null;
+
+    EmailHelper::configure([
+        'smtp_enabled'   => (bool)SMTP_ENABLED,
+        'smtp_host'      => (string)SMTP_HOST,
+        'smtp_port'      => (int)SMTP_PORT,
+        'smtp_username'  => (!empty($secUser)) ? $secUser : (string)SMTP_USERNAME,
+        'smtp_password'  => (!empty($secPass)) ? $secPass : (string)SMTP_PASSWORD,
+        'smtp_encryption'=> (string)SMTP_ENCRYPTION,
+        'from_email'     => (string)FROM_EMAIL,
+        'from_name'      => (string)FROM_NAME,
+        'reply_to'       => (string)FROM_EMAIL,
+    ]);
+
+    $options = [
+        'is_html'   => true,
+        'from_email'=> (string)FROM_EMAIL,
+        'from_name' => (string)FROM_NAME,
+        'reply_to'  => (string)FROM_EMAIL,
     ];
 
     // Add BCC if configured
     if (defined('BCC_EMAIL') && BCC_EMAIL) {
-        $headers[] = 'Bcc: ' . BCC_EMAIL;
+        $options['bcc'] = [BCC_EMAIL];
     }
 
-    $headerString = implode("\r\n", $headers);
-
-    if (SMTP_ENABLED) {
-        // Use PHPMailer or similar SMTP library
-        // For now, we'll use PHP mail() function
-        // In production, consider using PHPMailer for better reliability
-        return mail($to, $subject, $htmlBody, $headerString);
-    } else {
-        // Use PHP mail() function
-        return mail($to, $subject, $htmlBody, $headerString);
-    }
+    return EmailHelper::send($to, $subject, $htmlBody, $options);
 }
 
 /**
@@ -109,6 +198,14 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
         }
         $shippingAddress = '<strong>Shipping Address:</strong><br>' . $address;
     }
+
+    // Resolve site base URL from canonical setting (required)
+    $siteBase = (string) BusinessSettings::getSiteUrl('');
+    if ($siteBase === '') {
+        throw new RuntimeException('Site base URL missing: BusinessSettings::getSiteUrl() returned empty');
+    }
+    // Precompute receipt URL using safe builder
+    $receiptUrl = wf_url_with_params(rtrim($siteBase, '/') . '/', ['page' => 'receipt', 'orderId' => $orderId]);
 
     $html = "
     <!DOCTYPE html>
@@ -248,12 +345,13 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
             </div>
             
             <div class='email-next-steps'>
-                <a href='https://whimsicalfrog.us/?page=receipt&orderId={$orderId}' class='email-cta-button'>
+                <a href='" . wf_url_with_params(rtrim($siteBase, '/') . '/', ['page' => 'receipt', 'orderId' => $orderId]) . "' class='email-cta-button'>
                     View Order Details
                 </a>
             </div>
             
             <div class='email-footer'>
+{{ ... }}
                 <p class='email-footer-primary'>Thank you for shopping with WhimsicalFrog!</p>
                 <p class='email-footer-secondary'>© " . date('Y') . " WhimsicalFrog. All rights reserved.</p>
             </div>
@@ -331,6 +429,9 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems)
     if (!empty($orderData['shippingAddress']) && $orderData['shippingAddress'] !== $customerAddress) {
         $shippingAddress = nl2br(htmlspecialchars($orderData['shippingAddress']));
     }
+
+    // Ensure admin base URL is defined for links below
+    $adminBase = wf_get_admin_base();
 
     $html = "
     <!DOCTYPE html>
@@ -462,10 +563,10 @@ function generateAdminNotificationEmail($orderData, $customerData, $orderItems)
             </div>
             
             <div class='email-next-steps'>
-                <a href='https://whimsicalfrog.us/?page=admin&section=orders&view={$orderId}' class='email-cta-button u-margin-right-10px'>
+                <a href='" . wf_url_with_params($adminBase, ['section' => 'orders', 'view' => $orderId]) . "' class='email-cta-button u-margin-right-10px'>
                     View in Admin Panel
                 </a>
-                <a href='https://whimsicalfrog.us/?page=admin&section=orders' class='email-secondary-cta'>
+                <a href='" . wf_url_with_params($adminBase, ['section' => 'orders']) . "' class='email-secondary-cta'>
                     All Orders
                 </a>
             </div>

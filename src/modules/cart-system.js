@@ -24,7 +24,14 @@ class CartSystem {
         this.setupEventListeners();
         // Ensure header/UI reflects persisted cart immediately on page load
         this.updateCartDisplay();
+        // Mark initialized before notifying so listeners see ready state
         this.state.initialized = true;
+        // Notify listeners (e.g., cart modal) that cart is ready so they can render
+        try {
+            window.dispatchEvent(new CustomEvent('cartUpdated', {
+                detail: { action: 'init', state: this.getState() }
+            }));
+        } catch (_) {}
         console.log('[Cart] System initialized');
     }
 
@@ -133,13 +140,22 @@ class CartSystem {
 
     // Generic notification system
     showNotification(message, type = 'info', duration = 2500) {
-        // Try to use existing notification system first
-        if (window.WhimsicalFrog && window.WhimsicalFrog.showNotification) {
+        // Prefer unified notification system
+        if (window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+            window.wfNotifications.show(message, type, { duration });
+            return;
+        }
+        // Legacy global helper if present
+        if (typeof window.showNotification === 'function') {
+            window.showNotification(message, type, { duration });
+            return;
+        }
+        if (window.WhimsicalFrog && typeof window.WhimsicalFrog.showNotification === 'function') {
             window.WhimsicalFrog.showNotification(message, type, duration);
             return;
         }
 
-        // Fallback notification system
+        // Final fallback notification system (minimal styles)
         const notification = document.createElement('div');
         notification.className = 'cart-notification';
         // Map type to semantic classes
@@ -299,6 +315,9 @@ class CartSystem {
             const el = e.target && e.target.closest && e.target.closest('.remove-from-cart, [data-action="remove-from-cart"], .cart-item-remove');
             if (el) {
                 e.preventDefault();
+                // Stop propagation so product-card or room icon delegated click handlers
+                // don't misinterpret this as an item click that opens the Add-to-Cart popup
+                try { e.stopPropagation(); e.stopImmediatePropagation && e.stopImmediatePropagation(); } catch (_) {}
                 const sku = el.dataset.sku || el.closest('[data-sku]')?.dataset.sku;
                 if (sku) {
                     this.removeItem(sku);
@@ -415,6 +434,18 @@ class CartSystem {
     getTotal() { return this.state.total; }
     getCount() { return this.state.count; }
     getState() { return { ...this.state }; }
+    // Reload from storage and notify listeners (useful after auth or cross-tab changes)
+    refreshFromStorage() {
+        try { this.loadCart(); } catch (_) {}
+        try { this.saveCart(); } catch (_) {}
+        try { this.updateCartDisplay(); } catch (_) {}
+        try {
+            window.dispatchEvent(new CustomEvent('cartUpdated', {
+                detail: { action: 'refresh', state: this.getState() }
+            }));
+        } catch (_) {}
+        return this.getState();
+    }
     setNotifications(enabled) { this.state.notifications = !!enabled; }
 }
 

@@ -196,12 +196,13 @@ class WhimsicalFrogNotifications {
                 icon: '⚠️'
             },
             info: {
-                background: 'linear-gradient(135deg, #dbeafe, #bfdbfe)',
-                border: '#3b82f6',
-                color: '#1e3a8a',
-                titleColor: '#2563eb',
-                closeColor: '#3b82f6',
-                shadow: 'rgba(59, 130, 246, 0.2)',
+                // Use secondary brand color for info toasts (standardized site-wide)
+                background: 'var(--brand-secondary, #6b8e23)',
+                border: 'var(--brand-secondary, #6b8e23)',
+                color: '#ffffff',
+                titleColor: '#ffffff',
+                closeColor: '#ffffff',
+                shadow: 'rgba(107, 142, 35, 0.2)',
                 icon: 'ℹ️'
             },
             validation: {

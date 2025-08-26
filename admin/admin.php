@@ -67,7 +67,7 @@ $tabs = [
     'secrets' => ['Secrets', 'admin-tab-secrets'],
 ];
 ?>
-    <?php if ($section !== 'pos'): ?>
+    <?php if ($currentSection !== 'pos'): ?>
     <div class="admin-tab-navigation">
         <div class="u-display-flex u-flex-wrap-wrap u-gap-2">
             <?php foreach ($tabs as $key => [$label, $cssClass]): ?>

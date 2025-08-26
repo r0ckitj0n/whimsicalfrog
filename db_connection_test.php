@@ -3,16 +3,19 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Set credentials manually to bypass config file issues
-global $host, $db, $user, $pass, $port, $socket;
-$host = '127.0.0.1';
-$db   = 'whimsical_frog'; // Assuming standard db name
-$user = 'root';
-$pass = 'Palz2516!';
-$port = 3306;
-$socket = ini_get("mysqli.default_socket");
-
+// Use centralized configuration which sets $host, $db, $user, $pass, $port, $socket
+require_once __DIR__ . '/api/config.php';
 require_once __DIR__ . '/includes/database.php';
+
+// Debug: show resolved DB connection parameters
+global $host, $db, $user, $pass, $port, $socket;
+header('Content-Type: text/plain');
+echo "Resolved DB params:\n";
+echo "  host:   {$host}\n";
+echo "  db:     {$db}\n";
+echo "  user:   {$user}\n";
+echo "  port:   " . (isset($port) ? $port : '(unset)') . "\n";
+echo "  socket: " . (isset($socket) && $socket ? $socket : '(none)') . "\n\n";
 
 try {
     $pdo = Database::getInstance();
@@ -27,3 +30,4 @@ try {
 } catch (Exception $e) {
     echo "Database connection failed: " . $e->getMessage() . "\n";
 }
+?>

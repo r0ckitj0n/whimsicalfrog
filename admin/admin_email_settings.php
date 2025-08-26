@@ -98,6 +98,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="admin-alert alert-<?= $messageType ?>">
             <?= htmlspecialchars($message) ?>
         </div>
+        <script>
+        (function() {
+            try {
+                var msg = <?php echo json_encode($message, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+                var type = <?php echo json_encode($messageType, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
+                var toastType = (type === 'success' || type === 'error' || type === 'warning' || type === 'info') ? type : 'info';
+                var title = (toastType === 'success') ? 'Email Test Sent' : 'Email Test';
+
+                var show;
+                if (window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                    show = function(m, t, o) { window.wfNotifications.show(m, t, o || {}); };
+                } else if (typeof window.showNotification === 'function') {
+                    show = function(m, t, o) { window.showNotification(m, t, o || {}); };
+                } else if (toastType === 'success' && typeof window.showSuccess === 'function') {
+                    show = function(m) { window.showSuccess(m); };
+                } else if (toastType === 'error' && typeof window.showError === 'function') {
+                    show = function(m) { window.showError(m); };
+                }
+
+                if (typeof show === 'function') {
+                    // Defer slightly to ensure notification system is initialized
+                    requestAnimationFrame(function(){
+                        try { show(msg, toastType, { title: title }); } catch (e) {}
+                    });
+                }
+            } catch (e) {
+                // no-op
+            }
+        })();
+        </script>
     <?php endif; ?>
 
     <!- Current Configuration ->

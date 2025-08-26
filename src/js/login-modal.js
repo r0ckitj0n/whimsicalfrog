@@ -88,10 +88,13 @@
     btn.textContent = 'Logging in…';
 
     try {
-      const res = await fetch('/functions/process_login.php', {
+      const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : window.location.origin;
+      const loginUrl = new URL('/functions/process_login.php', backendOrigin).toString();
+      const res = await fetch(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
+        credentials: 'include'
       });
 
       if (!res.ok) {
@@ -99,7 +102,17 @@
         throw new Error(err?.error || 'Login failed.');
       }
 
-      const data = await res.json();
+      const data = await safeJsonOk(res);
+      let resolvedUserId = (data && data.userId != null) ? data.userId : undefined;
+      // Fallback: if login response had no userId (e.g., proxy/content-type issues), query session
+      if (resolvedUserId == null) {
+        try {
+          const whoUrl = new URL('/api/whoami.php', backendOrigin).toString();
+          const who = await fetch(whoUrl, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          const sid = who?.userId;
+          if (sid != null) resolvedUserId = sid;
+        } catch (_) {}
+      }
       // Choose redirect target: server-provided > sessionStorage > current
       const serverRedirect = data?.redirectUrl;
       let target = serverRedirect;
@@ -108,11 +121,40 @@
       }
       if (!target) target = window.location.pathname || '/';
 
-      // Mark client-side state as logged-in for in-page flows
-      try { if (document && document.body) document.body.setAttribute('data-is-logged-in', 'true'); } catch (_) {}
+      // Normalize and mark client-side state as logged-in for in-page flows
+      try {
+        if (document && document.body) {
+          document.body.setAttribute('data-is-logged-in', 'true');
+          // Also expose user id so payment-modal can operate without full page reload
+          const n = Number(resolvedUserId);
+          if (Number.isFinite(n) && n > 0) {
+            document.body.setAttribute('data-user-id', String(n));
+            resolvedUserId = n;
+          } else {
+            resolvedUserId = undefined;
+          }
+        }
+      } catch (_) {}
 
       // Notify listeners about successful login
-      try { window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { serverRedirect, target } })); } catch (_) {}
+      try {
+        window.dispatchEvent(new CustomEvent('wf:login-success', {
+          detail: {
+            serverRedirect,
+            target,
+            userId: (resolvedUserId != null) ? resolvedUserId : undefined,
+            username: data?.username,
+            role: data?.role,
+          }
+        }));
+        // Also refresh cart state and notify globally so any open cart UI re-renders
+        try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
+        try {
+          window.dispatchEvent(new CustomEvent('cartUpdated', {
+            detail: { action: 'auth', state: window.WF_Cart?.getState?.() }
+          }));
+        } catch(_) {}
+      } catch (_) {}
 
       // Invoke optional callback if provided
       try {
@@ -143,6 +185,20 @@
     try { return await res.json(); } catch (_) { return null; }
   }
 
+  // Parse JSON safely on success responses. Tolerates empty body or non-JSON content.
+  async function safeJsonOk(res) {
+    try {
+      const ct = (res.headers && res.headers.get && res.headers.get('content-type')) || '';
+      const text = await res.text();
+      const trimmed = (text || '').trim();
+      if (!ct.includes('application/json')) return {};
+      if (!trimmed) return {};
+      try { return JSON.parse(trimmed); } catch (_) { return {}; }
+    } catch (_) {
+      return {};
+    }
+  }
+
   // Delegated listener for header login links
   document.addEventListener('click', (e) => {
     const link = e.target.closest('[data-action="open-login-modal"]');
@@ -159,6 +215,10 @@
     const pageForm = document.getElementById('loginForm');
     if (!pageForm) return;
 
+    // Prevent duplicate listener attachments from other modules
+    if (pageForm.dataset.wfLoginHandler === 'true') return;
+    pageForm.dataset.wfLoginHandler = 'true';
+
     pageForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = (pageForm.querySelector('#username') || {}).value?.trim();
@@ -174,10 +234,13 @@
       try { sessionStorage.setItem('wf_login_return_to', qsRedirect || (window.location.pathname || '/')); } catch (_) {}
 
       try {
-        const res = await fetch('/functions/process_login.php', {
+        const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : window.location.origin;
+        const loginUrl = new URL('/functions/process_login.php', backendOrigin).toString();
+        const res = await fetch(loginUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
+          body: JSON.stringify({ username, password }),
+          credentials: 'include'
         });
 
         if (!res.ok) {
@@ -185,13 +248,50 @@
           throw new Error(err?.error || 'Login failed.');
         }
 
-        const data = await res.json();
+        const data = await safeJsonOk(res);
         const serverRedirect = data?.redirectUrl;
         let target = serverRedirect;
         if (!target) {
           try { target = sessionStorage.getItem('wf_login_return_to'); } catch (_) {}
         }
         if (!target) target = '/';
+
+        // Standardize events and cart refresh for inline login flow as well
+        try {
+          window.dispatchEvent(new CustomEvent('wf:login-success', {
+            detail: {
+              serverRedirect,
+              target,
+              userId: (data && data.userId != null) ? data.userId : undefined,
+              username: data?.username,
+              role: data?.role,
+            }
+          }));
+        } catch(_) {}
+        try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
+        try {
+          window.dispatchEvent(new CustomEvent('cartUpdated', {
+            detail: { action: 'auth', state: window.WF_Cart?.getState?.() }
+          }));
+        } catch(_) {}
+
+        // Fallback: if inline login didn't return a userId, query backend session explicitly
+        try {
+          if (data?.userId == null) {
+            const whoUrl = new URL('/api/whoami.php', backendOrigin).toString();
+            const who = await fetch(whoUrl, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+            const sid = who?.userId;
+            const n = Number(sid);
+            if (Number.isFinite(n) && n > 0) {
+              try { if (document && document.body) document.body.setAttribute('data-user-id', String(n)); } catch(_) {}
+              try {
+                window.dispatchEvent(new CustomEvent('wf:login-success', {
+                  detail: { serverRedirect, target, userId: n, username: data?.username, role: data?.role }
+                }));
+              } catch(_) {}
+            }
+          }
+        } catch(_) {}
 
         if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
         setTimeout(() => { window.location.assign(target); }, 700);

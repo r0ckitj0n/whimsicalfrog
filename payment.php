@@ -8,10 +8,17 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
     require_once __DIR__ . '/api/config.php';
     require_once __DIR__ . '/includes/auth.php';
+    // Mark that we should emit header/footer ourselves after auth
+    $___wf_direct_include = true;
 }
 
 // Require authentication; on failure, set redirect and send to /login
 requireAuth('/payment');
+
+// If accessed directly (not through index.php), include the standard header now
+if (!empty($___wf_direct_include)) {
+    include __DIR__ . '/partials/header.php';
+}
 
 ?>
 <section id="paymentPage" class="container max-w-5xl mx-auto p-6">
@@ -145,3 +152,8 @@ requireAuth('/payment');
   // Clear pending checkout flag once we reach the payment step
   try { localStorage.removeItem('pendingCheckout'); } catch(e) {}
 </script>
+
+<?php if (!empty($___wf_direct_include)) {
+  // Close out the layout when accessed directly
+  include __DIR__ . '/partials/footer.php';
+} ?>

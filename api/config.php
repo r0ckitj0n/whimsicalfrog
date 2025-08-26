@@ -133,7 +133,9 @@ if ($isLocalhost) {
     $host = 'db5017975223.hosting-data.io'; // Real IONOS database host
     $db   = 'dbs14295502';                  // Real IONOS database name
     $user = 'dbu2826619';                   // Real IONOS database user
-    $pass = 'Palz2516';                    // IONOS database password
+    $pass = 'Ruok2drvacar?';                // IONOS database password (updated)
+    $port = 3306;                           // Explicit MySQL port for clarity
+    $socket = null;                         // Ensure TCP connection in production
 }
 
 // Common database settings

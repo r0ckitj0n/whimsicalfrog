@@ -3,6 +3,15 @@
 // Provides a lightweight wrapper around the Fetch API with sane defaults and
 // helper convenience functions.
 
+// Normalize API URLs for relative paths only. Do not alter absolute or root-relative URLs.
+function ensureApiUrl(url) {
+  if (typeof url !== 'string') return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/')) return url; // keep root-relative as-is
+  // Relative shorthand like 'endpoint.php' -> '/api/endpoint.php'
+  return `/api/${url}`;
+}
+
 export class ApiClient {
   /**
    * Core request helper used by all verb-specific helpers.
@@ -11,21 +20,30 @@ export class ApiClient {
    * @returns {Promise<any>} parsed JSON data
    */
   static async request(url, options = {}) {
-    const defaultOptions = {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'same-origin'
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
     };
+    // Decide credentials policy based on target origin
+    let credentials = options.credentials;
+    try {
+      const target = new URL(url, window.location.origin);
+      const sameOrigin = target.origin === window.location.origin;
+      const isRootRelative = typeof url === 'string' && url.startsWith('/');
+      // Recognize backend origin explicitly provided by PHP template in dev/prod
+      const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : null;
+      const isBackendOrigin = !!backendOrigin && target.origin === backendOrigin;
+      if (!credentials) {
+        credentials = (sameOrigin || isRootRelative || isBackendOrigin) ? 'include' : 'same-origin';
+      }
+    } catch (_) {
+      credentials = credentials || 'same-origin';
+    }
 
     const config = {
-      ...defaultOptions,
+      headers: { ...defaultHeaders, ...(options.headers || {}) },
+      credentials,
       ...options,
-      headers: {
-        ...defaultOptions.headers,
-        ...(options.headers || {})
-      }
     };
 
     const response = await fetch(url, config);
@@ -33,20 +51,41 @@ export class ApiClient {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    if (data && data.success === false) {
-      throw new Error(data.error || 'API request failed');
+    // Robust parsing: tolerate empty JSON bodies and non-JSON responses.
+    const contentType = response.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+
+    if (response.status === 204 || !contentType) {
+      return null;
     }
-    return data;
+
+    if (isJson) {
+      const text = await response.text();
+      const trimmed = (text || '').trim();
+      if (!trimmed) return {};
+      let data;
+      try {
+        data = JSON.parse(trimmed);
+      } catch (e) {
+        console.warn('[ApiClient] Invalid JSON response', { url, snippet: trimmed.slice(0, 200) });
+        throw new Error('Invalid JSON response from server.');
+      }
+      if (data && data.success === false) {
+        throw new Error(data.error || 'API request failed');
+      }
+      return data;
+    }
+
+    // For non-JSON successful responses, return text.
+    return response.text();
   }
 
   static get(url, params = {}) {
-    // Auto-prefix shorthand endpoint paths (e.g., 'get_room_data.php') with '/api/'
-    if (!url.startsWith('http') && !url.startsWith('/api/')) {
-      // If it already starts with '/' but lacks /api/, insert it
-      url = url.startsWith('/') ? `/api${url}` : `/api/${url}`;
-    }
-    const urlObj = new URL(url, window.location.origin);
+    // Normalize relative paths to '/api/' but preserve absolute and root-relative URLs.
+    const normalized = ensureApiUrl(url);
+    const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : null;
+    const base = (typeof normalized === 'string' && normalized.startsWith('/') && backendOrigin) ? backendOrigin : window.location.origin;
+    const urlObj = new URL(normalized, base);
     Object.keys(params).forEach(key => {
       if (params[key] !== null && params[key] !== undefined) {
         urlObj.searchParams.append(key, params[key]);
@@ -56,28 +95,36 @@ export class ApiClient {
   }
 
   static post(url, data = {}, options = {}) {
-    return this.request(url, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      ...options
-    });
+    const normalized = ensureApiUrl(url);
+    const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : null;
+    const base = (typeof normalized === 'string' && normalized.startsWith('/') && backendOrigin) ? backendOrigin : window.location.origin;
+    const absolute = new URL(normalized, base).toString();
+    return this.request(absolute, { method: 'POST', body: JSON.stringify(data), ...options });
   }
 
   static put(url, data = {}, options = {}) {
-    return this.request(url, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-      ...options
-    });
+    const normalized = ensureApiUrl(url);
+    const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : null;
+    const base = (typeof normalized === 'string' && normalized.startsWith('/') && backendOrigin) ? backendOrigin : window.location.origin;
+    const absolute = new URL(normalized, base).toString();
+    return this.request(absolute, { method: 'PUT', body: JSON.stringify(data), ...options });
   }
 
   static delete(url, options = {}) {
-    return this.request(url, { method: 'DELETE', ...options });
+    const normalized = ensureApiUrl(url);
+    const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : null;
+    const base = (typeof normalized === 'string' && normalized.startsWith('/') && backendOrigin) ? backendOrigin : window.location.origin;
+    const absolute = new URL(normalized, base).toString();
+    return this.request(absolute, { method: 'DELETE', ...options });
   }
 
   static upload(url, formData, options = {}) {
     // Let browser set multipart boundary.
-    return this.request(url, { method: 'POST', body: formData, headers: {}, ...options });
+    const normalized = ensureApiUrl(url);
+    const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : null;
+    const base = (typeof normalized === 'string' && normalized.startsWith('/') && backendOrigin) ? backendOrigin : window.location.origin;
+    const absolute = new URL(normalized, base).toString();
+    return this.request(absolute, { method: 'POST', body: formData, headers: {}, ...options });
   }
 }
 

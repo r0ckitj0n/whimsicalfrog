@@ -150,6 +150,7 @@ $chartData = [
 
 <div class="admin-content-container">
     <div class="admin-filter-section">
+        <div class="admin-filters">
         <form action="/admin/reports" method="GET" class="admin-filter-form">
             
             <input type="date" name="start_date" id="start_date" 
@@ -158,9 +159,12 @@ $chartData = [
             <input type="date" name="end_date" id="end_date" 
                    value="<?= htmlspecialchars($endDate) ?>" class="admin-form-input">
             
-            <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
-            <a href="/admin/reports" class="btn btn-secondary admin-filter-button">Clear</a>
+            <span class="admin-actions">
+                <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
+                <a href="/admin/reports" class="btn btn-secondary admin-filter-button">Clear</a>
+            </span>
         </form>
+        </div>
     </div>
 
     <div class="admin-table-section">

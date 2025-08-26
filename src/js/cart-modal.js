@@ -100,8 +100,12 @@ import '../styles/cart-modal.css';
       }
       state.overlay.classList.add('show');
       try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
+      // Always resync from storage upon open to avoid stale in-memory state
+      try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
       // Render into the modal container
       renderIfOpen();
+      // And render again shortly to catch any late init events
+      setTimeout(() => { try { window.WF_Cart?.renderCart?.(); } catch(_) {} }, 120);
     }
 
     function close() {
@@ -175,6 +179,56 @@ import '../styles/cart-modal.css';
 
     // Re-render when cart updates
     window.addEventListener('cartUpdated', renderIfOpen);
+
+    // Also refresh and render on focus/visibility/page show (covers auth redirects and BFCache)
+    const refreshIfOpen = () => {
+      try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
+      renderIfOpen();
+    };
+    window.addEventListener('focus', () => setTimeout(refreshIfOpen, 50));
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') setTimeout(refreshIfOpen, 50);
+    });
+    window.addEventListener('pageshow', () => setTimeout(refreshIfOpen, 50));
+
+    // Refresh modal after login success (modal may be open during auth)
+    // Rebuild overlay and force re-render to avoid stale "Loading" state after auth
+    window.addEventListener('wf:login-success', () => {
+      try {
+        // Force a state resync from storage first
+        try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
+        // Nudge header counters regardless
+        try { window.WF_Cart?.updateCartDisplay?.(); } catch(_) {}
+
+        if (state.overlay && state.overlay.classList.contains('show')) {
+          // Fully rebuild overlay DOM to mimic manual reopen behavior
+          try { close(); } catch(_) {}
+          try { state.overlay.remove(); } catch(_) {}
+          state.overlay = null;
+          state.container = null;
+          state.itemsEl = null;
+          // Recreate immediately, then open after a short delay so CSS/classes settle
+          createOverlay();
+          setTimeout(() => {
+            try {
+              open();
+              // After open, force a render in case the cartUpdated init raced
+              setTimeout(() => {
+                try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
+                try { window.WF_Cart?.renderCart?.(); } catch(_) {}
+              }, 140);
+            } catch(_) {}
+          }, 140);
+        } else {
+          // If not open, ensure next open renders latest cart
+          // and attempt a render in case overlay exists but is hidden
+          setTimeout(() => {
+            try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
+            try { window.WF_Cart?.renderCart?.(); } catch(_) {}
+          }, 80);
+        }
+      } catch(_) {}
+    });
 
     // Initialize overlay immediately so it is present for z-index stacking and quick open
     createOverlay();

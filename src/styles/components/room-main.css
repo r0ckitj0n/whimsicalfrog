@@ -14,10 +14,7 @@
 /* Fullscreen Main Room Styles */
 .main-room-section {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0; /* avoids 100vw/100vh overflow from scrollbar width */
     background-color: transparent;
     background-image: none;
     background-size: cover;

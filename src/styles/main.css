@@ -31,6 +31,7 @@
 /* @import url('./legacy_missing_admin.css'); */
 @import url('./admin-db-tools.css');
 @import url('./admin-inventory.css');
+@import url('./admin-filters.css');
 @import url('./utilities-ui.css');
 
 /* --- Checkout page layering fix: ensure it appears above room modal overlay --- */
@@ -41,9 +42,18 @@ body[data-page='payment'] #checkoutRoot {
 }
 
 /* Center title and intro text inside the green contact card */
-body[data-page='contact'] .wf-contact-card .content { text-align: center; }
+body[data-page='contact'] .wf-contact-card .content {
+  text-align: center;
+  /* Wrap intro text at a readable line length */
+  max-width: 68ch;
+  margin-left: auto;
+  margin-right: auto;
+  white-space: normal;
+}
 /* Center the single-column grid item that contains the form */
 body[data-page='contact'] .grid { justify-items: center; }
+body[data-page='contact'] .wf-contact-card .grid { width: 100%; }
+body[data-page='contact'] .wf-contact-card .grid > div { width: 100%; }
 /* Center input text per user request */
 body[data-page='contact'] .wf-contact-form input[type="text"] { text-align: center; }
 body[data-page='contact'] .wf-contact-form input[type="email"] { text-align: center; }
@@ -108,24 +118,65 @@ body.mode-fullscreen .clickable-area img {
 .prose { overflow-x: hidden; }
 
 /* Contact page: constrain page width and apply brand background only around content card */
-body[data-page='contact'] .page-content { width: min(100%, 1100px); margin: 0 auto; }
+body[data-page='contact'] .page-content {
+  width: min(100%, 1260px);
+  margin: 0 auto;
+  /* Ensure content starts below the visual header */
+  padding-top: calc(var(--wf-header-height, 120px) + 8px) !important;
+  /* Remove lateral padding from container classes like px-4 */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 0 !important;
+  position: relative;
+}
+/* Contact page: define a token for max form width that we can reuse */
+body[data-page='contact'] { --contact-form-max: min(96vw, 1100px); }
+@media (min-width: 1024px) {
+  body[data-page='contact'] { --contact-form-max: 1100px; }
+}
+@media (max-width: 640px) {
+  body[data-page='contact'] { --contact-form-max: 92vw; }
+}
 /* Align the reveal-company wrapper to the same max width as page content */
 /* Center the reveal button horizontally within its wrap */
-body[data-page='contact'] .wf-reveal-company-wrap { width: min(100%, 1100px); margin: 8px auto 6px auto; display: flex; justify-content: center; }
+body[data-page='contact'] .wf-reveal-company-wrap {
+  width: min(100%, 1100px);
+  margin: 20px auto 10px auto;
+  display: flex;
+  justify-content: center;
+}
 body[data-page='contact'] .wf-contact-card {
   background: var(--primary_color, #87ac3a);
   color: #fff;
   border-radius: 12px;
-  padding: clamp(12px, 2vw, 24px);
+  /* Strict 10px side gutters relative to form width */
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: clamp(12px, 2vw, 24px);
+  padding-bottom: clamp(12px, 2vw, 24px);
   box-shadow: 0 15px 45px rgb(0 0 0 / 25%);
   margin-left: auto; /* ensure card is centered */
   margin-right: auto;
-  width: min(100%, 1100px);
+  margin-top: 12px;
+  margin-bottom: 0;
+  /* Make the green card only 20px wider than the inputs (10px on each side) */
+  width: auto;
+  max-width: calc(var(--contact-form-max) + 20px) !important;
+  box-sizing: border-box;
 }
 body[data-page='contact'] .wf-contact-card h1 { text-align: center; color: #fff; }
 body[data-page='contact'] .wf-contact-card p { color: #fff; }
 body[data-page='contact'] .wf-contact-card label { color: #fff; }
 body[data-page='contact'] .wf-contact-card .wf-reveal .wf-reveal-label { color: #fff; }
+/* Ensure inner content matches form width so card stays only 20px wider */
+body[data-page='contact'] .wf-contact-card > .prose {
+  width: var(--contact-form-max) !important;
+  max-width: var(--contact-form-max) !important;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
 /* Make reveal button pop on contact page (contrast against green background) */
 body[data-page='contact'] .wf-reveal .wf-reveal-btn {
   background: #ffffff;
@@ -210,7 +261,10 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
 .wf-cloud-card { position: relative; display: block; width: auto; max-width: min(2000px, 90vw); margin: clamp(8px, 1.5vh, 16px) auto 0 auto; padding: clamp(44px, 7.5vw, 168px) clamp(48px, 8.5vw, 188px); min-height: clamp(620px, 62vh, 1100px); background: none; box-shadow: none;  overflow: visible; overflow-wrap: anywhere; }
 .wf-cloud-card .content { overflow-wrap: anywhere; position: relative; z-index: 1; max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
 .wf-cloud-card .content p { margin: 0.35em 0; line-height: 1.4; }
-.wf-cloud-card .content > p:first-of-type { margin-top: calc(1.4em * 2); }
+.wf-cloud-card .content > p:first-of-type {
+  /* Increase space between the title and the first paragraph (story) by ~50px more */
+  margin-top: calc(clamp(24px, 4.5vh, 56px) + 50px);
+}
 .wf-cloud-title { margin: 0 0 0.25rem 0; text-align: center; font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 700; color: #111; }
 .wf-cloud-card::before {
   content: '';
@@ -283,14 +337,10 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
 /* --- Contact form width: 75% viewport --- */
 .wf-contact-form {
   width: 100%;
-  max-width: 75vw;
+  /* Widen inputs and bind to the shared token */
+  max-width: var(--contact-form-max) !important;
   margin: 0 auto; /* center the form container */
-}
-@media (min-width: 1024px) {
-  .wf-contact-form { max-width: 560px; }
-}
-@media (max-width: 640px) {
-  .wf-contact-form { max-width: 92vw; }
+  box-sizing: border-box;
 }
 /* Compact inputs, larger textarea for contact form */
 .wf-contact-form select {
@@ -435,14 +485,27 @@ body[data-page='contact'] .content { color: #fff !important; }
 /* --- Shop page styles --- */
 /* Navigation area just under the page header */
 #shopPage .shop-navigation-area {
+  /* Expose an explicit nav height token used by the scrollable content area */
+  --shop-nav-height: 48px;
   /* Ensure fixed nav spans the full viewport width */
   position: fixed;
   top: var(--header-height, 80px);
   left: 0;
   right: 0;
-  padding: 8px 0;
+  padding: 4px 0; /* tighter top/bottom padding without affecting button size */
   margin: 0;
   width: auto;
+  z-index: var(--z-navigation, 120);
+  /* Request: make this element transparent */
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  border-bottom: none !important;
+}
+#shopPage .shop-navigation-area::before,
+#shopPage .shop-navigation-area::after {
+  content: none !important;
 }
 
 /* Make the shop page span full width with no side padding so left edge hugs viewport */
@@ -457,6 +520,8 @@ body[data-page='shop'] .page-content#shopPage {
 
 /* Also target the ID directly to defeat media query rules like #shopPage { padding: 0 15px } */
 body[data-page='shop'] #shopPage {
+  /* Define nav height token at section scope so siblings can read it */
+  --shop-nav-height: 48px;
   padding-left: 0 !important;
   padding-right: 0 !important;
   /* Use full container width (avoid 100vw to prevent horizontal overflow) */
@@ -469,7 +534,8 @@ body[data-page='shop'] #shopPage {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 16px;
+  border-bottom: none !important;
+  gap: 8px; /* less inter-column spacing while keeping button dimensions */
   margin: 0;
   width: 100%;
   max-width: none; /* override site-base constraint so left edge can hug viewport */
@@ -505,39 +571,199 @@ body[data-page='shop'] #shopPage .content-wrapper {
   flex-wrap: wrap;
 }
 
+/* Request: Filters use primary brand background with white text */
+/* Shared chip-style brand button for shop filters and back link */
+.btn-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  min-height: var(--button-height-sm, 34px);
+  border-radius: 9999px;
+  font-family: var(--font-primary, inherit);
+  font-weight: 600;
+}
+.shop-filter-btn {
+  background: var(--button-bg-primary) !important;
+  color: var(--button-text-primary) !important;
+  border: none !important;
+}
+.shop-filter-btn:hover { background: var(--button-bg-primary-hover) !important; }
+.shop-filter-btn.active { filter: brightness(0.95); }
+#shopPage .category-navigation .category-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  min-height: var(--button-height-sm, 34px);
+  border-radius: 9999px;
+  font-family: var(--font-primary, inherit);
+  font-weight: 600;
+  background: var(--button-bg-primary) !important;
+  color: var(--button-text-primary) !important;
+  border: none !important;
+}
+#shopPage .category-navigation .category-btn:hover { background: var(--button-bg-primary-hover) !important; }
+#shopPage .category-navigation .category-btn.active { filter: brightness(0.92); }
+
+/* Back-to-main-room link styled like buttons */
+#shopPage .room-main-nav-container .room-main-nav-link { text-decoration: none !important; }
+#shopPage .room-main-nav-container .room-main-nav-link.btn-chip { border-radius: 9999px !important; }
+
 /* Scrollable content area (internal scrollbar while nav stays fixed) */
 #shopPage .shop-content-area {
-  margin-top: 12px;
-  padding-top: var(--shop-nav-height, 100px); /* reserve space equal to fixed nav height */
-  height: calc(100vh - (var(--header-height, 80px) + var(--shop-nav-height, 100px))); /* viewport minus header + nav */
+  margin-top: 0;
+  padding-top: var(--shop-nav-height, 48px); /* reserve space equal to fixed nav height */
+  height: calc(100vh - (var(--header-height, 80px) + var(--shop-nav-height, 48px))); /* viewport minus header + nav */
   min-height: 0; /* defeat any global min-height */
   overflow-y: auto; /* vertical scroll within product list area */
   width: 100%;
   max-width: none; /* ensure full-window width */
 }
 
+/* Shop page: brand-colored scrollbar on the scrollable content area */
+body[data-page='shop'] #shopPage .shop-content-area {
+  /* Firefox */
+  scrollbar-width: thin;
+  /* thumb color, track color */
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+}
+/* WebKit/Blink */
+body[data-page='shop'] #shopPage .shop-content-area::-webkit-scrollbar { width: 10px; height: 10px; }
+body[data-page='shop'] #shopPage .shop-content-area::-webkit-scrollbar-track { background: var(--brand-primary); border-radius: 10px; }
+body[data-page='shop'] #shopPage .shop-content-area::-webkit-scrollbar-thumb {
+  background-color: var(--brand-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--brand-primary);
+}
+/* Slightly darker hover for the secondary brand color */
+body[data-page='shop'] #shopPage .shop-content-area::-webkit-scrollbar-thumb:hover { background-color: #a64c00; }
+
 /* Remove any residual horizontal padding/margins on scroll area and grid */
 body[data-page='shop'] #shopPage .shop-content-area,
 body[data-page='shop'] #shopPage #productsGrid {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
 
-/* Responsive product grid: fill full width; columns grow to consume space */
+/* Contact page: brand-colored scrollbar on the main page scroll */
+body[data-page='contact'] {
+  /* Firefox */
+  scrollbar-width: thin;
+  /* thumb color, track color */
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+  /* Do not reserve extra gutter; let browser handle overlay vs classic scrollbars */
+  scrollbar-gutter: auto;
+}
+/* WebKit/Blink */
+body[data-page='contact']::-webkit-scrollbar { width: 10px; height: 10px; }
+body[data-page='contact']::-webkit-scrollbar-track { background: var(--brand-primary); border-radius: 10px; }
+body[data-page='contact']::-webkit-scrollbar-thumb {
+  background-color: var(--brand-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--brand-primary);
+}
+/* Slightly darker hover for the secondary brand color */
+body[data-page='contact']::-webkit-scrollbar-thumb:hover { background-color: #a64c00; }
+
+/* Ensure styling applies to the actual root scroller and keep track visible */
+html:has(body[data-page='contact']) {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+  /* Let browser show scrollbar only when needed */
+  overflow-y: auto;
+  /* Do not reserve an extra gutter on root; prevents right-edge gap on overlay scrollbars */
+  scrollbar-gutter: auto;
+}
+/* WebKit/Blink on root */
+html:has(body[data-page='contact'])::-webkit-scrollbar { width: 10px; height: 10px; }
+html:has(body[data-page='contact'])::-webkit-scrollbar-track { background: var(--brand-primary); border-radius: 10px; }
+html:has(body[data-page='contact'])::-webkit-scrollbar-thumb {
+  background-color: var(--brand-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--brand-primary);
+}
+html:has(body[data-page='contact'])::-webkit-scrollbar-thumb:hover { background-color: #a64c00; }
+
+/* Contact page: ensure page can scroll and remove any fullscreen overrides */
+body[data-page='contact'] {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+html:has(body[data-page='contact']) {
+  height: auto !important;
+}
+
+/* =====================
+   Admin pages: shop-like scrollbars
+   ===================== */
+/* Root scroller (Firefox) */
+html:has(body[data-page^='admin']) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+  overflow-y: auto;
+  /* Avoid reserving gutter globally on admin pages to prevent right-edge gap */
+  scrollbar-gutter: auto;
+}
+/* Root scroller (WebKit/Blink) */
+html:has(body[data-page^='admin'])::-webkit-scrollbar { width: 10px; height: 10px; }
+html:has(body[data-page^='admin'])::-webkit-scrollbar-track { background: var(--brand-primary); border-radius: 10px; }
+html:has(body[data-page^='admin'])::-webkit-scrollbar-thumb {
+  background-color: var(--brand-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--brand-primary);
+}
+html:has(body[data-page^='admin'])::-webkit-scrollbar-thumb:hover { background-color: #a64c00; }
+
+/* Primary content scroller within admin */
+body[data-page^='admin'] #admin-section-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+}
+body[data-page^='admin'] #admin-section-content::-webkit-scrollbar { width: 10px; height: 10px; }
+body[data-page^='admin'] #admin-section-content::-webkit-scrollbar-track { background: var(--brand-primary); border-radius: 10px; }
+body[data-page^='admin'] #admin-section-content::-webkit-scrollbar-thumb {
+  background-color: var(--brand-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--brand-primary);
+}
+body[data-page^='admin'] #admin-section-content::-webkit-scrollbar-thumb:hover { background-color: #a64c00; }
+
+/* Contact page spacing adjustments */
+/* Respect header height padding computed earlier; only set bottom padding */
+body[data-page='contact'] .page-content { padding-bottom: 24px !important; }
+body[data-page='contact'] h1 { margin-top: 0 !important; margin-bottom: 4px !important; }
+body[data-page='contact'] .prose .content { margin-top: 0 !important; margin-bottom: 8px !important; }
+body[data-page='contact'] .wf-contact-card { padding-top: 8px !important; }
+body[data-page='contact'] .wf-contact-card h1 { margin-top: 0 !important; margin-bottom: 4px !important; }
+body[data-page='contact'] .wf-contact-card .content { margin-top: 0 !important; margin-bottom: 8px !important; }
+
+/* Contact page: textarea sizing via rows attribute; allow user resize */
+body[data-page='contact'] #message { min-height: unset; height: auto; resize: vertical; }
+
+/* Responsive product grid: enforce card min/max width and center items */
 #shopPage #productsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 16px;
+  justify-items: center; /* center cards when columns exceed max width */
   justify-content: stretch; /* tracks fill container width */
   width: 100%;
 }
 
+/* Ensure filtered-out cards do not occupy layout space */
+#shopPage .product-card.hidden { display: none !important; }
+
 /* Product card sizing and internal scroll behavior */
 #shopPage .product-card {
-  width: 100%; /* fill the grid column */
-  max-width: none; /* allow full-width columns */
+  width: 100%;
+  min-width: 350px;
+  max-width: 500px;
+  margin: 0 auto; /* ensure centering inside grid cell */
   /* Allow card to grow naturally; no internal scroll or clipping */
   display: flex;
   flex-direction: column;

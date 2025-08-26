@@ -1015,7 +1015,8 @@ function toggleSection(section) {
 }
 
 function toggleProviderSections() {
-  const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || getDefaultAIProvider();
+  const spEl = document.querySelector('input[name="ai_provider"]:checked');
+  const selectedProvider = (spEl && typeof spEl.value !== 'undefined' ? spEl.value : '') || getDefaultAIProvider();
   const providers = ['openai','anthropic','google','meta'];
   providers.forEach(p => {
     const sec = document.getElementById(`${p}_section`);
@@ -1037,30 +1038,54 @@ function toggleProviderSections() {
 }
 
 async function saveAISettings() {
+  const _sp = document.querySelector('input[name="ai_provider"]:checked');
+  const _openai_api_key = document.getElementById('openai_api_key');
+  const _openai_model = document.getElementById('openai_model');
+  const _anthropic_api_key = document.getElementById('anthropic_api_key');
+  const _anthropic_model = document.getElementById('anthropic_model');
+  const _google_api_key = document.getElementById('google_api_key');
+  const _google_model = document.getElementById('google_model');
+  const _meta_api_key = document.getElementById('meta_api_key');
+  const _meta_model = document.getElementById('meta_model');
+  const _ai_temperature = document.getElementById('ai_temperature');
+  const _ai_max_tokens = document.getElementById('ai_max_tokens');
+  const _ai_timeout = document.getElementById('ai_timeout');
+  const _fallback_to_local = document.getElementById('fallback_to_local');
+  const _ai_brand_voice = document.getElementById('ai_brand_voice');
+  const _ai_content_tone = document.getElementById('ai_content_tone');
+  const _ai_cost_temperature = document.getElementById('ai_cost_temperature');
+  const _ai_price_temperature = document.getElementById('ai_price_temperature');
+  const _ai_cost_multiplier_base = document.getElementById('ai_cost_multiplier_base');
+  const _ai_price_multiplier_base = document.getElementById('ai_price_multiplier_base');
+  const _ai_conservative_mode = document.getElementById('ai_conservative_mode');
+  const _ai_market_research_weight = document.getElementById('ai_market_research_weight');
+  const _ai_cost_plus_weight = document.getElementById('ai_cost_plus_weight');
+  const _ai_value_based_weight = document.getElementById('ai_value_based_weight');
+
   const settings = {
-    ai_provider: document.querySelector('input[name="ai_provider"]:checked')?.value || getDefaultAIProvider(),
-    openai_api_key: document.getElementById('openai_api_key')?.value || '',
-    openai_model: document.getElementById('openai_model')?.value || 'gpt-3.5-turbo',
-    anthropic_api_key: document.getElementById('anthropic_api_key')?.value || '',
-    anthropic_model: document.getElementById('anthropic_model')?.value || 'claude-3-haiku-20240307',
-    google_api_key: document.getElementById('google_api_key')?.value || '',
-    google_model: document.getElementById('google_model')?.value || 'gemini-pro',
-    meta_api_key: document.getElementById('meta_api_key')?.value || '',
-    meta_model: document.getElementById('meta_model')?.value || 'meta-llama/llama-3.1-70b-instruct',
-    ai_temperature: parseFloat(document.getElementById('ai_temperature')?.value || 0.7),
-    ai_max_tokens: parseInt(document.getElementById('ai_max_tokens')?.value || 1000),
-    ai_timeout: parseInt(document.getElementById('ai_timeout')?.value || 30),
-    fallback_to_local: document.getElementById('fallback_to_local')?.checked || false,
-    ai_brand_voice: document.getElementById('ai_brand_voice')?.value || '',
-    ai_content_tone: document.getElementById('ai_content_tone')?.value || 'professional',
-    ai_cost_temperature: parseFloat(document.getElementById('ai_cost_temperature')?.value || 0.7),
-    ai_price_temperature: parseFloat(document.getElementById('ai_price_temperature')?.value || 0.7),
-    ai_cost_multiplier_base: parseFloat(document.getElementById('ai_cost_multiplier_base')?.value || 1.0),
-    ai_price_multiplier_base: parseFloat(document.getElementById('ai_price_multiplier_base')?.value || 1.0),
-    ai_conservative_mode: document.getElementById('ai_conservative_mode')?.checked || false,
-    ai_market_research_weight: parseFloat(document.getElementById('ai_market_research_weight')?.value || 0.3),
-    ai_cost_plus_weight: parseFloat(document.getElementById('ai_cost_plus_weight')?.value || 0.4),
-    ai_value_based_weight: parseFloat(document.getElementById('ai_value_based_weight')?.value || 0.3)
+    ai_provider: (_sp && _sp.value) || getDefaultAIProvider(),
+    openai_api_key: (_openai_api_key && _openai_api_key.value) || '',
+    openai_model: (_openai_model && _openai_model.value) || 'gpt-3.5-turbo',
+    anthropic_api_key: (_anthropic_api_key && _anthropic_api_key.value) || '',
+    anthropic_model: (_anthropic_model && _anthropic_model.value) || 'claude-3-haiku-20240307',
+    google_api_key: (_google_api_key && _google_api_key.value) || '',
+    google_model: (_google_model && _google_model.value) || 'gemini-pro',
+    meta_api_key: (_meta_api_key && _meta_api_key.value) || '',
+    meta_model: (_meta_model && _meta_model.value) || 'meta-llama/llama-3.1-70b-instruct',
+    ai_temperature: parseFloat((_ai_temperature && _ai_temperature.value) || 0.7),
+    ai_max_tokens: parseInt((_ai_max_tokens && _ai_max_tokens.value) || 1000, 10),
+    ai_timeout: parseInt((_ai_timeout && _ai_timeout.value) || 30, 10),
+    fallback_to_local: !!(_fallback_to_local && _fallback_to_local.checked),
+    ai_brand_voice: (_ai_brand_voice && _ai_brand_voice.value) || '',
+    ai_content_tone: (_ai_content_tone && _ai_content_tone.value) || 'professional',
+    ai_cost_temperature: parseFloat((_ai_cost_temperature && _ai_cost_temperature.value) || 0.7),
+    ai_price_temperature: parseFloat((_ai_price_temperature && _ai_price_temperature.value) || 0.7),
+    ai_cost_multiplier_base: parseFloat((_ai_cost_multiplier_base && _ai_cost_multiplier_base.value) || 1.0),
+    ai_price_multiplier_base: parseFloat((_ai_price_multiplier_base && _ai_price_multiplier_base.value) || 1.0),
+    ai_conservative_mode: !!(_ai_conservative_mode && _ai_conservative_mode.checked),
+    ai_market_research_weight: parseFloat((_ai_market_research_weight && _ai_market_research_weight.value) || 0.3),
+    ai_cost_plus_weight: parseFloat((_ai_cost_plus_weight && _ai_cost_plus_weight.value) || 0.4),
+    ai_value_based_weight: parseFloat((_ai_value_based_weight && _ai_value_based_weight.value) || 0.3)
   };
 
   try {
@@ -1090,7 +1115,8 @@ function showAISettingsError(message) {
 }
 
 async function testAIProvider() {
-  const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || getDefaultAIProvider();
+  const _sp = document.querySelector('input[name="ai_provider"]:checked');
+  const selectedProvider = (_sp && _sp.value) || getDefaultAIProvider();
   try {
     try { showNotification('Testing AI Provider', `Testing ${selectedProvider} provider...`, 'info'); } catch (_) {}
     const response = await fetch(`/api/ai_settings.php?action=test_provider&provider=${selectedProvider}`);
@@ -1815,7 +1841,7 @@ function _showResult(element, success, message) {
 
 async function scanDatabaseConnections(e) {
     const evt = getEvent(e);
-    const button = evt?.target || document.querySelector('[data-action="scan-db"], #scanDatabaseConnectionsBtn');
+    const button = (evt && evt.target) ? evt.target : document.querySelector('[data-action="scan-db"], #scanDatabaseConnectionsBtn');
     const resultsDiv = document.getElementById('conversionResults');
     if (button) {
         button.disabled = true;
@@ -1873,7 +1899,7 @@ async function scanDatabaseConnections(e) {
 
 async function convertDatabaseConnections(e) {
     const evt = getEvent(e);
-    const button = evt?.target || document.querySelector('[data-action="convert-db"], #convertDatabaseConnectionsBtn');
+    const button = (evt && evt.target) ? evt.target : document.querySelector('[data-action="convert-db"], #convertDatabaseConnectionsBtn');
     const resultsDiv = document.getElementById('conversionResults');
     // Use native confirm for now; page also includes enhanced modals elsewhere
     if (!confirm('This will modify files with direct PDO connections and create backups. Continue?')) {
@@ -2215,16 +2241,16 @@ function renderResult(div, success, html) {
 async function updateDatabaseConfig(ev) {
     try {
         const resultDiv = document.getElementById('credentialsUpdateResult');
-        const button = ev?.target || document.activeElement;
+        const button = (ev && ev.target) ? ev.target : document.activeElement;
 
         const updateData = {
-            host: document.getElementById('newHost')?.value,
-            database: document.getElementById('newDatabase')?.value,
-            username: document.getElementById('newUsername')?.value,
-            password: document.getElementById('newPassword')?.value,
-            environment: document.getElementById('environmentSelect')?.value,
-            ssl_enabled: document.getElementById('sslEnabled')?.checked || false,
-            ssl_cert: document.getElementById('sslCertPath')?.value || ''
+            host: (document.getElementById('newHost') && document.getElementById('newHost').value) || '',
+            database: (document.getElementById('newDatabase') && document.getElementById('newDatabase').value) || '',
+            username: (document.getElementById('newUsername') && document.getElementById('newUsername').value) || '',
+            password: (document.getElementById('newPassword') && document.getElementById('newPassword').value) || '',
+            environment: (document.getElementById('environmentSelect') && document.getElementById('environmentSelect').value) || '',
+            ssl_enabled: !!(document.getElementById('sslEnabled') && document.getElementById('sslEnabled').checked),
+            ssl_cert: (document.getElementById('sslCertPath') && document.getElementById('sslCertPath').value) || ''
         };
 
         if (!updateData.host || !updateData.database || !updateData.username) {
@@ -2282,15 +2308,15 @@ async function updateDatabaseConfig(ev) {
 async function testSSLConnection(ev) {
     try {
         const resultDiv = document.getElementById('sslTestResult');
-        const button = ev?.target || document.activeElement;
+        const button = (ev && ev.target) ? ev.target : document.activeElement;
 
         const sslData = {
-            host: document.getElementById('testHost')?.value || document.getElementById('newHost')?.value,
-            database: document.getElementById('testDatabase')?.value || document.getElementById('newDatabase')?.value,
-            username: document.getElementById('testUsername')?.value || document.getElementById('newUsername')?.value,
-            password: document.getElementById('testPassword')?.value || document.getElementById('newPassword')?.value,
+            host: (document.getElementById('testHost') && document.getElementById('testHost').value) || (document.getElementById('newHost') && document.getElementById('newHost').value) || '',
+            database: (document.getElementById('testDatabase') && document.getElementById('testDatabase').value) || (document.getElementById('newDatabase') && document.getElementById('newDatabase').value) || '',
+            username: (document.getElementById('testUsername') && document.getElementById('testUsername').value) || (document.getElementById('newUsername') && document.getElementById('newUsername').value) || '',
+            password: (document.getElementById('testPassword') && document.getElementById('testPassword').value) || (document.getElementById('newPassword') && document.getElementById('newPassword').value) || '',
             ssl_enabled: true,
-            ssl_cert: document.getElementById('sslCertPath')?.value
+            ssl_cert: (document.getElementById('sslCertPath') && document.getElementById('sslCertPath').value) || ''
         };
 
         if (!sslData.ssl_cert) {
@@ -2318,7 +2344,7 @@ async function testSSLConnection(ev) {
                     <div class="text-xs space-y-1 text-green-700">
                         <div>SSL Certificate: Valid</div>
                         <div>Encryption: Active</div>
-                        <div>MySQL Version: ${result.info?.mysql_version || ''}</div>
+                        <div>MySQL Version: ${(result && result.info && result.info.mysql_version) ? result.info.mysql_version : ''}</div>
                     </div>
                 `);
             } else {
@@ -2430,12 +2456,18 @@ async function testSSLConnection(ev) {
  }
 
  function showEmailTemplatePreviewModal(preview) {
-     const modal = document.getElementById('emailTemplatePreviewModal');
-     const iframe = document.getElementById('emailPreviewFrame');
-     const subjectSpan = document.getElementById('previewSubject');
-     if (!modal || !iframe || !subjectSpan) return;
+    const modal = document.getElementById('emailTemplatePreviewModal');
+    const iframe = document.getElementById('emailPreviewFrame');
+    const subjectSpan = document.getElementById('previewSubject');
+    if (!modal || !iframe || !subjectSpan) return;
 
-     subjectSpan.textContent = (preview && preview.subject) ? preview.subject : '';
+    // Normalize modal overlay to match admin modal behavior (below header, items-start)
+    try {
+        modal.classList.add('admin-modal-overlay', 'fixed', 'left-0', 'right-0', 'bg-black', 'bg-opacity-50', 'flex', 'items-start', 'justify-center', 'z-50', 'admin-modal-offset-under-header');
+        modal.classList.remove('items-center');
+    } catch (_) {}
+
+    subjectSpan.textContent = (preview && preview.subject) ? preview.subject : '';
      try {
          const html = (preview && preview.html_content) ? preview.html_content : '';
          const blob = new Blob([html], { type: 'text/html' });
@@ -2448,8 +2480,8 @@ async function testSSLConnection(ev) {
      }
 
      modal.classList.remove('hidden');
-     try { updateModalScrollLock(); } catch (_) {}
- }
+    try { updateModalScrollLock(); } catch (_) {}
+}
 
  function closeEmailTemplatePreviewModal() {
      const modal = document.getElementById('emailTemplatePreviewModal');
@@ -2462,10 +2494,10 @@ async function testSSLConnection(ev) {
      }
      if (iframe) { try { iframe.src = 'about:blank'; } catch (_) {} }
      modal.classList.add('hidden');
-     try { updateModalScrollLock(); } catch (_) {}
- }
+    try { updateModalScrollLock(); } catch (_) {}
+}
 
- // Window shims for email preview
+  // Window shims for email preview
   try {
       if (typeof window !== 'undefined') {
           window.previewEmailTemplate = previewEmailTemplate;
@@ -2473,59 +2505,95 @@ async function testSSLConnection(ev) {
           window.closeEmailTemplatePreviewModal = closeEmailTemplatePreviewModal;
       }
   } catch (_) {}
- 
-  // -----------------------------
-  // Email Template Test Send
-  // -----------------------------
-  // Keep last focused element for focus restoration
-  let lastFocusedBeforeTestModal = null;
-  let lastFocusedBeforeEditModal = null;
-  let lastFocusedBeforeAssignModal = null;
 
-  function showTestEmailModal(templateId) {
-      let overlay = document.getElementById('testEmailSendModal');
-      if (!overlay) {
-          overlay = document.createElement('div');
-          overlay.id = 'testEmailSendModal';
-          overlay.className = 'admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
-          overlay.innerHTML = `
-            <div class="admin-modal bg-white rounded-lg w-full max-w-md shadow-xl" role="dialog" aria-modal="true" aria-labelledby="testEmailTitle">
-              <div class="flex items-center justify-between p-4 border-b">
-                <h3 id="testEmailTitle" class="text-lg font-semibold text-gray-800">Send Test Email</h3>
-                <button type="button" class="text-gray-500 hover:text-gray-700 text-xl" data-action="close-test-email-modal" aria-label="Close">&times;</button>
-              </div>
-              <div class="p-4 space-y-3">
-                <p class="text-sm text-gray-700">Enter an email address to send a test of this template.</p>
-                <input id="testEmailInput" type="email" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300" placeholder="name@example.com" aria-describedby="testEmailError" aria-invalid="false" />
-                <p id="testEmailError" class="form-error hidden"></p>
-              </div>
-              <div class="flex items-center justify-end gap-2 p-4 border-t bg-gray-50">
-                <button type="button" class="px-3 py-2 text-gray-700 hover:text-gray-900" data-action="close-test-email-modal">Cancel</button>
-                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" data-action="confirm-send-test-email">Send Test</button>
-              </div>
-            </div>`;
-          document.body.appendChild(overlay);
+  // Removed inline-style positioning helpers; using CSS class 'admin-modal-offset-under-header'
+
+  // Delegated handlers for Email Template Preview modal
+  document.addEventListener('click', function(ev) {
+      const t = ev.target;
+      if (!t || !t.closest) return;
+      // Preview-specific close button
+      if (t.closest('[data-action="close-email-preview-modal"]')) { ev.preventDefault(); closeEmailTemplatePreviewModal(); return; }
+      // Generic admin modal close buttons (X)
+      if (t.closest('[data-action="close-admin-modal"], .admin-modal-close')) {
+          ev.preventDefault();
+          const overlay = t.closest('.admin-modal-overlay');
+          if (overlay) {
+              overlay.classList.add('hidden');
+              try { overlay._disposePositioner && overlay._disposePositioner(); } catch (_) {}
+              try { updateModalScrollLock(); } catch (_) {}
+          }
+          return;
       }
-      overlay.dataset.templateId = String(templateId || '');
-      try { lastFocusedBeforeTestModal = document.activeElement; } catch (_) {}
-      overlay.classList.remove('hidden');
-      try { updateModalScrollLock(); } catch (_) {}
-      const input = overlay.querySelector('#testEmailInput');
-      if (input) { try { input.focus(); } catch (_) {} }
-  }
+      // Backdrop click (overlay area)
+      if (t.classList && t.classList.contains('admin-modal-overlay')) {
+          t.classList.add('hidden');
+          try { t._disposePositioner && t._disposePositioner(); } catch (_) {}
+          try { updateModalScrollLock(); } catch (_) {}
+          return;
+      }
+  });
+
+function showTestEmailModal(templateId) {
+    let overlay = document.getElementById('testEmailSendModal');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'testEmailSendModal';
+        overlay.className = 'admin-modal-overlay fixed left-0 right-0 bg-black bg-opacity-50 flex items-start justify-center z-50 hidden';
+        overlay.innerHTML = `
+          <div class="admin-modal bg-white rounded-lg w-full max-w-lg shadow-xl" role="dialog" aria-modal="true" aria-labelledby="testEmailTitle">
+            <div class="flex items-center justify-between p-4 border-b">
+              <h3 id="testEmailTitle" class="text-lg font-semibold text-gray-800">Send Test Email</h3>
+              <button type="button" class="admin-modal-close text-gray-700 hover:text-gray-900" data-action="close-admin-modal" aria-label="Close">&times;</button>
+            </div>
+            <div class="p-4 space-y-3">
+              <p class="text-sm text-gray-700">Enter an email address to send a test of this template.</p>
+              <input id="testEmailInput" type="email" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300" placeholder="name@example.com" aria-describedby="testEmailError" aria-invalid="false" />
+              <p id="testEmailError" class="form-error hidden"></p>
+            </div>
+            <div class="flex items-center justify-end gap-2 p-4 border-t bg-gray-50">
+              <button type="button" class="px-3 py-2 text-gray-700 hover:text-gray-900" data-action="close-test-email-modal">Cancel</button>
+              <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700" data-action="confirm-send-test-email">Send Test</button>
+            </div>
+          </div>`;
+        document.body.appendChild(overlay);
+    }
+    overlay.dataset.templateId = String(templateId || '');
+    try { lastFocusedBeforeTestModal = document.activeElement; } catch (_) {}
+    overlay.classList.remove('hidden');
+    try { updateModalScrollLock(); } catch (_) {}
+    // Position under header and keep in sync while visible
+    setOverlayPosition(overlay);
+    overlay._disposePositioner?.();
+    overlay._disposePositioner = attachOverlayAutoPosition(overlay);
+    const input = overlay.querySelector('#testEmailInput');
+    if (input) { try { input.focus(); } catch (_) {} }
+}
 
   function closeTestEmailModal() {
       const overlay = document.getElementById('testEmailSendModal');
       if (!overlay) return;
       overlay.classList.add('hidden');
       try { updateModalScrollLock(); } catch (_) {}
+      try { overlay._disposePositioner && overlay._disposePositioner(); } catch (_) {}
       // restore focus
       try { if (lastFocusedBeforeTestModal && lastFocusedBeforeTestModal.focus) lastFocusedBeforeTestModal.focus(); } catch (_) {}
   }
 
   async function sendTestEmailTemplate(templateId) {
       const id = String(templateId || '').trim();
-      if (!id) { console.warn('[AdminSettings] sendTestEmailTemplate: missing template id'); if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Missing template id'); return; }
+      if (!id) {
+          console.warn('[AdminSettings] sendTestEmailTemplate: missing template id; falling back to default template');
+          // Fallback to a sane default template id so testing can proceed
+          const fallbackId = 'order_confirmation';
+          if (typeof window !== 'undefined' && typeof window.showTestEmailModal === 'function') {
+              return showTestEmailModal(fallbackId);
+          }
+          if (typeof window !== 'undefined' && typeof window.showError === 'function') {
+              window.showError('Missing template id');
+          }
+          return;
+      }
       showTestEmailModal(id);
   }
 
@@ -2533,10 +2601,13 @@ async function testSSLConnection(ev) {
       try {
           const overlay = document.getElementById('testEmailSendModal');
           if (!overlay) return;
-          const id = String(overlay.dataset.templateId || '').trim();
+          let id = String(overlay.dataset.templateId || '').trim();
           const input = overlay.querySelector('#testEmailInput');
           const testEmail = String((input && input.value) || '').trim();
-          if (!id) { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Missing template id'); return; }
+          if (!id) {
+              // Fallback default when legacy inline buttons did not provide data-id
+              id = 'order_confirmation';
+          }
           const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           const err = overlay.querySelector('#testEmailError');
           if (!emailRe.test(testEmail)) {
@@ -2559,19 +2630,33 @@ async function testSSLConnection(ev) {
           });
           const data = await res.json();
           if (data && data.success) {
-              if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(data.message || 'Test email sent successfully.');
-              else alert(data.message || 'Test email sent successfully.');
+              if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                  window.wfNotifications.show(data.message || 'Test email sent successfully.', 'success', { title: 'Test Email' });
+              } else if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') {
+                  window.showSuccess(data.message || 'Test email sent successfully.');
+              } else {
+                  alert(data.message || 'Test email sent successfully.');
+              }
               closeTestEmailModal();
           } else {
               const msg = (data && (data.error || data.message)) ? (data.error || data.message) : 'Failed to send test email.';
-              if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError(msg);
-              else alert(msg);
+              if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                  window.wfNotifications.show(msg, 'error', { title: 'Test Email' });
+              } else if (typeof window !== 'undefined' && typeof window.showError === 'function') {
+                  window.showError(msg);
+              } else {
+                  alert(msg);
+              }
           }
           if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = prevText; }
           if (input) input.disabled = false;
       } catch (err) {
           console.error('[AdminSettings] confirmSendTestEmail error', err);
-          if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error sending test email');
+          if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+              window.wfNotifications.show('Error sending test email', 'error', { title: 'Test Email' });
+          } else if (typeof window !== 'undefined' && typeof window.showError === 'function') {
+              window.showError('Error sending test email');
+          }
       } finally {
           const overlay = document.getElementById('testEmailSendModal');
           if (overlay) {
@@ -2599,6 +2684,17 @@ async function testSSLConnection(ev) {
   document.addEventListener('click', function(ev) {
       const t = ev.target;
       if (!t || !t.closest) return;
+      // Generic close handler for any admin modal close button
+      const genericClose = t.closest('.admin-modal-close,[data-action="close-admin-modal"]');
+      if (genericClose) {
+          ev.preventDefault();
+          const overlay = t.closest('.admin-modal-overlay');
+          if (overlay) {
+              overlay.classList.add('hidden');
+              try { updateModalScrollLock(); } catch (_) {}
+          }
+          return;
+      }
       const closeBtn = t.closest('[data-action="close-test-email-modal"]');
       if (closeBtn) { ev.preventDefault(); closeTestEmailModal(); return; }
       const confirmBtn = t.closest('[data-action="confirm-send-test-email"]');
@@ -2615,12 +2711,12 @@ async function testSSLConnection(ev) {
       if (overlay) return overlay;
       overlay = document.createElement('div');
       overlay.id = 'emailTemplateEditModal';
-      overlay.className = 'admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
+      overlay.className = 'admin-modal-overlay fixed left-0 right-0 bg-black bg-opacity-50 flex items-start justify-center z-50 hidden';
       overlay.innerHTML = `
         <div class="admin-modal bg-white rounded-lg w-full max-w-3xl max-h-[90vh] flex flex-col shadow-xl" role="dialog" aria-modal="true" aria-labelledby="emailTemplateEditTitle">
           <div class="flex items-center justify-between p-4 border-b">
             <h3 id="emailTemplateEditTitle" class="text-lg font-semibold text-gray-800">Edit Email Template</h3>
-            <button type="button" class="text-gray-500 hover:text-gray-700 text-xl" data-action="close-email-template-modal" aria-label="Close">&times;</button>
+            <button type="button" class="admin-modal-close admin-modal-close--tight text-gray-700 hover:text-gray-900" data-action="close-admin-modal" aria-label="Close">&times;</button>
           </div>
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2762,14 +2858,21 @@ async function testSSLConnection(ev) {
   async function saveEmailTemplate() {
       try {
           const overlay = ensureEmailTemplateEditModal();
-          const id = String(overlay.dataset.templateId || '').trim();
-          const name = overlay.querySelector('#et_name')?.value?.trim() || '';
-          const type = overlay.querySelector('#et_type')?.value || '';
-          const subject = overlay.querySelector('#et_subject')?.value?.trim() || '';
-          const html = overlay.querySelector('#et_html')?.value || '';
-          const text = overlay.querySelector('#et_text')?.value || '';
-          const desc = overlay.querySelector('#et_desc')?.value || '';
-          const isActive = !!overlay.querySelector('#et_active')?.checked;
+          const id = String((overlay && overlay.dataset && overlay.dataset.templateId) ? overlay.dataset.templateId : '').trim();
+          const _et_name = overlay ? overlay.querySelector('#et_name') : null;
+          const _et_type = overlay ? overlay.querySelector('#et_type') : null;
+          const _et_subject = overlay ? overlay.querySelector('#et_subject') : null;
+          const _et_html = overlay ? overlay.querySelector('#et_html') : null;
+          const _et_text = overlay ? overlay.querySelector('#et_text') : null;
+          const _et_desc = overlay ? overlay.querySelector('#et_desc') : null;
+          const _et_active = overlay ? overlay.querySelector('#et_active') : null;
+          const name = _et_name && _et_name.value ? _et_name.value.trim() : '';
+          const type = _et_type && _et_type.value ? _et_type.value : '';
+          const subject = _et_subject && _et_subject.value ? _et_subject.value.trim() : '';
+          const html = _et_html && _et_html.value ? _et_html.value : '';
+          const text = _et_text && _et_text.value ? _et_text.value : '';
+          const desc = _et_desc && _et_desc.value ? _et_desc.value : '';
+          const isActive = !!(_et_active && _et_active.checked);
           if (!validateEmailTemplateForm(overlay)) { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Please fix the highlighted errors.'); return; }
           const saveBtn = overlay.querySelector('[data-action="save-email-template"]');
           const prevText = saveBtn ? saveBtn.textContent : '';
@@ -2867,12 +2970,12 @@ async function testSSLConnection(ev) {
       if (overlay) return overlay;
       overlay = document.createElement('div');
       overlay.id = 'templateAssignmentModal';
-      overlay.className = 'admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
+      overlay.className = 'admin-modal-overlay fixed left-0 right-0 bg-black bg-opacity-50 flex items-start justify-center z-50 hidden admin-modal-offset-under-header';
       overlay.innerHTML = `
         <div class="admin-modal bg-white rounded-lg w-full max-w-md shadow-xl" role="dialog" aria-modal="true" aria-labelledby="templateAssignmentTitle">
           <div class="flex items-center justify-between p-4 border-b">
             <h3 id="templateAssignmentTitle" class="text-lg font-semibold text-gray-800">Assign Email Template</h3>
-            <button type="button" class="text-gray-500 hover:text-gray-700 text-xl" data-action="close-template-assignment" aria-label="Close">&times;</button>
+            <button type="button" class="admin-modal-close text-gray-600 hover:text-gray-900 text-28 leading-1 p-6px" data-action="close-admin-modal" aria-label="Close">&times;</button>
           </div>
           <div class="p-4 space-y-3">
             <div>
@@ -3026,12 +3129,14 @@ async function testSSLConnection(ev) {
       const testOverlay = document.getElementById('testEmailSendModal');
       const editOverlay = document.getElementById('emailTemplateEditModal');
       const assignOverlay = document.getElementById('templateAssignmentModal');
+      const previewOverlay = document.getElementById('emailTemplatePreviewModal');
 
       // Escape closes whichever modal is open
       if (key === 'Escape') {
           if (isVisible(testOverlay)) { ev.preventDefault(); closeTestEmailModal(); return; }
           if (isVisible(editOverlay)) { ev.preventDefault(); closeEmailTemplateEditModal(); return; }
           if (isVisible(assignOverlay)) { ev.preventDefault(); closeTemplateAssignmentModal(); return; }
+          if (isVisible(previewOverlay)) { ev.preventDefault(); closeEmailTemplatePreviewModal(); return; }
       }
  
       // Enter behavior
@@ -3131,7 +3236,8 @@ async function testSSLConnection(ev) {
          // keep legacy global reference for any remaining consumers
          if (typeof window !== 'undefined') window.colorTemplatesCache = templates;
      }
-     const selectedCategory = document.getElementById('colorTemplateCategoryFilter')?.value || '';
+     const _ctf = document.getElementById('colorTemplateCategoryFilter');
+     const selectedCategory = (_ctf && _ctf.value) || '';
      const filtered = selectedCategory ? templates.filter(t => t.category === selectedCategory) : templates;
      if (filtered.length === 0) {
          list.innerHTML = '<div class="text-gray-500 text-center">No color templates found. Create your first template!</div>';
@@ -6834,6 +6940,371 @@ if (typeof window !== 'undefined') {
     } else {
         document.addEventListener('DOMContentLoaded', () => initAdminSettingsDelegatedListeners(), { once: true });
     }
+}
+
+// Hard guard to prevent legacy inline scripts or markup from auto-opening modals on page load
+function forceHideAdminModalsOnLoad() {
+    try {
+        // Do not force-hide if a modal is already visible or user has interacted
+        if (window.__wfModalUserInteracted) return;
+        const anyVisible = document.querySelector('.admin-modal-overlay.show, .modal-overlay.show, .room-modal-overlay.show, [id$="Modal"].show');
+        if (anyVisible) return;
+        const allowHash = (window.location && typeof window.location.hash === 'string') ? window.location.hash : '';
+        const selectors = [
+            '.admin-modal-overlay',
+            '.modal-overlay',
+            '.room-modal-overlay',
+            '.wf-revealco-overlay',
+            '#global-confirmation-modal',
+            '.confirmation-modal-overlay',
+            '#searchModal',
+            '.wf-login-overlay',
+            '#quantityModal',
+            '#detailedItemModal',
+            '[id$="Modal"]'
+        ];
+        const nodes = document.querySelectorAll(selectors.join(', '));
+        nodes.forEach((el) => {
+            if (allowHash && el.id && allowHash === '#' + el.id.replace(/Modal$/,'_config')) return;
+            try { el.classList.remove('show'); } catch (_) {}
+            try { el.classList.add('hidden'); } catch (_) {}
+        });
+        if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
+            window.WFModals.unlockScrollIfNoneOpen();
+        } else {
+            document.body.classList.remove('modal-open');
+            document.documentElement.classList.remove('modal-open');
+        }
+    } catch (_) {}
+}
+
+// Invoke the guard as soon as DOM is ready
+if (typeof window !== 'undefined') {
+    // Block programmatic modal opens during initial load; allow only user-initiated
+    const WF_SQUELCH_MS = 500;
+    const WF_SQUELCH_START = Date.now();
+    const isSquelchActive = () => (Date.now() - WF_SQUELCH_START) < WF_SQUELCH_MS;
+    // Expose for other closures in this module
+    window.__wfIsSquelchActive = isSquelchActive;
+    // Track if user has interacted with modals to avoid late force-hide
+    if (typeof window.__wfModalUserInteracted === 'undefined') window.__wfModalUserInteracted = false;
+    if (document.readyState !== 'loading') {
+        forceHideAdminModalsOnLoad();
+    } else {
+        document.addEventListener('DOMContentLoaded', () => forceHideAdminModalsOnLoad(), { once: true });
+    }
+    // Also enforce on full load and shortly after to suppress late auto-opens
+    window.addEventListener('load', () => {
+        try { forceHideAdminModalsOnLoad(); } catch(_) {}
+        // One quick retry; abort if user interacted
+        setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 200);
+    }, { once: true });
+
+    // Mark user interaction early to disable any further force-hides
+    const markInteract = () => { window.__wfModalUserInteracted = true; };
+    window.addEventListener('pointerdown', markInteract, { passive: true, once: true });
+    window.addEventListener('click', markInteract, { passive: true, once: true });
+    window.addEventListener('keydown', markInteract, { passive: true, once: true });
+}
+
+// Ensure all admin overlays open BELOW the fixed site header
+function getHeaderHeight() {
+    try {
+        const header = document.querySelector('header') || document.querySelector('.site-header') || document.querySelector('#site-header') || document.querySelector('.universal-page-header');
+        let h = 0;
+        if (header) {
+            const rect = header.getBoundingClientRect();
+            h = Math.max(0, Math.round(rect.height));
+        }
+        // Fallback: compute from the first main content container top
+        if (!h) {
+            const candidates = [
+                document.querySelector('#adminContent'),
+                document.querySelector('.admin-content'),
+                document.querySelector('main'),
+                document.querySelector('#content'),
+            ].filter(Boolean);
+            const first = candidates[0];
+            if (first) {
+                const top = Math.round(first.getBoundingClientRect().top);
+                if (Number.isFinite(top) && top > 0) h = top;
+            }
+        }
+        // Clamp to a sane minimum if still zero (ensures we never overlay under header)
+        if (!h) h = 64; // default header estimate
+        return h;
+    } catch (_) { return 0; }
+}
+
+function getHeaderZIndex() {
+    try {
+        const header = document.querySelector('header') || document.querySelector('.site-header') || document.querySelector('#site-header');
+        if (!header) return null;
+        const z = window.getComputedStyle(header).zIndex;
+        const zi = parseInt(z, 10);
+        return Number.isFinite(zi) ? zi : null;
+    } catch (_) { return null; }
+}
+
+function offsetOverlayBelowHeader(el) {
+    try {
+        if (!el) return;
+        el.classList.add('admin-modal-offset-under-header');
+    } catch (_) {}
+}
+
+function applyHeaderOffsetToAllOverlays() {
+    try {
+        const selectors = [
+            '.admin-modal-overlay',
+            '.modal-overlay',
+            '.room-modal-overlay',
+            '.wf-revealco-overlay',
+            '#global-confirmation-modal',
+            '.confirmation-modal-overlay',
+            '#searchModal',
+            '.wf-login-overlay',
+            '#quantityModal',
+            '#detailedItemModal',
+            '[id$="Modal"]'
+        ];
+        document.querySelectorAll(selectors.join(', ')).forEach((el) => offsetOverlayBelowHeader(el));
+    } catch (_) {}
+}
+
+function watchModalOpensForHeaderOffset() {
+    try {
+        const observer = new MutationObserver((mutations) => {
+            let needApply = false;
+            for (const m of mutations) {
+                if (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName === 'style')) {
+                    const t = m.target;
+                    if (!(t instanceof HTMLElement)) continue;
+                    // Heuristic: overlays commonly toggle 'show' or 'hidden'
+                    if (t.classList.contains('show') || !t.classList.contains('hidden')) {
+                        needApply = true;
+                        offsetOverlayBelowHeader(t);
+                    }
+                }
+            }
+            if (needApply) {
+                // Also sweep all to be safe
+                applyHeaderOffsetToAllOverlays();
+            }
+        });
+        observer.observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
+        // Keep a reference in case we need to disconnect later
+        window.__wfModalHeaderObserver = observer;
+    } catch (_) {}
+}
+
+if (typeof window !== 'undefined') {
+    const onReady = () => {
+        // Inject a strong style sheet that enforces top/height below header for overlays
+        try {
+            const existing = document.getElementById('wf-modal-offset-style');
+            const style = existing || document.createElement('style');
+            style.id = 'wf-modal-offset-style';
+            const headerZ = getHeaderZIndex();
+            const css = `
+                :root { --wf-header-h: ${getHeaderHeight()}px; --wf-header-h-plus: calc(var(--wf-header-h) + 16px); --wf-header-z: ${Number.isFinite(headerZ) ? headerZ : 100}; --wf-modal-below-header-z: calc(var(--wf-header-z) - 1); }
+                .admin-modal-overlay,
+                .modal-overlay,
+                .room-modal-overlay,
+                .wf-revealco-overlay,
+                #global-confirmation-modal,
+                .confirmation-modal-overlay,
+                #searchModal,
+                .wf-login-overlay,
+                #quantityModal,
+                #detailedItemModal,
+                [id$="Modal"] {
+                    position: fixed !important;
+                    top: var(--wf-header-h-plus) !important;
+                    height: calc(100vh - var(--wf-header-h-plus)) !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    overflow: auto !important;
+                    box-sizing: border-box !important;
+                    padding-top: 12px; /* ensure inner content and close button clear the site header */
+                    z-index: var(--wf-modal-below-header-z) !important;
+                }
+                /* Try to ensure inner fixed dialogs respect the header too */
+                .admin-modal-overlay [role="dialog"],
+                .modal-overlay [role="dialog"],
+                .room-modal-overlay [role="dialog"],
+                .admin-modal-overlay .modal,
+                .modal-overlay .modal,
+                .room-modal-overlay .modal,
+                .admin-modal-content {
+                    margin-top: max(0px, var(--wf-header-h-plus));
+                }
+                .admin-modal-header,
+                .admin-modal-overlay .section-header,
+                .modal-overlay .section-header {
+                    position: sticky;
+                    top: 0;
+                    z-index: 1;
+                }
+            `;
+            style.textContent = css;
+            if (!existing) document.head.appendChild(style);
+        } catch (_) {}
+
+        applyHeaderOffsetToAllOverlays();
+        watchModalOpensForHeaderOffset();
+        // Re-apply on resize since header height can change with breakpoints
+        window.addEventListener('resize', () => {
+            // Refresh style block value without touching inline CSS variables
+            try {
+                const h = getHeaderHeight();
+                const style = document.getElementById('wf-modal-offset-style');
+                if (style) style.textContent = style.textContent.replace(/--wf-header-h: \d+px;/, `--wf-header-h: ${h}px;`);
+            } catch (_) {}
+            applyHeaderOffsetToAllOverlays();
+        });
+
+        // Re-apply shortly after initial paint to catch late header sizing
+        setTimeout(() => applyHeaderOffsetToAllOverlays(), 250);
+        // Also re-apply on full window load (fonts/images can change header height)
+        window.addEventListener('load', () => applyHeaderOffsetToAllOverlays(), { once: true });
+
+        // Delegated admin modal handlers
+        const root = document;
+        const findOverlayByKey = (key) => {
+            try {
+                if (!key) return null;
+                const raw = String(key).replace(/Modal$/i, '');
+                const norm = raw.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const camelFromNorm = norm.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
+                const candidates = [
+                    `#${raw}Modal`,            // preserve camelCase input
+                    `#${norm}Modal`,
+                    `#${norm}-modal`,
+                    `#${camelFromNorm}Modal`,  // background-manager -> backgroundManagerModal
+                ];
+                for (const sel of candidates) {
+                    const el = document.querySelector(sel);
+                    if (el) return el;
+                }
+                // Fallback: any id ending with Modal that includes the raw or norm key
+                const all = Array.from(document.querySelectorAll('[id$="Modal"]'));
+                return all.find(el => {
+                    const id = (el.id || '').toLowerCase();
+                    return id.includes(norm) || id.includes(raw.toLowerCase());
+                });
+            } catch (_) { return null; }
+        };
+
+        const openOverlay = (el) => {
+            if (!el) return;
+            const squelchOn = (typeof window.__wfIsSquelchActive === 'function') ? window.__wfIsSquelchActive() : false;
+            if (squelchOn && !el.__wfUserInitiated) {
+                // Suppress auto-open during squelch window
+                try { el.classList.remove('show'); } catch(_) {}
+                try { el.classList.add('hidden'); } catch(_) {}
+                return;
+            }
+            // Mark user interaction so late force-hide does not close it
+            window.__wfModalUserInteracted = true;
+            try { el.classList.remove('hidden'); } catch (_) {}
+            try { el.classList.add('show'); } catch (_) {}
+            // Unhide any nested hidden panels that should be visible by default
+            try {
+                el.querySelectorAll(':scope .hidden[data-default-visible], :scope [data-unhide-on-open]')
+                  .forEach(n => n.classList.remove('hidden'));
+            } catch (_) {}
+            // Prevent background scroll
+            try {
+                document.documentElement.classList.add('modal-open');
+                document.body.classList.add('modal-open');
+            } catch (_) {}
+            applyHeaderOffsetToAllOverlays();
+            // Optional initializer hook: init<ID>() or init<IdWithoutModal>() if defined
+            try {
+                const id = el.id || '';
+                if (id) {
+                    const clean = id.replace(/Modal$/,'');
+                    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+                    const camel = clean.replace(/[-_](\w)/g, (_, c) => c.toUpperCase());
+                    const fnNames = [
+                        `init${cap(id)}`,
+                        `init${cap(camel)}Modal`,
+                        `init${cap(camel)}`,
+                    ];
+                    for (const fn of fnNames) {
+                        if (typeof window[fn] === 'function') { try { window[fn](el); } catch(_) {} break; }
+                    }
+                }
+            } catch (_) {}
+        };
+
+        const closeOverlay = (el) => {
+            if (!el) return;
+            try { el.classList.remove('show'); } catch (_) {}
+            try { el.classList.add('hidden'); } catch (_) {}
+            if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
+                window.WFModals.unlockScrollIfNoneOpen();
+            }
+        };
+
+        root.addEventListener('click', (ev) => {
+            const target = ev.target.closest('[data-action]');
+            const clicked = ev.target.closest('button, a, [role="button"]');
+            // 1) ID convention: some buttons lack data-action; infer from id: fooBtn -> #fooModal
+            if (clicked && clicked.id && /Btn$/.test(clicked.id)) {
+                const base = clicked.id.replace(/Btn$/, '');
+                const el = findOverlayByKey(base);
+                if (el) {
+                    ev.preventDefault();
+                    el.__wfUserInitiated = true; openOverlay(el); delete el.__wfUserInitiated;
+                    return;
+                }
+                // Known dynamic creators
+                if (/^loggingStatus$/i.test(base) && typeof window.createLoggingStatusModal === 'function') {
+                    ev.preventDefault();
+                    try { window.createLoggingStatusModal(); } catch(_) {}
+                    const created = document.getElementById('loggingStatusModal');
+                    if (created) { created.__wfUserInitiated = true; openOverlay(created); delete created.__wfUserInitiated; return; }
+                }
+                if (/^aiSettings$/i.test(base)) {
+                    // Sometimes rendered later; try a short defer
+                    setTimeout(() => {
+                        const late = findOverlayByKey(base);
+                        if (late) { late.__wfUserInitiated = true; openOverlay(late); delete late.__wfUserInitiated; }
+                    }, 50);
+                }
+            }
+
+            if (!target) return;
+            const action = String(target.getAttribute('data-action') || '');
+            // open-foo -> find #fooModal
+            const m = action.match(/^open-(.+)$/);
+            if (m) {
+                ev.preventDefault();
+                const el = findOverlayByKey(m[1]);
+                if (el) { el.__wfUserInitiated = true; openOverlay(el); delete el.__wfUserInitiated; }
+                else {
+                    // Try known creators for certain keys
+                    const key = m[1].toLowerCase();
+                    if (key.includes('logging') && typeof window.createLoggingStatusModal === 'function') {
+                        try { window.createLoggingStatusModal(); } catch(_) {}
+                        const created = document.getElementById('loggingStatusModal');
+                        if (created) { created.__wfUserInitiated = true; openOverlay(created); delete created.__wfUserInitiated; }
+                    }
+                }
+                return;
+            }
+            if (action === 'close-admin-modal') {
+                ev.preventDefault();
+                const overlay = target.closest('.admin-modal-overlay, .modal-overlay, .room-modal-overlay, [id$="Modal"]');
+                if (overlay) closeOverlay(overlay);
+                return;
+            }
+        }, { capture: true });
+    };
+    if (document.readyState !== 'loading') onReady();
+    else document.addEventListener('DOMContentLoaded', onReady, { once: true });
 }
 
 // Helper to initialize SSL checkbox-driven visibility

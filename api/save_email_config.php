@@ -1,18 +1,37 @@
 <?php
 // Prevent any output before JSON
 ob_start();
-error_reporting(0); // Suppress PHP errors from being output
+error_reporting(0);
 ini_set('display_errors', 0);
 
 header('Content-Type: application/json');
 
+// Load global API config first so CORS/OPTIONS handling applies here
+require_once __DIR__ . '/config.php';
+
+// Allow CORS preflight requests to succeed
+if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    if (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_clean(); }
+    echo json_encode(['success' => true]);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
+    if (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_clean(); }
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
     exit;
 }
 
+// Determine action from POST
 $action = $_POST['action'] ?? '';
+// Basic request logging for debugging
+error_log('[save_email_config] method=' . ($_SERVER['REQUEST_METHOD'] ?? 'unknown') . ' action=' . $action . ' POST=' . json_encode($_POST));
+
+require_once __DIR__ . '/../includes/secret_store.php';
+require_once __DIR__ . '/../includes/email_helper.php';
+require_once __DIR__ . '/business_settings_helper.php';
 
 if ($action === 'test') {
     handleTestEmail();
@@ -31,49 +50,47 @@ function handleTestEmail()
         return;
     }
 
-    // Create test email configuration from form data
-    $fromEmail = $_POST['fromEmail'] ?? 'orders@whimsicalfrog.us';
-    $fromName = $_POST['fromName'] ?? 'WhimsicalFrog';
-    $smtpEnabled = isset($_POST['smtpEnabled']);
+    try {
+        $pdo = Database::getInstance();
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'error' => 'Database connection failed']);
+        return;
+    }
 
-    $subject = "Test Email from WhimsicalFrog";
+    // Configure EmailHelper strictly from database-backed settings
+    EmailHelper::createFromBusinessSettings($pdo);
+
+    // Pull display fields for the email body and headers from DB
+    $settings = BusinessSettings::getByCategory('email');
+    $fromEmail = isset($settings['from_email']) ? (string)$settings['from_email'] : '';
+    $fromName  = isset($settings['from_name']) ? (string)$settings['from_name'] : '';
+    $smtpEnabled = !empty($settings['smtp_enabled']);
+    $bcc = isset($settings['bcc_email']) ? (string)$settings['bcc_email'] : '';
+
+    $subject = 'Test Email from WhimsicalFrog';
     $html = createTestEmailHtml($fromEmail, $fromName, $smtpEnabled);
+
+    $options = [
+        'from_email' => $fromEmail,
+        'from_name' => $fromName,
+        'reply_to' => $fromEmail,
+        'is_html' => true,
+        'bcc' => $bcc ?: []
+    ];
 
     $success = false;
     $errorMessage = '';
-
     try {
-        if ($smtpEnabled) {
-            // Always use our custom SMTP implementation for better error handling
-            $success = sendSmtpEmail($testEmail, $subject, $html, $fromEmail, $fromName, $_POST);
-        } else {
-            // Use PHP mail()
-            $headers = [
-                'From: ' . $fromName . ' <' . $fromEmail . '>',
-                'Reply-To: ' . $fromEmail,
-                'X-Mailer: PHP/' . phpversion(),
-                'MIME-Version: 1.0',
-                'Content-Type: text/html; charset=UTF-8'
-            ];
-
-            if (!empty($_POST['bccEmail'])) {
-                $headers[] = 'Bcc: ' . $_POST['bccEmail'];
-            }
-
-            $headerString = implode("\r\n", $headers);
-            $success = mail($testEmail, $subject, $html, $headerString);
-        }
+        $success = EmailHelper::send($testEmail, $subject, $html, $options);
     } catch (Exception $e) {
         $errorMessage = $e->getMessage();
-        error_log("Test email error: " . $errorMessage);
+        error_log('Test email error: ' . $errorMessage);
     }
 
     // Log the test email
     try {
         require_once 'email_logger.php';
-        
         $createdBy = $_SESSION['user']['userId'] ?? $_SESSION['user']['username'] ?? 'admin';
-
         if ($success) {
             logTestEmail($testEmail, $fromEmail, $subject, $html, 'sent', null, $createdBy);
         } else {
@@ -81,13 +98,10 @@ function handleTestEmail()
             logTestEmail($testEmail, $fromEmail, $subject, $html, 'failed', $logError, $createdBy);
         }
     } catch (Exception $e) {
-        // Log the logging error but don't fail the response
-        error_log("Email logging error: " . $e->getMessage());
+        error_log('Email logging error: ' . $e->getMessage());
     }
 
-    // Clean any buffered output and send JSON response
     ob_clean();
-
     if ($success) {
         echo json_encode(['success' => true, 'message' => 'Test email sent successfully!']);
     } else {
@@ -96,214 +110,181 @@ function handleTestEmail()
     }
 }
 
-function sendSmtpEmail($to, $subject, $html, $fromEmail, $fromName, $config)
-{
-    $host = $config['smtpHost'] ?? 'smtp.ionos.com';
-    $port = intval($config['smtpPort'] ?? 587);
-    $username = $config['smtpUsername'] ?? $fromEmail;
-    $password = $config['smtpPassword'] ?? '';
-    $encryption = $config['smtpEncryption'] ?? 'tls';
-
-    // For IONOS, we need to handle TLS differently
-    // Connect without encryption first, then upgrade to TLS
-    $socket = stream_socket_client(
-        $host . ':' . $port,
-        $errno,
-        $errstr,
-        30,
-        STREAM_CLIENT_CONNECT
-    );
-
-    if (!$socket) {
-        throw new Exception("Failed to connect to SMTP server $host:$port - $errstr ($errno)");
-    }
-
-    // Function to read SMTP response
-    $readResponse = function () use ($socket) {
-        $response = '';
-        while (($line = fgets($socket, 515)) !== false) {
-            $response .= $line;
-            if (isset($line[3]) && $line[3] == ' ') {
-                break;
-            } // End of multi-line response
-        }
-        return trim($response);
-    };
-
-    // Initial server greeting
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '220') {
-        fclose($socket);
-        throw new Exception("SMTP server not ready: $response");
-    }
-
-    // EHLO to identify client
-    fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("EHLO failed: $response");
-    }
-
-    // Start TLS if requested
-    if ($encryption === 'tls') {
-        fputs($socket, "STARTTLS\r\n");
-        $response = $readResponse();
-        $responseCode = substr($response, 0, 3);
-
-        if ($responseCode != '220') {
-            fclose($socket);
-            throw new Exception("STARTTLS not supported or failed: $response");
-        }
-
-        // Create TLS context
-        $context = stream_context_create([
-            'ssl' => [
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-                'allow_self_signed' => true,
-                'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT
-            ]
-        ]);
-
-        // Enable TLS encryption
-        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-            fclose($socket);
-            throw new Exception("Failed to enable TLS encryption");
-        }
-
-        // EHLO again after TLS
-        fputs($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
-        $response = $readResponse();
-        if (substr($response, 0, 3) != '250') {
-            fclose($socket);
-            throw new Exception("EHLO after TLS failed: $response");
-        }
-    }
-
-    // Authentication
-    fputs($socket, "AUTH LOGIN\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '334') {
-        fclose($socket);
-        throw new Exception("AUTH LOGIN not supported: $response");
-    }
-
-    // Send username
-    fputs($socket, base64_encode($username) . "\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '334') {
-        fclose($socket);
-        throw new Exception("Username rejected: $response");
-    }
-
-    // Send password
-    fputs($socket, base64_encode($password) . "\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '235') {
-        fclose($socket);
-        throw new Exception("Authentication failed - check username/password: $response");
-    }
-
-    // MAIL FROM
-    fputs($socket, "MAIL FROM: <$fromEmail>\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("MAIL FROM rejected: $response");
-    }
-
-    // RCPT TO
-    fputs($socket, "RCPT TO: <$to>\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("RCPT TO rejected: $response");
-    }
-
-    // DATA
-    fputs($socket, "DATA\r\n");
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '354') {
-        fclose($socket);
-        throw new Exception("DATA command rejected: $response");
-    }
-
-    // Send email headers and body
-    $email = "From: $fromName <$fromEmail>\r\n";
-    $email .= "To: <$to>\r\n";
-    $email .= "Subject: $subject\r\n";
-    $email .= "MIME-Version: 1.0\r\n";
-    $email .= "Content-Type: text/html; charset=UTF-8\r\n";
-    $email .= "\r\n";
-    $email .= $html . "\r\n";
-    $email .= ".\r\n"; // End data marker
-
-    fputs($socket, $email);
-    $response = $readResponse();
-    if (substr($response, 0, 3) != '250') {
-        fclose($socket);
-        throw new Exception("Email delivery failed: $response");
-    }
-
-    // Close connection gracefully
-    fputs($socket, "QUIT\r\n");
-    $readResponse(); // Read the response but don't check it
-    fclose($socket);
-
-    return true;
-}
-
 function handleSaveConfig()
 {
     try {
-        // Validate required fields
-        $requiredFields = ['fromEmail', 'fromName', 'adminEmail'];
-        foreach ($requiredFields as $field) {
-            if (empty($_POST[$field])) {
-                throw new Exception("$field is required");
-            }
-        }
-
-        // Validate email addresses
-        $emailFields = ['fromEmail', 'adminEmail'];
-        if (!empty($_POST['bccEmail'])) {
-            $emailFields[] = 'bccEmail';
-        }
-
+        // Expose DB target for debugging (from config.php globals)
+        global $host, $db, $isLocalhost;
+        error_log('[save_email_config] handleSaveConfig start');
+        // Optional validation: only validate email fields if provided (allow blanks)
+        $emailFields = ['fromEmail', 'adminEmail', 'bccEmail'];
         foreach ($emailFields as $field) {
-            if (!filter_var($_POST[$field], FILTER_VALIDATE_EMAIL)) {
-                throw new Exception("Invalid email address for $field");
+            if (isset($_POST[$field]) && $_POST[$field] !== '') {
+                if (!filter_var($_POST[$field], FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception("Invalid email address for $field");
+                }
             }
         }
 
-        // Create new configuration content
-        $configContent = generateConfigContent();
+        // Persist sensitive SMTP credentials to secret store (if provided) or clear when requested
+        $smtpUsername = trim($_POST['smtpUsername'] ?? '');
+        $smtpPassword = trim($_POST['smtpPassword'] ?? '');
+        $clearSecretUser = isset($_POST['clear_smtpUsername']) && (string)$_POST['clear_smtpUsername'] === '1';
+        $clearSecretPass = isset($_POST['clear_smtpPassword']) && (string)$_POST['clear_smtpPassword'] === '1';
+        if ($clearSecretUser) { @secret_delete('smtp_username'); }
+        if ($clearSecretPass) { @secret_delete('smtp_password'); }
+        if ($smtpUsername !== '') { secret_set('smtp_username', $smtpUsername); }
+        if ($smtpPassword !== '') { secret_set('smtp_password', $smtpPassword); }
+        error_log('[save_email_config] secrets updated: user=' . ($clearSecretUser ? 'cleared' : ($smtpUsername !== '' ? 'set' : 'unchanged')) . ' pass=' . ($clearSecretPass ? 'cleared' : ($smtpPassword !== '' ? 'set' : 'unchanged')));
 
-        // Write to file
-        $configFile = __DIR__ . '/email_config.php';
-        $backupFile = __DIR__ . '/email_config_backup_' . date('Y-m-d_H-i-s') . '.php';
+        // Load existing settings to preserve values when POST fields are blank
+        $existing = BusinessSettings::getByCategory('email');
 
-        // Create backup of existing file
-        if (file_exists($configFile)) {
-            copy($configFile, $backupFile);
+        // Helper to prefer POST non-empty, otherwise fall back to existing value
+        $prefer = function($postKey, $existingKey) use ($existing) {
+            $val = isset($_POST[$postKey]) ? (string)$_POST[$postKey] : '';
+            if ($val !== '') { return $val; }
+            return isset($existing[$existingKey]) ? (string)$existing[$existingKey] : '';
+        };
+
+        // Normalize values for DB storage, preserving existing when incoming is blank
+        $isFlagOn = function(string $key): bool { return isset($_POST[$key]) && (string)$_POST[$key] === '1'; };
+        $map = [
+            'from_email'      => $isFlagOn('clear_fromEmail') ? '' : $prefer('fromEmail', 'from_email'),
+            'from_name'       => $isFlagOn('clear_fromName') ? '' : $prefer('fromName', 'from_name'),
+            'admin_email'     => $isFlagOn('clear_adminEmail') ? '' : $prefer('adminEmail', 'admin_email'),
+            // If explicit clear flag set from UI, force blank; else preserve behavior
+            'bcc_email'       => $isFlagOn('clear_bccEmail') ? '' : $prefer('bccEmail', 'bcc_email'),
+            'smtp_enabled'    => isset($_POST['smtpEnabled']) ? 'true' : 'false',
+            'smtp_host'       => $isFlagOn('clear_smtpHost') ? '' : $prefer('smtpHost', 'smtp_host'),
+            'smtp_port'       => $isFlagOn('clear_smtpPort') ? '' : $prefer('smtpPort', 'smtp_port'),
+            // Username is stored in DB for visibility; secret store is the authority for sending.
+            'smtp_username'   => $isFlagOn('clear_smtpUsername') ? '' : $prefer('smtpUsername', 'smtp_username'),
+            // Password stays in secret store only
+            'smtp_encryption' => $isFlagOn('clear_smtpEncryption') ? '' : $prefer('smtpEncryption', 'smtp_encryption'),
+        ];
+
+        // Validation: if SMTP is enabled, require essential fields to be present (from POST or existing/secret)
+        if ($map['smtp_enabled'] === 'true') {
+            $hasHost = trim($map['smtp_host']) !== '';
+            $hasPort = trim($map['smtp_port']) !== '';
+            // Username can come from POST, existing DB, or secret store
+            $effectiveUsername = $smtpUsername !== '' ? $smtpUsername : ($map['smtp_username'] ?? '');
+            if ($effectiveUsername === '') {
+                try {
+                    $secretUser = secret_get('smtp_username');
+                    if (is_string($secretUser) && trim($secretUser) !== '') {
+                        $effectiveUsername = $secretUser;
+                    }
+                } catch (Exception $e) {
+                    // ignore secret read errors for validation; will fail below if still empty
+                }
+            }
+
+            if (!$hasHost || !$hasPort || trim($effectiveUsername) === '') {
+                throw new Exception('SMTP is enabled but host, port, or username is missing. Please provide all required SMTP fields.');
+            }
         }
 
-        // Write new configuration
-        if (file_put_contents($configFile, $configContent) === false) {
-            throw new Exception('Failed to write configuration file');
+        // Upsert to business_settings without relying on a unique index
+        $pdo = Database::getInstance();
+        error_log('[save_email_config] obtained PDO instance');
+        $update = $pdo->prepare("UPDATE business_settings
+            SET setting_value = :value, setting_type = :type, display_name = :display_name, description = :description, updated_at = CURRENT_TIMESTAMP
+            WHERE category = :category AND setting_key = :key");
+        $insert = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description, updated_at)
+            VALUES (:category, :key, :value, :type, :display_name, :description, CURRENT_TIMESTAMP)");
+
+        $ops = ['updated' => 0, 'inserted' => 0];
+        foreach ($map as $key => $val) {
+            $type = 'text';
+            $stored = (string)$val;
+            if ($key === 'smtp_enabled') { $type = 'boolean'; $stored = ($val === 'true') ? 'true' : 'false'; }
+            if ($key === 'smtp_port' && $stored !== '') { $type = 'number'; }
+
+            $params = [
+                ':category' => 'email',
+                ':key' => $key,
+                ':value' => $stored,
+                ':type' => $type,
+                ':display_name' => ucwords(str_replace('_', ' ', $key)),
+                ':description' => 'Email setting ' . $key,
+            ];
+
+            $update->execute($params);
+            if ($update->rowCount() > 0) {
+                $ops['updated']++;
+            } else {
+                $insert->execute($params);
+                $ops['inserted']++;
+            }
         }
 
-        echo json_encode(['success' => true, 'message' => 'Email configuration saved successfully!']);
+        // Clear settings cache so reads reflect the latest values
+        if (class_exists('BusinessSettings')) {
+            BusinessSettings::clearCache();
+        }
 
+        // Verification: re-query latest value per key and compare with what we attempted to write
+        $verifyStmt = $pdo->prepare("SELECT setting_value, setting_type FROM business_settings WHERE category = :category AND setting_key = :key ORDER BY updated_at DESC, id DESC LIMIT 1");
+        $mismatches = [];
+        foreach ($map as $key => $expectedVal) {
+            $verifyStmt->execute([':category' => 'email', ':key' => $key]);
+            $row = $verifyStmt->fetch(PDO::FETCH_ASSOC);
+            if ($row === false) {
+                $mismatches[$key] = ['expected' => (string)$expectedVal, 'actual' => null, 'note' => 'no row found'];
+                continue;
+            }
+            $actual = (string)$row['setting_value'];
+            if ((string)$expectedVal !== $actual) {
+                $mismatches[$key] = ['expected' => (string)$expectedVal, 'actual' => $actual, 'type' => $row['setting_type']];
+            }
+        }
+
+        // Load fresh settings and normalize like get_email_config.php
+        $settings = BusinessSettings::getByCategory('email');
+        $smtpEnabledVal = isset($settings['smtp_enabled']) ? $settings['smtp_enabled'] : false;
+        if (is_bool($smtpEnabledVal)) {
+            $smtpEnabled = $smtpEnabledVal;
+        } else {
+            $smtpEnabled = in_array(strtolower((string)$smtpEnabledVal), ['true','1','yes'], true);
+        }
+        $config = [
+            'fromEmail'      => isset($settings['from_email']) ? (string)$settings['from_email'] : '',
+            'fromName'       => isset($settings['from_name']) ? (string)$settings['from_name'] : '',
+            'adminEmail'     => isset($settings['admin_email']) ? (string)$settings['admin_email'] : '',
+            'bccEmail'       => isset($settings['bcc_email']) ? (string)$settings['bcc_email'] : '',
+            'smtpEnabled'    => $smtpEnabled,
+            'smtpHost'       => isset($settings['smtp_host']) ? (string)$settings['smtp_host'] : '',
+            'smtpPort'       => isset($settings['smtp_port']) ? (string)$settings['smtp_port'] : '',
+            'smtpUsername'   => isset($settings['smtp_username']) ? (string)$settings['smtp_username'] : '',
+            'smtpPassword'   => '',
+            'smtpEncryption' => isset($settings['smtp_encryption']) ? (string)$settings['smtp_encryption'] : ''
+        ];
+
+        // Ensure no stray output corrupts JSON
+        if (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_clean(); }
+        echo json_encode([
+            'success' => true,
+            'message' => 'Email configuration saved successfully!',
+            'config' => $config,
+            'debug' => [
+                'ops' => $ops,
+                'written' => $map,
+                'verify_mismatches' => $mismatches,
+                'db' => [ 'host' => $host ?? null, 'db' => $db ?? null, 'isLocalhost' => $isLocalhost ?? null ]
+            ]
+        ]);
     } catch (Exception $e) {
+        error_log('[save_email_config] error: ' . $e->getMessage());
+        if (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_clean(); }
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
 }
 
 function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled)
 {
-    require_once __DIR__ . '/../includes/business_settings_helper.php';
+    // BusinessSettings helper is already loaded above
     $brandPrimary = BusinessSettings::getPrimaryColor();
     $brandSecondary = BusinessSettings::getSecondaryColor();
     return "
@@ -335,9 +316,9 @@ function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled)
         </div>
         
         <div class='email-wrapper'>
-            <h2 class='u-color-333 m-0'>Configuration Test Successful! ✅</h2>
+            <h2 class='u-color-333 m-0'>Configuration Test</h2>
             
-            <p>If you're reading this email, your email configuration is working correctly.</p>
+            <p>If you're reading this email, your email configuration is working.</p>
             
             <div class='email-section'>
                 <h3>Configuration Details:</h3>
@@ -349,92 +330,11 @@ function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled)
             </div>
             
             <p class='u-color-666 u-font-size-14px u-margin-top-20px'>
-                This test email was sent on " . date('F j, Y \a\t g:i A T') . "
+                Sent on " . date('F j, Y \a\t g:i A T') . "
             </p>
         </div>
     </body>
     </html>
     ";
 }
-
-function generateConfigContent()
-{
-    $smtpEnabled = isset($_POST['smtpEnabled']) ? 'true' : 'false';
-    $fromEmail = addslashes($_POST['fromEmail']);
-    $fromName = addslashes($_POST['fromName']);
-    $adminEmail = addslashes($_POST['adminEmail']);
-    $bccEmail = addslashes($_POST['bccEmail'] ?? '');
-    $smtpHost = addslashes($_POST['smtpHost'] ?? 'smtp.ionos.com');
-    $smtpPort = (int)($_POST['smtpPort'] ?? 587);
-    $smtpUsername = addslashes($_POST['smtpUsername'] ?? '');
-    $smtpPassword = addslashes($_POST['smtpPassword'] ?? '');
-    $smtpEncryption = addslashes($_POST['smtpEncryption'] ?? 'tls');
-
-    $configFile = __DIR__ . '/email_config.php';
-
-    // Read existing content
-    if (file_exists($configFile)) {
-        $content = file_get_contents($configFile);
-
-        // Update the define statements
-        $patterns = [
-            "/define\('SMTP_ENABLED',\s*[^)]+\);/" => "define('SMTP_ENABLED', $smtpEnabled);",
-            "/define\('FROM_EMAIL',\s*[^)]+\);/" => "define('FROM_EMAIL', '$fromEmail');",
-            "/define\('FROM_NAME',\s*[^)]+\);/" => "define('FROM_NAME', '$fromName');",
-            "/define\('ADMIN_EMAIL',\s*[^)]+\);/" => "define('ADMIN_EMAIL', '$adminEmail');",
-            "/define\('BCC_EMAIL',\s*[^)]+\);/" => "define('BCC_EMAIL', '$bccEmail');",
-            "/define\('SMTP_HOST',\s*[^)]+\);/" => "define('SMTP_HOST', '$smtpHost');",
-            "/define\('SMTP_PORT',\s*[^)]+\);/" => "define('SMTP_PORT', $smtpPort);",
-            "/define\('SMTP_USERNAME',\s*[^)]+\);/" => "define('SMTP_USERNAME', '$smtpUsername');",
-            "/define\('SMTP_PASSWORD',\s*[^)]+\);/" => "define('SMTP_PASSWORD', '$smtpPassword');",
-            "/define\('SMTP_ENCRYPTION',\s*[^)]+\);/" => "define('SMTP_ENCRYPTION', '$smtpEncryption');"
-        ];
-
-        foreach ($patterns as $pattern => $replacement) {
-            $content = preg_replace($pattern, $replacement, $content);
-        }
-
-        return $content;
-    }
-
-    // If file doesn't exist, create a basic one
-    return "<?php
-// Email Configuration for WhimsicalFrog
-// This file handles email sending functionality for order confirmations and notifications
-
-// Email settings
-define('SMTP_ENABLED', $smtpEnabled);
-define('FROM_EMAIL', '$fromEmail');
-define('FROM_NAME', '$fromName');
-define('ADMIN_EMAIL', '$adminEmail');
-define('BCC_EMAIL', '$bccEmail');
-
-// SMTP Settings (if SMTP_ENABLED is true)
-define('SMTP_HOST', '$smtpHost');
-define('SMTP_PORT', $smtpPort);
-define('SMTP_USERNAME', '$smtpUsername');
-define('SMTP_PASSWORD', '$smtpPassword');
-define('SMTP_ENCRYPTION', '$smtpEncryption');
-
-/**
- * Send email using PHP mail() function
- */
-function sendEmail(\$to, \$subject, \$htmlBody, \$plainTextBody = '') {
-    \$headers = [
-        'From: ' . FROM_NAME . ' <' . FROM_EMAIL . '>',
-        'Reply-To: ' . FROM_EMAIL,
-        'X-Mailer: PHP/' . phpversion(),
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=UTF-8'
-    ];
-    
-    if (defined('BCC_EMAIL') && BCC_EMAIL) {
-        \$headers[] = 'Bcc: ' . BCC_EMAIL;
-    }
-    
-    \$headerString = implode(\"\\r\\n\", \$headers);
-    return mail(\$to, \$subject, \$htmlBody, \$headerString);
-}
-?>";
-}
-?> 
+?>

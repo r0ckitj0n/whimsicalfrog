@@ -15,7 +15,7 @@ function sendOrderConfirmationEmails($orderId, $pdo)
         $orderStmt = $pdo->prepare("
             SELECT o.*, u.firstName, u.lastName, u.email, u.username, u.phoneNumber 
             FROM orders o 
-            LEFT JOIN users u ON o.userId = u.userId 
+            LEFT JOIN users u ON o.userId = u.id 
             WHERE o.id = ?
         ");
         $orderStmt->execute([$orderId]);
@@ -60,19 +60,18 @@ function sendOrderConfirmationEmails($orderId, $pdo)
         $orderDate = date('F j, Y g:i A', strtotime($order['date'] ?? 'now'));
         $orderTotal = '$' . number_format((float)$order['total'], 2);
 
-        // Format shipping address
+        // Format shipping address (support both camelCase and snake_case keys)
         $shippingAddress = 'Not specified';
         if (!empty($order['shippingAddress'])) {
             $addressData = json_decode($order['shippingAddress'], true);
             if (is_array($addressData)) {
-                $addressParts = array_filter([
-                    $addressData['addressLine1'] ?? '',
-                    $addressData['addressLine2'] ?? '',
-                    $addressData['city'] ?? '',
-                    $addressData['state'] ?? '',
-                    $addressData['zipCode'] ?? ''
-                ]);
-                $shippingAddress = implode(', ', $addressParts);
+                $line1 = $addressData['addressLine1'] ?? $addressData['address_line1'] ?? '';
+                $line2 = $addressData['addressLine2'] ?? $addressData['address_line2'] ?? '';
+                $city  = $addressData['city'] ?? '';
+                $state = $addressData['state'] ?? '';
+                $zip   = $addressData['zipCode'] ?? $addressData['zip_code'] ?? '';
+                $addressParts = array_filter([$line1, $line2, $city, $state, $zip]);
+                $shippingAddress = $addressParts ? implode(', ', $addressParts) : 'Not specified';
             } else {
                 $shippingAddress = $order['shippingAddress'];
             }
@@ -240,17 +239,26 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
             $textContent = str_replace($placeholder, $value, $textContent);
         }
 
-        // Configure EmailHelper
+        // Attempt to load strict email_config to define constants; fallback gracefully if unavailable
+        try {
+            require_once __DIR__ . '/email_config.php';
+        } catch (Throwable $e) {
+            error_log('email_notifications: email_config.php unavailable: ' . $e->getMessage());
+        }
+
+        // Configure EmailHelper using constants if defined, otherwise derive minimal config from BusinessSettings
+        $fallbackFromEmail = (string) BusinessSettings::getBusinessEmail();
+        $fallbackFromName  = (string) BusinessSettings::getBusinessName();
         EmailHelper::configure([
-            'smtp_enabled' => defined('SMTP_ENABLED') ? SMTP_ENABLED : false,
-            'smtp_host' => defined('SMTP_HOST') ? SMTP_HOST : '',
-            'smtp_port' => defined('SMTP_PORT') ? SMTP_PORT : 587,
-            'smtp_username' => defined('SMTP_USERNAME') ? SMTP_USERNAME : '',
-            'smtp_password' => defined('SMTP_PASSWORD') ? SMTP_PASSWORD : '',
-            'smtp_encryption' => defined('SMTP_ENCRYPTION') ? SMTP_ENCRYPTION : 'tls',
-            'from_email' => defined('FROM_EMAIL') ? FROM_EMAIL : '',
-            'from_name' => defined('FROM_NAME') ? FROM_NAME : 'WhimsicalFrog',
-            'reply_to' => defined('FROM_EMAIL') ? FROM_EMAIL : '',
+            'smtp_enabled'   => defined('SMTP_ENABLED') ? (bool)SMTP_ENABLED : false,
+            'smtp_host'      => defined('SMTP_HOST') ? (string)SMTP_HOST : '',
+            'smtp_port'      => defined('SMTP_PORT') ? (int)SMTP_PORT : 587,
+            'smtp_username'  => defined('SMTP_USERNAME') ? (string)SMTP_USERNAME : '',
+            'smtp_password'  => defined('SMTP_PASSWORD') ? (string)SMTP_PASSWORD : '',
+            'smtp_encryption'=> defined('SMTP_ENCRYPTION') ? (string)SMTP_ENCRYPTION : 'tls',
+            'from_email'     => defined('FROM_EMAIL') && FROM_EMAIL ? (string)FROM_EMAIL : $fallbackFromEmail,
+            'from_name'      => defined('FROM_NAME') && FROM_NAME ? (string)FROM_NAME : ($fallbackFromName ?: 'WhimsicalFrog'),
+            'reply_to'       => defined('FROM_EMAIL') && FROM_EMAIL ? (string)FROM_EMAIL : $fallbackFromEmail,
         ]);
 
         // Send email

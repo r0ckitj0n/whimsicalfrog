@@ -110,7 +110,7 @@ class UnifiedPopupSystem {
     // Explicit: clicking the image also opens detailed item modal
     const img = this.popupEl.querySelector('#popupImage');
     if (img) {
-      img.style.cursor = 'pointer';
+      try { img.classList.add('cursor-pointer'); } catch (_) {}
       img.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();

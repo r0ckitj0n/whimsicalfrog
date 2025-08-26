@@ -32,4 +32,9 @@
   --font-secondary: 'Nunito', system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
   /* Optional alias for symmetry */
   --font-family-secondary: var(--font-secondary);
+
+  /* Site-wide button palette (used by shop filter/back buttons and more) */
+  --button-bg-primary: var(--brand-primary);
+  --button-text-primary: #ffffff;
+  --button-bg-primary-hover: var(--brand-secondary); /* use secondary brand on hover */
 }

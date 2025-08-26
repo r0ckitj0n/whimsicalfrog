@@ -2,17 +2,17 @@
 // Admin settings page - Authentication is now handled by index.php
 // All CSS moved to button-styles.css for centralized management
 ?>
-
-    // Ensure starts hidden unless explicitly opened later
-
-
-
+<?php
+// Load the dedicated Admin Settings module via Vite (dev/prod aware)
+require_once dirname(__DIR__) . '/includes/vite_helper.php';
+echo vite('js/admin-settings.js');
+?>
 
 <div class="settings-page">
     <div class="settings-grid">
     
     <!-- Content Management Section -->
-    <div class="settings-section content-section">
+    <div class="settings-section content-section card-theme-blue">
       <div class="section-header">
         <h2 class="section-title">Content Management</h2>
         <p class="section-description">Organize products, categories, and room content</p>
@@ -64,7 +64,7 @@
     </div>
 
     <!-- Visual & Design Section -->
-    <div class="settings-section visual-section">
+    <div class="settings-section visual-section card-theme-purple">
       <div class="section-header">
         <h2 class="section-title">Visual & Design</h2>
         <p class="section-description">Customize appearance and interactive elements</p>
@@ -101,7 +101,7 @@
     </div>
 
     <!-- Business & Analytics Section -->
-    <div class="settings-section business-section">
+    <div class="settings-section business-section card-theme-emerald">
       <div class="section-header">
         <h2 class="section-title">Business & Analytics</h2>
         <p class="section-description">Manage sales, promotions, and business insights</p>
@@ -147,7 +147,7 @@
     </div>
 
     <!-- Communication Section -->
-    <div class="settings-section communication-section">
+    <div class="settings-section communication-section card-theme-amber">
       <div class="section-header">
         <h2 class="section-title">Communication</h2>
         <p class="section-description">Email configuration and customer messaging</p>
@@ -191,7 +191,7 @@
     </div>
 
     <!-- Technical & System Section -->
-    <div class="settings-section technical-section">
+    <div class="settings-section technical-section card-theme-red">
       <div class="section-header">
         <h2 class="section-title">Technical & System</h2>
         <p class="section-description">System management and technical configuration</p>
@@ -228,7 +228,7 @@
     </div>
 
     <!-- AI & Automation Section -->
-    <div class="settings-section integration-section">
+    <div class="settings-section integration-section card-theme-cyan">
       <div class="section-header">
         <h2 class="section-title">AI & Automation</h2>
         <p class="section-description">Artificial intelligence configuration and automation settings</p>
@@ -273,6 +273,7 @@
 
     </div>
 </div>
+ 
 
 
 
@@ -373,57 +374,36 @@
 </div>
 
 <!-- Second CSS block removed - styles moved to button-styles.css -->
-
-                        'room_management': '🏠 Room Management',
-                        'email_system': '📧 Email System',
-                        'business_config': '⚙️ Business Config',
-                        'marketing_social': '📱 Marketing & Social',
-                        'help_system': '❓ Help System',
-                        'integrations': '🔌 Integrations',
-                        'analytics_receipts': '📊 Analytics & Receipts',
-                        'styling_theme': '🎨 Styling & Theme',
-                        'content_data': '📄 Content & Data',
-                        'other': '📁 Other'
-                    };
-                    
-                    return `
-                        <div class="bg-transparent rounded border border-purple-200">
-                            <h5 class="font-semibold text-purple-700 text-xs">${categoryLabels[category] || category}</h5>
-                            <ul class="space-y-1">
-                                ${Object.entries(tables).map(([table, info]) => 
-                                    `<li>
-                                        <button data-action="view-table" data-table="${table}" 
-                                                class="text-left w-full hover:bg-purple-100 rounded py-0\.5 transition-colors">
-                                            <code class="bg-transparent border border-purple-200 py-0\.5 rounded text-xs">${table}</code> 
-                                            <span class="text-xs text-gray-500">(${info.row_count} rows, ${info.field_count} fields)</span>
-                                        </button>
-                                    </li>`
-                                ).join('')}
-                            </ul>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
             
-            <!-- Backup Tables (Collapsible) -->
-            <div class="">
-                <button data-action="toggle-backup-tables" class="text-xs text-purple-600 hover:text-purple-800 flex items-center">
-                    <span id="databaseBackupToggleIcon">▶</span>
-                    <span class="">Show Backup Tables (${data.total_backup})</span>
-                </button>
-                <div id="databaseBackupTablesContainer" class="hidden bg-gray-100 rounded">
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                        ${data.backup_tables.map(table => 
-                            `<button data-action="view-table" data-table="${table}" 
-                                     class="text-left hover:bg-gray-200 rounded py-0\.5 transition-colors">
-                                <code class="bg-gray-200 py-0\.5 rounded">${table}</code>
-                            </button>`
-                        ).join('')}
-                    </div>
-                </div>
-            </div>
+ 
+            <!-- Backup Tables UI is dynamically rendered by JS -->
+            
         </div>
-    `;
+    
+<!-- Continue with JS utilities -->
+<script>
+// Utility: sanitize unresolved template placeholders that may leak into DOM as "${...}"
+function fixUnresolvedTemplatePlaceholders(root, settings) {
+    try {
+        const nodes = root.querySelectorAll('input, select, textarea');
+        nodes.forEach((el) => {
+            const val = (el.value || '').toString();
+            if (val.indexOf('${') !== -1) {
+                // Try to derive a sane fallback
+                let fallback = '';
+                const id = el.id || '';
+                if (settings && id && settings[id] != null) {
+                    fallback = String(settings[id]);
+                } else if (el.type === 'number') {
+                    // If number input, prefer empty to avoid "cannot be parsed" warnings
+                    fallback = '';
+                }
+                el.value = fallback;
+            }
+        });
+    } catch (e) {
+        // no-op; defensive helper
+    }
 }
 
 function closeDatabaseMaintenanceModal() {
@@ -503,8 +483,8 @@ async function testDatabaseConnection() {
         database: document.getElementById('testDatabase').value,
         username: document.getElementById('testUsername').value,
         password: document.getElementById('testPassword').value,
-        ssl_enabled: document.getElementById('sslEnabled')?.checked || false,
-        ssl_cert: document.getElementById('sslCertPath')?.value || ''
+        ssl_enabled: (document.getElementById('sslEnabled') && document.getElementById('sslEnabled').checked) || false,
+        ssl_cert: (document.getElementById('sslCertPath') && document.getElementById('sslCertPath').value) || ''
     };
     
     // Validate required fields
@@ -3324,7 +3304,7 @@ async function addRoomCategory() {
             
             // Get category name for friendly message
             const categorySelect = document.getElementById('categorySelect');
-            const categoryName = categorySelect.options[categorySelect.selectedIndex]?.text || 'Category';
+            const categoryName = (categorySelect.options[categorySelect.selectedIndex] && categorySelect.options[categorySelect.selectedIndex].text) || 'Category';
             
             showNotification('Success!', `${categoryName} has been assigned to this room.`, 'success');
         } else {
@@ -4152,7 +4132,7 @@ async function removeAreaMapping(mappingId) {
     </div>
 </div> 
 
-<!--
+<template id="legacy-ai-settings" style="display:none">
 // AI Settings Modal Functions
 let aiSettingsData = {};
 
@@ -4521,6 +4501,9 @@ function displayAISettings(settings) {
     `;
     
     contentContainer.innerHTML = html;
+    // Defensive: if any template placeholders leaked into the DOM (e.g., "${...}")
+    // sanitize them to valid values so inputs don't throw parsing errors.
+    try { fixUnresolvedTemplatePlaceholders(contentContainer, settings); } catch (e) { /* noop */ }
     
     // Show the correct provider section based on current selection
     toggleProviderSections();
@@ -4629,30 +4612,30 @@ function createAISettingField(setting) {
 
 async function saveAISettings() {
     const settings = {
-                    ai_provider: document.querySelector('input[name="ai_provider"]:checked')?.value || getDefaultAIProvider(),
-        openai_api_key: document.getElementById('openai_api_key')?.value || '',
-        openai_model: document.getElementById('openai_model')?.value || 'gpt-3.5-turbo',
-        anthropic_api_key: document.getElementById('anthropic_api_key')?.value || '',
-        anthropic_model: document.getElementById('anthropic_model')?.value || 'claude-3-haiku-20240307',
-        google_api_key: document.getElementById('google_api_key')?.value || '',
-        google_model: document.getElementById('google_model')?.value || 'gemini-pro',
-        meta_api_key: document.getElementById('meta_api_key')?.value || '',
-        meta_model: document.getElementById('meta_model')?.value || 'meta-llama/llama-3.1-70b-instruct',
-        ai_temperature: parseFloat(document.getElementById('ai_temperature')?.value || 0.7),
-        ai_max_tokens: parseInt(document.getElementById('ai_max_tokens')?.value || 1000),
-        ai_timeout: parseInt(document.getElementById('ai_timeout')?.value || 30),
-        fallback_to_local: document.getElementById('fallback_to_local')?.checked || false,
-        ai_brand_voice: document.getElementById('ai_brand_voice')?.value || '',
-        ai_content_tone: document.getElementById('ai_content_tone')?.value || 'professional',
+        ai_provider: (document.querySelector('input[name="ai_provider"]:checked') && document.querySelector('input[name="ai_provider"]:checked').value) || getDefaultAIProvider(),
+        openai_api_key: (document.getElementById('openai_api_key') && document.getElementById('openai_api_key').value) || '',
+        openai_model: (document.getElementById('openai_model') && document.getElementById('openai_model').value) || 'gpt-3.5-turbo',
+        anthropic_api_key: (document.getElementById('anthropic_api_key') && document.getElementById('anthropic_api_key').value) || '',
+        anthropic_model: (document.getElementById('anthropic_model') && document.getElementById('anthropic_model').value) || 'claude-3-haiku-20240307',
+        google_api_key: (document.getElementById('google_api_key') && document.getElementById('google_api_key').value) || '',
+        google_model: (document.getElementById('google_model') && document.getElementById('google_model').value) || 'gemini-pro',
+        meta_api_key: (document.getElementById('meta_api_key') && document.getElementById('meta_api_key').value) || '',
+        meta_model: (document.getElementById('meta_model') && document.getElementById('meta_model').value) || 'meta-llama/llama-3.1-70b-instruct',
+        ai_temperature: parseFloat((document.getElementById('ai_temperature') && document.getElementById('ai_temperature').value) || 0.7),
+        ai_max_tokens: parseInt((document.getElementById('ai_max_tokens') && document.getElementById('ai_max_tokens').value) || 1000),
+        ai_timeout: parseInt((document.getElementById('ai_timeout') && document.getElementById('ai_timeout').value) || 30),
+        fallback_to_local: (document.getElementById('fallback_to_local') && document.getElementById('fallback_to_local').checked) || false,
+        ai_brand_voice: (document.getElementById('ai_brand_voice') && document.getElementById('ai_brand_voice').value) || '',
+        ai_content_tone: (document.getElementById('ai_content_tone') && document.getElementById('ai_content_tone').value) || 'professional',
         // Advanced AI Temperature & Configuration Settings
-        ai_cost_temperature: parseFloat(document.getElementById('ai_cost_temperature')?.value || 0.7),
-        ai_price_temperature: parseFloat(document.getElementById('ai_price_temperature')?.value || 0.7),
-        ai_cost_multiplier_base: parseFloat(document.getElementById('ai_cost_multiplier_base')?.value || 1.0),
-        ai_price_multiplier_base: parseFloat(document.getElementById('ai_price_multiplier_base')?.value || 1.0),
-        ai_conservative_mode: document.getElementById('ai_conservative_mode')?.checked || false,
-        ai_market_research_weight: parseFloat(document.getElementById('ai_market_research_weight')?.value || 0.3),
-        ai_cost_plus_weight: parseFloat(document.getElementById('ai_cost_plus_weight')?.value || 0.4),
-        ai_value_based_weight: parseFloat(document.getElementById('ai_value_based_weight')?.value || 0.3)
+        ai_cost_temperature: parseFloat((document.getElementById('ai_cost_temperature') && document.getElementById('ai_cost_temperature').value) || 0.7),
+        ai_price_temperature: parseFloat((document.getElementById('ai_price_temperature') && document.getElementById('ai_price_temperature').value) || 0.7),
+        ai_cost_multiplier_base: parseFloat((document.getElementById('ai_cost_multiplier_base') && document.getElementById('ai_cost_multiplier_base').value) || 1.0),
+        ai_price_multiplier_base: parseFloat((document.getElementById('ai_price_multiplier_base') && document.getElementById('ai_price_multiplier_base').value) || 1.0),
+        ai_conservative_mode: (document.getElementById('ai_conservative_mode') && document.getElementById('ai_conservative_mode').checked) || false,
+        ai_market_research_weight: parseFloat((document.getElementById('ai_market_research_weight') && document.getElementById('ai_market_research_weight').value) || 0.3),
+        ai_cost_plus_weight: parseFloat((document.getElementById('ai_cost_plus_weight') && document.getElementById('ai_cost_plus_weight').value) || 0.4),
+        ai_value_based_weight: parseFloat((document.getElementById('ai_value_based_weight') && document.getElementById('ai_value_based_weight').value) || 0.3)
     };
     
     try {
@@ -4693,7 +4676,7 @@ function displayAIProviders(providers) {
 }
 
 async function testAIProvider() {
-    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || getDefaultAIProvider();
+    const selectedProvider = (document.querySelector('input[name="ai_provider"]:checked') && document.querySelector('input[name="ai_provider"]:checked').value) || getDefaultAIProvider();
     
     try {
         showNotification('Testing AI Provider', `Testing ${selectedProvider} provider...`, 'info');
@@ -5045,7 +5028,7 @@ function loadFallbackModelsForProviderWithSelection(provider, settings) {
 
 // Toggle provider sections based on selection
 function toggleProviderSections() {
-    const selectedProvider = document.querySelector('input[name="ai_provider"]:checked')?.value || getDefaultAIProvider();
+    const selectedProvider = (document.querySelector('input[name="ai_provider"]:checked') && document.querySelector('input[name="ai_provider"]:checked').value) || getDefaultAIProvider();
     
     // Hide all provider sections
     const sections = ['openai_section', 'anthropic_section', 'google_section', 'meta_section'];
@@ -5590,7 +5573,7 @@ async function deleteBrandVoiceOptionFromDB(optionId) {
     }
 }
 
--->
+</template>
 
 <script>
 // Background Manager Functions
@@ -6200,25 +6183,35 @@ window.openEmailConfigModal = async function openEmailConfigModal() {
     
     // Load current configuration
     try {
-        const response = await fetch('/api/get_email_config.php');
+        const response = await fetch('/api/get_email_config.php', { cache: 'no-store' });
         const data = await response.json();
-        
+        console.debug('[EmailConfig] GET config response:', data);
         if (data.success) {
             populateEmailForm(data.config);
+            // Post-populate verification
+            const el = (id) => document.getElementById(id);
+            const snapshot = {
+                fromEmail: (el('fromEmail') && el('fromEmail').value) ? el('fromEmail').value : '',
+                fromName: (el('fromName') && el('fromName').value) ? el('fromName').value : '',
+                adminEmail: (el('adminEmail') && el('adminEmail').value) ? el('adminEmail').value : '',
+                bccEmail: (el('bccEmail') && el('bccEmail').value) ? el('bccEmail').value : '',
+                smtpEnabled: !!(el('smtpEnabled') && el('smtpEnabled').checked),
+                smtpHost: (el('smtpHost') && el('smtpHost').value) ? el('smtpHost').value : '',
+                smtpPort: (el('smtpPort') && el('smtpPort').value) ? el('smtpPort').value : '',
+                smtpUsername: (el('smtpUsername') && el('smtpUsername').value) ? el('smtpUsername').value : '',
+                smtpEncryption: (el('smtpEncryption') && el('smtpEncryption').value) ? el('smtpEncryption').value : ''
+            };
+            console.debug('[EmailConfig] Post-populate input snapshot:', snapshot);
+            const allEmpty = Object.entries(snapshot).every(([k,v]) => (k==='smtpEnabled') ? v===false : v==='');
+            if (allEmpty) {
+                console.warn('[EmailConfig] Inputs still blank after populate.');
+                if (window.showNotification) {
+                    showNotification('Notice', 'Email config appears blank. If you have legacy values, try saving once to seed the email category.', 'warning');
+                }
+            }
         } else {
-            // Set recommended defaults for IONOS
-            populateEmailForm({
-                fromEmail: 'orders@whimsicalfrog.us',
-                fromName: 'WhimsicalFrog',
-                adminEmail: 'admin@whimsicalfrog.us',
-                bccEmail: '',
-                smtpEnabled: true,
-                smtpHost: 'smtp.ionos.com',
-                smtpPort: '587',
-                smtpUsername: 'orders@whimsicalfrog.us',
-                smtpPassword: '',
-                smtpEncryption: 'tls'
-            });
+            console.warn('[EmailConfig] API did not return success; populating blanks');
+            populateEmailForm({});
         }
     } catch (error) {
         console.error('Error loading email config:', error);
@@ -6227,26 +6220,59 @@ window.openEmailConfigModal = async function openEmailConfigModal() {
 }
 
 function closeEmailConfigModal() {
-    document.getElementById('emailConfigModal').style.display = 'none';
+    var el = document.getElementById('emailConfigModal');
+    if (!el) return;
+    // Hide via class to match modal system and allow re-open reliably
+    try { el.classList.add('hidden'); } catch (e) {}
+    // Remove inline display style to avoid conflicting states on next open
+    try { el.style.removeProperty('display'); } catch (e) { el.style.display = ''; }
+    // If modal positioning/scroll lock helpers exist, invoke them
+    try { if (typeof updateModalScrollLock === 'function') updateModalScrollLock(); } catch (e) {}
 }
 
 function populateEmailForm(config) {
-    document.getElementById('fromEmail').value = config.fromEmail || '';
-    document.getElementById('fromName').value = config.fromName || '';
-    document.getElementById('adminEmail').value = config.adminEmail || '';
-    document.getElementById('bccEmail').value = config.bccEmail || '';
-    
-    const smtpEnabled = document.getElementById('smtpEnabled');
-    smtpEnabled.checked = config.smtpEnabled || false;
+    const fromEmail = document.getElementById('fromEmail');
+    const fromName = document.getElementById('fromName');
+    const adminEmail = document.getElementById('adminEmail');
+    const bccEmail = document.getElementById('bccEmail');
+    const smtpEnabledEl = document.getElementById('smtpEnabled');
+    const smtpHost = document.getElementById('smtpHost');
+    const smtpPort = document.getElementById('smtpPort');
+    const smtpUsername = document.getElementById('smtpUsername');
+    const smtpPassword = document.getElementById('smtpPassword');
+    const smtpEncryption = document.getElementById('smtpEncryption');
+
+    // Clear placeholders so fields don't show greyed-out example values
+    if (fromEmail) fromEmail.placeholder = '';
+    if (fromName) fromName.placeholder = '';
+    if (adminEmail) adminEmail.placeholder = '';
+    if (bccEmail) bccEmail.placeholder = '';
+    if (smtpHost) smtpHost.placeholder = '';
+    if (smtpUsername) smtpUsername.placeholder = '';
+    if (smtpPassword) smtpPassword.placeholder = '';
+
+    // Ensure inputs are enabled (not readonly/disabled)
+    [fromEmail, fromName, adminEmail, bccEmail, smtpHost, smtpPort, smtpUsername, smtpPassword, smtpEncryption].forEach(el => {
+        if (el) { el.disabled = false; el.readOnly = false; }
+    });
+
+    // Assign values from config or blank
+    if (fromEmail) fromEmail.value = config.fromEmail || '';
+    if (fromName) fromName.value = config.fromName || '';
+    if (adminEmail) adminEmail.value = config.adminEmail || '';
+    if (bccEmail) bccEmail.value = config.bccEmail || '';
+
+    if (smtpEnabledEl) smtpEnabledEl.checked = !!config.smtpEnabled;
+    // Always set SMTP fields regardless of enabled state, so stale defaults don't linger
+    if (smtpHost) smtpHost.value = config.smtpHost || '';
+    if (smtpPort) smtpPort.value = String((typeof config.smtpPort !== 'undefined' && config.smtpPort !== null) ? config.smtpPort : '');
+    if (smtpUsername) smtpUsername.value = config.smtpUsername || '';
+    // Intentionally do not populate stored secrets; only set if provided explicitly
+    if (smtpPassword) smtpPassword.value = config.smtpPassword || '';
+    if (smtpEncryption) smtpEncryption.value = config.smtpEncryption || '';
+
+    // Show/hide SMTP settings based on checkbox
     toggleSmtpSettings();
-    
-    if (config.smtpEnabled) {
-        document.getElementById('smtpHost').value = config.smtpHost || '';
-        document.getElementById('smtpPort').value = config.smtpPort || '587';
-        document.getElementById('smtpUsername').value = config.smtpUsername || '';
-        document.getElementById('smtpPassword').value = config.smtpPassword || '';
-        document.getElementById('smtpEncryption').value = config.smtpEncryption || 'tls';
-    }
 }
 
 function toggleSmtpSettings() {
@@ -6268,16 +6294,26 @@ async function sendTestEmail() {
     formData.append('action', 'test');
     
     try {
+        console.debug('[EmailConfig] Sending test email with payload:', Object.fromEntries(formData.entries()));
         const response = await fetch('/api/save_email_config.php', {
             method: 'POST',
             body: formData
         });
-        
-        const result = await response.json();
-        if (result.success) {
+        let result;
+        try {
+            result = await response.json();
+        } catch (parseErr) {
+            const raw = await response.text();
+            console.error('[EmailConfig] Test email response not JSON', { status: response.status, raw });
+            showNotification('Error', `Test failed (non-JSON ${response.status}). See console for details.`, 'error');
+            return;
+        }
+        if (response.ok && result && result.success) {
             showNotification('Success', 'Test email sent successfully!', 'success');
         } else {
-            showNotification('Error', result.error || 'Failed to send test email', 'error');
+            const msg = (result && (result.error || result.message)) || `Failed to send test email (HTTP ${response.status})`;
+            console.error('[EmailConfig] Test email failed', { status: response.status, result });
+            showNotification('Error', msg, 'error');
         }
     } catch (error) {
         console.error('Error sending test email:', error);
@@ -6291,26 +6327,87 @@ document.addEventListener('DOMContentLoaded', function() {
     if (emailConfigForm) {
         emailConfigForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const formData = new FormData(this);
-            formData.append('action', 'save');
-            
+            // Explicit clear semantics for optional fields: append clear_* flags when blank
             try {
+                const fields = [
+                    { sel: '#fromEmail', flag: 'clear_fromEmail' },
+                    { sel: '#fromName', flag: 'clear_fromName' },
+                    { sel: '#adminEmail', flag: 'clear_adminEmail' },
+                    { sel: '#bccEmail', flag: 'clear_bccEmail' },
+                    { sel: '#smtpHost', flag: 'clear_smtpHost' },
+                    { sel: '#smtpPort', flag: 'clear_smtpPort' },
+                    { sel: '#smtpUsername', flag: 'clear_smtpUsername' },
+                    { sel: '#smtpEncryption', flag: 'clear_smtpEncryption' },
+                    { sel: '#smtpPassword', flag: 'clear_smtpPassword' },
+                ];
+                fields.forEach(({ sel, flag }) => {
+                    const el = this.querySelector(sel);
+                    if (el && (el.value || '').trim() === '') {
+                        formData.append(flag, '1');
+                    }
+                });
+            } catch (_) { /* noop */ }
+            formData.append('action', 'save');
+
+            // Disable submit while saving
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const prevText = submitBtn ? submitBtn.textContent : '';
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving…'; }
+
+            try {
+                console.debug('[EmailConfig] Saving configuration with payload:', Object.fromEntries(formData.entries()));
                 const response = await fetch('/api/save_email_config.php', {
                     method: 'POST',
                     body: formData
                 });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showNotification('Success', 'Email configuration saved successfully!', 'success');
-                    closeEmailConfigModal();
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (parseErr) {
+                    const raw = await response.text();
+                    console.error('[EmailConfig] Save response not JSON', { status: response.status, raw });
+                    showNotification('Error', `Save failed (non-JSON ${response.status}). See console for details.`, 'error');
+                    return;
+                }
+
+                if (response.ok && result && result.success) {
+                    showNotification('Success', 'Email configuration saved successfully! Reloading…', 'success');
+                    if (result.debug) {
+                        console.info('[EmailConfig] Save debug:', result.debug);
+                        const mismatches = result.debug.verify_mismatches || {};
+                        const mismatchKeys = Object.keys(mismatches).filter(k => mismatches[k]);
+                        if (mismatchKeys.length) {
+                            console.warn('[EmailConfig] DB verification mismatches detected:', mismatches);
+                            showNotification('Warning', 'Saved, but DB did not reflect some values. Check permissions. Keys: ' + mismatchKeys.join(', '), 'error');
+                        }
+                    }
+                    // Prefer server-returned config (authoritative, post-upsert)
+                    if (result.config) {
+                        populateEmailForm(result.config);
+                    } else {
+                        // Fallback: GET latest with cache-busting
+                        try {
+                            const refreshed = await fetch('/api/get_email_config.php?ts=' + Date.now(), { cache: 'no-store' });
+                            const refreshedData = await refreshed.json();
+                            if (refreshedData && refreshedData.success) {
+                                populateEmailForm(refreshedData.config);
+                            }
+                        } catch (e) {
+                            console.warn('[EmailConfig] Could not refresh config after save', e);
+                        }
+                    }
                 } else {
-                    showNotification('Error', result.error || 'Failed to save configuration', 'error');
+                    const msg = (result && (result.error || result.message)) || `Failed to save configuration (HTTP ${response.status})`;
+                    console.error('[EmailConfig] Save failed', { status: response.status, result });
+                    showNotification('Error', msg, 'error');
                 }
             } catch (error) {
                 console.error('Error saving email config:', error);
                 showNotification('Error', 'Failed to save email configuration', 'error');
+            } finally {
+                if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = prevText; }
             }
         });
     }
@@ -7431,19 +7528,19 @@ function showRoomSettingsSuccess(message) {
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">From Email Address</label>
-                            <input type="email" id="fromEmail" name="fromEmail" class="w-full border border-gray-300 rounded-md" placeholder="orders@whimsicalfrog.us" required>
+                            <input type="email" id="fromEmail" name="fromEmail" class="w-full border border-gray-300 rounded-md" autocomplete="email">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">From Name</label>
-                            <input type="text" id="fromName" name="fromName" class="w-full border border-gray-300 rounded-md" placeholder="WhimsicalFrog" required>
+                            <input type="text" id="fromName" name="fromName" class="w-full border border-gray-300 rounded-md">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Admin Email</label>
-                            <input type="email" id="adminEmail" name="adminEmail" class="w-full border border-gray-300 rounded-md" placeholder="admin@whimsicalfrog.us" required>
+                            <input type="email" id="adminEmail" name="adminEmail" class="w-full border border-gray-300 rounded-md" autocomplete="email">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">BCC Email (Optional)</label>
-                            <input type="email" id="bccEmail" name="bccEmail" class="w-full border border-gray-300 rounded-md" placeholder="backup@whimsicalfrog.us">
+                            <input type="email" id="bccEmail" name="bccEmail" class="w-full border border-gray-300 rounded-md">
                         </div>
                     </div>
                 </div>
@@ -7454,10 +7551,10 @@ function showRoomSettingsSuccess(message) {
                         <input type="checkbox" id="smtpEnabled" name="smtpEnabled" class="">
                         <label class="font-semibold text-gray-800">Enable SMTP (Recommended for IONOS)</label>
                     </div>
-                    <div id="smtpSettings" class="grid grid-cols-1 md:grid-cols-2 gap-4" class="hidden">
+                    <div id="smtpSettings" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700">SMTP Host</label>
-                            <input type="text" id="smtpHost" name="smtpHost" class="w-full border border-gray-300 rounded-md" placeholder="smtp.ionos.com">
+                            <input type="text" id="smtpHost" name="smtpHost" class="w-full border border-gray-300 rounded-md">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">SMTP Port</label>
@@ -7469,11 +7566,13 @@ function showRoomSettingsSuccess(message) {
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">SMTP Username</label>
-                            <input type="text" id="smtpUsername" name="smtpUsername" class="w-full border border-gray-300 rounded-md" placeholder="orders@whimsicalfrog.us">
+                            <input type="text" id="smtpUsername" name="smtpUsername" class="w-full border border-gray-300 rounded-md" autocomplete="username">
+                            <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current username (stored securely).</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">SMTP Password</label>
-                            <input type="password" id="smtpPassword" name="smtpPassword" class="w-full border border-gray-300 rounded-md" placeholder="Your email password">
+                            <input type="password" id="smtpPassword" name="smtpPassword" class="w-full border border-gray-300 rounded-md" autocomplete="current-password">
+                            <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current password (stored securely).</p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Encryption</label>
@@ -10043,8 +10142,8 @@ async function loadCSSTabContent(tabName) {
 }
 
 function renderColorsAndBrandingTab(contentDiv) {
-    const brandRules = window.cssRulesData?.brand || [];
-    const colorVariables = window.cssVariablesData?.colors || [];
+    const brandRules = (window.cssRulesData && window.cssRulesData.brand) || [];
+    const colorVariables = (window.cssVariablesData && window.cssVariablesData.colors) || [];
     
     let html = `
         <div class="space-y-8">
@@ -10102,7 +10201,7 @@ function renderColorsAndBrandingTab(contentDiv) {
 }
 
 function renderButtonsTab(contentDiv) {
-    const buttonRules = window.cssRulesData?.buttons || [];
+    const buttonRules = (window.cssRulesData && window.cssRulesData.buttons) || [];
     
     let html = `
         <div class="space-y-8">
@@ -10142,8 +10241,8 @@ function renderButtonsTab(contentDiv) {
 }
 
 function renderTypographyTab(contentDiv) {
-    const typographyRules = window.cssRulesData?.typography || [];
-    const roomHeaderRules = window.cssRulesData?.room_headers || [];
+    const typographyRules = (window.cssRulesData && window.cssRulesData.typography) || [];
+    const roomHeaderRules = (window.cssRulesData && window.cssRulesData.room_headers) || [];
     
     let html = `
         <div class="space-y-8">
@@ -10182,7 +10281,7 @@ function renderTypographyTab(contentDiv) {
 }
 
 function renderLayoutTab(contentDiv) {
-    const layoutRules = window.cssRulesData?.layout || [];
+    const layoutRules = (window.cssRulesData && window.cssRulesData.layout) || [];
     
     let html = `
         <div class="space-y-8">
@@ -10211,8 +10310,8 @@ function renderLayoutTab(contentDiv) {
 }
 
 function renderComponentsTab(contentDiv) {
-    const modalRules = window.cssRulesData?.modals || [];
-    const formRules = window.cssRulesData?.forms || [];
+    const modalRules = (window.cssRulesData && window.cssRulesData.modals) || [];
+    const formRules = (window.cssRulesData && window.cssRulesData.forms) || [];
     
     let html = `
         <div class="space-y-8">
@@ -10241,8 +10340,8 @@ function renderComponentsTab(contentDiv) {
 }
 
 function renderAdvancedTab(contentDiv) {
-    const adminRules = window.cssRulesData?.admin || [];
-    const navigationRules = window.cssRulesData?.navigation || [];
+    const adminRules = (window.cssRulesData && window.cssRulesData.admin) || [];
+    const navigationRules = (window.cssRulesData && window.cssRulesData.navigation) || [];
     
     let html = `
         <div class="space-y-8">
@@ -11810,7 +11909,7 @@ function renderEmailTemplates(templates = null) {
         window.emailTemplatesCache = templates;
     }
     
-    const selectedType = document.getElementById('emailTemplateTypeFilter')?.value || '';
+    const selectedType = (document.getElementById('emailTemplateTypeFilter') && document.getElementById('emailTemplateTypeFilter').value) || '';
     const filteredTemplates = selectedType 
         ? templates.filter(t => t.template_type === selectedType)
         : templates;
@@ -12002,7 +12101,7 @@ function renderColorTemplates(templates = null) {
         window.colorTemplatesCache = templates;
     }
     
-    const selectedCategory = document.getElementById('colorTemplateCategoryFilter')?.value || '';
+    const selectedCategory = (document.getElementById('colorTemplateCategoryFilter') && document.getElementById('colorTemplateCategoryFilter').value) || '';
     const filteredTemplates = selectedCategory 
         ? templates.filter(t => t.category === selectedCategory)
         : templates;
@@ -12171,7 +12270,7 @@ function renderSizeTemplates(templates = null) {
         window.sizeTemplatesCache = templates;
     }
     
-    const selectedCategory = document.getElementById('sizeTemplateCategoryFilter')?.value || '';
+    const selectedCategory = (document.getElementById('sizeTemplateCategoryFilter') && document.getElementById('sizeTemplateCategoryFilter').value) || '';
     const filteredTemplates = selectedCategory 
         ? templates.filter(t => t.category === selectedCategory)
         : templates;
@@ -12415,18 +12514,18 @@ function addColorToTemplate(colorData = null) {
                     <label class="block text-sm font-medium text-gray-700">Color Name *</label>
                     <input type="text" name="colors[${index}][color_name]" required 
                            class="w-full border border-gray-300 rounded text-sm"
-                           placeholder="e.g., Red" value="${colorData?.color_name || ''}">
+                           placeholder="e.g., Red" value="${(colorData && colorData.color_name) || ''}">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Color Code</label>
                     <div class="flex items-center space-x-2">
                         <input type="color" name="colors[${index}][color_code]" 
                                class="w-12 h-8 border border-gray-300 rounded cursor-pointer"
-                               value="${colorData?.color_code || '#ff0000'}"
+                               value="${(colorData && colorData.color_code) || '#ff0000'}"
                                data-action="color-picker-change" data-index="${index}">
                         <input type="text" name="colors[${index}][color_code_text]" 
                                class="flex-1 border border-gray-300 rounded text-sm font-mono"
-                               placeholder="#ff0000" value="${colorData?.color_code || '#ff0000'}"
+                               placeholder="#ff0000" value="${(colorData && colorData.color_code) || '#ff0000'}"
                                data-action="color-text-change" data-index="${index}">
                     </div>
                 </div>
@@ -12434,7 +12533,7 @@ function addColorToTemplate(colorData = null) {
                     <label class="block text-sm font-medium text-gray-700">Display Order</label>
                     <input type="number" name="colors[${index}][display_order]" min="0" 
                            class="w-full border border-gray-300 rounded text-sm"
-                           value="${colorData?.display_order || index}">
+                           value="${(colorData && colorData.display_order) || index}">
                 </div>
                 <div class="flex items-end">
                     <button type="button" data-action="color-template-remove-color" data-index="${index}"
@@ -12449,7 +12548,7 @@ function addColorToTemplate(colorData = null) {
     container.insertAdjacentHTML('beforeend', colorHTML);
     
     // Sync the color inputs
-    if (colorData?.color_code) {
+    if (colorData && colorData.color_code) {
         updateColorPreview(index, colorData.color_code);
     }
 }
@@ -12489,9 +12588,12 @@ async function saveColorTemplate(event) {
     const colorItems = document.querySelectorAll('.color-template-item');
     
     colorItems.forEach((item, index) => {
-        const colorName = item.querySelector('input[name*="[color_name]"]')?.value;
-        const colorCode = item.querySelector('input[name*="[color_code]"]')?.value;
-        const displayOrder = item.querySelector('input[name*="[display_order]"]')?.value;
+        const colorNameEl = item.querySelector('input[name*="[color_name]"]');
+        const colorCodeEl = item.querySelector('input[name*="[color_code]"]');
+        const displayOrderEl = item.querySelector('input[name*="[display_order]"]');
+        const colorName = colorNameEl ? colorNameEl.value : undefined;
+        const colorCode = colorCodeEl ? colorCodeEl.value : undefined;
+        const displayOrder = displayOrderEl ? displayOrderEl.value : undefined;
         
         if (colorName) {
             colors.push({
@@ -12675,25 +12777,25 @@ function addSizeToTemplate(sizeData = null) {
                     <label class="block text-sm font-medium text-gray-700">Size Name *</label>
                     <input type="text" name="sizes[${index}][size_name]" required 
                            class="w-full border border-gray-300 rounded text-sm"
-                           placeholder="e.g., Small" value="${sizeData?.size_name || ''}">
+                           placeholder="e.g., Small" value="${(sizeData && sizeData.size_name) || ''}">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Size Code *</label>
                     <input type="text" name="sizes[${index}][size_code]" required 
                            class="w-full border border-gray-300 rounded text-sm"
-                           placeholder="e.g., S" value="${sizeData?.size_code || ''}">
+                           placeholder="e.g., S" value="${(sizeData && sizeData.size_code) || ''}">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Price Adjustment</label>
                     <input type="number" name="sizes[${index}][price_adjustment]" step="0.01" 
                            class="w-full border border-gray-300 rounded text-sm"
-                           placeholder="0.00" value="${sizeData?.price_adjustment || '0.00'}">
+                           placeholder="0.00" value="${(sizeData && sizeData.price_adjustment) || '0.00'}">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Display Order</label>
                     <input type="number" name="sizes[${index}][display_order]" min="0" 
                            class="w-full border border-gray-300 rounded text-sm"
-                           value="${sizeData?.display_order || index}">
+                           value="${(sizeData && sizeData.display_order) || index}">
                 </div>
                 <div class="flex items-end">
                     <button type="button" data-action="size-template-remove-size" data-index="${index}" 
@@ -12729,10 +12831,14 @@ async function saveSizeTemplate(event) {
     const sizeItems = document.querySelectorAll('.size-template-item');
     
     sizeItems.forEach((item, index) => {
-        const sizeName = item.querySelector('input[name*="[size_name]"]')?.value;
-        const sizeCode = item.querySelector('input[name*="[size_code]"]')?.value;
-        const priceAdjustment = item.querySelector('input[name*="[price_adjustment]"]')?.value;
-        const displayOrder = item.querySelector('input[name*="[display_order]"]')?.value;
+        const sizeNameEl = item.querySelector('input[name*="[size_name]"]');
+        const sizeCodeEl = item.querySelector('input[name*="[size_code]"]');
+        const priceAdjEl = item.querySelector('input[name*="[price_adjustment]"]');
+        const displayOrderEl = item.querySelector('input[name*="[display_order]"]');
+        const sizeName = sizeNameEl ? sizeNameEl.value : undefined;
+        const sizeCode = sizeCodeEl ? sizeCodeEl.value : undefined;
+        const priceAdjustment = priceAdjEl ? priceAdjEl.value : undefined;
+        const displayOrder = displayOrderEl ? displayOrderEl.value : undefined;
         
         if (sizeName && sizeCode) {
             sizes.push({
@@ -13828,21 +13934,25 @@ async function loadMarketingTabData(tabName) {
 
 function updateMarketingMetrics(analyticsData, marketingData) {
     // Update email campaigns count
-    document.getElementById('emailCampaigns').textContent = marketingData.success ? 
-        (marketingData.data[0]?.email_campaigns || '0') : '0';
+    document.getElementById('emailCampaigns').textContent = marketingData.success && marketingData.data && marketingData.data[0] && marketingData.data[0].email_campaigns 
+        ? marketingData.data[0].email_campaigns 
+        : '0';
     
     // Update total visitors
-    document.getElementById('totalVisitors').textContent = analyticsData.success ? 
-        (analyticsData.data?.overall_stats?.total_sessions || '0') : '0';
+    document.getElementById('totalVisitors').textContent = analyticsData.success && analyticsData.data && analyticsData.data.overall_stats && analyticsData.data.overall_stats.total_sessions 
+        ? analyticsData.data.overall_stats.total_sessions 
+        : '0';
     
     // Update conversion rate
-    const conversionRate = analyticsData.success && analyticsData.data?.overall_stats ? 
-        ((analyticsData.data.overall_stats.conversions / analyticsData.data.overall_stats.total_sessions) * 100).toFixed(1) + '%' : '0%';
+    const conversionRate = analyticsData.success && analyticsData.data && analyticsData.data.overall_stats && analyticsData.data.overall_stats.total_sessions 
+        ? ((analyticsData.data.overall_stats.conversions / analyticsData.data.overall_stats.total_sessions) * 100).toFixed(1) + '%' 
+        : '0%';
     document.getElementById('overallConversionRate').textContent = conversionRate;
     
     // Update revenue generated
-    document.getElementById('revenueGenerated').textContent = marketingData.success ? 
-        '$' + (marketingData.data[0]?.revenue || '0.00') : '$0.00';
+    document.getElementById('revenueGenerated').textContent = marketingData.success && marketingData.data && marketingData.data[0] && marketingData.data[0].revenue 
+        ? '$' + marketingData.data[0].revenue 
+        : '$0.00';
 }
 
 async function loadCampaignsData() {
@@ -13898,8 +14008,8 @@ function updateCampaignsDisplay(campaignData, trafficData) {
                     <p class="text-sm text-gray-600">Sent: ${new Date(campaign.sent_date).toLocaleDateString()}</p>
                 </div>
                 <div class="text-right">
-                    <span class="text-green-600 font-bold">${campaign.open_rate?.toFixed(1) || '0'}% open</span>
-                    <p class="text-sm text-gray-600">${campaign.click_rate?.toFixed(1) || '0'}% click</p>
+                    <span class="text-green-600 font-bold">${(campaign.open_rate != null ? campaign.open_rate.toFixed(1) : '0')}% open</span>
+                    <p class="text-sm text-gray-600">${(campaign.click_rate != null ? campaign.click_rate.toFixed(1) : '0')}% click</p>
                 </div>
             </div>
         `).join('');
@@ -13908,7 +14018,7 @@ function updateCampaignsDisplay(campaignData, trafficData) {
     }
     
     // Update traffic sources with real data or fallback
-    if (trafficData.success && trafficData.data?.traffic_sources) {
+    if (trafficData.success && trafficData.data && trafficData.data.traffic_sources) {
         const sources = trafficData.data.traffic_sources;
         trafficContainer.innerHTML = sources.map(source => `
             <div class="flex justify-between items-center bg-gray-50 rounded">
@@ -14026,7 +14136,7 @@ function updateAcquisitionDisplay(acquisitionData, analyticsData) {
     }
     
     // Update user flow analysis
-    if (analyticsData.success && analyticsData.data?.conversion_funnel) {
+    if (analyticsData.success && analyticsData.data && analyticsData.data.conversion_funnel) {
         const funnel = analyticsData.data.conversion_funnel;
         userFlowContainer.innerHTML = `
             <div class="space-y-3">
@@ -14051,7 +14161,7 @@ function updateAcquisitionDisplay(acquisitionData, analyticsData) {
     }
     
     // Update product performance analysis
-    if (analyticsData.success && analyticsData.data?.product_performance) {
+    if (analyticsData.success && analyticsData.data && analyticsData.data.product_performance) {
         const products = analyticsData.data.product_performance;
         productPerformanceContainer.innerHTML = `
             <div class="overflow-x-auto">
@@ -14357,7 +14467,7 @@ function loadBusinessReportsData() {
 }
 
 async function loadAnalyticsData() {
-    const timeframe = document.getElementById('analyticsTimeframe')?.value || '30d';
+    const timeframe = (document.getElementById('analyticsTimeframe') && document.getElementById('analyticsTimeframe').value) || '30d';
     
     try {
         // Load analytics report
@@ -14382,15 +14492,15 @@ async function loadAnalyticsData() {
 
 function updateAnalyticsDashboard(data) {
     // Update overview metrics
-    document.getElementById('totalSessions').textContent = data.overall_stats?.total_sessions || '0';
+    document.getElementById('totalSessions').textContent = (data.overall_stats && data.overall_stats.total_sessions) || '0';
     document.getElementById('conversionRate').textContent = 
-        data.overall_stats?.total_sessions > 0 ? 
+        (data.overall_stats && data.overall_stats.total_sessions > 0) ? 
         ((data.overall_stats.conversions / data.overall_stats.total_sessions) * 100).toFixed(1) + '%' : '0%';
     document.getElementById('avgSessionDuration').textContent = 
-        data.overall_stats?.avg_session_duration ? 
+        (data.overall_stats && data.overall_stats.avg_session_duration) ? 
         Math.round(data.overall_stats.avg_session_duration) + 's' : '0s';
     document.getElementById('bounceRate').textContent = 
-        data.overall_stats?.bounce_rate ? 
+        (data.overall_stats && data.overall_stats.bounce_rate) ? 
         Math.round(data.overall_stats.bounce_rate) + '%' : '0%';
     
     // Update conversion funnel
@@ -20144,7 +20254,7 @@ function generateSystemDocumentation(systemData, databaseData) {
                 </div>
                 <div class="bg-orange-50 rounded-lg border border-orange-200">
                     <h4 class="font-semibold text-orange-800">Active Users</h4>
-                    <p class="text-2xl font-bold text-orange-900">${tableDetails.users?.row_count || 0}</p>
+                    <p class="text-2xl font-bold text-orange-900">${(tableDetails.users && tableDetails.users.row_count) || 0}</p>
                 </div>
             </div>
             
@@ -20379,8 +20489,8 @@ function generateDatabaseDocumentation(activeTables, tableDetails) {
         
         Object.keys(tables).forEach(tableName => {
             const tableInfo = tableDetails[tableName];
-            const rowCount = tableInfo?.row_count || 0;
-            const fieldCount = tableInfo?.field_count || 0;
+            const rowCount = (tableInfo && tableInfo.row_count) || 0;
+            const fieldCount = (tableInfo && tableInfo.field_count) || 0;
             
             const statusColor = rowCount > 0 ? 'text-green-600' : 'text-orange-600';
             const statusIcon = rowCount > 0 ? '✅' : '⚠️';
@@ -20407,7 +20517,7 @@ function generateCleanupRecommendations(tableDetails) {
     const lowUsageTables = [];
     
     Object.keys(tableDetails).forEach(tableName => {
-        const rowCount = tableDetails[tableName]?.row_count || 0;
+        const rowCount = (tableDetails[tableName] && tableDetails[tableName].row_count) || 0;
         if (rowCount === 0) {
             emptyTables.push(tableName);
         } else if (rowCount <= 5 && !['categories', 'users', 'items'].includes(tableName)) {

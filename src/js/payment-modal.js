@@ -64,10 +64,10 @@ import apiClient from './api-client.js';
               <div class="section-card">
                 <h4 class="section-title">Shipping address</h4>
                 <div id="pm-addressList" class="space-y-2"></div>
-                <div class="mt-2" style="margin-top:10px;">
+                <div class="mt-2 mt-10">
                   <button id="pm-addAddressToggle" class="modal-button btn-secondary">Add new address</button>
                 </div>
-                <div id="pm-addAddressForm" class="hidden" style="margin-top:10px;">
+                <div id="pm-addAddressForm" class="hidden mt-10">
                   <div class="form-row">
                     <div>
                       <label for="pm-addr_name">Label</label>
@@ -99,18 +99,18 @@ import apiClient from './api-client.js';
                       <input id="pm-addr_zip" type="text" />
                     </div>
                   </div>
-                  <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
+                  <div class="mt-8 flex items-center gap-8">
                     <input id="pm-addr_default" type="checkbox" />
                     <label for="pm-addr_default">Set as default</label>
                   </div>
-                  <div style="margin-top:10px; display:flex; gap:8px;">
+                  <div class="mt-10 flex gap-8">
                     <button id="pm-saveAddressBtn" class="modal-button btn-primary">Save address</button>
                     <button id="pm-cancelAddressBtn" class="modal-button btn-secondary">Cancel</button>
                   </div>
                 </div>
               </div>
 
-              <div class="section-card" style="margin-top:14px;">
+              <div class="section-card mt-14">
                 <h4 class="section-title">Shipping method</h4>
                 <select id="pm-shippingMethodSelect">
                   <option value="Customer Pickup">Customer Pickup</option>
@@ -119,19 +119,19 @@ import apiClient from './api-client.js';
                   <option value="FedEx">FedEx</option>
                   <option value="UPS">UPS</option>
                 </select>
-                <p class="hint" style="margin-top:8px;">Select a method. Address is required for delivery and carriers.</p>
+                <p class="hint mt-8">Select a method. Address is required for delivery and carriers.</p>
               </div>
 
-              <div class="section-card" style="margin-top:14px;">
+              <div class="section-card mt-14">
                 <h4 class="section-title">Payment</h4>
                 <div class="radio-row" role="radiogroup" aria-label="Payment method">
                   <label><input type="radio" name="pm-paymentMethod" value="Square" id="pm-pm-square" /> Square (card)</label>
                   <label><input type="radio" name="pm-paymentMethod" value="Cash" id="pm-pm-cash" /> Cash</label>
                 </div>
-                <div id="pmSquareNote" class="hint" style="margin-top:6px;">Square is currently unavailable.</div>
-                <div id="pm-cardContainerWrap" class="hidden" style="margin-top:10px;">
+                <div id="pmSquareNote" class="hint mt-6">Square is currently unavailable.</div>
+                <div id="pm-cardContainerWrap" class="hidden mt-10">
                   <div id="pm-card-container"></div>
-                  <div id="pm-card-errors" class="error hidden" style="margin-top:6px;"></div>
+                  <div id="pm-card-errors" class="error hidden mt-6"></div>
                 </div>
               </div>
             </div>
@@ -140,7 +140,7 @@ import apiClient from './api-client.js';
               <div class="section-card">
                 <h4 class="section-title">Order summary</h4>
                 <div id="pm-orderItems" class="summary-lines"></div>
-                <div class="summary-lines" style="margin-top:10px;">
+                <div class="summary-lines mt-10">
                   <div class="summary-line"><span class="label">Subtotal</span> <span id="pm-orderSubtotal" class="value">$0.00</span></div>
                   <div class="summary-line"><span class="label">Shipping</span> <span id="pm-orderShipping" class="value">$0.00</span></div>
                   <div class="summary-line"><span class="label">Tax</span> <span id="pm-orderTax" class="value">$0.00</span></div>
@@ -149,7 +149,7 @@ import apiClient from './api-client.js';
               </div>
             </div>
           </div>
-          <div id="pm-checkoutError" class="error hidden" style="margin-top:8px;"></div>
+          <div id="pm-checkoutError" class="error hidden mt-8"></div>
         </div>
         <div class="confirmation-modal-footer payment-footer">
           <button class="confirmation-modal-button cancel" id="pm-cancelBtn">Cancel</button>
@@ -162,7 +162,12 @@ import apiClient from './api-client.js';
 
     function setupController() {
       const cartApi = window.WF_Cart || window.cart || null;
-      const userId = document.body?.dataset?.userId;
+      let userId = (() => {
+        try {
+          const v = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+          return v ? String(v) : null;
+        } catch (_) { return null; }
+      })();
       const q = (sel) => state.container.querySelector(sel);
 
       // Elements (scoped)
@@ -197,9 +202,9 @@ import apiClient from './api-client.js';
 
       if (cancelBtn) cancelBtn.addEventListener('click', close);
 
-      if (!userId || !cartApi) {
+      if (!cartApi) {
         if (errorEl) {
-          errorEl.textContent = 'Checkout unavailable. Please refresh the page.';
+          errorEl.textContent = 'Checkout unavailable. Cart system not ready.';
           errorEl.classList.remove('hidden');
         }
         return;
@@ -209,7 +214,7 @@ import apiClient from './api-client.js';
       let addresses = [];
       let selectedAddressId = null;
       let pricing = { subtotal: 0, shipping: 0, tax: 0, total: 0 };
-      let sq = { enabled: false, applicationId: null, environment: 'sandbox', locationId: null, payments: null, card: null, sdkLoaded: false };
+      const sq = { enabled: false, applicationId: null, environment: 'sandbox', locationId: null, payments: null, card: null, sdkLoaded: false };
 
       function isReceiptOpen() {
         try { return window.__wfReceiptOpen === true; } catch (_) { return false; }
@@ -233,16 +238,8 @@ import apiClient from './api-client.js';
         const method = shipMethodSel?.value || 'Customer Pickup';
         const needsAddress = method !== 'Customer Pickup';
         const okAddress = !needsAddress || !!selectedAddressId;
-        if (placeOrderBtn) placeOrderBtn.disabled = !(hasItems && !!pm && okAddress);
-      }
-
-      function isDebugPricing() {
-        try {
-          const q = new URLSearchParams(window.location.search || '');
-          if (q.get('debugPricing') === '1') return true;
-          const v = (localStorage.getItem('wf_debug_pricing') || '').toLowerCase();
-          return v === '1' || v === 'true';
-        } catch (_) { return false; }
+        const hasUser = !!userId;
+        if (placeOrderBtn) placeOrderBtn.disabled = !(hasItems && !!pm && okAddress && hasUser);
       }
 
       function renderOrderSummary() {
@@ -266,9 +263,9 @@ import apiClient from './api-client.js';
           if (it.optionColor) descBits.push(it.optionColor);
           const desc = descBits.length ? `<div class="hint">${descBits.join(' • ')}</div>` : '';
           return `
-            <div class="summary-line" style="align-items:flex-start;">
-              <div class="label" style="flex:1;">${(it.name || it.sku || '').toString()}${desc}</div>
-              <div class="value" style="min-width:140px; text-align:right;">${qty} × ${currency(price)}<div style="font-weight:800;">${currency(line)}</div></div>
+            <div class="summary-line align-start">
+              <div class="label flex-1">${(it.name || it.sku || '').toString()}${desc}</div>
+              <div class="value min-w-140 text-right">${qty} × ${currency(price)}<div class="fw-800">${currency(line)}</div></div>
             </div>
           `;
         }).join('');
@@ -293,7 +290,7 @@ import apiClient from './api-client.js';
           if (!selectedAddressId && checked) selectedAddressId = id;
           const line2 = a.address_line2 ? `${a.address_line2}<br/>` : '';
           return `
-            <label class="flex items-start gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer" style="display:flex; gap:10px; align-items:flex-start; padding:6px; border-radius:8px;">
+            <label class="flex items-start gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer">
               <input type="radio" name="pm-shippingAddress" class="form-radio mt-1" value="${id}" ${checked ? 'checked' : ''} />
               <div class="text-sm">
                 <div class="font-medium">${a.address_name || 'Address'}</div>
@@ -302,7 +299,7 @@ import apiClient from './api-client.js';
                   ${line2}
                   ${a.city}, ${a.state} ${a.zip_code}
                 </div>
-                ${a.is_default == 1 ? '<div class="text-xs" style="color:#16a34a;">Default</div>' : ''}
+                ${a.is_default == 1 ? '<div class="text-xs text-green-600">Default</div>' : ''}
               </div>
             </label>
           `;
@@ -320,6 +317,49 @@ import apiClient from './api-client.js';
 
       async function loadAddresses() {
         try {
+          // Refresh userId from body in case it was set after login
+          try {
+            const v = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+            if (v) userId = String(v);
+          } catch (_) {}
+          // If we appear logged-in but userId not yet populated, retry briefly
+          if (!userId && isClientLoggedIn()) {
+            if (addressListEl) addressListEl.innerHTML = '<div class="hint">Loading your account…</div>';
+            for (let i = 0; i < 6 && !userId; i++) {
+              await new Promise(r => setTimeout(r, 250));
+              try {
+                const v2 = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+                if (v2) userId = String(v2);
+              } catch (_) {}
+            }
+            
+          }
+          if (!userId) {
+            // Final fallback: ask server session who we are if client thinks we're logged in
+            if (isClientLoggedIn()) {
+              try {
+                const who = await apiClient.get('/api/whoami.php');
+                const sidRaw = who?.userIdRaw || who?.userId;
+                if (sidRaw != null && String(sidRaw) !== '') {
+                  userId = String(sidRaw);
+                  try {
+                    if (document && document.body) {
+                      document.body.setAttribute('data-user-id', String(who?.userId ?? ''));
+                      document.body.setAttribute('data-user-id-raw', userId);
+                    }
+                  } catch(_) {}
+                }
+              } catch (e) {
+                console.warn('[PaymentModal] loadAddresses: session fallback failed', e);
+              }
+            }
+            if (!userId) {
+              console.warn('[PaymentModal] loadAddresses: missing userId. body.dataset=', document.body?.dataset || {});
+              if (addressListEl) addressListEl.innerHTML = '<div class="hint">Sign in to manage shipping addresses.</div>';
+              return;
+            }
+          }
+          // userId can be alphanumeric; just ensure it's non-empty
           if (addressListEl) addressListEl.innerHTML = '<div class="hint">Loading addresses…</div>';
           const url = `/api/customer_addresses.php?action=get_addresses&user_id=${encodeURIComponent(userId)}`;
           const res = await apiClient.get(url);
@@ -332,6 +372,42 @@ import apiClient from './api-client.js';
           console.error('[PaymentModal] Failed to load addresses', e);
           if (addressListEl) addressListEl.innerHTML = '<div class="error">Failed to load addresses.</div>';
         }
+      }
+
+      // Resolve userId robustly: check dataset, brief retry, then server session
+      async function resolveUserIdWithFallback() {
+        try {
+          const v = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+          if (v) userId = String(v);
+        } catch(_) {}
+        if (userId) return userId;
+        if (isClientLoggedIn()) {
+          for (let i = 0; i < 6 && !userId; i++) {
+            await new Promise(r => setTimeout(r, 150));
+            try {
+              const v2 = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+              if (v2) userId = String(v2);
+            } catch(_) {}
+          }
+          if (!userId) {
+            try {
+              const who = await apiClient.get('/api/whoami.php');
+              const sidRaw = who?.userIdRaw || who?.userId;
+              if (sidRaw != null && String(sidRaw) !== '') {
+                userId = String(sidRaw);
+                try {
+                  if (document && document.body) {
+                    document.body.setAttribute('data-user-id', String(who?.userId ?? ''));
+                    document.body.setAttribute('data-user-id-raw', userId);
+                  }
+                } catch(_) {}
+              }
+            } catch (e) {
+              console.warn('[PaymentModal] resolveUserIdWithFallback: session call failed', e);
+            }
+          }
+        }
+        return userId || null;
       }
 
       function toggleAddForm(show) {
@@ -524,6 +600,27 @@ import apiClient from './api-client.js';
         try {
           setError('');
           if (placeOrderBtn) { placeOrderBtn.disabled = true; placeOrderBtn.textContent = 'Placing…'; }
+          if (!userId) {
+            // Require login before order placement; attempt to open login modal if available
+            if (typeof window.openLoginModal === 'function') {
+              const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
+              window.openLoginModal(desiredReturn, {
+                suppressRedirect: true,
+                onSuccess: () => {
+                  try { if (document && document.body) document.body.setAttribute('data-is-logged-in', 'true'); } catch (_) {}
+                  // Refresh userId from body in case login response populated it
+                  try { userId = document.body?.dataset?.userId || userId; } catch(_) {}
+                  // Refresh addresses and pricing after login, then re-enable button for user to click again
+                  loadAddresses();
+                  ensurePlaceButtonState();
+                  updatePricing();
+                }
+              });
+              throw new Error('Please sign in to place your order.');
+            } else {
+              throw new Error('Please sign in to place your order.');
+            }
+          }
           const payload = buildOrderPayload();
           if (!payload.itemIds.length) throw new Error('Your cart is empty.');
           if (!payload.paymentMethod) throw new Error('Please choose a payment method.');
@@ -585,6 +682,65 @@ import apiClient from './api-client.js';
       // React to cart updates while modal is open (but ignore while receipt is open)
       window.addEventListener('cartUpdated', async () => { if (isReceiptOpen()) return; renderOrderSummary(); await updatePricing(); });
 
+      // React to authentication events: set userId and refresh UI/pricing
+      window.addEventListener('wf:login-success', async (e) => {
+        try {
+          const raw = (e?.detail?.userId != null ? e.detail.userId : document.body?.dataset?.userId);
+          const n = Number(raw);
+          if (Number.isFinite(n) && n > 0) userId = String(n);
+        } catch (_) {}
+        if (!userId) {
+          await resolveUserIdWithFallback();
+        }
+        // After login, populate addresses and recompute pricing
+        await loadAddresses();
+        ensurePlaceButtonState();
+        await updatePricing();
+      }, { once: false });
+
+      // React immediately when <body data-user-id> or login state changes (eliminates race conditions)
+      try {
+        if (document && document.body) {
+          const onUserIdAttr = async () => {
+            try {
+              const v = document.body?.dataset?.userId;
+              const n = Number(v);
+              if (Number.isFinite(n) && n > 0) {
+                const newId = String(n);
+                if (userId !== newId) {
+                  userId = newId;
+                  await loadAddresses();
+                  ensurePlaceButtonState();
+                  await updatePricing();
+                }
+              }
+            } catch(_) {}
+          };
+          const onLoggedInAttr = async () => {
+            try {
+              const loggedIn = document.body?.getAttribute('data-is-logged-in') === 'true';
+              if (loggedIn && !userId) {
+                await resolveUserIdWithFallback();
+                if (userId) {
+                  await loadAddresses();
+                  ensurePlaceButtonState();
+                  await updatePricing();
+                }
+              }
+            } catch(_) {}
+          };
+          const mo = new MutationObserver((mutations) => {
+            for (const m of mutations) {
+              if (m.type === 'attributes') {
+                if (m.attributeName === 'data-user-id') { onUserIdAttr(); }
+                else if (m.attributeName === 'data-is-logged-in') { onLoggedInAttr(); }
+              }
+            }
+          });
+          mo.observe(document.body, { attributes: true, attributeFilter: ['data-user-id', 'data-is-logged-in'] });
+        }
+      } catch(_) {}
+
       // Initial loads
       renderOrderSummary();
       checkSquareSettings();
@@ -611,8 +767,24 @@ import apiClient from './api-client.js';
             // After successful login, ensure flag is set and then open payment
             try { if (document && document.body) document.body.setAttribute('data-is-logged-in', 'true'); } catch (_) {}
             openInternal();
+            // Proactively resolve user and load data without waiting for attribute/event races
+            resolveUserIdWithFallback()
+              .then(async () => { if (userId) { await loadAddresses(); ensurePlaceButtonState(); await updatePricing(); } })
+              .catch(() => {});
           }
         });
+        // Also listen for the global login event to capture userId when available
+        const onLogin = (e) => {
+          try {
+            const uid = e?.detail?.userId || document.body?.dataset?.userId;
+            if (uid && document && document.body) document.body.setAttribute('data-user-id', String(uid));
+          } catch (_) {}
+          // If the modal isn't already open, open it now
+          try {
+            if (!state.overlay || !state.overlay.classList.contains('show')) openInternal();
+          } catch (_) {}
+        };
+        window.addEventListener('wf:login-success', onLogin, { once: true });
         return;
       }
       // Already logged in, just open

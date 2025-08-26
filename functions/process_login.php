@@ -23,8 +23,16 @@ require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/database_logger.php';
 
-// Set CORS headers
-header('Access-Control-Allow-Origin: *');
+// Set CORS headers for cross-origin credentialed requests from Vite dev server
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($origin) {
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Vary: Origin');
+} else {
+    // Fallback for same-origin or missing Origin header
+    header('Access-Control-Allow-Origin: *');
+}
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "printf 'http://127.0.0.1:5176' > hot && vite --host 127.0.0.1 --port 5176 --strictPort",
+    "dev:5180": "VITE_DEV_PORT=5180 VITE_HMR_PORT=5180 printf 'http://127.0.0.1:5180' > hot && vite --host 127.0.0.1 --port 5180 --strictPort",
     "stop": "rm hot",
     "build": "vite build",
     "preview": "vite preview",

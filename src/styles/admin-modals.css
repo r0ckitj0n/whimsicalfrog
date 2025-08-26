@@ -78,3 +78,16 @@ body.wf-no-scroll { overflow: hidden !important; }
   cursor: wait;
   pointer-events: none;
 }
+
+/* Modal close button styles (replacing prior inline styles) */
+.admin-modal-close {
+  font-size: 32px;
+  line-height: 1;
+  padding: 12px;
+  cursor: pointer;
+}
+
+/* Tighter padding variant when used in dense headers */
+.admin-modal-close--tight {
+  padding: 6px;
+}

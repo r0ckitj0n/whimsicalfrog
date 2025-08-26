@@ -1,7 +1,6 @@
 // src/ui/searchModal.js
 // ES module conversion of legacy search.js.
 import { apiGet } from '../core/apiClient.js';
-import { cart } from '../commerce/cartSystem.js';
 
 /* global document, window */
 
@@ -114,7 +113,23 @@ class SearchModal {
     evt.stopPropagation();
     const item = this.currentResults.find(i => i.sku === sku);
     if (!item) return;
-    cart.add({ sku: item.sku, name: item.name, price: parseFloat(item.price), image: item.image_url }, 1);
+    // Unified payload for both cart systems
+    const payload = { sku: item.sku, name: item.name, price: parseFloat(item.price), image: item.image_url, quantity: 1 };
+
+    // Prefer the unified CartSystem if available
+    if (window.WF_Cart && typeof window.WF_Cart.addItem === 'function') {
+      window.WF_Cart.addItem(payload);
+      return;
+    }
+
+    // Fallback to legacy singleton if present
+    if (window.cart && typeof window.cart.add === 'function') {
+      window.cart.add(payload, 1);
+      // Manually emit a cartUpdated event so listeners (e.g., header, modal) refresh
+      try {
+        window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { action: 'add', state: (window.cart.getState ? window.cart.getState() : undefined) } }));
+      } catch (_) {}
+    }
   }
 
   viewItemDetails(sku) {

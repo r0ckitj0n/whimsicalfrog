@@ -164,6 +164,7 @@ function getPaymentStatusBadgeClass($status)
 
 <div class="admin-content-container">
     <div class="admin-filter-section">
+        <div class="admin-filters">
         <form method="GET" action="/admin/orders" class="admin-filter-form">
             
             <input type="date" name="filter_date" 
@@ -213,9 +214,12 @@ function getPaymentStatusBadgeClass($status)
                 <?php endforeach; ?>
             </select>
             
-            <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
-            <a href="/admin/orders" class="btn btn-secondary admin-filter-button">Clear</a>
+            <span class="admin-actions">
+                <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
+                <a href="/admin/orders" class="btn btn-secondary admin-filter-button">Clear</a>
+            </span>
         </form>
+        </div>
     </div>
 
     <div class="admin-table-section">

@@ -6,6 +6,15 @@
 // Import CSS to be processed by Vite
 import '../styles/main.css';
 
+// TEMP: detect duplicate module evaluations during dev or unexpected reloads
+try {
+    window.__WF_APP_LOADS = (window.__WF_APP_LOADS || 0) + 1;
+    console.log('[App] app.js evaluation count:', window.__WF_APP_LOADS, 'url:', (import.meta && import.meta.url));
+    if (window.__WF_APP_LOADS > 1) {
+        console.warn('[App] Duplicate app.js evaluation detected');
+    }
+} catch (_) {}
+
 // reload-tracer removed (dev-only)
 import './whimsical-frog-core-unified.js';
 import CartSystem from '../modules/cart-system.js';
@@ -13,7 +22,6 @@ import RoomModalManager from '../modules/room-modal-manager.js';
 import SearchSystem from '../modules/search-system.js';
 import SalesSystem from '../modules/sales-system.js';
 import WhimsicalFrogUtils from '../modules/utilities.js';
-import _MainApplication from './main-application.js';
 import _ShopPage from './shop.js';
 
 // Critical missing modules for core functionality
@@ -33,8 +41,11 @@ import './landing-page.js';               // Landing page functionality
 import './room-main.js';                  // Room main page
 import './analytics.js';
 import './login-modal.js';                // Login modal and flow
+import './header-auth-sync.js';           // Keep header UI in sync after login
 import './payment-modal.js';              // Payment modal for in-place checkout
 import './receipt-modal.js';              // Receipt modal for post-checkout
+import './header-offset.js';              // Compute --wf-header-height for precise top offset
+import _MainApplication from './main-application.js';
 //
 import './contact.js';                    // Contact page AJAX submit
 import './reveal-company-modal.js';       // Single-button modal reveal for company info
@@ -150,12 +161,46 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
 
 // Public per-page dynamic imports (non-admin)
 (function setupPublicPageImports() {
+    if (window.__WF_PUBLIC_IMPORTS_DONE) {
+        console.log('[App] Public page imports already configured; skipping');
+        return;
+    }
+    window.__WF_PUBLIC_IMPORTS_DONE = true;
     function run() {
         try {
             const body = document.body;
             const ds = body ? body.dataset : {};
-            const page = (ds && ds.page) || (window.WF_PAGE_INFO && window.WF_PAGE_INFO.page) || '';
+            const pageRaw = (ds && ds.page) || (window.WF_PAGE_INFO && window.WF_PAGE_INFO.page) || '';
+            // Candidate A: explicit data-page token
+            const candidateA = (typeof pageRaw === 'string' && !pageRaw.includes('/')) ? pageRaw : '';
+            // Candidate B: last segment from path
+            const pathRaw = (ds && ds.path) || window.location.pathname || '';
+            const last = pathRaw.split('?')[0].split('#')[0].split('/').filter(Boolean).pop() || '';
+            const candidateB = (last || '').replace(/\.php$/i, '');
 
+            const resolved = candidateA || candidateB;
+            console.log('[App] Public page detection:', { pageRaw, candidateA, pathRaw, candidateB: resolved ? candidateB : '' });
+
+            // Force-load payment page if DOM hooks exist, regardless of page token
+            const hasPaymentDom = document.getElementById('paymentPage') || document.getElementById('checkoutRoot');
+            if (hasPaymentDom) {
+                console.log('[App] Payment DOM detected; force-loading payment module');
+                import('./pages/payment-page.js').catch(err => console.error('[App] Failed to load payment-page.js', err));
+                return;
+            }
+
+            const loaders = {
+                'cart': () => import('./pages/cart-page.js'),
+                'login': () => import('./pages/login-page.js'),
+                'register': () => import('./pages/register-page.js'),
+                'account_settings': () => import('./pages/account-settings-page.js'),
+                'account-settings': () => import('./pages/account-settings-page.js'),
+                'payment': () => import('./pages/payment-page.js'),
+            };
+
+            // Resolve final page by preferring a candidate that maps to a loader
+            const page = loaders[candidateA] ? candidateA : (loaders[candidateB] ? candidateB : (candidateA || candidateB || ''));
+            console.log('[App] Public page resolved to:', page);
             const isRoom = typeof page === 'string' && /^room\d+$/.test(page);
             if (isRoom) {
                 import('./pages/room-page.js')
@@ -163,20 +208,18 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
                     .catch(err => console.error(`[App] Failed to load public module for page: ${page}`, err));
                 return;
             }
-
-            const loaders = {
-                'cart': () => import('./pages/cart-page.js'),
-                'register': () => import('./pages/register-page.js'),
-                'account_settings': () => import('./pages/account-settings-page.js'),
-                'account-settings': () => import('./pages/account-settings-page.js'),
-                'payment': () => import('./pages/payment-page.js'),
-            };
-
             const load = loaders[page];
             if (typeof load === 'function') {
                 load()
                     .then(() => console.log(`[App] Public module loaded for page: ${page}`))
                     .catch(err => console.error(`[App] Failed to load public module for page: ${page}`, err));
+            } else if (document.getElementById('paymentPage')) {
+                console.warn('[App] Payment DOM detected but slug not resolved; loading payment-page.js via DOM fallback', { page, pageRaw, candidateA, candidateB, pathRaw });
+                import('./pages/payment-page.js')
+                    .then(() => console.log('[App] Public module loaded via DOM fallback: payment'))
+                    .catch(err => console.error('[App] Failed to load payment module via DOM fallback', err));
+            } else {
+                console.log('[App] No public per-page module to load for page:', page);
             }
         } catch (e) {
             console.error('[App] Error setting up public per-page imports', e);
@@ -192,6 +235,11 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
 
 // Per-page dynamic imports (admin-safe)
 (function setupPerPageImports() {
+    if (window.__WF_ADMIN_IMPORTS_DONE) {
+        console.log('[App] Admin page imports already configured; skipping');
+        return;
+    }
+    window.__WF_ADMIN_IMPORTS_DONE = true;
     function run() {
         try {
             const body = document.body;

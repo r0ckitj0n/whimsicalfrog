@@ -7,6 +7,20 @@ html, body {
   margin: 0;
   padding: 0;
 }
+/* Prevent horizontal scroll/white strip on admin pages */
+body[data-page^='admin'] { overflow-x: hidden; }
+/* Extra guard: clip any phantom overflow on admin pages at the root */
+html:has(body[data-page^='admin']) { overflow-x: clip; }
+/* Also ensure the nav container and content never overflow horizontally */
+/* Removed .admin-tab-navigation from global width rule to allow shrink-to-fit */
+body[data-page^='admin'] #admin-section-content { width: 100%; box-sizing: border-box; }
+/* Admin: tighten spacing between settings cards */
+body[data-page^='admin'] .settings-grid { gap: 0.5rem; margin-top: 0.5rem; }
+/* Remove borders on settings cards within admin pages */
+body[data-page^='admin'] .settings-section,
+body[data-page^='admin'] .settings-section-content > div {
+    border: none !important;
+}
 
 /* Utility Classes *//* Gradient Classes */
 
@@ -1100,7 +1114,7 @@ html, body {
 }.popup-btn-secondary {
     background: #f7fafc;
     color: #4a5568;
-    border: 1px solid #e2e8f0;
+    border: 1px solid rgba(226, 232, 240, 0.6);
 }.popup-btn-secondary:hover {
     background: #edf2f7;
     border-color: #cbd5e0;
@@ -2122,7 +2136,7 @@ html, body {
 }.text-green-800 {
     color: #166534;
 }.text-red-700 {
-    color: #b91c1c;
+    color: #b91c1b;
 }.text-red-800 {
     color: #991b1b;
 }.text-blue-700 {
@@ -2601,7 +2615,6 @@ html, body {
    ============================================== */
 
 /* Ensure modals don't interfere with admin navbar *//* When modals are open, ensure navbar stays visible */;
-/* ORPHANED PROPERTY: body:has(.modal-overlay:not(.hidden)) .admin-tab-navigation,; */
 body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
     z-index: var(--z-debug);
 }/* Fallback for browsers without :has() support */
@@ -3473,7 +3486,7 @@ body { /* Allow content overflow */
     text-decoration: none;
 }/* Table Section */
 .admin-table-section {
-    padding: 1.5rem;
+    padding: 0.75rem;
     overflow-x: auto;
 }.admin-data-table {
     width: 100%;
@@ -3541,7 +3554,7 @@ body { /* Allow content overflow */
     flex-direction: column;
     align-items: stretch;
 }.admin-table-section {
-    padding: 0.75rem;
+    padding: 0.25rem;
 }
 }/* ==============================================
    EXISTING ADMIN STYLES
@@ -3612,12 +3625,18 @@ body { /* Allow content overflow */
     background-color: #6b7280;
     color: white;
 }/* Navigation */
-.admin-nav {
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem 0;
-    margin-bottom: 2rem;
-}.admin-nav ul {
+/* Admin tab navigation bar (container around nav buttons) */
+.admin-tab-navigation {
+    background: #ffffff;
+    border-bottom: none;
+    display: inline-block;
+    width: auto;
+    max-width: 100%;
+    padding: 10px;
+    margin-bottom: 1rem;
+}
+/* Settings-page-specific overrides removed to unify navbar styling across admin pages */
+.admin-nav ul {
     flex-direction: column;
     display: flex;
     gap: 2rem;
@@ -3664,27 +3683,37 @@ body { /* Allow content overflow */
 
 /* Ensure admin navigation has proper z-index hierarchy *//* Admin Tab Navigation - High Z-Index to Stay Above Everything */
 .admin-tab-navigation {
+    display: block;
     flex-direction: column;
+    align-items: center; /* center inner row vertically within nav height */
     gap: 0.5rem;
     z-index: var(--z-dropdown);
     position: relative;
-    background: white;
+    background: #ffffff;
     border-radius: 12px;
-    padding: 1rem;
-    box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
-    border: 1px solid #e5e7eb;
-    margin-bottom: 1.5rem;
-}/* Ensure tab navigation stays above any content */
+    padding: 0.5rem 16px; /* add horizontal padding so tabs aren't against page edges */
+    box-shadow: none;
+    border: none;
+    margin-bottom: 1rem;
+    margin-left: auto;
+    margin-right: auto;
+    width: max-content;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+/* Ensure tab navigation stays above any content */
 .admin-tab-navigation .flex {
-    flex-direction: column;
+    /* Desktop: horizontal row of tabs, vertically centered */
+    flex-direction: row;
     z-index: var(--z-dropdown);
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    align-items: center;
+    align-items: center; /* vertical centering within nav height */
     justify-content: flex-start;
     position: relative;
-}/* Admin Page Title */
+}
+/* Admin Page Title */
 .admin-page-title {
     z-index: var(--z-dropdown);
     position: relative;
@@ -3709,7 +3738,7 @@ body { /* Allow content overflow */
     display: inline-flex;
     align-items: center;
     padding: 0.875rem 1.5rem;
-    background: #f8fafc;
+    background: transparent;
     text-decoration: none;
     border-radius: 10px;
     font-weight: 500;
@@ -3739,24 +3768,112 @@ body { /* Allow content overflow */
     background: linear-gradient(135deg, #14b8a6 0%, #0f766e 100%);
     border-color: #14b8a6;
     color: white;
-}.admin-nav-tab * {
+}
+.admin-tab-customers {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    border-color: #7c3aed;
     color: white;
-}.admin-tab-dashboard * {
+}
+.admin-tab-orders {
+    background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+    border-color: #f59e0b;
+    color: white;
+}
+.admin-tab-marketing {
+    background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    border-color: #ec4899;
+    color: white;
+}
+.admin-tab-settings {
+    /* Settings tab theme (Indigo - distinct from others) */
+    --admin-tab-bg: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    --admin-tab-border: #6366f1;
+    --admin-tab-hover-bg: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #4338ca 0%, #312e81 100%);
+}
+.admin-tab-secrets {
+    /* Secrets tab theme (Near-Black) */
+    --admin-tab-bg: linear-gradient(135deg, #0b0f13 0%, #111827 100%);
+    --admin-tab-border: #0b0f13;
+    --admin-tab-hover-bg: linear-gradient(135deg, #111827 0%, #0b0f13 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #000000 0%, #0b0f13 100%);
+}
+/* Unify ALL admin tabs to a single brand style */
+.admin-nav-tab,
+.admin-nav-tab * {
+    color: #ffffff !important;
+    font-family: var(--brand-font, inherit);
+}
+
+/* Variable-driven theming with brand fallback */
+body[data-page^='admin'] .admin-nav-tab {
+    background: var(--admin-tab-bg, linear-gradient(135deg, var(--brand-primary, #87ac3a) 0%, #6b8e23 100%));
+    border-color: var(--admin-tab-border, var(--brand-primary, #87ac3a));
+}
+body[data-page^='admin'] .admin-nav-tab:hover {
+    background: var(--admin-tab-hover-bg, linear-gradient(135deg, #6b8e23 0%, #556b2f 100%));
+}
+body[data-page^='admin'] .admin-nav-tab.active {
+    background: var(--admin-tab-active-bg, linear-gradient(135deg, #556b2f 0%, #465a20 100%));
+}
+
+/* Per-tab theme variables (centralized) */
+.admin-tab-dashboard {
+    --admin-tab-bg: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    --admin-tab-border: #3b82f6;
+    --admin-tab-hover-bg: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+}
+.admin-tab-customers {
+    --admin-tab-bg: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    --admin-tab-border: #8b5cf6;
+    --admin-tab-hover-bg: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+}
+.admin-tab-inventory {
+    /* Emerald */
+    --admin-tab-bg: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --admin-tab-border: #10b981;
+    --admin-tab-hover-bg: linear-gradient(135deg, #34d399 0%, #059669 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #065f46 0%, #047857 100%);
+}
+.admin-tab-orders {
+    /* Orange */
+    --admin-tab-bg: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    --admin-tab-border: #f59e0b;
+    --admin-tab-hover-bg: linear-gradient(135deg, #fb923c 0%, #d97706 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+}
+.admin-tab-reports {
+    /* Teal-Cyan (more cyan to differ from Inventory) */
+    --admin-tab-bg: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    --admin-tab-border: #06b6d4;
+    --admin-tab-hover-bg: linear-gradient(135deg, #22d3ee 0%, #0891b2 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #0e7490 0%, #155e75 100%);
+}
+.admin-tab-marketing {
+    --admin-tab-bg: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+    --admin-tab-border: #ec4899;
+    --admin-tab-hover-bg: linear-gradient(135deg, #db2777 0%, #be185d 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+}
+.admin-tab-pos {
+    /* Red (distinct from Orders) */
+    --admin-tab-bg: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    --admin-tab-border: #ef4444;
+    --admin-tab-hover-bg: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+    --admin-tab-active-bg: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+}
+.admin-tab-dashboard * {
     color: white;
 }.admin-tab-customers * {
     color: white;
-}.admin-tab-inventory * {
-    color: white;
-}.admin-tab-orders * {
-    color: white;
-}.admin-tab-pos * {
-    color: white;
-}.admin-tab-reports * {
-    color: white;
-}.admin-tab-marketing * {
-    color: white;
-}.admin-tab-settings * {
-    color: white;
+}.admin-tab-inventory *,
+.admin-tab-orders *,
+.admin-tab-pos *,
+.admin-tab-reports *,
+.admin-tab-marketing * {
+    color: inherit;
 }/* Content Area Protection */
 #admin-section-content {
     z-index: calc(var(--z-dropdown) + 1);
@@ -3769,7 +3886,78 @@ body { /* Allow content overflow */
     min-height: 400px;
     margin-top: 0;
     clear: both;
-}/* Prevent any floating elements from interfering */
+}
+body[data-page='admin/settings'] #admin-section-content {
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+    -webkit-overflow-scrolling: touch;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+/* Enable internal scrolling for Secrets page */
+body[data-page='admin/secrets'] #admin-section-content {
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+    -webkit-overflow-scrolling: touch;
+}
+/* Enable internal scrolling for other admin pages (match settings behavior) */
+body[data-page='admin/dashboard'] #admin-section-content,
+body[data-page='admin/customers'] #admin-section-content,
+body[data-page='admin/inventory'] #admin-section-content,
+body[data-page='admin/orders'] #admin-section-content,
+body[data-page='admin/reports'] #admin-section-content,
+body[data-page='admin/marketing'] #admin-section-content {
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+    -webkit-overflow-scrolling: touch;
+}
+/* Provide page-level scroll fallback (minimal specificity, no overrides) */
+body[data-page='admin/dashboard'],
+body[data-page='admin/customers'],
+body[data-page='admin/inventory'],
+body[data-page='admin/orders'],
+body[data-page='admin/reports'],
+body[data-page='admin/marketing'],
+body[data-page='admin/settings'] {
+    overflow-y: auto;
+}
+
+/* Admin filter forms: horizontal layout with wrapping */
+.admin-filter-section { 
+    margin-bottom: 0.75rem; 
+    background: #ffffff; 
+    border: none; 
+    border-radius: 0.375rem; 
+    padding: 0.5rem 0.75rem; 
+}
+.admin-filter-form { 
+    display: flex; 
+    flex-wrap: wrap; 
+    align-items: flex-end; 
+    justify-content: flex-start; 
+    gap: 0.5rem 0.75rem; 
+}
+.admin-filter-form > * { flex: 0 1 auto; }
+.admin-filter-form .admin-form-input,
+.admin-filter-form .admin-form-select {
+    height: 34px; 
+    padding: 0 0.5rem; 
+    border: 1px solid #d1d5db; 
+    border-radius: 0.375rem; 
+}
+.admin-filter-form button,
+.admin-filter-form .btn,
+.admin-filter-form [type="submit"] {
+    height: 34px; 
+    line-height: 32px; 
+    padding: 0 0.75rem; 
+}
+/* Restore page scrolling on Admin Settings (global body overflow hidden is used elsewhere) */
+body[data-page='admin/settings'] {
+    overflow: auto !important;
+}
+/* Prevent any floating elements from interfering */
 .admin-dashboard::after {
     z-index: var(--z-base);
     content: "";
@@ -4109,6 +4297,10 @@ body { /* Allow content overflow */
     list-style-type: disc;
 }.instruction-list li {
     margin-bottom: 0.5rem;
+}.instruction-text {
+    color: var(--instruction-text-color, #6b7280);
+    font-size: 0.875rem;
+    line-height: 1.5;
 }/* Admin Test Card */
 .admin-test-card {
     background-color: var(--test-card-bg, #f0f9ff);
@@ -4137,8 +4329,6 @@ body { /* Allow content overflow */
     display: flex;
     gap: 0.75rem;
     align-items: center;
-}.test-form-input-group .form-input {
-    flex: 1;
 }.test-info {
     font-size: 0.75rem;
     color: var(--test-info-color, #0369a1);
@@ -4542,29 +4732,34 @@ mark {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
 }.settings-section-header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding-bottom: 0.75rem;
-    margin-bottom: 1rem;
-}.settings-section-content {
+    margin-bottom: 0.5rem;
+}
+body[data-page^='admin'] .settings-section-header { border-bottom: none; margin-bottom: 0.5rem; padding-bottom: 0.5rem; }
+.settings-section-content {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     min-height: 300px;
-}.settings-section-content > div {
+}
+body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5rem; }
+.settings-section-content > div {
     padding: 1rem;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: none;
     border-radius: 0.5rem;
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     transition: all 0.2s ease;
-}.settings-section-content > div:hover {
+}
+.settings-section-content > div:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     background: rgba(255, 255, 255, 0.9);
 }/* Current section items - green accent */
 .settings-current-section .settings-section-content > div {
     border-color: #d1fae5;
-}.settings-current-section .settings-section-content > div:hover {
+}
+.settings-current-section .settings-section-content > div:hover {
     border-color: #a7f3d0;
 }/* Available section items - orange accent */
 .settings-available-section .settings-section-content > div {
@@ -5040,7 +5235,7 @@ mark {
     border-color: #047857;
 }.toast-error {
     background-color: var(--notification-error-bg, #dc2626);
-    border-color: #b91c1c;
+    border-color: #b91c1b;
 }.toast-info {
     background-color: var(--notification-info-bg, #0284c7);
     border-color: #0369a1;
@@ -5145,6 +5340,9 @@ mark {
 }.toast-notification.info {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     border-color: rgb(59 130 246 / 30%);
+}.toast-notification.warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border-color: rgb(245 158 11 / 30%);
 }.toast-icon {
     font-size: 20px;
     flex-shrink: 0;
@@ -6132,14 +6330,27 @@ mark {
 
 /* Settings Page Layout */
 .settings-page {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    /* Transparent to reveal body background (DB-driven) */
+    background: transparent;
+    background-color: transparent;
     border-radius: 16px;
-    margin: 1rem;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -1px rgb(0 0 0 / 6%);
-    padding: 2rem;
-    background-color: #f8fafc;
-    min-height: 100vh;
-}.settings-header {
+    margin: 0.5rem; /* tighter to reduce gap from navbar */
+    box-shadow: none;
+    padding: 1.25rem;
+    min-height: auto;
+}
+/* Ensure settings card titles/descriptions are readable on photo bg */
+.settings-page .section-title,
+.settings-page .section-description {
+    color: #ffffff !important;
+}
+/* Inside admin settings cards, use white brand font for titles/descriptions */
+body[data-page^='admin'] .settings-section .section-title,
+body[data-page^='admin'] .settings-section .section-description {
+    color: #ffffff !important;
+    font-family: var(--brand-font, inherit);
+}
+.settings-header {
     text-align: center;
     margin-bottom: 3rem;
 }.settings-title {
@@ -6191,59 +6402,110 @@ mark {
     width: 100%;
 }/* Section-specific styling */
 .content-section .section-header {
-    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    --card-accent-bg: linear-gradient(135deg, #3b82f6, #1e40af);
+    background: var(--card-accent-bg);
     color: white;
     padding: 1.5rem;
     border-radius: 8px 8px 0 0;
     margin-bottom: 1.5rem;
     border-bottom: none;
-}.content-section .section-header::before {
+}
+.content-section .section-header::before {
     display: none;
 }.visual-section .section-header {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    --card-accent-bg: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    background: var(--card-accent-bg);
     color: white;
     padding: 1.5rem;
     border-radius: 8px 8px 0 0;
     margin-bottom: 1.5rem;
     border-bottom: none;
-}.visual-section .section-header::before {
+}
+.visual-section .section-header::before {
     display: none;
 }.business-section .section-header {
-    background: linear-gradient(135deg, #10b981, #059669);
+    --card-accent-bg: linear-gradient(135deg, #10b981, #059669);
+    background: var(--card-accent-bg);
     color: white;
     padding: 1.5rem;
     border-radius: 8px 8px 0 0;
     margin-bottom: 1.5rem;
     border-bottom: none;
-}.business-section .section-header::before {
+}
+.business-section .section-header::before {
     display: none;
 }.communication-section .section-header {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
+    --card-accent-bg: linear-gradient(135deg, #f59e0b, #d97706);
+    background: var(--card-accent-bg);
     color: white;
     padding: 1.5rem;
     border-radius: 8px 8px 0 0;
     margin-bottom: 1.5rem;
     border-bottom: none;
-}.communication-section .section-header::before {
+}
+.communication-section .section-header::before {
     display: none;
 }.technical-section .section-header {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    --card-accent-bg: linear-gradient(135deg, #ef4444, #dc2626);
+    background: var(--card-accent-bg);
     color: white;
     padding: 1.5rem;
     border-radius: 8px 8px 0 0;
     margin-bottom: 1.5rem;
     border-bottom: none;
-}.technical-section .section-header::before {
+}
+.technical-section .section-header::before {
     display: none;
 }/* AI & Automation Section */
 .ai-automation-section .section-header {
-    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    --card-accent-bg: linear-gradient(135deg, #06b6d4, #0891b2);
+    background: var(--card-accent-bg);
     color: white;
     padding: 1.5rem;
     border-radius: 8px 8px 0 0;
     margin-bottom: 1.5rem;
     border-bottom: none;
-}.ai-automation-section .section-header::before {
+}
+/* Default header accent for any settings card */
+body[data-page^='admin'] .settings-section:not([class*="card-theme-"]) .section-header { 
+    --card-accent-bg: linear-gradient(135deg, var(--brand-primary, #87ac3a), #6b8e23); 
+}
+
+/* Match buttons to header accent with white brand-font text */
+body[data-page^='admin'] .settings-section .admin-settings-button {
+    background: var(--card-accent-bg, linear-gradient(135deg, var(--brand-primary, #87ac3a), #6b8e23));
+    color: #ffffff !important;
+    font-family: var(--brand-font, inherit);
+    border: none;
+}
+body[data-page^='admin'] .settings-section .admin-settings-button:hover { 
+    filter: brightness(0.95); 
+}
+
+/* Utility card theme classes: apply to .settings-section to give each card a unique color */
+/* Force section header to use the theme variable (overrides per-section defaults) */
+.settings-section[class*="card-theme-"] .section-header {
+  background: var(--card-accent-bg) !important;
+  color: #ffffff;
+  border-bottom: none;
+}
+.settings-section.card-theme-blue { --card-accent-bg: linear-gradient(135deg, #3b82f6, #1e40af); }
+.settings-section.card-theme-indigo { --card-accent-bg: linear-gradient(135deg, #6366f1, #4338ca); }
+.settings-section.card-theme-purple { --card-accent-bg: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.settings-section.card-theme-teal { --card-accent-bg: linear-gradient(135deg, #06b6d4, #0891b2); }
+.settings-section.card-theme-emerald { --card-accent-bg: linear-gradient(135deg, #10b981, #059669); }
+.settings-section.card-theme-orange { --card-accent-bg: linear-gradient(135deg, #f59e0b, #d97706); }
+.settings-section.card-theme-rose { --card-accent-bg: linear-gradient(135deg, #f43f5e, #e11d48); }
+.settings-section.card-theme-red { --card-accent-bg: linear-gradient(135deg, #ef4444, #dc2626); }
+.settings-section.card-theme-pink { --card-accent-bg: linear-gradient(135deg, #ec4899, #db2777); }
+.settings-section.card-theme-slate { --card-accent-bg: linear-gradient(135deg, #475569, #334155); }
+.settings-section.card-theme-amber { --card-accent-bg: linear-gradient(135deg, #f59e0b, #b45309); }
+.settings-section.card-theme-cyan { --card-accent-bg: linear-gradient(135deg, #22d3ee, #06b6d4); }
+
+/* Buttons inside themed cards already inherit --card-accent-bg via existing rule */
+/* Hide the experimental AI Provider Selection block on admin/settings */
+body[data-page='admin/settings'] div:has(#ai-provider-selection-content) { display: none !important; }
+.ai-automation-section .section-header::before {
     display: none;
 }
 
@@ -6252,12 +6514,13 @@ mark {
     padding: 1rem;
 }.settings-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.5rem;
 }.settings-section {
     padding: 1rem;
 }.settings-title {
     font-size: 1.875rem;
-}.admin-settings-button {
+}
+.admin-settings-button {
     padding: 0.75rem;
     font-size: 0.8rem;
 }.admin-settings-button .button-icon {
@@ -6694,6 +6957,18 @@ mark {
     transform: translateY(0);
     box-shadow: var(--shadow-sm);
 }/* Secondary (Alias for Primary) *//* Danger */
+/* Admin Settings: force buttons inside settings cards to use the card header theme */
+body[data-page^='admin'] .settings-section .admin-settings-button.btn-primary {
+    background: var(--card-accent-bg, var(--brand-primary)) !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+body[data-page^='admin'] .settings-section .admin-settings-button.btn-primary:hover {
+    filter: brightness(0.95);
+}
+body[data-page^='admin'] .settings-section .admin-settings-button.btn-primary:active {
+    filter: brightness(0.9);
+}
 .btn-danger {
     background: var(--error);
     color: var(--white);
@@ -7920,13 +8195,13 @@ mark {
 /* Notification Container */
 .wf-notification-container {
     z-index: 2147483647;
-    left: 5px;
     position: fixed;
     top: 24px;
     right: 24px;
+    left: auto;
     pointer-events: none;
     max-width: 420px;
-    width: 100%;
+    width: auto;
 }/* Notification Base */.wf-notification:hover {
     transform: translateX(0) scale(1.02);
 }/* Notification Types */
@@ -7946,10 +8221,10 @@ mark {
     color: #92400e;
     box-shadow: 0 12px 28px rgb(245 158 11 / 35%), 0 4px 8px rgb(245 158 11 / 15%);
 }.wf-info-notification {
-    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-    border-color: #3b82f6;
-    color: #1e3a8a;
-    box-shadow: 0 12px 28px rgb(59 130 246 / 35%), 0 4px 8px rgb(59 130 246 / 15%);
+    background: var(--brand-secondary, #6b8e23);
+    border-color: var(--brand-secondary, #6b8e23);
+    color: #ffffff;
+    box-shadow: 0 12px 28px rgb(107 142 35 / 35%), 0 4px 8px rgb(107 142 35 / 15%);
 }.wf-validation-notification {
     background: linear-gradient(135deg, #fef3c7, #fde68a);
     border-color: #f59e0b;
@@ -8059,8 +8334,8 @@ mark {
 @media (width <= 768px) {.wf-notification-container {
     top: 10px;
     right: 10px;
-    left: 10px;
-    max-width: none;
+    left: auto;
+    max-width: min(94vw, 420px);
 }.wf-notification {
     margin-bottom: 8px;
     padding: 12px;
@@ -8071,8 +8346,9 @@ mark {
 @media (width <= 480px) {.wf-notification-container {
     top: 5px;
     right: 5px;
-    left: 5px;
-}.wf-notification {
+    left: auto;
+}
+.wf-notification {
     padding: 10px;
     font-size: 12px;
 }

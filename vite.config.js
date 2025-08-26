@@ -5,6 +5,9 @@ import { defineConfig } from 'vite';
 
 
 
+const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5176);
+const hmrPort = Number(process.env.VITE_HMR_PORT || devPort);
+
 export default defineConfig({
     root: __dirname,
     plugins: [
@@ -29,9 +32,9 @@ export default defineConfig({
     },
     server: {
         // Ensure dev server runs on a stable port that matches our PHP helper hot origin
-        port: 5176,
+        port: devPort,
         strictPort: true,
-        host: '127.0.0.1', // force IPv4 to avoid ::1/HTTP2 quirks
+        host: 'localhost', // use localhost so cookies are same-site with backend on localhost
         // Use HTTP; we proxy via PHP to avoid CORS/TLS issues
         // https: false by default
         cors: true,
@@ -43,9 +46,9 @@ export default defineConfig({
         // Enable HMR so @vite/client can inject CSS and handle updates
         hmr: {
             protocol: 'ws',
-            host: '127.0.0.1',
-            port: 5176,
-            clientPort: 5176,
+            host: 'localhost',
+            port: hmrPort,
+            clientPort: hmrPort,
         },
     },
     build: {
@@ -58,6 +61,7 @@ export default defineConfig({
                 'js/app.js': resolve(__dirname, 'src/entries/app.js'),
                 'js/admin-dashboard.js': resolve(__dirname, 'src/entries/admin-dashboard.js'),
                 'js/admin-inventory.js': resolve(__dirname, 'src/entries/admin-inventory.js'),
+                'js/admin-settings.js': resolve(__dirname, 'src/entries/admin-settings.js'),
             },
         }
     },

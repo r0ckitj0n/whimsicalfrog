@@ -227,6 +227,7 @@ $messageType = $_GET['type'] ?? '';
 
 
     <div class="admin-filter-section">
+        <div class="admin-filters">
         <form method="GET" action="/admin/customers" class="admin-filter-form">
             
             <input type="text" name="search" placeholder="Search customers..." 
@@ -238,8 +239,11 @@ $messageType = $_GET['type'] ?? '';
                 <option value="admin" <?= $filterRole === 'admin' ? 'selected' : '' ?>>Admin</option>
             </select>
             
-            <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
+            <span class="admin-actions">
+                <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
+            </span>
         </form>
+        </div>
     </div>
     
     <?php if ($message): ?>

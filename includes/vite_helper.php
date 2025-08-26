@@ -33,6 +33,23 @@ function vite(string $entry): string
     }
     $hotPath = __DIR__ . '/../hot';
     $forceDev = (getenv('WF_VITE_DEV') === '1') || (defined('VITE_FORCE_DEV') && VITE_FORCE_DEV === true);
+
+    // Allow disabling dev/HMR even if a hot file exists, to avoid periodic auto-reloads in flaky dev envs.
+    // Priority: explicit query param (?vite=prod|dev) with cookie persistence > env WF_VITE_DISABLE_DEV
+    $requestedMode = isset($_GET['vite']) ? strtolower((string)$_GET['vite']) : '';
+    if ($requestedMode === 'prod' || $requestedMode === 'dev') {
+        // Persist preference for 30 days
+        @setcookie('wf_vite_mode', $requestedMode, [ 'expires' => time() + 60*60*24*30, 'path' => '/', 'httponly' => false, 'samesite' => 'Lax' ]);
+    }
+    $cookieMode = isset($_COOKIE['wf_vite_mode']) ? strtolower((string)$_COOKIE['wf_vite_mode']) : '';
+    $disableDevByEnv = getenv('WF_VITE_DISABLE_DEV') === '1';
+    $disableDevByFlag = file_exists(__DIR__ . '/../.disable-vite-dev');
+    // Prefer dev when hot server is available. Only explicit query param, env, or flag disables dev.
+    $devDisabled = ($requestedMode === 'prod') || $disableDevByEnv || $disableDevByFlag;
+    // Allow explicit dev request (query or cookie) to force dev resolution path later
+    if ($requestedMode === 'dev' || $cookieMode === 'dev') {
+        if (!defined('VITE_FORCE_DEV')) { define('VITE_FORCE_DEV', true); }
+    }
     // Determine Vite dev server origin. Priority: WF_VITE_ORIGIN env > hot file > default
     $viteOrigin = getenv('WF_VITE_ORIGIN');
     if (!$viteOrigin && file_exists($hotPath)) {
@@ -40,9 +57,35 @@ function vite(string $entry): string
         $viteOrigin = is_string($hotContents) ? trim($hotContents) : '';
     }
     if (empty($viteOrigin)) { $viteOrigin = 'http://localhost:5176'; }
+    // Normalize host: force localhost instead of 127.0.0.1 to keep SameSite cookies for backend on localhost
+    // This only rewrites host; scheme/port/path are preserved.
+    try {
+        $parts = @parse_url($viteOrigin);
+        if (is_array($parts) && isset($parts['host']) && $parts['host'] === '127.0.0.1') {
+            $scheme = $parts['scheme'] ?? 'http';
+            $host = 'localhost';
+            $port = isset($parts['port']) ? (':' . $parts['port']) : '';
+            $path = $parts['path'] ?? '';
+            $viteOrigin = $scheme . '://' . $host . $port . $path;
+        }
+    } catch (Throwable $e) {
+        // ignore normalization errors
+    }
+
+    // Compute backend origin for JS so cross-origin API calls can include cookies
+    $backendOrigin = getenv('WF_BACKEND_ORIGIN');
+    if (!$backendOrigin) {
+        $proto = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) ? $_SERVER['HTTP_X_FORWARDED_PROTO'] : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+        $host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+        // Normalize host to not include default ports redundantly
+        $port = $_SERVER['SERVER_PORT'] ?? null;
+        $needsPort = $port && !strpos($host, ':') && !(($proto === 'http' && (int)$port === 80) || ($proto === 'https' && (int)$port === 443));
+        $backendOrigin = $proto . '://' . $host . ($needsPort ? (':' . $port) : '');
+    }
+    $bootScript = "<script>window.__WF_BACKEND_ORIGIN = '" . addslashes(rtrim($backendOrigin, '/')) . "';</script>\n";
 
     // If a hot file exists, try dev server. Probe @vite/client to avoid emitting dev tags on live accidentally.
-    if (file_exists($hotPath)) {
+    if (!$devDisabled && file_exists($hotPath)) {
         $probeUrl = rtrim($viteOrigin, '/') . '/@vite/client';
         $ctx = stream_context_create([
             'http' => [ 'timeout' => 0.6, 'ignore_errors' => true ],
@@ -54,6 +97,7 @@ function vite(string $entry): string
                 'js/app.js' => 'src/entries/app.js',
                 'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
                 'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
+                'js/admin-settings.js' => 'src/entries/admin-settings.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             $vite_log('info', 'Vite hot mode: emitting dev script tags directly to origin', [
@@ -62,7 +106,8 @@ function vite(string $entry): string
                 'dev_entry' => $devEntry,
             ]);
             $origin = rtrim($viteOrigin, '/');
-            return "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
+            return $bootScript .
+                   "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
                    "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
         }
         $vite_log('warning', 'Hot file present but dev server is unreachable; falling back to production assets', [ 'vite_origin' => $viteOrigin ]);
@@ -70,7 +115,7 @@ function vite(string $entry): string
     }
 
     // If explicitly forcing dev, try dev server first regardless of manifest (do NOT require hot file)
-    if ($forceDev) {
+    if (!$devDisabled && $forceDev) {
         $probeUrl = rtrim($viteOrigin, '/') . '/@vite/client';
         $ctx = stream_context_create([
             'http' => [
@@ -94,11 +139,13 @@ function vite(string $entry): string
                 'js/app.js' => 'src/entries/app.js',
                 'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
                 'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
+                'js/admin-settings.js' => 'src/entries/admin-settings.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
 
             $origin = rtrim($viteOrigin, '/');
-            return "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
+            return $bootScript .
+                   "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
                    "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
         }
         // else: fall back to production manifest if dev server is not reachable
@@ -169,7 +216,7 @@ function vite(string $entry): string
         'WF_PUBLIC_BASE' => $publicBase,
         'dist_base' => $distBase,
     ]);
-    $html = "<script type=\"module\" src=\"{$distBase}{$asset['file']}\"></script>";
+    $html = $bootScript . "<script type=\"module\" src=\"{$distBase}{$asset['file']}\"></script>";
 
     // Collect CSS from entry and all imported chunks to ensure complete styles in production
     $visited = [];

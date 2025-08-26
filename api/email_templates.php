@@ -360,12 +360,21 @@ function handlePreviewTemplate($pdo)
     ];
 
     $htmlContent = $template['html_content'];
+    $textContent = $template['text_content'] ?? '';
     $subject = $template['subject'];
 
     // Replace variables in content
     foreach ($sampleVars as $var => $value) {
         $htmlContent = str_replace('{' . $var . '}', $value, $htmlContent);
+        if (!empty($textContent)) {
+            $textContent = str_replace('{' . $var . '}', $value, $textContent);
+        }
         $subject = str_replace('{' . $var . '}', $value, $subject);
+    }
+
+    // Derive plain text if not provided
+    if (empty($textContent)) {
+        $textContent = html_to_text_basic($htmlContent);
     }
 
     echo json_encode([
@@ -373,9 +382,23 @@ function handlePreviewTemplate($pdo)
         'preview' => [
             'subject' => $subject,
             'html_content' => $htmlContent,
+            'text_content' => $textContent,
             'variables_used' => $sampleVars
         ]
     ]);
+}
+
+/**
+ * Very basic HTML to text converter for preview purposes.
+ */
+function html_to_text_basic($html)
+{
+    $text = preg_replace('/<\/(p|div|h[1-6]|li)>/i', "\n", $html);
+    $text = preg_replace('/<(br|br\/)\s*>/i', "\n", $text);
+    $text = strip_tags($text);
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = preg_replace("/\n{3,}/", "\n\n", $text);
+    return trim($text);
 }
 
 function handleSendTestEmail($pdo)
@@ -395,10 +418,40 @@ function handleSendTestEmail($pdo)
         throw new Exception('Invalid email address');
     }
 
-    // Load email notification functions
+    // Load dependencies: sendTemplatedEmail (legacy) and sendTestEmail (manager)
     require_once __DIR__ . '/email_notifications.php';
+    require_once __DIR__ . '/../includes/email_manager.php';
 
-    $success = sendTestEmail($templateId, $testEmail, $pdo);
+    // Resolve non-numeric identifiers (allow passing an email type like "order_confirmation")
+    $resolvedTemplateId = null;
+    if (ctype_digit((string)$templateId)) {
+        $resolvedTemplateId = (int)$templateId;
+    } else {
+        // Treat provided value as email_type; find assigned template
+        $emailType = trim((string)$templateId);
+        if ($emailType !== '') {
+            $stmt = $pdo->prepare("SELECT template_id FROM email_template_assignments WHERE email_type = ?");
+            $stmt->execute([$emailType]);
+            $assignedId = $stmt->fetchColumn();
+            if ($assignedId) {
+                $resolvedTemplateId = (int)$assignedId;
+            } else {
+                // Fallback: first active template matching this type
+                $stmt2 = $pdo->prepare("SELECT id FROM email_templates WHERE template_type = ? AND is_active = 1 ORDER BY updated_at DESC, created_at DESC LIMIT 1");
+                $stmt2->execute([$emailType]);
+                $fallbackId = $stmt2->fetchColumn();
+                if ($fallbackId) {
+                    $resolvedTemplateId = (int)$fallbackId;
+                }
+            }
+        }
+    }
+
+    if (!$resolvedTemplateId) {
+        throw new Exception('Template not found for the provided identifier');
+    }
+
+    $success = sendTestEmail($resolvedTemplateId, $testEmail, $pdo);
 
     if ($success) {
         echo json_encode([

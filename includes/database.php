@@ -35,6 +35,49 @@ class Database {
         return self::$instance->pdo;
     }
 
+    /**
+     * Execute a SELECT and return all rows
+     * @param string $sql
+     * @param array $params
+     * @return array
+     */
+    public static function queryAll(string $sql, array $params = []): array
+    {
+        $pdo = self::getInstance();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Execute a SELECT and return first row or null
+     * @param string $sql
+     * @param array $params
+     * @return array|null
+     */
+    public static function queryOne(string $sql, array $params = []): ?array
+    {
+        $pdo = self::getInstance();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $row = $stmt->fetch();
+        return $row === false ? null : $row;
+    }
+
+    /**
+     * Execute an INSERT/UPDATE/DELETE and return affected rows
+     * @param string $sql
+     * @param array $params
+     * @return int affected rows
+     */
+    public static function execute(string $sql, array $params = []): int
+    {
+        $pdo = self::getInstance();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->rowCount();
+    }
+
     // Prevent cloning and unserialization
     private function __clone() { }
     public function __wakeup() { }

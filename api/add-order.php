@@ -40,7 +40,10 @@ register_shutdown_function(function () {
 });
 
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/email_config.php';
+// NOTE: Do not require email_config.php here. It performs strict runtime checks
+// and can throw before our try/catch begins, causing an HTTP 500 during order placement
+// if email settings are incomplete. Email sending for orders is handled by
+// api/email_notifications.php using EmailHelper and BusinessSettings.
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/email_notifications.php';
 require_once __DIR__ . '/business_settings_helper.php';
@@ -56,7 +59,12 @@ try {
     // Add debugging
     error_log("add-order.php: Received request");
     error_log("add-order.php: Request method: " . $_SERVER['REQUEST_METHOD']);
-    error_log("add-order.php: Headers: " . print_r(getallheaders(), true));
+    // getallheaders() is not available on all SAPIs; guard it
+    if (function_exists('getallheaders')) {
+        error_log("add-order.php: Headers: " . print_r(getallheaders(), true));
+    } else {
+        error_log("add-order.php: Headers: getallheaders() not available on this SAPI");
+    }
     $rawInput = file_get_contents('php://input');
     error_log("add-order.php: Raw input: " . $rawInput);
     error_log("add-order.php: Raw input length: " . strlen($rawInput));
@@ -99,32 +107,88 @@ try {
     // Ensure order_items table has size column (migration)
     try {
         $stmt = $pdo->query("SHOW COLUMNS FROM order_items LIKE 'size'");
-        if ($stmt->rowCount() === 0) {
-            $pdo->exec("ALTER TABLE order_items ADD COLUMN size VARCHAR(10) DEFAULT NULL AFTER color");
-            error_log("add-order.php: Added 'size' column to order_items table");
+        $hasSizeCol = $stmt->rowCount() > 0;
+        $orderItemSizeMaxLen = null;
+        if ($hasSizeCol) {
+            // Check existing length and widen if needed
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $type = isset($row['Type']) ? strtolower($row['Type']) : '';
+            $len = null;
+            if (preg_match('/varchar\((\d+)\)/i', $type, $m)) { $len = (int)$m[1]; }
+            if ($len !== null) { $orderItemSizeMaxLen = $len; }
+            if ($len !== null && $len < 32) {
+                try {
+                    $pdo->exec("ALTER TABLE order_items MODIFY COLUMN size VARCHAR(32) DEFAULT NULL");
+                    error_log("add-order.php: Widened 'size' column to VARCHAR(32)");
+                    $orderItemSizeMaxLen = 32;
+                } catch (Exception $e) {
+                    error_log("add-order.php: Warning - Could not widen size column: " . $e->getMessage());
+                }
+            }
+        } else {
+            try {
+                $pdo->exec("ALTER TABLE order_items ADD COLUMN size VARCHAR(32) DEFAULT NULL AFTER color");
+                error_log("add-order.php: Added 'size' column (VARCHAR(32)) to order_items table");
+                $hasSizeCol = true;
+                $orderItemSizeMaxLen = 32;
+            } catch (Exception $e) {
+                // Likely due to permissions or engine limitations; proceed without size column
+                error_log("add-order.php: Warning - Could not add size column: " . $e->getMessage());
+                $hasSizeCol = false;
+            }
         }
     } catch (Exception $e) {
         error_log("add-order.php: Warning - Could not check/add size column: " . $e->getMessage());
+        $hasSizeCol = false;
     }
 
     // Ensure orders table has shippingMethod and shippingAddress columns (migration)
     try {
         $stmt = $pdo->query("SHOW COLUMNS FROM orders LIKE 'shippingMethod'");
-        if ($stmt->rowCount() === 0) {
-            $pdo->exec("ALTER TABLE orders ADD COLUMN shippingMethod VARCHAR(50) DEFAULT 'Customer Pickup' AFTER paymentMethod");
-            error_log("add-order.php: Added 'shippingMethod' column to orders table");
+        $hasShippingMethodCol = $stmt->rowCount() > 0;
+        if (!$hasShippingMethodCol) {
+            try {
+                $pdo->exec("ALTER TABLE orders ADD COLUMN shippingMethod VARCHAR(50) DEFAULT 'Customer Pickup' AFTER paymentMethod");
+                error_log("add-order.php: Added 'shippingMethod' column to orders table");
+                $hasShippingMethodCol = true;
+            } catch (Exception $e) {
+                error_log("add-order.php: Warning - Could not add shippingMethod column: " . $e->getMessage());
+                $hasShippingMethodCol = false;
+            }
         }
     } catch (Exception $e) {
         error_log("add-order.php: Warning - Could not check/add shippingMethod column: " . $e->getMessage());
+        $hasShippingMethodCol = false;
     }
     try {
         $stmt = $pdo->query("SHOW COLUMNS FROM orders LIKE 'shippingAddress'");
-        if ($stmt->rowCount() === 0) {
-            $pdo->exec("ALTER TABLE orders ADD COLUMN shippingAddress JSON NULL AFTER shippingMethod");
-            error_log("add-order.php: Added 'shippingAddress' column to orders table");
+        $hasShippingAddressCol = $stmt->rowCount() > 0;
+        if (!$hasShippingAddressCol) {
+            try {
+                $pdo->exec("ALTER TABLE orders ADD COLUMN shippingAddress JSON NULL AFTER shippingMethod");
+                error_log("add-order.php: Added 'shippingAddress' column to orders table");
+                $hasShippingAddressCol = true;
+            } catch (Exception $e) {
+                // Fallback: some MySQL versions don't support JSON; we simply won't store it
+                error_log("add-order.php: Warning - Could not add shippingAddress column: " . $e->getMessage());
+                $hasShippingAddressCol = false;
+            }
         }
     } catch (Exception $e) {
         error_log("add-order.php: Warning - Could not check/add shippingAddress column: " . $e->getMessage());
+        $hasShippingAddressCol = false;
+    }
+
+    // Record detected schema in debug
+    if (!isset($hasSizeCol)) { $hasSizeCol = false; }
+    if (!isset($hasShippingMethodCol)) { $hasShippingMethodCol = false; }
+    if (!isset($hasShippingAddressCol)) { $hasShippingAddressCol = false; }
+    if (!empty($debug)) {
+        $debugData['schema'] = [
+            'order_items.size' => (bool)$hasSizeCol,
+            'orders.shippingMethod' => (bool)$hasShippingMethodCol,
+            'orders.shippingAddress' => (bool)$hasShippingAddressCol,
+        ];
     }
 
     // Validate required fields
@@ -472,11 +536,35 @@ try {
     ];
     $shippingCode = $shippingCodes[$shippingMethod] ?? 'P';
 
-    // Generate random 2-digit number
-    $randomNum = str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
-
-    // Create compact order ID: 01A15P23
-    $orderId = $customerNum . $compactDate . $shippingCode . $randomNum;
+    // Generate random 2-digit number and ensure uniqueness for the day/customer/shipping code
+    $orderId = null;
+    $maxAttempts = 50;
+    $attempt = 0;
+    $existsStmt = null;
+    while ($attempt < $maxAttempts) {
+        $attempt++;
+        $randomNum = str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
+        $candidate = $customerNum . $compactDate . $shippingCode . $randomNum; // e.g., 01A15P23
+        if ($existsStmt === null) {
+            $existsStmt = $pdo->prepare('SELECT 1 FROM orders WHERE id = ? LIMIT 1');
+        }
+        $existsStmt->execute([$candidate]);
+        if ($existsStmt->fetchColumn() === false) {
+            $orderId = $candidate;
+            if (!empty($debug) && $attempt > 1) {
+                $debugData['notes'][] = "Order ID collision avoided after $attempt attempts; using $orderId";
+            }
+            break;
+        }
+        // Collision; try again
+        if (!empty($debug)) { $debugData['notes'][] = "Order ID collision on $candidate; retrying ($attempt)"; }
+    }
+    if ($orderId === null) {
+        // Extremely unlikely; fallback to a UUID-like suffix truncated to keep length reasonable
+        $suffix = substr(strtoupper(bin2hex(random_bytes(2))), 0, 4); // 4 hex chars
+        $orderId = $customerNum . $compactDate . $shippingCode . substr($suffix, 0, 2); // still 8 chars
+        if (!empty($debug)) { $debugData['notes'][] = "Order ID fallback used: $orderId"; }
+    }
 
     $pdo->beginTransaction();
     try {
@@ -486,9 +574,24 @@ try {
             $shippingAddressJson = json_encode($shippingAddress);
         }
 
-        // Add shippingMethod and shippingAddress to the insert statement
-        $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, shippingAddress, order_status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?,?)");
-        $success = $stmt->execute([$orderId, $input['customerId'], $computedTotal, $paymentMethod, $shippingMethod, $shippingAddressJson, $orderStatus, $date, $paymentStatus]);
+        // Build INSERT for orders based on available columns
+        $orderCols = ['id','userId','total','paymentMethod'];
+        $orderVals = [$orderId, $input['customerId'], $computedTotal, $paymentMethod];
+        if (!empty($hasShippingMethodCol)) { $orderCols[] = 'shippingMethod'; $orderVals[] = $shippingMethod; }
+        if (!empty($hasShippingAddressCol)) { $orderCols[] = 'shippingAddress'; $orderVals[] = $shippingAddressJson; }
+        $orderCols = array_merge($orderCols, ['order_status','date','paymentStatus']);
+        $orderVals = array_merge($orderVals, [$orderStatus, $date, $paymentStatus]);
+        $placeholders = implode(',', array_fill(0, count($orderCols), '?'));
+        $sql = "INSERT INTO orders (" . implode(',', $orderCols) . ") VALUES ($placeholders)";
+        if (!empty($debug)) {
+            $debugData['ordersInsert'] = [
+                'sql' => $sql,
+                // Show anonymized values to avoid leaking PII; keep structure
+                'columns' => $orderCols,
+            ];
+        }
+        $stmt = $pdo->prepare($sql);
+        $success = $stmt->execute($orderVals);
 
         // Get the next order item ID sequence number by finding the highest existing ID
         $maxIdStmt = $pdo->prepare("SELECT id FROM order_items WHERE id REGEXP '^OI[0-9]+$' ORDER BY CAST(SUBSTRING(id, 3) AS UNSIGNED) DESC LIMIT 1");
@@ -507,14 +610,28 @@ try {
 
         // Prepare statements for order items and stock updates
         $priceStmt = $pdo->prepare("SELECT retailPrice FROM items WHERE sku = ?");
-        $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        // Prepare order_items insert; include size only if column exists
+        if (!empty($hasSizeCol)) {
+            $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        } else {
+            $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?, ?)");
+        }
 
         // Process each item (SKU)
         for ($i = 0; $i < count($itemIds); $i++) {
+            try {
             $sku = $itemIds[$i];
             $quantity = (int)$quantities[$i];
             $color = !empty($colors[$i]) ? $colors[$i] : null;
             $size = !empty($sizes[$i]) ? $sizes[$i] : null;
+            if (!empty($hasSizeCol) && $size !== null && isset($orderItemSizeMaxLen) && $orderItemSizeMaxLen > 0) {
+                if (strlen($size) > $orderItemSizeMaxLen) {
+                    $orig = $size;
+                    $size = substr($size, 0, $orderItemSizeMaxLen);
+                    error_log("add-order.php: Truncated size '$orig' to '$size' to fit column length $orderItemSizeMaxLen");
+                    if (!empty($debug)) { $debugData['notes'][] = "Truncated size '$orig' to '$size' to fit column length $orderItemSizeMaxLen"; }
+                }
+            }
 
             // Debug each SKU being processed
             error_log("add-order.php: Processing item $i: SKU='$sku', Quantity=$quantity, Color='$color', Size='$size'");
@@ -574,7 +691,11 @@ try {
 
             // Insert order item with color and size information (store effective SKU)
             error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$effectiveSku (orig '$sku'), Qty=$quantity, Price=$price, Color=$color, Size=$size");
-            $orderItemStmt->execute([$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color, $size]);
+            if (!empty($hasSizeCol)) {
+                $orderItemStmt->execute([$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color, $size]);
+            } else {
+                $orderItemStmt->execute([$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color]);
+            }
 
             // Handle stock reduction - prioritize size-specific, then color-specific, then general
             $stockReduced = false;
@@ -637,6 +758,17 @@ try {
                 $updateStockStmt->execute([$quantity, $effectiveSku]);
                 error_log("add-order.php: General stock reduced for SKU '$effectiveSku' (orig '$sku')");
             }
+            } catch (PDOException $ie) {
+                error_log("add-order.php: Item processing failed at index $i (SKU={$itemIds[$i]}): " . $ie->getMessage());
+                if (!empty($debug)) {
+                    $debugData['itemError'] = [
+                        'index' => $i,
+                        'sku' => $itemIds[$i],
+                        'message' => $ie->getMessage(),
+                    ];
+                }
+                throw $ie; // Rethrow to outer catch which will rollback
+            }
         }
 
         $pdo->commit();
@@ -681,20 +813,36 @@ try {
     } catch (PDOException $e) {
         if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) { $pdo->rollBack(); }
         error_log("add-order.php: Database error: " . $e->getMessage());
-        http_response_code(500);
+        if (!empty($debug)) {
+            http_response_code(200); // surface debug in client
+        } else {
+            http_response_code(500);
+        }
         $resp = ['success' => false,'error' => $e->getMessage()];
-        if ($debug) { $resp['debug'] = $debugData; }
+        if (!empty($debug)) {
+            // Attach PDO error info if available
+            $pdoInfo = method_exists($e, 'errorInfo') ? $e->errorInfo : (property_exists($e, 'errorInfo') ? $e->errorInfo : null);
+            $debugData['pdo'] = [
+                'code' => $e->getCode(),
+                'errorInfo' => $pdoInfo,
+            ];
+            $resp['debug'] = $debugData;
+        }
         while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
         $jsonOut = json_encode($resp);
         error_log('add-order.php: Sending DB error response, bytes=' . strlen($jsonOut));
         echo $jsonOut;
         $__wf_add_order_sent = true;
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) { $pdo->rollBack(); }
         error_log("add-order.php: General error: " . $e->getMessage());
-        http_response_code(500);
+        if (!empty($debug)) {
+            http_response_code(200);
+        } else {
+            http_response_code(500);
+        }
         $resp = ['success' => false,'error' => $e->getMessage()];
-        if ($debug) { $resp['debug'] = $debugData; }
+        if (!empty($debug)) { $resp['debug'] = $debugData; }
         while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
         $jsonOut = json_encode($resp);
         error_log('add-order.php: Sending general error response, bytes=' . strlen($jsonOut));
@@ -702,9 +850,13 @@ try {
         $__wf_add_order_sent = true;
     }
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log("add-order.php: Fatal error: " . $e->getMessage());
-    http_response_code(500);
+    if (isset($debug) && $debug) {
+        http_response_code(200);
+    } else {
+        http_response_code(500);
+    }
     $resp = ['success' => false,'error' => 'Fatal error: ' . $e->getMessage()];
     if (isset($debug) && $debug) { $resp['debug'] = $debugData; }
     while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }

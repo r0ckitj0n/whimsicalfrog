@@ -176,14 +176,43 @@ info "Fetching remote refs..."
  git fetch "$REMOTE" || true
 
 info "Pushing branch ${BRANCH} to ${REMOTE}..."
-# If upstream not set, set it; otherwise push normally
+# If upstream not set, set it; otherwise push normally. If push fails due to non-fast-forward,
+# attempt a pull --rebase and retry push once.
+set +e
 if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
   git push "$REMOTE" "$BRANCH"
+  PUSH_STATUS=$?
 else
   git push -u "$REMOTE" "$BRANCH"
+  PUSH_STATUS=$?
+fi
+set -e
+
+if [[ $PUSH_STATUS -ne 0 ]]; then
+  warn "Initial push failed. Attempting 'git pull --rebase' from $REMOTE/$BRANCH and retrying..."
+  git fetch "$REMOTE" "$BRANCH" || true
+  # If branch has an upstream, rebase against it; else explicitly use remote/branch
+  set +e
+  if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+    git pull --rebase
+  else
+    git pull --rebase "$REMOTE" "$BRANCH"
+  fi
+  REBASE_STATUS=$?
+  set -e
+  if [[ $REBASE_STATUS -ne 0 ]]; then
+    err "Rebase failed. Please resolve conflicts and re-run the script."
+    exit $PUSH_STATUS
+  fi
+  info "Retrying push after successful rebase..."
+  if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+    git push "$REMOTE" "$BRANCH"
+  else
+    git push -u "$REMOTE" "$BRANCH"
+  fi
 fi
 
-success "Sync complete. Remote: $(git remote get-url $REMOTE), Branch: $BRANCH"
+success "Sync complete. Remote: $(git remote get-url $REMOTE), Branch: $BRANCH" 
 
 # Optional: Git LFS hint (commented)
 # If you plan to track large binary assets, uncomment below lines the first time:

@@ -294,12 +294,19 @@ function handleSaveConfig() {
 }
 
 function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled) {
+<<<<<<< HEAD
+=======
+    require_once __DIR__ . '/../includes/business_settings_helper.php';
+    $brandPrimary = BusinessSettings::getPrimaryColor();
+    $brandSecondary = BusinessSettings::getSecondaryColor();
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     return "
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset='UTF-8'>
         <title>Test Email - WhimsicalFrog</title>
+<<<<<<< HEAD
     </head>
     <body style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;'>
         <div style='background-color: #87ac3a; color: white; padding: 20px; text-align: center; border-radius: 8px;'>
@@ -315,13 +322,35 @@ function createTestEmailHtml($fromEmail, $fromName, $smtpEnabled) {
             <div style='background-color: white; padding: 15px; border-radius: 6px; margin: 15px 0;'>
                 <h3 style='color: #333; margin-top: 0;'>Configuration Details:</h3>
                 <ul style='color: #666; line-height: 1.6;'>
+=======
+        <link rel='stylesheet' href='https://whimsicalfrog.us/css/email-styles.css'>
+    </head>
+    <body class='email-body' style='-brand-primary: {$brandPrimary}; -brand-secondary: {$brandSecondary};'>
+        <div class='email-header'>
+            <h1 class='m-0'>WhimsicalFrog</h1>
+            <p class='u-margin-top-10px'>Email Configuration Test</p>
+        </div>
+        
+        <div class='email-wrapper'>
+            <h2 class='u-color-87ac3a m-0'>Configuration Test Successful! ✅</h2>
+            
+            <p>If you're reading this email, your email configuration is working correctly.</p>
+            
+            <div class='email-section'>
+                <h3 class='u-color-333 m-0'>Configuration Details:</h3>
+                <ul class='u-color-666 u-line-height-1-6'>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <li><strong>From Email:</strong> " . htmlspecialchars($fromEmail) . "</li>
                     <li><strong>From Name:</strong> " . htmlspecialchars($fromName) . "</li>
                     <li><strong>SMTP Enabled:</strong> " . ($smtpEnabled ? 'Yes' : 'No') . "</li>
                 </ul>
             </div>
             
+<<<<<<< HEAD
             <p style='color: #666; font-size: 14px; margin-top: 20px;'>
+=======
+            <p class='u-color-666 u-font-size-14px u-margin-top-20px'>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 This test email was sent on " . date('F j, Y \a\t g:i A T') . "
             </p>
         </div>

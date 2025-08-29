@@ -57,7 +57,11 @@ if (!$input) {
 // Debug the parsed input
 error_log("add-order.php: Parsed input: " . print_r($input, true));
 
+<<<<<<< HEAD
 try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
+=======
+$pdo = new PDO($dsn, $user, $pass, $options);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 // Ensure order_items table has size column (migration)
 try {
@@ -140,6 +144,7 @@ $shippingCodes = [
 ];
 $shippingCode = $shippingCodes[$shippingMethod] ?? 'P';
 
+<<<<<<< HEAD
 // Generate sequence-based number instead of random to prevent duplicates
 // Find the highest existing order ID with this prefix pattern to get next sequence
 $orderPrefix = $customerNum . $compactDate . $shippingCode;
@@ -160,6 +165,13 @@ if ($maxOrderId) {
 
 // Create compact order ID: 01A15P01 (sequence-based, not random)
 $orderId = $orderPrefix . $sequenceNum;
+=======
+// Generate random 2-digit number
+$randomNum = str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
+
+// Create compact order ID: 01A15P23
+$orderId = $customerNum . $compactDate . $shippingCode . $randomNum;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 $pdo->beginTransaction();
 try {
@@ -169,6 +181,7 @@ try {
         $shippingAddressJson = json_encode($shippingAddress);
     }
     
+<<<<<<< HEAD
     // Insert the order
     $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, paymentStatus, order_status, date, shippingMethod, shippingAddress) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     $success = $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $paymentStatus, $orderStatus, $date, $shippingMethod, $shippingAddressJson]);
@@ -186,6 +199,11 @@ try {
         $orderStatus,
         $input['customerId']
     );
+=======
+    // Add shippingMethod and shippingAddress to the insert statement
+    $stmt = $pdo->prepare("INSERT INTO orders (id, userId, total, paymentMethod, shippingMethod, shippingAddress, order_status, date, paymentStatus) VALUES (?,?,?,?,?,?,?,?,?)");
+    $success = $stmt->execute([$orderId, $input['customerId'], $input['total'], $paymentMethod, $shippingMethod, $shippingAddressJson, $orderStatus, $date, $paymentStatus]);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     // Get the next order item ID sequence number by finding the highest existing ID
     $maxIdStmt = $pdo->prepare("SELECT id FROM order_items WHERE id REGEXP '^OI[0-9]+$' ORDER BY CAST(SUBSTRING(id, 3) AS UNSIGNED) DESC LIMIT 1");

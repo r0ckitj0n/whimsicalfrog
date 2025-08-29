@@ -237,8 +237,13 @@ function renderCostList(type, items) {
                 <div class="flex items-center">
                     <span class="cost-item-value">$${parseFloat(item.cost).toFixed(2)}</span>
                     <div class="cost-item-actions">
+<<<<<<< HEAD
                         <button type="button" class="text-green-600 hover:text-green-800 mr-2" onclick="editCostItem('${type}', ${item.id})" title="Edit Cost">✏️</button>
                         <button type="button" class="text-red-600 hover:text-red-800" onclick="deleteCostItem('${type}', ${item.id}, '${escapeHtml(itemName)}')" title="Delete Cost">🗑️</button>
+=======
+                        <button type="button" class="text-green-600 hover:text-green-800" data-action="editCostItem" data-params='{"type":"${type}","id":${item.id}}' title="Edit Cost">✏️</button>
+                        <button type="button" class="text-red-600 hover:text-red-800" data-action="deleteCostItem" data-params='{"type":"${type}","id":${item.id},"name":"${escapeHtml(itemName)}"}' title="Delete Cost">🗑️</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     </div>
                 </div>
             `;

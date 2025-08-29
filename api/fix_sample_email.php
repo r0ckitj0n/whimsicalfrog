@@ -57,6 +57,7 @@ try {
         LIMIT 1";
     
     $realisticContent = '
+<<<<<<< HEAD
                 <div class="email-container">
         <div class="email-header">
             <h1 class="email-title">WhimsicalFrog</h1>
@@ -64,11 +65,21 @@ try {
         </div>
         
         <h2 style="color: #333;">Order Confirmation #01F14P23</h2>
+=======
+            <div class="email-container">
+<div class="email-header">
+<h1>WhimsicalFrog</h1>
+<p>Custom Products & Design</p>
+</div>
+
+<h2>Order Confirmation #01F14P23</h2>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 
                 <p>Dear John Doe,</p>
                 
                 <p>Thank you for your order! We have received your order and it is being processed.</p>
                 
+<<<<<<< HEAD
                 <h3 class="email-section-title">Order Details:</h3>
                         <table class="email-table">
             <tr class="email-table-header">
@@ -93,6 +104,35 @@ try {
         </table>
                 
                 <h3 class="email-section-title">Shipping Information:</h3>
+=======
+                <div class="email-section">
+<h3>Order Details:</h3>
+<table class="email-table">
+<tr>
+<th>Item</th>
+<th class="text-right">Quantity</th>
+<th class="text-right">Price</th>
+</tr>
+<tr>
+<td>Custom T-Shirt Design</td>
+<td class="text-right">2</td>
+<td class="text-right">$25.00</td>
+</tr>
+<tr>
+<td>Custom Tumbler</td>
+<td class="text-right">1</td>
+<td class="text-right">$15.00</td>
+</tr>
+<tr class="total-row">
+<td colspan="2">Total:</td>
+<td class="text-right">$40.00</td>
+</tr>
+</table>
+</div>
+
+<div class="email-section">
+<h3>Shipping Information:</h3>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <p>John Doe<br>
                 123 Main Street<br>
                 Anytown, ST 12345</p>
@@ -106,7 +146,13 @@ try {
                 
                 <p>Thank you for choosing WhimsicalFrog!</p>
                 
+<<<<<<< HEAD
                 <div class="email-footer">
+=======
+                </div>
+
+<div class="email-footer">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <p>This is an automated email. Please do not reply to this email address.</p>
                 </div>
             </div>';

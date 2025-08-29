@@ -12,7 +12,11 @@ try {
     $createTable = "
     CREATE TABLE IF NOT EXISTS room_settings (
         id INT PRIMARY KEY AUTO_INCREMENT,
+<<<<<<< HEAD
         room_number INT NOT NULL UNIQUE,
+=======
+        room_number VARCHAR(10) NOT NULL UNIQUE,
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         room_name VARCHAR(100) NOT NULL,
         door_label VARCHAR(100) NOT NULL,
         description TEXT,
@@ -26,53 +30,90 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     
     $pdo->exec($createTable);
+<<<<<<< HEAD
+=======
+        // Ensure background_display_type column exists
+        try {
+            $pdo->exec("ALTER TABLE room_settings ADD COLUMN background_display_type ENUM('fullscreen','modal') NOT NULL DEFAULT 'fullscreen'");
+        } catch (Exception $e) {
+            // Column already exists, skip
+        }
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     // Insert default room settings
     $defaultRooms = [
         [
+<<<<<<< HEAD
             'room_number' => 0,
+=======
+            'room_number' => 'A',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             'room_name' => 'Landing Page',
             'door_label' => 'Welcome',
             'description' => 'Main landing page with featured items',
             'display_order' => 0
         ],
         [
+<<<<<<< HEAD
             'room_number' => 1,
+=======
+            'room_number' => 'B',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             'room_name' => 'Main Room',
             'door_label' => 'Explore Rooms',
             'description' => 'Central hub with access to all product rooms',
             'display_order' => 1
         ],
         [
+<<<<<<< HEAD
             'room_number' => 2,
+=======
+            'room_number' => '1',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             'room_name' => 'T-Shirts & Apparel',
             'door_label' => 'T-Shirts & Apparel',
             'description' => 'Custom t-shirts, hoodies, and apparel',
             'display_order' => 2
         ],
         [
+<<<<<<< HEAD
             'room_number' => 3,
+=======
+            'room_number' => '2',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             'room_name' => 'Tumblers & Drinkware',
             'door_label' => 'Tumblers & Drinkware',
             'description' => 'Custom tumblers, mugs, and drinkware',
             'display_order' => 3
         ],
         [
+<<<<<<< HEAD
             'room_number' => 4,
+=======
+            'room_number' => '3',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             'room_name' => 'Custom Artwork',
             'door_label' => 'Custom Artwork',
             'description' => 'Personalized artwork and designs',
             'display_order' => 4
         ],
         [
+<<<<<<< HEAD
             'room_number' => 5,
+=======
+            'room_number' => '4',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             'room_name' => 'Sublimation Items',
             'door_label' => 'Sublimation Items',
             'description' => 'Sublimation printing on various items',
             'display_order' => 5
         ],
         [
+<<<<<<< HEAD
             'room_number' => 6,
+=======
+            'room_number' => '5',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             'room_name' => 'Window Wraps',
             'door_label' => 'Window Wraps',
             'description' => 'Custom window wraps and vehicle graphics',

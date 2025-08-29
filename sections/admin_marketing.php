@@ -193,13 +193,22 @@ function generateId($prefix, $length = 3) {
             <input type="date" id="mTo" name="end_date" class="admin-form-input" 
                    value="<?= htmlspecialchars($endInput) ?>">
             
+<<<<<<< HEAD
             <button type="submit" class="btn-primary admin-filter-button">Apply Filter</button>
+=======
+            <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </form>
     </div>
 
     <div class="admin-table-section">
+<<<<<<< HEAD
         <!-- Dashboard Stats -->
     <div class="dashboard-stats-grid mb-8">
+=======
+        <!- Dashboard Stats ->
+    <div class="dashboard-stats-grid">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="stat-card">
             <div class="stat-icon customers">👥</div>
             <div class="stat-content">
@@ -249,11 +258,19 @@ function generateId($prefix, $length = 3) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Dashboard Content Grid -->
     <div class="dashboard-grid">
         <!-- Left Column -->
         <div class="dashboard-column">
             <!-- Sales Overview Chart -->
+=======
+    <!- Dashboard Content Grid ->
+    <div class="dashboard-grid">
+        <!- Left Column ->
+        <div class="dashboard-column">
+            <!- Sales Overview Chart ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="admin-card">
                 <div class="card-header">
                     <h3 class="card-title">Sales Overview</h3>
@@ -263,7 +280,11 @@ function generateId($prefix, $length = 3) {
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Payment Methods Chart -->
+=======
+            <!- Payment Methods Chart ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="admin-card">
                 <div class="card-header">
                     <h3 class="card-title">Payment Methods</h3>
@@ -273,7 +294,11 @@ function generateId($prefix, $length = 3) {
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Top Products -->
+=======
+            <!- Top Products ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="admin-card">
                 <div class="card-header">
                     <h3 class="card-title">Top Items</h3>
@@ -296,9 +321,15 @@ function generateId($prefix, $length = 3) {
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- Right Column -->
         <div class="dashboard-column">
             <!-- Recent Orders -->
+=======
+        <!- Right Column ->
+        <div class="dashboard-column">
+            <!- Recent Orders ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="admin-card">
                 <div class="card-header">
                     <h3 class="card-title">Recent Orders</h3>
@@ -336,7 +367,11 @@ function generateId($prefix, $length = 3) {
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Marketing Tools -->
+=======
+            <!- Marketing Tools ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="admin-card">
                 <div class="card-header">
                     <h3 class="card-title">Marketing Tools</h3>
@@ -378,6 +413,7 @@ function generateId($prefix, $length = 3) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Marketing Tool Sections -->
     <div id="marketing-tool-sections">
         <!-- Email Campaigns Section -->
@@ -386,12 +422,27 @@ function generateId($prefix, $length = 3) {
                 <div class="section-header">
                     <h2 class="section-title">Email Campaigns</h2>
                     <button class="btn-primary" onclick="toggleNewCampaignForm()">
+=======
+    <!- Marketing Tool Sections ->
+    <div id="marketing-tool-sections">
+        <!- Email Campaigns Section ->
+        <div id="email-campaigns-section" class="marketing-tool-section hidden">
+            <div class="admin-card">
+                <div class="section-header">
+                    <h2 class="section-title">Email Campaigns</h2>
+                    <button class="btn btn-primary" onclick="toggleNewCampaignForm()">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ➕ New Campaign
                     </button>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- New Campaign Form -->
                 <div id="new-campaign-form" class="form-container" style="display: none;">
+=======
+                <!- New Campaign Form ->
+                <div id="new-campaign-form" class="form-container hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <h3 class="form-title">Create New Campaign</h3>
                     <form id="campaign-form" action="process_email_campaign.php" method="post" class="marketing-form">
                         <input type="hidden" name="action" value="create">
@@ -434,19 +485,32 @@ function generateId($prefix, $length = 3) {
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <div id="schedule-date-container" class="form-group" style="display: none;">
+=======
+                        <div id="schedule-date-container" class="form-group hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <label for="campaign-date" class="form-label">Schedule Date</label>
                             <input type="datetime-local" id="campaign-date" name="scheduled_date" class="form-input">
                         </div>
                         
                         <div class="form-actions">
+<<<<<<< HEAD
                             <button type="button" class="btn-secondary" onclick="toggleNewCampaignForm()">Cancel</button>
                             <button type="submit" class="btn-primary">Create Campaign</button>
+=======
+                            <button type="button" class="btn btn-secondary" onclick="toggleNewCampaignForm()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Campaign</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     </form>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Campaigns List -->
+=======
+                <!- Campaigns List ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="campaigns-list">
                     <?php if (!empty($marketingData['emailCampaigns'])): ?>
                         <div class="table-container">
@@ -491,31 +555,53 @@ function generateId($prefix, $length = 3) {
                     <?php endif; ?>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Subscribers Section -->
+=======
+                <!- Subscribers Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <?php if (!empty($marketingData['emailSubscribers'])): ?>
                 <div class="subscribers-section">
                     <div class="subscribers-info">
                         <h4 class="subscribers-title">Active Subscribers</h4>
                         <p class="subscribers-count"><?= count($marketingData['emailSubscribers']) ?> subscribers</p>
                     </div>
+<<<<<<< HEAD
                     <button class="btn-secondary btn-sm">Manage Subscribers</button>
+=======
+                    <button class="btn btn-secondary btn-sm">Manage Subscribers</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
                 <?php endif; ?>
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Discount Codes Section -->
         <div id="discount-codes-section" class="marketing-tool-section" style="display: none;">
             <div class="admin-card">
                 <div class="section-header">
                     <h2 class="section-title">Discount Codes</h2>
                     <button class="btn-primary" onclick="toggleNewDiscountForm()">
+=======
+        <!- Discount Codes Section ->
+        <div id="discount-codes-section" class="marketing-tool-section hidden">
+            <div class="admin-card">
+                <div class="section-header">
+                    <h2 class="section-title">Discount Codes</h2>
+                    <button class="btn btn-primary" onclick="toggleNewDiscountForm()">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ➕ New Discount Code
                     </button>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- New Discount Form -->
                 <div id="new-discount-form" class="form-container" style="display: none;">
+=======
+                <!- New Discount Form ->
+                <div id="new-discount-form" class="form-container hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <h3 class="form-title">Create New Discount Code</h3>
                     <form id="discount-form" action="process_discount_code.php" method="post" class="marketing-form">
                         <input type="hidden" name="action" value="create">
@@ -526,7 +612,11 @@ function generateId($prefix, $length = 3) {
                                 <label for="discount-code" class="form-label">Discount Code</label>
                                 <div class="input-group">
                                     <input type="text" id="discount-code" name="code" class="form-input" required>
+<<<<<<< HEAD
                                     <button type="button" class="btn-secondary" onclick="generateDiscountCode()">Generate</button>
+=======
+                                    <button type="button" class="btn btn-secondary" onclick="generateDiscountCode()">Generate</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 </div>
                             </div>
                             
@@ -567,13 +657,22 @@ function generateId($prefix, $length = 3) {
                         </div>
                         
                         <div class="form-actions">
+<<<<<<< HEAD
                             <button type="button" class="btn-secondary" onclick="toggleNewDiscountForm()">Cancel</button>
                             <button type="submit" class="btn-primary">Create Discount Code</button>
+=======
+                            <button type="button" class="btn btn-secondary" onclick="toggleNewDiscountForm()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Create Discount Code</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     </form>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Discount Codes List -->
+=======
+                <!- Discount Codes List ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="discount-codes-list">
                     <?php if (!empty($marketingData['discountCodes'])): ?>
                         <div class="table-container">
@@ -634,17 +733,30 @@ function generateId($prefix, $length = 3) {
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Social Media Section -->
         <div id="social-media-section" class="marketing-tool-section" style="display: none;">
             <div class="admin-card">
                 <div class="section-header">
                     <h2 class="section-title">Social Media Management</h2>
                     <button class="btn-primary" onclick="toggleNewPostForm()">
+=======
+        <!- Social Media Section ->
+        <div id="social-media-section" class="marketing-tool-section" class="hidden">
+            <div class="admin-card">
+                <div class="section-header">
+                    <h2 class="section-title">Social Media Management</h2>
+                    <button class="btn btn-primary" onclick="toggleNewPostForm()">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ➕ New Post
                     </button>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Social Accounts -->
+=======
+                <!- Social Accounts ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <?php if (!empty($marketingData['socialAccounts'])): ?>
                 <div class="social-accounts-section">
                     <h3 class="subsection-title">Connected Accounts</h3>
@@ -670,7 +782,11 @@ function generateId($prefix, $length = 3) {
                                 </span>
                             </div>
                             <div class="account-actions">
+<<<<<<< HEAD
                                 <button class="btn-secondary btn-sm">
+=======
+                                <button class="btn btn-secondary btn-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?= ($account['status'] ?? '') === 'connected' ? 'Disconnect' : 'Connect' ?>
                                 </button>
                             </div>
@@ -680,7 +796,11 @@ function generateId($prefix, $length = 3) {
                 </div>
                 <?php endif; ?>
                 
+<<<<<<< HEAD
                 <!-- Social Posts -->
+=======
+                <!- Social Posts ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="social-posts-section">
                     <h3 class="subsection-title">Recent Posts</h3>
                     <?php if (!empty($marketingData['socialPosts'])): ?>
@@ -729,6 +849,7 @@ function generateId($prefix, $length = 3) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Setup Notice for Missing Tables -->
     <?php if (!$tableStatus['allTablesExist']): ?>
     <div class="admin-card mt-8">
@@ -736,6 +857,15 @@ function generateId($prefix, $length = 3) {
             <h3 class="setup-title">Marketing Setup Required</h3>
             <p class="setup-description">Some marketing features require database setup. Click below to initialize missing tables.</p>
             <button class="btn-primary" onclick="initializeMarketingTables()">
+=======
+    <!- Setup Notice for Missing Tables ->
+    <?php if (!$tableStatus['allTablesExist']): ?>
+    <div class="admin-card">
+        <div class="setup-notice">
+            <h3 class="setup-title">Marketing Setup Required</h3>
+            <p class="setup-description">Some marketing features require database setup. Click below to initialize missing tables.</p>
+            <button class="btn btn-primary" onclick="initializeMarketingTables()">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 🚀 Setup Marketing Tables
             </button>
         </div>
@@ -744,7 +874,11 @@ function generateId($prefix, $length = 3) {
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- JavaScript -->
+=======
+<!- JavaScript ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Chart Data
@@ -762,7 +896,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 datasets: [{
                     label: 'Sales ($)',
                     data: chartData.salesData,
+<<<<<<< HEAD
                     borderColor: 'var(--primary-color, #87ac3a)',
+=======
+                    borderColor: 'var(-primary-color, #87ac3a)',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     backgroundColor: 'rgba(135, 172, 58, 0.1)',
                     fill: true,
                     tension: 0.4
@@ -823,27 +961,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Marketing Tool Functions
 function showMarketingTool(tool) {
+<<<<<<< HEAD
     // Hide all sections
     document.querySelectorAll('.marketing-tool-section').forEach(section => {
         section.style.display = 'none';
+=======
+    // Hide all sections via CSS class
+    document.querySelectorAll('.marketing-tool-section').forEach(section => {
+        section.classList.add('hidden');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     });
     
     // Show selected section
     const section = document.getElementById(tool + '-section');
     if (section) {
+<<<<<<< HEAD
         section.style.display = 'block';
+=======
+        section.classList.remove('hidden');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         section.scrollIntoView({ behavior: 'smooth' });
     }
 }
 
 function toggleNewCampaignForm() {
     const form = document.getElementById('new-campaign-form');
+<<<<<<< HEAD
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
+=======
+    form.classList.toggle('hidden');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 }
 
 function toggleNewDiscountForm() {
     const form = document.getElementById('new-discount-form');
+<<<<<<< HEAD
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
+=======
+    form.classList.toggle('hidden');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 }
 
 function toggleNewPostForm() {
@@ -871,7 +1027,15 @@ function initializeMarketingTables() {
 document.addEventListener('change', function(e) {
     if (e.target.id === 'campaign-schedule') {
         const dateContainer = document.getElementById('schedule-date-container');
+<<<<<<< HEAD
         dateContainer.style.display = e.target.value === 'schedule' ? 'block' : 'none';
+=======
+        if (e.target.value === 'schedule') {
+            dateContainer.classList.remove('hidden');
+        } else {
+            dateContainer.classList.add('hidden');
+        }
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
 });
 </script>

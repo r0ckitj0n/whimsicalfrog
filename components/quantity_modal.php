@@ -5,8 +5,13 @@
  */
 ?>
 
+<<<<<<< HEAD
 <!-- Universal Quantity Modal - Used by all rooms -->
 <div id="quantityModal" class="modal-overlay hidden" style="z-index: 9999 !important;">
+=======
+<!- Universal Quantity Modal - Used by all rooms ->
+<div id="quantityModal" class="quantity-modal modal-overlay hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="room-modal-content">
         <div class="modal-header">
             <h3 class="modal-title">Add to Cart</h3>
@@ -21,7 +26,11 @@
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Color and Size Options - dynamically populated by cart.js -->
+=======
+            <!- Color and Size Options - dynamically populated by cart.js ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div id="colorDropdownContainer" class="color-dropdown-container"></div>
             <div id="sizeDropdownContainer" class="size-dropdown-container"></div>
             
@@ -47,8 +56,13 @@
             </div>
         </div>
         <div class="modal-footer">
+<<<<<<< HEAD
             <button id="cancelQuantityModal" class="btn-secondary">Cancel</button>
             <button id="confirmAddToCart" class="btn-primary">Add to Cart</button>
+=======
+            <button id="cancelQuantityModal" class="btn btn-secondary">Cancel</button>
+            <button id="confirmAddToCart" class="btn btn-primary">Add to Cart</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>
     </div>
 </div> 

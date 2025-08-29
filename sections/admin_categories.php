@@ -38,10 +38,17 @@ $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 ?>
 
+<<<<<<< HEAD
 <div class="container mx-auto px-4 py-6">
     <div class="admin-header-section">
         <h1 class="admin-title">Category Management</h1>
         <a href="/?page=admin&section=settings" class="btn-primary">Back to Settings</a>
+=======
+<div class="">
+    <div class="admin-header-section">
+        <h1 class="admin-title">Category Management</h1>
+        <a href="/?page=admin&section=settings" class="btn btn-primary">Back to Settings</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     </div>
     
     <?php if ($message): ?>
@@ -50,6 +57,7 @@ $messageType = $_GET['type'] ?? '';
         </div>
     <?php endif; ?>
 
+<<<<<<< HEAD
     <!-- Add Category Form -->
     <div class="admin-card mb-6">
         <h3 class="admin-card-title">Add New Category</h3>
@@ -61,6 +69,19 @@ $messageType = $_GET['type'] ?? '';
     </div>
 
     <!-- Categories List -->
+=======
+    <!- Add Category Form ->
+    <div class="admin-card">
+        <h3 class="admin-card-title">Add New Category</h3>
+        <form id="addCategoryForm" class="admin-form-inline">
+            <input type="text" id="newCategory" name="newCategory" 
+                   placeholder="Enter category name..." class="form-input" required>
+            <button type="submit" class="btn btn-primary">Add Category</button>
+        </form>
+    </div>
+
+    <!- Categories List ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <?php if (empty($categories)): ?>
             <div class="admin-empty-state">
@@ -105,8 +126,13 @@ $messageType = $_GET['type'] ?? '';
         <?php endif; ?>
     </div>
 
+<<<<<<< HEAD
     <!-- SKU Information -->
     <div class="admin-info-card mt-6">
+=======
+    <!- SKU Information ->
+    <div class="admin-info-card">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <h4 class="info-title">📋 SKU Naming Scheme</h4>
         <p class="info-text">Categories automatically generate SKU prefixes: <strong>WF-[CODE]-###</strong></p>
         <p class="info-text">Example: "T-Shirts" → <span class="code-badge">WF-TS-001</span></p>

@@ -1,4 +1,5 @@
 <?php
+<<<<<<< HEAD
 // Set headers for CORS and JSON response
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
@@ -52,20 +53,83 @@ $state = isset($data['state']) ? $data['state'] : '';
 $zipCode = isset($data['zipCode']) ? $data['zipCode'] : '';
 
 try {
+=======
+// Include centralized systems
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/functions.php';
+
+// Set CORS headers
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    Response::json(null, 200);
+}
+
+// Validate HTTP method
+Response::validateMethod('POST');
+
+try {
+    // Get and validate input
+    $data = Response::getJsonInput();
+    
+    // Validate required fields
+    $required = ['username', 'password', 'email'];
+    foreach ($required as $field) {
+        if (!isset($data[$field]) || empty($data[$field])) {
+            Response::error("$field is required");
+        }
+    }
+    
+    // Get database connection using centralized system
+    $pdo = Database::getInstance();
+    
+    // Sanitize inputs using centralized function
+    $username = trim($data['username']);
+    $password = $data['password'];
+    $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
+    
+    if (!$email) {
+        Response::error('Invalid email format');
+    }
+    
+    // Optional fields with defaults
+    $role = $data['role'] ?? 'Customer';
+    $roleType = $data['roleType'] ?? 'Customer';
+    $firstName = trim($data['firstName'] ?? '');
+    $lastName = trim($data['lastName'] ?? '');
+    $phoneNumber = trim($data['phoneNumber'] ?? '');
+    $addressLine1 = trim($data['addressLine1'] ?? '');
+    $addressLine2 = trim($data['addressLine2'] ?? '');
+    $city = trim($data['city'] ?? '');
+    $state = trim($data['state'] ?? '');
+    $zipCode = trim($data['zipCode'] ?? '');
+    
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     // Check if username already exists
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = ?');
     $stmt->execute([$username]);
     if ($stmt->fetchColumn() > 0) {
+<<<<<<< HEAD
         echo json_encode(['error' => 'Username already exists']);
         exit();
+=======
+        Response::error('Username already exists');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     // Check if email already exists
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ?');
     $stmt->execute([$email]);
     if ($stmt->fetchColumn() > 0) {
+<<<<<<< HEAD
         echo json_encode(['error' => 'Email already exists']);
         exit();
+=======
+        Response::error('Email already exists');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     // Generate compact customer ID format: [MonthDay][SequenceNum]
@@ -86,12 +150,24 @@ try {
     // Create customer ID: A15001
     $userId = $compactDate . $sequenceNum;
     
+<<<<<<< HEAD
     // Insert new user
     $stmt = $pdo->prepare('INSERT INTO users (id, username, password, email, role, roleType, first_name, last_name, phone_number, address_line1, address_line2, city, state, zip_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([
         $userId,
         $username,
         $password,
+=======
+    // Hash password using secure method
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    
+    // Insert new user
+    $stmt = $pdo->prepare('INSERT INTO users (id, username, password, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    $stmt->execute([
+        $userId,
+        $username,
+        $hashedPassword,
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         $email,
         $role,
         $roleType,
@@ -105,9 +181,22 @@ try {
         $zipCode
     ]);
     
+<<<<<<< HEAD
     // Return success response with user data
     echo json_encode([
         'success' => true,
+=======
+    // Log successful registration
+    Logger::info("User registered successfully", [
+        'userId' => $userId,
+        'username' => $username,
+        'email' => $email,
+        'role' => $role
+    ]);
+    
+    // Return success response using centralized method
+    Response::success([
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         'userId' => $userId,
         'username' => $username,
         'email' => $email,
@@ -115,10 +204,30 @@ try {
         'roleType' => $roleType,
         'firstName' => $firstName,
         'lastName' => $lastName
+<<<<<<< HEAD
     ]);
     
 } catch (PDOException $e) {
     // Database error
     echo json_encode(['error' => 'Registration failed', 'details' => $e->getMessage()]);
+=======
+    ], 'User registered successfully');
+    
+} catch (PDOException $e) {
+    // Log database error using centralized logging
+    Logger::databaseError($e, 'User registration failed', [
+        'username' => $username ?? 'unknown',
+        'email' => $email ?? 'unknown'
+    ]);
+    Response::serverError('Registration failed');
+    
+} catch (Exception $e) {
+    // Log general error using centralized logging
+    Logger::error('Registration error: ' . $e->getMessage(), [
+        'username' => $username ?? 'unknown',
+        'email' => $email ?? 'unknown'
+    ]);
+    Response::serverError('Registration failed');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 }
 ?>

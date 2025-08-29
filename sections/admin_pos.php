@@ -22,7 +22,11 @@ try {
 
 
 <div class="pos-register">
+<<<<<<< HEAD
     <!-- Header -->
+=======
+    <!- Header ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="pos-header">
         <h1 class="pos-title">🛒 WhimsicalFrog Point of Sale</h1>
         <div class="pos-header-buttons">
@@ -35,11 +39,19 @@ try {
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Main Content -->
     <div class="pos-main">
         <!-- Left Panel - Search & Items -->
         <div class="pos-left-panel">
             <!-- Search Section -->
+=======
+    <!- Main Content ->
+    <div class="pos-main">
+        <!- Left Panel - Search & Items ->
+        <div class="pos-left-panel">
+            <!- Search Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="pos-search-section">
                 <h2 class="pos-search-title">📦 Add Items</h2>
                 <div class="pos-search-methods">
@@ -54,15 +66,26 @@ try {
                 </div>
             </div>
 
+<<<<<<< HEAD
             <!-- Items Grid -->
             <div class="pos-items-grid">
                 <div class="items-grid" id="itemsGrid">
                     <!-- Items will be populated here -->
+=======
+            <!- Items Grid ->
+            <div class="pos-items-grid">
+                <div class="items-grid" id="itemsGrid">
+                    <!- Items will be populated here ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Right Panel - Cart -->
+=======
+        <!- Right Panel - Cart ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="pos-cart">
             <div class="cart-header">
                 <h2 class="cart-title">🛒 Cart</h2>
@@ -71,7 +94,11 @@ try {
             <div class="cart-summary">
                 <div class="cart-total">
                     <span>Total:</span>
+<<<<<<< HEAD
                     <span id="posCartTotal" class="pos-cart-total">$0.00</span>
+=======
+                    <span id="posCartTotal">$0.00</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
                 <button class="checkout-btn" id="checkoutBtn" onclick="processCheckout()" disabled>
                     💳 Complete Sale
@@ -92,7 +119,11 @@ try {
         // Load global CSS variables for POS
 async function loadPOSCSSVariables() {
     try {
+<<<<<<< HEAD
         const response = await fetch('/api/global_css_rules.php?action=generate_css');
+=======
+                        // Database CSS loading removed - using static CSS files only
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         const data = await response.json();
         
         if (data.success && data.css_content) {
@@ -213,7 +244,11 @@ function showAllItems() {
 // Simple test cart display function
 function simpleCartDisplay() {const cartItems = document.getElementById('cartItems');
     if (cartItems) {
+<<<<<<< HEAD
                         cartItems.innerHTML = '<div class="debug-info">🧪 SIMPLE TEST: Cart has ' + cart.length + ' items</div>';} else {
+=======
+        cartItems.innerHTML = '<div >🧪 SIMPLE TEST: Cart has ' + cart.length + ' items</div>';} else {
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         console.error('🧪 cartItems element not found');
     }
 }
@@ -436,6 +471,7 @@ function showPOSModal(title, message, type = 'info', autoClose = false) {
         'processing': '#9C27B0'
     };
     
+<<<<<<< HEAD
             modal.innerHTML = `
             <div class="pos-modal-content">
                 <div class="pos-modal-header" style="background: ${colorMap[type]};">
@@ -444,12 +480,26 @@ function showPOSModal(title, message, type = 'info', autoClose = false) {
                         ${title}
                     </h3>
                 </div>
+=======
+    modal.innerHTML = `
+        <div class="pos-modal-content">
+            <div class="pos-modal-header pos-modal-header-${type.toLowerCase().replace(/ /g, '-')}">
+                <h3 class="pos-modal-title">
+                    <span class="pos-modal-icon">${iconMap[type]}</span>
+                    ${title}
+                </h3>
+            </div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="pos-modal-body">
                 ${message}
             </div>
             ${!autoClose ? `
                 <div class="pos-modal-footer">
+<<<<<<< HEAD
                     <button class="pos-modal-btn pos-modal-btn-close" onclick="hidePOSModal()">OK</button>
+=======
+                    <button class="btn btn-light" onclick="hidePOSModal()">OK</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             ` : ''}
         </div>
@@ -478,9 +528,15 @@ function showPOSConfirm(title, message, confirmText = 'Confirm', cancelText = 'C
         
         modal.innerHTML = `
             <div class="pos-modal-content">
+<<<<<<< HEAD
                 <div class="pos-modal-header" style="background: #FF9800;">
                     <h3 class="pos-modal-header">
                         <span style="font-size: 1.5rem;">❓</span>
+=======
+                <div class="pos-modal-header pos-modal-header-warning">
+                    <h3 class="pos-modal-title">
+                        <span class="pos-modal-icon">❓</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ${title}
                     </h3>
                 </div>
@@ -488,8 +544,13 @@ function showPOSConfirm(title, message, confirmText = 'Confirm', cancelText = 'C
                     ${message}
                 </div>
                 <div class="pos-modal-footer">
+<<<<<<< HEAD
                     <button class="pos-modal-btn pos-modal-btn-cancel" onclick="resolvePOSConfirm(false)">${cancelText}</button>
                     <button class="pos-modal-btn pos-modal-btn-confirm" onclick="resolvePOSConfirm(true)">${confirmText}</button>
+=======
+                    <button class="btn btn-light" onclick="resolvePOSConfirm(false)">${cancelText}</button>
+                    <button class="btn btn-primary" onclick="resolvePOSConfirm(true)">${confirmText}</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         `;
@@ -526,6 +587,7 @@ function showPaymentMethodSelector(total) {
         modal.className = 'pos-modal-overlay';
         
         modal.innerHTML = `
+<<<<<<< HEAD
             <div class="pos-modal-content" style="max-width: 500px;">
                 <div class="pos-modal-header" style="background: #4CAF50;">
                     <h3 style="margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem;">
@@ -536,10 +598,23 @@ function showPaymentMethodSelector(total) {
                 <div class="pos-modal-body" style="padding: 2rem;">
                     <div style="text-align: center; margin-bottom: 2rem;">
                         <div style="font-size: 1.5rem; font-weight: bold; color: #333;">
+=======
+            <div class="pos-modal-content pos-modal-small">
+                <div class="pos-modal-header pos-modal-header-success">
+                    <h3 class="pos-modal-title">
+                        <span class="pos-modal-icon">💳</span>
+                        Select Payment Method
+                    </h3>
+                </div>
+                <div class="pos-modal-body">
+                    <div >
+                        <div >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             Total: $${total.toFixed(2)}
                         </div>
                     </div>
                     
+<<<<<<< HEAD
                     <div class="payment-methods" style="display: grid; gap: 1rem; margin-bottom: 2rem;">
                         <button class="payment-method-btn pos-payment-method pos-payment-cash" data-method="Cash">
                             <span style="font-size: 1.5rem;">💵</span>
@@ -570,12 +645,48 @@ function showPaymentMethodSelector(total) {
                             <div style="text-align: left;">
                                 <div style="font-weight: bold;">Check</div>
                                 <div style="font-size: 0.9rem; opacity: 0.9;">Personal or business</div>
+=======
+                    <div class="payment-methods">
+                        <button class="payment-method-btn" data-method="Cash">
+                            <span class="pos-modal-icon">💵</span>
+                            <div >
+                                <div >Cash</div>
+                                <div >Includes change calculator</div>
+                            </div>
+                        </button>
+                        
+                        <button class="payment-method-btn" data-method="Credit Card">
+                            <span class="pos-modal-icon">💳</span>
+                            <div >
+                                <div >Credit Card</div>
+                                <div >Visa, MasterCard, etc.</div>
+                            </div>
+                        </button>
+                        
+                        <button class="payment-method-btn" data-method="Debit Card">
+                            <span class="pos-modal-icon">💳</span>
+                            <div >
+                                <div >Debit Card</div>
+                                <div >PIN required</div>
+                            </div>
+                        </button>
+                        
+                        <button class="payment-method-btn" data-method="Check">
+                            <span class="pos-modal-icon">📝</span>
+                            <div >
+                                <div >Check</div>
+                                <div >Personal or business</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </div>
                         </button>
                     </div>
                 </div>
                 <div class="pos-modal-footer">
+<<<<<<< HEAD
                     <button class="pos-modal-btn pos-modal-btn-cancel" onclick="resolvePaymentMethod(null)">Cancel</button>
+=======
+                    <button class="btn btn-light" onclick="resolvePaymentMethod(null)">Cancel</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         `;
@@ -624,6 +735,7 @@ function showCashCalculator(total) {
         modal.className = 'pos-modal-overlay';
         
         modal.innerHTML = `
+<<<<<<< HEAD
             <div class="pos-modal-content" style="max-width: 600px;">
                 <div class="pos-modal-header" style="background: #4CAF50;">
                     <h3 style="margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem;">
@@ -655,12 +767,50 @@ function showCashCalculator(total) {
                     </div>
                     
                     <div id="insufficientFunds" style="display: none; background: #ffebee; color: #c62828; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+=======
+            <div class="pos-modal-content pos-modal-medium">
+                <div class="pos-modal-header pos-modal-header-success">
+                    <h3 class="pos-modal-title">
+                        <span class="pos-modal-icon">🧮</span>
+                        Cash Calculator
+                    </h3>
+                </div>
+                <div class="pos-modal-body">
+                    <div >
+                        <div >
+                            <div >Total Due</div>
+                            <div >$${total.toFixed(2)}</div>
+                        </div>
+                        <div >
+                            <div >Change Due</div>
+                            <div id="changeDue" >$0.00</div>
+                        </div>
+                    </div>
+                    
+                    <div >
+                        <label >Cash Received:</label>
+                        <input type="number" id="cashReceived" step="0.01" min="0" placeholder="0.00" 
+                               
+                               oninput="calculateChange(${total})">
+                    </div>
+                    
+                    <div class="quick-amounts" id="quickAmountButtons">
+                        <!- Quick amount buttons will be generated by JavaScript ->
+                    </div>
+                    
+                    <div id="insufficientFunds" class="hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ⚠️ Insufficient funds - please collect more cash
                     </div>
                 </div>
                 <div class="pos-modal-footer">
+<<<<<<< HEAD
                     <button class="pos-modal-btn pos-modal-btn-cancel" onclick="resolveCashCalculator(null)">Cancel</button>
                     <button id="acceptCashBtn" class="pos-modal-btn pos-modal-btn-confirm" onclick="acceptCashPayment(${total})" disabled>Accept Payment</button>
+=======
+                    <button class="btn btn-light" onclick="resolveCashCalculator(null)">Cancel</button>
+                    <button id="acceptCashBtn" class="btn btn-primary" onclick="acceptCashPayment(${total})" disabled>Accept Payment</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         `;
@@ -776,7 +926,11 @@ function generateQuickAmountButtons(total) {
     container.innerHTML = uniqueSuggestions.map(suggestion => `
         <button class="quick-amount-btn" 
                 onclick="setCashAmount(${suggestion.amount})" 
+<<<<<<< HEAD
                 style="background: #f0f0f0; border: none; padding: 0.75rem; border-radius: 6px; cursor: pointer; font-size: 1rem; ${suggestion.style || ''}"
+=======
+                
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 title="Suggest ${suggestion.label === 'Exact' ? 'exact change' : suggestion.label + ' bill'}">
             ${suggestion.label}
         </button>
@@ -885,6 +1039,7 @@ async function processCheckout() {
     }
     
     // Step 3: Final confirmation with tax breakdown
+<<<<<<< HEAD
     let confirmMessage = `<div style="text-align: left; line-height: 1.6;">
         <div style="text-align: center; font-size: 1.2rem; margin-bottom: 1rem; font-weight: bold;">Complete Sale</div>
         
@@ -899,20 +1054,45 @@ async function processCheckout() {
             </div>
             <div style="border-top: 2px solid #dc3545; padding-top: 0.5rem; margin-top: 0.5rem;">
                 <div style="display: flex; justify-content: space-between; font-size: 1.25rem; font-weight: bold; color: #dc3545;">
+=======
+    let confirmMessage = `<div >
+        <div >Complete Sale</div>
+        
+        <div >
+            <div >
+                <span>Subtotal:</span>
+                <span><strong>$${subtotal.toFixed(2)}</strong></span>
+            </div>
+            <div >
+                <span>Sales Tax (${(TAX_RATE * 100).toFixed(2)}%):</span>
+                <span>$${taxAmount.toFixed(2)}</span>
+            </div>
+            <div >
+                <div >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span>Total:</span>
                     <span>$${total.toFixed(2)}</span>
                 </div>
             </div>
         </div>
         
+<<<<<<< HEAD
         <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px;">
             <div style="font-weight: bold; margin-bottom: 0.5rem;">Payment Details:</div>
+=======
+        <div >
+            <div >Payment Details:</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div><strong>Method:</strong> ${paymentMethod}</div>`;
     
     if (paymentMethod === 'Cash') {
         confirmMessage += `
             <div><strong>Cash Received:</strong> $${cashReceived.toFixed(2)}</div>
+<<<<<<< HEAD
             <div style="font-weight: bold; color: #4CAF50;"><strong>Change Due:</strong> $${changeAmount.toFixed(2)}</div>`;
+=======
+            <div ><strong>Change Due:</strong> $${changeAmount.toFixed(2)}</div>`;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     confirmMessage += `</div></div>`;
@@ -1005,6 +1185,7 @@ function showReceiptModal(saleData) {
     const receiptContent = generateReceiptContent(saleData);
     
     modal.innerHTML = `
+<<<<<<< HEAD
         <div class="pos-modal-content" style="max-width: 500px;">
             <div class="pos-modal-header" style="background: #4CAF50;">
                 <h3 style="margin: 0; color: white; display: flex; align-items: center; gap: 0.5rem;">
@@ -1023,6 +1204,26 @@ function showReceiptModal(saleData) {
                     📧 Email Receipt
                 </button>
                 <button class="pos-modal-btn pos-modal-btn-confirm" onclick="finishSale()" style="background: #4CAF50; color: white; flex: 1; min-width: 120px;">
+=======
+        <div class="pos-modal-content pos-modal-small">
+            <div class="pos-modal-header pos-modal-header-success">
+                <h3 class="pos-modal-title">
+                    <span class="pos-modal-icon">🧾</span>
+                    Transaction Complete
+                </h3>
+            </div>
+            <div class="pos-modal-body pos-modal-body-scroll">
+                ${receiptContent}
+            </div>
+            <div class="pos-modal-footer" >
+                <button class="btn btn-secondary" onclick="printReceipt()" >
+                    🖨️ Print Receipt
+                </button>
+                <button class="btn btn-secondary" onclick="emailReceipt('${saleData.orderId}')" >
+                    📧 Email Receipt
+                </button>
+                <button class="btn btn-primary" onclick="finishSale()" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     ✅ Finish Sale
                 </button>
             </div>
@@ -1039,6 +1240,7 @@ function generateReceiptContent(saleData) {
     saleData.items.forEach(item => {
         const itemTotal = item.price * item.quantity;
         itemsHTML += `
+<<<<<<< HEAD
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; padding: 0.25rem 0; border-bottom: 1px dotted #ccc;">
                 <div style="flex: 1;">
                     <div style="font-weight: bold;">${item.name}</div>
@@ -1046,6 +1248,15 @@ function generateReceiptContent(saleData) {
                     <div style="font-size: 0.8rem; color: #666;">${item.quantity} x $${item.price.toFixed(2)}</div>
                 </div>
                 <div style="font-weight: bold; text-align: right;">
+=======
+            <div >
+                <div >
+                    <div >${item.name}</div>
+                    <div >SKU: ${item.sku}</div>
+                    <div >${item.quantity} x $${item.price.toFixed(2)}</div>
+                </div>
+                <div >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     $${itemTotal.toFixed(2)}
                 </div>
             </div>
@@ -1053,6 +1264,7 @@ function generateReceiptContent(saleData) {
     });
     
     return `
+<<<<<<< HEAD
         <div style="background: white; padding: 2rem; font-family: 'Courier New', monospace; font-size: 0.9rem; line-height: 1.4;">
             <!-- Receipt Header -->
             <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #333; padding-bottom: 1rem;">
@@ -1062,11 +1274,23 @@ function generateReceiptContent(saleData) {
             
             <!-- Transaction Info -->
             <div style="margin-bottom: 1.5rem; font-size: 0.8rem;">
+=======
+        <div >
+            <!- Receipt Header ->
+            <div >
+                <div >WHIMSICALFROG</div>
+                <div >Point of Sale Receipt</div>
+            </div>
+            
+            <!- Transaction Info ->
+            <div >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div><strong>Order ID:</strong> ${saleData.orderId}</div>
                 <div><strong>Date:</strong> ${timestamp}</div>
                 <div><strong>Cashier:</strong> POS System</div>
             </div>
             
+<<<<<<< HEAD
             <!-- Items -->
             <div style="margin-bottom: 1.5rem;">
                 <div style="font-weight: bold; margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 0.5rem;">ITEMS PURCHASED</div>
@@ -1084,14 +1308,39 @@ function generateReceiptContent(saleData) {
                     <span>$${saleData.taxAmount.toFixed(2)}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: bold; border-top: 1px solid #333; padding-top: 0.5rem; margin-top: 0.5rem;">
+=======
+            <!- Items ->
+            <div >
+                <div >ITEMS PURCHASED</div>
+                ${itemsHTML}
+            </div>
+            
+            <!- Totals ->
+            <div >
+                <div >
+                    <span>Subtotal:</span>
+                    <span>$${saleData.subtotal.toFixed(2)}</span>
+                </div>
+                <div >
+                    <span>Sales Tax (${(saleData.taxRate * 100).toFixed(2)}%):</span>
+                    <span>$${saleData.taxAmount.toFixed(2)}</span>
+                </div>
+                <div >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span>TOTAL:</span>
                     <span>$${saleData.total.toFixed(2)}</span>
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Payment Info -->
             <div style="margin-bottom: 1.5rem; border-top: 1px solid #ccc; padding-top: 1rem;">
                 <div style="font-weight: bold; margin-bottom: 0.5rem;">PAYMENT DETAILS</div>
+=======
+            <!- Payment Info ->
+            <div >
+                <div >PAYMENT DETAILS</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div><strong>Method:</strong> ${saleData.paymentMethod}</div>
                 ${saleData.paymentMethod === 'Cash' ? `
                     <div><strong>Cash Received:</strong> $${saleData.cashReceived.toFixed(2)}</div>
@@ -1099,10 +1348,17 @@ function generateReceiptContent(saleData) {
                 ` : ''}
             </div>
             
+<<<<<<< HEAD
             <!-- Footer -->
             <div style="text-align: center; font-size: 0.8rem; color: #666; border-top: 1px dotted #ccc; padding-top: 1rem;">
                 <div>Thank you for your business!</div>
                 <div style="margin-top: 0.5rem;">Visit us online at WhimsicalFrog.com</div>
+=======
+            <!- Footer ->
+            <div >
+                <div>Thank you for your business!</div>
+                <div >Visit us online at WhimsicalFrog.com</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </div>
         </div>
     `;
@@ -1119,6 +1375,7 @@ function printReceipt() {
         <head>
             <title>Receipt - Order ${new Date().getTime()}</title>
             
+<<<<<<< HEAD
         
 <!-- Database-driven CSS for admin_pos -->
 
@@ -1215,6 +1472,9 @@ function printReceipt() {
     document.addEventListener('DOMContentLoaded', loadAdmin_posCSS);
 </script>
 </head>
+=======
+        </head>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <body>
             ${receiptContent}
             <script>
@@ -1361,4 +1621,8 @@ document.addEventListener('keydown', function(e) {
     }
 });</script>
 
+<<<<<<< HEAD
 </div> <!-- Close pos-register --> 
+=======
+</div> <!- Close pos-register -> 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)

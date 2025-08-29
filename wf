@@ -9,16 +9,26 @@ cd /Users/jongraves/Documents/Websites/WhimsicalFrog
 case "$1" in
     start)
         echo "🐸 Starting WhimsicalFrog with monitoring..."
+<<<<<<< HEAD
         ./start_servers.sh
         ;;
     stop)
         echo "🐸 Stopping WhimsicalFrog servers and monitor..."
         ./server_monitor.sh stop
         pkill -f 'server_monitor.sh daemon' 2>/dev/null
+=======
+        ./Scripts/start_servers.sh
+        ;;
+    stop)
+        echo "🐸 Stopping WhimsicalFrog servers and monitor..."
+        ./Scripts/server_monitor.sh stop
+        pkill -f 'Scripts/server_monitor.sh daemon' 2>/dev/null
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         echo "✅ All servers stopped"
         ;;
     restart)
         echo "🐸 Restarting WhimsicalFrog..."
+<<<<<<< HEAD
         ./server_monitor.sh stop
         pkill -f 'server_monitor.sh daemon' 2>/dev/null
         sleep 2
@@ -30,6 +40,19 @@ case "$1" in
         echo ""
         echo "Monitor Status:"
         MONITOR_PID=$(pgrep -f "server_monitor.sh daemon")
+=======
+        ./Scripts/server_monitor.sh stop
+        pkill -f 'Scripts/server_monitor.sh daemon' 2>/dev/null
+        sleep 2
+        ./Scripts/start_servers.sh
+        ;;
+    status)
+        echo "🐸 WhimsicalFrog Server Status:"
+        ./Scripts/server_monitor.sh status
+        echo ""
+        echo "Monitor Status:"
+        MONITOR_PID=$(pgrep -f "Scripts/server_monitor.sh daemon")
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         if [ -n "$MONITOR_PID" ]; then
             echo "✅ Monitor daemon running (PID: $MONITOR_PID)"
         else
@@ -39,10 +62,17 @@ case "$1" in
     logs)
         echo "🐸 Recent server logs:"
         echo "=== PHP Server Log (last 20 lines) ==="
+<<<<<<< HEAD
         tail -20 php_server.log 2>/dev/null || echo "No PHP server log found"
         echo ""
         echo "=== Monitor Log (last 20 lines) ==="
         tail -20 monitor.log 2>/dev/null || echo "No monitor log found"
+=======
+        tail -20 logs/php_server.log 2>/dev/null || echo "No PHP server log found"
+        echo ""
+        echo "=== Monitor Log (last 20 lines) ==="
+        tail -20 logs/monitor.log 2>/dev/null || echo "No monitor log found"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         ;;
     *)
         echo "🐸 WhimsicalFrog Quick Commands"

@@ -306,6 +306,7 @@ class DOMUtils {
     }
 }
 
+<<<<<<< HEAD
 class PrintUtils {
     /**
      * Print a receipt with centralized functionality
@@ -463,6 +464,11 @@ window.ApiClient = ApiClient;
 window.DOMUtils = DOMUtils;
 window.PrintUtils = PrintUtils;
 window.AuthUtils = AuthUtils;
+=======
+// Make utilities available globally
+window.ApiClient = ApiClient;
+window.DOMUtils = DOMUtils;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 // Global API client instance
 const apiClient = new ApiClient();
@@ -473,6 +479,7 @@ window.apiPost = (url, data = null, options = {}) => apiClient.post(url, data, o
 window.apiPut = (url, data = null, options = {}) => apiClient.put(url, data, options);
 window.apiDelete = (url, options = {}) => apiClient.delete(url, options);
 
+<<<<<<< HEAD
 class AuthUtils {
     /**
      * Enhanced logout with centralized systems integration
@@ -582,18 +589,23 @@ class AuthUtils {
     }
 }
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 // Utility functions for common patterns
 window.debounce = DOMUtils.debounce;
 window.formatCurrency = DOMUtils.formatCurrency;
 window.escapeHtml = DOMUtils.escapeHtml;
 window.showToast = DOMUtils.showToast;
 window.confirmDialog = DOMUtils.confirm;
+<<<<<<< HEAD
 window.printReceipt = (orderId, orderTotal) => PrintUtils.printReceipt(orderId, orderTotal);
 window.printDocument = (options) => PrintUtils.printDocument(options);
 window.logout = (options) => AuthUtils.logout(options);
 window.checkAuth = () => AuthUtils.isLoggedIn();
 window.getCurrentUser = () => AuthUtils.getCurrentUser();
 window.isAdmin = () => AuthUtils.isAdmin();
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 // Deprecation warnings for direct fetch usage (development only)
 if (window.location.hostname === 'localhost' || window.location.hostname.includes('dev')) {

@@ -737,8 +737,13 @@ function generateTooltipCSS() {
     // Base tooltip styling
     $css .= ".help-tooltip {\n";
     $css .= "    position: fixed !important;\n";
+<<<<<<< HEAD
     $css .= "    background: var(--color_gray_800, #333333) !important;\n";
     $css .= "    color: var(--color_white, #ffffff) !important;\n";
+=======
+    $css .= "    background: var(-color_gray_800, #333333) !important;\n";
+    $css .= "    color: var(-color_white, #ffffff) !important;\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     $css .= "    padding: 12px 16px !important;\n";
     $css .= "    border-radius: 8px !important;\n";
     $css .= "    font-size: 14px !important;\n";
@@ -748,7 +753,11 @@ function generateTooltipCSS() {
     $css .= "    word-wrap: break-word !important;\n";
     $css .= "    white-space: normal !important;\n";
     $css .= "    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;\n";
+<<<<<<< HEAD
     $css .= "    border: 1px solid var(--color_gray_600, #555555) !important;\n";
+=======
+    $css .= "    border: 1px solid var(-color_gray_600, #555555) !important;\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     $css .= "    z-index: 99999 !important;\n";
     $css .= "    opacity: 0 !important;\n";
     $css .= "    visibility: hidden !important;\n";

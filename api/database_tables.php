@@ -317,7 +317,11 @@ function getTableDocumentation() {
         'room_settings' => [
             'description' => 'Dynamic room titles and descriptions',
             'fields' => [
+<<<<<<< HEAD
                 'room_number' => 'Primary key - Room number (0-6)',
+=======
+                'room_number' => 'Primary key - Room number (A, B, 1-5)',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 'room_name' => 'Display name for the room',
                 'door_label' => 'Text shown on door in main room',
                 'description' => 'Room description text',

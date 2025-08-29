@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for ai_processing -->
 <style id="ai_processing-css">
@@ -32,6 +33,8 @@
     document.addEventListener('DOMContentLoaded', loadAi_processingCSS);
 </script>
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php
 /**
  * AI Processing Modal Component
@@ -41,10 +44,17 @@
  */
 ?>
 
+<<<<<<< HEAD
 <!-- AI Processing Modal -->
 <div id="aiProcessingModal" class="modal-overlay hidden">
     <div class="modal-content">
         <!-- Modal Header -->
+=======
+<!- AI Processing Modal ->
+<div id="aiProcessingModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <!- Modal Header ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="modal-header">
             <h3 class="modal-title">
                 🎨 AI Image Processing
@@ -56,6 +66,7 @@
             </button>
         </div>
         
+<<<<<<< HEAD
         <!-- Modal Body -->
         <div class="modal-body">
             <!-- Processing Status -->
@@ -69,6 +80,21 @@
             <!-- Processing Steps -->
             <div id="aiProcessingSteps" class="space-y-3">
                 <!-- Step 1: AI Analysis -->
+=======
+        <!- Modal Body ->
+        <div class="modal-body">
+            <!- Processing Status ->
+            <div id="aiProcessingStatus" class="mb-4">
+                <div class="text-sm text-gray-600 mb-2">Processing your image...</div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="aiProcessingProgressBar" class="bg-green-500 h-2 rounded-full transition-all duration-300 width_0"></div>
+                </div>
+            </div>
+            
+            <!- Processing Steps ->
+            <div id="aiProcessingSteps" class="space-y-3">
+                <!- Step 1: AI Analysis ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div id="step1" class="flex items-center space-x-3">
                     <div id="step1Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
                         <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
@@ -79,7 +105,11 @@
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Step 2: Smart Cropping -->
+=======
+                <!- Step 2: Smart Cropping ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div id="step2" class="flex items-center space-x-3">
                     <div id="step2Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
                         <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
@@ -90,7 +120,11 @@
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Step 3: WebP Conversion -->
+=======
+                <!- Step 3: WebP Conversion ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div id="step3" class="flex items-center space-x-3">
                     <div id="step3Icon" class="w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center">
                         <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
@@ -102,7 +136,11 @@
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Processing Results -->
+=======
+            <!- Processing Results ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div id="aiProcessingResults" class="mt-4 hidden">
                 <div class="modal-success">
                     <div class="flex items-center">
@@ -119,7 +157,11 @@
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Error Display -->
+=======
+            <!- Error Display ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div id="aiProcessingError" class="mt-4 hidden">
                 <div class="modal-error">
                     <div class="flex items-center">
@@ -136,7 +178,11 @@
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Processing Details -->
+=======
+            <!- Processing Details ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div id="aiProcessingDetails" class="mt-4 hidden">
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <div class="text-sm font-medium text-blue-800 mb-2">Processing Details:</div>
@@ -145,12 +191,21 @@
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- Modal Footer -->
         <div class="modal-footer">
             <button id="aiProcessingCancelBtn" class="modal-button btn-secondary">
                 Cancel
             </button>
             <button id="aiProcessingDoneBtn" class="modal-button btn-primary hidden">
+=======
+        <!- Modal Footer ->
+        <div class="modal-footer">
+            <button id="aiProcessingCancelBtn" class="btn btn-secondary">
+                Cancel
+            </button>
+            <button id="aiProcessingDoneBtn" class="btn btn-primary hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 Done
             </button>
         </div>

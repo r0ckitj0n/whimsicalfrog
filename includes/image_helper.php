@@ -277,24 +277,38 @@ function renderItemImageDisplay($sku, $options = []) {
     
     if (empty($images)) {
         // Show elegant CSS-only fallback instead of placeholder image
+<<<<<<< HEAD
         return '<div class="item-image-placeholder" style="height: ' . $opts['height'] . '; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6b7280;">
             <div style="font-size: 3rem; margin-bottom: 0.5rem;">📷</div>
             <div style="font-size: 0.875rem; font-weight: 500;">No Image Available</div>
+=======
+        return '<div class="item-image-placeholder" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">
+            <div class="placeholder-icon">📷</div>
+            <div class="placeholder-text">No Image Available</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>';
     }
     
     if (count($images) === 1 || !$opts['showCarousel']) {
         // Single image display
         $image = $images[0];
+<<<<<<< HEAD
         return '<div class="item-single-image ' . $opts['className'] . '" style="height: ' . $opts['height'] . ';">
             <img src="' . htmlspecialchars($image['image_path']) . '" 
                  alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
                  style="width: 100%; height: 100%; object-fit: contain; background: white; border-radius: 8px;"
                  onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<div style=\\\'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6b7280;\\\'><div style=\\\'font-size: 3rem; margin-bottom: 0.5rem;\\\'>📷</div><div style=\\\'font-size: 0.875rem; font-weight: 500;\\\'>Image Not Found</div></div>\';">
+=======
+        return '<div class="item-single-image ' . $opts['className'] . '" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . ';">
+            <img src="' . htmlspecialchars($image['image_path']) . '" 
+                 alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
+                 onerror="this.style.display=\'none\'; this.parentElement.innerHTML=\'<div class=\\\'item-image-placeholder\\\'><div class=\\\'placeholder-icon\\\'>📷</div><div class=\\\'placeholder-text\\\'>Image Not Found</div></div>\';">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>';
     }
     
     // Multiple images - use simple carousel (simplified implementation)
+<<<<<<< HEAD
     $carouselHtml = '<div class="item-image-carousel" style="height: ' . $opts['height'] . ';">';
     foreach ($images as $index => $image) {
         $display = $index === 0 ? 'block' : 'none';
@@ -302,6 +316,15 @@ function renderItemImageDisplay($sku, $options = []) {
                              alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
                              style="width: 100%; height: 100%; object-fit: contain; background: white; border-radius: 8px; display: ' . $display . ';"
                              onerror="this.style.display=\'none\'; this.parentElement.innerHTML+=\'<div style=\\\'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6b7280; display: ' . $display . '\\\'><div style=\\\'font-size: 3rem; margin-bottom: 0.5rem;\\\'>📷</div><div style=\\\'font-size: 0.875rem; font-weight: 500;\\\'>Image Not Found</div></div>\';">';
+=======
+    $carouselHtml = '<div class="item-image-carousel" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">';
+    foreach ($images as $index => $image) {
+        $activeClass = $index === 0 ? ' active' : '';
+        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" 
+                             alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" 
+                             class="' . $activeClass . '"
+                             onerror="this.style.display=\'none\'; this.parentElement.innerHTML+=\'<div class=\\\'item-image-placeholder\\\'><div class=\\\'placeholder-icon\\\'>📷</div><div class=\\\'placeholder-text\\\'>Image Not Found</div></div>\';">';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     $carouselHtml .= '</div>';
     return $carouselHtml;

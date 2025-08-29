@@ -33,7 +33,11 @@ function updateDetailedModalContent(item, images) {
             if (!this.src.includes('placeholder')) {
                 this.src = 'images/items/placeholder.webp';
             }
+<<<<<<< HEAD
         };
+=======
+        }
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     // Update stock status
@@ -74,7 +78,11 @@ function closeDetailedModal() {
     const modal = document.getElementById('detailedItemModal');
     if (modal) {
         modal.classList.add('hidden');
+<<<<<<< HEAD
         document.body.style.overflow = ''; // Restore scrolling
+=======
+        document.body.classList.remove('modal-open-overflow-hidden'); // Restore scrolling
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
 }
 

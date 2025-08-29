@@ -17,7 +17,10 @@ $page = isset($_GET['page']) ? $_GET['page'] : 'landing';
 // Define allowed pages
 $allowed_pages = [
     'landing', 'room_main', 'shop', 'cart', 'login', 'register', 'admin', 'admin_inventory',
+<<<<<<< HEAD
     'room2', 'room3', 'room4', 'room5', 'room6',
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     'admin_customers', 'admin_orders', 'admin_reports', 'admin_marketing', 'admin_settings',
     'account_settings', 'receipt'
 ];
@@ -33,6 +36,19 @@ $isAdmin = isAdmin();
 $userData = getCurrentUser() ?? [];
 $welcomeMessage = $isLoggedIn ? getUsername() : '';
 
+<<<<<<< HEAD
+=======
+// Cart authentication check - must be done before any content output
+if ($page === 'cart' && !$isLoggedIn) {
+    // Store the cart redirect intent
+    $_SESSION['redirect_after_login'] = '/?page=cart';
+    
+    // Redirect to login page
+    header('Location: /?page=login');
+    exit;
+}
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 // Admin page access control - development-friendly
 if (strpos($page, 'admin') === 0 && !$isAdmin && !isAdminWithToken()) {
     // In development mode (localhost), allow admin access without strict authentication
@@ -48,6 +64,11 @@ if (strpos($page, 'admin') === 0 && !$isAdmin && !isAdminWithToken()) {
 
 define('INCLUDED_FROM_INDEX', true);
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 // Initialize logging systems
 if (class_exists('DatabaseLogger')) {
     DatabaseLogger::init();
@@ -114,8 +135,12 @@ try {
     // Database-driven search bar visibility
     function shouldShowSearchBar($pdo, $currentPage) {
         $pageToRoomMap = [
+<<<<<<< HEAD
             'landing' => 0, 'room_main' => 1, 'room2' => 2, 'room3' => 3, 
             'room4' => 4, 'room5' => 5, 'room6' => 6
+=======
+            'landing' => 0, 'room_main' => 1
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         ];
         
         if (!isset($pageToRoomMap[$currentPage])) {
@@ -144,6 +169,7 @@ if ($page === 'landing') {
     $bodyClass = 'is-landing';
 } elseif (strpos($page, 'admin') === 0) {
     $bodyClass = 'is-admin admin-page';
+<<<<<<< HEAD
 } elseif (in_array($page, ['room2', 'room3', 'room4', 'room5', 'room6'])) {
     $bodyClass = $page; // Add room-specific class (room2, room3, etc.)
 } elseif ($page === 'room_main') {
@@ -169,6 +195,15 @@ if ($page === 'room_main' && $isMainRoomFullscreen) {
 }
 
 $isFullscreenPage = in_array($page, $fullscreenPages);
+=======
+    // Add POS-specific body class to hide main header
+    if ($page === 'admin_pos' || ($page === 'admin' && isset($_GET['section']) && $_GET['section'] === 'pos')) {
+        $bodyClass .= ' is-pos-page';
+    }
+}
+
+$isFullscreenPage = in_array($page, ['landing']);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 if ($isFullscreenPage) {
     $bodyClass .= ' body-fullscreen-layout';
 }
@@ -190,6 +225,21 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
 // Generate dynamic SEO
 $currentSku = $_GET['product'] ?? null;
 $seoData = generatePageSEO($page, $currentSku);
+<<<<<<< HEAD
+=======
+
+// Determine the room type for the background
+$backgroundRoomType = 'landing'; // Default
+if ($page === 'room_main' || $page === 'shop' || $page === 'cart' || $page === 'login' || strpos($page, 'admin') === 0) {
+    $backgroundRoomType = 'room_main';
+} elseif ($page === 'landing') {
+    $backgroundRoomType = 'landing';
+}
+
+// Get background style
+$backgroundUrl = get_active_background($backgroundRoomType);
+$backgroundStyle = !empty($backgroundUrl) ? "style=\"background-image: url('{$backgroundUrl}');\"" : '';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -206,6 +256,7 @@ $seoData = generatePageSEO($page, $currentSku);
     <meta name="twitter:title" content="<?= htmlspecialchars($seoData['title']) ?>">
     <meta name="twitter:description" content="<?= htmlspecialchars($seoData['description']) ?>">
     
+<<<<<<< HEAD
     <!-- External Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
@@ -581,23 +632,119 @@ $seoData = generatePageSEO($page, $currentSku);
                            class="w-full px-4 py-2 pl-10 pr-4 text-sm bg-transparent border-2 rounded-full focus:outline-none focus:ring-2 transition-all duration-200 search-input">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #87ac3a;">
+=======
+    <!- External Dependencies ->
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!- Dynamic CSS Placeholders ->
+    <!- Database CSS style elements removed - using static CSS files only ->
+    
+    <!- Z-Index Hierarchy CSS ->
+    
+    
+    <!-- Core CSS Bundle -->
+    <link href="css/bundle.css?v=<?php echo filemtime('css/bundle.css'); ?>" rel="stylesheet">
+    
+    <!- Static CSS Rules + Essential Styles ->
+    
+    <!- Search Input Styling ->
+    
+    
+
+    <!- All styling now handled by static CSS system ->
+    
+    <!- Static Global CSS Variables ->
+    
+    
+    <!- Static Tooltip CSS ->
+    
+    
+    <script>
+        // Static CSS system - no database dependencies
+        // Global CSS variables loaded from js/css-initializer.js
+        // Tooltip CSS loaded from static CSS files
+        console.log('Using static CSS system');
+    </script>
+    
+    <!- Core Layout Styles ->
+    
+    
+    <!- Database CSS loading removed - using static CSS files only ->
+    
+
+    
+<?php if ($page === 'landing'): ?>
+    <link href="css/landing.css?v=<?php echo filemtime('css/landing.css'); ?>" rel="stylesheet">
+<?php endif; ?>
+
+    
+</head>
+<body class="<?php echo $page; ?>-page flex flex-col min-h-screen <?php echo $bodyClass; ?>">
+<!- Main Navigation ->
+<?php if ($page !== 'landing'): ?>
+<nav class="main-nav site-header">
+    <div class="header-container">
+        <div class="header-content">
+            <!- Logo and Tagline ->
+            <div class="header-left">
+                <a href="/?page=landing" class="logo-link">
+                    <?php echo getImageTag('images/logo_whimsicalfrog.png', 'Whimsical Frog', 'header-logo'); ?>
+                    <span class="logo-text">Whimsical Frog</span>
+                </a>
+                <span class="logo-tagline">Discover unique custom crafts, made with love.</span>
+            </div>
+            
+            <!- Search Bar ->
+            <?php if ($showSearchBar): ?>
+            <div class="header-center">
+                <div class="search-container">
+        <div class="search-input-container">
+                    <input type="text" id="headerSearchInput" placeholder="Search products..." 
+                           class="search-bar"
+                           data-focus-action="handleFormFocus"
+                           data-blur-action="handleFormBlur">
+                    <div class="search-icon">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
                 </div>
             </div>
             <?php else: ?>
+<<<<<<< HEAD
                 <div class="flex-grow"></div>
             <?php endif; ?>
             
             <!-- Navigation Links -->
             <div class="flex-none">
                 <div class="flex items-center">
+=======
+                <div class="header-center"></div>
+            <?php endif; ?>
+            
+            <!- Navigation Links ->
+            <div class="header-right">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <?php if ($isAdmin): ?>
                         <a href="/?page=admin" class="nav-link">Manage</a>
                     <?php endif; ?>
                     <a href="/?page=shop" class="nav-link">Shop</a>
+<<<<<<< HEAD
                     <a href="/?page=cart" class="nav-link relative inline-flex items-center">
+=======
+                    <?php if ($isLoggedIn): ?>
+                        <span class="welcome-message">
+                            <a href="/?page=account_settings" class="nav-link"><?php echo htmlspecialchars($welcomeMessage); ?></a>
+                        </span>
+                        <a href="/logout.php" class="nav-link">Logout</a>
+                    <?php else: ?>
+                        <a href="/?page=login" class="nav-link">Login</a>
+                    <?php endif; ?>
+                    <a href="/?page=cart" class="nav-link cart-link">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="flex items-center space-x-1 md:space-x-2">
                             <span id="cartCount" class="text-sm font-medium whitespace-nowrap"><?php echo $cartCount; ?> items</span>
                             <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -606,6 +753,7 @@ $seoData = generatePageSEO($page, $currentSku);
                             <span id="cartTotal" class="text-sm font-medium whitespace-nowrap hidden md:inline"><?php echo $formattedCartTotal; ?></span>
                         </div>
                     </a>
+<<<<<<< HEAD
                     <?php if ($isLoggedIn): ?>
                         <a href="/logout.php" class="nav-link" onclick="logout(); return false;">Logout</a>
                     <?php else: ?>
@@ -633,11 +781,42 @@ $seoData = generatePageSEO($page, $currentSku);
             include $pageFile;
         } else {
             echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Page not found</h1></div>';
+=======
+                </div>
+        </div>
+    </div>
+</nav>
+<?php endif; ?>
+
+<!- Main Content Area ->
+<?php if ($isFullscreenPage): ?>
+    <div class="fullscreen-container" <?php echo $backgroundStyle; ?>>
+        <?php include "sections/{$page}.php"; ?>
+    </div>
+<?php else: ?>
+    <main class="md:p-4 lg:p-6 cottage-bg" id="mainContent" <?php echo $backgroundStyle; ?>>
+        <?php 
+        $pageFile = 'sections/' . $page . '.php';
+
+        // Route all admin pages through the main admin handler for consistent navbar
+        if (strpos($page, 'admin_') === 0) {
+            // Direct admin_* pages map to a section under the main admin handler
+            $_GET['section'] = substr($page, strlen('admin_'));
+            include 'sections/admin.php';
+        } elseif ($page === 'admin') {
+            // Main admin dashboard
+            include 'sections/admin.php';
+        } elseif (file_exists($pageFile)) {
+            include $pageFile;
+        } else {
+            echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Page not found</h1></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
         ?>
     </main>
 <?php endif; ?>
 
+<<<<<<< HEAD
 <!-- Product Modal -->
 <div id="productModal" class="modal">
     <div class="modal-content">
@@ -967,6 +1146,107 @@ async function saveRoomBackgroundSettings() {
 <?php endif; ?>
 
 <!-- WebP Support Detection -->
+=======
+<!- Product Modal ->
+<div id="productModal" class="modal">
+    <div class="modal-content">
+        <span class="close-button" data-action="closeProductModal">&times;</span>
+        <div id="modalContent" class="">
+            <!- Content will be dynamically inserted here ->
+        </div>
+    </div>
+    </div>
+</div>
+
+<?php
+// Include global popup component
+include_once 'components/global_popup.php';
+echo renderGlobalPopupCSS();
+echo renderGlobalPopup();
+?>
+
+<!- WhimsicalFrog Unified JavaScript System ->
+<?php
+$debug_js = isset($_GET['debug_js']);
+
+if ($debug_js) {
+    // Load individual scripts for debugging
+    $js_files = [
+        'js/utils.js',
+        'js/whimsical-frog-core.js',
+        'js/central-functions.js',
+        'js/wf-unified.js',
+        'js/ui-manager.js',
+        'js/image-viewer.js',
+        'js/global-notifications.js',
+        'js/notification-messages.js',
+        'js/global-popup.js',
+        'js/global-modals.js',
+        'js/modal-functions.js',
+        'js/modal-close-positioning.js',
+        'js/analytics.js',
+        'js/sales-checker.js',
+        'js/search.js',
+        'js/room-css-manager.js',
+        'js/room-coordinate-manager.js',
+        'js/room-event-manager.js',
+        'js/room-functions.js',
+        'js/room-helper.js',
+        'js/global-item-modal.js',
+        'js/detailed-item-modal.js',
+        'js/room-modal-manager.js',
+        'js/modules/cart-system.js',
+        'js/main.js',
+    ];
+
+    foreach ($js_files as $file) {
+        echo "<script src='{$file}?v=" . filemtime($file) . "'></script>\n";
+    }
+} else {
+    // Load the bundled script for production
+    // Set global flag so wf-unified.js skips dynamic loading inside the bundle
+    echo "<script>window.WF_BUNDLE_LOADED = true;</script>\n";
+    echo "<script src='js/bundle.js?v=" . filemtime('js/bundle.js') . "'></script>\n";
+}
+?>
+
+<!- Admin-specific Scripts ->
+<?php if (strpos($page, 'admin') === 0): ?>
+<script>
+// Database-driven tooltip system initialization
+async function initializeTooltipSystem() {
+    try {
+        // Load tooltip JS from database
+        const response = await fetch('/api/help_tooltips.php?action=generate_js');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data.success && data.js_content) {
+            // Execute the generated JavaScript
+            const script = document.createElement('script');
+            script.textContent = data.js_content;
+            document.head.appendChild(script);
+            console.log('✅ Tooltip system initialized successfully');
+        } else {
+            throw new Error(data.message || 'Tooltip JS generation failed');
+        }
+    } catch (error) {
+        console.error('❌ Failed to initialize tooltip system:', error);
+        // Fallback to basic tooltip functionality
+        console.log('🔄 Using basic tooltip fallback');
+    }
+}
+
+// Initialize tooltips when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeTooltipSystem();
+});
+</script>
+<?php endif; ?>
+
+<!- WebP Support Detection ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <script>
     (function(){
         var d=document.createElement('div');
@@ -974,6 +1254,7 @@ async function saveRoomBackgroundSettings() {
     })();
 </script>
 
+<<<<<<< HEAD
 <!-- Dynamic Background Loading -->
 <script>
     async function loadDynamicBackground() {
@@ -1128,5 +1409,12 @@ async function saveRoomBackgroundSettings() {
         }
     });
 </script>
+=======
+<!- Dynamic Background Loading ->
+<script src="js/dynamic-background-loader.js?v=<?php echo filemtime('js/dynamic-background-loader.js'); ?>"></script>
+
+<!- Main Application Script ->
+<script src="js/main-app.js?v=<?php echo filemtime('js/main-app.js'); ?>"></script>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 </body>
 </html>

@@ -7,20 +7,33 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 
 // Verify user is logged in
 if (!isset($isLoggedIn) || !$isLoggedIn) {
+<<<<<<< HEAD
     echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Please login to access your account settings</h1></div>';
+=======
+    echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Please login to access your account settings</h1></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     exit;
 }
 ?>
 
+<<<<<<< HEAD
 <section id="accountSettingsPage" class="max-w-md mx-auto mt-10 p-8 bg-white rounded-lg shadow-xl">
     <h2 class="text-3xl font-merienda text-center text-[#556B2F] mb-6">Account Settings</h2>
     
     <div id="accountErrorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded" role="alert"></div>
     <div id="accountSuccessMessage" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded" role="alert">
+=======
+<section id="accountSettingsPage" class="max-w-md bg-white rounded-lg shadow-xl">
+    <h2 class="text-3xl font-merienda text-center text-[#556B2F]">Account Settings</h2>
+    
+    <div id="accountErrorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 rounded" role="alert"></div>
+    <div id="accountSuccessMessage" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 rounded" role="alert">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         Your account has been updated successfully!
     </div>
     
     <form id="accountSettingsForm">
+<<<<<<< HEAD
         <div class="mb-4">
             <label for="username" class="block text-sm font-medium text-gray-700">Username:</label>
             <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($userData['username'] ?? ''); ?>" readonly
@@ -62,11 +75,57 @@ if (!isset($isLoggedIn) || !$isLoggedIn) {
         
         <button type="submit" 
                 class="w-full bg-[#6B8E23] hover:bg-[#556B2F] text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition duration-150">
+=======
+        <div class="">
+            <label for="username" class="block text-sm font-medium text-gray-700">Username:</label>
+            <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($userData['username'] ?? ''); ?>" readonly
+                   class="block w-full border border-gray-300 bg-gray-100 rounded-md shadow-sm sm:text-sm">
+            <p class="text-xs text-gray-500">Username cannot be changed</p>
+        </div>
+        
+        <div class="">
+            <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>" required
+                   class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23] sm:text-sm">
+        </div>
+        
+        <div class="">
+            <label for="firstName" class="block text-sm font-medium text-gray-700">First Name:</label>
+            <input type="text" id="firstName" name="firstName" value="<?php echo htmlspecialchars($userData['firstName'] ?? ''); ?>"
+                   class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23] sm:text-sm">
+        </div>
+        
+        <div class="">
+            <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name:</label>
+            <input type="text" id="lastName" name="lastName" value="<?php echo htmlspecialchars($userData['lastName'] ?? ''); ?>"
+                   class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23] sm:text-sm">
+        </div>
+        
+        <div class="">
+            <label for="currentPassword" class="block text-sm font-medium text-gray-700">Current Password:</label>
+            <input type="password" id="currentPassword" name="currentPassword" required
+                   class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23] sm:text-sm">
+            <p class="text-xs text-gray-500">Required to save changes</p>
+        </div>
+        
+        <div class="">
+            <label for="newPassword" class="block text-sm font-medium text-gray-700">New Password:</label>
+            <input type="password" id="newPassword" name="newPassword"
+                   class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#6B8E23] focus:border-[#6B8E23] sm:text-sm">
+            <p class="text-xs text-gray-500">Leave blank to keep current password</p>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-full">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             Save Changes
         </button>
     </form>
     
+<<<<<<< HEAD
     <div class="mt-6 pt-6 border-t border-gray-200">
+=======
+    <div class="border-t border-gray-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <a href="/?page=shop" class="block text-center text-[#6B8E23] hover:text-[#556B2F]">
             ← Back to Shop
         </a>

@@ -23,15 +23,25 @@ class SearchModal {
 
     createModalHTML() {
         const modalHTML = `
+<<<<<<< HEAD
             <!-- Search Results Modal -->
             <div id="searchModal" class="search-modal-overlay" style="display: none;">
+=======
+            <!- Search Results Modal ->
+            <div id="searchModal">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="search-modal-content">
                     <div class="search-modal-header">
                         <h2 class="search-modal-title">Search Results</h2>
                         <button class="search-modal-close" onclick="searchModal.close()">&times;</button>
                     </div>
+<<<<<<< HEAD
                     <div class="search-modal-results">
                         <!-- Search results will be populated here -->
+=======
+                    <div class="search-modal-body" id="searchModalBody">
+                        <!- Search results will be populated here ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     </div>
                 </div>
             </div>
@@ -110,7 +120,11 @@ class SearchModal {
     }
 
     showLoading() {
+<<<<<<< HEAD
         const modalBody = document.querySelector('.search-modal-results');
+=======
+        const modalBody = document.getElementById('searchModalBody');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         modalBody.innerHTML = `
             <div class="search-loading">
                 <div class="spinner"></div>
@@ -123,7 +137,11 @@ class SearchModal {
         // Store results for later use
         this.currentResults = data.results || [];
         
+<<<<<<< HEAD
         const modalBody = document.querySelector('.search-modal-results');
+=======
+        const modalBody = document.getElementById('searchModalBody');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         
         if (data.results.length === 0) {
             modalBody.innerHTML = `
@@ -184,7 +202,11 @@ class SearchModal {
     }
 
     displayError(message) {
+<<<<<<< HEAD
         const modalBody = document.querySelector('.search-modal-results');
+=======
+        const modalBody = document.getElementById('searchModalBody');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         modalBody.innerHTML = `
             <div class="search-error">
                 <div class="search-error-icon">⚠️</div>
@@ -234,20 +256,34 @@ class SearchModal {
 
     open() {
         if (this.modal) {
+<<<<<<< HEAD
             this.modal.style.display = 'block';
             document.body.style.overflow = 'hidden';
+=======
+            this.modal.classList.add('show');
+            document.body.classList.add('modal-open');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
     }
 
     close() {
         if (this.modal) {
+<<<<<<< HEAD
             this.modal.style.display = 'none';
             document.body.style.overflow = '';
+=======
+            this.modal.classList.remove('show');
+            document.body.classList.remove('modal-open');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
     }
 
     isOpen() {
+<<<<<<< HEAD
         return this.modal && this.modal.style.display === 'block';
+=======
+        return this.modal && this.modal.classList.contains('show');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
 
     addToCart(sku, event) {

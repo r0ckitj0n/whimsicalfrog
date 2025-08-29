@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for header_template -->
 <style id="header_template-css">
@@ -32,6 +33,8 @@
     document.addEventListener('DOMContentLoaded', loadHeader_templateCSS);
 </script>
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php
 /**
  * Header Template Component
@@ -95,7 +98,11 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
     <div class="header-container">
         <div class="header-content">
             
+<<<<<<< HEAD
             <!-- Left Section: Logo -->
+=======
+            <!- Left Section: Logo ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="header-left">
                 <?php if ($config['show_logo']): ?>
                     <a href="/" class="logo-link" aria-label="<?php echo htmlspecialchars($config['logo_text']); ?> - Home">
@@ -115,7 +122,11 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                 <?php endif; ?>
             </div>
 
+<<<<<<< HEAD
             <!-- Center Section: Search -->
+=======
+            <!- Center Section: Search ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <?php if ($config['show_search']): ?>
                 <div class="header-center">
                     <div class="search-container">
@@ -136,10 +147,17 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                 </div>
             <?php endif; ?>
 
+<<<<<<< HEAD
             <!-- Right Section: Navigation, Cart, User Menu -->
             <div class="header-right">
                 
                 <!-- Desktop Navigation -->
+=======
+            <!- Right Section: Navigation, Cart, User Menu ->
+            <div class="header-right">
+                
+                <!- Desktop Navigation ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <nav class="nav-links" role="navigation" aria-label="Main navigation">
                     <?php foreach ($config['navigation_items'] as $item): ?>
                         <?php 
@@ -153,6 +171,7 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                     <?php endforeach; ?>
                 </nav>
 
+<<<<<<< HEAD
                 <!-- Admin Welcome Info (only shown on admin pages) -->
                 <?php if ($current_page === 'admin' || (isset($_GET['page']) && $_GET['page'] === 'admin')): ?>
                     <?php
@@ -171,6 +190,25 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                 <?php endif; ?>
 
                 <!-- Cart Link -->
+=======
+                <!- User Menu: Logout then Username ->
+                <?php if ($config['show_user_menu']): ?>
+                    <?php if ($is_logged_in): ?>
+                        <div class="user-menu">
+                            <span class="welcome-message">
+                                <a href="/logout">Logout</a> | <a href="/profile"><?php echo htmlspecialchars($username); ?></a>
+                            </span>
+                        </div>
+                    <?php else: ?>
+                        <div class="auth-links">
+                            <a href="/login" class="nav-link">Login</a>
+                            <a href="/register" class="nav-link">Register</a>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+
+                <!- Cart Link ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <?php if ($config['show_cart']): ?>
                     <a href="/cart" class="cart-link" aria-label="Shopping cart with <?php echo $cart_count; ?> items">
                         <svg class="cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -183,6 +221,7 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                     </a>
                 <?php endif; ?>
 
+<<<<<<< HEAD
                 <!-- User Menu -->
                 <?php if ($config['show_user_menu']): ?>
                     <?php if ($is_logged_in): ?>
@@ -201,6 +240,9 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
                 <?php endif; ?>
 
                 <!-- Mobile Menu Toggle -->
+=======
+                <!- Mobile Menu Toggle ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <button class="mobile-menu-toggle" 
                         aria-label="Toggle mobile menu" 
                         aria-expanded="false" 
@@ -212,7 +254,11 @@ $username = $is_logged_in ? ($_SESSION['username'] ?? 'User') : null;
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Mobile Menu -->
+=======
+        <!- Mobile Menu ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="mobile-menu" id="mobile-menu" role="navigation" aria-label="Mobile navigation">
             <div class="mobile-nav-links">
                 <?php foreach ($config['navigation_items'] as $item): ?>

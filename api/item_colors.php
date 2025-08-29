@@ -86,12 +86,16 @@ try {
     switch ($action) {
         case 'get_colors':
             $itemSku = $_GET['item_sku'] ?? '';
+<<<<<<< HEAD
             $inStockOnly = isset($_GET['in_stock_only']) && $_GET['in_stock_only'] === 'true';
             
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             if (empty($itemSku)) {
                 throw new Exception('Item SKU is required');
             }
             
+<<<<<<< HEAD
             // Build query with optional stock filter
             $whereClause = "WHERE item_sku = ? AND is_active = 1";
             if ($inStockOnly) {
@@ -102,6 +106,12 @@ try {
                 SELECT id, item_sku, color_name, color_code, image_path, stock_level, is_active, display_order
                 FROM item_colors 
                 $whereClause 
+=======
+            $stmt = $pdo->prepare("
+                SELECT id, item_sku, color_name, color_code, image_path, stock_level, is_active, display_order
+                FROM item_colors 
+                WHERE item_sku = ? AND is_active = 1 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 ORDER BY display_order ASC, color_name ASC
             ");
             $stmt->execute([$itemSku]);

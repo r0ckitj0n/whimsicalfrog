@@ -227,7 +227,11 @@ $messageType = $_GET['type'] ?? '';
                 <option value="admin" <?= $filterRole === 'admin' ? 'selected' : '' ?>>Admin</option>
             </select>
             
+<<<<<<< HEAD
             <button type="submit" class="btn-primary admin-filter-button">Filter</button>
+=======
+            <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </form>
     </div>
     
@@ -298,7 +302,11 @@ $messageType = $_GET['type'] ?? '';
                         <tr data-customer-id="<?= htmlspecialchars($customerId) ?>">
                             <td>
                                 <div class="flex items-center">
+<<<<<<< HEAD
                                     <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-semibold mr-3">
+=======
+                                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-semibold">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <?= $initials ?>
                                     </div>
                                     <div>
@@ -309,7 +317,11 @@ $messageType = $_GET['type'] ?? '';
                             </td>
                             <td><?= htmlspecialchars($email) ?></td>
                             <td>
+<<<<<<< HEAD
                                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= strtolower($role) === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' ?>">
+=======
+                                <span class="inline-flex items-center rounded-full text-xs font-medium <?= strtolower($role) === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' ?>">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?= htmlspecialchars($role) ?>
                                 </span>
                             </td>
@@ -332,7 +344,11 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Delete Confirmation Modal -->
+=======
+<!- Delete Confirmation Modal ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <div id="deleteConfirmModal" class="delete-modal">
     <div class="delete-modal-content">
         <h2 class="delete-modal-title">Confirm Delete</h2>
@@ -340,16 +356,24 @@ $messageType = $_GET['type'] ?? '';
             Are you sure you want to delete this customer? This action cannot be undone.
         </p>
         <div class="delete-modal-actions">
+<<<<<<< HEAD
             <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
                             <form action="" method="POST" class="inline-block">
                 <input type="hidden" name="customer_id" id="delete_customer_id">
                 <button type="submit" name="delete_customer" class="btn-danger">Delete</button>
+=======
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                            <form action="" method="POST" class="inline-block">
+                <input type="hidden" name="customer_id" id="delete_customer_id">
+                <button type="submit" name="delete_customer" class="btn btn-danger">Delete</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </form>
         </div>
     </div>
 </div>
 
 <?php if (($modalMode === 'view' || $modalMode === 'edit') && $editCustomer): ?>
+<<<<<<< HEAD
 <!-- Customer View/Edit Modal -->
 <div class="customer-modal" id="customerModalOuter">
     <!-- Navigation Arrows -->
@@ -357,11 +381,24 @@ $messageType = $_GET['type'] ?? '';
         <span class="text-xl">‹</span>
     </button>
     <button id="nextCustomerBtn" onclick="navigateToCustomer('next')" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-50 text-gray-600" title="Next customer">
+=======
+<!- Customer View/Edit Modal ->
+<div class="customer-modal" id="customerModalOuter">
+    <!- Navigation Arrows ->
+    <button id="prevCustomerBtn" onclick="navigateToCustomer('prev')" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Previous customer">
+        <span class="text-xl">‹</span>
+    </button>
+    <button id="nextCustomerBtn" onclick="navigateToCustomer('next')" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Next customer">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <span class="text-xl">›</span>
     </button>
     
     <div class="modal-content">
+<<<<<<< HEAD
         <!-- Modal Header -->
+=======
+        <!- Modal Header ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="modal-header">
             <h2 class="modal-title">
                 <?= $modalMode === 'view' ? 'View Customer: ' : 'Edit Customer: ' ?>
@@ -378,7 +415,11 @@ $messageType = $_GET['type'] ?? '';
 
         <div class="modal-body">
             <div class="modal-main">
+<<<<<<< HEAD
                 <!-- Customer Avatar and Basic Info -->
+=======
+                <!- Customer Avatar and Basic Info ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="customer-profile-header">
                     <div class="customer-avatar-large">
                         <?php
@@ -396,7 +437,11 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Form Fields Grid -->
+=======
+                <!- Form Fields Grid ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="firstName" class="form-label">First Name</label>
@@ -442,7 +487,11 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Address Section -->
+=======
+                <!- Address Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="form-section">
                     <h5 class="form-section-title">Address Information</h5>
                     
@@ -480,7 +529,11 @@ $messageType = $_GET['type'] ?? '';
                 </div>
 
                 <?php if ($modalMode === 'edit'): ?>
+<<<<<<< HEAD
                 <!-- Password Management Section -->
+=======
+                <!- Password Management Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="form-section">
                     <h5 class="form-section-title">Password Management</h5>
                     <p class="form-section-help">Leave password fields blank to keep the current password unchanged.</p>
@@ -504,7 +557,11 @@ $messageType = $_GET['type'] ?? '';
                 <?php endif; ?>
             </div>
             
+<<<<<<< HEAD
             <!-- Order History Sidebar -->
+=======
+            <!- Order History Sidebar ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="modal-sidebar">
                 <div class="order-history-panel">
                     <h3 class="order-history-title">Order History</h3>
@@ -555,16 +612,28 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
 
+<<<<<<< HEAD
         <!-- Modal Footer -->
         <div class="modal-footer">
             <a href="?page=admin&section=customers" class="btn-secondary">
+=======
+        <!- Modal Footer ->
+        <div class="modal-footer">
+            <a href="?page=admin&section=customers" class="btn btn-secondary">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <?= $modalMode === 'edit' ? 'Cancel' : 'Close' ?>
             </a>
             <?php if ($modalMode === 'view'): ?>
                 <a href="?page=admin&section=customers&edit=<?= htmlspecialchars($editCustomer['id'] ?? '') ?>" 
+<<<<<<< HEAD
                    class="btn-primary">Edit Customer</a>
             <?php else: ?>
                 <button type="submit" id="saveCustomerBtn" class="btn-primary">
+=======
+                   class="btn btn-primary">Edit Customer</a>
+            <?php else: ?>
+                <button type="submit" id="saveCustomerBtn" class="btn btn-primary">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span class="button-text">Save Changes</span>
                     <span class="loading-spinner hidden">⏳</span>
                 </button>
@@ -578,7 +647,11 @@ $messageType = $_GET['type'] ?? '';
 </div>
 <?php endif; ?>
 
+<<<<<<< HEAD
 <!-- JavaScript -->
+=======
+<!- JavaScript ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <script>
 // Initialize variables
 const modalMode = <?= json_encode($modalMode ?? '') ?>;

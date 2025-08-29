@@ -738,10 +738,17 @@ function exportTables() {
         header('Pragma: no-cache');
         header('Expires: 0');
         
+<<<<<<< HEAD
         echo "-- Database Export\n";
         echo "-- Generated: " . date('Y-m-d H:i:s') . "\n";
         echo "-- Database: $db\n";
         echo "-- Tables: " . implode(', ', $tableList) . "\n\n";
+=======
+        echo "- Database Export\n";
+        echo "- Generated: " . date('Y-m-d H:i:s') . "\n";
+        echo "- Database: $db\n";
+        echo "- Tables: " . implode(', ', $tableList) . "\n\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         
         foreach ($tableList as $table) {
             $table = trim($table);
@@ -750,7 +757,11 @@ function exportTables() {
             $stmt = $pdo->query("SHOW CREATE TABLE `$table`");
             $createTable = $stmt->fetch();
             
+<<<<<<< HEAD
             echo "-- Table structure for `$table`\n";
+=======
+            echo "- Table structure for `$table`\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             echo "DROP TABLE IF EXISTS `$table`;\n";
             echo $createTable['Create Table'] . ";\n\n";
             
@@ -759,7 +770,11 @@ function exportTables() {
             $rows = $stmt->fetchAll();
             
             if (!empty($rows)) {
+<<<<<<< HEAD
                 echo "-- Data for table `$table`\n";
+=======
+                echo "- Data for table `$table`\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 
                 $columns = array_keys($rows[0]);
                 $columnList = '`' . implode('`, `', $columns) . '`';
@@ -862,16 +877,26 @@ function createBackup() {
         $stmt = $pdo->query("SHOW TABLES");
         $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
         
+<<<<<<< HEAD
         $backup = "-- Database Backup\n";
         $backup .= "-- Generated: " . date('Y-m-d H:i:s') . "\n";
         $backup .= "-- Database: $db\n\n";
+=======
+        $backup = "- Database Backup\n";
+        $backup .= "- Generated: " . date('Y-m-d H:i:s') . "\n";
+        $backup .= "- Database: $db\n\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         
         foreach ($tables as $table) {
             // Get table structure
             $stmt = $pdo->query("SHOW CREATE TABLE `$table`");
             $createTable = $stmt->fetch();
             
+<<<<<<< HEAD
             $backup .= "-- Table structure for `$table`\n";
+=======
+            $backup .= "- Table structure for `$table`\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             $backup .= "DROP TABLE IF EXISTS `$table`;\n";
             $backup .= $createTable['Create Table'] . ";\n\n";
             
@@ -880,7 +905,11 @@ function createBackup() {
             $rows = $stmt->fetchAll();
             
             if (!empty($rows)) {
+<<<<<<< HEAD
                 $backup .= "-- Data for table `$table`\n";
+=======
+                $backup .= "- Data for table `$table`\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 
                 $columns = array_keys($rows[0]);
                 $columnList = '`' . implode('`, `', $columns) . '`';
@@ -1018,7 +1047,11 @@ function restoreDatabase() {
             $statement = trim($statement);
             
             // Skip empty statements and comments
+<<<<<<< HEAD
             if (empty($statement) || substr($statement, 0, 2) === '--') {
+=======
+            if (empty($statement) || substr($statement, 0, 2) === '-') {
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 continue;
             }
             
@@ -1535,7 +1568,11 @@ function importSQL() {
             $statement = trim($statement);
             
             // Skip empty statements and comments
+<<<<<<< HEAD
             if (empty($statement) || strpos($statement, '--') === 0 || strpos($statement, '/*') === 0) {
+=======
+            if (empty($statement) || strpos($statement, '-') === 0 || strpos($statement, '/*') === 0) {
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 continue;
             }
             

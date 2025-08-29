@@ -47,6 +47,7 @@ if (!empty($selectedItemId)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cost Breakdown Manager - Whimsical Frog</title>
+<<<<<<< HEAD
     
     <!-- Database-driven CSS for cost_breakdown -->
     <style id="cost_breakdown-css">
@@ -89,10 +90,24 @@ if (!empty($selectedItemId)) {
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-green-700">Cost Breakdown Manager</h1>
             <a href="?page=admin&section=inventory" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+=======
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+</head>
+<body class="bg-gray-100">
+    <!- Toast Notification ->
+    <div id="toast" class="toast-notification"></div>
+    
+    <div class="">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-green-700">Cost Breakdown Manager</h1>
+            <a href="?page=admin&section=inventory" class="bg-blue-600 hover:bg-blue-700 text-white rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 Back to Inventory
             </a>
         </div>
         
+<<<<<<< HEAD
         <!-- Item Selection -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Select Inventory Item</h2>
@@ -100,6 +115,15 @@ if (!empty($selectedItemId)) {
                 <div class="flex-1">
                     <select id="itemSelector" class="w-full p-2 border border-gray-300 rounded">
                         <option value="">-- Select an item --</option>
+=======
+        <!- Item Selection ->
+        <div class="bg-white rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold text-gray-700">Select Inventory Item</h2>
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <select id="itemSelector" class="w-full border border-gray-300 rounded">
+                        <option value="">- Select an item -</option>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <?php foreach ($inventoryItems as $item): ?>
                         <option value="<?php echo $item['id']; ?>" <?php echo ($selectedItemId === $item['id']) ? 'selected' : ''; ?>>
                             <?php echo htmlspecialchars($item['name']); ?> (<?php echo $item['id']; ?>)
@@ -108,13 +132,18 @@ if (!empty($selectedItemId)) {
                     </select>
                 </div>
                 <div>
+<<<<<<< HEAD
                     <button id="loadItemBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+=======
+                    <button id="loadItemBtn" class="bg-green-600 hover:bg-green-700 text-white rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         Load Item
                     </button>
                 </div>
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- Cost Breakdown Display -->
         <div id="costBreakdownContainer" class="<?php echo empty($selectedItemId) ? 'hidden' : ''; ?>">
             <!-- Item Details -->
@@ -124,11 +153,26 @@ if (!empty($selectedItemId)) {
                         <?php echo isset($selectedItem) ? htmlspecialchars($selectedItem['name']) : ''; ?>
                     </h2>
                     <span class="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm" id="itemIdDisplay">
+=======
+        <!- Cost Breakdown Display ->
+        <div id="costBreakdownContainer" class="<?php echo empty($selectedItemId) ? 'hidden' : ''; ?>">
+            <!- Item Details ->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-xl font-semibold text-gray-700" id="itemNameDisplay">
+                        <?php echo isset($selectedItem) ? htmlspecialchars($selectedItem['name']) : ''; ?>
+                    </h2>
+                    <span class="bg-gray-200 text-gray-700 rounded-full text-sm" id="itemIdDisplay">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <?php echo isset($selectedItem) ? $selectedItem['id'] : ''; ?>
                     </span>
                 </div>
                 
+<<<<<<< HEAD
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+=======
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div>
                         <span class="text-gray-600 text-sm">Category:</span>
                         <p id="itemCategoryDisplay" class="font-medium">
@@ -150,6 +194,7 @@ if (!empty($selectedItemId)) {
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Cost Breakdown Sections -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Left Column: Materials and Labor -->
@@ -159,36 +204,66 @@ if (!empty($selectedItemId)) {
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-gray-700">Materials</h3>
                             <button id="addMaterialBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+=======
+            <!- Cost Breakdown Sections ->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!- Left Column: Materials and Labor ->
+                <div>
+                    <!- Materials Section ->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-700">Materials</h3>
+                            <button id="addMaterialBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 Add Material
                             </button>
                         </div>
                         
                         <div id="materialsList" class="divide-y divide-gray-200">
+<<<<<<< HEAD
                             <!-- Materials will be loaded here via JavaScript -->
                             <div class="py-4 text-center text-gray-500 italic" id="noMaterialsMsg">
+=======
+                            <!- Materials will be loaded here via JavaScript ->
+                            <div class="text-center text-gray-500 italic" id="noMaterialsMsg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 No materials added yet
                             </div>
                         </div>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Labor Section -->
                     <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-gray-700">Labor</h3>
                             <button id="addLaborBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+=======
+                    <!- Labor Section ->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-700">Labor</h3>
+                            <button id="addLaborBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 Add Labor
                             </button>
                         </div>
                         
                         <div id="laborList" class="divide-y divide-gray-200">
+<<<<<<< HEAD
                             <!-- Labor items will be loaded here via JavaScript -->
                             <div class="py-4 text-center text-gray-500 italic" id="noLaborMsg">
+=======
+                            <!- Labor items will be loaded here via JavaScript ->
+                            <div class="text-center text-gray-500 italic" id="noLaborMsg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 No labor costs added yet
                             </div>
                         </div>
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Right Column: Energy and Totals -->
                 <div>
                     <!-- Energy Section -->
@@ -196,21 +271,41 @@ if (!empty($selectedItemId)) {
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-lg font-semibold text-gray-700">Energy</h3>
                             <button id="addEnergyBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
+=======
+                <!- Right Column: Energy and Totals ->
+                <div>
+                    <!- Energy Section ->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-700">Energy</h3>
+                            <button id="addEnergyBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 Add Energy
                             </button>
                         </div>
                         
                         <div id="energyList" class="divide-y divide-gray-200">
+<<<<<<< HEAD
                             <!-- Energy items will be loaded here via JavaScript -->
                             <div class="py-4 text-center text-gray-500 italic" id="noEnergyMsg">
+=======
+                            <!- Energy items will be loaded here via JavaScript ->
+                            <div class="text-center text-gray-500 italic" id="noEnergyMsg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 No energy costs added yet
                             </div>
                         </div>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Totals Section -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h3 class="text-lg font-semibold text-gray-700 mb-4">Cost Summary</h3>
+=======
+                    <!- Totals Section ->
+                    <div class="bg-white rounded-lg shadow-md">
+                        <h3 class="text-lg font-semibold text-gray-700">Cost Summary</h3>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         
                         <div class="cost-totals">
                             <div class="cost-total-row">
@@ -225,17 +320,30 @@ if (!empty($selectedItemId)) {
                                 <span class="cost-label">Energy Total:</span>
                                 <span id="energyTotalDisplay" class="cost-item-value">$0.00</span>
                             </div>
+<<<<<<< HEAD
                             <div class="cost-total-row border-t border-gray-300 pt-2 mt-2">
+=======
+                            <div class="cost-total-row border-t border-gray-300">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <span class="font-semibold">Suggested Cost:</span>
                                 <span id="suggestedCostDisplay" class="font-bold text-purple-700">$0.00</span>
                             </div>
                             
+<<<<<<< HEAD
                             <div class="mt-4 flex justify-between items-center">
                                 <div>
                                     <span class="text-sm text-gray-600">Current Cost Price:</span>
                                     <span id="currentCostDisplay" class="ml-2 font-medium">$0.00</span>
                                 </div>
                                 <button id="updateCostBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded text-sm">
+=======
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <span class="text-sm text-gray-600">Current Cost Price:</span>
+                                    <span id="currentCostDisplay" class="font-medium">$0.00</span>
+                                </div>
+                                <button id="updateCostBtn" class="bg-purple-600 hover:bg-purple-700 text-white rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     Update Cost Price
                                 </button>
                             </div>
@@ -245,6 +353,7 @@ if (!empty($selectedItemId)) {
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- Empty State -->
         <div id="emptyStateContainer" class="<?php echo !empty($selectedItemId) ? 'hidden' : ''; ?> bg-white p-8 rounded-lg shadow-md text-center">
             <svg class="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -259,6 +368,22 @@ if (!empty($selectedItemId)) {
     <div id="materialModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
+=======
+        <!- Empty State ->
+        <div id="emptyStateContainer" class="<?php echo !empty($selectedItemId) ? 'hidden' : ''; ?> bg-white rounded-lg shadow-md text-center">
+            <svg class="w-20 h-20 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            <h2 class="text-xl font-semibold text-gray-700">No Item Selected</h2>
+            <p class="text-gray-500">Please select an inventory item to manage its cost breakdown</p>
+        </div>
+    </div>
+    
+    <!- Add/Edit Material Modal ->
+    <div id="materialModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <h3 id="materialModalTitle" class="text-lg font-semibold text-gray-700">Add Material</h3>
                 <button class="text-gray-500 hover:text-gray-700 close-modal" data-modal="materialModal">&times;</button>
             </div>
@@ -268,6 +393,7 @@ if (!empty($selectedItemId)) {
                 <input type="hidden" id="materialInventoryId" value="">
                 
                 <div>
+<<<<<<< HEAD
                     <label for="materialName" class="block text-sm font-medium text-gray-700 mb-1">Material Name</label>
                     <input type="text" id="materialName" class="w-full p-2 border border-gray-300 rounded" required>
                 </div>
@@ -280,6 +406,20 @@ if (!empty($selectedItemId)) {
                 <div class="flex justify-end space-x-3 pt-4">
                     <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="materialModal">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+=======
+                    <label for="materialName" class="block text-sm font-medium text-gray-700">Material Name</label>
+                    <input type="text" id="materialName" class="w-full border border-gray-300 rounded" required>
+                </div>
+                
+                <div>
+                    <label for="materialCost" class="block text-sm font-medium text-gray-700">Cost ($)</label>
+                    <input type="number" id="materialCost" class="w-full border border-gray-300 rounded" min="0" step="0.01" required>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="materialModal">Cancel</button>
+                    <button type="submit" class="bg-green-600 text-white rounded hover:bg-green-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <span id="materialSubmitText">Save Material</span>
                         <span id="materialSubmitSpinner" class="loading-spinner hidden"></span>
                     </button>
@@ -288,10 +428,17 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Add/Edit Labor Modal -->
     <div id="laborModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
+=======
+    <!- Add/Edit Labor Modal ->
+    <div id="laborModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <h3 id="laborModalTitle" class="text-lg font-semibold text-gray-700">Add Labor</h3>
                 <button class="text-gray-500 hover:text-gray-700 close-modal" data-modal="laborModal">&times;</button>
             </div>
@@ -301,6 +448,7 @@ if (!empty($selectedItemId)) {
                 <input type="hidden" id="laborInventoryId" value="">
                 
                 <div>
+<<<<<<< HEAD
                     <label for="laborDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <input type="text" id="laborDescription" class="w-full p-2 border border-gray-300 rounded" required>
                 </div>
@@ -313,6 +461,20 @@ if (!empty($selectedItemId)) {
                 <div class="flex justify-end space-x-3 pt-4">
                     <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="laborModal">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+=======
+                    <label for="laborDescription" class="block text-sm font-medium text-gray-700">Description</label>
+                    <input type="text" id="laborDescription" class="w-full border border-gray-300 rounded" required>
+                </div>
+                
+                <div>
+                    <label for="laborCost" class="block text-sm font-medium text-gray-700">Cost ($)</label>
+                    <input type="number" id="laborCost" class="w-full border border-gray-300 rounded" min="0" step="0.01" required>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="laborModal">Cancel</button>
+                    <button type="submit" class="bg-green-600 text-white rounded hover:bg-green-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <span id="laborSubmitText">Save Labor</span>
                         <span id="laborSubmitSpinner" class="loading-spinner hidden"></span>
                     </button>
@@ -321,10 +483,17 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Add/Edit Energy Modal -->
     <div id="energyModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
+=======
+    <!- Add/Edit Energy Modal ->
+    <div id="energyModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <h3 id="energyModalTitle" class="text-lg font-semibold text-gray-700">Add Energy</h3>
                 <button class="text-gray-500 hover:text-gray-700 close-modal" data-modal="energyModal">&times;</button>
             </div>
@@ -334,6 +503,7 @@ if (!empty($selectedItemId)) {
                 <input type="hidden" id="energyInventoryId" value="">
                 
                 <div>
+<<<<<<< HEAD
                     <label for="energyDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                     <input type="text" id="energyDescription" class="w-full p-2 border border-gray-300 rounded" required>
                 </div>
@@ -346,6 +516,20 @@ if (!empty($selectedItemId)) {
                 <div class="flex justify-end space-x-3 pt-4">
                     <button type="button" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="energyModal">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+=======
+                    <label for="energyDescription" class="block text-sm font-medium text-gray-700">Description</label>
+                    <input type="text" id="energyDescription" class="w-full border border-gray-300 rounded" required>
+                </div>
+                
+                <div>
+                    <label for="energyCost" class="block text-sm font-medium text-gray-700">Cost ($)</label>
+                    <input type="number" id="energyCost" class="w-full border border-gray-300 rounded" min="0" step="0.01" required>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="energyModal">Cancel</button>
+                    <button type="submit" class="bg-green-600 text-white rounded hover:bg-green-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <span id="energySubmitText">Save Energy</span>
                         <span id="energySubmitSpinner" class="loading-spinner hidden"></span>
                     </button>
@@ -354,19 +538,34 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
+=======
+    <!- Delete Confirmation Modal ->
+    <div id="deleteModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <h3 class="text-lg font-semibold text-red-600">Confirm Delete</h3>
                 <button class="text-gray-500 hover:text-gray-700 close-modal" data-modal="deleteModal">&times;</button>
             </div>
             
+<<<<<<< HEAD
             <p class="mb-4" id="deleteConfirmText">Are you sure you want to delete this item?</p>
             
             <div class="flex justify-end space-x-3">
                 <button class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="deleteModal">Cancel</button>
                 <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+=======
+            <p class="" id="deleteConfirmText">Are you sure you want to delete this item?</p>
+            
+            <div class="flex justify-end space-x-3">
+                <button class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="deleteModal">Cancel</button>
+                <button id="confirmDeleteBtn" class="bg-red-600 text-white rounded hover:bg-red-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span id="deleteSubmitText">Delete</span>
                     <span id="deleteSubmitSpinner" class="loading-spinner hidden"></span>
                 </button>
@@ -377,30 +576,52 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Update Cost Price Confirmation Modal -->
     <div id="updateCostModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
+=======
+    <!- Update Cost Price Confirmation Modal ->
+    <div id="updateCostModal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <h3 class="text-lg font-semibold text-purple-600">Update Cost Price</h3>
                 <button class="text-gray-500 hover:text-gray-700 close-modal" data-modal="updateCostModal">&times;</button>
             </div>
             
+<<<<<<< HEAD
             <p class="mb-4">Do you want to update the cost price to match the suggested cost?</p>
             
             <div class="bg-gray-100 p-4 rounded mb-4">
+=======
+            <p class="">Do you want to update the cost price to match the suggested cost?</p>
+            
+            <div class="bg-gray-100 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="flex justify-between items-center">
                     <span>Current Cost Price:</span>
                     <span id="updateCurrentCost" class="font-medium">$0.00</span>
                 </div>
+<<<<<<< HEAD
                 <div class="flex justify-between items-center mt-2">
+=======
+                <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span>Suggested Cost:</span>
                     <span id="updateSuggestedCost" class="font-medium text-purple-600">$0.00</span>
                 </div>
             </div>
             
             <div class="flex justify-end space-x-3">
+<<<<<<< HEAD
                 <button class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="updateCostModal">Cancel</button>
                 <button id="confirmUpdateCostBtn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+=======
+                <button class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 close-modal" data-modal="updateCostModal">Cancel</button>
+                <button id="confirmUpdateCostBtn" class="bg-purple-600 text-white rounded hover:bg-purple-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span id="updateCostSubmitText">Update Cost</span>
                     <span id="updateCostSubmitSpinner" class="loading-spinner hidden"></span>
                 </button>
@@ -543,9 +764,15 @@ if (!empty($selectedItemId)) {
                             <span class="font-medium">${escapeHtml(material.name)}</span>
                         </div>
                         <div class="flex items-center">
+<<<<<<< HEAD
                             <span class="mr-4 font-semibold">$${parseFloat(material.cost).toFixed(2)}</span>
                                                             <button class="text-green-600 hover:text-green-800 mr-2" onclick="openEditModal('material', ${material.id})" title="Edit Material">✏️</button>
                                 <button class="text-red-600 hover:text-red-800" onclick="openDeleteModal('material', ${material.id}, '${escapeHtml(material.name)}')" title="Delete Material">🗑️</button>
+=======
+                            <span class="font-semibold">$${parseFloat(material.cost).toFixed(2)}</span>
+                            <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"material","id":${material.id}}' title="Edit Material">✏️</button>
+                            <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"material","id":${material.id},"name":"${escapeHtml(material.name)}"}' title="Delete Material">🗑️</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     `;
                     materialsList.appendChild(materialItem);
@@ -568,9 +795,15 @@ if (!empty($selectedItemId)) {
                             <span class="font-medium">${escapeHtml(labor.description)}</span>
                         </div>
                         <div class="flex items-center">
+<<<<<<< HEAD
                             <span class="mr-4 font-semibold">$${parseFloat(labor.cost).toFixed(2)}</span>
                                                             <button class="text-green-600 hover:text-green-800 mr-2" onclick="openEditModal('labor', ${labor.id})" title="Edit Labor">✏️</button>
                                 <button class="text-red-600 hover:text-red-800" onclick="openDeleteModal('labor', ${labor.id}, '${escapeHtml(labor.description)}')" title="Delete Labor">🗑️</button>
+=======
+                            <span class="font-semibold">$${parseFloat(labor.cost).toFixed(2)}</span>
+                            <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"labor","id":${labor.id}}' title="Edit Labor">✏️</button>
+                            <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"labor","id":${labor.id},"name":"${escapeHtml(labor.description)}"}' title="Delete Labor">🗑️</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     `;
                     laborList.appendChild(laborItem);
@@ -593,9 +826,15 @@ if (!empty($selectedItemId)) {
                             <span class="font-medium">${escapeHtml(energy.description)}</span>
                         </div>
                         <div class="flex items-center">
+<<<<<<< HEAD
                             <span class="mr-4 font-semibold">$${parseFloat(energy.cost).toFixed(2)}</span>
                                                             <button class="text-green-600 hover:text-green-800 mr-2" onclick="openEditModal('energy', ${energy.id})" title="Edit Energy">✏️</button>
                                 <button class="text-red-600 hover:text-red-800" onclick="openDeleteModal('energy', ${energy.id}, '${escapeHtml(energy.description)}')" title="Delete Energy">🗑️</button>
+=======
+                            <span class="font-semibold">$${parseFloat(energy.cost).toFixed(2)}</span>
+                            <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"energy","id":${energy.id}}' title="Edit Energy">✏️</button>
+                            <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"energy","id":${energy.id},"name":"${escapeHtml(energy.description)}"}' title="Delete Energy">🗑️</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     `;
                     energyList.appendChild(energyItem);

@@ -1,0 +1,244 @@
+No syntax errors detected in ./process_customers_get.php
+No syntax errors detected in ./db_quick.php
+No syntax errors detected in ./admin_user_manager.php
+No syntax errors detected in ./db_web_manager.php
+No syntax errors detected in ./sections/account_settings.php
+No syntax errors detected in ./sections/login.php
+No syntax errors detected in ./sections/cart.php
+No syntax errors detected in ./sections/admin_inventory.php
+No syntax errors detected in ./sections/register.php
+No syntax errors detected in ./sections/admin_categories.php
+No syntax errors detected in ./sections/logout.php
+No syntax errors detected in ./sections/admin_email_settings.php
+No syntax errors detected in ./sections/admin_dashboard.php
+No syntax errors detected in ./sections/shop.php
+No syntax errors detected in ./sections/room_main.php
+No syntax errors detected in ./sections/receipt.php
+No syntax errors detected in ./sections/admin_orders.php
+No syntax errors detected in ./sections/admin_pos.php
+No syntax errors detected in ./sections/landing.php
+No syntax errors detected in ./sections/admin_customers.php
+No syntax errors detected in ./sections/admin_reports.php
+No syntax errors detected in ./sections/admin_settings.php
+No syntax errors detected in ./sections/admin_marketing.php
+No syntax errors detected in ./sections/admin.php
+No syntax errors detected in ./process_discount_code.php
+No syntax errors detected in ./set_session.php
+No syntax errors detected in ./index.php
+No syntax errors detected in ./cost_management_js.php
+
+Deprecated: Using ${var} in strings is deprecated, use {$var} instead in ./css/dynamic-styles.php on line 13
+No syntax errors detected in ./css/dynamic-styles.php
+No syntax errors detected in ./process_inventory_update.php
+No syntax errors detected in ./process_orders_get.php
+No syntax errors detected in ./process_customer_update.php
+No syntax errors detected in ./process_image_upload.php
+No syntax errors detected in ./logout.php
+No syntax errors detected in ./includes/functions.php
+No syntax errors detected in ./includes/image_helper.php
+No syntax errors detected in ./includes/logger.php
+No syntax errors detected in ./includes/database_operations.php
+No syntax errors detected in ./includes/auth.php
+No syntax errors detected in ./includes/stock_manager.php
+No syntax errors detected in ./includes/item_image_helpers.php
+No syntax errors detected in ./includes/system_cleanup.php
+No syntax errors detected in ./includes/data_manager.php
+No syntax errors detected in ./includes/room_helper.php
+No syntax errors detected in ./includes/email_helper.php
+No syntax errors detected in ./includes/api_helpers.php
+No syntax errors detected in ./includes/response.php
+No syntax errors detected in ./includes/http_client.php
+No syntax errors detected in ./includes/database.php
+No syntax errors detected in ./includes/session.php
+No syntax errors detected in ./includes/api_handlers_extended.php
+No syntax errors detected in ./includes/room_helpers.php
+No syntax errors detected in ./includes/security_validator.php
+No syntax errors detected in ./includes/constructor_manager.php
+No syntax errors detected in ./includes/file_operations.php
+No syntax errors detected in ./includes/ai_manager.php
+No syntax errors detected in ./includes/file_helper.php
+No syntax errors detected in ./includes/database_logger.php
+No syntax errors detected in ./includes/auth_helper.php
+No syntax errors detected in ./includes/email_manager.php
+No syntax errors detected in ./includes/data_processor.php
+No syntax errors detected in ./includes/error_logger.php
+No syntax errors detected in ./admin/room_config_manager.php
+No syntax errors detected in ./process_cost_breakdown.php
+No syntax errors detected in ./process_login.php
+No syntax errors detected in ./db_status.php
+No syntax errors detected in ./config.php
+No syntax errors detected in ./process_account_update.php
+No syntax errors detected in ./process_inventory_add.php
+No syntax errors detected in ./components/quantity_modal.php
+No syntax errors detected in ./components/simple_footer.php
+No syntax errors detected in ./components/detailed_item_modal.php
+No syntax errors detected in ./components/button_template.php
+No syntax errors detected in ./components/ai_processing_modal.php
+No syntax errors detected in ./components/image_carousel.php
+No syntax errors detected in ./components/header_template.php
+No syntax errors detected in ./components/global_popup.php
+No syntax errors detected in ./components/footer_template.php
+No syntax errors detected in ./process_multi_image_upload.php
+No syntax errors detected in ./process_email_campaign.php
+No syntax errors detected in ./process_social_post.php
+No syntax errors detected in ./cost_breakdown_manager.php
+No syntax errors detected in ./scripts/bundle-css.php
+
+Parse error: Unmatched '}' in ./scripts/extract-inline-styles-fixed.php on line 18
+Errors parsing ./scripts/extract-inline-styles-fixed.php
+No syntax errors detected in ./scripts/build.php
+No syntax errors detected in ./scripts/generate-tailwind-utilities.php
+
+Parse error: Unclosed '{' on line 5 in ./scripts/extract-inline-styles.php on line 36
+Errors parsing ./scripts/extract-inline-styles.php
+No syntax errors detected in ./scripts/bundle-js.php
+No syntax errors detected in ./scripts/remove-tailwind-classes.php
+No syntax errors detected in ./scripts/migrate-backup-inline-styles.php
+No syntax errors detected in ./scripts/update_background_filenames.php
+No syntax errors detected in ./scripts/view_backgrounds.php
+No syntax errors detected in ./process_inventory_get.php
+No syntax errors detected in ./api/help_tooltips.php
+No syntax errors detected in ./api/help_documentation.php
+
+Parse error: syntax error, unexpected token ";" in ./api/get_email_details.php on line 13
+Errors parsing ./api/get_email_details.php
+No syntax errors detected in ./api/update-inventory-field.php
+No syntax errors detected in ./api/cost_breakdown_templates.php
+No syntax errors detected in ./api/item_sizes.php
+No syntax errors detected in ./api/database_tables.php
+No syntax errors detected in ./api/website_config.php
+No syntax errors detected in ./api/ai_providers.php
+No syntax errors detected in ./api/fix_sample_email.php
+No syntax errors detected in ./api/get_email_config.php
+No syntax errors detected in ./api/login.php
+No syntax errors detected in ./api/get_badge_scores.php
+No syntax errors detected in ./api/migrate_room_numbering.php
+No syntax errors detected in ./api/get_item_images.php
+No syntax errors detected in ./api/item_assignment_management.php
+No syntax errors detected in ./api/cleanup_system.php
+No syntax errors detected in ./api/color_templates.php
+No syntax errors detected in ./api/get_ai_model_capabilities.php
+No syntax errors detected in ./api/sales.php
+No syntax errors detected in ./api/email_notifications.php
+
+Parse error: syntax error, unexpected token ";" in ./api/process_image_ai.php on line 33
+Errors parsing ./api/process_image_ai.php
+No syntax errors detected in ./api/backgrounds.php
+No syntax errors detected in ./api/backup_database.php
+No syntax errors detected in ./api/dashboard_sections.php
+No syntax errors detected in ./api/update-inventory-stock.php
+No syntax errors detected in ./api/get_room_categories.php
+No syntax errors detected in ./api/inventory.php
+No syntax errors detected in ./api/analytics_tracker.php
+No syntax errors detected in ./api/save_email_config.php
+No syntax errors detected in ./api/get_system_config.php
+No syntax errors detected in ./api/marketing_manager.php
+No syntax errors detected in ./api/delete-order.php
+
+Parse error: syntax error, unexpected token ";" in ./api/upload_background.php on line 40
+Errors parsing ./api/upload_background.php
+No syntax errors detected in ./api/init_room_settings_db.php
+No syntax errors detected in ./api/update-inventory.php
+No syntax errors detected in ./api/register.php
+No syntax errors detected in ./api/item_colors.php
+No syntax errors detected in ./api/receipt_settings.php
+No syntax errors detected in ./api/global_css_rules.php
+No syntax errors detected in ./api/get_background.php
+No syntax errors detected in ./api/brand_voice_options.php
+No syntax errors detected in ./api/item_genders.php
+No syntax errors detected in ./api/database_maintenance.php
+No syntax errors detected in ./api/business_settings.php
+No syntax errors detected in ./api/debug_session.php
+No syntax errors detected in ./api/room_helpers.php
+No syntax errors detected in ./api/suggest_price.php
+No syntax errors detected in ./api/ai_image_processor.php
+No syntax errors detected in ./api/file_manager.php
+No syntax errors detected in ./api/update-payment-status.php
+No syntax errors detected in ./api/next-order-item-id.php
+
+Parse error: syntax error, unexpected token ";" in ./api/resend_email.php on line 16
+Errors parsing ./api/resend_email.php
+No syntax errors detected in ./api/customer_addresses.php
+No syntax errors detected in ./api/get_room_coordinates.php
+No syntax errors detected in ./api/square_settings.php
+No syntax errors detected in ./api/get_pricing_explanation.php
+No syntax errors detected in ./api/config.php
+No syntax errors detected in ./api/backup_website.php
+No syntax errors detected in ./api/send_receipt_email.php
+No syntax errors detected in ./api/ai_settings.php
+No syntax errors detected in ./api/get_marketing_data.php
+No syntax errors detected in ./api/get_ai_models.php
+No syntax errors detected in ./api/email_templates.php
+No syntax errors detected in ./api/get_database_info.php
+No syntax errors detected in ./api/css_generator.php
+No syntax errors detected in ./api/users.php
+No syntax errors detected in ./api/inventory-costs.php
+No syntax errors detected in ./api/size_templates.php
+No syntax errors detected in ./api/test.php
+No syntax errors detected in ./api/get_room_data.php
+No syntax errors detected in ./api/delete_item_image.php
+No syntax errors detected in ./api/global_color_size_management.php
+No syntax errors detected in ./api/fix_permissions.php
+No syntax errors detected in ./api/image_server.php
+No syntax errors detected in ./api/email_logger.php
+No syntax errors detected in ./api/save_image_alt_text.php
+No syntax errors detected in ./api/update_sample_email.php
+No syntax errors detected in ./api/update-order.php
+No syntax errors detected in ./api/website_logs.php
+No syntax errors detected in ./api/suggest_cost.php
+
+Parse error: syntax error, unexpected token ";" in ./api/get_email_history.php on line 27
+Errors parsing ./api/get_email_history.php
+No syntax errors detected in ./api/suggest_marketing.php
+No syntax errors detected in ./api/get_marketing_suggestion.php
+No syntax errors detected in ./api/get_item_details.php
+No syntax errors detected in ./api/get_price_suggestion.php
+No syntax errors detected in ./api/render_detailed_modal.php
+No syntax errors detected in ./api/room_maps.php
+No syntax errors detected in ./api/db_manager.php
+No syntax errors detected in ./api/ai_item_analysis.php
+No syntax errors detected in ./api/sync_db.php
+No syntax errors detected in ./api/search_items.php
+No syntax errors detected in ./api/fulfill_order.php
+No syntax errors detected in ./api/init_help_tooltips_db.php
+No syntax errors detected in ./api/badge_content_manager.php
+No syntax errors detected in ./api/get_order.php
+No syntax errors detected in ./api/load_room_content.php
+No syntax errors detected in ./api/delete-customer.php
+No syntax errors detected in ./api/room_settings.php
+No syntax errors detected in ./api/room_category_assignments.php
+No syntax errors detected in ./api/seo_enhancer.php
+No syntax errors detected in ./api/delete-inventory.php
+No syntax errors detected in ./api/compact_repair_database.php
+No syntax errors detected in ./api/set_redirect.php
+No syntax errors detected in ./api/order_management.php
+No syntax errors detected in ./api/get_cost_suggestion.php
+No syntax errors detected in ./api/area_mappings.php
+No syntax errors detected in ./api/set_primary_image.php
+No syntax errors detected in ./api/generate_sitemap.php
+No syntax errors detected in ./api/update-user.php
+No syntax errors detected in ./api/content_tone_options.php
+No syntax errors detected in ./api/add-inventory.php
+No syntax errors detected in ./api/marketing_helper.php
+No syntax errors detected in ./api/next_sku.php
+No syntax errors detected in ./api/add-order.php
+No syntax errors detected in ./api/get_items.php
+No syntax errors detected in ./api/email_config.php
+No syntax errors detected in ./api/business_settings_helper.php
+No syntax errors detected in ./api/redesign_size_color_system.php
+No syntax errors detected in ./api/orders.php
+No syntax errors detected in ./api/start_over.php
+No syntax errors detected in ./api/get_categories.php
+No syntax errors detected in ./api/convert_to_centralized_db.php
+No syntax errors detected in ./api/help_tooltips_test.php
+No syntax errors detected in ./db_manager.php
+No syntax errors detected in ./process_customer_orders.php
+No syntax errors detected in ./db_api.php
+No syntax errors detected in ./process_register.php
+No syntax errors detected in ./backups/autogen_missing_css.php
+No syntax errors detected in ./backups/test_root_php.php
+No syntax errors detected in ./backups/standardize_codebase.php
+No syntax errors detected in ./backups/database_migrations/add_ai_processing_columns.php
+No syntax errors detected in ./backups/sync_database_smart.php
+No syntax errors detected in ./process_inventory_delete.php
+No syntax errors detected in ./process_category_action.php

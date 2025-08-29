@@ -179,32 +179,49 @@ class RoomHelper {
         $image = htmlspecialchars($this->seoData['image'] ?? '');
         
         return "
+<<<<<<< HEAD
         <!-- SEO Meta Tags -->
+=======
+        <!- SEO Meta Tags ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <title>{$title} | WhimsicalFrog</title>
         <meta name=\"description\" content=\"{$description}\">
         <meta name=\"keywords\" content=\"{$category}, WhimsicalFrog, custom products, online store\">
         <link rel=\"canonical\" href=\"https://whimsicalfrog.us{$canonical}\">
 
+<<<<<<< HEAD
         <!-- Open Graph Tags -->
+=======
+        <!- Open Graph Tags ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <meta property=\"og:title\" content=\"{$title}\">
         <meta property=\"og:description\" content=\"{$description}\">
         <meta property=\"og:image\" content=\"https://whimsicalfrog.us/{$image}\">
         <meta property=\"og:url\" content=\"https://whimsicalfrog.us{$canonical}\">
         <meta property=\"og:type\" content=\"website\">
 
+<<<<<<< HEAD
         <!-- Twitter Card Tags -->
+=======
+        <!- Twitter Card Tags ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <meta name=\"twitter:card\" content=\"summary_large_image\">
         <meta name=\"twitter:title\" content=\"{$title}\">
         <meta name=\"twitter:description\" content=\"{$description}\">
         <meta name=\"twitter:image\" content=\"https://whimsicalfrog.us/{$image}\">
 
+<<<<<<< HEAD
         <!-- Structured Data -->
+=======
+        <!- Structured Data ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <script type=\"application/ld+json\">
         {$this->generateStructuredData()}
         </script>";
     }
     
     /**
+<<<<<<< HEAD
      * Render CSS links and loading scripts
      */
     public function renderCssLinks() {
@@ -242,6 +259,13 @@ class RoomHelper {
             // Load CSS when DOM is ready
             document.addEventListener('DOMContentLoaded', loadRoom_templateCSS);
         </script>
+=======
+     * Render required CSS links
+     */
+    public function renderCssLinks() {
+        return "
+        <!- All room styling now handled by database-driven CSS system ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         ";
     }
     
@@ -250,6 +274,7 @@ class RoomHelper {
      */
     public function renderJavaScript() {
         $coordinates = $this->getRoomCoordinates();
+<<<<<<< HEAD
         
         return "
         <!-- Room-specific JavaScript -->
@@ -407,12 +432,23 @@ class RoomHelper {
             }
         });
         </script>";
+=======
+        return sprintf(
+            '<script src="js/room-helper.js?v=%s" data-room-items=\'%s\' data-room-number="%s" data-room-type="%s" data-base-areas=\'%s\'></script>',
+            time(),
+            htmlspecialchars(json_encode($this->roomItems), ENT_QUOTES),
+            $this->roomNumber,
+            $this->roomType,
+            htmlspecialchars(json_encode($coordinates), ENT_QUOTES)
+        );
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     /**
      * Render room container with background
      */
     public function renderRoomContainer($content = '') {
+<<<<<<< HEAD
         return "
         <div class=\"room-container\">
             <div class=\"room-overlay-wrapper\" style=\"background-image: url('images/{$this->roomType}.webp?v=cb2');\">
@@ -421,6 +457,18 @@ class RoomHelper {
                 </div>
             </div>
         </div>";
+=======
+        $overlayCss = "";
+        return $overlayCss . <<<HTML
+<div class="room-container">
+    <div class="room-overlay-wrapper room-overlay-{$this->roomType}">
+        <div class="room-overlay-content">
+            {$content}
+        </div>
+    </div>
+</div>
+HTML;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     /**
@@ -435,7 +483,12 @@ class RoomHelper {
             <div class=\"back-button-container\">
                 <a href=\"/?page=room_main\" class=\"back-to-main-button\">
                     <svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">
+<<<<<<< HEAD
                         <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10 19l-7-7m0 0l7-7m-7 7h18\"></path>
+=======
+                        <path d=\"m12 19-7-7 7-7\"></path>
+                        <path d=\"m19 12-7 7-7-7\"></path>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     </svg>
                     <span>Back to Main Room</span>
                 </a>
@@ -452,12 +505,23 @@ class RoomHelper {
      * Render product icons from room items
      */
     public function renderProductIcons() {
+<<<<<<< HEAD
         $html = '<div class="shelf-area" id="shelf-area">';
         
         foreach ($this->roomItems as $index => $item) {
             $stockLevel = intval($item['stockLevel'] ?? 0);
             $outOfStockClass = $stockLevel <= 0 ? ' out-of-stock' : '';
             $outOfStockBadge = $stockLevel <= 0 ? '<div class="out-of-stock-badge">Out of Stock</div>' : '';
+=======
+        $positionCss = '';
+        $html = $positionCss . <<<HTML
+<div class="shelf-area" id="shelf-area">
+HTML;
+         foreach ($this->roomItems as $index => $item) {
+             $stockLevel = intval($item['stockLevel'] ?? 0);
+             $outOfStockClass = $stockLevel <= 0 ? ' out-of-stock' : '';
+             $outOfStockBadge = $stockLevel <= 0 ? '<div class="out-of-stock-badge">Out of Stock</div>' : '';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             
             // Get image path with fallbacks
             $imagePath = $this->getItemImagePath($item);
@@ -466,6 +530,7 @@ class RoomHelper {
             $itemWithImage = $item;
             $itemWithImage['primaryImageUrl'] = $imagePath;
             
+<<<<<<< HEAD
             // Generate item icon without positioning - let JavaScript handle scaling
             $html .= "
             <div class=\"item-icon{$outOfStockClass}\" 
@@ -481,6 +546,30 @@ class RoomHelper {
             </div>";
         }
         
+=======
+            // Generate item icon with basic initial positioning to prevent stacking at 0,0
+            // $initialTop = 50 + ($index * 80); // Spread items vertically initially
+            // $initialLeft = 50 + ($index * 100); // Spread items horizontally initially
+            
+            $itemWithImageJson = htmlspecialchars(json_encode($itemWithImage));
+            $itemJson = htmlspecialchars(json_encode($item));
+            $itemAlt = htmlspecialchars($item['name'] ?? $item['productName'] ?? 'Product');
+            $html .= <<<HTML
+    <div class="item-icon{$outOfStockClass} room-item room-item-position-{$index}"
+         id="item-icon-{$index}"
+         data-product-id="{$item['sku']}"
+         data-stock="{$stockLevel}"
+         data-index="{$index}"
+         data-mouseover-action="showGlobalPopup" data-params='{"itemData":{$itemWithImageJson}}'
+         data-mouseout-action="hideGlobalPopup"
+         data-action="openQuantityModal" data-params='{"itemData":{$itemJson}}'
+         >
+        <img src="{$imagePath}" alt="{$itemAlt}" loading="lazy" class="room-item-img">
+        {$outOfStockBadge}
+    </div>
+HTML;
+         }
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         $html .= '</div>';
         return $html;
     }

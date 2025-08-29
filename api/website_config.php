@@ -166,9 +166,15 @@ function updateCSSVariable($pdo) {
         return;
     }
     
+<<<<<<< HEAD
     // Ensure variable name starts with --
     if (!str_starts_with($variable_name, '--')) {
         $variable_name = '--' . $variable_name;
+=======
+    // Ensure variable name starts with -
+    if (!str_starts_with($variable_name, '-')) {
+        $variable_name = '-' . $variable_name;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     // Check if variable exists

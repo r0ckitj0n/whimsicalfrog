@@ -19,6 +19,7 @@ Auth::requireAdmin();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room Configuration Manager - WhimsicalFrog Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<<<<<<< HEAD
     <!-- Admin styles now loaded from database via main CSS system -->
     
 
@@ -54,6 +55,10 @@ Auth::requireAdmin();
     // Load CSS when DOM is ready
     document.addEventListener('DOMContentLoaded', loadRoom_configCSS);
 </script>
+=======
+    <link href="../css/admin-styles.css?v=<?php echo time(); ?>" rel="stylesheet">
+    <link href="../css/global-modals.css?v=<?php echo time(); ?>" rel="stylesheet">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto px-4 py-8">
@@ -62,10 +67,17 @@ Auth::requireAdmin();
             
             <div id="messageContainer"></div>
             
+<<<<<<< HEAD
             <!-- Room Selection -->
             <div class="mb-6">
                 <label for="roomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
                 <select id="roomSelect" class="form-input w-full" onchange="loadRoomConfig()">
+=======
+            <!- Room Selection ->
+            <div class="mb-6">
+                <label for="roomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
+                <select id="roomSelect" class="form-input w-full" data-change-action="loadRoomConfig">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <option value="">Choose a room...</option>
                     <option value="2">Room 2 - T-Shirts</option>
                     <option value="3">Room 3 - Tumblers</option>
@@ -83,7 +95,11 @@ Auth::requireAdmin();
             <div class="border-t pt-8">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-4">Configure Room Settings</h2>
                 
+<<<<<<< HEAD
                 <div id="configFormContainer" style="display: none;">
+=======
+                <div id="configFormContainer" class="config-form-container hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <form id="roomConfigForm" class="space-y-8">
                         <input type="hidden" id="roomNumber" name="room_number">
                         
@@ -210,8 +226,13 @@ Auth::requireAdmin();
                         </div>
                         
                         <div class="flex justify-end space-x-4">
+<<<<<<< HEAD
                             <button type="button" onclick="resetForm()" class="btn-secondary">Reset to Defaults</button>
                             <button type="submit" class="btn-primary">Save Configuration</button>
+=======
+                            <button type="button" data-action="resetForm" class="btn btn-secondary">Reset to Defaults</button>
+                            <button type="submit" class="btn btn-primary">Save Configuration</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     </form>
                 </div>

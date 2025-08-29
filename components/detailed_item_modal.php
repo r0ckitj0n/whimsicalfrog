@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for detailed_item_modal -->
 <style id="detailed_item_modal-css">
@@ -32,6 +33,8 @@
     document.addEventListener('DOMContentLoaded', loadDetailed_item_modalCSS);
 </script>
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php
 // Detailed Item Modal Component
 // This component displays comprehensive item information in a compact modal
@@ -39,6 +42,41 @@
 // Include marketing helper for selling points
 require_once __DIR__ . '/../api/marketing_helper.php';
 
+<<<<<<< HEAD
+=======
+/**
+ * Helper function to get image URL with fallback
+ */
+function getImageUrl($imagePath, $directory, $extension = 'webp') {
+    if (empty($imagePath)) {
+        return "images/{$directory}/placeholder.{$extension}";
+    }
+    
+    // Ensure brand prefix for image filenames when missing
+    if (strpos($imagePath, 'WF-') !== 0 && strpos($imagePath, "/{$directory}/") === false && strpos($imagePath, 'images/') !== 0) {
+        $imagePath = 'WF-' . $imagePath;
+    }
+    
+    // If path already includes directory, use as-is
+    if (strpos($imagePath, "/{$directory}/") !== false || strpos($imagePath, "{$directory}/") !== false) {
+        return $imagePath;
+    }
+    
+    // If it starts with images/, use as-is
+    if (strpos($imagePath, 'images/') === 0) {
+        return $imagePath;
+    }
+    
+    // If it looks like a SKU (no extension), add the A suffix and extension
+    if (strpos($imagePath, '.') === false) {
+        return "images/{$directory}/{$imagePath}A.{$extension}";
+    }
+    
+    // Add directory prefix
+    return "images/{$directory}/" . $imagePath;
+}
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 function renderDetailedItemModal($item, $images = []) {
     ob_start();
     
@@ -56,6 +94,7 @@ function renderDetailedItemModal($item, $images = []) {
     $sellingPoints = getSellingPoints($item['sku'] ?? '');
     
     ?>
+<<<<<<< HEAD
     <div id="detailedItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4" onclick="closeDetailedModalOnOverlay(event)" style="z-index: 9999 !important;">
         <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-hidden relative" onclick="event.stopPropagation()">
             <!-- Close Button -->
@@ -103,37 +142,111 @@ function renderDetailedItemModal($item, $images = []) {
                                     <!-- Zoom Icon Overlay -->
                                     <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                                         <svg class="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+=======
+    <div id="detailedItemModal" class="detailed-item-modal fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4" data-action="closeDetailedModalOnOverlay">
+        <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[95vh] overflow-hidden relative detailed-item-modal-container">
+            <!- Modal Header ->
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title"><?php echo htmlspecialchars($item['name'] ?? 'Item Name'); ?></h3>
+                </div>
+                <button data-action="closeDetailedModal" class="room-modal-button">Back to main room</button>
+            </div>
+            
+            <!- Scrollable Content ->
+            <div class="overflow-y-auto max-h-[95vh]">
+                <div class="p-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!- Left Column - Images ->
+                        <div class="space-y-3">
+                            <!- Main Image with Click-to-Zoom ->
+                            <div class="relative">
+                                <!- Dynamic Badge Container ->
+                                <div id="detailedBadgeContainer" class="absolute top-2 left-2 z-10 flex flex-col space-y-1">
+                                    <!- Badges will be dynamically inserted here ->
+                                </div>
+                                
+                                <div class="aspect-square bg-white rounded-lg overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                    <?php if (!empty($images)): ?>
+                                        <img id="detailedMainImage" 
+                                             src="<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>" 
+                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
+                                             class="w-full h-full object-contain cursor-pointer"
+                                             data-action="openImageViewer"
+                                             data-params='{"src":"<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>","name":"<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"}'
+                                             >
+                                    <?php else: ?>
+                                        <img id="detailedMainImage" 
+                                             src="<?php echo htmlspecialchars(getImageUrl($item['sku'] ?? '', 'items')); ?>" 
+                                             alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"
+                                             class="w-full h-full object-contain cursor-pointer"
+                                             data-action="openImageViewer"
+                                             data-params='{"src":"<?php echo htmlspecialchars(getImageUrl($item['sku'] ?? '', 'items')); ?>","name":"<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"}'
+                                             >
+                                    <?php endif; ?>
+                                    
+                                    <!- Zoom Icon Overlay ->
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center pointer-events-none">
+                                        <svg data-action="openImageViewer" data-params='{"src":"<?php echo htmlspecialchars(getImageUrl($images[0]['image_path'] ?? '', 'items')); ?>","name":"<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>"}' class="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity cursor-pointer pointer-events-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path>
                                         </svg>
                                     </div>
                                 </div>
                             </div>
                             
+<<<<<<< HEAD
                             <!-- Thumbnail Gallery -->
+=======
+                            <!- Thumbnail Gallery ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <?php if (count($images) > 1): ?>
                             <div class="flex space-x-2 overflow-x-auto">
                                 <?php foreach ($images as $index => $image): ?>
                                 <div class="flex-shrink-0 w-16 h-16 border-2 <?php echo $index === 0 ? 'border-green-500' : 'border-gray-200'; ?> rounded cursor-pointer hover:border-green-400 transition-colors"
+<<<<<<< HEAD
                                      onclick="switchDetailedImage('<?php echo htmlspecialchars($image['image_path']); ?>')">
                                     <img src="<?php echo htmlspecialchars($image['image_path']); ?>" 
                                          alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?> - Image <?php echo $index + 1; ?>"
                                          class="w-full h-full object-contain rounded">
+=======
+                                     data-action="switchDetailedImage"
+                                     data-params='{"url":"<?php echo htmlspecialchars(getImageUrl($image['image_path'] ?? '', 'items')); ?>"}'>
+                                    <img src="<?php echo htmlspecialchars(getImageUrl($image['image_path'] ?? '', 'items')); ?>" 
+                                         alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?> - Image <?php echo $index + 1; ?>"
+                                         class="w-full h-full object-contain rounded"
+                                         onerror="this.src='images/items/placeholder.webp';">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 </div>
                                 <?php endforeach; ?>
                             </div>
                             <?php endif; ?>
+<<<<<<< HEAD
                         </div>
                         
                         <!-- Right Column - Item Details -->
                         <div class="space-y-4">
                             <!-- Header -->
+=======
+                            
+
+                        </div>
+                        
+                        <!- Right Column - Item Details ->
+                        <div class="space-y-4">
+                            <!- Header ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <div>
                                 <div class="text-xs text-gray-500 mb-1">
                                     <?php echo htmlspecialchars($item['category'] ?? 'Item'); ?> • SKU: <?php echo htmlspecialchars($item['sku'] ?? 'N/A'); ?>
                                 </div>
                                 <h2 class="text-xl font-bold text-gray-900 mb-2"><?php echo htmlspecialchars($item['name'] ?? 'Item Name'); ?></h2>
                                 
+<<<<<<< HEAD
                                 <!-- Price Section -->
+=======
+                                <!- Price Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <div id="detailedPriceSection" class="flex items-center space-x-2 mb-3">
                                     <span id="detailedCurrentPrice" class="text-xl font-bold text-green-600">
                                         $<?php echo number_format($item['retailPrice'] ?? 0, 2); ?>
@@ -142,7 +255,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     <span id="detailedSavings" class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hidden"></span>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Stock Status -->
+=======
+                                <!- Stock Status ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <div class="flex items-center space-x-2 mb-3">
                                     <?php if (($item['stockLevel'] ?? 0) > 0): ?>
                                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -162,7 +279,11 @@ function renderDetailedItemModal($item, $images = []) {
                                 </div>
                             </div>
                             
+<<<<<<< HEAD
                             <!-- Selling Points -->
+=======
+                            <!- Selling Points ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <?php if (!empty($sellingPoints) && count($sellingPoints) > 0): ?>
                             <div class="bg-green-50 border border-green-200 rounded-lg p-3">
                                 <h3 class="text-sm font-semibold text-green-800 mb-2">Why You'll Love This</h3>
@@ -179,7 +300,11 @@ function renderDetailedItemModal($item, $images = []) {
                             </div>
                             <?php endif; ?>
                             
+<<<<<<< HEAD
                             <!-- Description -->
+=======
+                            <!- Description ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <?php if (hasItemData($item, 'description')): ?>
                             <div>
                                 <h3 class="text-sm font-semibold text-gray-800 mb-1">Description</h3>
@@ -187,9 +312,15 @@ function renderDetailedItemModal($item, $images = []) {
                             </div>
                             <?php endif; ?>
                             
+<<<<<<< HEAD
                             <!-- Item Options -->
                             <div id="detailedOptionsContainer" class="space-y-3">
                                 <!-- Gender Selection (First in hierarchy) -->
+=======
+                            <!- Item Options ->
+                            <div id="detailedOptionsContainer" class="space-y-3">
+                                <!- Gender Selection (First in hierarchy) ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <div id="genderSelection" class="hidden">
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         Gender/Style: <span class="text-red-500">*</span>
@@ -199,7 +330,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </select>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Size Selection (Second in hierarchy) -->
+=======
+                                <!- Size Selection (Second in hierarchy) ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                             <div id="sizeSelection" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Size: <span class="text-red-500">*</span>
@@ -210,7 +345,11 @@ function renderDetailedItemModal($item, $images = []) {
                                 <div id="sizeStockInfo" class="text-xs text-gray-500 mt-1"></div>
                             </div>
                                 
+<<<<<<< HEAD
                                 <!-- Color Selection (Third in hierarchy) -->
+=======
+                                <!- Color Selection (Third in hierarchy) ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                             <div id="colorSelection" class="hidden">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Color: <span class="text-red-500">*</span>
@@ -222,6 +361,7 @@ function renderDetailedItemModal($item, $images = []) {
                             </div>
                             </div>
                             
+<<<<<<< HEAD
                             <!-- Quantity and Add to Cart -->
                             <?php if (($item['stockLevel'] ?? 0) > 0): ?>
                             <div class="space-y-3 border-t pt-3">
@@ -230,6 +370,16 @@ function renderDetailedItemModal($item, $images = []) {
                                     <label class="text-sm font-medium text-gray-700">Qty:</label>
                                     <div class="flex items-center space-x-2">
                                         <button onclick="adjustDetailedQuantity(-1)" class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+=======
+                            <!- Quantity and Add to Cart ->
+                            <?php if (($item['stockLevel'] ?? 0) > 0): ?>
+                            <div class="space-y-3 border-t pt-3">
+                                <!- Quantity Selector ->
+                                <div class="flex items-center space-x-3">
+                                    <label class="text-sm font-medium text-gray-700">Qty:</label>
+                                    <div class="flex items-center space-x-2">
+                                        <button data-action="adjustDetailedQuantity" data-params='{"delta":-1}' class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                             </svg>
@@ -240,7 +390,11 @@ function renderDetailedItemModal($item, $images = []) {
                                                min="1" 
                                                max="<?php echo $item['stockLevel'] ?? 1; ?>"
                                                class="w-16 text-center border border-gray-300 rounded py-1 text-sm">
+<<<<<<< HEAD
                                         <button onclick="adjustDetailedQuantity(1)" class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+=======
+                                        <button data-action="adjustDetailedQuantity" data-params='{"delta":1}' class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                             </svg>
@@ -248,14 +402,21 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Add to Cart Button -->
                                 <button onclick="addDetailedToCart('<?php echo htmlspecialchars($item['sku'] ?? ''); ?>')" 
                                         class="brand-button w-full py-2 px-4 rounded-lg flex items-center justify-center space-x-2">
+=======
+                                <!- Add to Cart Button ->
+                                <button data-action="addDetailedToCart" data-params='{"sku":"<?php echo htmlspecialchars($item['sku'] ?? ''); ?>"}' 
+                                        class="brand-button wf-add-to-cart-btn w-full py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10m-10 0v6a1 1 0 001 1h8a1 1 0 001-1v-6m-9 0h9"></path>
                                         </svg>
                                         <span>Add to Cart</span>
                                 </button>
+<<<<<<< HEAD
                             </div>
                             <?php endif; ?>
                             
@@ -271,13 +432,40 @@ function renderDetailedItemModal($item, $images = []) {
                                 <div id="detailedInfoContent" class="hidden mt-2 space-y-2 text-xs text-gray-700">
                                     <!-- Features -->
                                     <?php if (hasItemData($item, 'features')): ?>
+=======
+                                
+                                <!- Single Sales Pitch Line ->
+                                <div id="detailedSalesPitch" class="mt-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3 text-center">
+                                    <div id="detailedSalesPitchText" class="text-sm font-semibold text-blue-800">
+                                        ✨ Experience premium quality and style that speaks to your unique personality!
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <!- Accordion for Additional Details ->
+                            <div class="border-t border-gray-200 pt-4">
+                                <button id="additionalInfoToggle" class="w-full flex justify-between items-center text-left text-sm font-semibold text-gray-800 focus:outline-none">
+                                    <span>Additional Details</span>
+                                    <svg id="additionalInfoIcon" class="w-5 h-5 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <div id="additionalInfoContent" class="mt-3 space-y-4 hidden">
+                                    <!- Item properties ->
+                                    <?php if (hasItemData($item, 'material') || hasItemData($item, 'brand') || hasItemData($item, 'dimensions') || hasItemData($item, 'weight')): ?>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div>
                                         <strong>Features:</strong>
                                         <span><?php echo htmlspecialchars($item['features']); ?></span>
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Material -->
+=======
+                                    <!- Material ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'material')): ?>
                                     <div>
                                         <strong>Material:</strong>
@@ -285,7 +473,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Dimensions -->
+=======
+                                    <!- Dimensions ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'dimensions')): ?>
                                     <div>
                                         <strong>Dimensions:</strong>
@@ -293,7 +485,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Care Instructions -->
+=======
+                                    <!- Care Instructions ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'care_instructions')): ?>
                                     <div>
                                         <strong>Care Instructions:</strong>
@@ -301,7 +497,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Color Options -->
+=======
+                                    <!- Color Options ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'color_options')): ?>
                                     <div>
                                         <strong>Color Options:</strong>
@@ -309,7 +509,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Size Options -->
+=======
+                                    <!- Size Options ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'size_options')): ?>
                                     <div>
                                         <strong>Size Options:</strong>
@@ -317,7 +521,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Production Time -->
+=======
+                                    <!- Production Time ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'production_time')): ?>
                                     <div>
                                         <strong>Production Time:</strong>
@@ -325,7 +533,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Warranty -->
+=======
+                                    <!- Warranty ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'warranty')): ?>
                                     <div>
                                         <strong>Warranty:</strong>
@@ -333,7 +545,11 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- Tags -->
+=======
+                                    <!- Tags ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (hasItemData($item, 'tags')): ?>
                                     <div>
                                         <strong>Tags:</strong>
@@ -341,25 +557,41 @@ function renderDetailedItemModal($item, $images = []) {
                                     </div>
                                     <?php endif; ?>
                                     
+<<<<<<< HEAD
                                     <!-- SKU -->
+=======
+                                    <!- SKU ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div>
                                         <strong>SKU:</strong>
                                         <span><?php echo htmlspecialchars($item['sku'] ?? 'N/A'); ?></span>
                                     </div>
                                     
+<<<<<<< HEAD
                                     <!-- Category -->
+=======
+                                    <!- Category ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div>
                                         <strong>Category:</strong>
                                         <span><?php echo htmlspecialchars($item['category'] ?? 'N/A'); ?></span>
                                     </div>
                                     
+<<<<<<< HEAD
                                     <!-- Stock Level -->
+=======
+                                    <!- Stock Level ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div>
                                         <strong>Stock Level:</strong>
                                         <span><?php echo $item['stockLevel'] ?? 0; ?> units</span>
                                     </div>
                                     
+<<<<<<< HEAD
                                     <!-- Reorder Point -->
+=======
+                                    <!- Reorder Point ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (isset($item['reorderPoint']) && $item['reorderPoint'] > 0): ?>
                                     <div>
                                         <strong>Reorder Point:</strong>
@@ -375,6 +607,7 @@ function renderDetailedItemModal($item, $images = []) {
         </div>
     </div>
     
+<<<<<<< HEAD
     <!-- Image Zoom Modal -->
     <div id="imageZoomModal" class="fixed inset-0 bg-black bg-opacity-90 hidden z-[60] flex items-center justify-center p-4" onclick="closeImageZoom()">
         <div class="relative max-w-full max-h-full">
@@ -1137,6 +1370,9 @@ function renderDetailedItemModal($item, $images = []) {
         addDetailedToCart: typeof addDetailedToCart
     });
     </script>
+=======
+    <!- Zoom functionality is now centralized via openImageViewer ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     
     

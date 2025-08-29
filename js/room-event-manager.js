@@ -14,8 +14,12 @@ window.RoomEvents = window.RoomEvents || {};
     function setupPopupEventsAfterPositioning() {// Get all product icons
         const productIcons = document.querySelectorAll('.item-icon');productIcons.forEach((icon, index) => {
             // Make sure the element is interactive
+<<<<<<< HEAD
             icon.style.pointerEvents = 'auto';
             icon.style.cursor = 'pointer';
+=======
+            icon.classList.add('clickable-icon');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             
             // Get the product data from the inline event attribute
             const onMouseEnterAttr = icon.getAttribute('onmouseenter');

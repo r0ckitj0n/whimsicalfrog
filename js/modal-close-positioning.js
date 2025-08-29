@@ -7,7 +7,11 @@
 function initializeModalClosePositioning() {
     // Get the current position setting from CSS variables
     const position = getComputedStyle(document.documentElement)
+<<<<<<< HEAD
         .getPropertyValue('--modal-close-position')
+=======
+        .getPropertyValue('-modal-close-position')
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         .trim();
     
     // Apply position classes to all modal close buttons

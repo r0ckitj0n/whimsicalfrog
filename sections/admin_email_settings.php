@@ -91,8 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 ?>
 
+<<<<<<< HEAD
 <div class="container mx-auto px-4 py-6">
     <h1 class="admin-title mb-6">Email Settings</h1>
+=======
+<div class="">
+    <h1 class="admin-title">Email Settings</h1>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     <?php if ($message): ?>
         <div class="admin-alert alert-<?= $messageType ?>">
@@ -100,7 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     <?php endif; ?>
 
+<<<<<<< HEAD
     <!-- Current Configuration -->
+=======
+    <!- Current Configuration ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h2 class="admin-card-title">📧 Current Email Configuration</h2>
         
@@ -154,7 +163,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Configuration Instructions -->
+=======
+    <!- Configuration Instructions ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h2 class="admin-card-title">⚙️ Configuration Instructions</h2>
         
@@ -187,7 +200,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Email Test Section -->
+=======
+    <!- Email Test Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-test-card">
         <h2 class="test-card-title">🧪 Test Email Functionality</h2>
         
@@ -206,7 +223,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            placeholder="Enter email address to receive test emails"
                            class="form-input flex-1"
                            required>
+<<<<<<< HEAD
                     <button type="submit" name="test_email" value="1" class="btn-primary">
+=======
+                    <button type="submit" name="test_email" value="1" class="btn btn-primary">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         Send Test Emails
                     </button>
                 </div>
@@ -222,7 +243,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Email Templates Preview -->
+=======
+    <!- Email Templates Preview ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h2 class="admin-card-title">📋 Email Templates</h2>
         
@@ -251,7 +276,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Troubleshooting Section -->
+=======
+    <!- Troubleshooting Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h2 class="admin-card-title">🔧 Troubleshooting</h2>
         

@@ -26,6 +26,7 @@ function calculateSalePrice(originalPrice, discountPercentage) {
     return originalPrice * (1 - discountPercentage / 100);
 }
 
+<<<<<<< HEAD
 // Global function to update total in modal
 window.updateModalTotal = function() {
     const quantityInput = document.getElementById('quantityInput');
@@ -59,6 +60,8 @@ window.closeCartModal = function() {
     window.currentModalItem = null;
 };
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 // Enhanced checkAndDisplaySalePrice function
 async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = null, context = 'popup') {
     if (!item || !priceElement) return;
@@ -73,6 +76,7 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             // Validate the discount percentage
             if (isNaN(validDiscountPercentage) || validDiscountPercentage <= 0) {
                 console.error('Invalid discount percentage in sale data:', saleData.discountPercentage);
+<<<<<<< HEAD
                 return;
             }
             
@@ -105,17 +109,49 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             
             console.log(`✅ Sale price displayed for ${item.sku}: ${validDiscountPercentage}% off`);
             
+=======
+                // Fall back to regular price display
+                const price = parseFloat(item.retailPrice || item.price);
+                priceElement.textContent = `$${price.toFixed(2)}`;
+                if (unitPriceElement) {
+                    unitPriceElement.textContent = `$${price.toFixed(2)}`;
+                }
+                return;
+            }
+            
+            const salePrice = calculateSalePrice(originalPrice, validDiscountPercentage);
+            
+            // Format sale price display
+            const saleHTML = `
+                <span class="u-text-decoration-line-through u-color-999 u-font-size-0-9em">$${originalPrice.toFixed(2)}</span>
+                <span class="u-color-dc2626 u-font-weight-bold u-margin-left-5px">$${salePrice.toFixed(2)}</span>
+                <span class="u-color-dc2626 u-font-size-0-8em u-margin-left-5px">(${Math.round(validDiscountPercentage)}% off)</span>
+            `;
+            
+            priceElement.innerHTML = saleHTML;
+            
+            if (unitPriceElement) {
+                unitPriceElement.innerHTML = saleHTML;
+            }
+            
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             // Update item object with sale price for cart
             item.salePrice = salePrice;
             item.originalPrice = originalPrice;
             item.isOnSale = true;
             item.discountPercentage = validDiscountPercentage;
         } else {
+<<<<<<< HEAD
             // No sale - display regular price, preserving original classes
             const price = parseFloat(item.retailPrice || item.price);
             const existingClasses = priceElement.className;
             priceElement.textContent = `$${price.toFixed(2)}`;
             priceElement.className = existingClasses; // Restore original classes
+=======
+            // No sale, display regular price
+            const price = parseFloat(item.retailPrice || item.price);
+            priceElement.textContent = `$${price.toFixed(2)}`;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             
             if (unitPriceElement) {
                 unitPriceElement.textContent = `$${price.toFixed(2)}`;
@@ -124,12 +160,23 @@ async function checkAndDisplaySalePrice(item, priceElement, unitPriceElement = n
             item.isOnSale = false;
         }
     } catch (error) {
+<<<<<<< HEAD
         console.error('Error checking sale price:', error);
         // Fallback to regular price on error, preserving original classes
         const price = parseFloat(item.retailPrice || item.price);
         const existingClasses = priceElement.className;
         priceElement.textContent = `$${price.toFixed(2)}`;
         priceElement.className = existingClasses; // Restore original classes
+=======
+        console.log('No sale data available for', item.sku);
+        // Display regular price on error
+        const price = parseFloat(item.retailPrice || item.price);
+        priceElement.textContent = `$${price.toFixed(2)}`;
+        
+        if (unitPriceElement) {
+            unitPriceElement.textContent = `$${price.toFixed(2)}`;
+        }
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
 }
 
@@ -180,6 +227,7 @@ function updatePopupContent(popup, item) {
         }
         
         popupImage.src = imageSrc;
+<<<<<<< HEAD
         popupImage.onerror = function() {
             // If WebP fails and we have a SKU, try PNG
             if (item.sku && this.src.includes('.webp')) {
@@ -196,6 +244,19 @@ function updatePopupContent(popup, item) {
             // Final fallback
             this.src = 'images/items/placeholder.webp';
         };
+=======
+        
+        // Use centralized image error handling
+        if (typeof window.setupImageErrorHandling === 'function') {
+            window.setupImageErrorHandling(popupImage, item.sku);
+        } else {
+            // Fallback if central functions not loaded yet
+            popupImage.onerror = function() {
+                this.src = 'images/items/placeholder.webp';
+                this.onerror = null;
+            };
+        }
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     // Update item name
@@ -272,6 +333,7 @@ function updatePopupContent(popup, item) {
 function positionPopupSimple(element, popup) {
     const rect = element.getBoundingClientRect();
     
+<<<<<<< HEAD
     // Show popup temporarily to get actual dimensions
     popup.style.display = 'block';
     popup.style.visibility = 'hidden'; // Hide visually but allow measurement
@@ -279,6 +341,14 @@ function positionPopupSimple(element, popup) {
     const popupWidth = popupRect.width;
     const popupHeight = popupRect.height;
     popup.style.visibility = 'visible'; // Make visible again
+=======
+    // Show popup temporarily to get actual dimensions using CSS classes
+    popup.classList.add('measuring');
+    const popupRect = popup.getBoundingClientRect();
+    const popupWidth = popupRect.width;
+    const popupHeight = popupRect.height;
+    popup.classList.remove('measuring');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     // Get viewport dimensions with safety margins
     const viewportWidth = window.innerWidth;
@@ -325,11 +395,18 @@ function positionPopupSimple(element, popup) {
         }
     }
     
+<<<<<<< HEAD
     // Apply final positioning
     popup.style.position = 'fixed';
     popup.style.left = left + 'px';
     popup.style.top = top + 'px';
     popup.style.zIndex = '1000';
+=======
+    // Apply final positioning using CSS custom properties
+    popup.style.setProperty('-popup-left', left + 'px');
+    popup.style.setProperty('-popup-top', top + 'px');
+    popup.classList.add('positioned', 'visible');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     console.log(`Popup positioned at: left=${left}, top=${top}, width=${popupWidth}, height=${popupHeight}`);
 }
@@ -380,7 +457,11 @@ function addSaleBadgeToCardWithDiscount(itemCard, discountPercentage) {
         existingBadge.remove();
     }
     
+<<<<<<< HEAD
     // Create new sale badge using CSS classes
+=======
+    // Create new sale badge
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     const saleBadge = document.createElement('div');
     saleBadge.className = 'sale-badge';
     saleBadge.innerHTML = `
@@ -388,8 +469,12 @@ function addSaleBadgeToCardWithDiscount(itemCard, discountPercentage) {
         <span class="sale-percentage">${Math.round(validDiscountPercentage)}% OFF</span>
     `;
     
+<<<<<<< HEAD
     // Ensure item card has relative positioning
     itemCard.style.position = 'relative';
+=======
+    // No need to set styles - using CSS classes instead
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     itemCard.appendChild(saleBadge);
 }
 
@@ -418,10 +503,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+<<<<<<< HEAD
 // Keep popup visible when hovering over it
 function keepPopupVisible() {
     clearTimeout(hideTimeout);
 }
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 // Setup hover listeners for room pages
 function setupRoomHover() {

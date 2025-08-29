@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for receipt -->
 <style id="receipt-css">
@@ -32,6 +33,8 @@
     document.addEventListener('DOMContentLoaded', loadReceiptCSS);
 </script>
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php
 if (!defined('INCLUDED_FROM_INDEX')) {
     // allow standalone access as fallback
@@ -41,7 +44,11 @@ require_once 'api/config.php';
 
 $orderId = $_GET['orderId'] ?? '';
 if ($orderId === '') {
+<<<<<<< HEAD
     echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Invalid order ID</h1></div>';
+=======
+    echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Invalid order ID</h1></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     return;
 }
 
@@ -77,7 +84,11 @@ try {
     $salesVerbiage = getSalesVerbiage($pdo);
     
 } catch (Exception $e) {
+<<<<<<< HEAD
     echo '<div class="text-center py-12"><h1 class="text-2xl font-bold text-red-600">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
+=======
+    echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     return;
 }
 
@@ -225,6 +236,7 @@ $pending = ($order['paymentStatus'] === 'Pending');
 ?>
 
 
+<<<<<<< HEAD
 <script>
 // Centralized print receipt function using PrintUtils
 function printReceipt() {
@@ -267,6 +279,15 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="flex justify-center items-center mb-4">
             <img src="images/WhimsicalFrog_Logo.webp" alt="Whimsical Frog Crafts Logo" class="h-16 w-auto mr-3" 
                  onerror="this.src='images/WhimsicalFrog_Logo.png'">
+=======
+<!- Simple Receipt Header with Company Info ->
+<div class="receipt-container max-w-2xl bg-white shadow-md rounded">
+    <!- Company Header ->
+    <div class="text-center border-b">
+        <div class="flex justify-center items-center">
+            <img src="images/logo_whimsicalfrog.webp" alt="Whimsical Frog Crafts Logo" class="h-16 w-auto" 
+                 onerror="this.src='images/logo_whimsicalfrog.png'">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div>
                 <h1 class="text-2xl font-bold text-[#87ac3a]">Whimsical Frog Crafts</h1>
                 <p class="text-base text-gray-600 italic">Custom Crafts & Personalized Gifts</p>
@@ -276,6 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <p><strong>Lisa Lemley</strong></p>
             <p>1524 Red Oak Flats Rd</p>
             <p>Dahlonega, GA 30533</p>
+<<<<<<< HEAD
             <p class="mt-1 text-[#87ac3a] font-medium">whimsicalfrog.us</p>
         </div>
     </div>
@@ -283,10 +305,20 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- Order Information -->
     <div class="text-center mb-3">
         <h2 class="text-lg font-semibold text-gray-800 mb-2">Order Receipt</h2>
+=======
+            <p class="text-[#87ac3a] font-medium">whimsicalfrog.us</p>
+        </div>
+    </div>
+
+    <!- Order Information ->
+    <div class="text-center">
+        <h2 class="text-lg font-semibold text-gray-800">Order Receipt</h2>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <p class="text-sm text-gray-600">Order ID: <strong><?= htmlspecialchars($orderId) ?></strong></p>
         <p class="text-sm text-gray-600">Date: <?= date('M d, Y', strtotime($order['date'] ?? 'now')) ?></p>
     </div>
 
+<<<<<<< HEAD
     <!-- Order Items Table -->
     <table class="w-full mb-3 text-sm">
         <thead>
@@ -295,25 +327,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 <th class="text-left p-2">Item</th>
                 <th class="text-center p-2">Qty</th>
                 <th class="text-right p-2">Price</th>
+=======
+    <!- Order Items Table ->
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="text-left">Item ID</th>
+                <th class="text-left">Item</th>
+                <th class="text-center">Qty</th>
+                <th class="text-right">Price</th>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </tr>
         </thead>
         <tbody>
             <?php foreach ($orderItems as $it): ?>
                 <tr class="border-b">
+<<<<<<< HEAD
                     <td class="p-2 font-mono text-xs"><?= htmlspecialchars($it['sku'] ?? '') ?></td>
                     <td class="p-2"><?= htmlspecialchars($it['itemName'] ?? 'N/A') ?></td>
                     <td class="text-center p-2"><?= $it['quantity'] ?? 0 ?></td>
                     <td class="text-right p-2">$<?= number_format($it['price'] ?? 0, 2) ?></td>
+=======
+                    <td class="font-mono text-xs"><?= htmlspecialchars($it['sku'] ?? '') ?></td>
+                    <td class=""><?= htmlspecialchars($it['itemName'] ?? 'N/A') ?></td>
+                    <td class="text-center"><?= $it['quantity'] ?? 0 ?></td>
+                    <td class="text-right">$<?= number_format($it['price'] ?? 0, 2) ?></td>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
     
+<<<<<<< HEAD
     <div class="flex justify-end mb-3 text-base font-semibold">
+=======
+    <div class="flex justify-end text-base font-semibold">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <span>Total:&nbsp;$<?= $total ?></span>
     </div>
 
     <?php if ($pending): ?>
+<<<<<<< HEAD
         <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 mb-3 text-sm" role="alert">
             <p class="font-bold">Thank you for choosing Whimsical&nbsp;Frog&nbsp;Crafts!</p>
             <p>Your order is reserved and will be shipped as soon as we receive your payment&nbsp;🙂</p>
@@ -322,43 +376,78 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     <?php else: ?>
         <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-3 text-sm" role="alert">
+=======
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 text-sm" role="alert">
+            <p class="font-bold">Thank you for choosing Whimsical&nbsp;Frog&nbsp;Crafts!</p>
+            <p>Your order is reserved and will be shipped as soon as we receive your payment&nbsp;🙂</p>
+            <p class="">Remit payment to:<br><strong>Lisa&nbsp;Lemley</strong><br>1524&nbsp;Red&nbsp;Oak&nbsp;Flats&nbsp;Rd<br>Dahlonega,&nbsp;GA&nbsp;30533</p>
+            <p class="">Please include your order&nbsp;ID on the memo line. As soon as we record your payment we'll send a confirmation e-mail and get your items on their way.</p>
+        </div>
+    <?php else: ?>
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 text-sm" role="alert">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <p class="font-bold"><?= htmlspecialchars($receiptMessage['title']) ?></p>
             <p><?= htmlspecialchars($receiptMessage['content']) ?></p>
         </div>
     <?php endif; ?>
 
+<<<<<<< HEAD
     <!-- Sales Verbiage Section -->
     <?php if (!empty($salesVerbiage)): ?>
         <div class="border-t pt-4 mt-4 space-y-3">
             <?php if (!empty($salesVerbiage['receipt_thank_you_message'])): ?>
                 <div class="bg-green-50 border border-green-200 text-green-800 p-3 rounded-lg text-center">
+=======
+    <!- Sales Verbiage Section ->
+    <?php if (!empty($salesVerbiage)): ?>
+        <div class="border-t space-y-3">
+            <?php if (!empty($salesVerbiage['receipt_thank_you_message'])): ?>
+                <div class="bg-green-50 border border-green-200 text-green-800 rounded-lg text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <p class="font-semibold">💚 <?= htmlspecialchars($salesVerbiage['receipt_thank_you_message']) ?></p>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($salesVerbiage['receipt_next_steps'])): ?>
+<<<<<<< HEAD
                 <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg">
+=======
+                <div class="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <p class="text-sm">📋 <?= htmlspecialchars($salesVerbiage['receipt_next_steps']) ?></p>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($salesVerbiage['receipt_social_sharing'])): ?>
+<<<<<<< HEAD
                 <div class="bg-purple-50 border border-purple-200 text-purple-800 p-3 rounded-lg text-center">
+=======
+                <div class="bg-purple-50 border border-purple-200 text-purple-800 rounded-lg text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <p class="text-sm font-medium">📱 <?= htmlspecialchars($salesVerbiage['receipt_social_sharing']) ?></p>
                 </div>
             <?php endif; ?>
             
             <?php if (!empty($salesVerbiage['receipt_return_customer'])): ?>
+<<<<<<< HEAD
                 <div class="bg-orange-50 border border-orange-200 text-orange-800 p-3 rounded-lg text-center">
+=======
+                <div class="bg-orange-50 border border-orange-200 text-orange-800 rounded-lg text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <p class="text-sm">🎨 <?= htmlspecialchars($salesVerbiage['receipt_return_customer']) ?></p>
                 </div>
             <?php endif; ?>
         </div>
     <?php endif; ?>
 
+<<<<<<< HEAD
     <div class="text-center mt-4">
         <button id="printBtn" onclick="printReceipt();" class="brand-button">
             🖨️ Print Receipt
         </button>
+=======
+    <div class="text-center">
+        <button id="printBtn" onclick="window.print();" class="bg-[#87ac3a] hover:bg-[#a3cc4a] text-white rounded">Print Receipt</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     </div>
 </div> 

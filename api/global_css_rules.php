@@ -1,5 +1,38 @@
 <?php
 
+<<<<<<< HEAD
+=======
+/*
+ * ⚠️  DEPRECATED: Database CSS System
+ * 
+ * This file is NO LONGER USED as of January 2025.
+ * WhimsicalFrog now uses static CSS files instead of database-driven CSS.
+ * 
+ * CSS is now managed in these files:
+ * - css/z-index-hierarchy.css
+ * - css/room-modal.css
+ * - css/form-errors.css
+ * - js/css-initializer.js (for CSS variables)
+ * 
+ * Database tables have been cleared:
+ * - css_variables: 0 rows
+ * - global_css_rules: 0 rows
+ * 
+ * This file is kept for compatibility but should not be used.
+ */
+
+// Return empty CSS response for any requests
+header('Content-Type: application/json');
+echo json_encode([
+    'success' => true,
+    'css_content' => '/* CSS system moved to static files - see css/ directory */',
+    'message' => 'Database CSS system deprecated - using static files'
+]);
+exit;
+
+// ===== DEPRECATED CODE BELOW =====
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
@@ -107,6 +140,7 @@ function generateCSSContent($rules) {
     $css .= "/* Generated on: " . date('Y-m-d H:i:s') . " */\n\n";
     
     $currentCategory = '';
+<<<<<<< HEAD
     $groupedRules = [];
     
     // Group rules by selector
@@ -150,6 +184,41 @@ function generateCSSContent($rules) {
             $css .= "    {$prop['property']}: {$prop['value']};\n";
         }
         $css .= "}\n\n";
+=======
+    $utilityClasses = [];
+    
+    foreach ($rules as $rule) {
+        if ($rule['category'] !== $currentCategory) {
+            $currentCategory = $rule['category'];
+            $css .= "\n/* " . ucfirst($currentCategory) . " */\n";
+        }
+        
+        // Check if this is a utility class (contains full CSS block)
+        if (strpos($rule['rule_name'], '_utility_class') !== false && strpos($rule['css_value'], '{') !== false) {
+            // This is a utility class - store it for later processing
+            $utilityClasses[] = $rule;
+            continue;
+        }
+        
+        // Regular CSS variable
+        $css .= ":root {\n";
+        $css .= "    -{$rule['rule_name']}: {$rule['css_value']};\n";
+        $css .= "}\n\n";
+        
+        // Also generate utility classes for regular properties
+        $className = str_replace('_', '-', $rule['rule_name']);
+        $css .= ".{$className} {\n";
+        $css .= "    {$rule['css_property']}: {$rule['css_value']};\n";
+        $css .= "}\n\n";
+    }
+    
+    // Add utility classes at the end
+    if (!empty($utilityClasses)) {
+        $css .= "\n/* Utility Classes */\n";
+        foreach ($utilityClasses as $utilityRule) {
+            $css .= $utilityRule['css_value'] . "\n\n";
+        }
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     return $css;

@@ -52,17 +52,31 @@ $footerData = [
 ];
 ?>
 
+<<<<<<< HEAD
 <!-- Footer CSS now loaded from database via main CSS system -->
 
 <!-- Main Footer -->
+=======
+<!- Footer CSS (Include this in your head section) ->
+<link rel="stylesheet" href="/css/footer-styles.css">
+
+<!- Main Footer ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <footer class="site-footer footer-theme-<?php echo $footerConfig['theme']; ?>">
     <div class="footer-container">
         
         <?php if ($footerConfig['layout'] === '4-column'): ?>
+<<<<<<< HEAD
         <!-- 4-Column Layout -->
         <div class="footer-grid-4">
             
             <!-- Company Info Column -->
+=======
+        <!- 4-Column Layout ->
+        <div class="footer-grid-4">
+            
+            <!- Company Info Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <?php if ($footerConfig['show_logo']): ?>
                 <div class="footer-logo">
@@ -75,7 +89,11 @@ $footerData = [
                 <p class="footer-text"><?php echo $footerData['company']['description']; ?></p>
             </div>
             
+<<<<<<< HEAD
             <!-- Quick Links Column -->
+=======
+            <!- Quick Links Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Quick Links</h3>
                 <ul class="footer-nav">
@@ -85,7 +103,11 @@ $footerData = [
                 </ul>
             </div>
             
+<<<<<<< HEAD
             <!-- Support Column -->
+=======
+            <!- Support Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Support</h3>
                 <ul class="footer-nav">
@@ -95,7 +117,11 @@ $footerData = [
                 </ul>
             </div>
             
+<<<<<<< HEAD
             <!-- Contact & Newsletter Column -->
+=======
+            <!- Contact & Newsletter Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <?php if ($footerConfig['show_contact']): ?>
                 <h3 class="footer-heading">Contact Us</h3>
@@ -125,8 +151,13 @@ $footerData = [
                 
                 <?php if ($footerConfig['show_newsletter']): ?>
                 <div class="footer-newsletter">
+<<<<<<< HEAD
                                     <h4 class="footer-heading">Newsletter</h4>
                 <p class="footer-text">Get updates on new products and special offers!</p>
+=======
+                    <h4 class="footer-heading footer_newsletter_heading">Newsletter</h4>
+                    <p class="footer-text footer_newsletter_text">Get updates on new products and special offers!</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                         <input type="email" name="email" placeholder="Your email address" class="footer-newsletter-input" required>
                         <button type="submit" class="footer-newsletter-button">Subscribe</button>
@@ -138,10 +169,17 @@ $footerData = [
         </div>
         
         <?php elseif ($footerConfig['layout'] === '3-column'): ?>
+<<<<<<< HEAD
         <!-- 3-Column Layout -->
         <div class="footer-grid-3">
             
             <!-- Company Info Column -->
+=======
+        <!- 3-Column Layout ->
+        <div class="footer-grid-3">
+            
+            <!- Company Info Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <?php if ($footerConfig['show_logo']): ?>
                 <div class="footer-logo">
@@ -154,7 +192,11 @@ $footerData = [
                 <p class="footer-text"><?php echo $footerData['company']['description']; ?></p>
             </div>
             
+<<<<<<< HEAD
             <!-- Links Column -->
+=======
+            <!- Links Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Navigation</h3>
                 <ul class="footer-nav">
@@ -164,7 +206,11 @@ $footerData = [
                 </ul>
             </div>
             
+<<<<<<< HEAD
             <!-- Contact Column -->
+=======
+            <!- Contact Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Get In Touch</h3>
                 <?php if ($footerConfig['show_contact']): ?>
@@ -186,7 +232,11 @@ $footerData = [
                 
                 <?php if ($footerConfig['show_newsletter']): ?>
                 <div class="footer-newsletter">
+<<<<<<< HEAD
                     <h4 class="footer-heading">Stay Updated</h4>
+=======
+                    <h4 class="footer-heading footer_newsletter_heading">Stay Updated</h4>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                         <input type="email" name="email" placeholder="Email address" class="footer-newsletter-input" required>
                         <button type="submit" class="footer-newsletter-button">Join</button>
@@ -198,10 +248,17 @@ $footerData = [
         </div>
         
         <?php elseif ($footerConfig['layout'] === '2-column'): ?>
+<<<<<<< HEAD
         <!-- 2-Column Layout -->
         <div class="footer-grid-2">
             
             <!-- Left Column -->
+=======
+        <!- 2-Column Layout ->
+        <div class="footer-grid-2">
+            
+            <!- Left Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <?php if ($footerConfig['show_logo']): ?>
                 <div class="footer-logo footer-text-left">
@@ -231,7 +288,11 @@ $footerData = [
                 <?php endif; ?>
             </div>
             
+<<<<<<< HEAD
             <!-- Right Column -->
+=======
+            <!- Right Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Quick Links</h3>
                 <ul class="footer-nav">
@@ -242,7 +303,11 @@ $footerData = [
                 
                 <?php if ($footerConfig['show_newsletter']): ?>
                 <div class="footer-newsletter footer-mt-medium">
+<<<<<<< HEAD
                     <h4 class="footer-heading">Newsletter</h4>
+=======
+                    <h4 class="footer-heading footer_newsletter_heading">Newsletter</h4>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                         <input type="email" name="email" placeholder="Your email" class="footer-newsletter-input" required>
                         <button type="submit" class="footer-newsletter-button">Subscribe</button>
@@ -254,7 +319,11 @@ $footerData = [
         </div>
         
         <?php else: ?>
+<<<<<<< HEAD
         <!-- Single Column Layout -->
+=======
+        <!- Single Column Layout ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="footer-single">
             <?php if ($footerConfig['show_logo']): ?>
             <div class="footer-logo">
@@ -276,8 +345,13 @@ $footerData = [
             
             <?php if ($footerConfig['show_newsletter']): ?>
             <div class="footer-newsletter footer-mt-medium">
+<<<<<<< HEAD
                 <h4 class="footer-heading">Stay Connected</h4>
                 <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
+=======
+                <h4 class="footer-heading footer_newsletter_heading">Stay Connected</h4>
+                <form class="footer-newsletter-form footer_newsletter_form_centered" action="/api/newsletter_signup.php" method="POST">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <input type="email" name="email" placeholder="Enter your email address" class="footer-newsletter-input" required>
                     <button type="submit" class="footer-newsletter-button">Subscribe</button>
                 </form>
@@ -286,7 +360,11 @@ $footerData = [
         </div>
         <?php endif; ?>
         
+<<<<<<< HEAD
         <!-- Social Media Icons (shown for all layouts) -->
+=======
+        <!- Social Media Icons (shown for all layouts) ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <?php if ($footerConfig['show_social']): ?>
         <hr class="footer-divider">
         <div class="footer-social">
@@ -316,7 +394,11 @@ $footerData = [
         </div>
         <?php endif; ?>
         
+<<<<<<< HEAD
         <!-- Copyright Section -->
+=======
+        <!- Copyright Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="footer-copyright">
             <p class="footer-copyright-text">
                 © <?php echo date('Y'); ?> <?php echo $footerData['company']['name']; ?>. All rights reserved.
@@ -331,7 +413,11 @@ $footerData = [
     </div>
 </footer>
 
+<<<<<<< HEAD
 <!-- JavaScript for Newsletter Signup (Optional) -->
+=======
+<!- JavaScript for Newsletter Signup (Optional) ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const forms = document.querySelectorAll('.footer-newsletter-form');
@@ -360,13 +446,21 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     button.textContent = 'Subscribed!';
+<<<<<<< HEAD
                     button.style.backgroundColor = 'var(--footer-link-hover-color)';
+=======
+                    button.classList.add('footer-newsletter-success');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     this.querySelector('input[name="email"]').value = '';
                     
                     setTimeout(() => {
                         button.textContent = originalText;
                         button.disabled = false;
+<<<<<<< HEAD
                         button.style.backgroundColor = '';
+=======
+                        button.classList.remove('footer-newsletter-success');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     }, 3000);
                 } else {
                     throw new Error(data.message || 'Subscription failed');
@@ -375,10 +469,18 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 button.textContent = 'Try Again';
                 button.disabled = false;
+<<<<<<< HEAD
+=======
+                button.classList.add('footer-newsletter-error');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 console.error('Newsletter signup error:', error);
                 
                 setTimeout(() => {
                     button.textContent = originalText;
+<<<<<<< HEAD
+=======
+                    button.classList.remove('footer-newsletter-error');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 }, 3000);
             });
         });

@@ -50,7 +50,11 @@ function getImageTag($imagePath, $altText = '', $class = '', $style = '') {
         : $pathInfo['filename'];
 
     $classAttr = !empty($class) ? ' class="' . htmlspecialchars($class) . '"' : '';
+<<<<<<< HEAD
     $styleAttr = !empty($style) ? ' style="' . htmlspecialchars($style) . '"' : '';
+=======
+    $styleAttr = !empty($style) ? ' ' : '';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
     // If already WebP, just return img tag
     if ($extension === 'webp') {
@@ -278,4 +282,32 @@ function getCurrentURL() {
     $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     return $protocol . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 }
+<<<<<<< HEAD
+=======
+/**
+ * Get the active background image for a specific room type.
+ *
+ * @param string $roomType The type of room (e.g., 'landing', 'room_main').
+ * @return string The URL of the background image, or an empty string if not found.
+ */
+function get_active_background($roomType) {
+    try {
+        $pdo = Database::getInstance();
+        $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_type = ? AND is_active = 1 LIMIT 1");
+        $stmt->execute([$roomType]);
+        $background = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($background) {
+            // Prioritize WebP if a filename is present
+            $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
+            return "images/" . $imageFile;
+        }
+    } catch (Exception $e) {
+        error_log('Error fetching active background: ' . $e->getMessage());
+    }
+
+    return ''; // Return empty string on failure or if no background is set
+}
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 ?>

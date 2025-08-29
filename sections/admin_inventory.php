@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for admin_inventory -->
 <style id="admin_inventory-css">
@@ -32,6 +33,8 @@
     document.addEventListener('DOMContentLoaded', loadAdmin_inventoryCSS);
 </script>
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php
 // Admin Inventory Management Section
 ob_start();
@@ -137,7 +140,12 @@ $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 
 ?>
+<<<<<<< HEAD
 <!-- CSS utilities now loaded from database via main CSS system -->
+=======
+<!- Load CSS utilities for comprehensive styling ->
+<link rel="stylesheet" href="css/button-styles.css">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 
 <div class="admin-content-container">
@@ -158,9 +166,15 @@ $messageType = $_GET['type'] ?? '';
                 <option value="out" <?= ($filters['stock'] === 'out') ? 'selected' : ''; ?>>Out of Stock</option>
                 <option value="in" <?= ($filters['stock'] === 'in') ? 'selected' : ''; ?>>In Stock</option>
             </select>
+<<<<<<< HEAD
             <button type="submit" class="btn-primary admin-filter-button">Filter</button>
             <button type="button" onclick="refreshCategoryDropdown().then(() => showSuccess( 'Categories refreshed!'))" class="btn-secondary admin-filter-button" title="Refresh Categories">🔄</button>
             <a href="?page=admin&section=inventory&add=1" class="btn-primary admin-filter-button">Add New Item</a>
+=======
+            <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
+            <button type="button" onclick="refreshCategoryDropdown().then(() => showSuccess( 'Categories refreshed!'))" class="btn btn-secondary admin-filter-button" title="Refresh Categories">🔄</button>
+            <a href="?page=admin&section=inventory&add=1" class="btn btn-primary admin-filter-button">Add New Item</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </form>
     </div>
     
@@ -180,23 +194,40 @@ $messageType = $_GET['type'] ?? '';
             </thead>
             <tbody>
                 <?php if (empty($items)): ?>
+<<<<<<< HEAD
                     <tr><td colspan="10" class="text-center py-4">No items found matching your criteria.</td></tr>
+=======
+                    <tr><td colspan="10" class="text-center">No items found matching your criteria.</td></tr>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <?php else: ?>
                     <?php foreach ($items as $item): ?>
                     <tr data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['sku']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
+<<<<<<< HEAD
                             <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" style="width:40px;height:40px;">
                                 <div class="thumbnail-placeholder">...</div>
                             </div>
                         </td>
                         <td class="text-center">
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium <?= ($item['image_count'] > 0) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' ?>">
+=======
+                            <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" >
+                                <div class="thumbnail-loading" >...</div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <span class="inline-flex items-center rounded-full text-xs font-medium <?= ($item['image_count'] > 0) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600' ?>">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <?= intval($item['image_count']) ?>
                             </span>
                         </td>
                                             <td class="editable" data-field="name"><?= htmlspecialchars($item['name'] ?? '') ?></td>
                     <td class="editable" data-field="category"><?= htmlspecialchars($item['category'] ?? '') ?></td>
+<<<<<<< HEAD
                     <td><?= htmlspecialchars($item['sku'] ?? '') ?></td> <!-- SKU not typically inline editable -->
+=======
+                    <td><?= htmlspecialchars($item['sku'] ?? '') ?></td> <!- SKU not typically inline editable ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <td class="editable" data-field="stockLevel"><?= htmlspecialchars($item['stockLevel'] ?? '0') ?></td>
                     <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint'] ?? '0') ?></td>
                         <td class="editable" data-field="costPrice">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
@@ -218,7 +249,11 @@ $messageType = $_GET['type'] ?? '';
 
 <?php if ($modalMode === 'view' && $editItem): ?>
 <div class="modal-outer" id="inventoryModalOuter">
+<<<<<<< HEAD
     <!-- Navigation Arrows -->
+=======
+    <!- Navigation Arrows ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <button id="prevItemBtn" onclick="navigateToItem('prev')" class="nav-arrow left" title="Previous item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
@@ -231,7 +266,11 @@ $messageType = $_GET['type'] ?? '';
     </button>
     
     <div class="modal-content-wrapper">
+<<<<<<< HEAD
         <div class="flex justify-between items-center mb-3">
+=======
+        <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <h2 class="text-lg font-bold text-green-700">View Item: <?= htmlspecialchars($editItem['name'] ?? 'N/A') ?></h2>
             <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
@@ -241,53 +280,86 @@ $messageType = $_GET['type'] ?? '';
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label for="skuDisplay" class="block text-gray-700">SKU</label>
+<<<<<<< HEAD
                         <input type="text" id="skuDisplay" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="text" id="skuDisplay" name="sku" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
                     </div>
                     <div>
                         <label for="name" class="block text-gray-700">Name</label>
+<<<<<<< HEAD
                         <input type="text" id="name" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="text" id="name" name="name" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label for="category" class="block text-gray-700">Category</label>
+<<<<<<< HEAD
                         <input type="text" id="category" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="text" id="category" name="category" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['category'] ?? ''); ?>">
                     </div>
                     <div>
                         <label for="sku" class="block text-gray-700">SKU</label>
+<<<<<<< HEAD
                         <input type="text" id="sku" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="text" id="sku" name="sku" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
                     </div>
                 </div>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label for="stockLevel" class="block text-gray-700">Stock Level</label>
+<<<<<<< HEAD
                         <input type="number" id="stockLevel" name="stockLevel" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="number" id="stockLevel" name="stockLevel" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['stockLevel'] ?? '0'); ?>">
                     </div>
                     <div>
                         <label for="reorderPoint" class="block text-gray-700">Reorder Point</label>
+<<<<<<< HEAD
                         <input type="number" id="reorderPoint" name="reorderPoint" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="number" id="reorderPoint" name="reorderPoint" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['reorderPoint'] ?? '5'); ?>">
                     </div>
                 </div>
                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                         <label for="costPrice" class="block text-gray-700">Cost Price ($)</label>
+<<<<<<< HEAD
                         <input type="number" id="costPrice" name="costPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="number" id="costPrice" name="costPrice" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['costPrice'] ?? '0.00'); ?>">
                     </div>
                     <div>
                         <label for="retailPrice" class="block text-gray-700">Retail Price ($)</label>
+<<<<<<< HEAD
                         <input type="number" id="retailPrice" name="retailPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" readonly 
+=======
+                        <input type="number" id="retailPrice" name="retailPrice" class="block w-full border border-gray-300 rounded bg-gray-100" readonly 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                value="<?= htmlspecialchars($editItem['retailPrice'] ?? '0.00'); ?>">
                     </div>
                 </div>
                 <div>
                     <label for="description" class="block text-gray-700">Description</label>
+<<<<<<< HEAD
                     <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded bg-gray-100" rows="2" readonly><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                 </div>
                                     <!-- Item Images Section - Same layout as edit modal -->
@@ -298,6 +370,18 @@ $messageType = $_GET['type'] ?? '';
                         <div class="text-sm text-gray-600 mb-2">Current Images:</div>
                         <div id="currentImagesList" class="w-full">
                             <!-- Current images will be loaded here with dynamic layout -->
+=======
+                    <textarea id="description" name="description" class="block w-full border border-gray-300 rounded bg-gray-100" rows="2" readonly><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
+                </div>
+                                    <!- Item Images Section - Same layout as edit modal ->
+<div class="images-section-container" id="imagesSection">
+                    
+                    <!- Current Images Display ->
+                    <div id="currentImagesContainer" class="current-images-section">
+                        <div class="text-sm text-gray-600">Current Images:</div>
+                        <div id="currentImagesList" class="w-full">
+                            <!- Current images will be loaded here with dynamic layout ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <div class="text-center text-gray-500 text-sm" id="viewModalImagesLoading">Loading images...</div>
                         </div>
                     </div>
@@ -306,13 +390,22 @@ $messageType = $_GET['type'] ?? '';
 
             <div class="modal-form-suggestions-column">
                 <div class="suggestions-container">
+<<<<<<< HEAD
                     <!-- Cost Breakdown Section -->
+=======
+                    <!- Cost Breakdown Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div class="cost-breakdown-wrapper">
                         <div class="cost-breakdown">
                             <h3>Cost Breakdown</h3>
                             
+<<<<<<< HEAD
                             <!-- Suggested Cost Display - Moved to top with price styling -->
                             <div class="mb-4 p-2 bg-green-50 rounded border border-green-200">
+=======
+                            <!- Suggested Cost Display - Moved to top with price styling ->
+                            <div class="bg-green-50 rounded border border-green-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <div class="flex justify-between items-center">
                                     <span class="text-sm text-green-700 font-medium">Suggested Cost:</span>
                                     <span class="font-bold text-green-800 text-lg" id="suggestedCostDisplay">$0.00</span>
@@ -321,8 +414,13 @@ $messageType = $_GET['type'] ?? '';
                             
                             <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
                             <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
+<<<<<<< HEAD
                                 <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
                                 <div class="mb-2" id="view_<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
+=======
+                                <h4 class="font-semibold text-gray-700 text-sm"><?= ucfirst($costType); ?></h4>
+                                <div class="" id="view_<?= $costType; ?>List" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php if (!empty($editCostBreakdown[$costType])): ?>
                                         <?php foreach ($editCostBreakdown[$costType] as $item_cost): ?>
                                         <div class="cost-item">
@@ -333,20 +431,33 @@ $messageType = $_GET['type'] ?? '';
                                         </div>
                                         <?php endforeach; ?>
                                     <?php else: ?>
+<<<<<<< HEAD
                                         <p class="text-gray-500 text-xs italic px-1">No items added.</p>
+=======
+                                        <p class="text-gray-500 text-xs italic">No items added.</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <?php endif; ?>
                                 </div>
                             </div>
                             <?php endforeach; ?>
+<<<<<<< HEAD
                             <div class="cost-totals" style="display: none;">
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+=======
+                            <div class="cost-totals" class="hidden">
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </div>
                         </div>
                     </div>
                 
+<<<<<<< HEAD
                     <!-- Price Suggestion Section for View Modal -->
                     <div class="price-suggestion-wrapper">
                         <div class="price-suggestion bg-white border border-gray-200 rounded-lg p-4">
@@ -359,12 +470,27 @@ $messageType = $_GET['type'] ?? '';
                                 
                                 <!-- Suggested Price Display -->
                                 <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
+=======
+                    <!- Price Suggestion Section for View Modal ->
+                    <div class="price-suggestion-wrapper">
+                        <div class="price-suggestion bg-white border border-gray-200 rounded-lg">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <span class="">🎯</span> Price Suggestion
+                            </h3>
+                            
+                            <!- Price Suggestion Display ->
+                            <div id="viewPriceSuggestionDisplay" class="hidden">
+                                
+                                <!- Suggested Price Display ->
+                                <div class="bg-green-50 rounded border border-green-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
                                         <span class="font-bold text-green-800 text-lg" id="viewDisplaySuggestedPrice">$0.00</span>
                                     </div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Reasoning Section -->
                                 <div class="mb-3">
                                     <h4 class="font-semibold text-gray-700 mb-1 text-sm">AI Reasoning</h4>
@@ -374,17 +500,37 @@ $messageType = $_GET['type'] ?? '';
                                 </div>
                                 
                                 <div class="flex justify-between items-center text-xs mb-3">
+=======
+                                <!- Reasoning Section ->
+                                <div class="">
+                                    <h4 class="font-semibold text-gray-700 text-sm">AI Reasoning</h4>
+                                    <div class="" id="viewReasoningList">
+                                        <!- Reasoning items will be rendered here by JavaScript ->
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-center text-xs">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <span class="text-green-600" id="viewDisplayConfidence">Medium confidence</span>
                                     <span class="text-green-500" id="viewDisplayTimestamp">Just now</span>
                                 </div>
                             </div>
                             
+<<<<<<< HEAD
                                         <!-- Price Suggestion Placeholder -->
             <div id="viewPriceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                 <div class="text-center text-gray-500">
                     <div class="text-2xl mb-1">🎯</div>
                     <div class="text-sm">No price suggestion available</div>
                     <div class="text-xs mt-1 text-gray-400">Price suggestions are generated in edit mode</div>
+=======
+                                        <!- Price Suggestion Placeholder ->
+            <div id="viewPriceSuggestionPlaceholder" class="bg-gray-50 border border-gray-200 rounded-lg">
+                <div class="text-center text-gray-500">
+                    <div class="text-2xl">🎯</div>
+                    <div class="text-sm">No price suggestion available</div>
+                    <div class="text-xs text-gray-400">Price suggestions are generated in edit mode</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
                         </div>
@@ -393,9 +539,15 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
 
+<<<<<<< HEAD
         <div class="flex justify-end space-x-3 mt-auto pt-4 border-t">
             <a href="?page=admin&section=inventory" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">Close</a>
                             <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($editItem['sku'] ?? '') ?>" class="brand-button px-4 py-2 rounded text-sm">Edit Item</a>
+=======
+        <div class="flex justify-end space-x-3 mt-auto border-t">
+            <a href="?page=admin&section=inventory" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">Close</a>
+                            <a href="?page=admin&section=inventory&edit=<?= htmlspecialchars($editItem['sku'] ?? '') ?>" class="brand-button rounded text-sm">Edit Item</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>
     </div>
 </div>
@@ -403,7 +555,11 @@ $messageType = $_GET['type'] ?? '';
 
 <?php if ($modalMode === 'add' || ($modalMode === 'edit' && $editItem)): ?>
 <div class="modal-outer" id="inventoryModalOuter">
+<<<<<<< HEAD
     <!-- Navigation Arrows (only show for edit mode, not add mode) -->
+=======
+    <!- Navigation Arrows (only show for edit mode, not add mode) ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <?php if ($modalMode === 'edit'): ?>
     <button id="prevItemBtn" onclick="navigateToItem('prev')" class="nav-arrow left" title="Previous item">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,35 +574,60 @@ $messageType = $_GET['type'] ?? '';
     <?php endif; ?>
     
     <div class="modal-content-wrapper">
+<<<<<<< HEAD
         <div class="flex justify-between items-center mb-3">
+=======
+        <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <h2 class="text-lg font-bold text-green-700"><?= $modalMode === 'add' ? 'Add New Inventory Item' : 'Edit Item (' . htmlspecialchars($editItem['name'] ?? 'N/A') . ')' ?></h2>
             <a href="?page=admin&section=inventory" class="text-gray-500 hover:text-gray-700 text-2xl leading-none">&times;</a>
         </div>
 
+<<<<<<< HEAD
         <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col flex-grow overflow-y-auto" onsubmit="return validateGenderSizeColorRequirements(event)">
+=======
+        <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col overflow-y-auto" onsubmit="return validateGenderSizeColorRequirements(event)">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <input type="hidden" name="action" value="<?= $modalMode === 'add' ? 'add' : 'update'; ?>">
             <?php if ($modalMode === 'edit' && isset($editItem['sku'])): ?>
                 <input type="hidden" name="itemSku" value="<?= htmlspecialchars($editItem['sku'] ?? ''); ?>">
             <?php endif; ?>
 
+<<<<<<< HEAD
             <!-- 3-Grid Layout: Top Row (2 boxes) + Bottom Row (1 full-width box) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <!-- Left Box: Item Information -->
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                         <span class="mr-2">📝</span> Item Information
+=======
+            <!- 3-Grid Layout: Top Row (2 boxes) + Bottom Row (1 full-width box) ->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!- Left Box: Item Information ->
+                <div class="bg-white border border-gray-200 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <span class="">📝</span> Item Information
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     </h3>
                     
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label for="skuEdit" class="block text-gray-700">SKU *</label>
+<<<<<<< HEAD
                                 <input type="text" id="skuEdit" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('sku', $field_errors) ? 'field-error-highlight' : '' ?>" required 
+=======
+                                <input type="text" id="skuEdit" name="sku" class="block w-full border border-gray-300 rounded <?= in_array('sku', $field_errors) ? 'field-error-highlight' : '' ?>" required 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        value="<?= htmlspecialchars($editItem['sku'] ?? ($nextSku ?? '')); ?>" placeholder="Auto-generated if empty">
                             </div>
                             <div>
                                 <label for="name" class="block text-gray-700">Name *</label>
+<<<<<<< HEAD
                                 <input type="text" id="name" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('name', $field_errors) ? 'field-error-highlight' : '' ?>" required 
+=======
+                                <input type="text" id="name" name="name" class="block w-full border border-gray-300 rounded <?= in_array('name', $field_errors) ? 'field-error-highlight' : '' ?>" required 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        value="<?= htmlspecialchars($editItem['name'] ?? ''); ?>"
                                        data-tooltip="The name of your item. Try to be more creative than 'Thing' or 'Stuff'. Your customers deserve better than that.">
                             </div>
@@ -455,7 +636,11 @@ $messageType = $_GET['type'] ?? '';
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                             <div>
                                 <label for="categoryEdit" class="block text-gray-700">Category *</label>
+<<<<<<< HEAD
                                 <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'style="display:none;"' : '' ?>
+=======
+                                <select id="categoryEdit" name="category" class="block w-full border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required <?= $modalMode === 'add' ? 'class="hidden"' : '' ?>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         data-tooltip="Which category does this belong to? If you can't figure this out, maybe running a business isn't for you.">
                                     <option value="">Select Category</option>
                                     <?php foreach ($categories as $cat): ?>
@@ -463,14 +648,22 @@ $messageType = $_GET['type'] ?? '';
                                     <?php endforeach; ?>
                                 </select>
                                 <?php if ($modalMode === 'add'): ?>
+<<<<<<< HEAD
                                 <div id="aiCategoryMessage" class="mt-1 p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+=======
+                                <div id="aiCategoryMessage" class="bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     🤖 AI will automatically select the best category after you upload a photo and we analyze your item!
                                 </div>
                                 <?php endif; ?>
                             </div>
                             <div>
                                 <label for="genderEdit" class="block text-gray-700">Gender *</label>
+<<<<<<< HEAD
                                 <select id="genderEdit" name="gender" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('gender', $field_errors) ? 'field-error-highlight' : '' ?>" required
+=======
+                                <select id="genderEdit" name="gender" class="block w-full border border-gray-300 rounded <?= in_array('gender', $field_errors) ? 'field-error-highlight' : '' ?>" required
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         data-tooltip="Who is this for? Choose wisely - your customers judge you for everything, including assumptions about their gender.">
                                     <option value="">Select Gender</option>
                                     <option value="Unisex" <?= (isset($editItem['gender']) && $editItem['gender'] === 'Unisex') ? 'selected' : ''; ?>>Unisex</option>
@@ -483,7 +676,11 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                             <div>
                                 <label for="statusEdit" class="block text-gray-700">Status *</label>
+<<<<<<< HEAD
                                 <select id="statusEdit" name="status" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('status', $field_errors) ? 'field-error-highlight' : '' ?>" required
+=======
+                                <select id="statusEdit" name="status" class="block w-full border border-gray-300 rounded <?= in_array('status', $field_errors) ? 'field-error-highlight' : '' ?>" required
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         data-tooltip="Draft items are hidden from customers. Live items are public. Don't put garbage live and wonder why nobody buys it.">
                                     <option value="draft" <?= (isset($editItem['status']) && $editItem['status'] === 'draft') ? 'selected' : ''; ?>>Draft (Hidden)</option>
                                     <option value="live" <?= (isset($editItem['status']) && $editItem['status'] === 'live') ? 'selected' : ''; ?>>Live (Public)</option>
@@ -493,7 +690,11 @@ $messageType = $_GET['type'] ?? '';
                         
                         <div class="flex justify-end">
                             <div class="button-with-badge">
+<<<<<<< HEAD
                                 <button type="button" id="open-marketing-manager-btn" class="brand-button px-3 py-2 rounded text-sm"
+=======
+                                <button type="button" id="open-marketing-manager-btn" class="brand-button rounded text-sm"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         data-tooltip="Let AI write your marketing copy because apparently describing your own products is too hard. Don't worry, the robots are better at it anyway.">
                                      🎯 Marketing Manager
                                 </button>
@@ -504,13 +705,21 @@ $messageType = $_GET['type'] ?? '';
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label for="stockLevel" class="block text-gray-700">Stock Level *</label>
+<<<<<<< HEAD
                                 <input type="number" id="stockLevel" name="stockLevel" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('stockLevel', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
+=======
+                                <input type="number" id="stockLevel" name="stockLevel" class="block w-full border border-gray-300 rounded <?= in_array('stockLevel', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        value="<?= htmlspecialchars($editItem['stockLevel'] ?? '0'); ?>"
                                        data-tooltip="How many of these do you actually have? Don't lie - we're not your accountant, but your customers will be mad if you oversell.">
                             </div>
                             <div>
                                 <label for="reorderPoint" class="block text-gray-700">Reorder Point *</label>
+<<<<<<< HEAD
                                 <input type="number" id="reorderPoint" name="reorderPoint" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('reorderPoint', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
+=======
+                                <input type="number" id="reorderPoint" name="reorderPoint" class="block w-full border border-gray-300 rounded <?= in_array('reorderPoint', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        value="<?= htmlspecialchars($editItem['reorderPoint'] ?? '5'); ?>"
                                        data-tooltip="When to panic and order more. Set this too low and you'll run out. Set it too high and you'll have a warehouse full of stuff nobody wants.">
                             </div>
@@ -519,13 +728,21 @@ $messageType = $_GET['type'] ?? '';
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <div>
                                 <label for="costPrice" class="block text-gray-700">Cost Price ($) *</label>
+<<<<<<< HEAD
                                 <input type="number" id="costPrice" name="costPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('costPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
+=======
+                                <input type="number" id="costPrice" name="costPrice" class="block w-full border border-gray-300 rounded <?= in_array('costPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        value="<?= htmlspecialchars($editItem['costPrice'] ?? '0.00'); ?>"
                                        data-tooltip="How much you paid for this. Don't include your tears and frustration - those are free. This is just the cold, hard cash you spent.">
                             </div>
                             <div>
                                 <label for="retailPrice" class="block text-gray-700">Retail Price ($) *</label>
+<<<<<<< HEAD
                                 <input type="number" id="retailPrice" name="retailPrice" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('retailPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
+=======
+                                <input type="number" id="retailPrice" name="retailPrice" class="block w-full border border-gray-300 rounded <?= in_array('retailPrice', $field_errors) ? 'field-error-highlight' : '' ?>" step="0.01" min="0" required 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        value="<?= htmlspecialchars($editItem['retailPrice'] ?? '0.00'); ?>"
                                        data-tooltip="What you're charging customers. Try to make it higher than your cost price - that's how profit works. Revolutionary concept, I know.">
                             </div>
@@ -533,6 +750,7 @@ $messageType = $_GET['type'] ?? '';
                         
                         <div>
                             <label for="description" class="block text-gray-700">Description</label>
+<<<<<<< HEAD
                             <textarea id="description" name="description" class="mt-1 block w-full p-2 border border-gray-300 rounded" rows="3" placeholder="Enter item description or click 'Marketing Manager' for AI-powered suggestions..."
                                       data-tooltip="Describe your item. Be more creative than 'It's good' or 'People like it'. Your customers have questions, and this is where you answer them."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
                         </div>
@@ -544,20 +762,43 @@ $messageType = $_GET['type'] ?? '';
                                 <div class="flex justify-between items-center mb-2">
                                     <div class="text-sm text-gray-600">Current Images:</div>
                                     <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>" data-tooltip="Let AI automatically crop all existing images to their edges and convert them to WebP format. Because apparently manually cropping photos is too much work for you.">
+=======
+                            <textarea id="description" name="description" class="block w-full border border-gray-300 rounded" rows="3" placeholder="Enter item description or click 'Marketing Manager' for AI-powered suggestions..."
+                                      data-tooltip="Describe your item. Be more creative than 'It's good' or 'People like it'. Your customers have questions, and this is where you answer them."><?= htmlspecialchars($editItem['description'] ?? ''); ?></textarea>
+                        </div>
+
+                        <!- Item Images Section ->
+                        <div class="images-section-container" id="imagesSection">
+                            <!- Current Images Display ->
+                            <div id="currentImagesContainer" class="current-images-section">
+                                <div class="flex justify-between items-center">
+                                    <div class="text-sm text-gray-600">Current Images:</div>
+                                    <button type="button" id="processExistingImagesBtn" onclick="processExistingImagesWithAI()" class="bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors"  data-tooltip="Let AI automatically crop all existing images to their edges and convert them to WebP format. Because apparently manually cropping photos is too much work for you.">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         🎨 AI Process All
                                     </button>
                                 </div>
                                 <div id="currentImagesList" class="w-full">
+<<<<<<< HEAD
                                     <!-- Current images will be loaded here with dynamic layout -->
                                 </div>
                             </div>
                             
                             <!-- Multi-Image Upload Section - Only show in edit/add mode -->
                             <div class="multi-image-upload-section mt-3" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
+=======
+                                    <!- Current images will be loaded here with dynamic layout ->
+                                </div>
+                            </div>
+                            
+                            <!- Multi-Image Upload Section - Only show in edit/add mode ->
+                            <div class="multi-image-upload-section" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <input type="file" id="multiImageUpload" name="images[]" multiple accept="image/*" class="hidden">
                                 <?php if ($modalMode === 'add'): ?>
                                 <input type="file" id="aiAnalysisUpload" accept="image/*" class="hidden">
                                 <?php endif; ?>
+<<<<<<< HEAD
                                 <div class="upload-controls mb-3">
                                     <div class="flex gap-2 flex-wrap">
                                         <?php if ($modalMode === 'add'): ?>
@@ -585,21 +826,57 @@ $messageType = $_GET['type'] ?? '';
                                         <div class="text-sm text-gray-600 mb-2">Uploading images...</div>
                                         <div class="w-full bg-gray-200 rounded-full h-2">
                                             <div id="uploadProgressBar" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+=======
+                                <div class="upload-controls">
+                                    <div class="flex gap-2 flex-wrap">
+                                        <?php if ($modalMode === 'add'): ?>
+                                        <button type="button" onclick="document.getElementById('aiAnalysisUpload').click()" class="bg-purple-500 text-white rounded hover:bg-purple-600 text-sm">
+                                            🤖 Upload Photo for AI Analysis
+                                        </button>
+                                        <?php endif; ?>
+                                        <button type="button" onclick="document.getElementById('multiImageUpload').click()" class="bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                                            📁 Upload Images
+                                        </button>
+                                    </div>
+                                    <div class="text-xs text-gray-500">
+                                        Maximum file size: 10MB per image. Supported formats: PNG, JPG, JPEG, WebP, GIF
+                                    </div>
+                                    <div class="">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" id="useAIProcessing" name="useAIProcessing" class="" checked>
+                                            <span class="text-sm font-medium text-gray-700">🎨 Auto-crop to edges with AI</span>
+                                        </label>
+                                        <div class="text-xs text-gray-500">
+                                            Automatically detect and crop to the outermost edges of objects in your images
+                                        </div>
+                                    </div>
+                                    <div id="uploadProgress" class="hidden">
+                                        <div class="text-sm text-gray-600">Uploading images...</div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div id="uploadProgressBar" class="bg-blue-600 h-2 rounded-full" ></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+<<<<<<< HEAD
                         <!-- Structure Analysis & Redesign Section (conditionally displayed) -->
                         <div id="structureAnalysisSection" class="structure-analysis-section" style="display: none;">
                             <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+=======
+                        <!- Structure Analysis & Redesign Section (conditionally displayed) ->
+                        <div id="structureAnalysisSection" class="structure-analysis-section" class="hidden">
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <div class="flex items-start">
                                     <div class="flex-shrink-0">
                                         <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                         </svg>
                                     </div>
+<<<<<<< HEAD
                                     <div class="ml-3 flex-1">
                                         <h3 class="text-sm font-medium text-yellow-800">🎯 Size/Color System Analysis</h3>
                                         <div class="mt-2 text-sm text-yellow-700">
@@ -616,6 +893,24 @@ $messageType = $_GET['type'] ?? '';
                                                 🎯 Restructure System
                                             </button>
                                             <button type="button" onclick="showNewStructureView()" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-medium">
+=======
+                                    <div class="flex-1">
+                                        <h3 class="text-sm font-medium text-yellow-800">🎯 Size/Color System Analysis</h3>
+                                        <div class="text-sm text-yellow-700">
+                                            <p>Your current structure may be backwards! For better inventory management, you should have <strong>sizes first</strong> (S, M, L, XL), then colors available for each size.</p>
+                                            <div class="" id="structureAnalysisResult">
+                                                <em>Click "Analyze" to check your current structure...</em>
+                                            </div>
+                                        </div>
+                                        <div class="flex space-x-2">
+                                            <button type="button" onclick="analyzeStructure()" class="bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-medium">
+                                                🔍 Analyze Current Structure
+                                            </button>
+                                            <button type="button" onclick="showRestructureModal()" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium">
+                                                🎯 Restructure System
+                                            </button>
+                                            <button type="button" onclick="showNewStructureView()" class="bg-green-600 hover:bg-green-700 text-white rounded text-sm font-medium">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                 👀 View New Structure
                                             </button>
                                         </div>
@@ -626,6 +921,7 @@ $messageType = $_GET['type'] ?? '';
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Right Box: Cost & Price Suggestions -->
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -642,30 +938,64 @@ $messageType = $_GET['type'] ?? '';
                                 
                                 <div class="button-with-badge w-full">
                                     <button type="button" onclick="useSuggestedCost()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors mb-4" 
+=======
+                <!- Right Box: Cost & Price Suggestions ->
+                <div class="bg-white border border-gray-200 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <span class="">💰</span> Cost & Price Analysis
+                    </h3>
+                    
+                    <div class="suggestions-container">
+                        <!- Cost Breakdown Section ->
+                        <div class="cost-breakdown-wrapper">
+                            <div class="cost-breakdown">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                    <span class="">💰</span> Cost Breakdown
+                                </h3>
+                                
+                                <div class="button-with-badge w-full">
+                                    <button type="button" onclick="useSuggestedCost()" class="w-full bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors" 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             id="get-suggested-cost-btn" data-tooltip="Let AI analyze your item and suggest cost breakdown including materials, labor, energy, and equipment. Because apparently calculating costs is rocket science now.">
                                         🧮 Get Suggested Cost
                                     </button>
                                     <div id="step-badge-2" class="step-badge step-badge-2 pulse hidden"></div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Suggested Cost Display - Moved to top with price styling -->
                                 <div class="mb-4 p-2 bg-green-50 rounded border border-green-200">
+=======
+                                <!- Suggested Cost Display - Moved to top with price styling ->
+                                <div class="bg-green-50 rounded border border-green-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="flex justify-between items-center">
                                         <span class="text-sm text-green-700 font-medium">Suggested Cost:</span>
                                         <span class="font-bold text-green-800 text-lg" id="suggestedCostDisplay">$0.00</span>
                                     </div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <div class="mb-4">
                                     <button type="button" onclick="applyCostSuggestionToCost()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+=======
+                                <div class="">
+                                    <button type="button" onclick="applyCostSuggestionToCost()" class="w-full bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             id="apply-suggested-cost-btn" data-tooltip="Take the AI-suggested cost and put it in your cost field. For when you trust robots more than your own business judgment.">
                                         💰 Apply to Cost Field
                                     </button>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Template Selection Section -->
                                 <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                                     <div class="flex items-center justify-between mb-2">
+=======
+                                <!- Template Selection Section ->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-center justify-between">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <h4 class="font-medium text-blue-800 text-sm">📋 Cost Templates</h4>
                                         <button type="button" onclick="toggleTemplateSection()" class="text-blue-600 hover:text-blue-800 text-xs">
                                             <span id="templateToggleText">Show Templates</span>
@@ -673,20 +1003,36 @@ $messageType = $_GET['type'] ?? '';
                                     </div>
                                     
                                     <div id="templateSection" class="hidden space-y-3">
+<<<<<<< HEAD
                                         <!-- Load Template -->
                                         <div class="flex gap-2">
                                             <select id="templateSelect" class="flex-1 px-2 py-1 border border-blue-300 rounded text-xs">
                                                 <option value="">Choose a template...</option>
                                             </select>
                                             <button type="button" onclick="loadTemplate()" class="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+=======
+                                        <!- Load Template ->
+                                        <div class="flex gap-2">
+                                            <select id="templateSelect" class="flex-1 border border-blue-300 rounded text-xs">
+                                                <option value="">Choose a template...</option>
+                                            </select>
+                                            <button type="button" onclick="loadTemplate()" class="bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                 Load
                                             </button>
                                         </div>
                                         
+<<<<<<< HEAD
                                         <!-- Save Template -->
                                         <div class="flex gap-2">
                                             <input type="text" id="templateName" placeholder="Template name..." class="flex-1 px-2 py-1 border border-blue-300 rounded text-xs">
                                             <button type="button" onclick="saveAsTemplate()" class="px-2 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700">
+=======
+                                        <!- Save Template ->
+                                        <div class="flex gap-2">
+                                            <input type="text" id="templateName" placeholder="Template name..." class="flex-1 border border-blue-300 rounded text-xs">
+                                            <button type="button" onclick="saveAsTemplate()" class="bg-green-600 text-white rounded text-xs hover:bg-green-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                 Save as Template
                                             </button>
                                         </div>
@@ -699,9 +1045,15 @@ $messageType = $_GET['type'] ?? '';
                                 
                                 <?php foreach (['materials', 'labor', 'energy', 'equipment'] as $costType): ?>
                                 <div class="cost-breakdown-section <?= $costType !== 'materials' ? 'mt-3' : ''; ?>">
+<<<<<<< HEAD
                                     <h4 class="font-semibold text-gray-700 mb-1 text-sm"><?= ucfirst($costType); ?></h4>
                                     <div class="mb-2" id="<?= $costType; ?>List" style="max-height: 100px; overflow-y: auto;">
                                         <!-- Cost items will be rendered here by JavaScript -->
+=======
+                                    <h4 class="font-semibold text-gray-700 text-sm"><?= ucfirst($costType); ?></h4>
+                                    <div class="" id="<?= $costType; ?>List" >
+                                        <!- Cost items will be rendered here by JavaScript ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     </div>
                                     <button type="button" class="add-cost-btn" onclick="addCostItem('<?= $costType; ?>')" 
                                             id="add-<?= $costType; ?>-btn" data-tooltip="<?php 
@@ -713,7 +1065,11 @@ $messageType = $_GET['type'] ?? '';
                                                 ];
                                                 echo $tooltips[$costType] ?? 'Add cost items for this category.';
                                             ?>">
+<<<<<<< HEAD
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 mr-1"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+=======
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         Add <?php 
                                             $labels = ['materials' => 'Material', 'labor' => 'Labor', 'energy' => 'Energy', 'equipment' => 'Equipment'];
                                             echo $labels[$costType] ?? ucfirst($costType);
@@ -721,15 +1077,24 @@ $messageType = $_GET['type'] ?? '';
                                     </button>
                                 </div>
                                 <?php endforeach; ?>
+<<<<<<< HEAD
                                                             <div class="cost-totals" style="display: none;">
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
                                 <div class="cost-total-row" style="display: none;"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+=======
+                                                            <div class="cost-totals" class="hidden">
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Materials Total:</span> <span class="cost-item-value" id="materialsTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Labor Total:</span> <span class="cost-item-value" id="laborTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Energy Total:</span> <span class="cost-item-value" id="energyTotalDisplay">$0.00</span></div>
+                                <div class="cost-total-row" class="hidden"><span class="cost-label">Equipment Total:</span> <span class="cost-item-value" id="equipmentTotalDisplay">$0.00</span></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 </div>
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <!-- Price Suggestion Section -->
                         <div class="price-suggestion-wrapper">
                             <div class="price-suggestion bg-white border border-gray-200 rounded-lg p-4">
@@ -739,28 +1104,52 @@ $messageType = $_GET['type'] ?? '';
                                 
                                 <div class="button-with-badge w-full">
                                     <button type="button" onclick="useSuggestedPrice()" class="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium mb-4"
+=======
+                        <!- Price Suggestion Section ->
+                        <div class="price-suggestion-wrapper">
+                            <div class="price-suggestion bg-white border border-gray-200 rounded-lg">
+                                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                    <span class="">🎯</span> Price Suggestion
+                                </h3>
+                                
+                                <div class="button-with-badge w-full">
+                                    <button type="button" onclick="useSuggestedPrice()" class="w-full bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors font-medium"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             id="get-suggested-price-btn" data-tooltip="Let AI analyze your item and suggest optimal pricing based on cost analysis, market research, and competitive analysis. Because apparently setting prices is too complicated for humans now.">
                                         🎯 Get Suggested Price
                                     </button>
                                     <div id="step-badge-3" class="step-badge step-badge-3 pulse hidden"></div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Price Suggestion Display -->
                                 <div id="priceSuggestionDisplay" class="mb-4 hidden">
                                     
                                     <!-- Suggested Price Display -->
                                     <div class="mb-3 p-2 bg-green-50 rounded border border-green-200">
+=======
+                                <!- Price Suggestion Display ->
+                                <div id="priceSuggestionDisplay" class="hidden">
+                                    
+                                    <!- Suggested Price Display ->
+                                    <div class="bg-green-50 rounded border border-green-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <div class="flex justify-between items-center">
                                             <span class="text-sm text-green-700 font-medium">Suggested Price:</span>
                                             <span class="font-bold text-green-800 text-lg" id="displaySuggestedPrice">$0.00</span>
                                         </div>
                                     </div>
                                     
+<<<<<<< HEAD
                                     <button type="button" onclick="applyPriceSuggestion()" class="w-full px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors mb-3"
+=======
+                                    <button type="button" onclick="applyPriceSuggestion()" class="w-full bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             id="apply-suggested-price-btn" data-tooltip="Take the AI-suggested price and put it in your price field. Let the robots do your pricing - what could go wrong?">
                                         Apply to Retail Price
                                     </button>
                                     
+<<<<<<< HEAD
                                     <!-- Reasoning Section -->
                                     <div class="mb-3">
                                         <h4 class="font-semibold text-gray-700 mb-1 text-sm">AI Reasoning</h4>
@@ -770,17 +1159,37 @@ $messageType = $_GET['type'] ?? '';
                                     </div>
                                     
                                     <div class="flex justify-between items-center text-xs mb-3">
+=======
+                                    <!- Reasoning Section ->
+                                    <div class="">
+                                        <h4 class="font-semibold text-gray-700 text-sm">AI Reasoning</h4>
+                                        <div class="" id="reasoningList">
+                                            <!- Reasoning items will be rendered here by JavaScript ->
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center text-xs">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <span class="text-green-600" id="displayConfidence">Medium confidence</span>
                                         <span class="text-green-500" id="displayTimestamp">Just now</span>
                                     </div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Price Suggestion Placeholder -->
                                 <div id="priceSuggestionPlaceholder" class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                                     <div class="text-center text-gray-500">
                                         <div class="text-2xl mb-1">🎯</div>
                                         <div class="text-sm">No price suggestion yet</div>
                                         <div class="text-xs mt-1 text-gray-400">Click "Get Suggested Price" above to get AI pricing analysis</div>
+=======
+                                <!- Price Suggestion Placeholder ->
+                                <div id="priceSuggestionPlaceholder" class="bg-gray-50 border border-gray-200 rounded-lg">
+                                    <div class="text-center text-gray-500">
+                                        <div class="text-2xl">🎯</div>
+                                        <div class="text-sm">No price suggestion yet</div>
+                                        <div class="text-xs text-gray-400">Click "Get Suggested Price" above to get AI pricing analysis</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     </div>
                                 </div>
                             </div>
@@ -789,6 +1198,7 @@ $messageType = $_GET['type'] ?? '';
                 </div>
             </div>
 
+<<<<<<< HEAD
             <!-- Bottom Box: Gender, Size & Color Management (Full Width) -->
             <div class="bg-white border border-gray-200 rounded-lg p-4" style="<?= $modalMode === 'view' ? 'display: none;' : '' ?>">
                 <div class="gender-size-color-management-section">
@@ -797,17 +1207,33 @@ $messageType = $_GET['type'] ?? '';
                             <span class="mr-2">📦</span> Gender, Size & Color Management
                         </h3>
                         <div class="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded">
+=======
+            <!- Bottom Box: Gender, Size & Color Management (Full Width) ->
+            <div class="bg-white border border-gray-200 rounded-lg" >
+                <div class="gender-size-color-management-section">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                            <span class="">📦</span> Gender, Size & Color Management
+                        </h3>
+                        <div class="text-sm text-orange-600 bg-orange-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             Hierarchy: Gender → Size → Color
                         </div>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Requirement Notice -->
                     <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+=======
+                    <!- Requirement Notice ->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="text-sm text-yellow-800">
                             <strong>⚠️ Publication Requirements:</strong> Items must have at least one gender, size, and color assigned before they can be set to "Live" status.
                         </div>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Management Sections -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
@@ -818,6 +1244,18 @@ $messageType = $_GET['type'] ?? '';
                                     <span class="mr-2">👥</span> Gender Options
                                 </h4>
                                 <button type="button" onclick="addItemGender()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+=======
+                    <!- Management Sections ->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!- Gender Management ->
+                        <div class="gender-section">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                    <span class="">👥</span> Gender Options
+                                </h4>
+                                <button type="button" onclick="addItemGender()" class="text-white rounded text-sm transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     + Add Gender
                                 </button>
                             </div>
@@ -826,6 +1264,7 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <!-- Size Management -->
                         <div class="size-section">
                             <div class="flex justify-between items-center mb-3">
@@ -833,6 +1272,15 @@ $messageType = $_GET['type'] ?? '';
                                     <span class="mr-2">📏</span> Size Options
                                 </h4>
                                 <button type="button" onclick="addItemSize()" class="px-3 py-2 text-white rounded text-sm transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+=======
+                        <!- Size Management ->
+                        <div class="size-section">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                    <span class="">📏</span> Size Options
+                                </h4>
+                                <button type="button" onclick="addItemSize()" class="text-white rounded text-sm transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     + Add Size
                                 </button>
                             </div>
@@ -841,6 +1289,7 @@ $messageType = $_GET['type'] ?? '';
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <!-- Color Management -->
                         <div class="color-section">
                             <div class="flex justify-between items-center mb-3">
@@ -852,6 +1301,19 @@ $messageType = $_GET['type'] ?? '';
                                         🖼️ Match Image
                                     </button>
                                     <button type="button" onclick="addItemColor()" class="px-2 py-1 text-white rounded text-xs" style="background-color: #87ac3a;">
+=======
+                        <!- Color Management ->
+                        <div class="color-section">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-md font-semibold text-gray-700 flex items-center">
+                                    <span class="">🎨</span> Color Options
+                                </h4>
+                                <div class="flex space-x-2">
+                                    <button type="button" onclick="matchImageToColor()" class="bg-purple-600 text-white rounded text-xs hover:bg-purple-700">
+                                        🖼️ Match Image
+                                    </button>
+                                    <button type="button" onclick="addItemColor()" class="text-white rounded text-xs" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         + Add Color
                                     </button>
                                 </div>
@@ -863,16 +1325,27 @@ $messageType = $_GET['type'] ?? '';
                         
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Stock Summary -->
                     <div id="stockSummary" class="mt-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+=======
+                    <!- Stock Summary ->
+                    <div id="stockSummary" class="bg-gray-50 border border-gray-200 rounded-lg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="text-sm text-gray-600" id="stockSummaryText">Stock summary will update as you add gender, size, and color options.</div>
                     </div>
                 </div>
             </div>
 
+<<<<<<< HEAD
             <div class="flex justify-end space-x-3 mt-auto pt-4 border-t">
                 <a href="?page=admin&section=inventory" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">Cancel</a>
                 <button type="submit" id="saveItemBtn" class="brand-button px-4 py-2 rounded text-sm">
+=======
+            <div class="flex justify-end space-x-3 mt-auto border-t">
+                <a href="?page=admin&section=inventory" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 inline-block text-sm">Cancel</a>
+                <button type="submit" id="saveItemBtn" class="brand-button rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span class="button-text"><?= $modalMode === 'add' ? 'Add Item' : 'Save Changes'; ?></span>
                     <span class="loading-spinner hidden"></span>
                 </button>
@@ -886,7 +1359,11 @@ $messageType = $_GET['type'] ?? '';
 
 <div id="costFormModal" class="cost-modal">
     <div class="cost-modal-content">
+<<<<<<< HEAD
         <div class="flex justify-between items-center mb-3">
+=======
+        <div class="flex justify-between items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <h3 id="costFormTitle" class="text-md font-semibold text-gray-700">Edit Cost Item</h3>
             <button type="button" class="text-gray-500 hover:text-gray-700 text-2xl leading-none" onclick="closeCostModal()">&times;</button>
         </div>
@@ -895,6 +1372,7 @@ $messageType = $_GET['type'] ?? '';
             <input type="hidden" id="costItemType" value="">
             <div id="materialNameField" class="hidden">
                 <label for="costItemName" class="block text-sm font-medium text-gray-700">Material Name *</label>
+<<<<<<< HEAD
                 <input type="text" id="costItemName" name="name" class="mt-1 block w-full p-2 border border-gray-300 rounded">
             </div>
             <div id="genericDescriptionField" class="hidden">
@@ -910,12 +1388,30 @@ $messageType = $_GET['type'] ?? '';
                 <div class="flex space-x-2">
                     <button type="button" class="px-3 py-1.5 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm" onclick="closeCostModal()">Cancel</button>
                     <button type="submit" class="brand-button px-3 py-1.5 rounded text-sm">Save</button>
+=======
+                <input type="text" id="costItemName" name="name" class="block w-full border border-gray-300 rounded">
+            </div>
+            <div id="genericDescriptionField" class="hidden">
+                 <label for="costItemDescription" class="block text-sm font-medium text-gray-700">Description *</label>
+                <input type="text" id="costItemDescription" name="description" class="block w-full border border-gray-300 rounded">
+            </div>
+            <div>
+                <label for="costItemCost" class="block text-sm font-medium text-gray-700">Cost ($) *</label>
+                <input type="number" id="costItemCost" name="cost" step="0.01" min="0" class="block w-full border border-gray-300 rounded" required>
+            </div>
+            <div class="flex justify-between items-center">
+                <button type="button" id="deleteCostItem" class="py-1.5 bg-red-500 text-white rounded hover:bg-red-600 text-sm hidden">Delete</button>
+                <div class="flex space-x-2">
+                    <button type="button" class="py-1.5 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm" onclick="closeCostModal()">Cancel</button>
+                    <button type="submit" class="brand-button py-1.5 rounded text-sm">Save</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         </form>
     </div>
 </div>
 
+<<<<<<< HEAD
 <div id="deleteConfirmModal" class="cost-modal"> <!-- Reusing cost-modal style for delete confirm -->
     <div class="cost-modal-content max-w-sm">
         <h2 class="text-md font-bold mb-3 text-gray-800">Confirm Delete</h2>
@@ -923,10 +1419,20 @@ $messageType = $_GET['type'] ?? '';
         <div class="flex justify-end space-x-2">
             <button type="button" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm close-modal-button">Cancel</button>
             <button type="button" id="confirmDeleteBtn" class="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Delete</button>
+=======
+<div id="deleteConfirmModal" class="cost-modal"> <!- Reusing cost-modal style for delete confirm ->
+    <div class="cost-modal-content max-w-sm">
+        <h2 class="text-md font-bold text-gray-800">Confirm Delete</h2>
+        <p class="text-sm text-gray-600">Are you sure you want to delete this item? This action cannot be undone.</p>
+        <div class="flex justify-end space-x-2">
+            <button type="button" class="py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm close-modal-button">Cancel</button>
+            <button type="button" id="confirmDeleteBtn" class="py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">Delete</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Cost Item Delete Confirmation Modal -->
 <div id="deleteCostConfirmModal" class="cost-modal">
 
@@ -938,15 +1444,36 @@ $messageType = $_GET['type'] ?? '';
             <div class="flex items-center">
                 <h2 class="text-xl font-bold text-white mr-3">🎯 Marketing Manager</h2>
                 <span class="text-green-100 text-sm font-medium px-2 py-1 bg-green-800 bg-opacity-30 rounded">Currently editing: <span id="currentEditingSku"></span></span>
+=======
+<!- Cost Item Delete Confirmation Modal ->
+<div id="deleteCostConfirmModal" class="cost-modal">
+
+<!- Marketing Manager Modal ->
+<div id="marketingManagerModal" class="admin-modal-overlay" >
+    <div class="admin-modal-content">
+        <!- Modal Header ->
+        <div class="admin-modal-header" >
+            <div class="flex items-center">
+                <h2 class="text-xl font-bold text-white">🎯 Marketing Manager</h2>
+                <span class="text-green-100 text-sm font-medium bg-green-800 bg-opacity-30 rounded">Currently editing: <span id="currentEditingSku"></span></span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </div>
             <button onclick="closeMarketingManager()" class="modal-close">&times;</button>
         </div>
         
+<<<<<<< HEAD
         <!-- Tab Navigation -->
         <div class="admin-tab-bar">
             <div class="flex items-center">
                 <div id="marketingItemImageHeader" class="flex-shrink-0 mr-4">
                     <!-- Primary image will be loaded here -->
+=======
+        <!- Tab Navigation ->
+        <div class="admin-tab-bar">
+            <div class="flex items-center">
+                <div id="marketingItemImageHeader" class="flex-shrink-0">
+                    <!- Primary image will be loaded here ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
                 <div class="flex space-x-4 overflow-x-auto">
                     <button id="contentTab" class="css-category-tab active" onclick="showMarketingManagerTab('content')">📝 Content</button>
@@ -958,14 +1485,22 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- AI Help Text - Below Tab Buttons -->
         <div class="px-6 py-3 bg-blue-50 border-b border-blue-200">
             <div class="flex items-center text-sm text-blue-700">
                 <span class="mr-2">💡</span>
+=======
+        <!- AI Help Text - Below Tab Buttons ->
+        <div class="bg-blue-50 border-b border-blue-200">
+            <div class="flex items-center text-sm text-blue-700">
+                <span class="">💡</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <span>Use AI to automatically generate marketing content for all tabs</span>
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- Content Area -->
         <div class="modal-body" style="flex: 1; overflow-y: auto;">
             <div id="marketingManagerContent">
@@ -984,6 +1519,26 @@ $messageType = $_GET['type'] ?? '';
                 <button onclick="closeMarketingManager()" 
                         class="px-6 py-2 text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
                         style="background: linear-gradient(to right, #87ac3a, #6b8e23); border: none;">
+=======
+        <!- Content Area ->
+        <div class="modal-body" >
+            <div id="marketingManagerContent">
+                <!- Content will be loaded dynamically ->
+            </div>
+        </div>
+        
+        <!- Footer ->
+        <div class="modal-footer">
+            <div class="flex space-x-3">
+                <button onclick="applyMarketingToItem()" 
+                        class="text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                        >
+                    📝 Apply to Item
+                </button>
+                <button onclick="closeMarketingManager()" 
+                        class="text-sm font-medium text-white rounded-md transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg"
+                        >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     ✓ Close
                 </button>
             </div>
@@ -991,19 +1546,34 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- AI Content Comparison Modal -->
 <div id="aiComparisonModal" class="admin-modal-overlay hidden">
     <div class="admin-modal-content">
         <!-- Fixed Header -->
         <div class="admin-modal-header" style="background: linear-gradient(135deg, #10b981, #3b82f6);">
+=======
+<!- AI Content Comparison Modal ->
+<div id="aiComparisonModal" class="admin-modal-overlay hidden">
+    <div class="admin-modal-content">
+        <!- Fixed Header ->
+        <div class="admin-modal-header" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <h2 class="modal-title">🤖 AI Content Comparison & Selection</h2>
             <button onclick="closeAIComparisonModal()" class="modal-close">&times;</button>
         </div>
         
+<<<<<<< HEAD
         <!-- AI Analysis Progress Section (Collapsible) -->
         <div id="aiAnalysisProgressSection" class="bg-gradient-to-r from-blue-50 to-purple-50 border-b flex-shrink-0 transition-all duration-500 overflow-hidden" style="max-height: 200px;">
             <div class="px-4 sm:px-6 py-4">
                 <div class="flex items-center justify-between mb-3">
+=======
+        <!- AI Analysis Progress Section (Collapsible) ->
+        <div id="aiAnalysisProgressSection" class="bg-gradient-to-r from-blue-50 to-purple-50 border-b flex-shrink-0 transition-all duration-500 overflow-hidden" >
+            <div class="sm:px-6">
+                <div class="flex items-center justify-between">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div class="flex items-center gap-2">
                         <div id="aiProgressSpinner" class="modal-loading-spinner"></div>
                         <span class="text-sm font-semibold text-gray-800">AI Analysis in Progress</span>
@@ -1011,6 +1581,7 @@ $messageType = $_GET['type'] ?? '';
                     <span id="aiProgressText" class="text-xs text-gray-600">Initializing...</span>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Progress Bar -->
                 <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
                     <div id="aiProgressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
@@ -1027,6 +1598,24 @@ $messageType = $_GET['type'] ?? '';
                         <span>Extracting Insights</span>
                     </div>
                     <div id="step3-generate-content" class="flex items-center gap-1 p-2 rounded bg-white/50">
+=======
+                <!- Progress Bar ->
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="aiProgressBar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300" ></div>
+                </div>
+                
+                <!- Detailed Progress Steps ->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div id="step1-analyze" class="flex items-center gap-1 rounded bg-white/50">
+                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <span>Analyzing Content</span>
+                    </div>
+                    <div id="step2-extract-insights" class="flex items-center gap-1 rounded bg-white/50">
+                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <span>Extracting Insights</span>
+                    </div>
+                    <div id="step3-generate-content" class="flex items-center gap-1 rounded bg-white/50">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="w-3 h-3 rounded-full bg-gray-300"></div>
                         <span>Generating Content</span>
                     </div>
@@ -1034,26 +1623,45 @@ $messageType = $_GET['type'] ?? '';
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- Scrollable Content Area -->
         <div class="flex-1 overflow-y-scroll min-h-0">
             <div class="p-4 sm:p-6">
                 <div id="aiComparisonContent" class="space-y-4">
                     <div class="text-center text-gray-500 py-8">AI analysis in progress...</div>
+=======
+        <!- Scrollable Content Area ->
+        <div class="flex-1 overflow-y-scroll min-h-0">
+            <div class="sm:p-6">
+                <div id="aiComparisonContent" class="space-y-4">
+                    <div class="text-center text-gray-500">AI analysis in progress...</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         </div>
         
+<<<<<<< HEAD
         <!-- Fixed Footer -->
+=======
+        <!- Fixed Footer ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="modal-footer">
             <div class="flex justify-between items-center">
                 <div class="text-sm text-gray-600">
                     <span id="statusText"></span>
                 </div>
                 <div class="flex gap-2">
+<<<<<<< HEAD
                     <button onclick="applySelectedChanges()" id="applyChangesBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium hidden">
                         Apply Selected Changes
                     </button>
                     <button onclick="closeAIComparisonModal()" class="modal-button btn-secondary">
+=======
+                    <button onclick="applySelectedChanges()" id="applyChangesBtn" class="bg-green-600 hover:bg-green-700 text-white rounded font-medium hidden">
+                        Apply Selected Changes
+                    </button>
+                    <button onclick="closeAIComparisonModal()" class="modal-button btn btn-secondary">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         Close
                     </button>
                 </div>
@@ -1062,6 +1670,7 @@ $messageType = $_GET['type'] ?? '';
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Cost Item Delete Confirmation Modal -->
 <div id="deleteCostConfirmModal" class="cost-modal">
     <div class="cost-modal-content max-w-sm">
@@ -1070,6 +1679,16 @@ $messageType = $_GET['type'] ?? '';
         <div class="flex justify-end space-x-2">
             <button type="button" class="px-3 py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" onclick="closeCostDeleteModal()">Cancel</button>
             <button type="button" id="confirmCostDeleteBtn" class="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+=======
+<!- Cost Item Delete Confirmation Modal ->
+<div id="deleteCostConfirmModal" class="cost-modal">
+    <div class="cost-modal-content max-w-sm">
+        <h2 class="text-md font-bold text-red-600">Delete Cost Item</h2>
+        <p class="text-sm text-gray-600" id="deleteCostConfirmText">Are you sure you want to delete this cost item? This action cannot be undone.</p>
+        <div class="flex justify-end space-x-2">
+            <button type="button" class="py-1.5 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm" onclick="closeCostDeleteModal()">Cancel</button>
+            <button type="button" id="confirmCostDeleteBtn" class="py-1.5 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <span class="button-text">Delete</span>
                 <span class="loading-spinner hidden">⏳</span>
             </button>
@@ -1304,24 +1923,42 @@ function showImageDeleteConfirmation(imageId, sku) {
     
     // Create modal content
     overlay.innerHTML = `
+<<<<<<< HEAD
         <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm mx-4">
             <div class="flex items-center mb-4">
+=======
+        <div class="bg-white rounded-lg shadow-xl max-w-sm">
+            <div class="flex items-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
                     <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
+<<<<<<< HEAD
                 <div class="ml-4">
+=======
+                <div class="">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <h3 class="text-lg font-medium text-gray-900">Delete Image</h3>
                     <p class="text-sm text-gray-500">This action cannot be undone.</p>
                 </div>
             </div>
+<<<<<<< HEAD
                             <p class="text-gray-700 mb-6">Are you sure you want to delete this image? It will be permanently removed from the item.</p>
             <div class="flex justify-end space-x-3">
                 <button type="button" onclick="closeImageDeleteModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
                     Cancel
                 </button>
                 <button type="button" onclick="confirmImageDelete(${imageId}, '${sku}')" class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+=======
+                            <p class="text-gray-700">Are you sure you want to delete this image? It will be permanently removed from the item.</p>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeImageDeleteModal()" class="text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="confirmImageDelete(${imageId}, '${sku}')" class="text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     Delete Image
                 </button>
             </div>
@@ -1422,6 +2059,7 @@ function showStyledConfirm(title, message, confirmText = 'Confirm', cancelText =
         modal.style.zIndex = '999999';
         
         modal.innerHTML = `
+<<<<<<< HEAD
             <div class="modal-content" style="max-width: 400px;">
                 <div class="modal-header">
                     <h3 style="margin: 0; color: #374151; font-size: 1.2rem;">${title}</h3>
@@ -1433,6 +2071,19 @@ function showStyledConfirm(title, message, confirmText = 'Confirm', cancelText =
                             ${cancelText}
                         </button>
                         <button id="styled-confirm-ok" class="btn-primary" style="padding: 8px 16px; border-radius: 6px; border: none; background: #ef4444; color: white; cursor: pointer;">
+=======
+            <div class="modal-content" >
+                <div class="modal-header">
+                    <h3 >${title}</h3>
+                </div>
+                <div class="modal-body">
+                    <p >${message}</p>
+                    <div >
+                        <button id="styled-confirm-cancel" class="btn btn-secondary" >
+                            ${cancelText}
+                        </button>
+                        <button id="styled-confirm-ok" class="btn btn-primary" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             ${confirmText}
                         </button>
                     </div>
@@ -1669,7 +2320,11 @@ function renderCostList(type, items) {const listElement = document.getElementByI
     const viewListElement = document.getElementById(`view_${type}List`);if (listElement) {
         listElement.innerHTML = ''; 
         if (!items || items.length === 0) {
+<<<<<<< HEAD
             listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added yet.</p>';
+=======
+            listElement.innerHTML = '<p class="text-gray-500 text-xs italic">No items added yet.</p>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         } else {
             items.forEach(item_cost => {
                 const itemDiv = document.createElement('div');
@@ -1689,7 +2344,11 @@ function renderCostList(type, items) {const listElement = document.getElementByI
     if (viewListElement) {
         viewListElement.innerHTML = ''; 
         if (!items || items.length === 0) {
+<<<<<<< HEAD
             viewListElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added.</p>';
+=======
+            viewListElement.innerHTML = '<p class="text-gray-500 text-xs italic">No items added.</p>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         } else {
             items.forEach(item_cost => {
                 const itemDiv = document.createElement('div');
@@ -1741,12 +2400,17 @@ function showCostSuggestionChoiceDialog(suggestionData) {
     
     modal.innerHTML = `
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+<<<<<<< HEAD
             <div class="bg-gradient-to-r from-blue-600 to-green-600 px-6 py-4 flex-shrink-0">
+=======
+            <div class="bg-gradient-to-r from-blue-600 to-green-600 flex-shrink-0">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <h2 class="text-xl font-bold text-white flex items-center">
                     🧮 AI Cost Suggestion - Side by Side Comparison
                 </h2>
             </div>
             
+<<<<<<< HEAD
             <div class="p-6 overflow-y-auto flex-1 custom-scrollbar" style="max-height: 70vh;">
                 <!-- AI Analysis Summary -->
                 <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -1754,12 +2418,22 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                         <span class="mr-2">🤖</span> AI Analysis
                     </h3>
                     <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning}</p>
+=======
+            <div class="overflow-y-auto flex-1 custom-scrollbar" >
+                <!- AI Analysis Summary ->
+                <div class="bg-blue-50 rounded-lg border border-blue-200">
+                    <h3 class="font-semibold text-gray-800 flex items-center">
+                        <span class="">🤖</span> AI Analysis
+                    </h3>
+                    <p class="text-sm text-gray-700">${suggestionData.reasoning}</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div class="text-xs text-blue-600">
                         <strong>Confidence:</strong> ${suggestionData.confidence} • 
                         <strong>Total Suggested Cost:</strong> $${parseFloat(suggestionData.suggestedCost).toFixed(2)}
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Side by Side Comparison -->
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-800 mb-3">💰 Cost Breakdown Comparison</h3>
@@ -1785,12 +2459,40 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                                     <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.equipment || 0).toFixed(2)}</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-gray-100 rounded border-2 border-gray-300">
+=======
+                <!- Side by Side Comparison ->
+                <div class="">
+                    <h3 class="font-semibold text-gray-800">💰 Cost Breakdown Comparison</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!- Current Values Column ->
+                        <div class="bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 class="font-semibold text-gray-700 text-center">📊 Current Values</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Materials:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.materials || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Labor:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.labor || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Energy:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.energy || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Equipment:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentCosts.equipment || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-gray-100 rounded border-2 border-gray-300">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <span class="font-semibold text-gray-700">Total:</span>
                                     <span class="text-lg font-bold text-gray-800">$${parseFloat(currentCosts.total || 0).toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <!-- AI Suggested Values Column -->
                         <div class="bg-green-50 p-4 rounded-lg border border-green-200">
                             <h4 class="font-semibold text-green-700 mb-3 text-center">🤖 AI Suggested Values</h4>
@@ -1812,6 +2514,29 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                                     <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-green-100 rounded border-2 border-green-300">
+=======
+                        <!- AI Suggested Values Column ->
+                        <div class="bg-green-50 rounded-lg border border-green-200">
+                            <h4 class="font-semibold text-green-700 text-center">🤖 AI Suggested Values</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Materials:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Labor:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.labor || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Energy:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.energy || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Equipment:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-green-100 rounded border-2 border-green-300">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <span class="font-semibold text-green-700">Total:</span>
                                     <span class="text-lg font-bold text-green-800">$${parseFloat(suggestionData.suggestedCost).toFixed(2)}</span>
                                 </div>
@@ -1820,10 +2545,17 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Individual Field Selection -->
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-800 mb-3">🎯 Choose Which Values to Apply</h3>
                     <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+=======
+                <!- Individual Field Selection ->
+                <div class="">
+                    <h3 class="font-semibold text-gray-800">🎯 Choose Which Values to Apply</h3>
+                    <div class="bg-yellow-50 rounded-lg border border-yellow-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <p class="text-sm text-yellow-800">
                             <span class="font-semibold">💡 Pro Tip:</span> Select individual fields below to apply only the AI suggestions you want to keep. 
                             Unselected fields will retain their current values.
@@ -1831,28 +2563,46 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-3">
+<<<<<<< HEAD
                             <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
                                 <input type="checkbox" id="applyMaterials" class="mr-3 text-green-600 focus:ring-green-500" 
+=======
+                            <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" id="applyMaterials" class="text-green-600 focus:ring-green-500" 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        ${Math.abs(parseFloat(currentCosts.materials || 0) - parseFloat(suggestionData.breakdown.materials || 0)) > 0.01 ? 'checked' : ''}>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-800">Materials Cost</div>
                                     <div class="text-sm text-gray-600">
                                         ${parseFloat(currentCosts.materials || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.materials || 0).toFixed(2)}
+<<<<<<< HEAD
                                         <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0) ? 'text-red-600' : 'text-green-600'}">
+=======
+                                        <span class="text-xs ${parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0) ? 'text-red-600' : 'text-green-600'}">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             (${parseFloat(suggestionData.breakdown.materials || 0) > parseFloat(currentCosts.materials || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.materials || 0) - parseFloat(currentCosts.materials || 0)).toFixed(2)})
                                         </span>
                                     </div>
                                 </div>
                             </label>
                             
+<<<<<<< HEAD
                             <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
                                 <input type="checkbox" id="applyLabor" class="mr-3 text-green-600 focus:ring-green-500"
+=======
+                            <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" id="applyLabor" class="text-green-600 focus:ring-green-500"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        ${Math.abs(parseFloat(currentCosts.labor || 0) - parseFloat(suggestionData.breakdown.labor || 0)) > 0.01 ? 'checked' : ''}>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-800">Labor Cost</div>
                                     <div class="text-sm text-gray-600">
                                         $${parseFloat(currentCosts.labor || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.labor || 0).toFixed(2)}
+<<<<<<< HEAD
                                         <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.labor || 0) > parseFloat(currentCosts.labor || 0) ? 'text-red-600' : 'text-green-600'}">
+=======
+                                        <span class="text-xs ${parseFloat(suggestionData.breakdown.labor || 0) > parseFloat(currentCosts.labor || 0) ? 'text-red-600' : 'text-green-600'}">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             (${parseFloat(suggestionData.breakdown.labor || 0) > parseFloat(currentCosts.labor || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.labor || 0) - parseFloat(currentCosts.labor || 0)).toFixed(2)})
                                         </span>
                                     </div>
@@ -1861,28 +2611,46 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                         </div>
                         
                         <div class="space-y-3">
+<<<<<<< HEAD
                             <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
                                 <input type="checkbox" id="applyEnergy" class="mr-3 text-green-600 focus:ring-green-500"
+=======
+                            <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" id="applyEnergy" class="text-green-600 focus:ring-green-500"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        ${Math.abs(parseFloat(currentCosts.energy || 0) - parseFloat(suggestionData.breakdown.energy || 0)) > 0.01 ? 'checked' : ''}>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-800">Energy Cost</div>
                                     <div class="text-sm text-gray-600">
                                         $${parseFloat(currentCosts.energy || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.energy || 0).toFixed(2)}
+<<<<<<< HEAD
                                         <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.energy || 0) > parseFloat(currentCosts.energy || 0) ? 'text-red-600' : 'text-green-600'}">
+=======
+                                        <span class="text-xs ${parseFloat(suggestionData.breakdown.energy || 0) > parseFloat(currentCosts.energy || 0) ? 'text-red-600' : 'text-green-600'}">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             (${parseFloat(suggestionData.breakdown.energy || 0) > parseFloat(currentCosts.energy || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.energy || 0) - parseFloat(currentCosts.energy || 0)).toFixed(2)})
                                         </span>
                                     </div>
                                 </div>
                             </label>
                             
+<<<<<<< HEAD
                             <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
                                 <input type="checkbox" id="applyEquipment" class="mr-3 text-green-600 focus:ring-green-500"
+=======
+                            <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" id="applyEquipment" class="text-green-600 focus:ring-green-500"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                        ${Math.abs(parseFloat(currentCosts.equipment || 0) - parseFloat(suggestionData.breakdown.equipment || 0)) > 0.01 ? 'checked' : ''}>
                                 <div class="flex-1">
                                     <div class="font-medium text-gray-800">Equipment Cost</div>
                                     <div class="text-sm text-gray-600">
                                         $${parseFloat(currentCosts.equipment || 0).toFixed(2)} → $${parseFloat(suggestionData.breakdown.equipment || 0).toFixed(2)}
+<<<<<<< HEAD
                                         <span class="ml-2 text-xs ${parseFloat(suggestionData.breakdown.equipment || 0) > parseFloat(currentCosts.equipment || 0) ? 'text-red-600' : 'text-green-600'}">
+=======
+                                        <span class="text-xs ${parseFloat(suggestionData.breakdown.equipment || 0) > parseFloat(currentCosts.equipment || 0) ? 'text-red-600' : 'text-green-600'}">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             (${parseFloat(suggestionData.breakdown.equipment || 0) > parseFloat(currentCosts.equipment || 0) ? '+' : ''}${(parseFloat(suggestionData.breakdown.equipment || 0) - parseFloat(currentCosts.equipment || 0)).toFixed(2)})
                                         </span>
                                     </div>
@@ -1892,6 +2660,7 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Quick Select Options -->
                 <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <h4 class="font-medium text-gray-800 mb-3">⚡ Quick Select Options</h4>
@@ -1906,11 +2675,28 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                             📈 Only Higher Values
                         </button>
                         <button onclick="selectOnlyLowerValues()" class="px-3 py-1 bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
+=======
+                <!- Quick Select Options ->
+                <div class="bg-gray-50 rounded-lg border border-gray-200">
+                    <h4 class="font-medium text-gray-800">⚡ Quick Select Options</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="selectAllCostFields(true)" class="bg-green-100 text-green-700 rounded text-sm hover:bg-green-200 transition-colors">
+                            ✅ Select All
+                        </button>
+                        <button onclick="selectAllCostFields(false)" class="bg-red-100 text-red-700 rounded text-sm hover:bg-red-200 transition-colors">
+                            ❌ Select None
+                        </button>
+                        <button onclick="selectOnlyHigherValues()" class="bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200 transition-colors">
+                            📈 Only Higher Values
+                        </button>
+                        <button onclick="selectOnlyLowerValues()" class="bg-purple-100 text-purple-700 rounded text-sm hover:bg-purple-200 transition-colors">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             📉 Only Lower Values
                         </button>
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Action Buttons -->
                 <div class="flex flex-col gap-3">
                     <!-- Primary Action: Apply Total to Cost Field -->
@@ -1925,17 +2711,41 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                         <div class="flex flex-col gap-2">
                             <button onclick="replaceAllCostValues(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                                     class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-all duration-200 text-sm">
+=======
+                <!- Action Buttons ->
+                <div class="flex flex-col gap-3">
+                    <!- Primary Action: Apply Total to Cost Field ->
+                    <button onclick="applySuggestedCostToCostField(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                            class="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200">
+                        💰 Use Total Cost ($${parseFloat(suggestionData.suggestedCost).toFixed(2)}) in Cost Price Field
+                    </button>
+                    
+                    <!- Detailed Breakdown Actions ->
+                    <div class="border-t border-gray-200">
+                        <p class="text-sm text-gray-600 text-center">Or manage detailed cost breakdown:</p>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <button onclick="replaceAllCostValues(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                                    class="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white rounded-lg font-medium shadow transition-all duration-200 text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 🔄 Replace Current Cost Breakdown
                             </button>
                             
                             <div class="flex flex-col sm:flex-row gap-2">
                                 <button onclick="applySelectedCostFields(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+<<<<<<< HEAD
                                         class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white px-4 py-2 rounded-lg font-medium shadow transition-all duration-200 text-sm">
+=======
+                                        class="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white rounded-lg font-medium shadow transition-all duration-200 text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     ➕ Add Selected to Breakdown
                                 </button>
                                 
                                 <button onclick="closeCostSuggestionChoiceDialog()" 
+<<<<<<< HEAD
                                         class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm">
+=======
+                                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all duration-200 text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     ❌ Cancel
                                 </button>
                             </div>
@@ -1943,7 +2753,11 @@ function showCostSuggestionChoiceDialog(suggestionData) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <div class="mt-4 text-xs text-gray-500 text-center space-y-1">
+=======
+                <div class="text-xs text-gray-500 text-center space-y-1">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div>🔄 <strong>Replace:</strong> Deletes all current cost items and creates new ones with AI values</div>
                     <div>➕ <strong>Add:</strong> Only selected fields will be added. Unselected fields keep their current values.</div>
                 </div>
@@ -2351,12 +3165,17 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
     
     modal.innerHTML = `
         <div class="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+<<<<<<< HEAD
             <div class="bg-gradient-to-r from-green-600 to-blue-600 px-6 py-4 flex-shrink-0">
+=======
+            <div class="bg-gradient-to-r from-green-600 to-blue-600 flex-shrink-0">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <h2 class="text-xl font-bold text-white flex items-center">
                     🎯 AI Price Suggestion - Side by Side Comparison
                 </h2>
             </div>
             
+<<<<<<< HEAD
             <div class="p-6 overflow-y-auto flex-1 custom-scrollbar" style="max-height: 70vh;">
                 <!-- AI Analysis Summary -->
                 <div class="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
@@ -2364,12 +3183,22 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                         <span class="mr-2">🤖</span> AI Pricing Analysis
                     </h3>
                     <p class="text-sm text-gray-700 mb-2">${suggestionData.reasoning || 'Advanced pricing analysis completed'}</p>
+=======
+            <div class="overflow-y-auto flex-1 custom-scrollbar" >
+                <!- AI Analysis Summary ->
+                <div class="bg-green-50 rounded-lg border border-green-200">
+                    <h3 class="font-semibold text-gray-800 flex items-center">
+                        <span class="">🤖</span> AI Pricing Analysis
+                    </h3>
+                    <p class="text-sm text-gray-700">${suggestionData.reasoning || 'Advanced pricing analysis completed'}</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div class="text-xs text-green-600">
                         <strong>Confidence:</strong> ${suggestionData.confidence || 'medium'} • 
                         <strong>Suggested Price:</strong> $${parseFloat(suggestionData.suggestedPrice).toFixed(2)}
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Side by Side Comparison -->
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-800 mb-3">💰 Price Comparison</h3>
@@ -2387,12 +3216,32 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                                     <span class="font-semibold text-gray-800">$${parseFloat(currentPrice.cost || 0).toFixed(2)}</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-gray-100 rounded border-2 border-gray-300">
+=======
+                <!- Side by Side Comparison ->
+                <div class="">
+                    <h3 class="font-semibold text-gray-800">💰 Price Comparison</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!- Current Price Column ->
+                        <div class="bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 class="font-semibold text-gray-700 text-center">📊 Current Price</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Retail Price:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentPrice.retail || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border">
+                                    <span class="text-sm font-medium text-gray-600">Cost Price:</span>
+                                    <span class="font-semibold text-gray-800">$${parseFloat(currentPrice.cost || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-gray-100 rounded border-2 border-gray-300">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <span class="font-semibold text-gray-700">Profit Margin:</span>
                                     <span class="text-lg font-bold text-gray-800">${currentPrice.retail > 0 ? (((currentPrice.retail - currentPrice.cost) / currentPrice.retail) * 100).toFixed(1) : '0.0'}%</span>
                                 </div>
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <!-- AI Suggested Price Column -->
                         <div class="bg-green-50 p-4 rounded-lg border border-green-200">
                             <h4 class="font-semibold text-green-700 mb-3 text-center">🤖 AI Suggested Price</h4>
@@ -2406,6 +3255,21 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                                     <span class="font-semibold text-green-800">$${parseFloat(currentPrice.cost || 0).toFixed(2)}</span>
                                 </div>
                                 <div class="flex justify-between items-center p-3 bg-green-100 rounded border-2 border-green-300">
+=======
+                        <!- AI Suggested Price Column ->
+                        <div class="bg-green-50 rounded-lg border border-green-200">
+                            <h4 class="font-semibold text-green-700 text-center">🤖 AI Suggested Price</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Suggested Price:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(suggestionData.suggestedPrice).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-white rounded border border-green-200">
+                                    <span class="text-sm font-medium text-green-600">Cost Price:</span>
+                                    <span class="font-semibold text-green-800">$${parseFloat(currentPrice.cost || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="flex justify-between items-center bg-green-100 rounded border-2 border-green-300">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <span class="font-semibold text-green-700">Profit Margin:</span>
                                     <span class="text-lg font-bold text-green-800">${suggestionData.suggestedPrice > 0 ? (((suggestionData.suggestedPrice - currentPrice.cost) / suggestionData.suggestedPrice) * 100).toFixed(1) : '0.0'}%</span>
                                 </div>
@@ -2414,6 +3278,7 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Pricing Components Breakdown -->
                 ${suggestionData.components && suggestionData.components.length > 0 ? `
                 <div class="mb-6">
@@ -2422,6 +3287,16 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                         <div class="space-y-3">
                             ${suggestionData.components.map(component => `
                                 <div class="flex justify-between items-center p-2 bg-white rounded border">
+=======
+                <!- Pricing Components Breakdown ->
+                ${suggestionData.components && suggestionData.components.length > 0 ? `
+                <div class="">
+                    <h3 class="font-semibold text-gray-800">🔍 Pricing Components Analysis</h3>
+                    <div class="bg-blue-50 rounded-lg border border-blue-200">
+                        <div class="space-y-3">
+                            ${suggestionData.components.map(component => `
+                                <div class="flex justify-between items-center bg-white rounded border">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="flex-1">
                                         <div class="font-medium text-gray-800">${component.label}</div>
                                         <div class="text-xs text-gray-600">${component.explanation || ''}</div>
@@ -2434,31 +3309,52 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                 </div>
                 ` : ''}
                 
+<<<<<<< HEAD
                 <!-- Price Selection -->
                 <div class="mb-6">
                     <h3 class="font-semibold text-gray-800 mb-3">🎯 Choose Your Pricing Strategy</h3>
                     <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+=======
+                <!- Price Selection ->
+                <div class="">
+                    <h3 class="font-semibold text-gray-800">🎯 Choose Your Pricing Strategy</h3>
+                    <div class="bg-yellow-50 rounded-lg border border-yellow-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <p class="text-sm text-yellow-800">
                             <span class="font-semibold">💡 Pro Tip:</span> You can apply the AI suggested price or keep your current price. 
                             The AI analysis provides valuable insights for your pricing decision.
                         </p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<<<<<<< HEAD
                         <label class="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
                             <input type="radio" name="priceChoice" value="suggested" id="applySuggestedPrice" class="mr-3 text-green-600 focus:ring-green-500" checked>
+=======
+                        <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="priceChoice" value="suggested" id="applySuggestedPrice" class="text-green-600 focus:ring-green-500" checked>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <div class="flex-1">
                                 <div class="font-medium text-gray-800">Use AI Suggested Price</div>
                                 <div class="text-sm text-gray-600">
                                     $${parseFloat(suggestionData.suggestedPrice).toFixed(2)} 
+<<<<<<< HEAD
                                     <span class="ml-2 text-xs ${suggestionData.suggestedPrice > currentPrice.retail ? 'text-green-600' : 'text-red-600'}">
+=======
+                                    <span class="text-xs ${suggestionData.suggestedPrice > currentPrice.retail ? 'text-green-600' : 'text-red-600'}">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         (${suggestionData.suggestedPrice > currentPrice.retail ? '+' : ''}${(suggestionData.suggestedPrice - currentPrice.retail).toFixed(2)} vs current)
                                     </span>
                                 </div>
                             </div>
                         </label>
                         
+<<<<<<< HEAD
                         <label class="flex items-center p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
                             <input type="radio" name="priceChoice" value="current" id="keepCurrentPrice" class="mr-3 text-gray-600 focus:ring-gray-500">
+=======
+                        <label class="flex items-center bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
+                            <input type="radio" name="priceChoice" value="current" id="keepCurrentPrice" class="text-gray-600 focus:ring-gray-500">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <div class="flex-1">
                                 <div class="font-medium text-gray-800">Keep Current Price</div>
                                 <div class="text-sm text-gray-600">
@@ -2470,9 +3366,15 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                 </div>
                 
                 ${hasExistingPrice ? `
+<<<<<<< HEAD
                     <div class="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
                         <div class="flex items-center mb-2">
                             <span class="text-amber-600 mr-2">⚠️</span>
+=======
+                    <div class="bg-amber-50 rounded-lg border border-amber-200">
+                        <div class="flex items-center">
+                            <span class="text-amber-600">⚠️</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <span class="font-medium text-amber-800">Existing Price Suggestion Found</span>
                         </div>
                         <p class="text-sm text-amber-700">
@@ -2481,20 +3383,35 @@ function showPriceSuggestionChoiceDialog(suggestionData) {
                     </div>
                 ` : ''}
                 
+<<<<<<< HEAD
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button onclick="applySelectedPriceChoice(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
                             class="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition-all duration-200">
+=======
+                <!- Action Buttons ->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="applySelectedPriceChoice(this)" data-suggestion='${JSON.stringify(suggestionData).replace(/'/g, '&#39;').replace(/"/g, '&quot;')}' 
+                            class="flex-1 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-lg font-semibold shadow-lg transition-all duration-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         🎯 Apply Selected Choice
                     </button>
                     
                     <button onclick="closePriceSuggestionChoiceDialog()" 
+<<<<<<< HEAD
                             class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200">
+=======
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all duration-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ❌ Cancel
                     </button>
                 </div>
                 
+<<<<<<< HEAD
                 <div class="mt-4 text-xs text-gray-500 text-center">
+=======
+                <div class="text-xs text-gray-500 text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     💡 Tip: The AI analysis will be saved for reference even if you keep your current price
                 </div>
             </div>
@@ -2787,7 +3704,11 @@ function displayPriceSuggestion(data) {
                     }
                 });
             } else {
+<<<<<<< HEAD
                 reasoningList.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No reasoning provided.</p>';
+=======
+                reasoningList.innerHTML = '<p class="text-gray-500 text-xs italic">No reasoning provided.</p>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             }
         }
         
@@ -2976,7 +3897,11 @@ async function showPricingTooltipWithData(event, componentType, explanation) {
     const title = titles[componentType] || 'Pricing Analysis';
     
     tooltip.innerHTML = `
+<<<<<<< HEAD
         <div class="font-semibold mb-1">${title}</div>
+=======
+        <div class="font-semibold">${title}</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div>${explanation}</div>
     `;
     
@@ -3051,7 +3976,11 @@ async function showPricingTooltip(event, reasoningText) {
         `;
         tooltip.innerHTML = `
             <div class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+<<<<<<< HEAD
             <div class="font-semibold text-blue-200 mb-2">${explanationData.title}</div>
+=======
+            <div class="font-semibold text-blue-200">${explanationData.title}</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div>${explanationData.explanation}</div>
         `;
         
@@ -3103,7 +4032,11 @@ async function showPricingTooltip(event, reasoningText) {
         `;
         errorTooltip.innerHTML = `
             <div class="tooltip-arrow absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-red-800"></div>
+<<<<<<< HEAD
             <div class="font-semibold mb-1">Error Loading Explanation</div>
+=======
+            <div class="font-semibold">Error Loading Explanation</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div>Unable to load pricing explanation. Please try again.</div>
         `;
         iconContainer.appendChild(errorTooltip);
@@ -3279,7 +4212,11 @@ function displayViewPriceSuggestion(data) {
                     }
                 });
             } else {
+<<<<<<< HEAD
                 reasoningList.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No reasoning provided.</p>';
+=======
+                reasoningList.innerHTML = '<p class="text-gray-500 text-xs italic">No reasoning provided.</p>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             }
         }
         
@@ -3566,7 +4503,11 @@ function clearCostBreakdown() {
     ['materials', 'labor', 'energy', 'equipment'].forEach(category => {
         const listElement = document.getElementById(`${category}List`);
         if (listElement) {
+<<<<<<< HEAD
             listElement.innerHTML = '<p class="text-gray-500 text-xs italic px-1">No items added yet.</p>';
+=======
+            listElement.innerHTML = '<p class="text-gray-500 text-xs italic">No items added yet.</p>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
     });
     
@@ -3769,18 +4710,32 @@ function showMarketingIntelligenceModal(data) {
     
     // Create modal content with comprehensive marketing intelligence
     overlay.innerHTML = `
+<<<<<<< HEAD
         <div class="bg-white rounded-lg shadow-xl p-6 max-w-7xl mx-4 max-h-[95vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-6">
+=======
+        <div class="bg-white rounded-lg shadow-xl max-w-7xl max-h-[95vh] overflow-y-auto">
+            <div class="flex items-center justify-between">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="flex items-center">
                     <div class="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
                         <span class="text-2xl">🧠</span>
                     </div>
+<<<<<<< HEAD
                     <div class="ml-4">
                         <h3 class="text-xl font-bold text-gray-900">AI Marketing Intelligence</h3>
                         <p class="text-sm text-gray-500">Comprehensive marketing analysis and suggestions</p>
                         <div class="flex items-center mt-1">
                             <span class="text-xs text-green-600 font-medium">Confidence: ${Math.round(data.confidence * 100)}%</span>
                             <span class="ml-2 text-xs text-gray-400">• Powered by AI Analysis</span>
+=======
+                    <div class="">
+                        <h3 class="text-xl font-bold text-gray-900">AI Marketing Intelligence</h3>
+                        <p class="text-sm text-gray-500">Comprehensive marketing analysis and suggestions</p>
+                        <div class="flex items-center">
+                            <span class="text-xs text-green-600 font-medium">Confidence: ${Math.round(data.confidence * 100)}%</span>
+                            <span class="text-xs text-gray-400">• Powered by AI Analysis</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     </div>
                 </div>
@@ -3791,6 +4746,7 @@ function showMarketingIntelligenceModal(data) {
                 </button>
             </div>
             
+<<<<<<< HEAD
             <!-- Primary Content -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <!-- Enhanced Title & Description -->
@@ -3812,19 +4768,51 @@ function showMarketingIntelligenceModal(data) {
                         <div class="p-3 bg-white border border-green-200 rounded-lg hover:bg-green-50 cursor-pointer" onclick="applyDescription('${data.description.replace(/'/g, "\\'")}')">
                             <div class="text-gray-800 text-sm">${data.description}</div>
                             <div class="text-xs text-green-600 mt-1">Click to apply to item description</div>
+=======
+            <!- Primary Content ->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!- Enhanced Title & Description ->
+                <div class="space-y-4">
+                    <div class="bg-blue-50 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 flex items-center">
+                            <span class="">🏷️</span> AI-Enhanced Title
+                        </h4>
+                        <div class="bg-white border border-blue-200 rounded-lg hover:bg-blue-50 cursor-pointer" onclick="applyTitle('${data.title.replace(/'/g, "\\'")}')">
+                            <div class="font-medium text-gray-800">${data.title}</div>
+                            <div class="text-xs text-blue-600">Click to apply to item name</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 flex items-center">
+                            <span class="">📝</span> AI-Crafted Description
+                        </h4>
+                        <div class="bg-white border border-green-200 rounded-lg hover:bg-green-50 cursor-pointer" onclick="applyDescription('${data.description.replace(/'/g, "\\'")}')">
+                            <div class="text-gray-800 text-sm">${data.description}</div>
+                            <div class="text-xs text-green-600">Click to apply to item description</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Target Audience & Keywords -->
                 <div class="space-y-4">
                     <div class="bg-purple-50 rounded-lg p-4">
                         <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
                             <span class="mr-2">🎯</span> Target Audience
+=======
+                <!- Target Audience & Keywords ->
+                <div class="space-y-4">
+                    <div class="bg-purple-50 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 flex items-center">
+                            <span class="">🎯</span> Target Audience
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </h4>
                         <p class="text-sm text-gray-700">${data.targetAudience}</p>
                     </div>
                     
+<<<<<<< HEAD
                     <div class="bg-yellow-50 rounded-lg p-4">
                         <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
                             <span class="mr-2">🔍</span> SEO Keywords
@@ -3832,12 +4820,22 @@ function showMarketingIntelligenceModal(data) {
                         <div class="flex flex-wrap gap-2">
                             ${data.keywords.map(keyword => `
                                 <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">${keyword}</span>
+=======
+                    <div class="bg-yellow-50 rounded-lg">
+                        <h4 class="font-semibold text-gray-800 flex items-center">
+                            <span class="">🔍</span> SEO Keywords
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${data.keywords.map(keyword => `
+                                <span class="bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">${keyword}</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             `).join('')}
                         </div>
                     </div>
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Marketing Intelligence Tabs -->
             <div class="border-b border-gray-200 mb-4">
                 <nav class="-mb-px flex space-x-8">
@@ -3851,11 +4849,27 @@ function showMarketingIntelligenceModal(data) {
                         🎯 Conversion
                     </button>
                     <button onclick="showMarketingTab('channels')" class="marketing-tab-btn py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+=======
+            <!- Marketing Intelligence Tabs ->
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="showMarketingTab('selling')" class="marketing-tab-btn active border-b-2 border-purple-500 font-medium text-sm text-purple-600">
+                        💰 Selling Points
+                    </button>
+                    <button onclick="showMarketingTab('competitive')" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        ⚡ Competitive Edge
+                    </button>
+                    <button onclick="showMarketingTab('conversion')" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+                        🎯 Conversion
+                    </button>
+                    <button onclick="showMarketingTab('channels')" class="marketing-tab-btn border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         📢 Channels
                     </button>
                 </nav>
             </div>
             
+<<<<<<< HEAD
             <!-- Tab Content -->
             <div id="marketing-tab-content">
                 <!-- Selling Points Tab -->
@@ -3874,12 +4888,33 @@ function showMarketingIntelligenceModal(data) {
                             <div class="flex flex-wrap gap-2">
                                 ${data.marketingIntelligence.emotional_triggers.map(trigger => `
                                     <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">${trigger}</span>
+=======
+            <!- Tab Content ->
+            <div id="marketing-tab-content">
+                <!- Selling Points Tab ->
+                <div id="tab-selling" class="marketing-tab-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-green-50 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">💎 Key Selling Points</h5>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                ${data.marketingIntelligence.selling_points.map(point => `
+                                    <li class="flex items-start"><span class="text-green-600">•</span>${point}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="bg-blue-50 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">🎭 Emotional Triggers</h5>
+                            <div class="flex flex-wrap gap-2">
+                                ${data.marketingIntelligence.emotional_triggers.map(trigger => `
+                                    <span class="bg-blue-100 text-blue-800 text-xs rounded-full">${trigger}</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 `).join('')}
                             </div>
                         </div>
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Competitive Edge Tab -->
                 <div id="tab-competitive" class="marketing-tab-content hidden">
                     <div class="bg-red-50 rounded-lg p-4">
@@ -3887,6 +4922,15 @@ function showMarketingIntelligenceModal(data) {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             ${data.marketingIntelligence.competitive_advantages.map(advantage => `
                                 <div class="bg-white p-3 rounded-lg border border-red-200">
+=======
+                <!- Competitive Edge Tab ->
+                <div id="tab-competitive" class="marketing-tab-content hidden">
+                    <div class="bg-red-50 rounded-lg">
+                        <h5 class="font-semibold text-gray-800">🏆 Competitive Advantages</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${data.marketingIntelligence.competitive_advantages.map(advantage => `
+                                <div class="bg-white rounded-lg border border-red-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="font-medium text-gray-800 text-sm">${advantage}</div>
                                 </div>
                             `).join('')}
@@ -3894,6 +4938,7 @@ function showMarketingIntelligenceModal(data) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Conversion Tab -->
                 <div id="tab-conversion" class="marketing-tab-content hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3915,6 +4960,29 @@ function showMarketingIntelligenceModal(data) {
                                     <strong>Social Proof:</strong> Customer testimonials
                                 </div>
                                 <div class="bg-white p-2 rounded border border-pink-200">
+=======
+                <!- Conversion Tab ->
+                <div id="tab-conversion" class="marketing-tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-orange-50 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">🎯 Call-to-Action Ideas</h5>
+                            <ul class="text-sm text-gray-700 space-y-2">
+                                ${data.marketingIntelligence.call_to_action_suggestions.map(cta => `
+                                    <li class="bg-white rounded border border-orange-200 font-medium">"${cta}"</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div class="bg-pink-50 rounded-lg">
+                            <h5 class="font-semibold text-gray-800">⚡ Conversion Boosters</h5>
+                            <div class="space-y-2 text-sm text-gray-700">
+                                <div class="bg-white rounded border border-pink-200">
+                                    <strong>Urgency:</strong> Limited time offer
+                                </div>
+                                <div class="bg-white rounded border border-pink-200">
+                                    <strong>Social Proof:</strong> Customer testimonials
+                                </div>
+                                <div class="bg-white rounded border border-pink-200">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <strong>Guarantee:</strong> Satisfaction promise
                                 </div>
                             </div>
@@ -3922,6 +4990,7 @@ function showMarketingIntelligenceModal(data) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Marketing Channels Tab -->
                 <div id="tab-channels" class="marketing-tab-content hidden">
                     <div class="bg-indigo-50 rounded-lg p-4">
@@ -3929,6 +4998,15 @@ function showMarketingIntelligenceModal(data) {
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             ${data.marketingIntelligence.marketing_channels.map(channel => `
                                 <div class="bg-white p-3 rounded-lg border border-indigo-200 text-center">
+=======
+                <!- Marketing Channels Tab ->
+                <div id="tab-channels" class="marketing-tab-content hidden">
+                    <div class="bg-indigo-50 rounded-lg">
+                        <h5 class="font-semibold text-gray-800">📢 Recommended Marketing Channels</h5>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            ${data.marketingIntelligence.marketing_channels.map(channel => `
+                                <div class="bg-white rounded-lg border border-indigo-200 text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="font-medium text-gray-800 text-sm">${channel}</div>
                                 </div>
                             `).join('')}
@@ -3937,19 +5015,34 @@ function showMarketingIntelligenceModal(data) {
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- AI Analysis Summary -->
             <div class="mt-6 p-4 bg-gray-50 rounded-lg">
                 <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
                     <span class="mr-2">🧠</span> AI Analysis Summary
+=======
+            <!- AI Analysis Summary ->
+            <div class="bg-gray-50 rounded-lg">
+                <h4 class="font-semibold text-gray-800 flex items-center">
+                    <span class="">🧠</span> AI Analysis Summary
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </h4>
                 <p class="text-sm text-gray-700">${data.reasoning}</p>
             </div>
             
+<<<<<<< HEAD
             <div class="flex justify-between items-center mt-6">
                 <div class="text-xs text-gray-500">
                     Analysis saved to database • All suggestions are AI-generated recommendations
                 </div>
                 <button type="button" onclick="closeMarketingIntelligenceModal()" class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium">
+=======
+            <div class="flex justify-between items-center">
+                <div class="text-xs text-gray-500">
+                    Analysis saved to database • All suggestions are AI-generated recommendations
+                </div>
+                <button type="button" onclick="closeMarketingIntelligenceModal()" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 font-medium">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     Close Analysis
                 </button>
             </div>
@@ -4824,6 +5917,7 @@ function displayCurrentImages(images, isViewModal = false) {
     carouselContainer.className = 'image-carousel-container relative';
     carouselContainer.style.width = '100%';
     carouselContainer.innerHTML = `
+<<<<<<< HEAD
         <div class="image-carousel-wrapper overflow-hidden" style="width: 100%; max-width: 525px;">
             <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="${trackId}">
                 <!-- Images will be added here -->
@@ -4831,11 +5925,24 @@ function displayCurrentImages(images, isViewModal = false) {
         </div>
         ${images.length > 3 ? `
             <button type="button" class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', -1)">
+=======
+        <div class="image-carousel-wrapper overflow-hidden" >
+            <div class="image-carousel-track flex transition-transform duration-300 ease-in-out" id="${trackId}">
+                <!- Images will be added here ->
+            </div>
+        </div>
+        ${images.length > 3 ? `
+            <button type="button" class="carousel-nav carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', -1)">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
             </button>
+<<<<<<< HEAD
             <button type="button" class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full p-3 shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', 1)">
+=======
+            <button type="button" class="carousel-nav carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full shadow-lg z-10 transition-all" onclick="moveCarousel('${carouselType}', 1)">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -4854,14 +5961,21 @@ function displayCurrentImages(images, isViewModal = false) {
         imageDiv.style.width = '155px';
         imageDiv.style.marginRight = '15px';// Action buttons only for edit modal
         const actionButtons = isViewModal ? '' : `
+<<<<<<< HEAD
             <div class="flex gap-1 mt-1 flex-wrap">
                         ${!image.is_primary ? `<button type="button" data-action="set-primary" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
                                   <button type="button" data-action="delete-image" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs px-1 py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
+=======
+            <div class="flex gap-1 flex-wrap">
+                        ${!image.is_primary ? `<button type="button" data-action="set-primary" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Set as Primary">Primary</button>` : ''}
+                                  <button type="button" data-action="delete-image" data-sku="${image.sku}" data-image-id="${image.id}" class="text-xs py-0.5 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Delete Image">Delete</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </div>
         `;
         
         imageDiv.innerHTML = `
             <div class="relative bg-white border-2 rounded-lg overflow-hidden shadow-md h-full">
+<<<<<<< HEAD
                 <div class="relative carousel-image-container" style="height: 150px;">
                     <img src="${image.image_path}" alt="${image.alt_text}" 
                          class="w-full h-full object-contain bg-gray-50 carousel-image" 
@@ -4871,6 +5985,17 @@ function displayCurrentImages(images, isViewModal = false) {
                 <div class="p-2 bg-gray-50">
                     ${!isViewModal ? `<div class="text-xs text-gray-700 truncate font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>` : ''}
                     ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold mt-1">⭐ Primary</div>' : ''}
+=======
+                <div class="relative carousel-image-container" >
+                    <img src="${image.image_path}" alt="${image.alt_text}" 
+                         class="w-full h-full object-contain bg-gray-50 carousel-image" 
+                                                     onerror="this.style.display='none'; this.parentElement.innerHTML = '<div class=\''u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px\''><div class=\''u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7\''>📷</div><div class=\''u-font-size-0-8rem u-font-weight-500\''>Image Not Found</div></div>';"
+                         >
+                </div>
+                <div class="bg-gray-50">
+                    ${!isViewModal ? `<div class="text-xs text-gray-700 font-medium" title="${image.image_path.split('/').pop()}">${image.image_path.split('/').pop()}</div>` : ''}
+                    ${image.is_primary ? '<div class="text-xs text-green-600 font-semibold">⭐ Primary</div>' : ''}
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     ${actionButtons}
                 </div>
             </div>
@@ -4949,17 +6074,30 @@ function loadThumbnailImage(sku, container) {
             
             container.innerHTML = `
                 <img src="${webpPath}" alt="thumb" 
+<<<<<<< HEAD
                      style="width:40px;height:40px;object-fit:cover;border-radius:6px;box-shadow:0 1px 3px #bbb;"
                      onerror="console.log('WebP failed, trying PNG'); this.src='${originalPath}'; this.onerror=function(){console.log('PNG also failed'); this.parentElement.innerHTML='<div style=&quot;width:40px;height:40px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#999;&quot;>No img</div>';}">
             `;
         } else {
             console.log('No images found for', sku);
                                     container.innerHTML = '<div class="thumbnail-placeholder">No img</div>';
+=======
+                     
+                     onerror="console.log('WebP failed, trying PNG'); this.src='${originalPath}'; this.onerror=function(){console.log('PNG also failed'); this.parentElement.innerHTML = '<div class=\''u-width-40px u-height-40px u-background-f0f0f0 u-border-radius-6px u-display-flex u-align-items-center u-justify-content-center u-font-size-12px u-color-999\''>No img</div>';}">
+            `;
+        } else {
+            console.log('No images found for', sku);
+            container.innerHTML = '<div >No img</div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
     })
     .catch(error => {
         console.error('Error loading thumbnail for', sku, ':', error);
+<<<<<<< HEAD
                             container.innerHTML = '<div class="thumbnail-placeholder">Error</div>';
+=======
+        container.innerHTML = '<div >Error</div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     });
 }
 
@@ -5945,8 +7083,13 @@ function showMarketingManagerTab(tabName) {
 
 function loadMarketingData() {const contentDiv = document.getElementById('marketingManagerContent');if (contentDiv) {
         contentDiv.innerHTML = '<div class="modal-loading">' +
+<<<<<<< HEAD
             '<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>' +
             '<p class="mt-4 text-gray-600">Loading marketing data...</p>' +
+=======
+            '<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>' +
+            '<p class="text-gray-600">Loading marketing data...</p>' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         '</div>';
         
         // Force content div to be visible with clean styling
@@ -5980,11 +7123,19 @@ function loadMarketingTabContent(tabName) {
 
 function loadContentTab(contentDiv) {
     contentDiv.innerHTML = '<div class="space-y-6">' +
+<<<<<<< HEAD
         '<div class="bg-purple-200 rounded-lg p-3 mb-4">' +
             '<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 items-end">' +
                 '<div>' +
                     '<label class="block text-xs text-white mb-1">Brand Voice</label>' +
                     '<select id="brandVoice" class="w-full p-2 border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'brand_voice\', this.value)">' +
+=======
+        '<div class="bg-purple-200 rounded-lg">' +
+            '<div class="grid grid-cols-1 lg:grid-cols-4 gap-3 items-end">' +
+                '<div>' +
+                    '<label class="block text-xs text-white">Brand Voice</label>' +
+                    '<select id="brandVoice" class="w-full border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'brand_voice\', this.value)">' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         '<option value="">Select voice...</option>' +
                         '<option value="friendly">Friendly</option>' +
                         '<option value="professional">Professional</option>' +
@@ -5994,8 +7145,13 @@ function loadContentTab(contentDiv) {
                     '</select>' +
                 '</div>' +
                 '<div>' +
+<<<<<<< HEAD
                     '<label class="block text-xs text-white mb-1">Content Tone</label>' +
                     '<select id="contentTone" class="w-full p-2 border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'content_tone\', this.value)">' +
+=======
+                    '<label class="block text-xs text-white">Content Tone</label>' +
+                    '<select id="contentTone" class="w-full border border-purple-200 rounded bg-gray-50 text-sm" onchange="updateGlobalMarketingDefault(\'content_tone\', this.value)">' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         '<option value="">Select tone...</option>' +
                         '<option value="informative">Informative</option>' +
                         '<option value="persuasive">Persuasive</option>' +
@@ -6005,35 +7161,63 @@ function loadContentTab(contentDiv) {
                     '</select>' +
                 '</div>' +
                 '<div>' +
+<<<<<<< HEAD
                     '<button onclick="generateAllMarketingContent()" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-xs font-medium">' +
+=======
+                    '<button onclick="generateAllMarketingContent()" class="w-full bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium">' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         '🧠 Generate AI' +
                     '</button>' +
                 '</div>' +
                 '<div>' +
+<<<<<<< HEAD
                     '<button onclick="generateFreshMarketingComparison()" class="w-full bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded text-xs font-medium">' +
+=======
+                    '<button onclick="generateFreshMarketingComparison()" class="w-full bg-orange-600 hover:bg-orange-700 text-white rounded text-xs font-medium">' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         '🔥 Fresh Start' +
                     '</button>' +
                 '</div>' +
             '</div>' +
+<<<<<<< HEAD
             '<div class="mt-2 text-center">' +
+=======
+            '<div class="text-center">' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 '<p class="text-xs text-white">💡 Global settings • AI generates content for all tabs based on voice & tone</p>' +
             '</div>' +
         '</div>' +
         '<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">' +
+<<<<<<< HEAD
             '<div class="bg-blue-50 rounded-lg p-4">' +
                 '<label class="block text-sm font-medium text-gray-800 mb-2">📝 Item Title</label>' +
                                   '<textarea id="marketingTitle" class="w-full p-3 border border-blue-300 rounded-lg text-sm resize-none" rows="2" placeholder="Enter enhanced item title..."></textarea>' +
                 '<div class="mt-2 flex justify-center">' +
                     '<button onclick="applyAndSaveMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-xs font-medium" style="display: none;">' +
+=======
+            '<div class="bg-blue-50 rounded-lg">' +
+                '<label class="block text-sm font-medium text-gray-800">📝 Item Title</label>' +
+                                  '<textarea id="marketingTitle" class="w-full border border-blue-300 rounded-lg text-sm resize-none" rows="2" placeholder="Enter enhanced item title..."></textarea>' +
+                '<div class="flex justify-center">' +
+                    '<button onclick="applyAndSaveMarketingTitle()" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium" class="hidden">' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         '📝 Apply & Save' +
                     '</button>' +
                 '</div>' +
             '</div>' +
+<<<<<<< HEAD
             '<div class="bg-green-50 rounded-lg p-4">' +
                 '<label class="block text-sm font-medium text-gray-800 mb-2">📄 Item Description</label>' +
                                   '<textarea id="marketingDescription" class="w-full p-3 border border-green-300 rounded-lg text-sm resize-none" rows="4" placeholder="Enter detailed item description..."></textarea>' +
                 '<div class="mt-2 flex justify-center">' +
                     '<button onclick="applyAndSaveMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-xs font-medium" style="display: none;">' +
+=======
+            '<div class="bg-green-50 rounded-lg">' +
+                '<label class="block text-sm font-medium text-gray-800">📄 Item Description</label>' +
+                                  '<textarea id="marketingDescription" class="w-full border border-green-300 rounded-lg text-sm resize-none" rows="4" placeholder="Enter detailed item description..."></textarea>' +
+                '<div class="flex justify-center">' +
+                    '<button onclick="applyAndSaveMarketingDescription()" class="bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium" class="hidden">' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         '📝 Apply & Save' +
                     '</button>' +
                 '</div>' +
@@ -6058,6 +7242,7 @@ function loadAudienceTab(contentDiv) {
     contentDiv.innerHTML = '<div class="space-y-6">' +
         '<h3 class="text-lg font-semibold text-gray-800">Target Audience Management</h3>' +
         '<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">' +
+<<<<<<< HEAD
             '<div class="bg-orange-50 rounded-lg p-4">' +
                 '<label class="block text-sm font-medium text-gray-700 mb-2">Primary Target Audience</label>' +
                 '<textarea id="targetAudience" class="w-full p-3 border border-orange-200 rounded-lg" rows="3" placeholder="Describe your ideal customer..."></textarea>' +
@@ -6073,6 +7258,23 @@ function loadAudienceTab(contentDiv) {
             '<label class="block text-sm font-medium text-gray-700 mb-2">Psychographic Profile</label>' +
             '<textarea id="psychographics" class="w-full p-3 border border-indigo-200 rounded-lg" rows="3" placeholder="Interests, values, lifestyle, personality traits..."></textarea>' +
             '<button onclick="saveMarketingField(\'psychographic_profile\')" class="mt-2 text-indigo-600 hover:text-indigo-800 text-sm" style="display: none;">Save</button>' +
+=======
+            '<div class="bg-orange-50 rounded-lg">' +
+                '<label class="block text-sm font-medium text-gray-700">Primary Target Audience</label>' +
+                '<textarea id="targetAudience" class="w-full border border-orange-200 rounded-lg" rows="3" placeholder="Describe your ideal customer..."></textarea>' +
+                '<button onclick="saveMarketingField(\'target_audience\')" class="text-orange-600 hover:text-orange-800 text-sm" class="hidden">Save</button>' +
+            '</div>' +
+            '<div class="bg-pink-50 rounded-lg">' +
+                '<label class="block text-sm font-medium text-gray-700">Demographics</label>' +
+                '<textarea id="demographics" class="w-full border border-pink-200 rounded-lg" rows="3" placeholder="Age, gender, income, location..."></textarea>' +
+                '<button onclick="saveMarketingField(\'demographic_targeting\')" class="text-pink-600 hover:text-pink-800 text-sm" class="hidden">Save</button>' +
+            '</div>' +
+        '</div>' +
+        '<div class="bg-indigo-50 rounded-lg">' +
+            '<label class="block text-sm font-medium text-gray-700">Psychographic Profile</label>' +
+            '<textarea id="psychographics" class="w-full border border-indigo-200 rounded-lg" rows="3" placeholder="Interests, values, lifestyle, personality traits..."></textarea>' +
+            '<button onclick="saveMarketingField(\'psychographic_profile\')" class="text-indigo-600 hover:text-indigo-800 text-sm" class="hidden">Save</button>' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         '</div>' +
     '</div>';
     
@@ -6088,11 +7290,16 @@ function loadAudienceTab(contentDiv) {
 
 function loadSellingTab(contentDiv) {
     contentDiv.innerHTML = `
+<<<<<<< HEAD
         <div class="max-h-[60vh] overflow-y-auto pr-2">
+=======
+        <div class="max-h-[60vh] overflow-y-auto">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="space-y-6">
                 <h3 class="text-lg font-semibold text-gray-800">Selling Points & Advantages</h3>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<<<<<<< HEAD
                     <div class="bg-green-50 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-2">
                             <label class="block text-sm font-medium text-gray-700">Key Selling Points</label>
@@ -6125,6 +7332,40 @@ function loadSellingTab(contentDiv) {
                         <!-- Dynamic content -->
                     </div>
                     <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full p-2 border border-yellow-200 rounded" onkeypress="if(event.key==='Enter') addListItem('customer_benefits')">
+=======
+                    <div class="bg-green-50 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">Key Selling Points</label>
+                            <button onclick="addListItem('selling_points')" class="text-green-600 hover:text-green-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="sellingPointsList" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!- Dynamic content ->
+                        </div>
+                        <input type="text" id="newSellingPoint" placeholder="Enter new selling point..." class="w-full border border-green-200 rounded" onkeypress="if(event.key==='Enter') addListItem('selling_points')">
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">Competitive Advantages</label>
+                            <button onclick="addListItem('competitive_advantages')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="competitiveAdvantagesList" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!- Dynamic content ->
+                        </div>
+                        <input type="text" id="newCompetitiveAdvantage" placeholder="What makes you better..." class="w-full border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('competitive_advantages')">
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-sm font-medium text-gray-700">Customer Benefits</label>
+                        <button onclick="addListItem('customer_benefits')" class="text-yellow-600 hover:text-yellow-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="customerBenefitsList" class="space-y-2 max-h-40 overflow-y-auto">
+                        <!- Dynamic content ->
+                    </div>
+                    <input type="text" id="newCustomerBenefit" placeholder="What benefit does customer get..." class="w-full border border-yellow-200 rounded" onkeypress="if(event.key==='Enter') addListItem('customer_benefits')">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         </div>
@@ -6135,6 +7376,7 @@ function loadSellingTab(contentDiv) {
 
 function loadSEOTab(contentDiv) {
     contentDiv.innerHTML = `
+<<<<<<< HEAD
         <div class="max-h-[60vh] overflow-y-auto pr-2">
             <div class="space-y-6">
                 <h3 class="text-lg font-semibold text-gray-800">SEO & Keywords</h3>
@@ -6154,12 +7396,34 @@ function loadSEOTab(contentDiv) {
                     <div class="bg-purple-50 rounded-lg p-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Search Intent</label>
                         <select id="searchIntent" class="w-full p-2 border border-purple-200 rounded">
+=======
+        <div class="max-h-[60vh] overflow-y-auto">
+            <div class="space-y-6">
+                <h3 class="text-lg font-semibold text-gray-800">SEO & Keywords</h3>
+                
+                <div class="bg-blue-50 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-sm font-medium text-gray-700">SEO Keywords</label>
+                        <button onclick="addListItem('seo_keywords')" class="text-blue-600 hover:text-blue-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="seoKeywordsList" class="space-y-2 max-h-40 overflow-y-auto">
+                        <!- Dynamic content ->
+                    </div>
+                    <input type="text" id="newSEOKeyword" placeholder="Enter keyword or phrase..." class="w-full border border-blue-200 rounded" onkeypress="if(event.key==='Enter') addListItem('seo_keywords')">
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-purple-50 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700">Search Intent</label>
+                        <select id="searchIntent" class="w-full border border-purple-200 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <option value="">Select intent...</option>
                             <option value="informational">Informational</option>
                             <option value="navigational">Navigational</option>
                             <option value="transactional">Transactional</option>
                             <option value="commercial">Commercial Investigation</option>
                         </select>
+<<<<<<< HEAD
                         <button onclick="saveMarketingField('search_intent')" class="mt-2 text-purple-600 hover:text-purple-800 text-sm" style="display: none;">Save</button>
                     </div>
                     
@@ -6167,6 +7431,15 @@ function loadSEOTab(contentDiv) {
                         <label class="block text-sm font-medium text-gray-700 mb-2">Seasonal Relevance</label>
                         <textarea id="seasonalRelevance" class="w-full p-3 border border-green-200 rounded-lg" rows="3" placeholder="Christmas, summer, back-to-school, etc..."></textarea>
                         <button onclick="saveMarketingField('seasonal_relevance')" class="mt-2 text-green-600 hover:text-green-800 text-sm" style="display: none;">Save</button>
+=======
+                        <button onclick="saveMarketingField('search_intent')" class="text-purple-600 hover:text-purple-800 text-sm" class="hidden">Save</button>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg">
+                        <label class="block text-sm font-medium text-gray-700">Seasonal Relevance</label>
+                        <textarea id="seasonalRelevance" class="w-full border border-green-200 rounded-lg" rows="3" placeholder="Christmas, summer, back-to-school, etc..."></textarea>
+                        <button onclick="saveMarketingField('seasonal_relevance')" class="text-green-600 hover:text-green-800 text-sm" class="hidden">Save</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     </div>
                 </div>
             </div>
@@ -6183,11 +7456,16 @@ function loadSEOTab(contentDiv) {
 
 function loadConversionTab(contentDiv) {
     contentDiv.innerHTML = `
+<<<<<<< HEAD
         <div class="max-h-[60vh] overflow-y-auto pr-2">
+=======
+        <div class="max-h-[60vh] overflow-y-auto">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="space-y-6">
                 <h3 class="text-lg font-semibold text-gray-800">Conversion Optimization</h3>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<<<<<<< HEAD
                     <div class="bg-orange-50 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-2">
                             <label class="block text-sm font-medium text-gray-700">Call-to-Action Suggestions</label>
@@ -6220,6 +7498,40 @@ function loadConversionTab(contentDiv) {
                         <!-- Dynamic content -->
                     </div>
                     <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full p-2 border border-purple-200 rounded" onkeypress="if(event.key==='Enter') addListItem('conversion_triggers')">
+=======
+                    <div class="bg-orange-50 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">Call-to-Action Suggestions</label>
+                            <button onclick="addListItem('call_to_action_suggestions')" class="text-orange-600 hover:text-orange-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="callToActionsList" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!- Dynamic content ->
+                        </div>
+                        <input type="text" id="newCallToAction" placeholder="Get Yours Today, Buy Now, etc..." class="w-full border border-orange-200 rounded" onkeypress="if(event.key==='Enter') addListItem('call_to_action_suggestions')">
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-medium text-gray-700">Urgency Factors</label>
+                            <button onclick="addListItem('urgency_factors')" class="text-red-600 hover:text-red-800 text-sm">+ Add</button>
+                        </div>
+                        <div id="urgencyFactorsList" class="space-y-2 max-h-40 overflow-y-auto">
+                            <!- Dynamic content ->
+                        </div>
+                        <input type="text" id="newUrgencyFactor" placeholder="Limited time, while supplies last..." class="w-full border border-red-200 rounded" onkeypress="if(event.key==='Enter') addListItem('urgency_factors')">
+                    </div>
+                </div>
+                
+                <div class="bg-purple-50 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-sm font-medium text-gray-700">Conversion Triggers</label>
+                        <button onclick="addListItem('conversion_triggers')" class="text-purple-600 hover:text-purple-800 text-sm">+ Add</button>
+                    </div>
+                    <div id="conversionTriggersList" class="space-y-2 max-h-40 overflow-y-auto">
+                        <!- Dynamic content ->
+                    </div>
+                    <input type="text" id="newConversionTrigger" placeholder="Free shipping, money-back guarantee..." class="w-full border border-purple-200 rounded" onkeypress="if(event.key==='Enter') addListItem('conversion_triggers')">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         </div>
@@ -7257,7 +8569,11 @@ function showAIComparisonModal() {const modal = document.getElementById('aiCompa
     
     const contentDiv = document.getElementById('aiComparisonContent');
     if (contentDiv) {
+<<<<<<< HEAD
         contentDiv.innerHTML = '<div class="text-center text-gray-500 py-8">AI analysis in progress...</div>';
+=======
+        contentDiv.innerHTML = '<div class="text-center text-gray-500">AI analysis in progress...</div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }}
 
 function closeAIComparisonModal() {const modal = document.getElementById('aiComparisonModal');
@@ -7450,7 +8766,11 @@ function buildComparisonInterface(aiData, currentMarketingData) {
     
     // Build comparison interface
     let html = '<div class="space-y-6">';
+<<<<<<< HEAD
     html += '<div class="text-center mb-6">';
+=======
+    html += '<div class="text-center">';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     html += '<h3 class="text-lg font-semibold text-gray-800">🎯 AI Content Comparison</h3>';
     html += '<p class="text-sm text-gray-600">Review and select which AI-generated content to apply to your item</p>';
     html += '</div>';
@@ -7513,24 +8833,41 @@ function buildComparisonInterface(aiData, currentMarketingData) {
     if (availableFields.length > 0) {
         html = html.replace('<div class="space-y-6">', `
             <div class="space-y-6">
+<<<<<<< HEAD
             <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <input type="checkbox" id="selectAllComparison" class="mr-3 h-4 w-4 text-blue-600 border-gray-300 rounded" onchange="toggleSelectAll()">
+=======
+            <div class="bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="selectAllComparison" class="h-4 w-4 text-blue-600 border-gray-300 rounded" onchange="toggleSelectAll()">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <label for="selectAllComparison" class="font-medium text-blue-800">Select All AI Suggestions</label>
                     </div>
                     <span class="text-sm text-blue-600">${availableFields.length} suggestions available</span>
                 </div>
+<<<<<<< HEAD
                 <p class="text-sm text-blue-600 mt-2">Apply all AI-generated content to your item at once</p>
+=======
+                <p class="text-sm text-blue-600">Apply all AI-generated content to your item at once</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </div>
         `);
     }
     
     // Only show "no changes" message if there are truly no available fields
     if (availableFields.length === 0) {
+<<<<<<< HEAD
         html += '<div class="text-center py-8 text-gray-500">';
         html += '<p>No changes detected. All AI suggestions match your current content.</p>';
         html += '<div class="mt-4 text-xs bg-gray-100 p-4 rounded">';
+=======
+        html += '<div class="text-center text-gray-500">';
+        html += '<p>No changes detected. All AI suggestions match your current content.</p>';
+        html += '<div class="text-xs bg-gray-100 rounded">';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         html += '<strong>Debug Info:</strong><br>';
         html += `Current Title: "${document.getElementById('name')?.value || 'N/A'}"<br>`;
         html += `AI Title: "${aiData.title || 'N/A'}"<br>`;
@@ -7560,21 +8897,38 @@ function buildComparisonInterface(aiData, currentMarketingData) {
 function createComparisonCard(fieldKey, fieldLabel, currentValue, suggestedValue) {
     const cardId = `comparison-${fieldKey}`;
     return `
+<<<<<<< HEAD
         <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
             <div class="flex items-center justify-between mb-3">
                 <h4 class="font-medium text-gray-800">${fieldLabel}</h4>
                 <label class="flex items-center">
                     <input type="checkbox" id="${cardId}-checkbox" class="mr-2" onchange="toggleComparison('${fieldKey}')">
+=======
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div class="flex items-center justify-between">
+                <h4 class="font-medium text-gray-800">${fieldLabel}</h4>
+                <label class="flex items-center">
+                    <input type="checkbox" id="${cardId}-checkbox" class="" onchange="toggleComparison('${fieldKey}')">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span class="text-sm text-gray-600">Apply AI suggestion</span>
                 </label>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<<<<<<< HEAD
                 <div class="bg-gray-50 p-3 rounded">
                     <h5 class="text-sm font-medium text-gray-600 mb-2">Current</h5>
                     <p class="text-sm text-gray-800">${currentValue || '<em>No current value</em>'}</p>
                 </div>
                 <div class="bg-green-50 p-3 rounded">
                     <h5 class="text-sm font-medium text-green-600 mb-2">AI Suggested</h5>
+=======
+                <div class="bg-gray-50 rounded">
+                    <h5 class="text-sm font-medium text-gray-600">Current</h5>
+                    <p class="text-sm text-gray-800">${currentValue || '<em>No current value</em>'}</p>
+                </div>
+                <div class="bg-green-50 rounded">
+                    <h5 class="text-sm font-medium text-green-600">AI Suggested</h5>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <p class="text-sm text-gray-800">${suggestedValue}</p>
                 </div>
             </div>
@@ -7884,9 +9238,15 @@ function renderColors(colors) {
             `Stock out of sync! Colors total: ${totalColorStock}, Item stock: ${currentItemStock}`;
         
         html += `
+<<<<<<< HEAD
             <div class="mb-3 p-2 border rounded-lg ${syncClass}">
                 <div class="text-sm font-medium">${syncIcon} ${syncMessage}</div>
                 ${!isInSync ? '<div class="text-xs mt-1">Click "Sync Stock" to fix this.</div>' : ''}
+=======
+            <div class="border rounded-lg ${syncClass}">
+                <div class="text-sm font-medium">${syncIcon} ${syncMessage}</div>
+                ${!isInSync ? '<div class="text-xs">Click "Sync Stock" to fix this.</div>' : ''}
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </div>
         `;
     }
@@ -7897,9 +9257,15 @@ function renderColors(colors) {
         const activeText = isActive ? '' : ' (Inactive)';
         
         return `
+<<<<<<< HEAD
             <div class="color-item flex items-center justify-between p-3 border border-gray-200 rounded-lg ${activeClass}">
                 <div class="flex items-center space-x-3">
                     <div class="color-swatch w-8 h-8 rounded-full border-2 border-gray-300" style="background-color: ${color.color_code || '#ccc'}"></div>
+=======
+            <div class="color-item flex items-center justify-between border border-gray-200 rounded-lg ${activeClass}">
+                <div class="flex items-center space-x-3">
+                    <div class="color-swatch w-8 h-8 rounded-full border-2 border-gray-300" ></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <div>
                             <div class="font-medium text-gray-800">${color.color_name}${activeText}</div>
                             <div class="text-sm text-gray-500 flex items-center">
@@ -7912,13 +9278,21 @@ function renderColors(colors) {
                                       title="Click to edit stock level">
                                     ${color.stock_level}
                                 </span>
+<<<<<<< HEAD
                                 <span class="ml-1">in stock</span>
+=======
+                                <span class="">in stock</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </div>
                             ${color.image_path ? `<div class="text-xs text-blue-600">Image: ${color.image_path}</div>` : ''}
                         </div>
                 </div>
                 <div class="flex items-center space-x-2">
+<<<<<<< HEAD
                     <button type="button" onclick="deleteColor(${color.id})" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">
+=======
+                    <button type="button" onclick="deleteColor(${color.id})" class="bg-red-500 text-white rounded text-xs hover:bg-red-600">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         Delete
                     </button>
                 </div>
@@ -8099,7 +9473,11 @@ function showColorModal(color = null) {
 function createColorModal() {
     const modalHTML = `
         <div id="colorModal" class="modal-overlay hidden">
+<<<<<<< HEAD
             <div class="modal-content" style="max-width: 1100px; max-height: 90vh; overflow-y: auto;">
+=======
+            <div class="modal-content" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="modal-header">
                     <h2 id="colorModalTitle">Add New Color</h2>
                     <button type="button" class="modal-close" onclick="closeColorModal()">&times;</button>
@@ -8108,6 +9486,7 @@ function createColorModal() {
                     <form id="colorForm" onsubmit="saveColor(event)">
                         <input type="hidden" id="colorId" name="colorId">
                         
+<<<<<<< HEAD
                         <!-- Two-column layout -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <!-- Left Column: Color Selection & Basic Info -->
@@ -8121,12 +9500,28 @@ function createColorModal() {
                                         <option value="">Choose a color...</option>
                                     </select>
                                     <div class="mt-2 text-xs">
+=======
+                        <!- Two-column layout ->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <!- Left Column: Color Selection & Basic Info ->
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="globalColorSelect" class="block text-sm font-medium text-gray-700">
+                                        Select Color *
+                                        <span class="text-xs text-gray-500">(from predefined colors)</span>
+                                    </label>
+                                    <select id="globalColorSelect" name="globalColorSelect" required class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2"  onchange="handleGlobalColorSelection()">
+                                        <option value="">Choose a color...</option>
+                                    </select>
+                                    <div class="text-xs">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <a href="#" onclick="openGlobalColorsManagement()" class="text-blue-600 hover:text-blue-800">
                                             ⚙️ Manage Global Colors in Settings
                                         </a>
                                     </div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Hidden fields populated by global color selection -->
                                 <input type="hidden" id="colorName" name="colorName">
                                 <input type="hidden" id="colorCode" name="colorCode">
@@ -8135,6 +9530,16 @@ function createColorModal() {
                                 <div id="selectedColorPreview" class="hidden">
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Selected Color Preview</label>
                                     <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+=======
+                                <!- Hidden fields populated by global color selection ->
+                                <input type="hidden" id="colorName" name="colorName">
+                                <input type="hidden" id="colorCode" name="colorCode">
+                                
+                                <!- Display selected color ->
+                                <div id="selectedColorPreview" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700">Selected Color Preview</label>
+                                    <div class="flex items-center space-x-3 bg-gray-50 rounded-lg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <div id="colorPreviewSwatch" class="w-12 h-12 rounded border-2 border-gray-300 shadow-sm"></div>
                                         <div>
                                             <div id="colorPreviewName" class="font-medium text-gray-900"></div>
@@ -8144,6 +9549,7 @@ function createColorModal() {
                                 </div>
                                 
                                 <div>
+<<<<<<< HEAD
                                     <label for="colorStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
                                     <input type="number" id="colorStockLevel" name="stockLevel" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
                                 </div>
@@ -8151,16 +9557,30 @@ function createColorModal() {
                                 <div>
                                     <label for="displayOrder" class="block text-sm font-medium text-gray-700 mb-2">Display Order</label>
                                     <input type="number" id="displayOrder" name="displayOrder" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
+=======
+                                    <label for="colorStockLevel" class="block text-sm font-medium text-gray-700">Stock Level</label>
+                                    <input type="number" id="colorStockLevel" name="stockLevel" min="0" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2" >
+                                </div>
+                                
+                                <div>
+                                    <label for="displayOrder" class="block text-sm font-medium text-gray-700">Display Order</label>
+                                    <input type="number" id="displayOrder" name="displayOrder" min="0" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 </div>
                                 
                                 <div>
                                     <label class="flex items-center">
+<<<<<<< HEAD
                                         <input type="checkbox" id="isActive" name="isActive" class="mr-2">
+=======
+                                        <input type="checkbox" id="isActive" name="isActive" class="">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <span class="text-sm font-medium text-gray-700">Active (visible to customers)</span>
                                     </label>
                                 </div>
                             </div>
                             
+<<<<<<< HEAD
                             <!-- Right Column: Image Selection & Preview -->
                             <div class="space-y-4">
                                 <!-- Available Images Grid (moved to top) -->
@@ -8182,23 +9602,59 @@ function createColorModal() {
                                             <img id="imagePreview" src="" alt="Selected image preview" class="max-w-full max-h-64 object-contain rounded border border-gray-200 shadow-sm">
                                         </div>
                                         <div id="imagePreviewInfo" class="mt-3 text-center">
+=======
+                            <!- Right Column: Image Selection & Preview ->
+                            <div class="space-y-4">
+                                <!- Available Images Grid (moved to top) ->
+                                <div id="availableImagesGrid">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        Available Images
+                                        <span class="text-xs text-gray-500 font-normal">(click to select for this color)</span>
+                                    </label>
+                                    <div class="grid grid-cols-4 gap-3 max-h-48 overflow-y-auto border border-gray-200 rounded bg-gray-50">
+                                        <!- Images will be populated here ->
+                                    </div>
+                                </div>
+                                
+                                <!- Image Preview ->
+                                <div id="imagePreviewContainer" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700">Selected Image Preview</label>
+                                    <div class="border border-gray-300 rounded-lg bg-gray-50">
+                                        <div class="flex justify-center">
+                                            <img id="imagePreview" src="" alt="Selected image preview" class="max-h-64 object-contain rounded border border-gray-200 shadow-sm">
+                                        </div>
+                                        <div id="imagePreviewInfo" class="text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <div id="imagePreviewName" class="text-sm font-medium text-gray-700"></div>
                                             <div id="imagePreviewPath" class="text-xs text-gray-500"></div>
                                         </div>
                                     </div>
                                 </div>
                                 
+<<<<<<< HEAD
                                 <!-- Hidden field for storing selected image path -->
+=======
+                                <!- Hidden field for storing selected image path ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <input type="hidden" id="colorImagePath" name="colorImagePath" value="">
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <!-- Action Buttons -->
                         <div class="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-200">
                             <button type="button" onclick="closeColorModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
                             </button>
                             <button type="submit" class="px-4 py-2 text-white rounded transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+=======
+                        <!- Action Buttons ->
+                        <div class="flex justify-end space-x-3 border-t border-gray-200">
+                            <button type="button" onclick="closeColorModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="text-white rounded transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 Save Color
                             </button>
                         </div>
@@ -8248,11 +9704,19 @@ async function loadAvailableImages() {
                 img.className = 'w-full h-20 object-cover rounded border border-gray-200 hover:border-green-400 transition-colors';
                 img.onerror = () => {
                     img.style.display = 'none';
+<<<<<<< HEAD
                     img.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:2rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.8rem;font-weight:500;">Image Not Found</div></div>';
                 };
                 
                 const label = document.createElement('div');
                 label.className = 'text-xs text-gray-600 mt-1 truncate text-center';
+=======
+                    img.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">Image Not Found</div></div>';
+                };
+                
+                const label = document.createElement('div');
+                label.className = 'text-xs text-gray-600 mt-1 text-center';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 label.textContent = image.image_path;
                 
                 if (image.is_primary) {
@@ -8271,14 +9735,22 @@ async function loadAvailableImages() {
             availableImagesGrid.style.display = 'block';
         } else {
             // Show message when no images available
+<<<<<<< HEAD
             gridContainer.innerHTML = '<div class="col-span-4 text-center text-gray-500 py-8"><div class="text-3xl mb-2">📷</div><div class="text-sm">No images available for this item</div></div>';
+=======
+            gridContainer.innerHTML = '<div class="col-span-4 text-center text-gray-500"><div class="text-3xl">📷</div><div class="text-sm">No images available for this item</div></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             availableImagesGrid.style.display = 'block';
         }
     } catch (error) {
         console.error('Error loading available images:', error);
         const gridContainer = availableImagesGrid?.querySelector('.grid');
         if (gridContainer) {
+<<<<<<< HEAD
             gridContainer.innerHTML = '<div class="col-span-4 text-center text-red-500 py-8"><div class="text-sm">Error loading images</div></div>';
+=======
+            gridContainer.innerHTML = '<div class="col-span-4 text-center text-red-500"><div class="text-sm">Error loading images</div></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
     }
 }
@@ -8315,7 +9787,11 @@ function updateImagePreview() {
         imagePreview.src = previewSrc;
         imagePreview.onerror = () => {
             imagePreview.style.display = 'none';
+<<<<<<< HEAD
             imagePreview.parentElement.innerHTML = '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f8f9fa;color:#6c757d;border-radius:8px;"><div style="font-size:3rem;margin-bottom:0.5rem;opacity:0.7;">📷</div><div style="font-size:0.9rem;font-weight:500;">No Image Available</div></div>';
+=======
+            imagePreview.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">No Image Available</div></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         };
         
         imagePreviewName.textContent = selectedImagePath;
@@ -8716,9 +10192,15 @@ function renderSizes(sizes) {
             `Stock out of sync! Sizes total: ${totalSizeStock}, Item stock: ${currentItemStock}`;
         
         html += `
+<<<<<<< HEAD
             <div class="mb-3 p-2 border rounded-lg ${syncClass}">
                 <div class="text-sm font-medium">${syncIcon} ${syncMessage}</div>
                 ${!isInSync ? '<div class="text-xs mt-1">Click "Sync Stock" to fix this.</div>' : ''}
+=======
+            <div class="border rounded-lg ${syncClass}">
+                <div class="text-sm font-medium">${syncIcon} ${syncMessage}</div>
+                ${!isInSync ? '<div class="text-xs">Click "Sync Stock" to fix this.</div>' : ''}
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </div>
         `;
     }
@@ -8730,8 +10212,13 @@ function renderSizes(sizes) {
         // Add group header if there are multiple groups
         if (Object.keys(groupedSizes).length > 1) {
             html += `
+<<<<<<< HEAD
                 <div class="mb-2 font-medium text-gray-700 flex items-center">
                     ${group.color_code ? `<div class="w-4 h-4 rounded border mr-2" style="background-color: ${group.color_code}"></div>` : ''}
+=======
+                <div class="font-medium text-gray-700 flex items-center">
+                    ${group.color_code ? `<div class="w-4 h-4 rounded border" ></div>` : ''}
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     ${group.color_name}
                 </div>
             `;
@@ -8745,9 +10232,15 @@ function renderSizes(sizes) {
             const priceAdjustmentText = size.price_adjustment > 0 ? ` (+$${size.price_adjustment})` : '';
             
             html += `
+<<<<<<< HEAD
                 <div class="size-item flex items-center justify-between p-3 border border-gray-200 rounded-lg ${activeClass} ml-${Object.keys(groupedSizes).length > 1 ? '4' : '0'}">
                     <div class="flex items-center space-x-3">
                         <div class="size-badge bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium">
+=======
+                <div class="size-item flex items-center justify-between border border-gray-200 rounded-lg ${activeClass} ml-${Object.keys(groupedSizes).length > 1 ? '4' : '0'}">
+                    <div class="flex items-center space-x-3">
+                        <div class="size-badge bg-blue-100 text-blue-800 rounded text-sm font-medium">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             ${size.size_code}
                         </div>
                         <div>
@@ -8762,12 +10255,20 @@ function renderSizes(sizes) {
                                       title="Click to edit stock level">
                                     ${size.stock_level}
                                 </span>
+<<<<<<< HEAD
                                 <span class="ml-1">in stock</span>
+=======
+                                <span class="">in stock</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
+<<<<<<< HEAD
                         <button type="button" onclick="deleteSize(${size.id})" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">
+=======
+                        <button type="button" onclick="deleteSize(${size.id})" class="bg-red-500 text-white rounded text-xs hover:bg-red-600">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             Delete
                         </button>
                     </div>
@@ -8898,7 +10399,11 @@ function showSizeModal(size = null) {
 function createSizeModal() {
     const modalHTML = `
         <div id="sizeModal" class="modal-overlay hidden">
+<<<<<<< HEAD
             <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+=======
+            <div class="modal-content" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="modal-header">
                     <h2 id="sizeModalTitle" class="text-xl font-semibold text-gray-800">Add New Size</h2>
                     <button type="button" onclick="closeSizeModal()" class="modal-close">&times;</button>
@@ -8907,6 +10412,7 @@ function createSizeModal() {
                     <form id="sizeForm" onsubmit="saveSize(event)">
                         <input type="hidden" id="sizeId" name="sizeId">
                         
+<<<<<<< HEAD
                         <div class="mb-6">
                             <label for="sizeColorId" class="block text-sm font-medium text-gray-700 mb-2">Color Association</label>
                             <select id="sizeColorId" name="sizeColorId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;">
@@ -8923,6 +10429,24 @@ function createSizeModal() {
                             <div>
                                 <label for="sizeCode" class="block text-sm font-medium text-gray-700 mb-2">Size Code *</label>
                                 <select id="sizeCode" name="sizeCode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2" style="--tw-ring-color: #87ac3a;" required>
+=======
+                        <div class="">
+                            <label for="sizeColorId" class="block text-sm font-medium text-gray-700">Color Association</label>
+                            <select id="sizeColorId" name="sizeColorId" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2" >
+                                <option value="">General Size (No specific color)</option>
+                            </select>
+                            <div class="text-xs text-gray-500">Choose a color if this size is specific to a particular color variant</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="sizeName" class="block text-sm font-medium text-gray-700">Size Name *</label>
+                                <input type="text" id="sizeName" name="sizeName" placeholder="e.g., Medium" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2"  required>
+                            </div>
+                            <div>
+                                <label for="sizeCode" class="block text-sm font-medium text-gray-700">Size Code *</label>
+                                <select id="sizeCode" name="sizeCode" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2"  required>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <option value="">Select size...</option>
                                     <option value="XS">XS</option>
                                     <option value="S">S</option>
@@ -8936,6 +10460,7 @@ function createSizeModal() {
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                             <div>
                                 <label for="sizeStockLevel" class="block text-sm font-medium text-gray-700 mb-2">Stock Level</label>
@@ -8957,16 +10482,47 @@ function createSizeModal() {
                             <div class="flex items-center pt-6">
                                 <label class="flex items-center">
                                     <input type="checkbox" id="sizeIsActive" name="sizeIsActive" class="mr-2">
+=======
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="sizeStockLevel" class="block text-sm font-medium text-gray-700">Stock Level</label>
+                                <input type="number" id="sizeStockLevel" name="sizeStockLevel" min="0" value="0" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2" >
+                            </div>
+                            <div>
+                                <label for="sizePriceAdjustment" class="block text-sm font-medium text-gray-700">Price Adjustment ($)</label>
+                                <input type="number" id="sizePriceAdjustment" name="sizePriceAdjustment" step="0.01" value="0.00" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2" >
+                                <div class="text-xs text-gray-500">Extra charge for this size (e.g., +$2 for XXL)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="sizeDisplayOrder" class="block text-sm font-medium text-gray-700">Display Order</label>
+                                <input type="number" id="sizeDisplayOrder" name="sizeDisplayOrder" min="0" value="0" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2" >
+                                <div class="text-xs text-gray-500">Lower numbers appear first</div>
+                            </div>
+                            <div class="flex items-center">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="sizeIsActive" name="sizeIsActive" class="">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <span class="text-sm font-medium text-gray-700">Active (available to customers)</span>
                                 </label>
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <div class="flex justify-end space-x-3 mt-8 pt-4 border-t border-gray-200">
                             <button type="button" onclick="closeSizeModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
                                 Cancel
                             </button>
                             <button type="submit" class="px-4 py-2 text-white rounded transition-colors" style="background-color: #87ac3a;" onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+=======
+                        <div class="flex justify-end space-x-3 border-t border-gray-200">
+                            <button type="button" onclick="closeSizeModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="text-white rounded transition-colors"  onmouseover="this.style.backgroundColor='#6b8e23'" onmouseout="this.style.backgroundColor='#87ac3a'">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 Save Size
                             </button>
                         </div>
@@ -9169,7 +10725,11 @@ async function openColorTemplateModal() {
 function createColorTemplateModal() {
     const modalHTML = `
         <div id="colorTemplateModal" class="modal-overlay hidden">
+<<<<<<< HEAD
             <div class="modal-content" style="max-width: 800px;">
+=======
+            <div class="modal-content" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="modal-header">
                     <h2 class="text-xl font-bold text-gray-800">🎨 Color Templates</h2>
                     <button type="button" onclick="closeColorTemplateModal()" class="text-gray-500 hover:text-gray-700">
@@ -9178,20 +10738,33 @@ function createColorTemplateModal() {
                         </svg>
                     </button>
                 </div>
+<<<<<<< HEAD
                 <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
                     <!-- Template Categories -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Category:</label>
                         <select id="colorTemplateCategory" onchange="filterColorTemplates()" class="w-full px-3 py-2 border border-gray-300 rounded">
+=======
+                <div class="modal-body" >
+                    <!- Template Categories ->
+                    <div class="">
+                        <label class="block text-sm font-medium text-gray-700">Filter by Category:</label>
+                        <select id="colorTemplateCategory" onchange="filterColorTemplates()" class="w-full border border-gray-300 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <option value="">All Categories</option>
                         </select>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Template List -->
+=======
+                    <!- Template List ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div id="colorTemplatesList" class="space-y-3">
                         <div class="text-center text-gray-500">Loading templates...</div>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Application Options -->
                     <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <h3 class="font-medium text-blue-800 mb-3">Application Options</h3>
@@ -9203,15 +10776,35 @@ function createColorTemplateModal() {
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Default Stock Level for New Colors:</label>
                                 <input type="number" id="defaultColorStock" value="0" min="0" class="w-32 px-3 py-2 border border-gray-300 rounded text-sm">
+=======
+                    <!- Application Options ->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 class="font-medium text-blue-800">Application Options</h3>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="replaceExistingColors" class="">
+                                <span class="text-sm">Replace existing colors (clear current colors first)</span>
+                            </label>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Default Stock Level for New Colors:</label>
+                                <input type="number" id="defaultColorStock" value="0" min="0" class="w-32 border border-gray-300 rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
+<<<<<<< HEAD
                     <button type="button" onclick="closeColorTemplateModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
                         Cancel
                     </button>
                     <button type="button" onclick="applySelectedColorTemplate()" id="applyColorTemplateBtn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
+=======
+                    <button type="button" onclick="closeColorTemplateModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="applySelectedColorTemplate()" id="applyColorTemplateBtn" class="bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         Apply Template
                     </button>
                 </div>
@@ -9278,16 +10871,27 @@ function renderColorTemplates() {
     }
     
     container.innerHTML = filteredTemplates.map(template => `
+<<<<<<< HEAD
         <div class="template-item border border-gray-200 rounded-lg p-4 hover:border-purple-300 cursor-pointer" 
              onclick="selectColorTemplate(${template.id})" data-template-id="${template.id}">
             <div class="flex justify-between items-start mb-2">
+=======
+        <div class="template-item border border-gray-200 rounded-lg hover:border-purple-300 cursor-pointer" 
+             onclick="selectColorTemplate(${template.id})" data-template-id="${template.id}">
+            <div class="flex justify-between items-start">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div>
                     <h4 class="font-medium text-gray-800">${template.template_name}</h4>
                     <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
                 </div>
                 <div class="text-right">
+<<<<<<< HEAD
                     <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
                     <div class="text-xs text-gray-500 mt-1">${template.color_count} colors</div>
+=======
+                    <span class="inline-block bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
+                    <div class="text-xs text-gray-500">${template.color_count} colors</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
             <div class="template-preview" id="colorPreview${template.id}">
@@ -9312,10 +10916,17 @@ async function loadColorTemplatePreview(templateId) {
             const previewContainer = document.getElementById(`colorPreview${templateId}`);
             if (previewContainer) {
                 previewContainer.innerHTML = `
+<<<<<<< HEAD
                     <div class="flex flex-wrap gap-1 mt-2">
                         ${data.template.colors.map(color => `
                             <div class="flex items-center space-x-1 text-xs">
                                 <div class="w-4 h-4 rounded border border-gray-300" style="background-color: ${color.color_code || '#ccc'}"></div>
+=======
+                    <div class="flex flex-wrap gap-1">
+                        ${data.template.colors.map(color => `
+                            <div class="flex items-center space-x-1 text-xs">
+                                <div class="w-4 h-4 rounded border border-gray-300" ></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <span>${color.color_name}</span>
                             </div>
                         `).join('')}
@@ -9431,7 +11042,11 @@ async function openSizeTemplateModal() {
 function createSizeTemplateModal() {
     const modalHTML = `
         <div id="sizeTemplateModal" class="modal-overlay hidden">
+<<<<<<< HEAD
             <div class="modal-content" style="max-width: 800px;">
+=======
+            <div class="modal-content" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="modal-header">
                     <h2 class="text-xl font-bold text-gray-800">📏 Size Templates</h2>
                     <button type="button" onclick="closeSizeTemplateModal()" class="text-gray-500 hover:text-gray-700">
@@ -9440,20 +11055,33 @@ function createSizeTemplateModal() {
                         </svg>
                     </button>
                 </div>
+<<<<<<< HEAD
                 <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
                     <!-- Template Categories -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Category:</label>
                         <select id="sizeTemplateCategory" onchange="filterSizeTemplates()" class="w-full px-3 py-2 border border-gray-300 rounded">
+=======
+                <div class="modal-body" >
+                    <!- Template Categories ->
+                    <div class="">
+                        <label class="block text-sm font-medium text-gray-700">Filter by Category:</label>
+                        <select id="sizeTemplateCategory" onchange="filterSizeTemplates()" class="w-full border border-gray-300 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <option value="">All Categories</option>
                         </select>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Template List -->
+=======
+                    <!- Template List ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div id="sizeTemplatesList" class="space-y-3">
                         <div class="text-center text-gray-500">Loading templates...</div>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- Application Options -->
                     <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                         <h3 class="font-medium text-blue-800 mb-3">Application Options</h3>
@@ -9467,32 +11095,68 @@ function createSizeTemplateModal() {
                                     </label>
                                     <label class="flex items-center">
                                         <input type="radio" name="sizeApplyMode" value="color_specific" class="mr-2">
+=======
+                    <!- Application Options ->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg">
+                        <h3 class="font-medium text-blue-800">Application Options</h3>
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Apply Mode:</label>
+                                <div class="space-y-2">
+                                    <label class="flex items-center">
+                                        <input type="radio" name="sizeApplyMode" value="general" class="" checked>
+                                        <span class="text-sm">General sizes (not color-specific)</span>
+                                    </label>
+                                    <label class="flex items-center">
+                                        <input type="radio" name="sizeApplyMode" value="color_specific" class="">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <span class="text-sm">Color-specific sizes</span>
                                     </label>
                                 </div>
                             </div>
                             <div id="colorSelectionForSizes" class="hidden">
+<<<<<<< HEAD
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Select Color:</label>
                                 <select id="sizeTemplateColorId" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+=======
+                                <label class="block text-sm font-medium text-gray-700">Select Color:</label>
+                                <select id="sizeTemplateColorId" class="w-full border border-gray-300 rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <option value="">Loading colors...</option>
                                 </select>
                             </div>
                             <label class="flex items-center">
+<<<<<<< HEAD
                                 <input type="checkbox" id="replaceExistingSizes" class="mr-2">
                                 <span class="text-sm">Replace existing sizes</span>
                             </label>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Default Stock Level for New Sizes:</label>
                                 <input type="number" id="defaultSizeStock" value="0" min="0" class="w-32 px-3 py-2 border border-gray-300 rounded text-sm">
+=======
+                                <input type="checkbox" id="replaceExistingSizes" class="">
+                                <span class="text-sm">Replace existing sizes</span>
+                            </label>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Default Stock Level for New Sizes:</label>
+                                <input type="number" id="defaultSizeStock" value="0" min="0" class="w-32 border border-gray-300 rounded text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
+<<<<<<< HEAD
                     <button type="button" onclick="closeSizeTemplateModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
                         Cancel
                     </button>
                     <button type="button" onclick="applySelectedSizeTemplate()" id="applySizeTemplateBtn" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
+=======
+                    <button type="button" onclick="closeSizeTemplateModal()" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="applySelectedSizeTemplate()" id="applySizeTemplateBtn" class="bg-purple-600 text-white rounded hover:bg-purple-700" disabled>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         Apply Template
                     </button>
                 </div>
@@ -9572,16 +11236,27 @@ function renderSizeTemplates() {
     }
     
     container.innerHTML = filteredTemplates.map(template => `
+<<<<<<< HEAD
         <div class="template-item border border-gray-200 rounded-lg p-4 hover:border-purple-300 cursor-pointer" 
              onclick="selectSizeTemplate(${template.id})" data-template-id="${template.id}">
             <div class="flex justify-between items-start mb-2">
+=======
+        <div class="template-item border border-gray-200 rounded-lg hover:border-purple-300 cursor-pointer" 
+             onclick="selectSizeTemplate(${template.id})" data-template-id="${template.id}">
+            <div class="flex justify-between items-start">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div>
                     <h4 class="font-medium text-gray-800">${template.template_name}</h4>
                     <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
                 </div>
                 <div class="text-right">
+<<<<<<< HEAD
                     <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
                     <div class="text-xs text-gray-500 mt-1">${template.size_count} sizes</div>
+=======
+                    <span class="inline-block bg-blue-100 text-blue-800 text-xs rounded">${template.category}</span>
+                    <div class="text-xs text-gray-500">${template.size_count} sizes</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
             <div class="template-preview" id="sizePreview${template.id}">
@@ -9606,9 +11281,15 @@ async function loadSizeTemplatePreview(templateId) {
             const previewContainer = document.getElementById(`sizePreview${templateId}`);
             if (previewContainer) {
                 previewContainer.innerHTML = `
+<<<<<<< HEAD
                     <div class="flex flex-wrap gap-2 mt-2">
                         ${data.template.sizes.map(size => `
                             <span class="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+=======
+                    <div class="flex flex-wrap gap-2">
+                        ${data.template.sizes.map(size => `
+                            <span class="inline-block bg-gray-100 text-gray-700 text-xs rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 ${size.size_name} (${size.size_code})${size.price_adjustment > 0 ? ' +$' + size.price_adjustment : size.price_adjustment < 0 ? ' $' + size.price_adjustment : ''}
                             </span>
                         `).join('')}
@@ -9906,8 +11587,13 @@ async function analyzeStructure() {
             const resultDiv = document.getElementById('structureAnalysisResult');
             
             let html = `
+<<<<<<< HEAD
                 <div class="mt-3 p-3 bg-white border border-yellow-300 rounded-lg">
                     <h4 class="font-medium text-gray-800 mb-2">📊 Analysis Results:</h4>
+=======
+                <div class="bg-white border border-yellow-300 rounded-lg">
+                    <h4 class="font-medium text-gray-800">📊 Analysis Results:</h4>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div class="text-sm space-y-1">
                         <div><strong>Colors:</strong> ${analysis.total_colors}</div>
                         <div><strong>Sizes:</strong> ${analysis.total_sizes}</div>
@@ -9916,8 +11602,13 @@ async function analyzeStructure() {
             
             if (analysis.structure_issues.length > 0) {
                 html += `
+<<<<<<< HEAD
                     <div class="mt-3">
                         <h5 class="font-medium text-red-700 mb-1">⚠️ Issues Found:</h5>
+=======
+                    <div class="">
+                        <h5 class="font-medium text-red-700">⚠️ Issues Found:</h5>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <ul class="text-sm text-red-600 space-y-1">
                             ${analysis.structure_issues.map(issue => `<li>• ${issue}</li>`).join('')}
                         </ul>
@@ -9927,8 +11618,13 @@ async function analyzeStructure() {
             
             if (analysis.recommendations.length > 0) {
                 html += `
+<<<<<<< HEAD
                     <div class="mt-3">
                         <h5 class="font-medium text-blue-700 mb-1">💡 Recommendations:</h5>
+=======
+                    <div class="">
+                        <h5 class="font-medium text-blue-700">💡 Recommendations:</h5>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <ul class="text-sm text-blue-600 space-y-1">
                             ${analysis.recommendations.map(rec => `<li>• ${rec}</li>`).join('')}
                         </ul>
@@ -9989,9 +11685,15 @@ function createRestructureModal(proposal) {
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
     
     modal.innerHTML = `
+<<<<<<< HEAD
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <!-- Fixed Header -->
             <div class="p-6 border-b border-gray-200 flex-shrink-0">
+=======
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <!- Fixed Header ->
+            <div class="border-b border-gray-200 flex-shrink-0">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800">✅ Current Size/Color Structure</h2>
                     <button type="button" onclick="closeRestructureModal()" class="text-gray-400 hover:text-gray-600">
@@ -10002,6 +11704,7 @@ function createRestructureModal(proposal) {
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc; max-height: calc(90vh - 160px);">
                 
@@ -10018,6 +11721,24 @@ function createRestructureModal(proposal) {
                     
                     <!-- Structure Info -->
                     <div class="bg-white bg-opacity-70 rounded-lg p-3">
+=======
+            <!- Scrollable Content ->
+            <div class="overflow-y-auto flex-1" >
+                
+                
+                <!- Summary Section ->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-800">✅ Hierarchy is CORRECT</h3>
+                        <div class="text-sm text-gray-600">
+                            <span class="bg-white rounded shadow-sm">${proposedSizes.length} sizes × ${allColors.length} colors = ${totalCombinations} combinations</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700">${message}</p>
+                    
+                    <!- Structure Info ->
+                    <div class="bg-white bg-opacity-70 rounded-lg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="text-sm">
                             <strong>Hierarchy:</strong> Item → Sizes → Colors → Stock<br>
                             <strong>Structure:</strong> Each size contains multiple colors as options
@@ -10025,6 +11746,7 @@ function createRestructureModal(proposal) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <!-- Content Sections -->
                 <div class="p-6">
                     <!-- Size-Color Combinations -->
@@ -10033,26 +11755,51 @@ function createRestructureModal(proposal) {
                             <h4 class="font-semibold text-gray-700 flex items-center">
                                 📦 Size-Color Combinations
                                 <span class="ml-2 text-sm text-gray-500">(${totalCombinations} active combinations)</span>
+=======
+                <!- Content Sections ->
+                <div class="">
+                    <!- Size-Color Combinations ->
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-semibold text-gray-700 flex items-center">
+                                📦 Size-Color Combinations
+                                <span class="text-sm text-gray-500">(${totalCombinations} active combinations)</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </h4>
                         </div>
                         
                         <div class="space-y-3" id="sizeColorCombinations">
                             ${proposedSizes.map((size, sizeIndex) => `
+<<<<<<< HEAD
                                 <div class="border border-gray-200 rounded-lg p-3">
                                     <div class="flex items-center justify-between mb-2">
                                         <div class="flex items-center space-x-2">
                                             <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">${size.code}</span>
+=======
+                                <div class="border border-gray-200 rounded-lg">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="bg-blue-100 text-blue-800 rounded text-xs font-medium">${size.code}</span>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <span class="text-sm font-semibold">${size.name}</span>
                                             ${size.price_adjustment > 0 ? `<span class="text-green-600 text-xs">+$${parseFloat(size.price_adjustment).toFixed(2)}</span>` : ''}
                                         </div>
                                         <span class="text-xs text-gray-500">${size.colors ? size.colors.length : 0} colors, ${size.stock || 0} total stock</span>
                                     </div>
                                     
+<<<<<<< HEAD
                                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ml-6">
                                         ${(size.colors || []).map((color, colorIndex) => `
                                             <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
                                                 <div class="flex items-center space-x-2">
                                                     <div class="w-3 h-3 rounded-full border border-gray-300" style="background-color: ${color.color_code}"></div>
+=======
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                        ${(size.colors || []).map((color, colorIndex) => `
+                                            <div class="flex items-center justify-between bg-gray-50 rounded border">
+                                                <div class="flex items-center space-x-2">
+                                                    <div class="w-3 h-3 rounded-full border border-gray-300" ></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                     <span class="text-xs font-medium">${color.color_name}</span>
                                                 </div>
                                                 <span class="text-xs text-gray-600">${color.stock_level}</span>
@@ -10063,21 +11810,34 @@ function createRestructureModal(proposal) {
                             `).join('')}
                         </div>
                         
+<<<<<<< HEAD
                         <div class="mt-3 text-xs text-gray-500 bg-yellow-50 p-3 rounded">
+=======
+                        <div class="text-xs text-gray-500 bg-yellow-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             💡 Each number represents the stock level for that specific size-color combination (e.g., "5" = 5 Small Red T-shirts)
                         </div>
                     </div>
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Fixed Footer -->
             <div class="p-4 border-t border-gray-200 flex-shrink-0 bg-gray-50">
+=======
+            <!- Fixed Footer ->
+            <div class="border-t border-gray-200 flex-shrink-0 bg-gray-50">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="flex items-center justify-between">
                     <div class="text-sm text-gray-600">
                         <span>✅ Structure is correct: Sizes → Colors → Stock</span>
                     </div>
                     <div class="flex gap-3">
+<<<<<<< HEAD
                         <button type="button" onclick="closeRestructureModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
+=======
+                        <button type="button" onclick="closeRestructureModal()" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             Close
                         </button>
                     </div>
@@ -10302,9 +12062,15 @@ function createStructureViewModal(data) {
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
     
     modal.innerHTML = `
+<<<<<<< HEAD
         <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <!-- Fixed Header -->
             <div class="p-6 border-b border-gray-200 flex-shrink-0">
+=======
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <!- Fixed Header ->
+            <div class="border-b border-gray-200 flex-shrink-0">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="flex justify-between items-center">
                     <h2 class="text-xl font-bold text-gray-800">👀 Current Structure View</h2>
                     <button type="button" onclick="closeStructureViewModal()" class="text-gray-400 hover:text-gray-600">
@@ -10315,30 +12081,54 @@ function createStructureViewModal(data) {
                 </div>
             </div>
             
+<<<<<<< HEAD
             <!-- Scrollable Content -->
             <div class="p-6 overflow-y-auto flex-1" style="scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc;">
                 
                 
                 <div class="mb-4">
                     <div class="text-sm text-gray-600 mb-4">
+=======
+            <!- Scrollable Content ->
+            <div class="overflow-y-auto flex-1" >
+                
+                
+                <div class="">
+                    <div class="text-sm text-gray-600">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <strong>Item:</strong> ${data.item_sku} | <strong>Total Combinations:</strong> ${data.total_combinations}
                     </div>
                 </div>
                 
                 ${data.structure.length === 0 ? `
+<<<<<<< HEAD
                     <div class="text-center text-gray-500 py-8">
                         <p>No properly structured size-color combinations found.</p>
                         <p class="mt-2">Use the "Restructure System" button to create a logical structure.</p>
+=======
+                    <div class="text-center text-gray-500">
+                        <p>No properly structured size-color combinations found.</p>
+                        <p class="">Use the "Restructure System" button to create a logical structure.</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     </div>
                 ` : `
                     <div class="space-y-4">
                         ${data.structure.map(size => `
+<<<<<<< HEAD
                             <div class="border border-gray-200 rounded-lg p-4">
                                 <div class="flex items-center justify-between mb-3">
                                     <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                                         <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-medium mr-2">${size.size_code}</span>
                                         ${size.size_name}
                                         ${size.price_adjustment > 0 ? `<span class="ml-2 text-green-600 text-sm">+$${size.price_adjustment}</span>` : ''}
+=======
+                            <div class="border border-gray-200 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                        <span class="bg-blue-100 text-blue-800 rounded text-sm font-medium">${size.size_code}</span>
+                                        ${size.size_name}
+                                        ${size.price_adjustment > 0 ? `<span class="text-green-600 text-sm">+$${size.price_adjustment}</span>` : ''}
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     </h3>
                                     <div class="text-sm text-gray-600">
                                         <strong>Total Stock:</strong> ${size.total_stock}
@@ -10347,9 +12137,15 @@ function createStructureViewModal(data) {
                                 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                     ${size.colors.map(color => `
+<<<<<<< HEAD
                                         <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
                                             <div class="flex items-center space-x-2">
                                                 <div class="w-4 h-4 rounded-full border border-gray-300" style="background-color: ${color.color_code}"></div>
+=======
+                                        <div class="flex items-center justify-between bg-gray-50 rounded border">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-4 h-4 rounded-full border border-gray-300" ></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                 <span class="text-sm font-medium">${color.color_name}</span>
                                             </div>
                                             <span class="text-sm text-gray-600">${color.stock_level} stock</span>
@@ -10362,10 +12158,17 @@ function createStructureViewModal(data) {
                 `}
             </div>
             
+<<<<<<< HEAD
             <!-- Fixed Footer -->
             <div class="p-6 border-t border-gray-200 flex-shrink-0">
                 <div class="flex justify-center">
                     <button type="button" onclick="closeStructureViewModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+=======
+            <!- Fixed Footer ->
+            <div class="border-t border-gray-200 flex-shrink-0">
+                <div class="flex justify-center">
+                    <button type="button" onclick="closeStructureViewModal()" class="bg-gray-300 text-gray-700 rounded hover:bg-gray-400">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         Close
                     </button>
                 </div>
@@ -10459,9 +12262,15 @@ function renderSizeColorCombinations(data) {
     if (!combinationsContainer) return;
     
     if (!data.proposedSizes || data.proposedSizes.length === 0) {
+<<<<<<< HEAD
         combinationsContainer.innerHTML = '<div class="text-center text-gray-500 py-8">' +
             '<div class="mb-4"><span class="text-4xl">📦</span></div>' +
             '<p class="text-lg mb-2">No size-color combinations found</p>' +
+=======
+        combinationsContainer.innerHTML = '<div class="text-center text-gray-500">' +
+            '<div class=""><span class="text-4xl">📦</span></div>' +
+            '<p class="text-lg">No size-color combinations found</p>' +
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             '<p class="text-sm">Click "Add Combination" to create your first size-color combination, or use "Legacy Mode" to manage colors and sizes separately.</p>' +
             '</div>';
         return;
@@ -10473,10 +12282,17 @@ function renderSizeColorCombinations(data) {
         const sizeTotal = size.colors.reduce(function(sum, color) { return sum + parseInt(color.stock_level || 0); }, 0);
         
         // Build HTML using string concatenation to avoid template literal issues
+<<<<<<< HEAD
         var sizeHtml = '<div class="size-group border border-gray-200 rounded-lg p-4 bg-white">';
         sizeHtml += '<div class="flex items-center justify-between mb-3">';
         sizeHtml += '<div class="flex items-center space-x-3">';
         sizeHtml += '<div class="size-badge bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">' + (size.code || 'No code').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+=======
+        var sizeHtml = '<div class="size-group border border-gray-200 rounded-lg bg-white">';
+        sizeHtml += '<div class="flex items-center justify-between">';
+        sizeHtml += '<div class="flex items-center space-x-3">';
+        sizeHtml += '<div class="size-badge bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">' + (size.code || 'No code').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         sizeHtml += '<h4 class="text-lg font-semibold text-gray-800">' + (size.name || 'No name').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</h4>';
         if (parseFloat(size.price_adjustment) > 0) {
             sizeHtml += '<span class="text-green-600 text-sm font-medium">+$' + size.price_adjustment + '</span>';
@@ -10484,28 +12300,48 @@ function renderSizeColorCombinations(data) {
         sizeHtml += '</div>';
         sizeHtml += '<div class="flex items-center space-x-3">';
         sizeHtml += '<div class="text-sm text-gray-600"><span class="font-medium">' + sizeTotal + '</span> total stock</div>';
+<<<<<<< HEAD
         sizeHtml += '<button type="button" onclick="deleteSize(\'' + String(size.id || '').replace(/'/g, '\\\'') + '\', \'' + String(size.name || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-red-600 hover:text-red-800 transition-colors" title="Delete this entire size and all its color combinations">🗑️ Delete Size</button>';
+=======
+        sizeHtml += '<button type="button" onclick="deleteSize(\'' + String(size.id || '').replace(/'/g, '\\\'') + '\', \'' + String(size.name || '').replace(/'/g, '\\\'') + '\')" class="text-red-600 hover:text-red-800 transition-colors" title="Delete this entire size and all its color combinations">🗑️ Delete Size</button>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         sizeHtml += '</div>';
         sizeHtml += '</div>';
         
         sizeHtml += '<div class="colors-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">';
         size.colors.forEach(function(color) {
+<<<<<<< HEAD
             sizeHtml += '<div class="color-combination flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">';
             sizeHtml += '<div class="flex items-center space-x-3">';
             sizeHtml += '<div class="color-swatch w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm" style="background-color: ' + (color.color_code || '#ccc') + '" title="' + (color.color_name || 'No name').replace(/"/g, '&quot;') + '"></div>';
+=======
+            sizeHtml += '<div class="color-combination flex items-center justify-between bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">';
+            sizeHtml += '<div class="flex items-center space-x-3">';
+            sizeHtml += '<div class="color-swatch w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"  title="' + (color.color_name || 'No name').replace(/"/g, '&quot;') + '"></div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             sizeHtml += '<div>';
             sizeHtml += '<div class="font-medium text-gray-800 text-sm">' + (color.color_name || 'No name').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
             sizeHtml += '<div class="text-xs text-gray-500">' + (color.color_code || 'No code').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
             sizeHtml += '</div></div>';
             sizeHtml += '<div class="flex items-center space-x-2">';
+<<<<<<< HEAD
             sizeHtml += '<div class="inline-stock-editor cursor-pointer px-2 py-1 bg-white border border-gray-200 rounded text-sm hover:border-blue-400 transition-colors" data-type="color" data-id="' + color.id + '" data-field="stock_level" data-value="' + color.stock_level + '" onclick="editInlineStock(this)" title="Click to edit stock level">' + color.stock_level + '</div>';
             sizeHtml += '<button type="button" onclick="deleteCombination(\'' + String(color.id || '').replace(/'/g, '\\\'') + '\')" class="p-1 text-red-600 hover:text-red-800 transition-colors" title="Delete this combination">Delete</button>';
+=======
+            sizeHtml += '<div class="inline-stock-editor cursor-pointer bg-white border border-gray-200 rounded text-sm hover:border-blue-400 transition-colors" data-type="color" data-id="' + color.id + '" data-field="stock_level" data-value="' + color.stock_level + '" onclick="editInlineStock(this)" title="Click to edit stock level">' + color.stock_level + '</div>';
+            sizeHtml += '<button type="button" onclick="deleteCombination(\'' + String(color.id || '').replace(/'/g, '\\\'') + '\')" class="text-red-600 hover:text-red-800 transition-colors" title="Delete this combination">Delete</button>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             sizeHtml += '</div></div>';
         });
         sizeHtml += '</div>';
         
+<<<<<<< HEAD
         sizeHtml += '<div class="mt-3 flex justify-end">';
         sizeHtml += '<button type="button" onclick="addColorToSize(\'' + (size.code || '').replace(/'/g, '\\\'') + '\')" class="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">+ Add Color to ' + (size.name || 'Size').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</button>';
+=======
+        sizeHtml += '<div class="flex justify-end">';
+        sizeHtml += '<button type="button" onclick="addColorToSize(\'' + (size.code || '').replace(/'/g, '\\\'') + '\')" class="text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">+ Add Color to ' + (size.name || 'Size').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</button>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         sizeHtml += '</div></div>';
         
         html += sizeHtml;
@@ -10723,33 +12559,57 @@ function matchImageToColor() {
 function showImageColorModal() {
     const modalHTML = `
         <div id="imageColorModal" class="modal-overlay">
+<<<<<<< HEAD
             <div class="modal-content" style="max-width: 900px;">
+=======
+            <div class="modal-content" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="modal-header">
                     <h2>Match Images to Colors</h2>
                     <button type="button" class="modal-close" onclick="closeImageColorModal()">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<<<<<<< HEAD
                         <!-- Left: Images -->
                         <div>
                             <h3 class="font-semibold mb-3">Item Images</h3>
+=======
+                        <!- Left: Images ->
+                        <div>
+                            <h3 class="font-semibold">Item Images</h3>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <div id="imageColorImageGrid" class="space-y-2">
                                 <div class="text-center text-gray-500">Loading images...</div>
                             </div>
                         </div>
                         
+<<<<<<< HEAD
                         <!-- Right: Color Selection -->
                         <div>
                             <h3 class="font-semibold mb-3">Select Color</h3>
+=======
+                        <!- Right: Color Selection ->
+                        <div>
+                            <h3 class="font-semibold">Select Color</h3>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <div id="imageColorColorSelection" class="space-y-2">
                                 <div class="text-center text-gray-500">Loading colors...</div>
                             </div>
                             
+<<<<<<< HEAD
                             <div class="mt-4">
                                 <label for="newColorName" class="block text-sm font-medium text-gray-700 mb-2">Or add new color:</label>
                                 <input type="text" id="newColorName" placeholder="Color name" class="w-full px-3 py-2 border border-gray-300 rounded-md mb-2">
                                 <input type="color" id="newColorHex" class="w-full px-3 py-2 border border-gray-300 rounded-md mb-2">
                                 <button type="button" onclick="addNewColorFromModal()" class="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+=======
+                            <div class="">
+                                <label for="newColorName" class="block text-sm font-medium text-gray-700">Or add new color:</label>
+                                <input type="text" id="newColorName" placeholder="Color name" class="w-full border border-gray-300 rounded-md">
+                                <input type="color" id="newColorHex" class="w-full border border-gray-300 rounded-md">
+                                <button type="button" onclick="addNewColorFromModal()" class="w-full bg-green-600 text-white rounded hover:bg-green-700">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     Add New Color
                                 </button>
                             </div>
@@ -10757,7 +12617,11 @@ function showImageColorModal() {
                     </div>
                 </div>
                 <div class="modal-footer">
+<<<<<<< HEAD
                     <button type="button" onclick="closeImageColorModal()" class="modal-button btn-secondary">Close</button>
+=======
+                    <button type="button" onclick="closeImageColorModal()" class="modal-button btn btn-secondary">Close</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         </div>
@@ -10783,8 +12647,13 @@ async function loadImageColorModalData() {
         const imageGrid = document.getElementById('imageColorImageGrid');
         if (data.success && data.images.length > 0) {
             imageGrid.innerHTML = data.images.map(img => `
+<<<<<<< HEAD
                 <div class="image-color-item p-2 border rounded cursor-pointer hover:bg-gray-50" onclick="selectImageForColor('${img.image_path}')">
                     <img src="/images/items/${img.image_path}" alt="Image" class="w-full h-20 object-cover rounded mb-2">
+=======
+                <div class="image-color-item border rounded cursor-pointer hover:bg-gray-50" onclick="selectImageForColor('${img.image_path}')">
+                    <img src="/images/items/${img.image_path}" alt="Image" class="w-full h-20 object-cover rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div class="text-sm text-gray-600">${img.image_path}</div>
                 </div>
             `).join('');
@@ -10807,9 +12676,15 @@ async function loadColorsForImageModal() {
         const colorSelection = document.getElementById('imageColorColorSelection');
         if (data.success && data.colors.length > 0) {
             colorSelection.innerHTML = data.colors.map(color => `
+<<<<<<< HEAD
                 <div class="color-option p-2 border rounded cursor-pointer hover:bg-gray-50" onclick="assignImageToColor('${color.id}')">
                     <div class="flex items-center space-x-3">
                         <div class="w-8 h-8 rounded border" style="background-color: ${color.hex_code || '#000000'}"></div>
+=======
+                <div class="color-option border rounded cursor-pointer hover:bg-gray-50" onclick="assignImageToColor('${color.id}')">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded border" ></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div>
                             <div class="font-medium">${color.color_name}</div>
                             <div class="text-sm text-gray-500">${color.hex_code || 'No hex code'}</div>
@@ -10928,7 +12803,11 @@ async function loadItemGenders() {
         
         if (data.success && data.genders.length > 0) {
             gendersList.innerHTML = data.genders.map(gender => `
+<<<<<<< HEAD
                 <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+=======
+                <div class="flex justify-between items-center bg-gray-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <span class="font-medium">👥 ${gender.gender}</span>
                     <button onclick="deleteItemGender('${gender.id}')" class="text-red-600 hover:text-red-800 text-sm">🗑️</button>
                 </div>
@@ -10957,7 +12836,11 @@ async function loadItemSizes() {
         
         if (data.success && data.sizes.length > 0) {
             sizesList.innerHTML = data.sizes.map(size => `
+<<<<<<< HEAD
                 <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+=======
+                <div class="flex justify-between items-center bg-gray-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <div>
                         <span class="font-medium">📏 ${size.size_name}</span>
                         <span class="text-sm text-gray-600">- Stock: ${size.stock_level}</span>
@@ -10989,9 +12872,15 @@ async function loadItemColors() {
         
         if (data.success && data.colors.length > 0) {
             colorsList.innerHTML = data.colors.map(color => `
+<<<<<<< HEAD
                 <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
                     <div class="flex items-center space-x-3">
                         <div class="w-6 h-6 rounded border" style="background-color: ${color.hex_code || '#000000'}"></div>
+=======
+                <div class="flex justify-between items-center bg-gray-50 rounded">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-6 h-6 rounded border" ></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div>
                             <span class="font-medium">🎨 ${color.color_name}</span>
                             <span class="text-sm text-gray-600">- Stock: ${color.stock_level}</span>
@@ -11306,7 +13195,11 @@ if (modalMode === 'edit') {
 
 </script>
 
+<<<<<<< HEAD
 <script src="js/modal-close-positioning.js?v=<?php echo time(); ?>"></script>
+=======
+<!- Modal positioning loaded by unified system ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 <?php
 $output = ob_get_clean();

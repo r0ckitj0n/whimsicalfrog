@@ -72,11 +72,15 @@ function resetToDefaults($pdo) {
             ['room_system_enabled', 'boolean', 'true', 'rooms', 'Enable the room-based navigation system'],
             ['room_main_title', 'text', 'Welcome to Our Creative Workshop', 'rooms', 'Main room title'],
             ['room_main_description', 'text', 'Explore our different departments by clicking on the doors', 'rooms', 'Main room description'],
+<<<<<<< HEAD
             ['room_2_category', 'text', 'T-Shirts', 'rooms', 'Room 2 category name'],
             ['room_3_category', 'text', 'Tumblers', 'rooms', 'Room 3 category name'],
             ['room_4_category', 'text', 'Artwork', 'rooms', 'Room 4 category name'],
             ['room_5_category', 'text', 'Sublimation', 'rooms', 'Room 5 category name'],
             ['room_6_category', 'text', 'Window Wraps', 'rooms', 'Room 6 category name'],
+=======
+            // Dynamic room categories will be populated based on current room configuration
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             
             // E-commerce Settings
             ['currency_symbol', 'text', '$', 'ecommerce', 'Currency symbol'],
@@ -102,6 +106,24 @@ function resetToDefaults($pdo) {
             ['enable_ai_features', 'boolean', 'true', 'site', 'Enable AI-powered features']
         ];
         
+<<<<<<< HEAD
+=======
+        // Add dynamic room categories based on current room configuration
+        $roomStmt = $pdo->prepare("SELECT room_number, room_name FROM room_doors ORDER BY room_number");
+        $roomStmt->execute();
+        $rooms = $roomStmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        foreach ($rooms as $room) {
+            $defaultSettings[] = [
+                "room_{$room['room_number']}_category", 
+                'text', 
+                $room['room_name'], 
+                'rooms', 
+                "Room {$room['room_number']} category name"
+            ];
+        }
+        
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         $pdo->beginTransaction();
         
         $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");

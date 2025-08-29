@@ -5,10 +5,17 @@
  * Comprehensive database access and management tool
  * 
  * Usage:
+<<<<<<< HEAD
  * php db_manager.php --help
  * php db_manager.php --env=local --action=status
  * php db_manager.php --env=live --action=query --sql="SELECT COUNT(*) FROM items"
  * php db_manager.php --action=sync --from=local --to=live
+=======
+ * php db_manager.php -help
+ * php db_manager.php -env=local -action=status
+ * php db_manager.php -env=live -action=query -sql="SELECT COUNT(*) FROM items"
+ * php db_manager.php -action=sync -from=local -to=live
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
  */
 
 // Include configuration
@@ -396,6 +403,7 @@ class DatabaseManager {
     public function showHelp() {
         echo "Usage: php db_manager.php [options]\n\n";
         echo "Options:\n";
+<<<<<<< HEAD
         echo "  --help                          Show this help\n";
         echo "  --env=[local|live]             Set environment\n";
         echo "  --action=[status|query]        Action to perform\n";
@@ -405,6 +413,17 @@ class DatabaseManager {
         echo "  php db_manager.php --action=status --env=local\n";
         echo "  php db_manager.php --action=query --env=live --sql=\"SELECT COUNT(*) FROM items\"\n";
         echo "  php db_manager.php --interactive\n";
+=======
+        echo "  -help                          Show this help\n";
+        echo "  -env=[local|live]             Set environment\n";
+        echo "  -action=[status|query]        Action to perform\n";
+        echo "  -sql=\"SQL QUERY\"              SQL to execute (with -action=query)\n";
+        echo "  -interactive                  Start interactive mode\n\n";
+        echo "Examples:\n";
+        echo "  php db_manager.php -action=status -env=local\n";
+        echo "  php db_manager.php -action=query -env=live -sql=\"SELECT COUNT(*) FROM items\"\n";
+        echo "  php db_manager.php -interactive\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
 }
 
@@ -440,7 +459,11 @@ switch ($action) {
     case 'query':
         $sql = $options['sql'] ?? '';
         if (empty($sql)) {
+<<<<<<< HEAD
             echo "❌ SQL query required. Use --sql=\"YOUR QUERY\"\n";
+=======
+            echo "❌ SQL query required. Use -sql=\"YOUR QUERY\"\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             exit(1);
         }
         $manager->executeQuery($env, $sql);
@@ -453,7 +476,11 @@ switch ($action) {
     case 'restore':
         $file = $options['file'] ?? '';
         if (empty($file)) {
+<<<<<<< HEAD
             echo "❌ Backup file required. Use --file=backup.sql\n";
+=======
+            echo "❌ Backup file required. Use -file=backup.sql\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             exit(1);
         }
         $manager->restore($env, $file);

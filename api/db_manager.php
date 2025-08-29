@@ -132,6 +132,7 @@ try {
         case 'fix_sample_email':
             // Direct sample email fix without separate script
             $sampleEmailContent = '
+<<<<<<< HEAD
                     <div class="email-container">
             <div class="email-header">
                 <h1 class="email-title">WhimsicalFrog</h1>
@@ -139,11 +140,21 @@ try {
             </div>
             
             <h2 style="color: #333;">Order Confirmation #01F14P23</h2>
+=======
+            <div class="order-email-body">
+                <div class="order-email-header">
+                    <h1 class="order-email-logo">WhimsicalFrog</h1>
+                    <p class="order-email-tagline">Custom Products & Design</p>
+                </div>
+                
+                <h2 class="order-email-title">Order Confirmation #01F14P23</h2>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 
                 <p>Dear John Doe,</p>
                 
                 <p>Thank you for your order! We have received your order and it is being processed.</p>
                 
+<<<<<<< HEAD
                 <h3 class="email-section-title">Order Details:</h3>
                 <table class="email-table">
                     <tr class="email-table-header">
@@ -168,6 +179,32 @@ try {
                 </table>
                 
                 <h3 class="email-section-title">Shipping Information:</h3>
+=======
+                <h3 class="order-email-section-title">Order Details:</h3>
+                <table class="order-email-table">
+                    <tr class="order-email-table-header">
+                        <th class="order-email-table-header">Item</th>
+                        <th class="order-email-table-header">Quantity</th>
+                        <th class="order-email-table-header">Price</th>
+                    </tr>
+                    <tr>
+                        <td class="order-email-table-cell">Custom T-Shirt Design</td>
+                        <td class="order-email-table-cell-right">2</td>
+                        <td class="order-email-table-cell-right">$25.00</td>
+                    </tr>
+                    <tr>
+                        <td class="order-email-table-cell">Custom Tumbler</td>
+                        <td class="order-email-table-cell-right">1</td>
+                        <td class="order-email-table-cell-right">$15.00</td>
+                    </tr>
+                    <tr class="order-email-table-total">
+                        <td class="order-email-table-cell" colspan="2">Total:</td>
+                        <td class="order-email-table-cell-right">$40.00</td>
+                    </tr>
+                </table>
+                
+                <h3 class="order-email-section-title">Shipping Information:</h3>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <p>John Doe<br>
                 123 Main Street<br>
                 Anytown, ST 12345</p>
@@ -181,7 +218,11 @@ try {
                 
                 <p>Thank you for choosing WhimsicalFrog!</p>
                 
+<<<<<<< HEAD
                 <div class="email-footer">
+=======
+                <div class="order-email-shipping-info">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <p>This is an automated email. Please do not reply to this email address.</p>
                 </div>
             </div>';

@@ -206,8 +206,13 @@ function getPaymentStatusBadgeClass($status) {
                 <?php endforeach; ?>
             </select>
             
+<<<<<<< HEAD
             <button type="submit" class="btn-primary admin-filter-button">Filter</button>
             <a href="/?page=admin&section=orders" class="btn-secondary admin-filter-button">Clear</a>
+=======
+            <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
+            <a href="/?page=admin&section=orders" class="btn btn-secondary admin-filter-button">Clear</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </form>
     </div>
 
@@ -217,8 +222,13 @@ function getPaymentStatusBadgeClass($status) {
                 <tr>
                     <th>Order ID</th>
                     <th>Customer</th>
+<<<<<<< HEAD
                     <th style="white-space: nowrap;">Date</th>
                     <th style="white-space: nowrap;">Time</th>
+=======
+                    <th>Date</th>
+                    <th>Time</th>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     <th>Items</th>
                     <th>Order Status</th>
                     <th>Payment</th>
@@ -231,7 +241,11 @@ function getPaymentStatusBadgeClass($status) {
             <tbody>
                 <?php if (empty($orders)): ?>
                 <tr>
+<<<<<<< HEAD
                     <td colspan="11" class="text-center text-gray-500 py-8">
+=======
+                    <td colspan="11" class="text-center text-gray-500">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         No orders found matching the current filters.
                     </td>
                 </tr>
@@ -251,10 +265,17 @@ function getPaymentStatusBadgeClass($status) {
                 <tr>
                     <td class="font-mono"><?= htmlspecialchars($order['id']) ?></td>
                     <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
+<<<<<<< HEAD
                     <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="date" data-type="date" style="white-space: nowrap;">
                         <?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?>
                     </td>
                     <td class="text-gray-600" style="white-space: nowrap;">
+=======
+                    <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="date" data-type="date" >
+                        <?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?>
+                    </td>
+                    <td class="text-gray-600" >
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <?= htmlspecialchars(date('g:i A', strtotime($order['date'] ?? 'now'))) ?>
                     </td>
                     <td class="items-cell text-center" title="<?= htmlspecialchars($itemsList) ?>">
@@ -295,7 +316,11 @@ function getPaymentStatusBadgeClass($status) {
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Order View/Edit Modal -->
+=======
+<!- Order View/Edit Modal ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php if ($modalState['mode']): ?>
 <?php
 $orderId = $modalState['view_id'] ?: $modalState['edit_id'];
@@ -318,8 +343,13 @@ if ($orderData):
     $nextOrderId = $currentIndex < count($allOrderIds) - 1 ? $allOrderIds[$currentIndex + 1] : null;
 ?>
 
+<<<<<<< HEAD
 <div class="modal-overlay order-modal" id="orderModal">
     <!-- Navigation Arrows -->
+=======
+<div class="modal-overlay order-modal hidden" id="orderModal">
+    <!- Navigation Arrows ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <?php if ($prevOrderId): ?>
     <a href="?page=admin&section=orders&<?= $modalState['mode'] ?>=<?= $prevOrderId ?>" 
        class="nav-arrow nav-arrow-left">
@@ -339,7 +369,11 @@ if ($orderData):
     <?php endif; ?>
 
     <div class="modal-content order-modal-content">
+<<<<<<< HEAD
         <!-- Modal Header -->
+=======
+        <!- Modal Header ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="modal-header">
             <h2 class="modal-title">
                 <?= $modalState['mode'] === 'view' ? 'View' : 'Edit' ?> Order: <?= htmlspecialchars($orderId) ?>
@@ -351,10 +385,17 @@ if ($orderData):
             </a>
         </div>
 
+<<<<<<< HEAD
         <!-- Modal Body -->
         <div class="modal-body">
             <form id="orderForm" class="order-form-grid">
                 <!-- Order Details Column -->
+=======
+        <!- Modal Body ->
+        <div class="modal-body">
+            <form id="orderForm" class="order-form-grid">
+                <!- Order Details Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="order-details-column">
                     <div class="form-section">
                         <h3 class="form-section-title">Order Information</h3>
@@ -439,13 +480,21 @@ if ($orderData):
                     </div>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Order Items Column -->
+=======
+                <!- Order Items Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <div class="order-items-column">
                     <div class="form-section">
                         <div class="form-section-header">
                             <h3 class="form-section-title">Order Items</h3>
                             <?php if ($modalState['mode'] === 'edit'): ?>
+<<<<<<< HEAD
                             <button type="button" class="btn-small btn-primary" onclick="showAddItemModal()">
+=======
+                            <button type="button" class="btn btn-primary btn-sm" onclick="showAddItemModal()">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 ➕ Add Item
                             </button>
                             <?php endif; ?>
@@ -474,7 +523,11 @@ if ($orderData):
                                     </div>
                                     <?php if ($modalState['mode'] === 'edit'): ?>
                                     <button type="button" 
+<<<<<<< HEAD
                                             class="btn-small btn-danger" 
+=======
+                                            class="btn btn-danger btn-sm" 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             onclick="removeItemFromOrder(<?= $item['id'] ?>)"
                                             title="Remove item">
                                         🗑️
@@ -494,10 +547,17 @@ if ($orderData):
                             <h3 class="form-section-title">Shipping Address</h3>
                             <?php if ($modalState['mode'] === 'edit'): ?>
                             <div class="address-actions">
+<<<<<<< HEAD
                                 <button type="button" class="btn-small btn-secondary" onclick="showAddressSelector()">
                                     📍 Select Address
                                 </button>
                                 <button type="button" class="btn-small btn-primary" onclick="showAddAddressModal()">
+=======
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="showAddressSelector()">
+                                    📍 Select Address
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="showAddAddressModal()">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     ➕ Add New
                                 </button>
                             </div>
@@ -507,11 +567,19 @@ if ($orderData):
                             <?= nl2br(htmlspecialchars(formatAddress($orderData))) ?>
                         </div>
                         <?php if ($modalState['mode'] === 'edit'): ?>
+<<<<<<< HEAD
                         <div class="form-group mt-3">
                             <button type="button" class="btn-small btn-secondary" onclick="editCurrentAddress()">
                                 ✏️ Edit Current Address
                             </button>
                             <button type="button" class="btn-small btn-primary" onclick="impersonateCustomer('<?= $orderData['userId'] ?>')">
+=======
+                        <div class="form-group">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="editCurrentAddress()">
+                                ✏️ Edit Current Address
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="impersonateCustomer('<?= $orderData['userId'] ?>')">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 👤 Shop as Customer
                             </button>
                         </div>
@@ -535,6 +603,7 @@ if ($orderData):
             </form>
         </div>
 
+<<<<<<< HEAD
         <!-- Modal Footer -->
         <?php if ($modalState['mode'] === 'edit'): ?>
         <div class="modal-footer">
@@ -542,6 +611,15 @@ if ($orderData):
                 Cancel
             </button>
             <button type="submit" form="orderForm" class="btn-primary">
+=======
+        <!- Modal Footer ->
+        <?php if ($modalState['mode'] === 'edit'): ?>
+        <div class="modal-footer">
+            <button type="button" onclick="window.location.href='?page=admin&section=orders'" class="btn btn-secondary">
+                Cancel
+            </button>
+            <button type="submit" form="orderForm" class="btn btn-primary">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 Save Changes
             </button>
         </div>
@@ -551,24 +629,41 @@ if ($orderData):
 <?php endif; ?>
 <?php endif; ?>
 
+<<<<<<< HEAD
 <!-- Delete Confirmation Modal -->
 <div class="modal-overlay delete-confirmation-modal" id="deleteModal" style="display: none;">
+=======
+<!- Delete Confirmation Modal ->
+<div id="deleteModal" class="modal-overlay delete-confirmation-modal hidden">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="modal-content compact-modal-content">
         <div class="modal-header">
             <h3 class="modal-title">Confirm Delete</h3>
         </div>
         <div class="modal-body">
             <p>Are you sure you want to delete this order? This action cannot be undone.</p>
+<<<<<<< HEAD
             <p class="text-sm text-gray-600 mt-2">Order ID: <span id="deleteOrderId" class="font-mono"></span></p>
         </div>
         <div class="modal-footer">
             <button type="button" onclick="closeDeleteModal()" class="btn-secondary">Cancel</button>
             <button type="button" onclick="deleteOrder()" class="btn-danger">Delete Order</button>
+=======
+            <p class="text-sm text-gray-600">Order ID: <span id="deleteOrderId" class="font-mono"></span></p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="closeDeleteModal()" class="btn btn-secondary">Cancel</button>
+            <button type="button" onclick="deleteOrder()" class="btn btn-danger">Delete Order</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Success/Error Messages -->
+=======
+<!- Success/Error Messages ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php if ($message): ?>
 <div class="toast-notification <?= $messageType === 'success' ? 'toast-success' : 'toast-error' ?>" id="toast">
     <?= htmlspecialchars($message) ?>
@@ -839,9 +934,38 @@ async function deleteOrder() {
 }
 
 // Notification functions
+<<<<<<< HEAD
 // showSuccess function moved to js/global-notifications.js for centralization
 
 // showError function moved to js/global-notifications.js for centralization
+=======
+// Use unified notification system
+function showSuccess(message) {
+    if (typeof window.wfNotifications === 'object' && window.wfNotifications.success) {
+        return window.wfNotifications.success(message, {
+            title: 'Success',
+            duration: 3000
+        });
+    } else if (typeof window.showSuccess === 'function') {
+        return window.showSuccess(message);
+    } else {
+        showNotification(message, 'success');
+    }
+}
+
+function showError(message) {
+    if (typeof window.wfNotifications === 'object' && window.wfNotifications.error) {
+        return window.wfNotifications.error(message, {
+            title: 'Error',
+            duration: 5000
+        });
+    } else if (typeof window.showError === 'function') {
+        return window.showError(message);
+    } else {
+        showNotification(message, 'error');
+    }
+}
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 function showNotification(message, type) {
     const toast = document.createElement('div');
@@ -938,8 +1062,13 @@ async function showAddItemModal() {
                     <label class="form-label">Search Items</label>
                     <input type="text" id="itemSearch" class="form-input" placeholder="Search by SKU or name...">
                 </div>
+<<<<<<< HEAD
                 <div class="items-list" id="itemsList" style="max-height: 300px; overflow-y: auto;">
                     <div class="loading-message">Loading items...</div>
+=======
+                <div class="items-list" id="itemsList" >
+                    <div >Loading items...</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </div>
             </div>
         </div>
@@ -958,6 +1087,7 @@ async function showAddItemModal() {
             
             if (data.success) {
                 if (data.items.length === 0) {
+<<<<<<< HEAD
                                             itemsList.innerHTML = '<div class="no-items-message">No items found</div>';
                 } else {
                     itemsList.innerHTML = data.items.map(item => `
@@ -967,14 +1097,32 @@ async function showAddItemModal() {
                                                             <div class="item-sku">${item.sku}</div>
                         </div>
                         <div class="item-price">$${parseFloat(item.retailPrice || 0).toFixed(2)}</div>
+=======
+                    itemsList.innerHTML = '<div >No items found</div>';
+                } else {
+                    itemsList.innerHTML = data.items.map(item => `
+                        <div class="item-card-small" onclick="addItemToOrder('${item.sku}', '${item.name.replace(/'/g, "\\'")}', ${item.retailPrice})" >
+                            <div class="item-info">
+                                <div class="item-name" >${item.name}</div>
+                                <div class="item-sku" >${item.sku}</div>
+                            </div>
+                            <div class="item-price" >$${parseFloat(item.retailPrice || 0).toFixed(2)}</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         </div>
                     `).join('');
                 }
             } else {
+<<<<<<< HEAD
                                     itemsList.innerHTML = '<div class="error-message">Failed to load items</div>';
             }
         } catch (error) {
                             itemsList.innerHTML = '<div class="error-message">Network error</div>';
+=======
+                itemsList.innerHTML = '<div >Failed to load items</div>';
+            }
+        } catch (error) {
+            itemsList.innerHTML = '<div >Network error</div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
     };
     

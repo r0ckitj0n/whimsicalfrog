@@ -46,6 +46,7 @@ try {
     }
     
 } catch (PDOException $e) {
+<<<<<<< HEAD
     // Log error and fail hard - no fallback
     error_log("Room coordinates API error: " . $e->getMessage());
     
@@ -55,6 +56,16 @@ try {
         'success' => false,
         'error' => 'Database connection failed',
         'message' => 'Room mapping requires database connection. Please refresh the page or contact support.'
+=======
+    // Log error but don't expose sensitive database info
+    error_log("Room coordinates API error: " . $e->getMessage());
+    
+    // Return graceful fallback
+    echo json_encode([
+        'success' => true,
+        'coordinates' => [],
+        'message' => 'No active room map found in database'
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     ]);
 }
 ?> 

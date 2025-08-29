@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__ . '/config.php';
+<<<<<<< HEAD
+=======
+require_once __DIR__ . '/../includes/business_settings_helper.php';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 require_once __DIR__ . '/../includes/email_helper.php';
 
 /**
@@ -86,6 +90,7 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
             $itemPrice = '$' . number_format((float)($item['price'] ?? 0), 2);
             $itemTotal = '$' . number_format($itemQuantity * (float)($item['price'] ?? 0), 2);
             
+<<<<<<< HEAD
             $itemsListHtml .= "<li style='padding: 8px 0; border-bottom: 1px solid #eee;'>";
             $itemsListHtml .= "<strong>{$itemName}</strong>";
             if ($itemSku) {
@@ -93,6 +98,15 @@ function sendOrderConfirmationEmails($orderId, $pdo) {
             }
             $itemsListHtml .= "<br>";
             $itemsListHtml .= "<span style='color: #666;'>Quantity: {$itemQuantity} × {$itemPrice} = {$itemTotal}</span>";
+=======
+            $itemsListHtml .= "<li class='email-list-item'>";
+            $itemsListHtml .= "<strong>{$itemName}</strong>";
+            if ($itemSku) {
+                $itemsListHtml .= " <small class='u-color-666'>({$itemSku})</small>";
+            }
+            $itemsListHtml .= "<br>";
+            $itemsListHtml .= "<span class='u-color-666'>Quantity: {$itemQuantity} × {$itemPrice} = {$itemTotal}</span>";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             $itemsListHtml .= "</li>";
             
             $itemsListText .= "- {$itemName}";
@@ -174,6 +188,14 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType) {
         // Replace variables in subject and content
         $subject = $template['subject'];
         $htmlContent = $template['html_content'];
+<<<<<<< HEAD
+=======
+        // Inject shared CSS and CSS variable custom properties for dynamic brand colors
+        $brandPrimary = BusinessSettings::getPrimaryColor();
+        $brandSecondary = BusinessSettings::getSecondaryColor();
+        $htmlContent = preg_replace('/<head>/', "<head>\n    <link rel='stylesheet' href='https://whimsicalfrog.us/css/email-styles.css'>", $htmlContent);
+        $htmlContent = preg_replace('/<body([^>]*)>/', "<body$1 class='email-body' style=\"-brand-primary: {$brandPrimary}; -brand-secondary: {$brandSecondary};\">", $htmlContent);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         $textContent = $template['text_content'] ?? '';
         
         foreach ($variables as $key => $value) {

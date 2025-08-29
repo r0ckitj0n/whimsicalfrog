@@ -133,6 +133,7 @@ function generateReceiptEmailContent($orderData) {
     foreach ($orderData['items'] as $item) {
         $itemTotal = $item['price'] * $item['quantity'];
         $itemsHTML .= '
+<<<<<<< HEAD
             <tr class="receipt-item-row">
                 <td class="receipt-item-cell">
                     <div class="receipt-item-name">' . htmlspecialchars($item['name']) . '</div>
@@ -141,10 +142,21 @@ function generateReceiptEmailContent($orderData) {
                 </td>
                 <td class="receipt-item-cell receipt-item-price">
                     $' . number_format($item['quantity'] * $item['price'], 2) . '
+=======
+            <tr class="email-table-row">
+                <td class="email-table-cell">
+                    <div class="email-item-name">' . htmlspecialchars($item['name']) . '</div>
+                    <div class="email-item-sku">SKU: ' . htmlspecialchars($item['sku']) . '</div>
+                    <div class="email-item-quantity">' . $item['quantity'] . ' × $' . number_format($item['price'], 2) . '</div>
+                </td>
+                <td class="email-table-cell-right">
+                    $' . number_format($itemTotal, 2) . '
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 </td>
             </tr>';
     }
     
+<<<<<<< HEAD
     $paymentSection = '';
     if (isset($orderData['cashReceived']) && $orderData['cashReceived'] > 0) {
         $paymentSection = '
@@ -161,6 +173,8 @@ function generateReceiptEmailContent($orderData) {
             </div>';
     }
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     return '
     <!DOCTYPE html>
     <html lang="en">
@@ -169,6 +183,7 @@ function generateReceiptEmailContent($orderData) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Receipt - Order #' . htmlspecialchars($orderData['orderId']) . '</title>
     </head>
+<<<<<<< HEAD
     <body class="receipt-email-body">
         <div class="receipt-email-container">
             
@@ -195,10 +210,42 @@ function generateReceiptEmailContent($orderData) {
             <div class="receipt-items-section">
                 <h2 class="receipt-items-title">Items Purchased</h2>
                 <table class="receipt-items-table">
+=======
+    <body class="email-body">
+        <div class="email-container">
+            
+            <!- Header ->
+            <div class="email-header">
+                <h1 class="email-header-title">WHIMSICALFROG</h1>
+                <p class="email-header-subtitle">Receipt for Your Purchase</p>
+            </div>
+            
+            <!- Order Info ->
+            <div class="email-order-info">
+                                  <div class="email-info-row">
+                      <span class="email-info-label">Order ID:</span>
+                      <span class="email-info-value-mono">' . htmlspecialchars($orderData['orderId']) . '</span>
+                  </div>
+                  <div class="email-info-row">
+                      <span class="email-info-label">Date:</span>
+                      <span class="email-info-value">' . $timestamp . '</span>
+                  </div>
+                <div class="email-info-row">
+                    <span class="email-info-label">Payment Method:</span>
+                    <span class="email-info-value">' . htmlspecialchars($orderData['paymentMethod'] ?? 'Not specified') . '</span>
+                </div>
+            </div>
+            
+            <!- Items ->
+            <div class="email-content">
+                <h2 class="email-content-title">Items Purchased</h2>
+                <table class="email-table">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     ' . $itemsHTML . '
                 </table>
             </div>
             
+<<<<<<< HEAD
             <div class="receipt-totals-section">
                 <div class="receipt-total-row">
                     <span class="receipt-total-label">Subtotal:</span>
@@ -219,12 +266,55 @@ function generateReceiptEmailContent($orderData) {
             <div class="receipt-footer">
                 <p class="receipt-footer-title">Thank you for your business!</p>
                 <p class="receipt-footer-text">Visit us online at WhimsicalFrog.com</p>
+=======
+            <!- Totals ->
+            <div class="email-totals">
+                <div class="email-totals-row">
+                    <span class="email-totals-label">Subtotal:</span>
+                    <span class="email-totals-value">$' . number_format($orderData['subtotal'], 2) . '</span>
+                </div>
+                <div class="email-totals-row">
+                    <span class="email-totals-label">Sales Tax (' . number_format(($orderData['taxRate'] ?? 0) * 100, 2) . '%):</span>
+                    <span class="email-totals-value">$' . number_format($orderData['taxAmount'] ?? 0, 2) . '</span>
+                </div>
+                <div class="email-totals-final">
+                    <span class="email-totals-final-label">TOTAL:</span>
+                    <span class="email-totals-final-value">$' . number_format($orderData['total'], 2) . '</span>
+                </div>
+            </div>
+            
+            ' . (($orderData['paymentMethod'] ?? '') === 'Cash' ? '
+            <!- Cash Payment Details ->
+            <div class="email-payment-details">
+                <h3 class="email-payment-title">Payment Details</h3>
+                <div class="email-payment-row">
+                    <span class="email-payment-label">Cash Received:</span>
+                    <span class="email-payment-value">$' . number_format($orderData['cashReceived'] ?? 0, 2) . '</span>
+                </div>
+                <div class="email-payment-row">
+                    <span class="email-payment-label">Change Given:</span>
+                    <span class="email-payment-value">$' . number_format($orderData['changeAmount'] ?? 0, 2) . '</span>
+                </div>
+            </div>
+            ' : '') . '
+            
+            <!- Footer ->
+            <div class="email-footer">
+                <p class="email-footer-title">Thank you for your business!</p>
+                <p class="email-footer-text">Visit us online at WhimsicalFrog.com</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             </div>
             
         </div>
         
+<<<<<<< HEAD
         <div class="receipt-disclaimer">
             <p>This is an automated receipt. Please keep for your records.</p>
+=======
+        <!- Footer text ->
+        <div class="email-footer-disclaimer">
+            <p>This email was sent from the WhimsicalFrog Point of Sale system.</p>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>
     </body>
     </html>';

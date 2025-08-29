@@ -25,7 +25,11 @@ try {
 
     $pdo->beginTransaction();
 
+<<<<<<< HEAD
     // --- Update order scalar fields (reuse logic similar to update-payment-status) ---
+=======
+    // -- Update order scalar fields (reuse logic similar to update-payment-status) --
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     $updateMap=[]; $params=[':orderId'=>$orderId];
     $scalarFields = [
         'status'=>'order_status',
@@ -50,7 +54,11 @@ try {
         $stmt->execute($params);
     }
 
+<<<<<<< HEAD
     // --- Update items ---
+=======
+    // -- Update items --
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     if (isset($input['items']) && is_array($input['items'])) {
         // delete existing items
         $pdo->prepare('DELETE FROM order_items WHERE orderId = ?')->execute([$orderId]);

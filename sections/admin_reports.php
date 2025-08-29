@@ -160,13 +160,22 @@ $chartData = [
             <input type="date" name="end_date" id="end_date" 
                    value="<?= htmlspecialchars($endDate) ?>" class="admin-form-input">
             
+<<<<<<< HEAD
             <button type="submit" class="btn-primary admin-filter-button">Apply Filter</button>
             <a href="?page=admin&section=reports" class="btn-secondary admin-filter-button">Clear</a>
+=======
+            <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
+            <a href="?page=admin&section=reports" class="btn btn-secondary admin-filter-button">Clear</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </form>
     </div>
 
     <div class="admin-table-section">
+<<<<<<< HEAD
         <!-- Key Metrics Dashboard -->
+=======
+        <!- Key Metrics Dashboard ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="metrics-grid">
         <div class="metric-card success">
             <div class="metric-label">Total Revenue</div>
@@ -205,7 +214,11 @@ $chartData = [
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Sales Over Time Chart -->
+=======
+    <!- Sales Over Time Chart ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h3 class="admin-card-title">📈 Sales Performance Over Time</h3>
         <div class="chart-container">
@@ -213,7 +226,11 @@ $chartData = [
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Payment Method Distribution -->
+=======
+    <!- Payment Method Distribution ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h3 class="admin-card-title">💳 Payment Method Distribution</h3>
         <div class="chart-container">
@@ -221,7 +238,11 @@ $chartData = [
         </div>
     </div>
 
+<<<<<<< HEAD
     <!-- Top Products Table -->
+=======
+    <!- Top Products Table ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h3 class="admin-card-title">🏆 Top Selling Products</h3>
         <?php if (empty($topProducts)): ?>
@@ -254,7 +275,11 @@ $chartData = [
         <?php endif; ?>
     </div>
 
+<<<<<<< HEAD
     <!-- Low Stock Alerts -->
+=======
+    <!- Low Stock Alerts ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div class="admin-card">
         <h3 class="admin-card-title">⚠️ Inventory Alerts</h3>
         <?php if (empty($lowStockProducts)): ?>
@@ -298,10 +323,17 @@ $chartData = [
         <?php endif; ?>
     </div>
 
+<<<<<<< HEAD
     <!-- Print Action -->
     <div class="report-actions">
         <button type="button" class="btn-secondary" onclick="window.print()">
             <svg class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+=======
+    <!- Print Action ->
+    <div class="report-actions">
+        <button type="button" class="btn btn-secondary" onclick="window.print()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
@@ -311,7 +343,11 @@ $chartData = [
     </div>
 </div>
 
+<<<<<<< HEAD
 <!-- Chart.js Integration -->
+=======
+<!- Chart.js Integration ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

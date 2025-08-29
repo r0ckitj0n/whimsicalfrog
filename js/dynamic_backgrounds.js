@@ -27,8 +27,13 @@ async function loadRoomBackground(roomType) {
                     `images/${background.webp_filename}` : 
                     `images/${background.image_filename}`;
                 
+<<<<<<< HEAD
                 // Apply the background to the room wrapper
                 roomWrapper.style.backgroundImage = `url('${imageUrl}?v=${Date.now()}')`;
+=======
+                // Apply the background to the room wrapper using CSS custom property
+                roomWrapper.style.setProperty('-dynamic-room-bg-url', `url('${imageUrl}?v=${Date.now()}')`);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 roomWrapper.classList.add('dynamic-room-bg-loaded');
                 
                 console.log(`Dynamic room background loaded: ${background.background_name} (${imageUrl})`);
@@ -45,6 +50,7 @@ async function loadRoomBackground(roomType) {
 }
 
 // Auto-detect room type and load background
+<<<<<<< HEAD
 function autoLoadRoomBackground() {
     // Try to detect room type from the page element or URL
     const roomContainer = document.querySelector('[data-room-name]');
@@ -69,10 +75,48 @@ function autoLoadRoomBackground() {
                 roomType = 'room6';
                 break;
             default:
+=======
+async function autoLoadRoomBackground() {
+    try {
+        // Get dynamic room data from API
+        const response = await fetch('/api/get_room_data.php');
+        const roomData = await response.json();
+        
+        if (!roomData.success) {
+            console.error('Failed to get room data:', roomData.message);
+            console.log('Background system will operate in degraded mode');
+            return;
+        }
+        
+        if (!roomData.data.roomDoors || roomData.data.roomDoors.length === 0) {
+            console.log('No room doors found - background system will use default');
+            return;
+        }
+        
+        const roomTypeMapping = roomData.data.roomTypeMapping;
+        const roomDoors = roomData.data.roomDoors;
+        
+        // Try to detect room type from the page element or URL
+        const roomContainer = document.querySelector('[data-room-name]');
+        if (roomContainer) {
+            const roomName = roomContainer.getAttribute('data-room-name');
+            let roomType = '';
+            
+            // Find matching room by name
+            const matchingRoom = roomDoors.find(room => 
+                room.room_name.toLowerCase() === roomName.toLowerCase() ||
+                room.door_label.toLowerCase() === roomName.toLowerCase()
+            );
+            
+            if (matchingRoom) {
+                roomType = roomTypeMapping[matchingRoom.room_number];
+            } else {
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 // Try to detect from URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentPage = urlParams.get('page') || '';
                 
+<<<<<<< HEAD
                 switch (currentPage) {
                             case 'room2':
             roomType = 'room2';
@@ -95,6 +139,20 @@ function autoLoadRoomBackground() {
         if (roomType) {
             loadRoomBackground(roomType);
         }
+=======
+                // Check if currentPage matches any room type
+                if (roomTypeMapping[currentPage.replace('room', '')]) {
+                    roomType = currentPage;
+                }
+            }
+            
+            if (roomType) {
+                loadRoomBackground(roomType);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading dynamic room background:', error);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
 }
 

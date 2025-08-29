@@ -5,6 +5,7 @@
  */
 ?>
 
+<<<<<<< HEAD
 <!-- Simple Footer -->
 <footer class="site-footer">
     <div class="footer-container">
@@ -13,13 +14,27 @@
         <div class="footer-grid-3">
             
             <!-- Company Info -->
+=======
+<!- Simple Footer ->
+<footer class="site-footer">
+    <div class="footer-container">
+        
+        <!- 3-Column Layout (automatically becomes single column on mobile) ->
+        <div class="footer-grid-3">
+            
+            <!- Company Info ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Whimsical Frog</h3>
                 <p class="footer-tagline">Custom Crafts & Creative Designs</p>
                 <p class="footer-text">Creating unique, personalized items that bring joy and whimsy to your world.</p>
             </div>
             
+<<<<<<< HEAD
             <!-- Quick Links -->
+=======
+            <!- Quick Links ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Quick Links</h3>
                 <ul class="footer-nav">
@@ -30,7 +45,11 @@
                 </ul>
             </div>
             
+<<<<<<< HEAD
             <!-- Contact Info -->
+=======
+            <!- Contact Info ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="footer-section">
                 <h3 class="footer-heading">Get In Touch</h3>
                 <div class="footer-contact-item">
@@ -49,7 +68,11 @@
             
         </div>
         
+<<<<<<< HEAD
         <!-- Social Media Icons -->
+=======
+        <!- Social Media Icons ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <hr class="footer-divider">
         <div class="footer-social">
             <a href="#" class="footer-social-icon" aria-label="Facebook">📘</a>
@@ -58,7 +81,11 @@
             <a href="#" class="footer-social-icon" aria-label="Pinterest">📌</a>
         </div>
         
+<<<<<<< HEAD
         <!-- Copyright -->
+=======
+        <!- Copyright ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="footer-copyright">
             <p class="footer-copyright-text">
                 © <?php echo date('Y'); ?> Whimsical Frog. All rights reserved.
@@ -72,7 +99,11 @@
     </div>
 </footer>
 
+<<<<<<< HEAD
 <!-- 
+=======
+<!- 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 USAGE INSTRUCTIONS:
 ===================
 
@@ -105,4 +136,8 @@ USAGE INSTRUCTIONS:
    - Single column layout
    - Newsletter signup
    - Logo integration
+<<<<<<< HEAD
 --> 
+=======
+-> 
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)

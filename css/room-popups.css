@@ -1,0 +1,1577 @@
+/* Room Popups CSS - Database-Driven Styling */
+
+/* This file uses CSS variables from the Global CSS Rules system */
+
+/* All styling can be customized through Admin Settings > Global CSS Rules */
+
+:root {
+    /* Popup Variables - Fallback values, will be overridden by Global CSS Rules */
+    --popup-bg-color: #fff;
+    --popup-border-color: #8B4513;
+    --popup-border-width: 3px;
+    --popup-border-radius: 15px;
+    --popup-shadow: 0 8px 25px rgb(0 0 0 / 30%);
+    --popup-padding: 15px;
+    --popup-min-width: 280px;
+    --popup-max-width: 450px;
+    --popup-z-index: 200;
+    
+    /* Popup Text Variables */
+    --popup-title-color: #556B2F;
+    --popup-title-size: 16px;
+    --popup-title-weight: bold;
+    --popup-category-color: #6B8E23;
+    --popup-category-size: 12px;
+    --popup-description-color: #666;
+    --popup-description-size: 12px;
+    --popup-price-color: #6B8E23;
+    --popup-price-size: 18px;
+    
+    /* Enhanced Popup Variables */
+    --popup-enhanced-bg-color: #fff;
+    --popup-enhanced-border-radius: 20px;
+    --popup-enhanced-shadow: 0 12px 40px rgb(0 0 0 / 40%);
+    --popup-enhanced-min-width: 400px;
+    --popup-enhanced-max-width: 600px;
+    --popup-enhanced-padding: 20px;
+    
+    /* Button Variables */
+    --button-bg-primary: #87ac3a;
+    --button-bg-primary-hover: #a3cc4a;
+    --button-text-primary: #fff;
+    --button-border-radius: 8px;
+}
+
+/* ==============================================
+   STANDARD POPUP SYSTEM (Rooms 3, 4, 5, 6)
+   ============================================== */
+
+.item-popup,
+.item-popup-legacy {
+    position: absolute;
+    background: var(--popup-bg-color);
+    border-radius: var(--popup-border-radius);
+    padding: var(--popup-padding);
+    box-shadow: var(--popup-shadow);
+    min-width: var(--popup-min-width);
+    max-width: var(--popup-max-width);
+    width: auto;
+    z-index: var(--popup-z-index);
+    opacity: 0;
+    visibility: hidden;
+    display: none;
+    transition: all 0.3s ease;
+    transform: translateY(10px);
+}
+
+.item-popup.show,
+.item-popup-legacy.show {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Popup positioning helper classes */
+.item-popup.positioned {
+    position: fixed;
+    z-index: var(--popup-z-index, var(--z-popups));
+    left: var(--popup-left, 0);
+    top: var(--popup-top, 0);
+}
+
+/* Popup visibility and positioning states */
+.item-popup.measuring {
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    z-index: var(--popup-z-index, var(--z-popups));
+}
+
+.item-popup.visible {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    position: fixed;
+    z-index: var(--popup-z-index, var(--z-popups));
+}
+
+.item-popup.hidden {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* Dynamic positioning - uses CSS custom properties set by JavaScript */
+.item-popup.positioned {
+    left: var(--popup-left, 0);
+    top: var(--popup-top, 0);
+    position: fixed;
+    z-index: var(--popup-z-index, var(--z-popups));
+}
+
+/* Clickable popup content styling */
+.popup-content {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.popup-content:hover {
+    transform: scale(1.02);
+    background: rgb(135 172 58 / 5%);
+    border-radius: 10px;
+}
+
+/* Popup Image - Dynamic Height */
+.popup-image {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+
+/* Popup Details Container */
+.popup-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Popup Text Elements */
+.popup-title {
+    font-size: var(--popup-title-size);
+    font-weight: var(--popup-title-weight);
+    color: var(--popup-title-color);
+    margin-bottom: 8px;
+}
+
+.popup-category {
+    font-size: var(--popup-category-size);
+    color: var(--popup-category-color);
+    margin-bottom: 1px;
+    font-weight: 600;
+}
+
+.popup-description {
+    font-size: var(--popup-description-size);
+    color: var(--popup-description-color);
+    margin-bottom: 10px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Badge styling */
+.popup-sale-badge, 
+.popup-stock-badge, 
+.popup-marketing-badge {
+    position: absolute;
+    top: 8px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.popup-sale-badge {
+    left: 8px;
+}
+
+.popup-stock-badge {
+    right: 8px;
+}
+
+.popup-marketing-badge {
+    right: 8px;
+    top: 35px; /* Position below stock badge */
+}
+
+/* Override positioning for image overlay badges */
+.popup-image-container .popup-marketing-badge {
+    top: 6px;
+    right: 6px;
+}
+
+.sale-badge {
+    background: #ef4444;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.stock-badge {
+    background: #f97316;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+.marketing-badge {
+    background: #3b82f6;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 30%);
+    display: inline-block;
+    border: 1px solid white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    min-width: 45px;
+    text-align: center;
+    position: relative;
+}
+
+/* Badge Shape Variations */
+.marketing-badge.shape-circle {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    line-height: 1;
+}
+
+.marketing-badge.shape-diamond {
+    border-radius: 0;
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    transform: rotate(45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marketing-badge.shape-diamond span {
+    transform: rotate(-45deg);
+    font-size: 8px;
+    line-height: 1;
+}
+
+.marketing-badge.shape-star {
+    background: transparent;
+    border: none;
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marketing-badge.shape-star::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 18px solid #3b82f6;
+}
+
+.marketing-badge.shape-star::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-top: 18px solid #3b82f6;
+}
+
+.marketing-badge.shape-star span {
+    position: relative;
+    z-index: 10;
+    background: #3b82f6;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 8px;
+    line-height: 1;
+    border: 1px solid white;
+    color: white;
+}
+
+.marketing-badge.shape-hexagon {
+    background: #3b82f6;
+    width: 50px;
+    height: 43px;
+    padding: 0;
+    position: relative;
+    margin: 5px 0;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.marketing-badge.shape-hexagon::before,
+.marketing-badge.shape-hexagon::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+}
+
+.marketing-badge.shape-hexagon::before {
+    bottom: 100%;
+    border-bottom: 12px solid #3b82f6;
+}
+
+.marketing-badge.shape-hexagon::after {
+    top: 100%;
+    border-top: 12px solid #3b82f6;
+}
+
+.marketing-badge.shape-hexagon span {
+    color: white;
+}
+
+.marketing-badge.shape-hexagon span {
+    color: white;
+    font-size: 8px;
+    line-height: 1;
+    z-index: 10;
+    position: relative;
+}
+
+.marketing-badge.shape-rounded {
+    border-radius: 25px;
+    padding: 6px 12px;
+    font-size: 9px;
+}
+
+.marketing-badge.shape-pill {
+    border-radius: 20px;
+    padding: 5px 15px;
+    font-size: 9px;
+}
+
+/* Modal Badge Shape Variations */
+.modal-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+/* Modal Badge base styling */
+.modal-badge, .modal-badge * {
+    white-space: nowrap;
+}
+
+.modal-badge.shape-circle {
+    border-radius: 50%;
+    min-width: max-content;
+    width: auto;
+    height: auto;
+    padding: 8px 12px;
+    font-size: inherit;
+    line-height: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+}
+
+.modal-badge.shape-diamond {
+    min-width: max-content;
+    width: auto;
+    height: auto;
+    padding: 8px 12px;
+    transform: rotate(45deg);
+    border-radius: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+}
+
+.modal-badge.shape-diamond span {
+    transform: rotate(-45deg);
+    font-size: inherit;
+    line-height: inherit;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+    min-width: max-content;
+}
+
+.modal-badge.shape-star {
+    background: inherit;
+    border: none;
+    min-width: max-content;
+    width: auto;
+    height: auto;
+    padding: 8px 12px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+}
+
+.modal-badge.shape-star::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-bottom: 18px solid #22c55e;
+}
+
+.modal-badge.shape-star::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+    border-top: 18px solid #22c55e;
+}
+
+.modal-badge.shape-star span {
+    position: relative;
+    z-index: 10;
+    background: inherit;
+    padding: inherit;
+    border-radius: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+    white-space: nowrap;
+    text-overflow: clip;
+    overflow: visible;
+    max-width: none;
+    min-width: max-content;
+}
+
+/* Green badge star (Quality) */
+.bg-green-600 .modal-badge.shape-star::before,
+.bg-green-600 .modal-badge.shape-star::after {
+    border-bottom-color: #16a34a;
+    border-top-color: #16a34a;
+}
+
+.bg-green-600 .modal-badge.shape-star span {
+    background: #16a34a;
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+/* Red badge star (Trending) */
+.bg-red-600 .modal-badge.shape-star::before,
+.bg-red-600 .modal-badge.shape-star::after {
+    border-bottom-color: #dc2626;
+    border-top-color: #dc2626;
+}
+
+.bg-red-600 .modal-badge.shape-star span {
+    background: #dc2626;
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+/* Yellow badge star (Bestseller) */
+.bg-yellow-600 .modal-badge.shape-star::before,
+.bg-yellow-600 .modal-badge.shape-star::after,
+.bg-amber-700 .modal-badge.shape-star::before,
+.bg-amber-700 .modal-badge.shape-star::after {
+    border-bottom-color: #92400e;
+    border-top-color: #92400e;
+}
+
+.bg-yellow-600 .modal-badge.shape-star span,
+.bg-amber-700 .modal-badge.shape-star span {
+    background: #92400e;
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+.modal-badge.shape-hexagon {
+    min-width: max-content;
+    width: auto;
+    height: auto;
+    padding: 8px 12px;
+    position: relative;
+    margin: 5px 0;
+    border-radius: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+}
+
+.modal-badge.shape-hexagon::before,
+.modal-badge.shape-hexagon::after {
+    content: "";
+    position: absolute;
+    width: 0;
+    border-left: 25px solid transparent;
+    border-right: 25px solid transparent;
+}
+
+.modal-badge.shape-hexagon::before {
+    bottom: 100%;
+    border-bottom: 12px solid #22c55e;
+}
+
+.modal-badge.shape-hexagon::after {
+    top: 100%;
+    border-top: 12px solid #22c55e;
+}
+
+/* Green badge hexagon (Quality) */
+.bg-green-600 .modal-badge.shape-hexagon,
+.bg-green-600 .modal-badge.shape-hexagon::before,
+.bg-green-600 .modal-badge.shape-hexagon::after {
+    background: #16a34a;
+    border-bottom-color: #16a34a;
+    border-top-color: #16a34a;
+}
+
+/* Red badge hexagon (Trending) */
+.bg-red-600 .modal-badge.shape-hexagon,
+.bg-red-600 .modal-badge.shape-hexagon::before,
+.bg-red-600 .modal-badge.shape-hexagon::after {
+    background: #dc2626;
+    border-bottom-color: #dc2626;
+    border-top-color: #dc2626;
+}
+
+/* Yellow badge hexagon (Bestseller) */
+.bg-yellow-600 .modal-badge.shape-hexagon,
+.bg-yellow-600 .modal-badge.shape-hexagon::before,
+.bg-yellow-600 .modal-badge.shape-hexagon::after,
+.bg-amber-700 .modal-badge.shape-hexagon,
+.bg-amber-700 .modal-badge.shape-hexagon::before,
+.bg-amber-700 .modal-badge.shape-hexagon::after {
+    background: #92400e;
+    border-bottom-color: #92400e;
+    border-top-color: #92400e;
+}
+
+.modal-badge.shape-hexagon span {
+    font-size: inherit;
+    line-height: inherit;
+    z-index: 10;
+    position: relative;
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+    min-width: max-content;
+}
+
+.modal-badge.shape-rounded {
+    border-radius: 25px;
+    padding: 8px 12px;
+    font-size: inherit;
+    min-width: max-content;
+    width: auto;
+    white-space: nowrap;
+    text-overflow: clip;
+    overflow: visible;
+    max-width: none;
+}
+
+.modal-badge.shape-pill {
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-size: inherit;
+    min-width: max-content;
+    width: auto;
+    white-space: nowrap;
+    text-overflow: clip;
+    overflow: visible;
+    max-width: none;
+}
+
+.modal-badge.shape-rectangle {
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: inherit;
+    min-width: max-content;
+    width: auto;
+    white-space: nowrap;
+    text-overflow: clip;
+    overflow: visible;
+    max-width: none;
+}
+
+/* Main sales pitch styling */
+.popup-main-sales-pitch {
+    margin-bottom: 8px;
+}
+
+.popup-main-pitch {
+    font-size: 13px;
+    color: var(--brand-primary, #87ac3a);
+    font-weight: 600;
+    font-style: italic;
+    line-height: 1.3;
+    padding: 4px 0;
+}
+
+/* Sales pitch content styling */
+.popup-sales-pitch {
+    margin-top: 12px;
+    padding: 8px 0;
+    border-top: 1px solid #e0e0e0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.popup-enhanced-description {
+    margin-bottom: 10px;
+    color: #333;
+    font-style: italic;
+}
+
+.popup-selling-points,
+.popup-competitive-advantages {
+    margin-bottom: 8px;
+}
+
+.popup-selling-points h4,
+.popup-competitive-advantages h4 {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand-primary, #87ac3a);
+    text-transform: uppercase;
+}
+
+.popup-selling-points ul,
+.popup-competitive-advantages ul {
+    margin: 0;
+    padding: 0 0 0 16px;
+    font-size: 11px;
+}
+
+.popup-selling-points li,
+.popup-competitive-advantages li {
+    margin: 2px 0;
+    color: #555;
+    line-height: 1.3;
+}
+
+.popup-urgency {
+    margin-top: 8px;
+    padding: 4px 8px;
+    background: #ff6b6b;
+    color: white;
+    border-radius: 4px;
+    font-size: 11px;
+    text-align: center;
+}
+
+.popup-price {
+    font-size: var(--popup-price-size);
+    font-weight: bold;
+    color: var(--popup-price-color);
+    margin-bottom: 10px;
+}
+
+/* Popup Add Button */
+.popup-add-btn,
+.popup-add-to-cart {
+    width: 100%;
+    background: var(--button-bg-primary);
+    color: var(--button-text-primary);
+    border: none;
+    padding: 8px;
+    border-radius: var(--button-border-radius);
+    font-family: var(--font-primary);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
+}
+
+.popup-add-btn:hover,
+.popup-add-to-cart:hover {
+    background: var(--button-bg-primary-hover);
+    color: var(--button-text-primary);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 15%);
+    transform: translateY(-1px);
+}
+
+/* ==============================================
+   ENHANCED POPUP SYSTEM (Rooms 2, 3)
+   ============================================== */
+
+.item-popup-enhanced {
+    position: absolute;
+    background: var(--popup-enhanced-bg-color);
+    border-radius: var(--popup-enhanced-border-radius);
+    box-shadow: var(--popup-enhanced-shadow);
+    min-width: var(--popup-enhanced-min-width);
+    max-width: var(--popup-enhanced-max-width);
+    width: auto;
+    z-index: var(--popup-z-index);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    transform: translateY(10px);
+}
+
+.item-popup-enhanced.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.popup-content-enhanced {
+    display: flex;
+    gap: 16px;
+    padding: var(--popup-enhanced-padding);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 12px;
+    position: relative; /* For badge positioning */
+}
+
+.popup-content-enhanced:hover {
+    transform: scale(1.02);
+    background: rgb(135 172 58 / 5%);
+}
+
+/* Enhanced popup badges */
+.item-popup-enhanced .popup-sale-badge,
+.item-popup-enhanced .popup-stock-badge,
+.item-popup-enhanced .popup-marketing-badge {
+    position: absolute;
+    top: 12px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.item-popup-enhanced .popup-sale-badge {
+    left: 12px;
+}
+
+.item-popup-enhanced .popup-stock-badge {
+    right: 12px;
+}
+
+.item-popup-enhanced .popup-marketing-badge {
+    right: 12px;
+    top: 40px; /* Position below stock badge */
+}
+
+/* Enhanced Popup Image - Dynamic Height */
+.popup-image-enhanced {
+    width: 200px;
+    max-width: 200px;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.popup-details-enhanced {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.popup-title-enhanced {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.popup-sku {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 4px;
+    font-family: 'Courier New', monospace;
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.popup-stock {
+    font-size: 12px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.popup-category-enhanced {
+    color: var(--popup-category-color);
+    font-size: var(--popup-category-size);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.popup-description-enhanced {
+    color: #4a5568;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 4px 0;
+    flex-grow: 1;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.popup-price-enhanced {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--button-bg-primary);
+    margin: 8px 0;
+}
+
+.popup-actions-enhanced {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.popup-add-btn-enhanced {
+    background: var(--button-bg-primary);
+    color: var(--button-text-primary);
+    border: none;
+    padding: 10px 16px;
+    border-radius: var(--button-border-radius);
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+}
+
+.popup-add-btn-enhanced:hover {
+    background: var(--button-bg-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(135 172 58 / 30%);
+}
+
+.popup-details-btn-enhanced {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    padding: 10px 16px;
+    border-radius: var(--button-border-radius);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+}
+
+.popup-details-btn-enhanced:hover {
+    background: #cbd5e0;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+}
+
+/* ==============================================
+   MODAL CART BUTTONS (Consistent across all rooms)
+   ============================================== */
+
+div #confirmAddToCart,
+#confirmAddToCart {
+    background-color: var(--button-bg-primary);
+    color: var(--button-text-primary);
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--button-border-radius);
+    font-family: var(--font-primary);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
+}
+
+div #confirmAddToCart:hover,
+#confirmAddToCart:hover {
+    background-color: var(--button-bg-primary-hover);
+    color: var(--button-text-primary);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 15%);
+    transform: translateY(-1px);
+}
+
+/* ==============================================
+   OUT OF STOCK STYLING
+   ============================================== */
+
+.item-icon.out-of-stock {
+    opacity: 0.7;
+    filter: grayscale(30%);
+}
+
+.item-icon.out-of-stock:hover {
+    opacity: 0.9;
+    filter: grayscale(10%);
+}
+
+.out-of-stock-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #dc2626;
+    color: black;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 10;
+    border: 1px solid rgb(255 255 255 / 30%);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+}
+
+/* ==============================================
+   RESPONSIVE DESIGN
+   ============================================== */
+
+@media (width <= 768px) {
+    .item-popup {
+        min-width: 250px;
+        max-width: 300px;
+        padding: 12px;
+    }
+    
+    .item-popup-enhanced {
+        min-width: 320px;
+        max-width: 350px;
+    }
+    
+    .popup-content-enhanced {
+        flex-direction: column;
+        padding: 16px;
+    }
+    
+    .popup-image-enhanced {
+        width: 100%;
+        height: auto;
+        max-height: 250px;
+    }
+    
+    .popup-image {
+        height: auto;
+        max-height: 300px;
+    }
+}
+
+/* ==============================================
+   ANIMATIONS
+   ============================================== */
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ==============================================
+   UTILITY CLASSES FOR FUTURE ROOMS
+   ============================================== */
+
+.popup-container {
+    position: relative;
+}
+
+.popup-trigger {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.popup-trigger:hover {
+    transform: scale(1.05);
+}
+
+.popup-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    color: var(--popup-description-color);
+}
+
+.popup-error {
+    color: #dc2626;
+    text-align: center;
+    padding: 20px;
+    font-size: 14px;
+}
+
+/* ==============================================
+   ENHANCED POPUP BADGES
+   ============================================== */
+
+/* Quality Badge */
+.popup-quality-badge {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    z-index: 8;
+    transform: translateY(28px);
+}
+
+.quality-badge {
+    background: #28a745;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Trending Badge */
+.popup-trending-badge {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    z-index: 9;
+    transform: translateY(56px);
+}
+
+.trending-badge {
+    background: #ff6b6b;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Bestseller Badge */
+.popup-bestseller-badge {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    z-index: 7;
+    transform: translateY(84px);
+}
+
+.bestseller-badge {
+    background: #ffc107;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ==============================================
+   ENHANCED POPUP CONTENT SECTIONS
+   ============================================== */
+
+/* Social Proof Section */
+.popup-social-proof {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 10%);
+}
+
+.popup-social-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.social-stat {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #495057;
+}
+
+.stat-icon {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+}
+
+.stat-text {
+    font-weight: 500;
+    color: #212529;
+}
+
+/* Quick Benefits Section */
+.popup-quick-benefits {
+    background: linear-gradient(135deg, #e8f5e8, #d4edda);
+    border: 1px solid #c3e6cb;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+}
+
+.popup-benefits-list h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #155724;
+}
+
+.popup-benefits-list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.popup-benefits-list li {
+    font-size: 12px;
+    color: #155724;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.popup-benefits-list li::before {
+    content: "✓";
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Urgency Factors Section */
+.popup-urgency-factors {
+    background: linear-gradient(135deg, #fff3cd, #ffeaa7);
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    animation: pulse 4s infinite;
+}
+
+.popup-urgency-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.urgency-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #856404;
+    font-weight: 500;
+}
+
+.urgency-icon {
+    font-size: 14px;
+    color: #fd7e14;
+}
+
+.urgency-text {
+    color: #856404;
+}
+
+/* Reviews Section */
+.popup-reviews {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+}
+
+.popup-review-snippet h4 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #495057;
+}
+
+.review-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.review-stars {
+    font-size: 12px;
+    color: #ffc107;
+}
+
+.review-text {
+    font-size: 12px;
+    color: #6c757d;
+    font-style: italic;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.review-author {
+    font-size: 11px;
+    color: #868e96;
+    font-weight: 500;
+}
+
+/* Final Push Section */
+.popup-final-push {
+    background: #007bff;
+    color: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 8px 0;
+    text-align: center;
+}
+
+.popup-final-push-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.final-push-text {
+    font-size: 13px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+} 
+
+/* Fun Badge Styling - Bubbles, Clouds, Stars */
+
+/* Bubble Badge Style */
+.popup-quality-badge .quality-badge,
+.popup-trending-badge .trending-badge,
+.popup-bestseller-badge .bestseller-badge,
+.popup-marketing-badge .marketing-badge,
+.popup-stock-badge .stock-badge,
+.popup-sale-badge .sale-badge {
+    position: relative;
+    display: inline-block;
+    padding: 8px 12px 8px 20px; /* Extra left padding for icon */
+    border-radius: 50px;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgb(0 0 0 / 20%);
+    animation: none;
+}
+
+/* Minimal Icon Effects */
+.popup-quality-badge .quality-badge::before,
+.popup-trending-badge .trending-badge::before,
+.popup-bestseller-badge .bestseller-badge::before,
+.popup-marketing-badge .marketing-badge::before,
+.popup-stock-badge .stock-badge::before,
+.popup-sale-badge .sale-badge::before {
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    transform: translateY(-50%);
+    font-size: 8px;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+/* Quality Badge Icon */
+.popup-quality-badge .quality-badge::before {
+    content: '✓';
+    color: #10b981;
+}
+
+/* Trending Badge Icon */
+.popup-trending-badge .trending-badge::before {
+    content: '⚡';
+    color: #f59e0b;
+}
+
+/* Bestseller Badge Icon */
+.popup-bestseller-badge .bestseller-badge::before {
+    content: '★';
+    color: #fbbf24;
+}
+
+/* Sale Badge Icon */
+.popup-sale-badge .sale-badge::before {
+    content: '%';
+    color: #ef4444;
+}
+
+/* Stock Badge Icon */
+.popup-stock-badge .stock-badge::before {
+    content: '!';
+    color: #f97316;
+}
+
+/* Marketing Badge Icon */
+.popup-marketing-badge .marketing-badge::before {
+    content: '◆';
+    color: #8b5cf6;
+}
+
+/* Modal Badge Fun Styling */
+#detailedQualityBadge span,
+#detailedTrendingBadge span,
+#detailedBestsellerBadge span {
+    position: relative;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-weight: bold;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px 8px 20px; /* Extra left padding for icon */
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgb(0 0 0 / 20%);
+    animation: none;
+}
+
+/* Modal Badge Icons */
+#detailedQualityBadge span::before,
+#detailedTrendingBadge span::before,
+#detailedBestsellerBadge span::before,
+#detailedSaleBadge span::before,
+#detailedStockBadge span::before {
+    position: absolute;
+    top: 50%;
+    left: 6px;
+    transform: translateY(-50%);
+    font-size: 8px;
+    font-weight: bold;
+    opacity: 0.8;
+}
+
+/* Modal Quality Badge Icon */
+#detailedQualityBadge span::before {
+    content: '✓';
+    color: #10b981;
+}
+
+/* Modal Trending Badge Icon */
+#detailedTrendingBadge span::before {
+    content: '⚡';
+    color: #f59e0b;
+}
+
+/* Modal Bestseller Badge Icon */
+#detailedBestsellerBadge span::before {
+    content: '★';
+    color: #fbbf24;
+}
+
+/* Modal Sale Badge Icon */
+#detailedSaleBadge span::before {
+    content: '%';
+    color: #ef4444;
+}
+
+/* Modal Stock Badge Icon */
+#detailedStockBadge span::before {
+    content: '!';
+    color: #f97316;
+}
+
+/* Badge Style System - 3 rotating effects */
+
+/* Style 1: Minimal Icons (already implemented above) */
+
+/* Style 2: Corner Decorations */
+.badge-style-2::after {
+    content: '';
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #fbbf24, #f59e0b);
+    box-shadow: 0 0 8px rgb(251 191 36 / 60%);
+}
+
+.badge-style-2::before {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #10b981, #059669);
+    box-shadow: 0 0 6px rgb(16 185 129 / 60%);
+}
+
+/* Style 3: Pulse Animation */
+.badge-style-3 {
+    animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes badgePulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgb(0 0 0 / 20%);
+    }
+
+    50% { 
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgb(0 0 0 / 30%);
+    }
+}
+
+/* Override icon padding for corner decoration style */
+.badge-style-2 {
+    padding: 8px 12px; /* Reset padding for corner decorations */
+}
+
+/* Override icons for corner decoration style */
+.badge-style-2.popup-quality-badge .quality-badge::before,
+.badge-style-2.popup-trending-badge .trending-badge::before,
+.badge-style-2.popup-bestseller-badge .bestseller-badge::before,
+.badge-style-2.popup-marketing-badge .marketing-badge::before,
+.badge-style-2.popup-stock-badge .stock-badge::before,
+.badge-style-2.popup-sale-badge .sale-badge::before,
+.badge-style-2#detailedQualityBadge span::before,
+.badge-style-2#detailedTrendingBadge span::before,
+.badge-style-2#detailedBestsellerBadge span::before,
+.badge-style-2#detailedSaleBadge span::before,
+.badge-style-2#detailedStockBadge span::before {
+    display: none; /* Hide icons for corner decoration style */
+}
+
+/* Reduce the sales pitch section size to prevent scrollbars */
+.popup-sales-pitch {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 8px;
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+.popup-sales-pitch h4 {
+    font-size: 12px;
+    margin-bottom: 4px;
+    margin-top: 8px;
+}
+
+.popup-sales-pitch ul {
+    margin-bottom: 8px;
+}
+
+.popup-sales-pitch li {
+    margin-bottom: 2px;
+}
+
+/* Reduce modal sales pitch size */
+#detailedSalesPitch {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 12px;
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+#detailedSalesPitch h3 {
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+
+#detailedSalesPitch .space-y-2 > * + * {
+    margin-top: 6px;
+}
+
+#detailedSalesPitch .space-y-3 > * + * {
+    margin-top: 8px;
+}
+
+/* Additional specific ellipsis prevention for modal badges */
+#detailedSaleBadge, #detailedStockBadge, #detailedQualityBadge, #detailedTrendingBadge, #detailedBestsellerBadge,
+#detailedSaleBadge *, #detailedStockBadge *, #detailedQualityBadge *, #detailedTrendingBadge *, #detailedBestsellerBadge *,
+#detailedSaleText, #detailedQualityText, #detailedTrendingText, #detailedBestsellerText,
+.detailed-item-modal .bg-red-500, .detailed-item-modal .bg-orange-500, .detailed-item-modal .bg-green-600, 
+.detailed-item-modal .bg-red-600, .detailed-item-modal .bg-amber-700,
+.detailed-item-modal .bg-red-500 *, .detailed-item-modal .bg-orange-500 *, .detailed-item-modal .bg-green-600 *, 
+.detailed-item-modal .bg-red-600 *, .detailed-item-modal .bg-amber-700 * {
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+    width: auto;
+    min-width: max-content;
+    text-align: center;
+}
+
+/* Force all spans in absolute positioned divs to show full text */
+.detailed-item-modal .absolute span,
+.detailed-item-modal div[class*="absolute"] span,
+#detailedItemModal .absolute span,
+#detailedItemModal div[class*="absolute"] span {
+    text-overflow: clip;
+    white-space: nowrap;
+    overflow: visible;
+    max-width: none;
+    width: auto;
+    min-width: max-content;
+    display: inline-block;
+}
+
+ 

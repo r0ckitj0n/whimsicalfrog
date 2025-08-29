@@ -225,6 +225,7 @@ function loginUser($userData) {
  * Logout user
  */
 function logoutUser() {
+<<<<<<< HEAD
     unset($_SESSION['user']);
     
     // Clear any other auth-related session data
@@ -235,6 +236,15 @@ function logoutUser() {
     
     // Optionally destroy entire session
     // session_destroy();
+=======
+    // Ensure session is active
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    // Clear all session data and destroy session
+    session_unset();
+    session_destroy();
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 }
 
 ?>

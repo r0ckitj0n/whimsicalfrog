@@ -1,6 +1,12 @@
 /**
+<<<<<<< HEAD
  * WhimsicalFrog Global Notification System
  * Provides consistent, branded notifications across the entire application
+=======
+ * WhimsicalFrog Unified Notification System
+ * Consolidated branded notification system with fallback handling
+ * Replaces both global-notifications.js and modules/notification-system.js
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
  */
 
 class WhimsicalFrogNotifications {
@@ -8,16 +14,26 @@ class WhimsicalFrogNotifications {
         this.notifications = new Map();
         this.nextId = 1;
         this.container = null;
+<<<<<<< HEAD
+=======
+        this.initialized = false;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         this.init();
     }
 
     init() {
+<<<<<<< HEAD
+=======
+        if (this.initialized) return;
+        
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         // Create notification container if it doesn't exist
         if (!this.container) {
             this.container = document.createElement('div');
             this.container.id = 'wf-notification-container';
             this.container.className = 'wf-notification-container';
             
+<<<<<<< HEAD
             // Use CSS variables from database for container styling
             this.container.style.cssText = `
                 position: var(--notification-container-position, fixed);
@@ -26,18 +42,47 @@ class WhimsicalFrogNotifications {
                 z-index: var(--notification-container-zindex, 2147483647);
                 pointer-events: none;
                 max-width: var(--notification-container-width, 420px);
+=======
+            // Use CSS variables for container styling with fallbacks
+            this.container.style.cssText = `
+                position: var(-notification-container-position, fixed);
+                top: var(-notification-container-top, 24px);
+                right: var(-notification-container-right, 24px);
+                z-index: var(-notification-container-zindex, 2147483647);
+                pointer-events: none;
+                max-width: var(-notification-container-width, 420px);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 width: 100%;
             `;
             document.body.appendChild(this.container);
         }
+<<<<<<< HEAD
     }
 
     show(message, type = 'info', options = {}) {
+=======
+        
+        this.initialized = true;
+        console.log('✅ WhimsicalFrog Unified Notification System initialized');
+    }
+
+    show(message, type = 'info', options = {}) {
+        if (!this.initialized) {
+            console.warn('Notification system not initialized, initializing now...');
+            this.init();
+        }
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         const {
             title = null,
             duration = this.getDefaultDuration(type),
             persistent = false,
+<<<<<<< HEAD
             actions = null
+=======
+            actions = null,
+            autoHide = true
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         } = options;
 
         const id = this.nextId++;
@@ -49,6 +94,7 @@ class WhimsicalFrogNotifications {
         // Trigger animation
         requestAnimationFrame(() => {
             notification.style.opacity = '1';
+<<<<<<< HEAD
             notification.style.transform = 'var(--notification-transform-show, translateX(0) scale(1))';
         });
 
@@ -64,6 +110,16 @@ class WhimsicalFrogNotifications {
             }, duration);
         } else if (persistent) {
             console.log(`Notification ${id} is persistent - will not auto-dismiss`);
+=======
+            notification.style.transform = 'var(-notification-transform-show, translateX(0) scale(1))';
+        });
+
+        // Auto-remove if not persistent and autoHide is enabled
+        if (!persistent && autoHide && duration > 0) {
+            setTimeout(() => {
+                this.remove(id);
+            }, duration);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
 
         return id;
@@ -75,6 +131,7 @@ class WhimsicalFrogNotifications {
         notification.dataset.id = id;
         notification.dataset.type = type;
         
+<<<<<<< HEAD
         // Apply branded styling using CSS variables from database
         notification.style.cssText = `
             background: var(--notification-${type}-bg, ${this.getFallbackColor(type, 'background')});
@@ -100,6 +157,8 @@ class WhimsicalFrogNotifications {
         
         // Brand accent is now handled by CSS pseudo-element ::before
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         // Add click-to-dismiss functionality
         notification.addEventListener('click', (event) => {
             console.log(`Notification ${id} clicked - removing`);
@@ -111,6 +170,7 @@ class WhimsicalFrogNotifications {
         // Prevent event bubbling on button clicks
         notification.addEventListener('mousedown', (event) => {
             console.log(`Notification ${id} mousedown event`);
+<<<<<<< HEAD
             // Don't stop propagation here - let the click through for dismiss
         });
 
@@ -141,15 +201,34 @@ class WhimsicalFrogNotifications {
                 <div class="wf-notification-body" style="flex: 1; min-width: 0;">
                     ${title ? `<div class="wf-notification-title" style="font-weight: ${titleWeight}; margin-bottom: ${titleMargin};">${title}</div>` : ''}
                     <div class="wf-notification-message" style="word-wrap: break-word;">
+=======
+        });
+
+        notification.title = 'Click to dismiss';
+
+        // Create HTML content
+        notification.innerHTML = `
+            <div class="wf-notification-content">
+                <div class="wf-notification-icon">
+                    ${this.getTypeIcon(type)}
+                </div>
+                <div class="wf-notification-body">
+                    ${title ? `<div class="wf-notification-title">${title}</div>` : ''}
+                    <div class="wf-notification-message">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ${message}
                     </div>
                     ${actions ? this.createActions(actions) : ''}
                 </div>
                 ${!persistent ? `
+<<<<<<< HEAD
                     <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})" 
                             style="background: none; border: none; cursor: pointer; font-size: 18px; padding: 0; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; border-radius: 4px; transition: all 0.2s; margin-top: 1px; flex-shrink: 0; opacity: 0.7;"
                             onmouseover="this.style.opacity='1'; this.style.backgroundColor='rgba(255,255,255,0.2)'"
                             onmouseout="this.style.opacity='0.7'; this.style.backgroundColor='transparent'">&times;</button>
+=======
+                    <button class="wf-notification-close" onclick="event.stopPropagation(); window.wfNotifications.remove(${id})">&times;</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 ` : ''}
             </div>
         `;
@@ -158,14 +237,21 @@ class WhimsicalFrogNotifications {
         if (type === 'warning' || type === 'error') {
             setTimeout(() => {
                 if (notification.parentElement) {
+<<<<<<< HEAD
                     notification.style.transform = 'translateX(0) scale(1.02)';
                     setTimeout(() => {
                         notification.style.transform = 'translateX(0) scale(1)';
+=======
+                    notification.classList.add('pulse');
+                    setTimeout(() => {
+                        notification.classList.remove('pulse');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     }, 150);
                 }
             }, 200);
         }
 
+<<<<<<< HEAD
         // Add click handler to open cart modal when notification is clicked
         notification.addEventListener('click', function(e) {
             // Don't trigger if clicking the close button
@@ -177,6 +263,8 @@ class WhimsicalFrogNotifications {
             window.location.href = '/?page=cart';
         });
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         return notification;
     }
 
@@ -184,6 +272,7 @@ class WhimsicalFrogNotifications {
         if (!actions || !Array.isArray(actions)) return '';
         
         return `
+<<<<<<< HEAD
             <div class="wf-notification-actions" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
                 ${actions.map(action => `
                     <button onclick="${action.onClick}" 
@@ -198,6 +287,11 @@ class WhimsicalFrogNotifications {
                                    transition: all 0.2s;"
                             onmouseover="this.style.opacity='0.8'"
                             onmouseout="this.style.opacity='1'">
+=======
+            <div class="wf-notification-actions">
+                ${actions.map(action => `
+                    <button onclick="${action.onClick}" class="wf-notification-action ${action.style === 'primary' ? 'primary' : 'secondary'}">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         ${action.text}
                     </button>
                 `).join('')}
@@ -268,7 +362,11 @@ class WhimsicalFrogNotifications {
         if (notification && notification.parentElement) {
             console.log(`Removing notification ${id} from DOM`);
             notification.style.opacity = '0';
+<<<<<<< HEAD
             notification.style.transform = 'var(--notification-transform-enter, translateX(100%) scale(0.9))';
+=======
+            notification.style.transform = 'var(-notification-transform-enter, translateX(100%) scale(0.9))';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             
             setTimeout(() => {
                 if (notification.parentElement) {
@@ -368,6 +466,7 @@ class WhimsicalFrogNotifications {
     }
 }
 
+<<<<<<< HEAD
 // Initialize global notification system
 window.wfNotifications = new WhimsicalFrogNotifications();
 
@@ -479,3 +578,92 @@ function showSuccessNotification(title, message) {
     }, 3000);
 }
 }
+=======
+// Initialize unified notification system
+window.wfNotifications = new WhimsicalFrogNotifications();
+
+// Consolidated global functions - prevent duplicate registrations
+function registerNotificationFunctions() {
+    // Only register if not already registered
+    if (!window._wfNotificationFunctionsRegistered) {
+        // Main notification functions
+        window.showNotification = (message, type = 'info', options = {}) => {
+            return window.wfNotifications.show(message, type, options);
+        };
+
+        window.showSuccess = (message, options = {}) => {
+            return window.wfNotifications.success(message, options);
+        };
+
+        window.showError = (message, options = {}) => {
+            return window.wfNotifications.error(message, options);
+        };
+
+        window.showWarning = (message, options = {}) => {
+            return window.wfNotifications.warning(message, options);
+        };
+
+        window.showInfo = (message, options = {}) => {
+            return window.wfNotifications.info(message, options);
+        };
+
+        window.showValidation = (message, options = {}) => {
+            return window.wfNotifications.validation(message, options);
+        };
+
+        window._wfNotificationFunctionsRegistered = true;
+        console.log('📢 WhimsicalFrog notification functions registered globally');
+    }
+}
+
+// Register functions immediately
+registerNotificationFunctions();
+
+// Override alert and showToast functions (immediate execution)
+if (!window._wfAlertOverridden) {
+    window.alert = function(message) {
+        // Detect if this is a cart-related message
+        if (message.includes('added to your cart') || message.includes('added to cart')) {
+            window.wfNotifications.success(message);
+        } else {
+            window.wfNotifications.info(message);
+        }
+    };
+    window._wfAlertOverridden = true;
+}
+
+// Enhanced showToast function for backward compatibility
+if (!window.showToast) {
+    window.showToast = (typeOrMessage, messageOrType = null, options = {}) => {
+        // Handle both (type, message) and (message, type) parameter orders
+        let message, type;
+        
+        if (messageOrType === null) {
+            message = typeOrMessage;
+            type = 'info';
+        } else if (typeof typeOrMessage === 'string' && ['success', 'error', 'warning', 'info'].includes(typeOrMessage)) {
+            type = typeOrMessage;
+            message = messageOrType;
+        } else {
+            message = typeOrMessage;
+            type = messageOrType || 'info';
+        }
+        
+        return window.wfNotifications.show(message, type, options);
+    };
+}
+
+// Additional utility functions
+window.hideNotification = (id) => window.wfNotifications.remove(id);
+window.clearNotifications = () => window.wfNotifications.removeAll();
+
+// Cart notification integration
+if (window.cart && typeof window.cart === 'object') {
+    window.cart.showNotification = (message) => window.wfNotifications.success(message);
+    window.cart.showErrorNotification = (message) => window.wfNotifications.error(message);
+    window.cart.showValidationError = (message) => window.wfNotifications.validation(message);
+}
+
+// Final system ready message
+console.log('🎉 WhimsicalFrog Unified Notification System ready!');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)

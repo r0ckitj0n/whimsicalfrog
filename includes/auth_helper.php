@@ -19,6 +19,11 @@ class AuthHelper {
      * @return bool True if user has admin privileges
      */
     public static function isAdmin(): bool {
+<<<<<<< HEAD
+=======
+        // Initialize session for session-based authentication
+        SessionManager::init();
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         // Parse JSON input for token-based requests
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
         
@@ -46,9 +51,18 @@ class AuthHelper {
      * @param string $message Error message to return
      */
     public static function requireAdmin(int $httpCode = 403, string $message = 'Admin access required'): void {
+<<<<<<< HEAD
         if (!self::isAdmin()) {
             if (class_exists('Response')) {
                 Response::error($message, $httpCode);
+=======
+        // Initialize session to access user data
+        SessionManager::init();
+        if (!self::isAdmin()) {
+            if (class_exists('Response')) {
+                // Pass httpCode as third argument to set correct HTTP status code
+                Response::error($message, null, $httpCode);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             } else {
                 // Fallback for APIs that don't use Response class
                 http_response_code($httpCode);

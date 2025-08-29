@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhimsicalFrog Database Status</title>
     
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for db_status -->
 <style id="db_status-css">
@@ -41,6 +42,11 @@
 </head>
 <body>
     <div class="container">
+=======
+</head>
+<body>
+    <div class="">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="header">
             <h1>🐸 WhimsicalFrog Database Status</h1>
             <p>Database Management Dashboard</p>
@@ -192,8 +198,13 @@
         <div class="actions">
             <a href="db_web_manager.php" class="btn">🔧 Web Manager</a>
             <a href="?refresh=1" class="btn">🔄 Refresh Status</a>
+<<<<<<< HEAD
             <a href="#" onclick="runCommand('test-css')" class="btn">🧪 Test CSS</a>
             <a href="#" onclick="runCommand('generate-css')" class="btn">🎨 Generate CSS</a>
+=======
+            <a href="#" data-action="runCommand" data-params='{"command":"test-css"}' class="btn">🧪 Test CSS</a>
+            <a href="#" data-action="runCommand" data-params='{"command":"generate-css"}' class="btn">🎨 Generate CSS</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         </div>
     </div>
     

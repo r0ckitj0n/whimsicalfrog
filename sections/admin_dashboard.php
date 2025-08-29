@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for admin_dashboard -->
 <style id="admin_dashboard-css">
@@ -32,6 +33,8 @@
     document.addEventListener('DOMContentLoaded', loadAdmin_dashboardCSS);
 </script>
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 <?php
 // Admin Dashboard - Configurable widget-based dashboard
 require_once __DIR__ . '/../includes/functions.php';
@@ -117,7 +120,11 @@ if (empty($dashboardConfig)) {
 ?>
 
 <div class="dashboard-container">
+<<<<<<< HEAD
     <!-- Dashboard Sections -->
+=======
+    <!- Dashboard Sections ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div id="dashboardGrid" class="dashboard-grid space-y-6">
         <?php foreach ($dashboardConfig as $config): ?>
             <?php 
@@ -130,18 +137,30 @@ if (empty($dashboardConfig)) {
                  data-section-key="<?= htmlspecialchars($config['section_key']) ?>" 
                  data-order="<?= $config['display_order'] ?>"
                  data-width="<?= htmlspecialchars($widthClass) ?>">
+<<<<<<< HEAD
                 <!-- Always show title and description for dashboard sections -->
                 <div class="section-header p-4 border-b border-gray-100">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <h3 class="text-lg font-semibold text-gray-800 mb-1">
+=======
+                <!- Always show title and description for dashboard sections ->
+                <div class="section-header border-b border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <?= htmlspecialchars(($config['custom_title'] ?? '') ?: $sectionInfo['title']) ?>
                             </h3>
                             <p class="text-sm text-gray-600">
                                 <?= htmlspecialchars(($config['custom_description'] ?? '') ?: $sectionInfo['description']) ?>
                             </p>
                         </div>
+<<<<<<< HEAD
                         <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 ml-3 p-2 rounded hover:bg-gray-100" title="Drag to reorder">
+=======
+                        <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100" title="Drag to reorder">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M8 6h2v2H8V6zm6 0h2v2h-2V6zM8 10h2v2H8v-2zm6 0h2v2h-2v-2zM8 14h2v2H8v-2zm6 0h2v2h-2v-2z"/>
                             </svg>
@@ -149,6 +168,7 @@ if (empty($dashboardConfig)) {
                     </div>
                 </div>
                 
+<<<<<<< HEAD
                 <div class="section-content p-4">
                     <?php if ($config['section_key'] === 'metrics'): ?>
                         <!-- Quick Metrics Section -->
@@ -167,45 +187,94 @@ if (empty($dashboardConfig)) {
                             </div>
                             <div class="metric-card bg-yellow-50 p-4 rounded-lg text-center">
                                 <div class="text-3xl font-bold text-yellow-600 mb-1">$<?= number_format($totalRevenue, 2) ?></div>
+=======
+                <div class="section-content">
+                    <?php if ($config['section_key'] === 'metrics'): ?>
+                        <!- Quick Metrics Section ->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="metric-card bg-blue-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-blue-600"><?= number_format($totalItems) ?></div>
+                                <div class="text-sm text-blue-800 font-medium">Items</div>
+                            </div>
+                            <div class="metric-card bg-green-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-green-600"><?= number_format($totalOrders) ?></div>
+                                <div class="text-sm text-green-800 font-medium">Orders</div>
+                            </div>
+                            <div class="metric-card bg-purple-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-purple-600"><?= number_format($totalCustomers) ?></div>
+                                <div class="text-sm text-purple-800 font-medium">Customers</div>
+                            </div>
+                            <div class="metric-card bg-yellow-50 rounded-lg text-center">
+                                <div class="text-3xl font-bold text-yellow-600">$<?= number_format($totalRevenue, 2) ?></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <div class="text-sm text-yellow-800 font-medium">Revenue</div>
                             </div>
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'recent_orders'): ?>
+<<<<<<< HEAD
                         <!-- Recent Orders Section -->
                         <div class="space-y-3">
                             <?php if (!empty($recentOrders)): ?>
                                 <?php foreach (array_slice($recentOrders, 0, 5) as $order): ?>
                                 <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+=======
+                        <!- Recent Orders Section ->
+                        <div class="space-y-3">
+                            <?php if (!empty($recentOrders)): ?>
+                                <?php foreach (array_slice($recentOrders, 0, 5) as $order): ?>
+                                <div class="flex justify-between items-center bg-gray-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div>
                                         <div class="font-medium text-sm"><?= htmlspecialchars($order['id']) ?></div>
                                         <div class="text-xs text-gray-600"><?= htmlspecialchars($order['username'] ?? 'Guest') ?></div>
                                     </div>
                                     <div class="text-right">
                                         <div class="text-sm font-medium">$<?= number_format($order['total'], 2) ?></div>
+<<<<<<< HEAD
                                         <div class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+=======
+                                        <div class="text-xs rounded-full bg-blue-100 text-blue-800">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <?= htmlspecialchars($order['status'] ?? 'Pending') ?>
                                         </div>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
+<<<<<<< HEAD
                                 <div class="text-center pt-2">
                                     <a href="/?page=admin&section=orders" class="text-blue-600 hover:text-blue-800 text-sm">View All Orders →</a>
                                 </div>
                             <?php else: ?>
                                 <div class="text-center text-gray-500 py-8">
                                     <div class="text-3xl mb-2">📋</div>
+=======
+                                <div class="text-center">
+                                    <a href="/?page=admin&section=orders" class="text-blue-600 hover:text-blue-800 text-sm">View All Orders →</a>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center text-gray-500">
+                                    <div class="text-3xl">📋</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="text-sm">No recent orders</div>
                                 </div>
                             <?php endif; ?>
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'low_stock'): ?>
+<<<<<<< HEAD
                         <!-- Low Stock Section -->
                         <div class="space-y-3">
                             <?php if (!empty($lowStockItems)): ?>
                                 <?php foreach ($lowStockItems as $item): ?>
                                 <div class="flex justify-between items-center p-2 bg-red-50 rounded">
+=======
+                        <!- Low Stock Section ->
+                        <div class="space-y-3">
+                            <?php if (!empty($lowStockItems)): ?>
+                                <?php foreach ($lowStockItems as $item): ?>
+                                <div class="flex justify-between items-center bg-red-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div>
                                         <div class="font-medium text-sm"><?= htmlspecialchars($item['name'] ?? $item['sku']) ?></div>
                                         <div class="text-xs text-gray-600"><?= htmlspecialchars($item['sku']) ?></div>
@@ -216,19 +285,32 @@ if (empty($dashboardConfig)) {
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
+<<<<<<< HEAD
                                 <div class="text-center pt-2">
                                     <a href="/?page=admin&section=inventory" class="text-red-600 hover:text-red-800 text-sm">Manage Inventory →</a>
                                 </div>
                             <?php else: ?>
                                 <div class="text-center text-gray-500 py-8">
                                     <div class="text-3xl mb-2">✅</div>
+=======
+                                <div class="text-center">
+                                    <a href="/?page=admin&section=inventory" class="text-red-600 hover:text-red-800 text-sm">Manage Inventory →</a>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-center text-gray-500">
+                                    <div class="text-3xl">✅</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="text-sm">All items well stocked</div>
                                 </div>
                             <?php endif; ?>
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'inventory_summary'): ?>
+<<<<<<< HEAD
                         <!-- Inventory Summary Section -->
+=======
+                        <!- Inventory Summary Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="space-y-3">
                             <?php 
                                                          $inventoryStats = Database::queryRow('SELECT 
@@ -239,32 +321,55 @@ if (empty($dashboardConfig)) {
                                  FROM items');
                             $topItems = Database::queryAll('SELECT name, sku, stockLevel, reorderPoint FROM items ORDER BY stockLevel DESC LIMIT 3');
                             ?>
+<<<<<<< HEAD
                             <div class="grid grid-cols-2 gap-3 mb-4">
                                 <div class="bg-blue-50 p-3 rounded text-center">
                                     <div class="text-lg font-bold text-blue-600"><?= $inventoryStats['total_items'] ?? 0 ?></div>
                                     <div class="text-xs text-blue-800">Total Items</div>
                                 </div>
                                 <div class="bg-red-50 p-3 rounded text-center">
+=======
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="bg-blue-50 rounded text-center">
+                                    <div class="text-lg font-bold text-blue-600"><?= $inventoryStats['total_items'] ?? 0 ?></div>
+                                    <div class="text-xs text-blue-800">Total Items</div>
+                                </div>
+                                <div class="bg-red-50 rounded text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="text-lg font-bold text-red-600"><?= $inventoryStats['low_stock'] ?? 0 ?></div>
                                     <div class="text-xs text-red-800">Low Stock</div>
                                 </div>
                             </div>
                             <?php if (!empty($topItems)): ?>
+<<<<<<< HEAD
                                 <div class="text-xs font-medium text-gray-600 mb-2">Top Stock Items:</div>
                                 <?php foreach ($topItems as $item): ?>
                                 <div class="flex justify-between items-center text-xs p-2 bg-gray-50 rounded">
+=======
+                                <div class="text-xs font-medium text-gray-600">Top Stock Items:</div>
+                                <?php foreach ($topItems as $item): ?>
+                                <div class="flex justify-between items-center text-xs bg-gray-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <span><?= htmlspecialchars($item['name'] ?? $item['sku']) ?></span>
                                     <span class="font-medium"><?= $item['stockLevel'] ?? 0 ?></span>
                                 </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
+<<<<<<< HEAD
                             <div class="text-center pt-2">
+=======
+                            <div class="text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <a href="/?page=admin&section=inventory" class="text-blue-600 hover:text-blue-800 text-sm">Manage Inventory →</a>
                             </div>
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'customer_summary'): ?>
+<<<<<<< HEAD
                         <!-- Customer Summary Section -->
+=======
+                        <!- Customer Summary Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="space-y-3">
                             <?php 
                                                          $customerStats = Database::queryRow('SELECT 
@@ -272,28 +377,47 @@ if (empty($dashboardConfig)) {
                                  FROM users WHERE role != \'admin\'');
                              $recentCustomers = Database::queryAll('SELECT username, email FROM users WHERE role != \'admin\' ORDER BY id DESC LIMIT 3');
                             ?>
+<<<<<<< HEAD
                                                          <div class="grid grid-cols-1 gap-3 mb-4">
                                  <div class="bg-green-50 p-3 rounded text-center">
+=======
+                                                         <div class="grid grid-cols-1 gap-3">
+                                 <div class="bg-green-50 rounded text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                      <div class="text-lg font-bold text-green-600"><?= $customerStats['total_customers'] ?? 0 ?></div>
                                      <div class="text-xs text-green-800">Total Customers</div>
                                  </div>
                              </div>
                             <?php if (!empty($recentCustomers)): ?>
+<<<<<<< HEAD
                                 <div class="text-xs font-medium text-gray-600 mb-2">Recent Customers:</div>
                                 <?php foreach ($recentCustomers as $customer): ?>
                                 <div class="text-xs p-2 bg-gray-50 rounded">
+=======
+                                <div class="text-xs font-medium text-gray-600">Recent Customers:</div>
+                                <?php foreach ($recentCustomers as $customer): ?>
+                                <div class="text-xs bg-gray-50 rounded">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="font-medium"><?= htmlspecialchars($customer['username'] ?? 'Unknown') ?></div>
                                     <div class="text-gray-500"><?= htmlspecialchars($customer['email'] ?? '') ?></div>
                                 </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
+<<<<<<< HEAD
                             <div class="text-center pt-2">
+=======
+                            <div class="text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <a href="/?page=admin&section=customers" class="text-green-600 hover:text-green-800 text-sm">Manage Customers →</a>
                             </div>
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'marketing_tools'): ?>
+<<<<<<< HEAD
                         <!-- Marketing Tools Section -->
+=======
+                        <!- Marketing Tools Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="space-y-3">
                             <?php 
                             $marketingStats = Database::queryRow('SELECT 
@@ -302,26 +426,44 @@ if (empty($dashboardConfig)) {
                                 (SELECT COUNT(*) FROM social_posts WHERE scheduled_date >= CURDATE()) as scheduled_posts
                             ');
                             ?>
+<<<<<<< HEAD
                             <div class="grid grid-cols-1 gap-2 mb-4">
                                 <div class="bg-orange-50 p-3 rounded text-center">
                                     <div class="text-lg font-bold text-orange-600"><?= $marketingStats['email_campaigns'] ?? 0 ?></div>
                                     <div class="text-xs text-orange-800">Email Campaigns</div>
                                 </div>
                                 <div class="bg-indigo-50 p-3 rounded text-center">
+=======
+                            <div class="grid grid-cols-1 gap-2">
+                                <div class="bg-orange-50 rounded text-center">
+                                    <div class="text-lg font-bold text-orange-600"><?= $marketingStats['email_campaigns'] ?? 0 ?></div>
+                                    <div class="text-xs text-orange-800">Email Campaigns</div>
+                                </div>
+                                <div class="bg-indigo-50 rounded text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="text-lg font-bold text-indigo-600"><?= $marketingStats['active_discounts'] ?? 0 ?></div>
                                     <div class="text-xs text-indigo-800">Active Discounts</div>
                                 </div>
                             </div>
                             <div class="text-center space-y-2">
                                 <div class="flex gap-2 justify-center">
+<<<<<<< HEAD
                                     <a href="/?page=admin&section=marketing" class="px-3 py-1 bg-orange-600 hover:bg-orange-700 text-white text-xs rounded">📧 Email</a>
                                     <a href="/?page=admin&section=marketing" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded">🏷️ Discounts</a>
+=======
+                                    <a href="/?page=admin&section=marketing" class="bg-orange-600 hover:bg-orange-700 text-white text-xs rounded">📧 Email</a>
+                                    <a href="/?page=admin&section=marketing" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded">🏷️ Discounts</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 </div>
                             </div>
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'order_fulfillment'): ?>
+<<<<<<< HEAD
                         <!-- Updated Order Fulfillment Interface Embedded -->
+=======
+                        <!- Updated Order Fulfillment Interface Embedded ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <?php
                         // Get filter parameters
                         $filterDate = $_GET['filter_date'] ?? '';
@@ -385,13 +527,19 @@ if (empty($dashboardConfig)) {
                         ?>
                         
                         <div class="space-y-4">
+<<<<<<< HEAD
                             <!-- Filter Section -->
                             <div class="bg-white border border-gray-200 rounded-lg p-4">
+=======
+                            <!- Filter Section ->
+                            <div class="bg-white border border-gray-200 rounded-lg">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <form method="GET" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                                     <input type="hidden" name="page" value="admin">
                                     <input type="hidden" name="section" value="">
                                     
                                     <div>
+<<<<<<< HEAD
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Date</label>
                                         <input type="date" name="filter_date" value="<?= htmlspecialchars($filterDate) ?>" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
                                     </div>
@@ -404,6 +552,20 @@ if (empty($dashboardConfig)) {
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Order Status</label>
                                         <select name="filter_status" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+=======
+                                        <label class="block text-xs font-medium text-gray-700">Date</label>
+                                        <input type="date" name="filter_date" value="<?= htmlspecialchars($filterDate) ?>" class="w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700">Items</label>
+                                        <input type="text" name="filter_items" value="<?= htmlspecialchars($filterItems) ?>" placeholder="Search..." class="w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700">Order Status</label>
+                                        <select name="filter_status" class="w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <option value="">All Order Status</option>
                                             <?php foreach ($statusOptions as $status): ?>
                                             <option value="<?= htmlspecialchars($status) ?>" <?= $defaultStatus === $status ? 'selected' : '' ?>>
@@ -414,8 +576,13 @@ if (empty($dashboardConfig)) {
                                     </div>
                                     
                                     <div>
+<<<<<<< HEAD
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Payment</label>
                                         <select name="filter_payment_method" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+=======
+                                        <label class="block text-xs font-medium text-gray-700">Payment</label>
+                                        <select name="filter_payment_method" class="w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <option value="">All Payment</option>
                                             <?php foreach ($paymentMethodOptions as $method): ?>
                                             <option value="<?= htmlspecialchars($method) ?>" <?= $filterPaymentMethod === $method ? 'selected' : '' ?>>
@@ -426,8 +593,13 @@ if (empty($dashboardConfig)) {
                                     </div>
                                     
                                     <div>
+<<<<<<< HEAD
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Shipping</label>
                                         <select name="filter_shipping_method" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+=======
+                                        <label class="block text-xs font-medium text-gray-700">Shipping</label>
+                                        <select name="filter_shipping_method" class="w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <option value="">All Shipping</option>
                                             <?php foreach ($shippingMethodOptions as $method): ?>
                                             <option value="<?= htmlspecialchars($method) ?>" <?= $filterShippingMethod === $method ? 'selected' : '' ?>>
@@ -438,8 +610,13 @@ if (empty($dashboardConfig)) {
                                     </div>
                                     
                                     <div>
+<<<<<<< HEAD
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Pay Status</label>
                                         <select name="filter_payment_status" class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+=======
+                                        <label class="block text-xs font-medium text-gray-700">Pay Status</label>
+                                        <select name="filter_payment_status" class="w-full text-xs border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-green-500">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                             <option value="">All Pay Status</option>
                                             <?php foreach ($paymentStatusOptions as $status): ?>
                                             <option value="<?= htmlspecialchars($status) ?>" <?= $filterPaymentStatus === $status ? 'selected' : '' ?>>
@@ -450,17 +627,30 @@ if (empty($dashboardConfig)) {
                                     </div>
                                     
                                     <div class="flex items-end space-x-2">
+<<<<<<< HEAD
                                         <button type="submit" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors">Filter</button>
                                         <a href="/?page=admin" class="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded transition-colors">Clear</a>
+=======
+                                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors">Filter</button>
+                                        <a href="/?page=admin" class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded transition-colors">Clear</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     </div>
                                 </form>
                             </div>
 
+<<<<<<< HEAD
                             <!-- Orders Table -->
                             <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                                 <?php if (empty($orders)): ?>
                                     <div class="text-center py-8 text-gray-500">
                                         <div class="text-3xl mb-2">📋</div>
+=======
+                            <!- Orders Table ->
+                            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                <?php if (empty($orders)): ?>
+                                    <div class="text-center text-gray-500">
+                                        <div class="text-3xl">📋</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <div class="text-sm">No orders found</div>
                                         <div class="text-xs">Try adjusting your filters</div>
                                     </div>
@@ -469,6 +659,7 @@ if (empty($dashboardConfig)) {
                                         <table class="w-full text-xs">
                                             <thead class="bg-gray-50 border-b border-gray-200">
                                                 <tr>
+<<<<<<< HEAD
                                                     <th class="px-3 py-2 text-left font-medium text-gray-700">Order ID</th>
                                                     <th class="px-3 py-2 text-left font-medium text-gray-700">Customer</th>
                                                     <th class="px-3 py-2 text-left font-medium text-gray-700">Date</th>
@@ -481,11 +672,26 @@ if (empty($dashboardConfig)) {
                                                     <th class="px-3 py-2 text-left font-medium text-gray-700">Payment Method</th>
                                                     <th class="px-3 py-2 text-left font-medium text-gray-700">Shipping Method</th>
                                                     <th class="px-3 py-2 text-left font-medium text-gray-700">Actions</th>
+=======
+                                                    <th class="text-left font-medium text-gray-700">Order ID</th>
+                                                    <th class="text-left font-medium text-gray-700">Customer</th>
+                                                    <th class="text-left font-medium text-gray-700">Date</th>
+                                                    <th class="text-left font-medium text-gray-700">Time</th>
+                                                    <th class="text-left font-medium text-gray-700">Items</th>
+                                                    <th class="text-left font-medium text-gray-700">Total</th>
+                                                    <th class="text-left font-medium text-gray-700">Payment Status</th>
+                                                    <th class="text-left font-medium text-gray-700">Payment Date</th>
+                                                    <th class="text-left font-medium text-gray-700">Order Status</th>
+                                                    <th class="text-left font-medium text-gray-700">Payment Method</th>
+                                                    <th class="text-left font-medium text-gray-700">Shipping Method</th>
+                                                    <th class="text-left font-medium text-gray-700">Actions</th>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-gray-200">
                                                 <?php foreach ($orders as $order): ?>
                                                 <tr class="hover:bg-gray-50">
+<<<<<<< HEAD
                                                     <td class="px-3 py-2 font-mono font-medium text-gray-900">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
                                                     <td class="px-3 py-2"><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
                                                     <td class="px-3 py-2 text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
@@ -493,6 +699,15 @@ if (empty($dashboardConfig)) {
                                                     <td class="px-3 py-2 text-center">
                                                         <button onclick="openOrderDetailsModal(<?= htmlspecialchars($order['id'] ?? '') ?>)"
                                                                 class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none p-0"
+=======
+                                                    <td class="font-mono font-medium text-gray-900">#<?= htmlspecialchars($order['id'] ?? '') ?></td>
+                                                    <td class=""><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
+                                                    <td class="text-gray-600"><?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?></td>
+                                                    <td class="text-gray-600"><?= htmlspecialchars(date('g:i A', strtotime($order['date'] ?? 'now'))) ?></td>
+                                                    <td class="text-center">
+                                                        <button onclick="openOrderDetailsModal(<?= htmlspecialchars($order['id'] ?? '') ?>)"
+                                                                class="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-none"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                                 title="Click to view order details">
                                                             <?php
                                                             $totalItems = Database::queryRow("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?", [$order['id']])['total_items'] ?? 0;
@@ -500,15 +715,22 @@ if (empty($dashboardConfig)) {
                                                             ?>
                                                         </button>
                                                     </td>
+<<<<<<< HEAD
                                                     <td class="px-3 py-2 font-semibold">$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
                                                     <td class="px-3 py-2">
                                                         <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="paymentStatus" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+=======
+                                                    <td class="font-semibold">$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
+                                                    <td class="">
+                                                        <select class="w-full text-xs border border-gray-300 rounded order-field-update" data-field="paymentStatus" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                             <option value="Pending" <?= strtolower($order['paymentStatus'] ?? 'Pending') === strtolower('Pending') ? 'selected' : '' ?>>Pending</option>
                                                             <option value="Received" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Received') ? 'selected' : '' ?>>Received</option>
                                                             <option value="Refunded" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Refunded') ? 'selected' : '' ?>>Refunded</option>
                                                             <option value="Failed" <?= strtolower($order['paymentStatus'] ?? '') === strtolower('Failed') ? 'selected' : '' ?>>Failed</option>
                                                         </select>
                                                     </td>
+<<<<<<< HEAD
                                                     <td class="px-3 py-2">
                                                         <input type="date" 
                                                                class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" 
@@ -519,6 +741,18 @@ if (empty($dashboardConfig)) {
                                                     </td>
                                                     <td class="px-3 py-2">
                                                         <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="order_status" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+=======
+                                                    <td class="">
+                                                        <input type="date" 
+                                                               class="w-full text-xs border border-gray-300 rounded order-field-update" 
+                                                               data-field="paymentDate" 
+                                                               data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>"
+                                                               value="<?= !empty($order['paymentDate']) ? htmlspecialchars(date('Y-m-d', strtotime($order['paymentDate']))) : '' ?>"
+                                                               >
+                                                    </td>
+                                                    <td class="">
+                                                        <select class="w-full text-xs border border-gray-300 rounded order-field-update" data-field="order_status" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                             <option value="Pending" <?= strtolower($order['order_status'] ?? 'Pending') === strtolower('Pending') ? 'selected' : '' ?>>Pending</option>
                                                             <option value="Processing" <?= strtolower($order['order_status'] ?? '') === strtolower('Processing') ? 'selected' : '' ?>>Processing</option>
                                                             <option value="Shipped" <?= strtolower($order['order_status'] ?? '') === strtolower('Shipped') ? 'selected' : '' ?>>Shipped</option>
@@ -526,8 +760,13 @@ if (empty($dashboardConfig)) {
                                                             <option value="Cancelled" <?= strtolower($order['order_status'] ?? '') === strtolower('Cancelled') ? 'selected' : '' ?>>Cancelled</option>
                                                         </select>
                                                     </td>
+<<<<<<< HEAD
                                                     <td class="px-3 py-2">
                                                         <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="paymentMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+=======
+                                                    <td class="">
+                                                        <select class="w-full text-xs border border-gray-300 rounded order-field-update" data-field="paymentMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                             <option value="Credit Card" <?= strtolower($order['paymentMethod'] ?? 'Credit Card') === strtolower('Credit Card') ? 'selected' : '' ?>>Credit Card</option>
                                                             <option value="Cash" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Cash') ? 'selected' : '' ?>>Cash</option>
                                                             <option value="Check" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Check') ? 'selected' : '' ?>>Check</option>
@@ -535,8 +774,13 @@ if (empty($dashboardConfig)) {
                                                             <option value="Venmo" <?= strtolower($order['paymentMethod'] ?? '') === strtolower('Venmo') ? 'selected' : '' ?>>Venmo</option>
                                                         </select>
                                                     </td>
+<<<<<<< HEAD
                                                     <td class="px-3 py-2">
                                                         <select class="w-full px-1 py-1 text-xs border border-gray-300 rounded order-field-update" data-field="shippingMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+=======
+                                                    <td class="">
+                                                        <select class="w-full text-xs border border-gray-300 rounded order-field-update" data-field="shippingMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                             <option value="Customer Pickup" <?= strtolower($order['shippingMethod'] ?? 'Customer Pickup') === strtolower('Customer Pickup') ? 'selected' : '' ?>>Customer Pickup</option>
                                                             <option value="Local Delivery" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('Local Delivery') ? 'selected' : '' ?>>Local Delivery</option>
                                                             <option value="USPS" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('USPS') ? 'selected' : '' ?>>USPS</option>
@@ -544,7 +788,11 @@ if (empty($dashboardConfig)) {
                                                             <option value="UPS" <?= strtolower($order['shippingMethod'] ?? '') === strtolower('UPS') ? 'selected' : '' ?>>UPS</option>
                                                         </select>
                                                     </td>
+<<<<<<< HEAD
                                                     <td class="px-3 py-2">
+=======
+                                                    <td class="">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                         <div class="flex space-x-2">
                                                             <a href="/?page=admin&section=orders&view=<?= urlencode($order['id']) ?>" 
                                                                class="text-blue-600 hover:text-blue-800" title="View Order">👁️</a>
@@ -632,7 +880,11 @@ if (empty($dashboardConfig)) {
                                     itemsContainer.appendChild(itemCard);
                                 });
                             } else {
+<<<<<<< HEAD
                                 itemsContainer.innerHTML = '<div class="text-gray-500 text-center py-4">No items found</div>';
+=======
+                                itemsContainer.innerHTML = '<div class="text-gray-500 text-center">No items found</div>';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             }
                             
                             // Update address if available
@@ -717,10 +969,17 @@ if (empty($dashboardConfig)) {
                         });
                         </script>
 
+<<<<<<< HEAD
                         <!-- Order Details Modal - Sunday Layout -->
                         <div class="modal-overlay order-modal" id="orderDetailsModal" style="display: none;">
                             <div class="modal-content order-modal-content">
                                 <!-- Modal Header -->
+=======
+                        <!- Order Details Modal - Sunday Layout ->
+                        <div class="modal-overlay order-modal" id="orderDetailsModal" class="hidden">
+                            <div class="modal-content order-modal-content">
+                                <!- Modal Header ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <div class="modal-header">
                                     <h2 class="modal-title">Order Details: <span id="modal-order-id">#0000</span></h2>
                                     <button onclick="closeOrderDetailsModal()" class="modal-close">
@@ -730,10 +989,17 @@ if (empty($dashboardConfig)) {
                                     </button>
                                 </div>
 
+<<<<<<< HEAD
                                 <!-- Modal Body -->
                                 <div class="modal-body">
                                     <div class="order-form-grid">
                                         <!-- Order Details Column -->
+=======
+                                <!- Modal Body ->
+                                <div class="modal-body">
+                                    <div class="order-form-grid">
+                                        <!- Order Details Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <div class="order-details-column">
                                             <div class="form-section">
                                                 <h3 class="form-section-title">Order Information</h3>
@@ -776,12 +1042,20 @@ if (empty($dashboardConfig)) {
                                             </div>
                                         </div>
 
+<<<<<<< HEAD
                                         <!-- Order Items Column -->
+=======
+                                        <!- Order Items Column ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                         <div class="order-items-column">
                                             <div class="form-section">
                                                 <h3 class="form-section-title">Order Items</h3>
                                                 <div class="order-items-list" id="modal-order-items">
+<<<<<<< HEAD
                                                     <!-- Items will be populated dynamically -->
+=======
+                                                    <!- Items will be populated dynamically ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                                 </div>
                                             </div>
 
@@ -810,7 +1084,11 @@ if (empty($dashboardConfig)) {
                         </div>
                         
                     <?php elseif ($config['section_key'] === 'reports_summary'): ?>
+<<<<<<< HEAD
                         <!-- Reports Summary Section -->
+=======
+                        <!- Reports Summary Section ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                         <div class="space-y-2">
                             <?php 
                             $reportsStats = Database::queryRow('SELECT 
@@ -819,26 +1097,46 @@ if (empty($dashboardConfig)) {
                                 AVG(total) as avg_order_value
                                 FROM orders WHERE DATE(date) >= CURDATE() - INTERVAL 30 DAY');
                             ?>
+<<<<<<< HEAD
                             <div class="grid grid-cols-1 gap-1 mb-2">
                                 <div class="bg-teal-50 p-2 rounded text-center">
                                     <div class="text-sm font-bold text-teal-600">$<?= number_format($reportsStats['total_revenue'] ?? 0, 0) ?></div>
                                     <div class="text-xs text-teal-800">30-Day Revenue</div>
                                 </div>
                                 <div class="bg-cyan-50 p-2 rounded text-center">
+=======
+                            <div class="grid grid-cols-1 gap-1">
+                                <div class="bg-teal-50 rounded text-center">
+                                    <div class="text-sm font-bold text-teal-600">$<?= number_format($reportsStats['total_revenue'] ?? 0, 0) ?></div>
+                                    <div class="text-xs text-teal-800">30-Day Revenue</div>
+                                </div>
+                                <div class="bg-cyan-50 rounded text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                     <div class="text-sm font-bold text-cyan-600">$<?= number_format($reportsStats['avg_order_value'] ?? 0, 0) ?></div>
                                     <div class="text-xs text-cyan-800">Avg Order Value</div>
                                 </div>
                             </div>
+<<<<<<< HEAD
                             <div class="text-center pt-1">
+=======
+                            <div class="text-center">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                                 <a href="/?page=admin&section=reports" class="text-teal-600 hover:text-teal-800 text-xs">View Reports →</a>
                             </div>
                         </div>
                         
                     <?php elseif ($sectionInfo['type'] === 'external'): ?>
+<<<<<<< HEAD
                         <!-- External Section Placeholder -->
                         <div class="text-center text-gray-500 py-8">
                             <div class="text-3xl mb-2">🔗</div>
                             <div class="text-sm mb-2">External Section</div>
+=======
+                        <!- External Section Placeholder ->
+                        <div class="text-center text-gray-500">
+                            <div class="text-3xl">🔗</div>
+                            <div class="text-sm">External Section</div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             <a href="/?page=admin&section=<?= htmlspecialchars($sectionInfo['source']) ?>" 
                                class="text-blue-600 hover:text-blue-800 text-sm">
                                 Open <?= htmlspecialchars($sectionInfo['title']) ?> →
@@ -851,12 +1149,21 @@ if (empty($dashboardConfig)) {
     </div>
     
     <?php if (empty($dashboardConfig)): ?>
+<<<<<<< HEAD
     <!-- Empty State -->
     <div class="text-center py-12">
         <div class="text-6xl mb-4">📊</div>
         <h3 class="text-xl font-semibold text-gray-800 mb-2">Welcome to Your Dashboard</h3>
         <p class="text-gray-600 mb-4">Configure your dashboard to see the information that matters most to you.</p>
         <button onclick="openDashboardConfig()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+=======
+    <!- Empty State ->
+    <div class="text-center">
+        <div class="text-6xl">📊</div>
+        <h3 class="text-xl font-semibold text-gray-800">Welcome to Your Dashboard</h3>
+        <p class="text-gray-600">Configure your dashboard to see the information that matters most to you.</p>
+        <button onclick="openDashboardConfig()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             ⚙️ Configure Dashboard
         </button>
     </div>
@@ -1046,4 +1353,9 @@ function showOrderSaveSuccess() {
 
 
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
  

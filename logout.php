@@ -1,4 +1,5 @@
 <?php
+<<<<<<< HEAD
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/functions.php';
 
@@ -44,5 +45,15 @@ session_destroy();
 
 // Redirect to landing page with logout success parameter
 header('Location: /?page=landing&logout=success');
+=======
+session_start();
+require_once __DIR__ . '/includes/auth.php';
+
+// Logout the user
+logoutUser();
+
+// Redirect to landing page
+header('Location: /?page=landing');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 exit;
 ?> 

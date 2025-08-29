@@ -41,6 +41,7 @@ switch ($method) {
         echo json_encode(['success' => false, 'message' => 'Method not allowed']);
         break;
 }
+<<<<<<< HEAD
 function handleGet($pdo) {
     $action = $_GET['action'] ?? 'get_all';
     
@@ -96,6 +97,56 @@ function getRoom($pdo) {
             echo json_encode(['success' => true, 'room' => $room]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Room not found']);
+=======
+
+function handleGet($pdo) {
+    $action = $_GET['action'] ?? 'get_all';
+    $roomNumber = $_GET['room_number'] ?? null;
+    
+    try {
+        if ($action === 'get_all') {
+            // Get all room settings ordered by display order
+            $stmt = $pdo->prepare("
+                SELECT * FROM room_settings 
+                WHERE is_active = 1 
+                ORDER BY display_order, room_number
+            ");
+            $stmt->execute();
+            $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode(['success' => true, 'rooms' => $rooms]);
+            
+        } elseif ($action === 'get_room' && $roomNumber !== null) {
+            // Get specific room settings
+            $stmt = $pdo->prepare("
+                SELECT * FROM room_settings 
+                WHERE room_number = ? AND is_active = 1
+            ");
+            $stmt->execute([$roomNumber]);
+            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($room) {
+                echo json_encode(['success' => true, 'room' => $room]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Room not found']);
+            }
+            
+        } elseif ($action === 'get_navigation_rooms') {
+            // Get rooms that should appear in navigation (product rooms)
+            $stmt = $pdo->prepare("
+                SELECT room_number, room_name, door_label, description 
+                FROM room_settings 
+                WHERE room_number NOT IN ('A', 'B') AND is_active = 1 
+                ORDER BY display_order, room_number
+            ");
+            $stmt->execute();
+            $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode(['success' => true, 'rooms' => $rooms]);
+            
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
         
     } catch (PDOException $e) {
@@ -104,6 +155,7 @@ function getRoom($pdo) {
     }
 }
 
+<<<<<<< HEAD
 function getNavigationRooms($pdo) {
     try {
         $stmt = $pdo->query("SELECT * FROM room_settings WHERE room_number >= 2 AND is_active = 1 ORDER BY display_order, room_number");
@@ -121,13 +173,18 @@ function getNavigationRooms($pdo) {
     }
 }
 
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 function handlePost($pdo, $input) {
     $action = $input['action'] ?? null;
     
     if ($action === 'create_room') {
         createRoom($pdo, $input);
+<<<<<<< HEAD
     } elseif ($action === 'update_room') {
         updateRoom($pdo, $input);
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     } else {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -272,10 +329,19 @@ function handleDelete($pdo, $input) {
         return;
     }
     
+<<<<<<< HEAD
     // Prevent deletion of core rooms (0-6)
     if ($roomNumber >= 0 && $roomNumber <= 6) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Core rooms (0-6) cannot be deleted']);
+=======
+    // Prevent deletion of core rooms (A, B, plus active product rooms)
+    require_once __DIR__ . '/room_helpers.php';
+    $coreRooms = getCoreRooms();
+    if (in_array($roomNumber, $coreRooms)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Core rooms cannot be deleted']);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         return;
     }
     

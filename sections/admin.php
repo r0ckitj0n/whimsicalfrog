@@ -46,6 +46,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
 ?>
 
 <div class="admin-dashboard">
+<<<<<<< HEAD
     <!-- Admin Header -->
     <div class="admin-header-card mb-4">
         <div class="flex flex-col md:flex-row justify-between items-center">
@@ -60,6 +61,12 @@ $adminRole = $userData['role'] ?? 'Administrator';
     </div>
 
     <!-- Navigation Tabs -->
+=======
+
+
+
+    <!- Navigation Tabs ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <?php
     $section = $_GET['section'] ?? '';
     $tabs = [
@@ -73,7 +80,12 @@ $adminRole = $userData['role'] ?? 'Administrator';
         'settings' => ['Settings', 'admin-tab-settings'],
     ];
     ?>
+<<<<<<< HEAD
     <div class="admin-tab-navigation mb-1">
+=======
+    <?php if ($section !== 'pos'): ?>
+    <div class="admin-tab-navigation">
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div class="flex flex-wrap gap-2">
             <?php foreach ($tabs as $key => [$label, $cssClass]): ?>
                 <?php 
@@ -97,6 +109,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
                 </a>
             <?php endforeach; ?>
         </div>
+<<<<<<< HEAD
         
         <div class="admin-page-title">
             <?php 
@@ -117,6 +130,12 @@ $adminRole = $userData['role'] ?? 'Administrator';
     </div>
 
     <!-- Dynamic Section Content -->
+=======
+    </div>
+    <?php endif; ?>
+
+    <!- Dynamic Section Content ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <div id="admin-section-content">
         <?php
         switch($section) {

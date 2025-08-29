@@ -329,6 +329,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
     <html>
     <head>
         <title>Database Centralization Tool</title>
+<<<<<<< HEAD
         <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
             .button { padding: 10px 20px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; }
@@ -337,12 +338,16 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
             .success { color: #006600; }
             .error { color: #cc0000; }
         </style>
+=======
+        
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     </head>
     <body>
         <h1>🗄️ Database Centralization Tool</h1>
         <p>This tool helps convert your codebase from direct PDO connections to use the centralized Database class.</p>
         
         <div>
+<<<<<<< HEAD
             <button class="button" onclick="performAction('scan')">📊 Scan Files</button>
             <button class="button" onclick="performAction('convert')" 
                     onclick="return confirm('This will modify files and create backups. Continue?')">
@@ -352,6 +357,16 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
         </div>
         
         <div id="results" class="results" style="display: none;"></div>
+=======
+            <button class="button" data-action="performAction" data-params='{"action":"scan"}'>📊 Scan Files</button>
+            <button class="button" data-action="confirmAndPerform" data-params='{"action":"convert","message":"This will modify files and create backups. Continue?"}'>
+                🔄 Convert Files
+            </button>
+            <button class="button" data-action="performAction" data-params='{"action":"test"}'>🧪 Test Connection</button>
+        </div>
+        
+        <div id="results" class="results display-none"></div>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         
         <script>
         async function performAction(action) {

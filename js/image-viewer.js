@@ -4,8 +4,13 @@
  */
 
 // Image viewer variables
+<<<<<<< HEAD
 let currentViewerImages = [];
 let currentViewerIndex = 0;
+=======
+var currentViewerImages = (typeof currentViewerImages !== 'undefined') ? currentViewerImages : [];
+var currentViewerIndex = (typeof currentViewerIndex !== 'undefined') ? currentViewerIndex : 0;
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 
 /**
  * Open the image viewer with given image path and product name
@@ -90,9 +95,17 @@ function openImageViewer(imagePath, productName, allImages = null) {
     
     if (viewerCounter && currentViewerImages.length > 1) {
         viewerCounter.textContent = `${currentViewerIndex + 1} of ${currentViewerImages.length}`;
+<<<<<<< HEAD
         viewerCounter.style.display = 'block';
     } else if (viewerCounter) {
         viewerCounter.style.display = 'none';
+=======
+        viewerCounter.classList.remove('image-viewer-controls-hidden');
+        viewerCounter.classList.add('image-viewer-controls-visible');
+    } else if (viewerCounter) {
+        viewerCounter.classList.remove('image-viewer-controls-visible');
+        viewerCounter.classList.add('image-viewer-controls-hidden');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     // Update navigation buttons visibility
@@ -100,6 +113,7 @@ function openImageViewer(imagePath, productName, allImages = null) {
     const nextBtn = document.getElementById('viewerNextBtn');
     if (prevBtn && nextBtn) {
         const showNav = currentViewerImages.length > 1;
+<<<<<<< HEAD
         prevBtn.style.display = showNav ? 'flex' : 'none';
         nextBtn.style.display = showNav ? 'flex' : 'none';
     }
@@ -109,6 +123,38 @@ function openImageViewer(imagePath, productName, allImages = null) {
     document.body.classList.add('modal-open');
     document.documentElement.classList.add('modal-open');
     
+=======
+        const visibilityClass = showNav ? 'image-viewer-controls-visible' : 'image-viewer-controls-hidden';
+        const hideClass = showNav ? 'image-viewer-controls-hidden' : 'image-viewer-controls-visible';
+        
+        prevBtn.classList.remove(hideClass);
+        prevBtn.classList.add(visibilityClass);
+        nextBtn.classList.remove(hideClass);
+        nextBtn.classList.add(visibilityClass);
+    }
+    
+    // Show the viewer using CSS classes only
+    viewerModal.classList.remove('image-viewer-modal-closed');
+    viewerModal.classList.add('image-viewer-modal-open');
+    // Ensure any lingering hidden class is removed
+    viewerModal.classList.remove('hidden');
+    viewerModal.style.display = 'flex';
+    
+    // Force z-index as backup while we debug the CSS class system
+    viewerModal.style.zIndex = '2700';
+    
+    // Add CSS class to body to manage z-index hierarchy
+    document.body.classList.add('modal-open', 'image-viewer-open');
+    document.documentElement.classList.add('modal-open');
+    
+    // Debug logging
+    console.log('🖼️ Image viewer opened. Classes added:', {
+        bodyClasses: document.body.className,
+        viewerModalZIndex: viewerModal.style.zIndex,
+        viewerModalClasses: viewerModal.className
+    });
+    
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     // Add keyboard support
     document.addEventListener('keydown', handleImageViewerKeyboard);
 }
@@ -119,6 +165,7 @@ function openImageViewer(imagePath, productName, allImages = null) {
 function closeImageViewer() {
     const viewerModal = document.getElementById('imageViewerModal');
     if (viewerModal) {
+<<<<<<< HEAD
         viewerModal.style.display = 'none';
     }
     
@@ -130,6 +177,18 @@ function closeImageViewer() {
     document.body.style.width = '';
     document.body.style.height = '';
     document.documentElement.style.overflow = '';
+=======
+        viewerModal.classList.remove('image-viewer-modal-open');
+        viewerModal.classList.add('image-viewer-modal-closed');
+        viewerModal.style.display = 'none';
+    }
+    
+    // Remove CSS classes to restore z-index hierarchy
+    document.body.classList.remove('modal-open', 'image-viewer-open');
+    document.documentElement.classList.remove('modal-open');
+    document.body.classList.remove('modal-open-overflow-hidden', 'modal-open-position-fixed');
+    document.documentElement.classList.remove('modal-open-overflow-hidden');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     // Remove keyboard support
     document.removeEventListener('keydown', handleImageViewerKeyboard);
@@ -197,30 +256,54 @@ function handleImageViewerKeyboard(event) {
  */
 function createImageViewerModal() {
     const modalHTML = `
+<<<<<<< HEAD
     <div id="imageViewerModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4" style="display: none; z-index: 1000;">
         <div class="relative w-full h-full flex items-center justify-center">
             <!-- Close button -->
             <button id="viewerCloseBtn" onclick="closeImageViewer()" 
+=======
+    <div id="imageViewerModal" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 image-viewer-modal image-viewer-modal-closed">
+        <div class="relative w-full h-full flex items-center justify-center">
+            <!- Close button ->
+            <button id="viewerCloseBtn" data-action="closeImageViewer"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     class="absolute top-4 right-4 text-white hover:text-gray-300 text-4xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center transition-colors">
                 &times;
             </button>
             
+<<<<<<< HEAD
             <!-- Previous button -->
             <button id="viewerPrevBtn" onclick="previousImage()" 
+=======
+            <!- Previous button ->
+            <button id="viewerPrevBtn" data-action="previousImage"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-3xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center transition-colors">
                 &#8249;
             </button>
             
+<<<<<<< HEAD
             <!-- Next button -->
             <button id="viewerNextBtn" onclick="nextImage()" 
+=======
+            <!- Next button ->
+            <button id="viewerNextBtn" data-action="nextImage"
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                     class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white hover:text-gray-300 text-3xl font-bold z-10 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center transition-colors">
                 &#8250;
             </button>
             
+<<<<<<< HEAD
             <!-- Large image -->
             <img id="viewerImage" src="" alt="" class="max-w-full max-h-full object-contain">
             
             <!-- Image info -->
+=======
+            <!- Large image ->
+            <img id="viewerImage" src="" alt="" class="max-w-full max-h-full object-contain">
+            
+            <!- Image info ->
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center bg-black bg-opacity-50 px-4 py-2 rounded-lg">
                 <p id="viewerImageTitle" class="font-medium"></p>
                 <p id="viewerImageCounter" class="text-sm opacity-75"></p>
@@ -260,6 +343,7 @@ function addEnlargeTooltip(container) {
     tooltip.className = 'enlarge-tooltip';
     tooltip.textContent = '🔍 Click to enlarge';
     
+<<<<<<< HEAD
     // Apply brand styling
     tooltip.style.cssText = `
         position: absolute;
@@ -278,16 +362,30 @@ function addEnlargeTooltip(container) {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         white-space: nowrap;
     `;
+=======
+    // Apply brand styling with CSS class
+    tooltip.classList.add('enlarge-tooltip-styled');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     container.appendChild(tooltip);
     
     // Show/hide on hover
     container.addEventListener('mouseenter', () => {
+<<<<<<< HEAD
         tooltip.style.opacity = '1';
     });
     
     container.addEventListener('mouseleave', () => {
         tooltip.style.opacity = '0';
+=======
+        tooltip.classList.add('tooltip-visible');
+        tooltip.classList.remove('tooltip-hidden');
+    });
+    
+    container.addEventListener('mouseleave', () => {
+        tooltip.classList.remove('tooltip-visible');
+        tooltip.classList.add('tooltip-hidden');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     });
 }
 

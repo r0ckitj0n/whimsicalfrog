@@ -1,0 +1,506 @@
+/* ==============================================
+   HEADER & NAVIGATION SYSTEM CSS
+   ============================================== */
+
+/* Header CSS Variables - Uses Global CSS Rules */
+:root {
+    --header-bg-color: linear-gradient(to bottom, rgb(0 0 0 / 95%), transparent);
+    --header-text-color: var(--brand-primary, #87ac3a);
+    --header-logo-height: var(--header-logo-height, 60px);
+    --header-padding-y: var(--header-padding-y, 0.5rem);
+    --header-shadow: var(--header-shadow, none);
+    --nav-link-color: var(--brand-primary, #87ac3a);
+    --nav-link-hover-color: #a3cc4a;
+    --nav-link-active-color: var(--brand-primary, #87ac3a);
+    --search-bar-bg: var(--search-bar-bg, transparent);
+    --search-bar-border: var(--search-bar-border, 2px solid #87ac3a);
+    
+    /* SEARCH BAR CUSTOMIZATION - Uses Global CSS Rules */
+    --search-bar-text-color: var(--search-bar-text-color, #87ac3a);
+    --search-placeholder-color: var(--search-placeholder-color, rgb(135 172 58 / 70%));
+}
+
+/* Main Header Container */
+.site-header {
+    background: var(--header-bg-color);
+    color: var(--header-text-color);
+    padding: var(--header-padding-y) 0;
+    box-shadow: var(--header-shadow);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-header, 2800);
+    max-height: 100%; /* Ensure logo doesn't exceed header height */
+    width: auto; /* Maintain aspect ratio */
+    object-fit: contain; /* Ensures the logo scales down to fit, preserving aspect ratio */
+    height: 60px; /* Enforce a strict height */
+    display: flex; /* Use flexbox for alignment */
+    align-items: center; /* Vertically center content */
+    transition: all 0.3s ease;
+}
+
+.header-logo img {
+    max-height: 60px; /* Explicitly constrain image height to match header */
+    display: block; /* Remove any extra space below the image */
+}
+
+.header-container {
+    width: 100%;
+    margin: 0;
+    padding: 0 !important; /* Ensure no horizontal padding at any breakpoint */
+}
+
+/* Header Layout */
+.header-content {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    width: 100%;
+}
+
+/* Each section alignment within grid */
+.header-left {
+    justify-self: start;
+}
+
+.header-center {
+    justify-self: center;
+    display: flex;
+}
+
+.header-right {
+    justify-self: end;
+}
+
+/* Center the middle column contents */
+
+
+
+
+/* Ensure header-left sticks to far left */
+.header-left {
+    justify-self: start;
+}
+
+.header-left {
+    flex: none;
+    display: flex;
+    align-items: center;
+}
+
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding-right: 0;
+}
+
+/* Logo Styling */
+.header-logo {
+    height: var(--header-logo-height);
+    width: auto;
+    transition: opacity 0.3s ease;
+    filter: drop-shadow(1px 1px 2px rgb(0 0 0 / 70%));
+}
+
+.header-logo:hover {
+    opacity: 0.8;
+}
+
+.logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--header-text-color);
+}
+
+.logo-link img {
+    max-height: 50px; /* Ensure logo fits within the 60px header with padding */
+    width: auto;
+    object-fit: contain;
+}
+
+.logo-text {
+    font-family: Merienda, cursive;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-left: 0.5rem;
+    color: var(--header-text-color);
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+.logo-tagline {
+    font-family: Merienda, cursive;
+    font-size: 1rem;
+    color: var(--header-text-color);
+    margin-left: 0.5rem;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+    line-height: 1.2;
+}
+
+/* Navigation Links */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem; /* Tight spacing between nav links */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-link {
+    color: var(--nav-link-color);
+    text-decoration: none;
+    padding: 0.3rem 0.4rem 0.3rem 0.5rem; /* Reduce right padding */
+    border-radius: 0.375rem;
+    font-weight: 500;
+    font-size: 1.05rem;
+    transition: all 0.2s ease;
+    position: relative;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+.nav-link:hover {
+    color: var(--nav-link-hover-color);
+    background-color: rgb(135 172 58 / 10%);
+}
+
+.nav-link.active {
+    color: var(--nav-link-active-color);
+    background-color: rgb(135 172 58 / 15%);
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 2px;
+    background-color: var(--nav-link-active-color);
+    border-radius: 1px;
+}
+
+/* Search Bar */
+.search-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+.search-input-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 0.5rem 1rem 0.5rem 2.5rem;
+    background: transparent;
+    border: 2px solid #87ac3a;
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    color: #87ac3a;
+    transition: all 0.2s ease;
+}
+
+/* More specific selectors to ensure green styling */
+.header-center .search-container .search-input-container .search-bar,
+.header-center .search-container .search-input-container input[type="search"],
+input.search-bar,
+input[type="search"].search-bar {
+    background: transparent;
+    border: 2px solid #87ac3a;
+    color: #87ac3a;
+    background-color: transparent;
+}
+
+.header-center .search-container .search-input-container .search-bar::placeholder,
+.header-center .search-container .search-input-container input[type="search"]::placeholder,
+input.search-bar::placeholder,
+input[type="search"].search-bar::placeholder {
+    color: rgb(135 172 58 / 80%);
+}
+
+/* Override any Tailwind or other framework styles */
+.search-bar {
+    background: transparent;
+    background-color: transparent;
+    border: 2px solid #87ac3a;
+    border-color: #87ac3a;
+    color: #87ac3a;
+}
+
+/* Ultra-specific overrides to beat any framework */
+html body .site-header .header-container .header-content .header-center .search-container .search-input-container .search-bar,
+html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"] {
+    background: transparent;
+    background-color: transparent;
+    border: 2px solid #87ac3a;
+    border-color: #87ac3a;
+    color: #87ac3a;
+}
+
+/* Header Search Input - Green styling with transparent background */
+#headerSearchInput,
+input#headerSearchInput,
+.main-nav input#headerSearchInput,
+nav input#headerSearchInput,
+input[id="headerSearchInput"],
+html body nav input#headerSearchInput,
+html body input#headerSearchInput {
+    background: transparent;
+    background-color: transparent;
+    border: 2px solid #87ac3a;
+    border-color: #87ac3a;
+    color: #87ac3a;
+    border-radius: 9999px;
+    transition: all 0.2s ease;
+}
+
+#headerSearchInput::placeholder,
+input#headerSearchInput::placeholder,
+.main-nav input#headerSearchInput::placeholder,
+nav input#headerSearchInput::placeholder,
+input[id="headerSearchInput"]::placeholder,
+html body nav input#headerSearchInput::placeholder,
+html body input#headerSearchInput::placeholder {
+    color: rgb(135 172 58 / 80%);
+    opacity: 1;
+}
+
+#headerSearchInput:focus,
+input#headerSearchInput:focus,
+.main-nav input#headerSearchInput:focus,
+nav input#headerSearchInput:focus,
+input[id="headerSearchInput"]:focus,
+html body nav input#headerSearchInput:focus,
+html body input#headerSearchInput:focus {
+    border-color: #6b8e23;
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(135 172 58 / 10%);
+    color: #87ac3a;
+    background-color: rgb(135 172 58 / 5%);
+}
+
+html body .site-header .header-container .header-content .header-center .search-container .search-input-container .search-bar::placeholder,
+html body .site-header .header-container .header-content .header-center .search-container .search-input-container input[type="search"]::placeholder {
+    color: rgb(135 172 58 / 80%);
+}
+
+.search-bar:focus {
+    outline: none;
+    border-color: #6b8e23;
+    box-shadow: 0 0 0 3px rgb(135 172 58 / 10%);
+    background-color: rgb(135 172 58 / 5%);
+}
+
+.search-bar::placeholder {
+    color: rgb(135 172 58 / 80%);
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: #87ac3a;
+    fill: #87ac3a;
+    stroke: #87ac3a;
+}
+
+/* Cart Link */
+.cart-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem; /* Slightly less gap inside cart link */
+    color: var(--nav-link-color);
+    text-decoration: none;
+    padding: 0.25rem 0.3rem 0.25rem 0.5rem; /* Smaller right padding */
+    margin-right: -0.1rem; /* Pull cart slightly closer to edge */
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    position: relative;
+    font-size: 1.05rem;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+.cart-link:hover {
+    color: var(--nav-link-hover-color);
+    background-color: rgb(135 172 58 / 10%);
+}
+
+.cart-count {
+    color: var(--nav-link-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+.cart-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    position: relative;
+    stroke: var(--nav-link-color);
+    filter: drop-shadow(1px 1px 2px rgb(0 0 0 / 70%));
+}
+
+.cart-total {
+    color: var(--nav-link-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+/* Welcome Message */
+.welcome-message {
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+    color: var(--header-text-color);
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+.welcome-message a {
+    color: var(--header-text-color);
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 70%);
+}
+
+.welcome-message a:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--header-text-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.mobile-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--header-bg-color);
+    border-top: 1px solid rgb(0 0 0 / 10%);
+    box-shadow: var(--header-shadow);
+    z-index: var(--z-navigation);
+}
+
+.mobile-menu.active {
+    display: block;
+}
+
+.mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.5rem;
+}
+
+.mobile-nav-link {
+    color: var(--nav-link-color);
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.mobile-nav-link:hover {
+    color: var(--nav-link-hover-color);
+    background-color: rgb(135 172 58 / 10%);
+}
+
+.mobile-search {
+    padding: 1rem;
+    border-top: 1px solid rgb(0 0 0 / 10%);
+}
+
+/* Mobile styles moved to css/responsive/mobile.css */
+
+@media (width <= 480px) {
+    .header-logo {
+        height: calc(var(--header-logo-height) * 0.8);
+    }
+    
+    .logo-text {
+        font-size: 1.25rem;
+    }
+    
+    .cart-count {
+        font-size: 0.75rem;
+    }
+    
+    .cart-icon {
+        width: 1rem;
+        height: 1rem;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .site-header,
+    .nav-link,
+    .search-bar,
+    .cart-link {
+        transition: none;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .site-header {
+        position: static;
+        box-shadow: none;
+        border-bottom: 1px solid #000;
+    }
+    
+    .search-container,
+    .cart-link,
+    .mobile-menu-toggle {
+        display: none;
+    }
+}
+
+/* Dark Mode Support - variables managed in css/core/variables.css */
+@media (prefers-color-scheme: dark) {
+    /* Dark mode styles automatically applied via core/variables.css */
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .nav-link {
+        border: 1px solid transparent;
+    }
+    
+    .nav-link:hover,
+    .nav-link.active {
+        border-color: var(--nav-link-hover-color);
+    }
+    
+    .search-bar {
+        border-width: 2px;
+    }
+} 
+
+/* Hide main navigation on POS page */
+.is-pos-page nav.main-nav {
+    display: none;
+} 

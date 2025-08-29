@@ -56,7 +56,10 @@ class AnalyticsTracker {
     }
     
     getPageType() {
+<<<<<<< HEAD
         const url = window.location.href;
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         const params = new URLSearchParams(window.location.search);
         const page = params.get('page') || 'landing';
         

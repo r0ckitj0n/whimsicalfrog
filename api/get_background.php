@@ -1,6 +1,11 @@
 <?php
 
 require_once __DIR__ . '/../includes/functions.php';
+<<<<<<< HEAD
+=======
+require_once __DIR__ . '/room_helpers.php';
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 // Get active background for a room
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -11,10 +16,39 @@ $dbname = 'whimsicalfrog';
 $username = 'root';
 $password = 'Palz2516';
 
+<<<<<<< HEAD
+=======
+/**
+ * Generate dynamic fallback backgrounds based on room data
+ */
+function generateDynamicFallbacks() {
+    $fallbacks = [
+        'landing' => ['png' => 'background_home.png', 'webp' => 'background_home.webp'],
+        'room_main' => ['png' => 'background_room_main.png', 'webp' => 'background_room_main.webp']
+    ];
+    
+    // Get all valid rooms from database
+    $validRooms = getAllValidRooms();
+    
+    foreach ($validRooms as $roomNumber) {
+        if (!in_array($roomNumber, ['A', 'B'])) {
+            // Generate default filenames for product rooms
+            $fallbacks["room{$roomNumber}"] = [
+                'png' => "background_room{$roomNumber}.png", 
+                'webp' => "background_room{$roomNumber}.webp"
+            ];
+        }
+    }
+    
+    return $fallbacks;
+}
+
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 try {
     try { $pdo = Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
+<<<<<<< HEAD
     // Return fallback backgrounds if database fails
     $roomType = $_GET['room_type'] ?? '';
     $fallbacks = [
@@ -26,6 +60,11 @@ try {
         'room5' => ['png' => 'room5.png', 'webp' => 'room5.webp'],
         'room6' => ['png' => 'room6.png', 'webp' => 'room6.webp']
     ];
+=======
+    // Return dynamic fallback backgrounds if database fails
+    $roomType = $_GET['room_type'] ?? '';
+    $fallbacks = generateDynamicFallbacks();
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     if (isset($fallbacks[$roomType])) {
         echo json_encode([
@@ -37,7 +76,14 @@ try {
             ]
         ]);
     } else {
+<<<<<<< HEAD
         echo json_encode(['success' => false, 'message' => 'Room type not found']);
+=======
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Room type not found and database unavailable'
+        ]);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     exit;
 }
@@ -64,6 +110,7 @@ try {
     if ($background) {
         echo json_encode(['success' => true, 'background' => $background]);
     } else {
+<<<<<<< HEAD
         // Return fallback if no active background found
         $fallbacks = [
             'landing' => ['png' => 'home_background.png', 'webp' => 'home_background.webp'],
@@ -74,6 +121,10 @@ try {
             'room5' => ['png' => 'room5.png', 'webp' => 'room5.webp'],
             'room6' => ['png' => 'room6.png', 'webp' => 'room6.webp']
         ];
+=======
+        // Return dynamic fallback if no active background found
+        $fallbacks = generateDynamicFallbacks();
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         
         if (isset($fallbacks[$roomType])) {
             echo json_encode([
@@ -85,7 +136,14 @@ try {
                 ]
             ]);
         } else {
+<<<<<<< HEAD
             echo json_encode(['success' => false, 'message' => 'No background found for this room']);
+=======
+            echo json_encode([
+                'success' => false, 
+                'message' => 'No background found for this room type'
+            ]);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         }
     }
 } catch (PDOException $e) {

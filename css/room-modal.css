@@ -1,0 +1,704 @@
+/* Room Modal Styles - WhimsicalFrog */
+
+/* Updated to use centralized z-index system and fix styling issues */
+
+/* Hide legacy modal elements when room modal is active */
+body.modal-open #productModal,
+body.modal-open #productModal .modal-content,
+body.modal-open #productModal #modalContent,
+body.modal-open .modal:not(.room-modal-overlay, #detailedItemModal),
+body.modal-open .modal-content:not(.room-modal-container),
+body.modal-open .modal-overlay:not(.room-modal-overlay, #detailedItemModal),
+body.modal-open #quantityModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1; /* Force behind room modal */
+    transform: scale(0); /* Additional hiding */
+}
+
+/* Hide detailed item modal ONLY when room modal is active, not when the detailed modal itself is open */
+body.modal-open:has(.room-modal-overlay.show) #detailedItemModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1; /* Force behind room modal */
+    transform: scale(0); /* Additional hiding */
+}
+
+/* Fallback for browsers that don't support :has() - use a specific class for room modal state */
+body.room-modal-open #detailedItemModal {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1; /* Force behind room modal */
+    transform: scale(0); /* Additional hiding */
+}
+
+/* Allow item popup to work within room modal - it has its own z-index management */
+body.modal-open #itemPopup.in-room-modal {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 2147483647;
+    transform: scale(1);
+}
+
+/* Allow item popup to work within detailed item modal - ensure it's visible */
+body.modal-open #itemPopup.show,
+body.modal-open #itemPopup.visible {
+    display: block;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 2147483647;
+    transform: scale(1);
+}
+
+/* Room Modal Overlay */
+.room-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), var(--dynamic-bg-url);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: var(--z-room-modals, 2400); /* Use centralized z-index */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    padding-top: 90px;
+    overflow: hidden;
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-sizing: border-box;
+}
+
+.room-modal-overlay.show {
+    display: flex;
+    opacity: 1;
+}
+
+/* Room Modal Container - Fixed aspect ratio to match room images (1280:896 = 1.43:1) */
+.room-modal-container {
+    position: relative;
+    background: rgb(255 255 255 / 5%);
+    border-radius: var(--room-modal-border-radius, 32px);
+    box-shadow: 0 25px 50px rgb(0 0 0 / 40%);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgb(255 255 255 / 10%);
+    overflow: hidden;
+    
+    /* Maintain exact 1280:896 aspect ratio */
+    aspect-ratio: 1280 / 896;
+    width: min(95vw, min(95vh * 1.43, 1280px));
+    height: auto; /* Let aspect-ratio control height */
+    
+    /* Fallback for browsers without aspect-ratio support */
+    max-width: 1280px;
+    max-height: 896px;
+    
+    /* Ensure proper scaling */
+    transform: scale(0.9);
+    margin-bottom: 20px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Show state with proper scaling */
+.room-modal-overlay.show .room-modal-container {
+    transform: scale(1);
+}
+
+/* Room Modal Frame - Fill container exactly */
+.room-modal-frame,
+.room-modal-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--room-modal-border-radius, 32px);
+    background: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    overflow: hidden;
+    display: block;
+}
+
+/* Room Modal Header - Use centralized z-index */
+.room-modal-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-room-modal-header, 2450); /* Use centralized z-index */
+    pointer-events: none;
+}
+
+/* Back button positioning - simple top-left */
+.back-button-container {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    pointer-events: auto;
+    z-index: var(--z-room-buttons, 55); /* Use centralized z-index */
+}
+
+/* Room Title/Description Overlay Styles - Ensure proper loading in modal context */
+.room-title-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    max-width: 300px;
+    padding: 15px;
+    background: var(--brand-primary, #87ac3a);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+    border: none;
+    backdrop-filter: blur(10px);
+    text-align: right;
+    z-index: var(--z-room-buttons, 55);
+    pointer-events: auto;
+    transition: all 0.3s ease;
+}
+
+.room-title-overlay:hover {
+    background: var(--brand-primary-dark, #6b8e23);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
+}
+
+.room-title-overlay h1 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+}
+
+.room-title-overlay .room-description {
+    margin: 0;
+    font-size: 0.9rem;
+    color: white;
+    line-height: 1.4;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+}
+
+/* Room Modal Buttons - Remove unwanted borders */
+.room-modal-button {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: none; /* Remove all borders */
+    padding: 12px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.room-modal-button:hover {
+    background: var(--brand-primary-hover, #6b8e23);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 30%);
+}
+
+.room-modal-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+/* Enhanced styling for back button specifically - Remove border */
+.back-button-container .room-modal-button {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: none; /* Explicitly remove border */
+    outline: none; /* Remove outline too */
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+.back-button-container .room-modal-button:hover {
+    background: var(--brand-primary-hover, #6b8e23);
+    border: none; /* Ensure no border on hover */
+    outline: none;
+}
+
+.back-button-container .room-modal-button:focus {
+    border: none; /* Remove focus border */
+    outline: none;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%), 0 0 0 2px rgb(135 172 58 / 30%);
+}
+
+/* Room Modal Loading States */
+.room-modal-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    z-index: 10;
+}
+
+.room-modal-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgb(135 172 58 / 10%);
+    border-top: 4px solid var(--brand-primary, #87ac3a);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.room-modal-loading-text {
+    color: var(--brand-primary, #87ac3a);
+    font-size: 16px;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+}
+
+/* Room Modal Close Button - Use centralized z-index */
+.room-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgb(0 0 0 / 70%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+    line-height: 1;
+    z-index: var(--z-room-modal-header, 2450); /* Use centralized z-index */
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+}
+
+.room-modal-close:hover {
+    background: rgb(0 0 0 / 90%);
+    transform: scale(1.1);
+}
+
+/* Room Modal Title */
+.room-modal-title {
+    background: var(--primary-color, #87ac3a);
+    color: white;
+    padding: 15px 20px;
+    border-radius: var(--radius-2xl); /* Using centralized border radius */
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 30%);
+    backdrop-filter: blur(10px);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Room Modal Iframe Styles */
+.room-modal-iframe-body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    border-radius: var(--room-modal-border-radius);
+}
+
+.room-modal-iframe-page {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--room-modal-border-radius);
+}
+
+/* Modal Z-Index Classes */
+.detailed-item-modal {
+    z-index: var(--z-detailed-item-modal);
+}
+
+.image-zoom-modal {
+    z-index: var(--z-image-zoom-modal);
+}
+
+.quantity-modal {
+    z-index: var(--z-quantity-modal);
+}
+
+.config-form-container {
+    display: none;
+}
+
+/* Room Modal Loading States */
+.room-modal-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgb(255 255 255 / 95%);
+    padding: 20px;
+    border-radius: var(--radius-2xl); /* Using centralized border radius */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 30%);
+}
+
+.room-modal-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color, #87ac3a);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.room-modal-loading-text {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Room Modal Error States */
+.room-modal-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid #fecaca;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 30%);
+}
+
+.room-modal-error-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.room-modal-error-message {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Item Icons with White Background */
+.item-icon {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: transparent !important;
+    padding: 0 !important;
+    border-radius: 12px;
+    box-shadow: none !important;
+    z-index: 20;
+    pointer-events: auto;
+}
+
+.item-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+}
+
+.item-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Room Modal Buttons */
+.room-modal-button {
+    background: var(--primary-color, #87ac3a);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.room-modal-button:hover {
+    background: var(--primary-hover, #6b8e23);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgb(0 0 0 / 30%);
+}
+
+.room-modal-button:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+}
+
+/* Enhanced styling for back button specifically */
+.back-button-container .room-modal-button {
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: none !important;
+}
+
+.back-button-container .room-modal-button:hover {
+    background: var(--brand-primary-hover, #6b8e23);
+    border: none !important;
+}
+
+/* Room Product Icons in Modal - Use centralized z-index */
+.room-product-icon {
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: var(--z-room-elements, 15); /* Use centralized z-index */
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+}
+
+.room-product-icon:hover {
+    transform: scale(1.05);
+    background: rgb(255 255 255 / 95%);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+    z-index: calc(var(--z-room-elements, 15) + 5); /* Slightly higher on hover */
+}
+
+.room-product-icon img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 4px;
+    max-width: 100%;
+    display: block;
+}
+
+/* Out of stock styling */
+.room-product-icon.out-of-stock {
+    opacity: 0.6;
+    background: rgb(240 240 240 / 90%);
+    border-color: #ccc;
+}
+
+/* Enhanced Responsive Design - Maintain 1280:896 aspect ratio */
+@media (width <= 1400px) {
+    .room-modal-container {
+        width: min(90vw, min(90vh * 1.43, 1200px));
+        aspect-ratio: 1280 / 896;
+    }
+    
+    .back-button-container {
+        top: 0.75rem;
+        left: 0.75rem;
+    }
+    
+    .room-title-overlay {
+        top: 0.75rem;
+        right: 0.75rem;
+        max-width: 280px;
+        padding: 12px;
+    }
+    
+    .room-modal-button {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (width <= 1024px) {
+    .room-modal-container {
+        width: min(95vw, min(95vh * 1.43, 1000px));
+        aspect-ratio: 1280 / 896;
+    }
+    
+    .room-modal-overlay {
+        padding: 10px;
+    }
+}
+
+@media (width <= 768px) {
+    .room-modal-container {
+        width: min(98vw, min(98vh * 1.43, 800px));
+        aspect-ratio: 1280 / 896;
+    }
+    
+    .back-button-container {
+        top: 0.5rem;
+        left: 0.5rem;
+    }
+    
+    .room-title-overlay {
+        top: 0.5rem;
+        right: 0.5rem;
+        max-width: 220px;
+        padding: 10px;
+    }
+    
+    .room-title-overlay h1 {
+        font-size: 1.25rem;
+    }
+    
+    .room-title-overlay .room-description {
+        font-size: 0.8rem;
+    }
+    
+    .room-modal-button {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (width <= 480px) {
+    .room-modal-container {
+        width: min(99vw, min(99vh * 1.43, 600px));
+        aspect-ratio: 1280 / 896;
+        border-radius: 16px;
+    }
+    
+    .room-modal-overlay {
+        padding: 5px;
+    }
+    
+    .room-title-overlay {
+        max-width: 180px;
+        padding: 8px;
+    }
+    
+    .room-title-overlay h1 {
+        font-size: 1.1rem;
+    }
+    
+    .room-title-overlay .room-description {
+        font-size: 0.75rem;
+    }
+}
+
+/* Fallback for browsers without aspect-ratio support */
+@supports not (aspect-ratio: 1280 / 896) {
+    .room-modal-container {
+        width: min(95vw, 1280px);
+        height: calc(min(95vw, 1280px) * 896 / 1280);
+        max-height: 896px;
+    }
+    
+    @media (width <= 1400px) {
+        .room-modal-container {
+            width: min(90vw, 1200px);
+            height: calc(min(90vw, 1200px) * 896 / 1280);
+        }
+    }
+    
+    @media (width <= 1024px) {
+        .room-modal-container {
+            width: min(95vw, 1000px);
+            height: calc(min(95vw, 1000px) * 896 / 1280);
+        }
+    }
+    
+    @media (width <= 768px) {
+        .room-modal-container {
+            width: min(98vw, 800px);
+            height: calc(min(98vw, 800px) * 896 / 1280);
+        }
+    }
+    
+    @media (width <= 480px) {
+        .room-modal-container {
+            width: min(99vw, 600px);
+            height: calc(min(99vw, 600px) * 896 / 1280);
+        }
+    }
+}
+
+/* Room Modal Animation States */
+.room-modal-overlay.hide {
+    opacity: 0;
+}
+
+.room-modal-overlay.hide .room-modal-container {
+    transform: scale(0.95);
+}
+
+/* Room Modal Error States */
+.room-modal-error {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fee2e2;
+    color: #dc2626;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid #fecaca;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgb(0 0 0 / 30%);
+}
+
+.room-modal-error-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.room-modal-error-message {
+    font-size: 0.9rem;
+    line-height: 1.4;
+} 
+
+/* Ensure detailed item modal images display correctly */
+.detailed-item-modal-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+} 

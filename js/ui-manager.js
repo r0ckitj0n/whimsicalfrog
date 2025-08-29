@@ -11,6 +11,7 @@
                             // Function to force hide auto-save indicators
                             function hideAutoSaveIndicator() {
                                 const indicators = document.querySelectorAll('.auto-save-indicator, .progress-bar, .loading-indicator');
+<<<<<<< HEAD
                                 indicators.forEach(indicator => {
                                     indicator.style.display = 'none';
                                     indicator.style.visibility = 'hidden';
@@ -26,6 +27,18 @@
                                         indicator.style.opacity = '0';
                                     });
                                 }, 100);
+=======
+                                                indicators.forEach(indicator => {
+                    indicator.classList.add('indicator-hidden');
+                });
+                                
+                                // Set timeout to double-check
+                                                setTimeout(() => {
+                    indicators.forEach(indicator => {
+                        indicator.classList.add('indicator-hidden');
+                    });
+                }, 100);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             }
 
 

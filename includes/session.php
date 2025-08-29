@@ -7,7 +7,12 @@
 class SessionManager {
     private static $initialized = false;
     private static $config = [
+<<<<<<< HEAD
         'name' => 'WHIMSICAL_SESSION',
+=======
+        // Use default PHP session name so API uses the same session cookie
+        'name' => 'PHPSESSID',
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         'lifetime' => 86400, // 24 hours
         'path' => '/',
         'domain' => '',

@@ -76,8 +76,12 @@ function positionPopup(popup, element) {
     if (!popup || !element) return;
     
     // Make popup visible but transparent to measure dimensions
+<<<<<<< HEAD
     popup.style.opacity = '0';
     popup.style.display = 'block';
+=======
+    popup.classList.add('popup-measuring');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     
     // Get element and popup dimensions
     const elementRect = element.getBoundingClientRect();
@@ -100,10 +104,17 @@ function positionPopup(popup, element) {
     }
     
     // Apply position and restore visibility
+<<<<<<< HEAD
     popup.style.left = left + 'px';
     popup.style.top = top + 'px';
     popup.style.opacity = '';
     popup.style.display = '';
+=======
+    popup.style.setProperty('-popup-left', left + 'px');
+    popup.style.setProperty('-popup-top', top + 'px');
+    popup.classList.remove('popup-measuring');
+    popup.classList.add('popup-positioned');
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 }
 
 /**

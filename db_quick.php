@@ -10,6 +10,7 @@ require_once __DIR__ . '/includes/database.php';
 
 function connectLocal() {
     try {
+<<<<<<< HEAD
         $dsn = "mysql:host=localhost;dbname=whimsicalfrog;charset=utf8mb4";
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -17,6 +18,9 @@ function connectLocal() {
             PDO::ATTR_EMULATE_PREPARES => false,
         ];
         return new PDO($dsn, 'root', 'Palz2516', $options);
+=======
+        return Database::getInstance();
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     } catch (PDOException $e) {
         echo "❌ Local database connection failed: " . $e->getMessage() . "\n";
         return null;
@@ -156,7 +160,11 @@ function generateCSS() {
             
             // CSS Variable
             $css .= ":root {\n";
+<<<<<<< HEAD
             $css .= "    --{$rule['rule_name']}: {$rule['css_value']};\n";
+=======
+            $css .= "    -{$rule['rule_name']}: {$rule['css_value']};\n";
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
             $css .= "}\n\n";
             
             // Utility Class

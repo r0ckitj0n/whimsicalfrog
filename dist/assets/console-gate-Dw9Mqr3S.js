@@ -1,0 +1,1 @@
+(function(){if(typeof window>"u")return;const n=/(?:^|[?&])debug=1(?:&|$)/.test(window.location&&window.location.search||"");if(!(window.WF_DEBUG===!0||n)){const o=()=>{};try{window.console&&(window.console.debug=o,window.console.log=o,window.console.info,window.console.info=o)}catch{}}})();

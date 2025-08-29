@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2025-08-16T02:33:57.665Z",
+  "duplicates": [],
+  "conflicts": [
+    {
+      "selectorMedia": "||:root",
+      "files": [
+        "src/styles/site-base.css",
+        "src/styles/z-index.css"
+      ],
+      "declSigs": [
+        [
+          "--brand-light:#a6c86a;--brand-primary:#87ac3a;--brand-secondary:#6b8e23;--font-primary:'Merienda', cursive;--gradient-header:linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.0) 100%);--header-height:80px"
+        ],
+        [
+          "--z-base-elevated:var(--z-index-content-front);--z-base:var(--z-index-base);--z-door-areas:var(--z-index-content-front);--z-dropdown:var(--z-index-dropdown);--z-index-base:1;--z-index-behind:-1;--z-index-content-back:5;--z-index-content-front:15;--z-index-content-mid:10;--z-index-dropdown:200;--z-index-floating-ui:20;--z-index-global-notification:500;--z-index-god-mode:9999;--z-index-modal-back:400;--z-index-modal-base:410;--z-index-modal-content:420;--z-index-modal-front:430;--z-index-modal:var(--z-index-modal-base);--z-index-overlay-backdrop:300;--z-index-overlay:320;--z-index-page-footer:90;--z-index-page-header-elevated:3000;--z-index-page-header:100;--z-index-room-modal-header:2450;--z-index-room-modal:2400;--z-index-tooltip:250;--z-modal:var(--z-index-modal-base);--z-navigation-elevated:var(--z-index-page-header-elevated);--z-navigation:var(--z-index-page-header);--z-notification:var(--z-index-global-notification);--z-room-buttons:var(--z-index-floating-ui);--z-tooltip:var(--z-index-tooltip)"
+        ]
+      ]
+    },
+    {
+      "selectorMedia": "||.site-header.universal-page-header",
+      "files": [
+        "src/styles/components/components-base.css",
+        "src/styles/site-base.css"
+      ],
+      "declSigs": [
+        [
+          "font-family:var(--font-primary, 'Merienda', cursive);width:100%"
+        ],
+        [
+          "--header-height:80px;background:var(--gradient-header);color:var(--brand-primary);left:0;position:fixed;right:0;top:0;transition:all 0.3s ease-in-out;z-index:var(--z-index-page-header, 100)"
+        ]
+      ]
+    }
+  ]
+}

@@ -55,7 +55,11 @@ function render_button($config = []) {
     // Build CSS classes
     $classes = ['btn'];
     
+<<<<<<< HEAD
     // Type classes
+=======
+    // Variant and Type classes
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     if ($config['variant'] === 'outline') {
         $classes[] = 'btn-outline';
         $classes[] = 'btn-' . $config['type'];
@@ -63,7 +67,11 @@ function render_button($config = []) {
         $classes[] = 'btn-ghost';
     } elseif ($config['variant'] === 'link') {
         $classes[] = 'btn-link';
+<<<<<<< HEAD
     } else {
+=======
+    } else { // solid
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         $classes[] = 'btn-' . $config['type'];
     }
     
@@ -82,11 +90,15 @@ function render_button($config = []) {
     }
     
     if ($config['icon'] && $config['icon_position'] === 'only') {
+<<<<<<< HEAD
         $classes[] = 'btn-icon';
     }
     
     if ($config['icon']) {
         $classes[] = 'btn-with-icon';
+=======
+        $classes[] = 'btn-icon-only';
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     }
     
     // Add custom classes

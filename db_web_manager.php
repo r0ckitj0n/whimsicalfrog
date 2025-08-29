@@ -31,6 +31,7 @@ if (!$authenticated) {
     <head>
         <title>Database Manager - Authentication</title>
         
+<<<<<<< HEAD
     
 <!-- Database-driven CSS for db_web_manager -->
 <style id="db_web_manager-css">
@@ -65,6 +66,9 @@ if (!$authenticated) {
     document.addEventListener('DOMContentLoaded', loadDb_web_managerCSS);
 </script>
 </head>
+=======
+    </head>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     <body>
         <div class="login-form">
             <h2>🐸 Database Manager</h2>
@@ -215,6 +219,7 @@ if (isset($_POST['action'])) {
 <head>
     <title>WhimsicalFrog Database Manager</title>
     
+<<<<<<< HEAD
 
 <!-- Database-driven CSS for db_web_manager -->
 <style id="db_web_manager-css">
@@ -248,11 +253,17 @@ if (isset($_POST['action'])) {
     // Load CSS when DOM is ready
     document.addEventListener('DOMContentLoaded', loadDb_web_managerCSS);
 </script>
+=======
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
 </head>
 <body>
     <div class="header">
         <h1>🐸 WhimsicalFrog Database Manager</h1>
+<<<<<<< HEAD
                         <a href="?logout=1" class="logout-link">Logout</a>
+=======
+        <a href="?logout=1" class="logout">Logout</a>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     </div>
     
     <div class="env-switcher">
@@ -266,30 +277,50 @@ if (isset($_POST['action'])) {
     </div>
     
     <div class="tabs">
+<<<<<<< HEAD
         <button class="tab active" onclick="showTab('query')">SQL Query</button>
         <button class="tab" onclick="showTab('tables')">Tables</button>
         <button class="tab" onclick="showTab('structure')">Table Structure</button>
+=======
+        <button class="tab active" data-action="showTab" data-params='{"tabName":"query"}'>SQL Query</button>
+        <button class="tab" data-action="showTab" data-params='{"tabName":"tables"}'>Tables</button>
+        <button class="tab" data-action="showTab" data-params='{"tabName":"structure"}'>Table Structure</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
     </div>
     
     <div id="query" class="tab-content active panel">
         <h3>Execute SQL Query</h3>
         <textarea id="sqlQuery" placeholder="SELECT * FROM global_css_rules WHERE category = 'main_room' LIMIT 10;"></textarea>
         <br>
+<<<<<<< HEAD
         <button onclick="executeQuery()">Execute Query</button>
         <button class="secondary" onclick="clearQuery()">Clear</button>
+=======
+        <button data-action="executeQuery">Execute Query</button>
+        <button class="secondary" data-action="clearQuery">Clear</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div id="queryResults" class="results"></div>
     </div>
     
     <div id="tables" class="tab-content panel">
         <h3>Database Tables</h3>
+<<<<<<< HEAD
         <button onclick="loadTables()">Refresh Tables</button>
+=======
+        <button data-action="loadTables">Refresh Tables</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div id="tablesResults" class="results"></div>
     </div>
     
     <div id="structure" class="tab-content panel">
         <h3>Table Structure</h3>
+<<<<<<< HEAD
         <input type="text" id="tableName" placeholder="Enter table name" style="padding: 10px; width: 300px; margin-right: 10px;">
         <button onclick="describeTable()">Describe Table</button>
+=======
+        <input type="text" id="tableName" placeholder="Enter table name" class="input-table-name">
+        <button data-action="describeTable">Describe Table</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
         <div id="structureResults" class="results"></div>
     </div>
 
@@ -407,8 +438,13 @@ if (isset($_POST['action'])) {
                             <td><strong>${table.name}</strong></td>
                             <td>${table.rows}</td>
                             <td>
+<<<<<<< HEAD
                                 <button onclick="quickQuery('SELECT * FROM \`${table.name}\` LIMIT 10')">Preview</button>
                                 <button onclick="quickQuery('DESCRIBE \`${table.name}\`')">Structure</button>
+=======
+                                <button data-action="quickQuery" data-params='{"sql":"SELECT * FROM `${table.name}` LIMIT 10"}'>Preview</button>
+                                <button data-action="quickQuery" data-params='{"sql":"DESCRIBE `${table.name}`"}'>Structure</button>
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                             </td>
                         </tr>`;
                     });

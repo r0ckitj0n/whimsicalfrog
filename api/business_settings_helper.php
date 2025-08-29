@@ -183,7 +183,11 @@ class BusinessSettings {
         
         foreach ($colors as $key => $value) {
             if (strpos($key, '_color') !== false) {
+<<<<<<< HEAD
                 $cssVar = '--' . str_replace('_', '-', $key);
+=======
+                $cssVar = '-' . str_replace('_', '-', $key);
+>>>>>>> df48c881 (Codebase audit & cleanup: remove unused JS, fix ESLint to 0 errors, add ESLint config, backup removed code under backups/code_removed. Also initialized git repo.)
                 $css .= "    {$cssVar}: {$value};\n";
             }
         }

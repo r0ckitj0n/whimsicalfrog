@@ -198,14 +198,13 @@ if ($__wf_is_logged_in) {
   $bodyStyle = '';
   if ($bodyBgUrl) {
       $safeBg = htmlspecialchars($bodyBgUrl, ENT_QUOTES, 'UTF-8');
-      $bodyStyle = "background-image:url('{$safeBg}');background-size:cover;background-position:center;background-repeat:no-repeat;min-height:100vh;";
+      // Inline styles are disallowed by CI guard. We'll set background via JS using data-bg-url.
   }
 ?>
 <body class="<?php echo implode(' ', $bodyClasses); ?>" <?php echo $bodyBgUrl ? 'data-bg-url="' . htmlspecialchars($bodyBgUrl) . '"' : ''; ?> data-page="<?php echo htmlspecialchars($pageSlug); ?>" data-path="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/'); ?>" data-is-admin="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-is-logged-in="<?php echo $__wf_is_logged_in ? 'true' : 'false'; ?>"
   <?php echo ($__wf_user_id !== null) ? 'data-user-id="' . htmlspecialchars($__wf_user_id) . '"' : ''; ?>
   <?php echo ($__wf_user_id_raw !== null && $__wf_user_id_raw !== '') ? 'data-user-id-raw="' . htmlspecialchars($__wf_user_id_raw) . '"' : ''; ?>
   <?php echo ($__wf_user_id !== null) ? 'data-user-id-norm="' . htmlspecialchars($__wf_user_id) . '"' : ''; ?>
-  <?php echo $bodyStyle ? 'style="' . $bodyStyle . '"' : ''; ?>
 >
 <?php
 // Render the visual header component

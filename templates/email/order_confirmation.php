@@ -9,6 +9,7 @@ $orderId = htmlspecialchars($order['id'] ?? 'N/A');
 $fullName = htmlspecialchars(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? ''));
 $total = htmlspecialchars(number_format((float)($order['total'] ?? 0), 2));
 ?>
+<!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
 <html>
 <head>

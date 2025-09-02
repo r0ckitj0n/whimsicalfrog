@@ -1,0 +1,13 @@
+/* Room Main utilities (Vite-managed) */
+
+.door-interactive {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Background base styling when dynamic class is attached */
+#mainRoomPage.room-bg-loaded {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}

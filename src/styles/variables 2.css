@@ -1,0 +1,40 @@
+/* Global CSS Variables: brand colors and header gradient */
+:root {
+  /* Brand colors */
+  --brand-primary: #87ac3a; /* Whimsical Frog green */
+  /* Secondary brand color: burnt orange */
+  --brand-secondary: #BF5700; /* burnt orange */
+
+  /* Legacy alias used in some styles */
+  --primary_color: #87ac3a;
+
+  /* Header gradient (dark -> light) */
+  --gradient-header: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.90) 0%,
+    rgba(0, 0, 0, 0.60) 55%,
+    rgba(0, 0, 0, 0.00) 100%
+  );
+
+  /* Global default header height */
+  --header-height: 80px;
+
+  /* Common utility tokens referenced occasionally */
+  --white: #ffffff;
+
+  /* Brand fonts */
+  /* Primary brand display font (used for titles, badges, CTAs) */
+  --font-primary: 'Merienda', cursive;
+  /* Legacy alias used in some rules */
+  --font-family-primary: var(--font-primary);
+
+  /* Secondary brand font (clean UI stack for body and UI elements) */
+  --font-secondary: 'Nunito', system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+  /* Optional alias for symmetry */
+  --font-family-secondary: var(--font-secondary);
+
+  /* Site-wide button palette (used by shop filter/back buttons and more) */
+  --button-bg-primary: var(--brand-primary);
+  --button-text-primary: #ffffff;
+  --button-bg-primary-hover: var(--brand-secondary); /* use secondary brand on hover */
+}

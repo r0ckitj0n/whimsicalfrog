@@ -8,6 +8,7 @@ $brandSecondary = function_exists('BusinessSettings::getSecondaryColor') ? Busin
 $name = htmlspecialchars($user_name ?: 'there');
 $url = htmlspecialchars($reset_url ?? '#');
 ?>
+<!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
 <html>
 <head>

@@ -1,0 +1,60 @@
+/*
+ * =============================================================================
+ * Z-Index Hierarchy - Single Source of Truth
+ * =============================================================================
+ * This file defines the z-index stacking order for the entire application.
+ * Use these variables instead of hardcoded z-index values to ensure
+ * predictable and conflict-free layering of components.
+ */
+
+:root {
+  /* -- Base & Content Layers -- */
+  --z-index-behind: -1;
+  --z-index-base: 1;
+  --z-index-content-back: 5;
+  --z-index-content-mid: 10;
+  --z-index-content-front: 15;
+
+  /* -- Floating UI & Page-Level Components -- */
+  --z-index-floating-ui: 20;
+  --z-index-page-header: 100;
+  --z-index-page-footer: 90;
+
+  /* -- Overlays & Dropdowns -- */
+  --z-index-dropdown: 200;
+  --z-index-tooltip: 250;
+  --z-index-overlay-backdrop: 300;
+
+  /* -- Modals & Popups -- */
+  --z-index-modal-back: 400;
+  --z-index-modal-base: 410;
+  --z-index-modal-content: 420;
+  --z-index-modal-front: 430;
+
+  /* -- Room & Special Modals -- */
+  --z-index-room-modal: 2400;
+  --z-index-room-modal-header: 2450;
+  /* Checkout / Payment overlay (should sit above room modal but below site header overrides) */
+  --z-index-checkout-overlay: 2500;
+
+  /* -- Global Notifications & Highest Level -- */
+  --z-index-global-notification: 500;
+  --z-index-god-mode: 9999;
+}
+
+/* Legacy variable aliases for backward compatibility */
+:root {
+  /* Aliases mapping old custom properties to the new z-index scale */
+  --z-base: var(--z-index-base);
+  --z-base-elevated: var(--z-index-content-front);
+  --z-modal: var(--z-index-modal-base);
+  --z-notification: var(--z-index-global-notification);
+  --z-tooltip: var(--z-index-tooltip);
+  --z-navigation: var(--z-index-page-header);
+  --z-door-areas: var(--z-index-content-front);
+  --z-room-buttons: var(--z-index-floating-ui);
+  --z-index-overlay: var(--z-index-overlay-backdrop);
+
+  /* Landing page: ensure it sits above the fixed header */
+  --z-index-landing-page: 110; /* header = 100 */
+}

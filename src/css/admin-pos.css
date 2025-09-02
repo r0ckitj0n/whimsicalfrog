@@ -1,0 +1,127 @@
+/* Admin POS styles - semantic classes only. Managed by Vite. */
+
+/* Theme variables (override in page or global theme if needed) */
+:root {
+  --brand-primary: #0ea5e9; /* sky-500 */
+  --brand-secondary: #22c55e; /* green-500 */
+  --pos-bg: #ffffff;
+  --pos-fg: #111827; /* gray-900 */
+  --panel: #f8fafc; /* slate-50 */
+  --border: #e5e7eb; /* gray-200 */
+  --border-strong: #111827; /* gray-900 */
+  --border-muted: #d1d5db; /* gray-300 */
+  --muted: #6b7280; /* gray-500 */
+  --muted-strong: #374151; /* gray-700 */
+  --overlay: rgba(15, 23, 42, 0.5);
+  --success-bg: #ecfdf5;
+  --error-bg: #fef2f2;
+  --info-bg: #eff6ff;
+  --processing-bg: #f5f3ff;
+}
+
+/* Hide admin navbar on POS page */
+body[data-page="admin/pos"] .admin-tab-navigation {
+  display: none !important;
+}
+
+/* Modal */
+.pos-modal-overlay { position: fixed; inset: 0; display: grid; place-items: center; background: var(--overlay); z-index: 1000; }
+.pos-modal-content { background: var(--pos-bg); color: var(--pos-fg); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: min(640px, 92vw); max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+.pos-modal-small { width: min(520px, 92vw); }
+.pos-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.pos-modal-title { margin: 0; font-size: 16px; font-weight: 700; }
+.pos-modal-header-info { background: var(--info-bg); }
+.pos-modal-header-success { background: var(--success-bg); }
+.pos-modal-header-error { background: var(--error-bg); }
+.pos-modal-header-processing { background: var(--processing-bg); }
+.pos-modal-close { background: transparent; border: 0; font-size: 20px; cursor: pointer; color: var(--muted-strong); }
+.pos-modal-body { padding: 16px; overflow: auto; }
+.pos-modal-body-scroll { padding: 0; max-height: 60vh; overflow: auto; }
+.pos-modal-footer { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--panel); }
+
+/* Buttons */
+.btn { appearance: none; border: 1px solid transparent; border-radius: 8px; padding: 10px 14px; font-weight: 600; cursor: pointer; transition: box-shadow .15s ease, transform .05s ease; }
+.btn:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--brand-secondary); color: #fff; }
+.btn-secondary { background: var(--brand-primary); color: #fff; }
+
+/* Receipt */
+.receipt { background: var(--pos-bg); color: var(--pos-fg); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.receipt__header { text-align: center; padding: 16px; border-bottom: 2px solid var(--border-strong); }
+.receipt__brand { font-weight: 800; letter-spacing: 0.08em; color: var(--brand-primary); }
+.receipt__title { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.receipt__section { padding: 12px 16px; }
+.receipt__section-title { font-weight: 700; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.receipt__meta { font-size: 12px; color: var(--muted-strong); }
+.receipt__meta-row { margin-bottom: 4px; }
+.receipt-items { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.receipt-item { padding-bottom: 8px; border-bottom: 1px dotted var(--border-muted); }
+.receipt-item__row { display: flex; justify-content: space-between; align-items: baseline; }
+.receipt-item__name { font-weight: 700; }
+.receipt-item__price { color: var(--pos-fg); }
+.receipt-item__meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+.receipt-item__row--total { margin-top: 4px; font-size: 12px; }
+.receipt-item__label { color: var(--muted-strong); }
+.receipt-item__line-total { font-weight: 700; }
+.receipt__totals { border-top: 2px solid var(--border-strong); margin-top: 8px; }
+.receipt__row { display: flex; justify-content: space-between; margin: 6px 0; }
+.receipt__row--grand { font-weight: 800; font-size: 16px; border-top: 1px solid var(--border-strong); padding-top: 8px; margin-top: 8px; }
+.receipt__payment .receipt__row { font-size: 13px; }
+.receipt__footer { text-align: center; font-size: 11px; color: var(--muted); border-top: 1px dotted var(--border-muted); padding: 10px 0; }
+
+/* Print context */
+.receipt-print { background: var(--pos-bg); }
+.receipt-print .receipt { max-width: 340px; margin: 0 auto; padding: 8px; }
+
+/* POS page basics (non-modal) */
+.pos-register { position: fixed; inset: 0; background: var(--pos-bg); color: var(--pos-fg); display: grid; grid-template-rows: auto 1fr; }
+
+/* Header */
+.pos-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.pos-title { font-size: 22px; font-weight: 800; letter-spacing: .02em; }
+.pos-header-buttons { display: flex; gap: 8px; }
+.pos-fullscreen-btn, .pos-exit-btn, .pos-browse-btn { border: 1px solid transparent; border-radius: 8px; padding: 8px 12px; font-weight: 600; cursor: pointer; }
+.pos-fullscreen-btn { background: var(--brand-primary); color: #fff; }
+.pos-exit-btn { background: #ef4444; color: #fff; }
+.pos-browse-btn { background: var(--brand-secondary); color: #fff; }
+
+/* Main grid */
+.pos-main { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; padding: 12px; height: 100%; overflow: hidden; }
+
+/* Left panel */
+.pos-left-panel { display: grid; grid-template-rows: auto 1fr; gap: 12px; min-width: 0; }
+.pos-search-section { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+.pos-search-title { margin: 0 0 8px; font-weight: 700; }
+.pos-search-methods { display: flex; gap: 8px; }
+.pos-search-input { flex: 1 1 auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 16px; }
+
+/* Items grid */
+.pos-items-grid { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; overflow: hidden; }
+.items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; height: 100%; overflow: auto; padding-right: 6px; }
+.item-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: grid; gap: 8px; }
+.item-card__image, .item-image { width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border-radius: 8px; }
+.item-card__name, .item-name { font-weight: 700; font-size: 14px; }
+.item-card__price, .item-price { color: var(--muted-strong); }
+.item-card .btn { width: 100%; }
+
+/* Out of stock visuals */
+.badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 6px; border-radius: 6px; }
+.badge-out { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+.item-card .badge-out { position: absolute; top: 8px; left: 8px; }
+.item-card .item-media { position: relative; }
+.is-out-of-stock { opacity: .55; filter: grayscale(.6); }
+.is-out-of-stock [data-action], .is-out-of-stock button { pointer-events: none; }
+
+/* Cart panel */
+.pos-cart { display: grid; grid-template-rows: auto auto 1fr; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.cart-header { padding: 12px; border-bottom: 1px solid var(--border); background: var(--pos-bg); }
+.cart-title { margin: 0; font-weight: 800; }
+.cart-summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--pos-bg); }
+.pos-cart-total-row { display: flex; gap: 8px; font-size: 18px; font-weight: 800; }
+.pos-cart-total { color: var(--brand-primary); }
+.checkout-btn { background: var(--brand-secondary); color: #fff; border: 0; border-radius: 10px; padding: 10px 14px; font-weight: 700; }
+.checkout-btn:disabled { opacity: .5; cursor: not-allowed; }
+.cart-items { overflow: auto; padding: 12px; }
+.cart-item { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px; border-bottom: 1px dotted var(--border-muted); }
+.empty-cart { text-align: center; color: var(--muted); padding: 20px 0; }

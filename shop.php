@@ -166,7 +166,7 @@ if (!empty($categories)) {
                     <p class="description-text-short" title="<?php echo htmlspecialchars($shortDescription); ?>">
                         <?php echo htmlspecialchars($shortDescription); ?><?php echo $hasMore ? '...' : ''; ?>
                     </p>
-                    <p class="description-text-full" style="display:none;" title="<?php echo htmlspecialchars($rawDescription); ?>">
+                    <p class="description-text-full hidden" title="<?php echo htmlspecialchars($rawDescription); ?>">
                         <?php echo htmlspecialchars($rawDescription); ?>
                     </p>
                     <button class="product-more-toggle" type="button" aria-expanded="false">Additional Information</button>

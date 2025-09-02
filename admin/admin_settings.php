@@ -4132,7 +4132,7 @@ async function removeAreaMapping(mappingId) {
     </div>
 </div> 
 
-<template id="legacy-ai-settings" style="display:none">
+<template id="legacy-ai-settings">
 // AI Settings Modal Functions
 let aiSettingsData = {};
 

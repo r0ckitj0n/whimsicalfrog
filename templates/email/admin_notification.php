@@ -7,6 +7,7 @@ $brandPrimary = function_exists('BusinessSettings::getPrimaryColor') ? BusinessS
 $orderId = htmlspecialchars($order['id'] ?? 'N/A');
 $customerEmail = htmlspecialchars($customer['email'] ?? '');
 ?>
+<!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
 <html>
 <head>

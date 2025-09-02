@@ -9,6 +9,7 @@ $name = htmlspecialchars($user_name ?: 'there');
 $hasActivation = !empty($activation_url);
 $url = htmlspecialchars($activation_url ?? '#');
 ?>
+<!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
 <html>
 <head>

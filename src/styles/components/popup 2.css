@@ -1,0 +1,259 @@
+/* Popup component styles (Vite-managed)
+   Consolidated from room-modal-popup-fixes.css.
+   Positioning remains runtime-injected via classes; this file handles visuals only.
+*/
+
+/* Base popup wrapper visuals */
+.item-popup-legacy {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important; /* ensure rounded corners apply */
+}
+.item-popup-enhanced {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important; /* ensure rounded corners apply */
+}
+
+/* Inner content reset */
+.item-popup .popup-content {
+  padding: 0 !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+  /* Do not allow internal scrolling; popup itself is clamped to viewport */
+  max-height: none !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.item-popup-legacy .popup-content {
+  padding: 0 !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+.item-popup-enhanced .popup-content {
+  padding: 0 !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+/* Remove hover transform and keep background consistent */
+.popup-content:hover {
+  transform: none !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 0 !important;
+}
+
+/* Typography sizing for popup content */
+.item-popup * { font-size: 15px !important; line-height: 1.4 !important; }
+
+.item-popup .popup-title { font-size: 20px !important; font-weight: 700 !important; }
+
+.item-popup-legacy .popup-title { font-size: 20px !important; font-weight: 700 !important; }
+
+.item-popup-enhanced .popup-title { font-size: 20px !important; font-weight: 700 !important; }
+
+
+/* Match detailed modal price styling: larger and brand secondary color */
+.item-popup .popup-price { font-size: 2.5rem !important; line-height: 1.1 !important; font-weight: 700 !important; margin-top: 4px !important; color: var(--brand-secondary) !important; }
+
+.item-popup-legacy .popup-price { font-size: 2.5rem !important; line-height: 1.1 !important; font-weight: 700 !important; margin-top: 4px !important; color: var(--brand-secondary) !important; }
+
+.item-popup-enhanced .popup-price { font-size: 2.5rem !important; line-height: 1.1 !important; font-weight: 700 !important; margin-top: 4px !important; color: var(--brand-secondary) !important; }
+
+/* Out-of-stock emphasis */
+.item-popup .popup-stock-info.out-of-stock {
+  color: var(--brand-red, #c62828) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border: 2px solid currentcolor !important;
+  padding: 2px 6px !important;
+  display: inline-block !important;
+  transform: rotate(-6deg);
+}
+.item-popup-legacy .popup-stock-info.out-of-stock {
+  color: var(--brand-red, #c62828) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border: 2px solid currentcolor !important;
+  padding: 2px 6px !important;
+  display: inline-block !important;
+  transform: rotate(-6deg);
+}
+.item-popup-enhanced .popup-stock-info.out-of-stock {
+  color: var(--brand-red, #c62828) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border: 2px solid currentcolor !important;
+  padding: 2px 6px !important;
+  display: inline-block !important;
+  transform: rotate(-6deg);
+}
+
+/* Image sizing */
+.item-popup .popup-image { width: 100% !important; max-width: 100% !important; height: auto !important; }
+.item-popup-legacy .popup-image { width: 100% !important; max-width: 100% !important; height: auto !important; }
+.item-popup-enhanced .popup-image { width: 100% !important; max-width: 100% !important; height: auto !important; }
+
+/* Ensure badges can overlay the image */
+.item-popup .popup-image-container { position: relative !important; }
+.item-popup .popup-badge-container { position: absolute !important; inset: 0 !important; pointer-events: none !important; }
+.item-popup .popup-badge { position: absolute !important; pointer-events: none !important; background: rgba(0,0,0,0.75) !important; color: #fff !important; font-family: var(--font-primary, Merienda, cursive) !important; font-weight: 800 !important; font-size: 0.875rem !important; line-height: 1.1 !important; padding: 4px 8px !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; }
+.item-popup .popup-badge.pos-top-left { top: 8px !important; left: 8px !important; }
+.item-popup .popup-badge.pos-top-right { top: 8px !important; right: 8px !important; }
+.item-popup .popup-badge.pos-bottom-left { bottom: 8px !important; left: 8px !important; }
+.item-popup .popup-badge.pos-bottom-right { bottom: 8px !important; right: 8px !important; }
+
+/* Hide image when no valid source to avoid white bars */
+.item-popup .popup-image[src=""] { display: none !important; }
+.item-popup .popup-image:not([src]) { display: none !important; }
+.item-popup .popup-image[src="about:blank"] { display: none !important; }
+
+/* Header/layout stacking for narrow popups */
+.item-popup .popup-header { display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+.item-popup-legacy .popup-header { display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+.item-popup-enhanced .popup-header { display: flex !important; flex-direction: column !important; align-items: stretch !important; }
+
+.item-popup .popup-image-container { width: 100% !important; }
+
+.item-popup-legacy .popup-image-container { width: 100% !important; }
+
+.item-popup-enhanced .popup-image-container { width: 100% !important; }
+
+.item-popup .popup-info { width: 100% !important; padding: 12px !important; }
+
+.item-popup-legacy .popup-info { width: 100% !important; padding: 12px !important; }
+
+.item-popup-enhanced .popup-info { width: 100% !important; padding: 12px !important; }
+
+/* Buttons: avoid full-width expansions */
+.item-popup .popup-btn {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+.item-popup .popup-btn-primary {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+.item-popup .popup-btn-secondary {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+.item-popup .popup-add-to-cart {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+.popup-add-to-cart {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+.popup-add-btn {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+.popup-add-to-cart-btn {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+
+/* Footer spacing tidy */
+.popup-footer {
+  padding-bottom: 0 !important;
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+  padding: 0 12px 5px !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Popup actions: centered at bottom */
+.item-popup .popup-actions {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: auto !important; /* push to bottom of popup-content */
+  padding: 12px !important;
+}
+
+/* Primary Add to Cart button styling */
+.item-popup .popup-add-btn {
+  background: var(--brand-primary, #87ac3a) !important;
+  color: var(--white, #ffffff) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 10px 16px !important;
+  font-weight: 700 !important;
+  font-family: var(--font-secondary, Nunito, system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif) !important;
+  cursor: pointer !important;
+  width: auto !important;
+  min-width: 160px !important;
+  text-align: center !important;
+}
+.item-popup .popup-add-btn:hover,
+.item-popup .popup-add-btn:focus {
+  background: var(--brand-secondary, #6b8e23) !important;
+  color: var(--white, #ffffff) !important;
+}
+
+/* Remove residual extra height on popup wrapper */
+.item-popup {
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  background: var(--popup-bg-color, #ffffff) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+  padding-bottom: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+  max-width: calc(100vw - 16px) !important;
+  max-height: calc(100vh - 16px) !important;
+ }
+
+/* Popup visibility states (prevent initial flash and manage interactions) */
+.item-popup.hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.item-popup.visible {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+/* During measurement, keep it hidden to avoid flicker */
+.item-popup.measuring {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

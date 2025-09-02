@@ -35,6 +35,7 @@ whf_deploy_key.pub
 
 # Root-level env/hot files (do not track)
 /.env*
+!/.env.example
 /hot*
 
 # Large files not tracked

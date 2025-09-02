@@ -62,3 +62,11 @@ You can also use the `wf` helper for common operations:
 The `wf` wrapper uses the scripts under `scripts/` and keeps process names consistent.
 
 Enjoy coding! 🐸
+
+## Environment (.env)
+
+- See `.env.example` at the repo root for a template of expected variables.
+- PHP loads environment variables from a root `.env` via `config.php` using `loadEnv(__DIR__ . '/.env')`.
+- The actual `.env` file is git-ignored; copy `.env.example` to `.env` and fill values locally.
+- Vite/dev server reads values from the shell process (e.g., `VITE_DEV_PORT`, `VITE_HMR_PORT`, `PORT`). Optional toggles read by PHP include `WF_VITE_DEV`, `WF_VITE_DISABLE_DEV`, `WF_VITE_ORIGIN`, `WF_PUBLIC_BASE`, `WF_BACKEND_ORIGIN`.
+

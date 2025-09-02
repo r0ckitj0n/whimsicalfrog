@@ -1,4 +1,3 @@
-// WF_GUARD_JS_INLINE_STYLES_IGNORE
 import '../styles/room-main.css';
 
 // Configuration for coordinate-based door positioning
@@ -28,6 +27,16 @@ async function loadMainRoomCoordinatesFromDatabase() {
   }
 }
 
+function ensureCoordsStyleEl() {
+  let styleEl = document.getElementById('wf-main-room-coords');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'wf-main-room-coords';
+    document.head.appendChild(styleEl);
+  }
+  return styleEl;
+}
+
 function applyDoorCoordinates() {
   const container = document.querySelector('#mainRoomPage');
   if (!container) return;
@@ -37,6 +46,8 @@ function applyDoorCoordinates() {
   const scaleX = rect.width / MainRoomConfig.originalImageWidth;
   const scaleY = rect.height / MainRoomConfig.originalImageHeight;
 
+  const styleEl = ensureCoordsStyleEl();
+  let css = '';
   MainRoomConfig.doorCoordinates.forEach((coord) => {
     const door = container.querySelector(coord.selector);
     if (!door) return;
@@ -44,13 +55,11 @@ function applyDoorCoordinates() {
     const scaledLeft = coord.left * scaleX;
     const scaledWidth = coord.width * scaleX;
     const scaledHeight = coord.height * scaleY;
-
-    door.style.setProperty('--door-top', `${scaledTop}px`);
-    door.style.setProperty('--door-left', `${scaledLeft}px`);
-    door.style.setProperty('--door-width', `${scaledWidth}px`);
-    door.style.setProperty('--door-height', `${scaledHeight}px`);
     door.classList.add('use-door-vars');
+    const selector = `#mainRoomPage ${coord.selector}.use-door-vars`;
+    css += `${selector}{top:${scaledTop.toFixed(2)}px;left:${scaledLeft.toFixed(2)}px;width:${scaledWidth.toFixed(2)}px;height:${scaledHeight.toFixed(2)}px;}`;
   });
+  styleEl.textContent = css;
 }
 
 function enterRoom(roomNumber) {

@@ -1,4 +1,3 @@
-// WF_GUARD_JS_INLINE_STYLES_IGNORE
 // Admin Cost Breakdown Manager - Vite entry
 // Migrated from inline script in sections/admin_cost_breakdown_manager.php
 
@@ -40,9 +39,9 @@
     if (!toast) return;
     toast.textContent = message;
     toast.className = 'toast-notification ' + (type === 'error' ? 'is-error' : type === 'success' ? 'is-success' : '');
-    toast.style.display = 'block';
+    toast.classList.remove('hidden');
     setTimeout(() => {
-      toast.style.display = 'none';
+      toast.classList.add('hidden');
     }, 3000);
   }
   const showError = (m) => showToast(m, 'error');
@@ -420,7 +419,7 @@
 
     document.getElementById('confirmUpdateCostBtn')?.addEventListener('click', updateCostPrice);
 
-    $$('.close-modal').forEach((btn) => btn.addEventListener('click', (e) => {
+    $$('.close-modal').forEach((btn) => btn.addEventListener('click', (_e) => {
       const modalId = btn.getAttribute('data-modal');
       if (modalId) closeModal(modalId);
     }));

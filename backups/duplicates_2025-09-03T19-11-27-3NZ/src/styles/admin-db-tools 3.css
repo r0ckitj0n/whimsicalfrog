@@ -1,0 +1,68 @@
+/* Admin DB Tools – Semantic Class Styles
+   These classes style admin database tool buttons using semantic selectors,
+   replacing legacy attribute-based CSS like button[onclick="..."] and avoiding
+   styling via [data-action]. Keep data-action strictly for behavior.
+*/
+
+/* Shared basics intentionally minimal to avoid fighting utility classes */
+
+/* Export */
+.btn--db-export { background-color: #db2777; color: #fff; }
+.btn--db-export:hover { background-color: #be185d; }
+
+/* Import */
+.btn--db-import-sql { background-color: #7c3aed; color: #fff; }
+.btn--db-import-csv { background-color: #7c3aed; color: #fff; }
+.btn--db-import-json { background-color: #7c3aed; color: #fff; }
+.btn--db-import-sql:hover { background-color: #6d28d9; }
+.btn--db-import-csv:hover { background-color: #6d28d9; }
+.btn--db-import-json:hover { background-color: #6d28d9; }
+
+/* Query actions */
+.btn--db-query-execute { background-color: #3b82f6; color: #fff; }
+.btn--db-query-execute:hover { background-color: #2563eb; }
+.btn--db-query-clear { background-color: #6b7280; color: #fff; }
+.btn--db-query-clear:hover { background-color: #4b5563; }
+
+/* DB maintenance set */
+.btn--db-init { background-color: #d97706; color: #fff; }
+.btn--db-init:hover { background-color: #b45309; }
+
+.btn--db-optimize { background-color: #2563eb; color: #fff; }
+.btn--db-optimize:hover { background-color: #1d4ed8; }
+
+.btn--db-analyze-indexes { background-color: #7c3aed; color: #fff; }
+.btn--db-analyze-indexes:hover { background-color: #6d28d9; }
+
+.btn--db-cleanup { background-color: #16a34a; color: #fff; }
+.btn--db-cleanup:hover { background-color: #15803d; }
+
+.btn--db-repair { background-color: #dc2626; color: #fff; }
+.btn--db-repair:hover { background-color: #b91c1c; }
+
+.btn--db-analyze-size { background-color: #4f46e5; color: #fff; }
+.btn--db-analyze-size:hover { background-color: #4338ca; }
+
+.btn--db-performance { background-color: #ca8a04; color: #111827; }
+.btn--db-performance:hover { background-color: #a16207; }
+
+.btn--db-foreign-keys { background-color: #0d9488; color: #fff; }
+.btn--db-foreign-keys:hover { background-color: #0f766e; }
+
+/* Open tool modals */
+.btn--db-show-export { background-color: #db2777; color: #fff; }
+.btn--db-export-tools { background-color: #db2777; color: #fff; }
+.btn--db-show-export:hover { background-color: #be185d; }
+.btn--db-export-tools:hover { background-color: #be185d; }
+
+.btn--db-show-import { background-color: #7c3aed; color: #fff; }
+
+.btn--db-import-tools { background-color: #7c3aed; color: #fff; }
+.btn--db-show-import:hover { background-color: #6d28d9; }
+.btn--db-import-tools:hover { background-color: #6d28d9; }
+
+.btn--db-show-schema { background-color: #0891b2; color: #fff; }
+
+.btn--db-schema-browser { background-color: #0891b2; color: #fff; }
+.btn--db-show-schema:hover { background-color: #0e7490; }
+.btn--db-schema-browser:hover { background-color: #0e7490; }

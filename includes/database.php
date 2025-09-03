@@ -10,15 +10,18 @@ class Database {
         // These globals are expected to be set by a config file before this class is used.
         global $host, $db, $user, $pass, $port, $socket;
 
-        $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4";
+        // Add a conservative connect_timeout in the DSN to avoid long hangs
+        $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4;connect_timeout=3";
         if (!empty($socket)) {
-            $dsn = "mysql:unix_socket={$socket};dbname={$db};charset=utf8mb4";
+            $dsn = "mysql:unix_socket={$socket};dbname={$db};charset=utf8mb4;connect_timeout=3";
         }
 
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES   => false,
+            // Fallback timeout guard (may be ignored by some MySQL clients but harmless)
+            PDO::ATTR_TIMEOUT            => 3,
         ];
 
         try {

@@ -106,13 +106,13 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
                     </a>
                 <?php endif; ?>
 
-                <!-- Desktop Navigation (Left-justified) - Excluding Shop which is now in right section -->
+                <!-- Desktop Navigation (Left-justified) -->
                 <nav class="nav-links" role="navigation" aria-label="Main navigation">
                     <?php foreach ($config['navigation_items'] as $item): ?>
                         <?php
-                        // Skip Shop (rendered on right) and Home (logo already links home)
+                        // Skip Home (logo already links home)
                         $label_lc = strtolower($item['label']);
-                        if ($label_lc === 'shop' || $label_lc === 'home') continue;
+                        if ($label_lc === 'home') continue;
 
                         $is_active = $item['active'] ?? (rtrim($current_page, '/') === rtrim($item['url'], '/'));
                         ?>
@@ -152,26 +152,8 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
                 </div>
             <?php endif; ?>
 
-            <!-- Right Section: Shop, User Menu, Cart -->
+            <!-- Right Section: User Menu, Cart -->
             <div class="header-right">
-
-                <!-- Shop Navigation Link -->
-                <?php
-                // Find and display Shop link from navigation items
-                foreach ($config['navigation_items'] as $item):
-                    if (strtolower($item['label']) === 'shop'):
-                        $is_active = $item['active'] ?? (rtrim($current_page, '/') === rtrim($item['url'], '/'));
-                ?>
-                        <a href="<?php echo htmlspecialchars($item['url']); ?>"
-                           class="nav-link <?php echo $is_active ? 'active' : ''; ?>"
-                           <?php echo $is_active ? 'aria-current="page"' : ''; ?>>
-                            <?php echo htmlspecialchars($item['label']); ?>
-                        </a>
-                <?php
-                        break;
-                    endif;
-                endforeach;
-                ?>
 
                 <!-- User Menu: Login/Logout -->
                 <?php if ($config['show_user_menu']): ?>

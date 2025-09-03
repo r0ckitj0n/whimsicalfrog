@@ -5,13 +5,76 @@
 <?php
 // Load the dedicated Admin Settings module via Vite (dev/prod aware)
 require_once dirname(__DIR__) . '/includes/vite_helper.php';
-echo vite('js/admin-settings.js');
+// Minimal render mode: if ?wf_minimal=1, output a tiny shell and skip heavy content/scripts
+if (isset($_GET['wf_minimal']) && $_GET['wf_minimal'] === '1') {
+    // Output a tiny, static placeholder to test if DOM/CSS load is the freeze source
+    echo "<div class=\"settings-page\" style=\"padding:16px;font-family:sans-serif\">" .
+         "<h1>Admin Settings (Minimal Mode)</h1>" .
+         "<p>This minimal render omits scripts and heavy sections. If this loads without freezing, the issue is likely DOM/layout volume or a specific section.</p>" .
+         "</div>";
+    return;
+}
+
+// If the global layout (header/body with data attributes) hasn't been bootstrapped, include it now.
+if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+    // Hint header about current route so it sets body data-page to admin/settings
+    $page = 'admin';
+    include dirname(__DIR__) . '/partials/header.php';
+    // Final safety: inline fallback to ensure horizontal admin tabs render and spacing under header is tight
+    echo '<style id="wf-admin-settings-inline-fallback">'
+       . 'body[data-page^="admin"] .admin-tab-navigation{position:fixed!important;top:var(--wf-admin-nav-top, 80px)!important;left:0;right:0;z-index:2000;margin:0!important;padding:6px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation>*,'
+       . 'body[data-page^="admin"] .admin-tab-navigation .flex,'
+       . 'body[data-page^="admin"] .admin-tab-navigation>div,'
+       . 'body[data-page^="admin"] .admin-tab-navigation ul{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;list-style:none!important;width:100%!important;text-align:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation .container, body[data-page^="admin"] .admin-tab-navigation .wrapper, body[data-page^="admin"] .admin-tab-navigation .flex, body[data-page^="admin"] .admin-tab-navigation > div{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;width:auto!important;max-width:none!important;flex:0 0 auto!important;white-space:nowrap;text-decoration:none}'
+       . '</style>';
+    echo '<script>(function(){try{var compute=function(){var h=document.querySelector(".site-header")||document.querySelector(".universal-page-header");if(h&&h.getBoundingClientRect){var hh=Math.max(40,Math.round(h.getBoundingClientRect().height));document.documentElement.style.setProperty("--wf-header-height",hh+"px")}var hc=document.querySelector(".header-content");if(hc&&hc.getBoundingClientRect){var b=Math.round(hc.getBoundingClientRect().bottom+2);document.documentElement.style.setProperty("--wf-admin-nav-top",b+"px")}};if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",compute,{once:true})}else{compute()}window.addEventListener("load",compute,{once:true});window.addEventListener("resize",compute);try{if(window.ResizeObserver){var ro=new ResizeObserver(function(){compute()});var hc=document.querySelector(".header-content");if(hc)ro.observe(hc);var h=document.querySelector(".site-header")||document.querySelector(".universal-page-header");if(h)ro.observe(h)}else{var t=setInterval(compute,500);setTimeout(function(){clearInterval(t)},4000)}}catch(_){}}catch(e){}})();</script>';
+    // Ensure footer closes the document even for standalone direct loads
+    if (!function_exists('__wf_admin_settings_footer_shutdown')) {
+        function __wf_admin_settings_footer_shutdown() {
+            @include __DIR__ . '/../partials/footer.php';
+        }
+    }
+    register_shutdown_function('__wf_admin_settings_footer_shutdown');
+}
+// Optional section filter: /admin/settings?wf_section=content|visual|business|communication|technical
+$wf_section = isset($_GET['wf_section']) ? strtolower((string)$_GET['wf_section']) : '';
+// Default to LIGHT render unless explicitly opting into full heavy DOM
+$wf_full = isset($_GET['wf_full']) && $_GET['wf_full'] === '1';
+// In LIGHT mode, do NOT emit the admin-settings bundle to avoid any heavy JS costs
+// But DO render the full sections HTML so options are visible and usable for manual testing
+if (!$wf_full && $wf_section === '') {
+    if (function_exists('vite_css')) {
+        echo vite_css('js/app.js');
+        echo vite_css('js/admin-settings.js');
+    }
+    if (isset($_GET['wf_debug']) && $_GET['wf_debug'] === '1') {
+        echo '<div class="settings-page" style="padding:12px 16px 0">'
+           . '<div class="notice" style="margin:0 0 12px;color:#666;font-size:14px">'
+           . 'Light mode: heavy JS disabled by default. Append <code>?wf_full=1</code> or set <code>&wf_section=...</code> to lazy-load the legacy module for that section if required.'
+           . '</div>'
+           . '</div>';
+    }
+    // Do not return; continue to render the full sections below.
+}
+// For full render or section-specific render, emit the admin-settings bundle (dev/prod aware)
+if ($wf_full || $wf_section !== '') {
+    if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) {
+        define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true);
+        echo vite('js/admin-settings.js');
+    }
+}
 ?>
 
 <div class="settings-page">
     <div class="settings-grid">
     
     <!-- Content Management Section -->
+    <?php if (!$wf_section || $wf_section === 'content'): ?>
     <div class="settings-section content-section card-theme-blue">
       <div class="section-header">
         <h2 class="section-title">Content Management</h2>
@@ -62,8 +125,10 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Visual & Design Section -->
+    <?php if (!$wf_section || $wf_section === 'visual'): ?>
     <div class="settings-section visual-section card-theme-purple">
       <div class="section-header">
         <h2 class="section-title">Visual & Design</h2>
@@ -99,8 +164,10 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Business & Analytics Section -->
+    <?php if (!$wf_section || $wf_section === 'business'): ?>
     <div class="settings-section business-section card-theme-emerald">
       <div class="section-header">
         <h2 class="section-title">Business & Analytics</h2>
@@ -145,8 +212,10 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Communication Section -->
+    <?php if (!$wf_section || $wf_section === 'communication'): ?>
     <div class="settings-section communication-section card-theme-amber">
       <div class="section-header">
         <h2 class="section-title">Communication</h2>
@@ -189,8 +258,10 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Technical & System Section -->
+    <?php if (!$wf_section || $wf_section === 'technical'): ?>
     <div class="settings-section technical-section card-theme-red">
       <div class="section-header">
         <h2 class="section-title">Technical & System</h2>
@@ -228,6 +299,7 @@ echo vite('js/admin-settings.js');
     </div>
 
     <!-- AI & Automation Section -->
+    <?php if (!$wf_section || $wf_section === 'ai'): ?>
     <div class="settings-section integration-section card-theme-cyan">
       <div class="section-header">
         <h2 class="section-title">AI & Automation</h2>
@@ -271,9 +343,13 @@ echo vite('js/admin-settings.js');
       </div>
     </div>
 
+    <?php endif; ?>
+    <?php endif; ?>
+
     </div>
 </div>
  
+<?php if ($wf_section) { return; } ?>
 
 
 
@@ -381,7 +457,7 @@ echo vite('js/admin-settings.js');
         </div>
     
 <!-- Continue with JS utilities -->
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Utility: sanitize unresolved template placeholders that may leak into DOM as "${...}"
 function fixUnresolvedTemplatePlaceholders(root, settings) {
     try {
@@ -5575,7 +5651,7 @@ async function deleteBrandVoiceOptionFromDB(optionId) {
 
 </template>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Background Manager Functions
 async function openBackgroundManagerModal() {
     const modal = document.getElementById('backgroundManagerModal');
@@ -7038,7 +7114,7 @@ function escapeHtml(text) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Room Settings Modal Functions
 let currentEditingRoom = null;
 let coreRooms = []; // Will be loaded dynamically from database
@@ -8910,7 +8986,7 @@ function showRoomSettingsSuccess(message) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // File Explorer JavaScript
 let currentDirectory = '';
 let currentFile = null;
@@ -11727,7 +11803,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Template Manager functions migrated to Vite module (src/js/admin-settings.js)
 
 async function loadCostTemplates() {
@@ -13820,7 +13896,7 @@ async function saveSizeTemplate(event) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Marketing Analytics Modal Functions
 function openMarketingAnalyticsModal() {
     document.getElementById('marketingAnalyticsModal').classList.remove('hidden');
@@ -14754,7 +14830,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Third CSS block removed - styles moved to button-styles.css -->
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Categories Modal Functions
 function openCategoriesModal() {
     const modal = document.getElementById('categoriesModal');
@@ -16632,7 +16708,7 @@ async function saveCartButtonTexts(texts) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // ===== SALES ADMIN FUNCTIONALITY =====
 
 let currentEditingSaleId = null;
@@ -18813,7 +18889,7 @@ async function toggleGlobalTooltips() {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Square Settings Modal Functions
 function openSquareSettingsModal() {
     document.getElementById("squareSettingsModal").style.display = "flex";
@@ -19076,7 +19152,7 @@ function updateConnectionStatus(isConnected, lastSync) {
 
 <!-- Final CSS block removed - styles moved to button-styles.css -->
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Receipt Settings Modal Functions
 let receiptSettingsData = {};
 
@@ -21060,7 +21136,7 @@ async function saveEmailTemplate() {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // System Documentation Functions
 function openSystemDocumentationModal() {
     document.getElementById('systemDocumentationModal').classList.remove('hidden');

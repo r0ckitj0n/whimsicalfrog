@@ -159,6 +159,13 @@ if ($isLocalhost && isset($_GET['debug']) && !isAjaxRequest()) {
     echo "Database: $host/$db<br>";
 }
 
-// Initialize loggers that depend on database credentials
-require_once __DIR__ . '/../includes/database_logger.php';
-require_once __DIR__ . '/../includes/admin_logger.php';
+// Initialize loggers that depend on database credentials only in API context
+// or when explicitly enabled, to avoid heavy DB work on normal page loads.
+$__wf_req_path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$__wf_script = $_SERVER['SCRIPT_NAME'] ?? '';
+$__wf_is_api_context = (strpos($__wf_script, '/api/') !== false) || (strpos($__wf_req_path, '/api/') === 0);
+$__wf_enable_db_loggers = getenv('WF_ENABLE_DB_LOGGERS') === '1';
+if ($__wf_is_api_context || $__wf_enable_db_loggers) {
+    require_once __DIR__ . '/../includes/database_logger.php';
+    require_once __DIR__ . '/../includes/admin_logger.php';
+}

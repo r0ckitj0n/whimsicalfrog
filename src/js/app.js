@@ -18,48 +18,24 @@ try {
 
 // reload-tracer removed (dev-only)
 import './whimsical-frog-core-unified.js';
-import CartSystem from '../modules/cart-system.js';
-import RoomModalManager from '../modules/room-modal-manager.js';
-import SearchSystem from '../modules/search-system.js';
-import SalesSystem from '../modules/sales-system.js';
-import WhimsicalFrogUtils from '../modules/utilities.js';
-import _ShopPage from './shop.js';
 
-// Critical missing modules for core functionality
-import './dynamic-background-loader.js';  // Background loading
-import './room-coordinate-manager.js';    // Room map coordinates
-import './api-client.js';                 // API communication
-import './api-aliases.js';                // Legacy API globals
-import './wait-for-function.js';          // Wait for function utility
-import './modal-manager.js';              // General modal management (WFModals)
-import './global-item-modal.js';
-import '../../js/detailed-item-modal.js'; // Canonical detailed item modal (IIFE registers globals)
-import './global-modals.js';
-import './cart-modal.js';                 // Site-wide cart modal overlay
-import '../ui/globalPopup.js';              // Modal system
-import './global-notifications.js';       // Notification system
-import './landing-page.js';               // Landing page functionality
-import './room-main.js';                  // Room main page
-import './analytics.js';
-import './login-modal.js';                // Login modal and flow
-import './header-auth-sync.js';           // Keep header UI in sync after login
-import './payment-modal.js';              // Payment modal for in-place checkout
-import './receipt-modal.js';              // Receipt modal for post-checkout
-import './header-offset.js';              // Compute --wf-header-height for precise top offset
-import _MainApplication from './main-application.js';
-//
-import './contact.js';                    // Contact page AJAX submit
-import './reveal-company-modal.js';       // Single-button modal reveal for company info
-import './room-icons-init.js';            // Initialize CSS vars for room icons from data-*
+// Note: Public modules are loaded dynamically in initializeCoreSystemsApp() to avoid
+// unnecessary work on admin routes.
 
 console.log('app.js loaded');
-import '../modules/image-carousel.js';
-import '../modules/footer-newsletter.js';
-import '../modules/ai-processing-modal.js';
-import '../modules/image-fallback.js';
+
+// Admin page detection (path-based, resilient before DOMContentLoaded)
+function __wfIsAdminPage() {
+    try {
+        const path = (window.location && window.location.pathname) ? window.location.pathname : '';
+        // e.g., /admin/settings, /admin/index.php, /admin
+        return /^\/?admin(\/|$)/i.test(path);
+    } catch (_) { return false; }
+}
+const __WF_IS_ADMIN = __wfIsAdminPage();
 
 // Function to initialize all core systems
-function initializeCoreSystemsApp() {
+async function initializeCoreSystemsApp() {
     console.log('[App] Initializing recovered systems...');
     
     // Prevent double initialization
@@ -68,6 +44,53 @@ function initializeCoreSystemsApp() {
         return;
     }
     
+    // Load core public modules dynamically
+    const [CartSystemMod, RoomModalManagerMod, SearchSystemMod, SalesSystemMod, UtilsMod] = await Promise.all([
+        import('../modules/cart-system.js'),
+        import('../modules/room-modal-manager.js'),
+        import('../modules/search-system.js'),
+        import('../modules/sales-system.js'),
+        import('../modules/utilities.js'),
+    ]);
+
+    const CartSystem = CartSystemMod.default;
+    const RoomModalManager = RoomModalManagerMod.default;
+    const SearchSystem = SearchSystemMod.default;
+    const SalesSystem = SalesSystemMod.default;
+    const WhimsicalFrogUtils = UtilsMod.default;
+
+    // Side-effect and UI modules (no exports needed)
+    await Promise.all([
+        import('./dynamic-background-loader.js'),
+        import('./room-coordinate-manager.js'),
+        import('./api-client.js'),
+        import('./api-aliases.js'),
+        import('./wait-for-function.js'),
+        import('./modal-manager.js'),
+        import('./global-item-modal.js'),
+        import('../../js/detailed-item-modal.js'),
+        import('./global-modals.js'),
+        import('./cart-modal.js'),
+        import('../ui/globalPopup.js'),
+        import('./global-notifications.js'),
+        import('./landing-page.js'),
+        import('./room-main.js'),
+        import('./analytics.js'),
+        import('./login-modal.js'),
+        import('./header-auth-sync.js'),
+        import('./payment-modal.js'),
+        import('./receipt-modal.js'),
+        import('./header-offset.js'),
+        import('./main-application.js'),
+        import('./contact.js'),
+        import('./reveal-company-modal.js'),
+        import('./room-icons-init.js'),
+        import('../modules/image-carousel.js'),
+        import('../modules/footer-newsletter.js'),
+        import('../modules/ai-processing-modal.js'),
+        import('../modules/image-fallback.js'),
+    ]).catch(err => console.warn('[App] Non-fatal: some side-effect modules failed to import', err));
+
     // Initialize cart system
     const cartSystem = new CartSystem();
     window.WF_Cart = cartSystem;
@@ -119,8 +142,8 @@ if (window.WhimsicalFrog) {
     console.log('[App] WhimsicalFrog.Core.initialized:', window.WhimsicalFrog.Core?.initialized);
 }
 
-// Initialize systems via WhimsicalFrog.ready OR immediately if already ready
-if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
+// Initialize systems via WhimsicalFrog.ready OR immediately if already ready (skip on admin)
+if (window.WhimsicalFrog && window.WhimsicalFrog.ready && !__WF_IS_ADMIN) {
     console.log('[App] WhimsicalFrog available, attempting ready callback');
     
     // Debug the ready function behavior
@@ -150,10 +173,14 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.ready) {
         console.error('[App] Error with ready callback:', error);
         initializeCoreSystemsApp();
     }
-} else {
+} else if (!__WF_IS_ADMIN) {
     console.log('[App] WhimsicalFrog not ready, setting up fallback initialization');
     // Immediate fallback
     initializeCoreSystemsApp();
+}
+
+if (__WF_IS_ADMIN) {
+    console.log('[App] Admin route detected; skipping public core systems initialization');
 }
 
 // The core WF object is exported and initialized automatically.

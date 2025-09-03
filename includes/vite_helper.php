@@ -72,6 +72,16 @@ function vite(string $entry): string
         // ignore normalization errors
     }
 
+    // Helper to probe a candidate Vite origin
+    $probe_dev = function(string $origin, float $timeout = 0.6) {
+        $probeUrl = rtrim($origin, '/') . '/@vite/client';
+        $ctx = stream_context_create([
+            'http' => [ 'timeout' => $timeout, 'ignore_errors' => true ],
+            'https' => [ 'timeout' => $timeout, 'ignore_errors' => true ],
+        ]);
+        return @file_get_contents($probeUrl, false, $ctx) !== false;
+    };
+
     // Compute backend origin for JS so cross-origin API calls can include cookies
     $backendOrigin = getenv('WF_BACKEND_ORIGIN');
     if (!$backendOrigin) {
@@ -86,13 +96,16 @@ function vite(string $entry): string
 
     // If a hot file exists, try dev server. Probe @vite/client to avoid emitting dev tags on live accidentally.
     if (!$devDisabled && file_exists($hotPath)) {
-        $probeUrl = rtrim($viteOrigin, '/') . '/@vite/client';
-        $ctx = stream_context_create([
-            'http' => [ 'timeout' => 0.6, 'ignore_errors' => true ],
-            'https' => [ 'timeout' => 0.6, 'ignore_errors' => true ],
-        ]);
-        $probe = @file_get_contents($probeUrl, false, $ctx);
-        if ($probe !== false) {
+        $origin = rtrim($viteOrigin, '/');
+        $probeOk = $probe_dev($origin);
+        // If initial probe fails, try common Vite ports
+        if (!$probeOk) {
+            $candidates = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'];
+            foreach ($candidates as $cand) {
+                if ($probe_dev($cand)) { $origin = rtrim($cand, '/'); $probeOk = true; break; }
+            }
+        }
+        if ($probeOk) {
             $devEntryMap = [
                 'js/app.js' => 'src/entries/app.js',
                 'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
@@ -101,11 +114,10 @@ function vite(string $entry): string
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             $vite_log('info', 'Vite hot mode: emitting dev script tags directly to origin', [
-                'vite_origin' => $viteOrigin,
+                'vite_origin' => $origin,
                 'entry' => $entry,
                 'dev_entry' => $devEntry,
             ]);
-            $origin = rtrim($viteOrigin, '/');
             return $bootScript .
                    "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
                    "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
@@ -116,24 +128,15 @@ function vite(string $entry): string
 
     // If explicitly forcing dev, try dev server first regardless of manifest (do NOT require hot file)
     if (!$devDisabled && $forceDev) {
-        $probeUrl = rtrim($viteOrigin, '/') . '/@vite/client';
-        $ctx = stream_context_create([
-            'http' => [
-                'timeout' => 0.75,
-                'protocol_version' => 1.1,
-                'ignore_errors' => true,
-                'header' => "Accept: text/javascript, */*;q=0.1\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Probe/1.0\r\n",
-            ],
-            'https' => [
-                'timeout' => 0.75,
-                'protocol_version' => 1.1,
-                'ignore_errors' => true,
-                'header' => "Accept: text/javascript, */*;q=0.1\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Probe/1.0\r\n",
-            ],
-        ]);
-        $probe = @file_get_contents($probeUrl, false, $ctx);
-
-        if ($probe !== false) {
+        $origin = rtrim($viteOrigin, '/');
+        $probeOk = $probe_dev($origin, 0.75);
+        if (!$probeOk) {
+            $candidates = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'];
+            foreach ($candidates as $cand) {
+                if ($probe_dev($cand, 0.75)) { $origin = rtrim($cand, '/'); $probeOk = true; break; }
+            }
+        }
+        if ($probeOk) {
             // In dev, map build entry keys to dev source paths so Vite can resolve
             $devEntryMap = [
                 'js/app.js' => 'src/entries/app.js',
@@ -142,16 +145,13 @@ function vite(string $entry): string
                 'js/admin-settings.js' => 'src/entries/admin-settings.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
-
-            $origin = rtrim($viteOrigin, '/');
             return $bootScript .
                    "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/@vite/client\"></script>\n" .
                    "<script crossorigin=\"anonymous\" type=\"module\" src=\"{$origin}/{$devEntry}\"></script>";
         }
         // else: fall back to production manifest if dev server is not reachable
         $vite_log('warning', 'Vite dev server unreachable while forced; falling back to production assets', [
-            'probe_url' => $probeUrl,
-            'vite_origin' => $viteOrigin,
+            'vite_origin_tried' => $viteOrigin,
         ]);
     }
 
@@ -245,3 +245,127 @@ function vite(string $entry): string
     return $html;
 }
 
+
+// Emit CSS-only links for a given entry (dev or prod), with legacy fallback.
+// This is intentionally defined at global scope so templates can call it before any JS bundles.
+function vite_css(string $entry): string
+{
+    // Mode controls
+    $requestedMode = isset($_GET['vite']) ? strtolower((string)$_GET['vite']) : '';
+    $disableDevByEnv = getenv('WF_VITE_DISABLE_DEV') === '1';
+    $disableDevByFlag = file_exists(__DIR__ . '/../.disable-vite-dev');
+    $devDisabled = ($requestedMode === 'prod') || $disableDevByEnv || $disableDevByFlag;
+
+    // Resolve a dev origin and probe without requiring a hot file
+    $viteOrigin = getenv('WF_VITE_ORIGIN');
+    if (empty($viteOrigin)) { $viteOrigin = 'http://localhost:5176'; }
+    try {
+        $parts = @parse_url($viteOrigin);
+        if (is_array($parts) && ($parts['host'] ?? '') === '127.0.0.1') {
+            $viteOrigin = ($parts['scheme'] ?? 'http') . '://localhost' . (isset($parts['port']) ? (':' . $parts['port']) : '') . ($parts['path'] ?? '');
+        }
+    } catch (Throwable $e) { /* ignore */ }
+    $probe = function (string $origin, float $timeout = 0.6): bool {
+        $url = rtrim($origin, '/') . '/@vite/client';
+        $ctx = stream_context_create([
+            'http' => [ 'timeout' => $timeout, 'ignore_errors' => true ],
+            'https' => [ 'timeout' => $timeout, 'ignore_errors' => true ],
+        ]);
+        return @file_get_contents($url, false, $ctx) !== false;
+    };
+
+    // DEV: if not disabled and dev server is reachable, emit source CSS links that Vite can serve directly
+    if (!$devDisabled) {
+        $origin = rtrim($viteOrigin, '/');
+        $ok = $probe($origin);
+        if (!$ok) {
+            foreach (['http://localhost:5176','http://localhost:5180','http://localhost:5173','http://localhost:5174','http://localhost:5175'] as $cand) {
+                if ($probe($cand)) { $origin = rtrim($cand, '/'); $ok = true; break; }
+            }
+        }
+        if ($ok) {
+            // Map entries to the exact CSS modules imported by the entry in dev
+            $cssMap = [
+                'js/app.js' => [
+                    'src/styles/main.css',
+                ],
+                'js/admin-settings.js' => [
+                    'src/styles/main.css',
+                    'src/styles/components/components-base.css',
+                    'src/styles/components/admin-nav.css',
+                    'src/styles/admin-modals.css',
+                    'src/styles/components/modal.css',
+                    'src/styles/admin-settings 3.css',
+                ],
+            ];
+            $list = $cssMap[$entry] ?? [];
+            if (!empty($list)) {
+                $html = '';
+                foreach ($list as $p) {
+                    $href = $origin . '/' . ltrim($p, '/');
+                    $href = str_replace(' ', '%20', $href);
+                    $html .= '<link rel="stylesheet" href="' . $href . '">';
+                }
+                if ($html !== '') { return $html; }
+            }
+            // Fall through to prod if we didn't know the mapping
+        }
+    }
+
+    // PROD: read manifest and recursively collect CSS
+    $manifestCandidates = [
+        __DIR__ . '/../dist/.vite/manifest.json',
+        __DIR__ . '/../dist/manifest.json',
+    ];
+    $manifestPath = null;
+    foreach ($manifestCandidates as $candidate) { if (file_exists($candidate)) { $manifestPath = $candidate; break; } }
+    if ($manifestPath && file_exists($manifestPath)) {
+        $json = @file_get_contents($manifestPath);
+        $manifest = is_string($json) ? json_decode($json, true) : null;
+        if (is_array($manifest)) {
+            $resolved = $entry;
+            if (!isset($manifest[$resolved])) {
+                foreach ($manifest as $k => $meta) {
+                    if (is_array($meta) && isset($meta['name']) && $meta['name'] === $entry) { $resolved = $k; break; }
+                }
+            }
+            if (!isset($manifest[$resolved]) && preg_match('#^js/(.+)$#', $entry, $m)) {
+                $cand = 'src/entries/' . $m[1];
+                if (isset($manifest[$cand])) { $resolved = $cand; }
+            }
+            if (isset($manifest[$resolved])) {
+                $visited = [];
+                $cssFiles = [];
+                $collect = function(string $key) use (&$collect, &$visited, &$cssFiles, $manifest) {
+                    if (isset($visited[$key])) { return; }
+                    $visited[$key] = true;
+                    if (!isset($manifest[$key])) { return; }
+                    $a = $manifest[$key];
+                    if (!empty($a['css']) && is_array($a['css'])) { foreach ($a['css'] as $f) { $cssFiles[] = $f; } }
+                    if (!empty($a['imports']) && is_array($a['imports'])) { foreach ($a['imports'] as $dep) { $collect($dep); } }
+                };
+                $collect($resolved);
+                if (!empty($manifest[$resolved]['imports'])) { foreach ($manifest[$resolved]['imports'] as $dep) { $collect($dep); } }
+                $cssFiles = array_values(array_unique($cssFiles));
+                $publicBase = rtrim((string) getenv('WF_PUBLIC_BASE') ?: '', '/');
+                $distBase = ($publicBase === '' ? '' : $publicBase) . '/dist/';
+                $html = '';
+                foreach ($cssFiles as $f) { $html .= '<link rel="stylesheet" href="' . $distBase . $f . '">'; }
+                if ($html !== '') { return $html; }
+            }
+        }
+    }
+
+    // Legacy fallback
+    $legacyMap = [
+        'js/app.js' => ['/css/styles.css', '/css/global-modals.css', '/css/notification-system.css'],
+        'js/admin-settings.js' => ['/css/styles.css', '/css/form-styles.css', '/css/global-modals.css'],
+    ];
+    $fallback = $legacyMap[$entry] ?? [];
+    if (!empty($fallback)) {
+        $html = '';
+        foreach ($fallback as $href) { $html .= '<link rel="stylesheet" href="' . $href . '">'; }
+        return $html;
+    }
+    return '<!-- vite_css: no css resolved for ' . htmlspecialchars($entry) . ' -->';
+}

@@ -13,14 +13,16 @@ require_once __DIR__ . '/config.php';
  */
 function getActiveProductRooms()
 {
+    // Product rooms are numeric >= 1 (exclude 0 main room and any letter-coded pages)
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
-            SELECT room_number 
-            FROM room_settings 
-            WHERE is_active = 1 
-            AND room_number NOT IN ('A', 'B')
-            ORDER BY display_order, room_number
+            SELECT room_number
+            FROM room_settings
+            WHERE is_active = 1
+              AND room_number REGEXP '^[0-9]+$'
+              AND CAST(room_number AS UNSIGNED) >= 1
+            ORDER BY CAST(room_number AS UNSIGNED)
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -36,24 +38,21 @@ function getActiveProductRooms()
  */
 function getAllValidRooms()
 {
+    // Valid navigable room numbers are numeric (including 0 main room). Letter-coded pages are excluded here.
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
-            SELECT room_number 
-            FROM room_settings 
-            WHERE is_active = 1 
-            ORDER BY 
-                CASE 
-                    WHEN room_number = 'A' THEN 0
-                    WHEN room_number = 'B' THEN 1
-                    ELSE CAST(room_number AS UNSIGNED) + 1
-                END
+            SELECT room_number
+            FROM room_settings
+            WHERE is_active = 1
+              AND room_number REGEXP '^[0-9]+$'
+            ORDER BY CAST(room_number AS UNSIGNED)
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     } catch (Exception $e) {
         error_log("Error getting valid rooms: " . $e->getMessage());
-        return []; // Return empty array - let UI handle graceful degradation
+        return [];
     }
 }
 
@@ -89,10 +88,11 @@ function getRoomDoorsData()
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
             SELECT room_number, room_name, door_label, description, display_order
-            FROM room_settings 
-            WHERE is_active = 1 
-            AND CAST(room_number AS CHAR) NOT IN ('A', 'B')
-            ORDER BY display_order, room_number
+            FROM room_settings
+            WHERE is_active = 1
+              AND room_number REGEXP '^[0-9]+$'
+              AND CAST(room_number AS UNSIGNED) >= 1
+            ORDER BY CAST(room_number AS UNSIGNED)
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -108,19 +108,21 @@ function getRoomDoorsData()
  */
 function getRoomTypeMapping()
 {
+    // Map numeric rooms: 0 -> room_main, n>=1 -> room{n}
     try {
         $pdo = Database::getInstance();
         $stmt = $pdo->prepare("
-            SELECT room_number, CONCAT('room', room_number) as room_type
-            FROM room_settings 
-            WHERE is_active = 1 
-            AND room_number NOT IN ('A', 'B')
-            ORDER BY display_order, room_number
+            SELECT room_number
+            FROM room_settings
+            WHERE is_active = 1
+              AND room_number REGEXP '^[0-9]+$'
+            ORDER BY CAST(room_number AS UNSIGNED)
         ");
         $stmt->execute();
         $mapping = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $mapping[$row['room_number']] = $row['room_type'];
+            $n = (int)$row['room_number'];
+            $mapping[$row['room_number']] = ($n === 0) ? 'room_main' : ('room' . $n);
         }
         return $mapping;
     } catch (Exception $e) {

@@ -1,0 +1,23 @@
+/* POS page scrolling and layout adjustments */
+
+/* Ensure the POS page can scroll when content exceeds viewport */
+.pos-register {
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+}
+
+/* Allow the main area to expand naturally; avoid accidental clipping */
+.pos-main {
+  overflow: visible;
+}
+
+/* Items grid should wrap and expand; avoid fixed heights that block scroll */
+.items-grid {
+  contain: layout paint;
+}
+
+/* Safe default for modal overlay to not lock background scrolling after close */
+.pos-modal-overlay {
+  overscroll-behavior: contain;
+}

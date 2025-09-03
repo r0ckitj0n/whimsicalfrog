@@ -3945,9 +3945,41 @@ if (typeof window !== 'undefined') {
 
 let WF_AdminSettingsListenersInitialized = false;
 
+// Performance guard: reduce heavy work for partial/minimal renders
+function __wfIsAdminSettingsLightMode() {
+    try {
+        const params = new URLSearchParams(window.location.search || '');
+        if (params.get('wf_noscripts') === '1') return true;
+        if (params.get('wf_minimal') === '1') return true;
+        if (params.has('wf_section') && params.get('wf_section')) return true;
+        if (window.WF_ADMIN_LIGHT === 1 || window.WF_ADMIN_LIGHT === true) return true;
+        // Default to light mode on Admin Settings unless explicitly overridden
+        try {
+            const body = document.body;
+            const dp = body && body.getAttribute ? body.getAttribute('data-page') : '';
+            const onSettings = !!(dp && (dp === 'admin/settings' || dp === 'admin')) || !!document.querySelector('.settings-page');
+            if (onSettings && params.get('wf_full') !== '1') return true;
+        } catch (_) {}
+        return false;
+    } catch (_) { return false; }
+}
+
+function __wfIsOnAdminSettingsPage() {
+    try {
+        const body = document.body;
+        const dp = body && body.getAttribute ? body.getAttribute('data-page') : '';
+        if (dp && (dp === 'admin/settings' || dp === 'admin')) return true;
+        // Fallback: presence of .settings-page container
+        return !!document.querySelector('.settings-page');
+    } catch (_) { return true; }
+}
+
 function tagInlineHandlersForMigration(root = document) {
     // Add data-action tags based on existing inline onclick attributes to ease removal later
     try {
+        const localRoot = (root && root.nodeType)
+            ? (root instanceof Document ? (document.querySelector('.settings-page') || document) : root)
+            : (document.querySelector('.settings-page') || document);
         const mappings = [
             { contains: 'scanDatabaseConnections', action: 'scan-db' },
             { contains: 'convertDatabaseConnections', action: 'convert-db' },
@@ -3974,7 +4006,7 @@ function tagInlineHandlersForMigration(root = document) {
             { contains: 'addBrandVoiceOption', action: 'brand-voice-add' },
             { contains: 'saveBrandVoiceOptions', action: 'brand-voice-save' }
         ];
-        const clickable = root.querySelectorAll('[onclick], [onchange]');
+        const clickable = localRoot.querySelectorAll('[onclick], [onchange]');
         clickable.forEach(el => {
             const code = (el.getAttribute('onclick') || el.getAttribute('onchange') || '').toString();
             for (const map of mappings) {
@@ -4033,7 +4065,7 @@ function tagInlineHandlersForMigration(root = document) {
     }
 }
 
-function stripInlineHandlersForMigration(root = document) {
+function stripInlineHandlersForMigration(root = document.querySelector('.settings-page') || document) {
     try {
         const selectors = [
             '[onclick*="scanDatabaseConnections"]',
@@ -4067,10 +4099,9 @@ function stripInlineHandlersForMigration(root = document) {
         root.querySelectorAll(selectors.join(',')).forEach(el => {
             // Preserve original inline handler for debugging/rollback visibility
             if (!el.dataset.onclickLegacy) {
-                el.dataset.onclickLegacy = el.getAttribute('onclick') || '';
+                try { el.dataset.onclickLegacy = (el.getAttribute('onclick') || ''); } catch (_) {}
             }
-            el.removeAttribute('onclick');
-            el.dataset.migrated = 'true';
+            try { el.removeAttribute('onclick'); } catch (_) {}
         });
     } catch (e) {
         console.debug('[AdminSettings] stripInlineHandlersForMigration error', e);
@@ -4081,44 +4112,47 @@ function initAdminSettingsDelegatedListeners() {
     if (WF_AdminSettingsListenersInitialized) return;
     WF_AdminSettingsListenersInitialized = true;
 
-    // Tag existing inline handlers for smoother migration
-    const runTagAndStrip = () => { tagInlineHandlersForMigration(); stripInlineHandlersForMigration(); };
-    if (document.readyState !== 'loading') {
-        runTagAndStrip();
-    } else {
-        document.addEventListener('DOMContentLoaded', () => runTagAndStrip(), { once: true });
+    // Tag existing inline handlers for smoother migration (opt-in only, and skip in light mode)
+    if (__wfMigrationEnabled() && !__wfIsAdminSettingsLightMode()) {
+        const runTagAndStrip = () => { try { tagInlineHandlersForMigration(); stripInlineHandlersForMigration(); } catch(_) {} };
+        const schedule = () => {
+            if ('requestIdleCallback' in window) {
+                try { window.requestIdleCallback(runTagAndStrip, { timeout: 300 }); } catch(_) { setTimeout(runTagAndStrip, 0); }
+            } else { setTimeout(runTagAndStrip, 0); }
+        };
+        if (document.readyState !== 'loading') schedule();
+        else document.addEventListener('DOMContentLoaded', schedule, { once: true });
     }
     
     // Initialize SSL option visibility on load
     initSSLHandlers();
     
-    // Observe future DOM changes to tag dynamically injected elements
-    try {
-        const observer = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-                if (m.type === 'childList') {
-                    m.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) {
-                            tagInlineHandlersForMigration(node);
-                            stripInlineHandlersForMigration(node);
-                            // Re-evaluate SSL option visibility for injected content
-                            initSSLHandlers(node);
+    // Observe future DOM changes (opt-in only, limited to settings-page, skip in light mode)
+    if (__wfMigrationEnabled() && !__wfIsAdminSettingsLightMode()) {
+        try {
+            const obsRoot = document.querySelector('.settings-page');
+            if (obsRoot) {
+                const observer = new MutationObserver((mutations) => {
+                    for (const m of mutations) {
+                        if (m.type === 'childList') {
+                            for (const node of m.addedNodes) {
+                                if (node && node.nodeType === 1) {
+                                    try { tagInlineHandlersForMigration(node); } catch(_) {}
+                                    try { stripInlineHandlersForMigration(node); } catch(_) {}
+                                    try { initSSLHandlers(node); } catch(_) {}
+                                }
+                            }
+                        } else if (m.type === 'attributes' && m.attributeName === 'onclick') {
+                            try { tagInlineHandlersForMigration(m.target); } catch(_) {}
+                            try { stripInlineHandlersForMigration(m.target); } catch(_) {}
                         }
-                    });
-                } else if (m.type === 'attributes' && m.attributeName === 'onclick') {
-                    tagInlineHandlersForMigration(m.target);
-                    stripInlineHandlersForMigration(m.target);
-                }
+                    }
+                });
+                observer.observe(obsRoot, { childList: true, subtree: true, attributes: true, attributeFilter: ['onclick'] });
             }
-        });
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['onclick']
-        });
-    } catch (err) {
-        console.debug('[AdminSettings] MutationObserver unavailable', err);
+        } catch (err) {
+            console.debug('[AdminSettings] MutationObserver unavailable', err);
+        }
     }
 
     // Delegated change handler (SSL checkbox)
@@ -4694,7 +4728,16 @@ function initAdminSettingsDelegatedListeners() {
                 if (typeof cb === 'string') {
                     const f = new Function(`return (${cb});`);
                     const fn = f();
-                    if (typeof fn === 'function') fn();
+                    if (typeof fn === 'function') {
+                        (function(){
+                          try {
+                            if (typeof window !== 'undefined' && (window.WF_DISABLE_ADMIN_SETTINGS_JS === 1 || window.WF_DISABLE_ADMIN_SETTINGS_JS === true)) {
+                              return; // global kill switch for safety during debugging
+                            }
+                          } catch(_) {}
+                        })();
+                        fn();
+                    }
                 }
             } catch (err) {
                 console.warn('[AdminSettings] modal callback failed', err);
@@ -6935,11 +6978,13 @@ function initAdminSettingsDelegatedListeners() {
 
 // Initialize listeners ASAP
 if (typeof window !== 'undefined') {
-    if (document.readyState !== 'loading') {
+    const bootInit = () => {
+        if (!__wfIsOnAdminSettingsPage()) return;
+        if (__wfIsAdminSettingsLightMode()) return; // skip heavy delegated init in light mode
         initAdminSettingsDelegatedListeners();
-    } else {
-        document.addEventListener('DOMContentLoaded', () => initAdminSettingsDelegatedListeners(), { once: true });
-    }
+    };
+    if (document.readyState !== 'loading') bootInit();
+    else document.addEventListener('DOMContentLoaded', bootInit, { once: true });
 }
 
 // Hard guard to prevent legacy inline scripts or markup from auto-opening modals on page load
@@ -6988,16 +7033,18 @@ if (typeof window !== 'undefined') {
     window.__wfIsSquelchActive = isSquelchActive;
     // Track if user has interacted with modals to avoid late force-hide
     if (typeof window.__wfModalUserInteracted === 'undefined') window.__wfModalUserInteracted = false;
-    if (document.readyState !== 'loading') {
+    const bootHide = () => {
+        if (!__wfIsOnAdminSettingsPage()) return;
+        if (__wfIsAdminSettingsLightMode()) return; // skip in light/minimal/section renders
         forceHideAdminModalsOnLoad();
-    } else {
-        document.addEventListener('DOMContentLoaded', () => forceHideAdminModalsOnLoad(), { once: true });
-    }
+    };
+    if (document.readyState !== 'loading') bootHide();
+    else document.addEventListener('DOMContentLoaded', bootHide, { once: true });
     // Also enforce on full load and shortly after to suppress late auto-opens
     window.addEventListener('load', () => {
-        try { forceHideAdminModalsOnLoad(); } catch(_) {}
+        try { bootHide(); } catch(_) {}
         // One quick retry; abort if user interacted
-        setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 200);
+        setTimeout(() => { try { bootHide(); } catch(_) {} }, 200);
     }, { once: true });
 
     // Mark user interaction early to disable any further force-hides
@@ -7303,8 +7350,13 @@ if (typeof window !== 'undefined') {
             }
         }, { capture: true });
     };
-    if (document.readyState !== 'loading') onReady();
-    else document.addEventListener('DOMContentLoaded', onReady, { once: true });
+    const bootDelegation = () => {
+        if (!__wfIsOnAdminSettingsPage()) return;
+        if (__wfIsAdminSettingsLightMode()) return; // skip in light/noscripts mode
+        onReady();
+    };
+    if (document.readyState !== 'loading') bootDelegation();
+    else document.addEventListener('DOMContentLoaded', bootDelegation, { once: true });
 }
 
 // Helper to initialize SSL checkbox-driven visibility

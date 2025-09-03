@@ -40,6 +40,24 @@ else
   echo -e "${GREEN}✅ No changes to commit${NC}"
 fi
 
+# Ensure frontend build artifacts exist
+echo -e "${GREEN}🧱 Ensuring Vite build artifacts exist...${NC}"
+if [ ! -f dist/manifest.json ]; then
+  echo -e "${YELLOW}⚠️  dist/manifest.json not found. Running vite build...${NC}"
+  if command -v npm >/dev/null 2>&1; then
+    if npm run build; then
+      echo -e "${GREEN}✅ Vite build completed${NC}"
+    else
+      echo -e "${RED}❌ Vite build failed. Aborting deployment.${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${YELLOW}⚠️  npm not available; skipping build step${NC}"
+  fi
+else
+  echo -e "${GREEN}✅ Found dist/manifest.json${NC}"
+fi
+
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
 cat > deploy_commands.txt << EOL
@@ -71,6 +89,9 @@ mirror --reverse --delete --verbose \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
   --exclude-glob config/my.cnf \
+  --exclude-glob "* [0-9].*" \
+  --exclude-glob "* [0-9]/*" \
+  --exclude-glob "* copy*" \
   --include-glob credentials.json \
   . $REMOTE_PATH
 bye
@@ -113,7 +134,7 @@ open sftp://$USER:$PASS@$HOST
 ls images/items/TS002A.webp
 ls process_multi_image_upload.php
 ls components/image_carousel.php
-ls dist/.vite/manifest.json
+ls dist/manifest.json
 ls dist/assets
 bye
 EOL
@@ -145,6 +166,50 @@ EOL
 
 lftp -f fix_permissions.txt > /dev/null 2>&1 || true
 rm fix_permissions.txt
+
+# List duplicate-suffixed files on server (for visibility)
+echo -e "${GREEN}🧹 Listing duplicate-suffixed files on server (space-number)...${NC}"
+cat > list_server_duplicates.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+# images root
+cls -1 images/*\\ 2.* || true
+cls -1 images/*\\ 3.* || true
+# subdirs
+cls -1 images/items/*\\ 2.* || true
+cls -1 images/items/*\\ 3.* || true
+cls -1 images/backgrounds/*\\ 2.* || true
+cls -1 images/backgrounds/*\\ 3.* || true
+cls -1 images/logos/*\\ 2.* || true
+cls -1 images/logos/*\\ 3.* || true
+cls -1 images/signs/*\\ 2.* || true
+cls -1 images/signs/*\\ 3.* || true
+bye
+EOL
+lftp -f list_server_duplicates.txt || true
+rm list_server_duplicates.txt
+
+# Delete duplicate-suffixed files on server
+echo -e "${GREEN}🧽 Removing duplicate-suffixed files on server...${NC}"
+cat > delete_server_duplicates.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+rm -f images/*\\ 2.* || true
+rm -f images/*\\ 3.* || true
+rm -f images/items/*\\ 2.* || true
+rm -f images/items/*\\ 3.* || true
+rm -f images/backgrounds/*\\ 2.* || true
+rm -f images/backgrounds/*\\ 3.* || true
+rm -f images/logos/*\\ 2.* || true
+rm -f images/logos/*\\ 3.* || true
+rm -f images/signs/*\\ 2.* || true
+rm -f images/signs/*\\ 3.* || true
+bye
+EOL
+lftp -f delete_server_duplicates.txt || true
+rm delete_server_duplicates.txt
 
 # Test image accessibility
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"

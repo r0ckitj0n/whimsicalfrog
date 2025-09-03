@@ -7,7 +7,7 @@ import '../styles/components/components-base.css';
 import '../styles/components/admin-nav.css';
 import '../styles/admin-modals.css';
 import '../styles/components/modal.css';
-import '../styles/admin-settings 3.css';
+import '../styles/admin-settings.css';
 
 // Important: only load the heavy legacy module when explicitly requested.
 // Always load the lightweight bridge.

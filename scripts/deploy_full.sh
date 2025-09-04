@@ -57,7 +57,11 @@ set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --verbose \
+# Use only-newer + size-only to skip identical files; avoid re-upload churn
+# - only-newer: don't overwrite if remote is same/newer
+# - size-only: treat same-size files as identical (mtime differences ignored)
+# - no-perms: don't try to sync permissions (reduces needless diffs)
+mirror --reverse --delete --verbose --only-newer --size-only --no-perms \
   --exclude-glob .git/ \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/ \

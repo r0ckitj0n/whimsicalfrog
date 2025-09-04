@@ -65,7 +65,11 @@ set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --verbose \
+# Note: SFTP lacks checksums; use size-only + only-newer to avoid re-uploading identical files
+# - only-newer: don't overwrite if remote is same/newer
+# - size-only: treat same-size files as identical (skips upload even if mtime differs)
+# - no-perms: don't try to sync permissions (reduces needless diffs)
+mirror --reverse --delete --verbose --only-newer --size-only --no-perms \
   --exclude-glob .git/ \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/ \

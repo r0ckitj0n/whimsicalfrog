@@ -82,9 +82,9 @@ if (!empty($___wf_direct_include)) {
       <div class="card-standard p-4">
         <h2 class="text-lg font-medium mb-3">Shipping method</h2>
         <select id="shippingMethodSelect" class="form-select">
-          <option value="Customer Pickup" selected>Customer Pickup (free)</option>
+          <option value="Customer Pickup">Customer Pickup (free)</option>
           <option value="Local Delivery">Local Delivery</option>
-          <option value="USPS">USPS</option>
+          <option value="USPS" selected>USPS</option>
           <option value="FedEx">FedEx</option>
           <option value="UPS">UPS</option>
         </select>

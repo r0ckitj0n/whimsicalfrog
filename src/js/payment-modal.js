@@ -191,6 +191,16 @@ import apiClient from './api-client.js';
       const cardErrorsEl = q('#pm-card-errors');
       const cancelBtn = q('#pm-cancelBtn');
 
+      // Ensure shipping method defaults to USPS on load if not already selected
+      try {
+        if (shipMethodSel && (!shipMethodSel.value || shipMethodSel.selectedIndex < 0)) {
+          const uspsOpt = Array.from(shipMethodSel.options || []).find(o => (o.value || o.text).toString().toUpperCase() === 'USPS');
+          if (uspsOpt) { shipMethodSel.value = uspsOpt.value; }
+          else { shipMethodSel.value = 'USPS'; }
+          try { shipMethodSel.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+        }
+      } catch (_) {}
+
       // Address form fields
       const fName = q('#pm-addr_name');
       const fL1 = q('#pm-addr_line1');
@@ -235,7 +245,7 @@ import apiClient from './api-client.js';
         const items = cartApi.getItems ? cartApi.getItems() : [];
         const hasItems = Array.isArray(items) && items.length > 0;
         const pm = getSelectedPaymentMethod();
-        const method = shipMethodSel?.value || 'Customer Pickup';
+        const method = shipMethodSel?.value || 'USPS';
         const needsAddress = method !== 'Customer Pickup';
         const okAddress = !needsAddress || !!selectedAddressId;
         const hasUser = !!userId;
@@ -525,7 +535,7 @@ import apiClient from './api-client.js';
           const payload = {
             itemIds: lines.map(l => l.sku),
             quantities: lines.map(l => l.quantity),
-            shippingMethod: shipMethodSel?.value || 'Customer Pickup',
+            shippingMethod: shipMethodSel?.value || 'USPS',
           };
           if (selectedAddressId) {
             const addr = addresses.find(a => String(a.id) === String(selectedAddressId));
@@ -582,7 +592,7 @@ import apiClient from './api-client.js';
         const colors = lines.map(l => l.optionColor);
         const sizes = lines.map(l => l.optionSize);
         const paymentMethod = getSelectedPaymentMethod();
-        const shippingMethod = shipMethodSel?.value || 'Customer Pickup';
+        const shippingMethod = shipMethodSel?.value || 'USPS';
         let shippingAddress = null;
         if (shippingMethod !== 'Customer Pickup' && selectedAddressId) {
           const a = addresses.find(x => String(x.id) === String(selectedAddressId));

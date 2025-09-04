@@ -23,7 +23,7 @@ try {
 
     $itemIds = $input['itemIds'] ?? [];
     $quantities = $input['quantities'] ?? [];
-    $shippingMethod = $input['shippingMethod'] ?? 'Customer Pickup';
+    $shippingMethod = $input['shippingMethod'] ?? 'USPS';
     $zip = isset($input['zip']) ? trim((string)$input['zip']) : null;
     $debug = !empty($input['debug']);
 
@@ -101,38 +101,19 @@ try {
         $subtotal += ((float)$price) * $qty;
     }
 
-    // Shipping rates and logic (no code fallbacks)
-    $freeThresholdRaw   = BusinessSettings::get('free_shipping_threshold');
-    $localDeliveryRaw   = BusinessSettings::get('local_delivery_fee');
-    $rateUSPSRaw        = BusinessSettings::get('shipping_rate_usps');
-    $rateFedExRaw       = BusinessSettings::get('shipping_rate_fedex');
-    $rateUPSRaw         = BusinessSettings::get('shipping_rate_ups');
-
-    $requiredShipping = [
-        'free_shipping_threshold' => $freeThresholdRaw,
-        'local_delivery_fee' => $localDeliveryRaw,
-        'shipping_rate_usps' => $rateUSPSRaw,
-        'shipping_rate_fedex' => $rateFedExRaw,
-        'shipping_rate_ups' => $rateUPSRaw,
-    ];
-    foreach ($requiredShipping as $k => $v) {
-        if ($v === null || $v === '') {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => "Missing required setting: {$k}"]);
-            exit;
-        }
-        if (!is_numeric($v)) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => "Invalid numeric setting: {$k}"]);
-            exit;
-        }
+    // Shipping rates and logic (STRICT: DB must provide settings)
+    try {
+        $shipCfg = BusinessSettings::getShippingConfig(true);
+    } catch (InvalidArgumentException $ex) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
+        exit;
     }
-
-    $freeThreshold   = (float)$freeThresholdRaw;
-    $localDeliveryFee= (float)$localDeliveryRaw;
-    $rateUSPS        = (float)$rateUSPSRaw;
-    $rateFedEx       = (float)$rateFedExRaw;
-    $rateUPS         = (float)$rateUPSRaw;
+    $freeThreshold   = (float)$shipCfg['free_shipping_threshold'];
+    $localDeliveryFee= (float)$shipCfg['local_delivery_fee'];
+    $rateUSPS        = (float)$shipCfg['shipping_rate_usps'];
+    $rateFedEx       = (float)$shipCfg['shipping_rate_fedex'];
+    $rateUPS         = (float)$shipCfg['shipping_rate_ups'];
 
     $shipping = 0.0;
     $method = (string)$shippingMethod;
@@ -154,30 +135,17 @@ try {
         $shipping = $rateUSPS;
     }
 
-    // Tax logic (no code fallbacks)
-    $taxShippingVal = BusinessSettings::get('tax_shipping');
-    if ($taxShippingVal === null || $taxShippingVal === '') {
+    // Tax logic (STRICT: DB must provide required settings when enabled)
+    try {
+        $taxCfg = BusinessSettings::getTaxConfig(true);
+    } catch (InvalidArgumentException $ex) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Missing required setting: tax_shipping']);
+        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
         exit;
     }
-    $taxShipping = in_array(strtolower((string)$taxShippingVal), ['1','true','yes'], true);
-
-    $settingsEnabled = (bool) BusinessSettings::isTaxEnabled();
-    $settingsRateRaw = BusinessSettings::getTaxRate();
-    if ($settingsEnabled) {
-        if ($settingsRateRaw === null || $settingsRateRaw === '') {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Missing required setting: tax_rate']);
-            exit;
-        }
-        if (!is_numeric($settingsRateRaw)) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'error' => 'Invalid numeric setting: tax_rate']);
-            exit;
-        }
-    }
-    $settingsRate = (float)$settingsRateRaw;
+    $taxShipping = (bool)$taxCfg['taxShipping'];
+    $settingsEnabled = (bool)$taxCfg['enabled'];
+    $settingsRate = (float)$taxCfg['rate'];
     $zipForTax = $zip ?: (string) BusinessSettings::get('business_zip', '');
     $zipState = null;
     $zipRate = null;
@@ -236,6 +204,8 @@ try {
             'method' => $method,
             'freeShippingThreshold' => $freeThreshold,
             'items' => $itemsDebug,
+            'usedDefaultSettings' => [],
+            'hasTaxShippingKey' => isset($taxCfg['hasTaxShippingKey']) ? (bool)$taxCfg['hasTaxShippingKey'] : null,
         ];
         error_log('checkout_pricing.php debug: ' . json_encode($response['debug']));
     }

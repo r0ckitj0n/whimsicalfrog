@@ -98,6 +98,24 @@ ready(() => {
   const cardContainerEl = document.getElementById('card-container');
   const cardErrorsEl = document.getElementById('card-errors');
 
+  // Ensure shipping method defaults to USPS on load if not already selected
+  try {
+    if (shipMethodSel) {
+      const cur = (shipMethodSel.value || '').trim();
+      if (!cur || cur === 'Customer Pickup') {
+        const uspsOpt = Array.from(shipMethodSel.options || []).find(o => (o.value || o.text).toString().toUpperCase() === 'USPS');
+        if (uspsOpt) {
+          shipMethodSel.value = uspsOpt.value;
+        } else {
+          // Fallback: set to literal 'USPS' if option values are labels
+          shipMethodSel.value = 'USPS';
+        }
+        // Trigger change to recalc pricing with the correct default
+        try { shipMethodSel.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+      }
+    }
+  } catch (_) {}
+
   // Address form fields
   const fName = document.getElementById('addr_name');
   const fL1 = document.getElementById('addr_line1');
@@ -192,7 +210,7 @@ ready(() => {
     const items = api?.getItems ? api.getItems() : getStoredCartItems();
     const hasItems = Array.isArray(items) && items.length > 0;
     const pm = getSelectedPaymentMethod();
-    const method = shipMethodSel?.value || 'Customer Pickup';
+    const method = shipMethodSel?.value || 'USPS';
     // If shipping method requires shipping, ensure address selected
     const needsAddress = method !== 'Customer Pickup';
     const okAddress = !needsAddress || !!selectedAddressId;
@@ -473,7 +491,7 @@ ready(() => {
       const payload = {
         itemIds: lines.map(l => l.sku),
         quantities: lines.map(l => l.quantity),
-        shippingMethod: shipMethodSel?.value || 'Customer Pickup',
+        shippingMethod: shipMethodSel?.value || 'USPS',
         debug: true,
       };
       // Optional zip from selected address
@@ -521,7 +539,7 @@ ready(() => {
     const sizes = lines.map(l => l.optionSize);
 
     const paymentMethod = getSelectedPaymentMethod();
-    const shippingMethod = shipMethodSel?.value || 'Customer Pickup';
+    const shippingMethod = shipMethodSel?.value || 'USPS';
 
     let shippingAddress = null;
     if (shippingMethod !== 'Customer Pickup' && selectedAddressId) {

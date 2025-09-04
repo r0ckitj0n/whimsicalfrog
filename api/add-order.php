@@ -230,7 +230,7 @@ try {
     }
 
     $paymentMethod = $input['paymentMethod'];
-    $shippingMethod = $input['shippingMethod'] ?? 'Customer Pickup'; // Default to Customer Pickup if not provided
+    $shippingMethod = $input['shippingMethod'] ?? 'USPS'; // Default to USPS if not provided
     $shippingAddress = $input['shippingAddress'] ?? null; // Shipping address data (optional)
 
     // --- Compute pricing server-side (subtotal, shipping, tax, total) ---
@@ -302,12 +302,22 @@ try {
         }
     }
 
-    // Shipping rules via BusinessSettings
-    $freeThreshold = (float) BusinessSettings::get('free_shipping_threshold', 50.00);
-    $localDeliveryFee = (float) BusinessSettings::get('local_delivery_fee', 5.00);
-    $rateUSPS = (float) BusinessSettings::get('shipping_rate_usps', 8.99);
-    $rateFedEx = (float) BusinessSettings::get('shipping_rate_fedex', 12.99);
-    $rateUPS = (float) BusinessSettings::get('shipping_rate_ups', 12.99);
+    // Shipping rules via BusinessSettings (STRICT)
+    try {
+        $shipCfg = BusinessSettings::getShippingConfig(true);
+    } catch (InvalidArgumentException $ex) {
+        error_log('add-order.php: Shipping configuration error: ' . $ex->getMessage());
+        http_response_code(500);
+        while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
+        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
+        $__wf_add_order_sent = true;
+        exit;
+    }
+    $freeThreshold   = (float)$shipCfg['free_shipping_threshold'];
+    $localDeliveryFee= (float)$shipCfg['local_delivery_fee'];
+    $rateUSPS        = (float)$shipCfg['shipping_rate_usps'];
+    $rateFedEx       = (float)$shipCfg['shipping_rate_fedex'];
+    $rateUPS         = (float)$shipCfg['shipping_rate_ups'];
 
     if ($shippingMethod === 'Customer Pickup') {
         $computedShipping = 0.0;
@@ -325,10 +335,20 @@ try {
         $computedShipping = $rateUSPS; // default fallback
     }
 
-    // Tax (ZIP-based base state tax support)
-    $taxShipping = (bool) BusinessSettings::get('tax_shipping', false);
-    $settingsEnabled = (bool) BusinessSettings::isTaxEnabled();
-    $settingsRate = (float) BusinessSettings::getTaxRate();
+    // Tax (ZIP-based base state tax support) - STRICT config
+    try {
+        $taxCfg = BusinessSettings::getTaxConfig(true);
+    } catch (InvalidArgumentException $ex) {
+        error_log('add-order.php: Tax configuration error: ' . $ex->getMessage());
+        http_response_code(500);
+        while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
+        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
+        $__wf_add_order_sent = true;
+        exit;
+    }
+    $taxShipping = (bool)$taxCfg['taxShipping'];
+    $settingsEnabled = (bool)$taxCfg['enabled'];
+    $settingsRate = (float)$taxCfg['rate'];
     $zipForTax = null;
     if ($shippingAddress && is_array($shippingAddress)) {
         $zipForTax = trim((string)($shippingAddress['zip_code'] ?? ''));
@@ -382,6 +402,7 @@ try {
                 'source' => $taxSource,
                 'zip' => $zipForTax,
                 'zipState' => $zipState,
+                'hasTaxShippingKey' => true,
             ],
             'items' => $itemsDebug,
         ];

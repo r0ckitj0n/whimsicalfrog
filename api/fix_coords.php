@@ -2,19 +2,10 @@
 require_once __DIR__ . '/api_bootstrap.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/room_helpers.php';
-
-// Database connection globals (same as get_background.php)
-global $host, $db, $user, $pass, $port, $socket;
-$host = 'localhost';
-$db = 'whimsicalfrog';
-$user = 'root';
-$pass = 'Palz2516';
-$port = 3306;
-$socket = '';
+ require_once __DIR__ . '/config.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$db", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Database::getInstance();
     
     // Room 1 coordinates (T-Shirts)
     $room1_coords = [

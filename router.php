@@ -65,6 +65,9 @@ if (strpos($requestedPath, '/dist/') === 0) {
             if (isset($manifest['js/app.js'])) { $resolved = $manifest['js/app.js']; }
             // Try source entry key
             if (!$resolved && isset($manifest['src/entries/app.js'])) { $resolved = $manifest['src/entries/app.js']; }
+            // Try common Vite key patterns
+            if (!$resolved && isset($manifest['src/js/app.js'])) { $resolved = $manifest['src/js/app.js']; }
+            if (!$resolved && isset($manifest['/src/js/app.js'])) { $resolved = $manifest['/src/js/app.js']; }
             // Try scan by name
             if (!$resolved) {
                 foreach ($manifest as $k => $meta) {
@@ -81,6 +84,19 @@ if (strpos($requestedPath, '/dist/') === 0) {
                     readfile($targetFs);
                     exit;
                 }
+            }
+        }
+        // If manifest missing or key not found, fallback by scanning filesystem for latest app.js-*.js
+        $globPaths = glob(__DIR__ . '/dist/assets/js/app.js-*.js');
+        if (!empty($globPaths)) {
+            // pick the most recent by modification time
+            usort($globPaths, function($a, $b) { return filemtime($b) <=> filemtime($a); });
+            $latestFs = $globPaths[0];
+            if (is_file($latestFs)) {
+                header('Content-Type: application/javascript; charset=utf-8');
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                readfile($latestFs);
+                exit;
             }
         }
     }

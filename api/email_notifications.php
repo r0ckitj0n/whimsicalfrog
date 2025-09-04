@@ -284,7 +284,7 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
 function logEmailSend($toEmail, $subject, $emailType, $status, $templateId = null, $errorMessage = null)
 {
     try {
-        $pdo = new PDO($GLOBALS['dsn'], $GLOBALS['user'], $GLOBALS['pass'], $GLOBALS['options']);
+        $pdo = Database::getInstance();
 
         $stmt = $pdo->prepare("
             INSERT INTO email_logs 

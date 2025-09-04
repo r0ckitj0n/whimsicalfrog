@@ -12,8 +12,7 @@ $ordersToDelete = [
 ];
 
 try {
-    $pdo = new PDO($dsn, $user, $pass, $options);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Database::getInstance();
 
     foreach ($ordersToDelete as $orderId) {
         echo "Processing order {$orderId}\n";

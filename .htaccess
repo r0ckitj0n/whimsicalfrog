@@ -7,6 +7,9 @@ Options -MultiViews
 RewriteEngine On
 RewriteBase /
 
+# Map stale app.js-* requests to the current bundle directly (internal rewrite, no redirect)
+RewriteRule ^dist/assets/js/app\.js-[A-Za-z0-9_\-]+\.js$ dist/assets/js/app.js-BbFnSAYk.js [L]
+
 # Allow direct access to existing files and directories
 # Only allow direct access to existing files. Route other requests (including
 # missing files under existing directories) through router.php so it can

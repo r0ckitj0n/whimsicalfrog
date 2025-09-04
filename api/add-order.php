@@ -102,7 +102,7 @@ try {
         'notes' => [],
     ];
 
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    $pdo = Database::getInstance();
 
     // Ensure order_items table has size column (migration)
     try {

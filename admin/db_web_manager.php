@@ -50,8 +50,8 @@ if (!$authenticated) {
     exit;
 }
 
-// Include database configuration
-require_once __DIR__ . '/includes/database.php';
+// Include centralized API config (bootstraps logging and Database singleton)
+require_once __DIR__ . '/../api/config.php';
 
 // Database configurations
 $configs = [

@@ -73,9 +73,16 @@ if (strpos($requestedPath, '/dist/') === 0) {
             }
             if (is_array($resolved) && !empty($resolved['file'])) {
                 $target = '/dist/' . ltrim($resolved['file'], '/');
-                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-                header('Location: ' . $target, true, 302);
-                exit;
+                // Avoid redirect loops: if target equals requested, or file doesn't exist, do not redirect
+                if ($target !== $requestedPath) {
+                    $targetFs = __DIR__ . $target;
+                    if (is_file($targetFs)) {
+                        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                        header('X-WF-Redirect-App', '1');
+                        header('Location: ' . $target, true, 302);
+                        exit;
+                    }
+                }
             }
         }
     }

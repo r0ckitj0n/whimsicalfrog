@@ -5,7 +5,6 @@ error_reporting(E_ALL);
 
 // Use centralized configuration which sets $host, $db, $user, $pass, $port, $socket
 require_once __DIR__ . '/api/config.php';
-require_once __DIR__ . '/includes/database.php';
 
 // Debug: show resolved DB connection parameters
 global $host, $db, $user, $pass, $port, $socket;

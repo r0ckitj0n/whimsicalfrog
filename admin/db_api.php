@@ -10,8 +10,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Include database configuration
-require_once __DIR__ . '/includes/database.php';
+// Include centralized API config (bootstraps Database singleton)
+require_once __DIR__ . '/../api/config.php';
 
 function connectLocal()
 {

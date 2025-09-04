@@ -12,8 +12,8 @@
  * php db_manager.php -action=sync -from=local -to=live
  */
 
-// Include configuration
-require_once __DIR__ . '/includes/database.php';
+// Include centralized API config (provides Database class and logging config)
+require_once __DIR__ . '/../api/config.php';
 
 class DatabaseManager
 {

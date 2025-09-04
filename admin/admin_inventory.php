@@ -11,8 +11,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     require_once __DIR__ . '/../api/config.php';
 } else {
     // When included from index.php, config.php is already loaded.
-    require_once __DIR__ . '/../includes/database.php';
-    require_once __DIR__ . '/../includes/logger.php';
+    // No additional includes needed here.
 }
 
 // Get database instance

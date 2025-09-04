@@ -31,12 +31,12 @@ function getRoomCoordinatesData() {
 }
 
 // Use same database connection pattern as other API files
-require_once '../includes/database.php';
+require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json');
 
 try {
-    $pdo = Database::getInstance()->getPDO();
+    $pdo = Database::getInstance();
     
     $results = [];
     $roomCoordinates = getRoomCoordinatesData();

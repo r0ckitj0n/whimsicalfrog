@@ -8,6 +8,9 @@ HOST="home419172903.1and1-data.host"
 USER="acc899014616"
 PASS="Palz2516!"
 REMOTE_PATH="/"
+# Optional public base for sites under a subdirectory (e.g., /wf)
+PUBLIC_BASE="${WF_PUBLIC_BASE:-}"
+BASE_URL="https://whimsicalfrog.us${PUBLIC_BASE}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -127,31 +130,36 @@ EOL
 lftp -f cleanup_hot.txt > /dev/null 2>&1 || true
 rm cleanup_hot.txt
 
-# Verify critical files exist on server
-echo -e "${GREEN}🔍 Verifying deployment...${NC}"
+# Verify deployment (HTTP-based, avoids dotfile visibility issues)
+echo -e "${GREEN}🔍 Verifying deployment over HTTP...${NC}"
 
-# Create verification script
-cat > verify_deployment.txt << EOL
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://$USER:$PASS@$HOST
-ls images/items/TS002A.webp
-ls process_multi_image_upload.php
-ls components/image_carousel.php
-ls dist/manifest.json
-ls dist/assets
-bye
-EOL
-
-echo -e "${GREEN}📋 Checking if critical files were uploaded...${NC}"
-if lftp -f verify_deployment.txt 2>/dev/null | grep -q "TS002A.webp"; then
-  echo -e "${GREEN}✅ TS002A.webp found on server${NC}"
+# Check Vite manifest availability (prefer .vite/manifest.json)
+HTTP_MANIFEST_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/.vite/manifest.json")
+if [ "$HTTP_MANIFEST_CODE" != "200" ]; then
+  HTTP_MANIFEST_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/manifest.json")
+fi
+if [ "$HTTP_MANIFEST_CODE" = "200" ]; then
+  echo -e "${GREEN}✅ Vite manifest accessible over HTTP${NC}"
 else
-  echo -e "${YELLOW}⚠️  TS002A.webp not found - may need manual upload${NC}"
+  echo -e "${YELLOW}⚠️  Vite manifest not accessible over HTTP (code $HTTP_MANIFEST_CODE)${NC}"
 fi
 
-# Clean up verification script
-rm verify_deployment.txt
+# Extract one JS and one CSS asset from homepage HTML and verify
+HOME_HTML=$(curl -s "$BASE_URL/")
+APP_JS=$(echo "$HOME_HTML" | grep -Eo '/dist/assets/js/app.js-[^"\']+\.js' | head -n1)
+MAIN_CSS=$(echo "$HOME_HTML" | grep -Eo '/dist/assets/[^"\']+\.css' | head -n1)
+if [ -n "$APP_JS" ]; then
+  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$APP_JS")
+  echo -e "  • JS $APP_JS -> HTTP $CODE_JS"
+else
+  echo -e "  • JS: ⚠️ Not found in homepage HTML"
+fi
+if [ -n "$MAIN_CSS" ]; then
+  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$MAIN_CSS")
+  echo -e "  • CSS $MAIN_CSS -> HTTP $CODE_CSS"
+else
+  echo -e "  • CSS: ⚠️ Not found in homepage HTML"
+fi
 
 # Fix permissions automatically after deployment
 echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
@@ -215,15 +223,15 @@ EOL
 lftp -f delete_server_duplicates.txt || true
 rm delete_server_duplicates.txt
 
-# Test image accessibility
+# Test image accessibility (use a stable, non-legacy asset)
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.us/images/items/TS002A.webp")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/images/logos/logo_whimsicalfrog.webp")
 if [ "$HTTP_CODE" = "200" ]; then
-  echo -e "${GREEN}✅ Clown frog image is accessible online!${NC}"
+  echo -e "${GREEN}✅ Logo image is accessible online!${NC}"
 elif [ "$HTTP_CODE" = "404" ]; then
-  echo -e "${YELLOW}⚠️  Image returns 404 - may need a few minutes to propagate${NC}"
+  echo -e "${YELLOW}⚠️  Logo image returns 404 - may need a few minutes to propagate${NC}"
 else
-  echo -e "${YELLOW}⚠️  Image returned HTTP code: $HTTP_CODE${NC}"
+  echo -e "${YELLOW}⚠️  Logo image returned HTTP code: $HTTP_CODE${NC}"
 fi
 
 # Final summary

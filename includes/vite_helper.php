@@ -295,7 +295,7 @@ function vite_css(string $entry): string
                     'src/styles/components/admin-nav.css',
                     'src/styles/admin-modals.css',
                     'src/styles/components/modal.css',
-                    'src/styles/admin-settings 3.css',
+                    'src/styles/admin-settings.css',
                 ],
             ];
             $list = $cssMap[$entry] ?? [];

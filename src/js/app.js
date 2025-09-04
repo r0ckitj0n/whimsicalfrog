@@ -297,6 +297,9 @@ if (__WF_IS_ADMIN) {
                 'users': 'customers',
                 'report': 'reports',
                 'setting': 'settings',
+                // Ensure legacy filenames route to settings module
+                'admin_settings': 'settings',
+                'admin-settings': 'settings',
                 // DB status routes
                 'db_status': 'db-status',
                 'dbstatus': 'db-status',

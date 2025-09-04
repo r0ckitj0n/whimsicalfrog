@@ -209,9 +209,122 @@ export function init(){
   onReady(() => {
     // Only run on admin settings page
     const body = document.body;
-    const isSettings = body?.dataset?.page === 'admin/settings' || (body?.dataset?.isAdmin === 'true' && (body?.dataset?.path || location.pathname).includes('/admin/settings'));
+    const path = (body?.dataset?.path || location.pathname || '').toLowerCase();
+    const isSettings = (
+      body?.dataset?.page === 'admin/settings'
+      || (body?.dataset?.isAdmin === 'true' && (
+        path.includes('/admin/settings')
+        || path.includes('/admin/admin_settings')
+        || path.endsWith('admin_settings.php')
+      ))
+    );
     if (!isSettings) return;
     initEmailSection();
+
+    // Helper show/hide for modals
+    const showModal = (id) => {
+      const el = document.getElementById(id);
+      if (!el) return false;
+      el.classList.remove('hidden');
+      el.classList.add('show');
+      el.setAttribute('aria-hidden', 'false');
+      return true;
+    };
+    const hideModal = (id) => {
+      const el = document.getElementById(id);
+      if (!el) return false;
+      el.classList.add('hidden');
+      el.classList.remove('show');
+      el.setAttribute('aria-hidden', 'true');
+      return true;
+    };
+
+    // Safety sweep: ensure all managed overlays start hidden to avoid multi-open on load
+    try {
+      const managed = ['businessInfoModal','squareSettingsModal','emailSettingsModal','loggingStatusModal','aiSettingsModal','aiToolsModal','secretsModal','cssRulesModal'];
+      managed.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('hidden');
+          el.classList.remove('show');
+          el.setAttribute('aria-hidden', 'true');
+        }
+      });
+    } catch(_) {}
+
+    // Delegated clicks for opening/closing modals and routing
+    document.addEventListener('click', (e) => {
+      const t = e.target;
+      const closest = (sel) => (t && t.closest ? t.closest(sel) : null);
+      const managedOverlays = new Set(['businessInfoModal','squareSettingsModal','emailSettingsModal','loggingStatusModal','aiSettingsModal','aiToolsModal','secretsModal']);
+
+      // Overlay click closes when clicking on the overlay container
+      if (t && t.classList && t.classList.contains('admin-modal-overlay')) {
+        // Determine which modal by id
+        const overlayId = t.id;
+        if (overlayId && managedOverlays.has(overlayId)) {
+          e.preventDefault();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+          else e.stopPropagation();
+          hideModal(overlayId);
+        }
+        return;
+      }
+
+      // Business Info
+      if (closest('[data-action="open-business-info"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('businessInfoModal'); return; }
+      if (closest('[data-action="close-business-info"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('businessInfoModal'); return; }
+
+      // Square Settings
+      if (closest('[data-action="open-square-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('squareSettingsModal'); return; }
+      if (closest('[data-action="close-square-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('squareSettingsModal'); return; }
+
+      // Email Settings
+      if (closest('[data-action="open-email-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('emailSettingsModal'); return; }
+      if (closest('[data-action="close-email-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('emailSettingsModal'); return; }
+      // Open Email Test: open email modal and focus test input if present
+      if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); if (showModal('emailSettingsModal')) { const test = document.getElementById('testEmailAddress'); if (test) setTimeout(() => test.focus(), 50); } return; }
+
+      // Logging Status
+      if (closest('[data-action="open-logging-status"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('loggingStatusModal'); return; }
+      if (closest('[data-action="close-logging-status"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('loggingStatusModal'); return; }
+
+      // AI Settings
+      if (closest('[data-action="open-ai-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('aiSettingsModal'); return; }
+      if (closest('[data-action="close-ai-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('aiSettingsModal'); return; }
+
+      // AI Tools
+      if (closest('[data-action="open-ai-tools"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('aiToolsModal'); return; }
+      if (closest('[data-action="close-ai-tools"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('aiToolsModal'); return; }
+
+      // Account Settings fallback navigation if no modal
+      if (closest('[data-action="open-account-settings"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!showModal('accountSettingsModal')) {
+          window.location.href = '/admin.php?section=account_settings';
+        }
+        return;
+      }
+
+      // Secrets Manager fallback navigation if no modal
+      if (closest('[data-action="open-secrets-modal"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!showModal('secretsModal')) {
+          window.location.href = '/admin.php?section=secrets';
+        }
+        return;
+      }
+
+      // Email History: route to dashboard/email history anchor for now
+      if (closest('[data-action="open-email-history"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = '/admin.php?section=dashboard#email-history';
+        return;
+      }
+    });
   });
 }
 

@@ -112,14 +112,15 @@ $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
            . '})();\n'
            . '</script>' . "\n";
     }
-    // If on admin/settings and in light mode by default, emit CSS-only early in head
+    // If on admin/settings ensure assets are emitted and avoid kill-switching JS
     if ($isAdmin && (strpos($pageSlug, 'admin/settings') === 0)) {
         $qs = $_GET ?? [];
         $wf_full = isset($qs['wf_full']) && $qs['wf_full'] === '1';
         $wf_minimal = isset($qs['wf_minimal']) && $qs['wf_minimal'] === '1';
         $wf_section = isset($qs['wf_section']) && $qs['wf_section'] !== '';
         $lightByDefault = (!$wf_full && !$wf_section) || $wf_minimal;
-        echo '<script>window.WF_ADMIN_LIGHT=' . ($lightByDefault ? 'true' : 'false') . ';window.WF_DISABLE_ADMIN_SETTINGS_JS=' . ($lightByDefault ? 'true' : 'false') . ';</script>' . "\n";
+        // Keep a light-mode marker for styling, but do NOT disable JS; bridge must run.
+        echo '<script>window.WF_ADMIN_LIGHT=' . ($lightByDefault ? 'true' : 'false') . ';window.WF_DISABLE_ADMIN_SETTINGS_JS=false;</script>' . "\n";
         if ($lightByDefault) {
             // Minimal inline CSS fallback to keep admin navbar horizontal in light mode
             echo '<style id="wf-admin-nav-fallback">\n'
@@ -135,8 +136,10 @@ $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
                . '.admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}\n'
                 . '.admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}\n'
                 . '</style>' . "\n";
-            // Prevent hash-driven modal auto-opens and suppress overlays unless user triggered
-            echo <<<'SCRIPT'
+            // Optional: Prevent hash-driven modal auto-opens and suppress overlays unless user triggered
+            // Gated behind wf_light_guard=1 to avoid interfering by default
+            if (isset($qs['wf_light_guard']) && $qs['wf_light_guard'] === '1') {
+                echo <<<'SCRIPT'
 <script>(function(){
   // CSS squelch: force-hide common modals unless attribute lifted
   try {
@@ -268,11 +271,10 @@ $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
   else onReady();
 })();</script>
 SCRIPT;
+            }
         }
-        if ($lightByDefault && function_exists('vite_css')) {
-            echo vite_css('js/app.js');
-            echo vite_css('js/admin-settings.js');
-        } elseif (!$lightByDefault && function_exists('vite')) {
+        // Always emit admin settings entry so the bridge is available; heavy legacy loads lazily inside the entry
+        if (function_exists('vite')) {
             if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) { define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true); echo vite('js/admin-settings.js'); }
         }
     }

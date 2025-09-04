@@ -61,12 +61,11 @@ if (!$wf_full && $wf_section === '') {
     }
     // Do not return; continue to render the full sections below.
 }
-// For full render or section-specific render, emit the admin-settings bundle (dev/prod aware)
-if ($wf_full || $wf_section !== '') {
-    if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) {
-        define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true);
-        echo vite('js/admin-settings.js');
-    }
+// Always emit the admin-settings entry so the lightweight bridge initializes.
+// The entry itself lazily loads the heavy legacy module only when requested.
+if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) {
+    define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true);
+    echo vite('js/admin-settings.js');
 }
 ?>
 

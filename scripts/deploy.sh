@@ -146,8 +146,8 @@ fi
 
 # Extract one JS and one CSS asset from homepage HTML and verify
 HOME_HTML=$(curl -s "$BASE_URL/")
-APP_JS=$(echo "$HOME_HTML" | grep -Eo '/dist/assets/js/app.js-[^"\']+\.js' | head -n1)
-MAIN_CSS=$(echo "$HOME_HTML" | grep -Eo '/dist/assets/[^"\']+\.css' | head -n1)
+APP_JS=$(echo "$HOME_HTML" | grep -Eo "/dist/assets/js/app.js-[^\"']+\\.js" | head -n1)
+MAIN_CSS=$(echo "$HOME_HTML" | grep -Eo "/dist/assets/[^\"']+\\.css" | head -n1)
 if [ -n "$APP_JS" ]; then
   CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$APP_JS")
   echo -e "  • JS $APP_JS -> HTTP $CODE_JS"

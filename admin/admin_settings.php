@@ -1097,10 +1097,7 @@ async function compactRepairDatabase() {
         const retryButton = document.createElement('button');
         retryButton.className = 'mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors';
         retryButton.textContent = 'Retry Operation';
-        retryButton.onclick = () => {
-            closeBackupProgressModal();
-            compactRepairDatabase();
-        };
+        retryButton.setAttribute('data-action', 'retry-compact-repair');
         if (progressSteps) {
             progressSteps.appendChild(retryButton);
         }
@@ -7198,7 +7195,9 @@ function displayRoomSettingsList(rooms) {
     rooms.forEach(room => {
         const roomCard = document.createElement('div');
         roomCard.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors';
-        roomCard.onclick = () => editRoomSettings(room);
+        // Delegate via data-action; embed minimal room payload for handler
+        roomCard.setAttribute('data-action', 'edit-room-settings');
+        try { roomCard.setAttribute('data-room', encodeURIComponent(JSON.stringify(room))); } catch(_) {}
         
         const roomTypeLabel = getRoomTypeLabel(room.room_number);
         const isCore = coreRooms.includes(room.room_number);
@@ -15193,7 +15192,8 @@ function startEditCategory(element) {
     // Replace the div with input
     element.innerHTML = '';
     element.appendChild(input);
-    element.onclick = null; // Remove click handler temporarily
+    // Delegation handles clicks; remove any direct handler
+    element.removeAttribute('onclick');
     
     // Focus and select text
     input.focus();
@@ -15244,7 +15244,7 @@ async function saveCategoryEdit(element, input) {
             // Update the display
             element.textContent = newName;
             element.dataset.original = newName;
-            element.onclick = function() { startEditCategory(element); };
+            element.setAttribute('data-action', 'start-edit-category');
             
             showNotification('Category Updated', `Category renamed from "${originalName}" to "${newName}"`, 'success');
         } else {
@@ -15260,7 +15260,7 @@ async function saveCategoryEdit(element, input) {
 
 function cancelCategoryEdit(element, originalName) {
     element.textContent = originalName;
-    element.onclick = function() { startEditCategory(element); };
+    element.setAttribute('data-action', 'start-edit-category');
 }
 
 // SKU Code editing functions
@@ -15282,7 +15282,7 @@ function startEditSkuCode(element) {
     // Replace the span with input
     element.innerHTML = '';
     element.appendChild(input);
-    element.onclick = null; // Remove click handler temporarily
+    element.removeAttribute('data-action'); // Remove delegated handler temporarily
     
     // Focus and select text
     input.focus();
@@ -15331,7 +15331,7 @@ function saveSkuCodeEdit(element, input) {
     // Update the display
     element.textContent = newCode;
     element.dataset.original = newCode;
-    element.onclick = function() { startEditSkuCode(element); };
+    element.setAttribute('data-action', 'start-edit-sku-code');
     // Update the example SKU with force refresh
     setTimeout(() => {
         updateExampleSku(categoryName, newCode);
@@ -15346,7 +15346,7 @@ function saveSkuCodeEdit(element, input) {
 
 function cancelSkuCodeEdit(element, originalCode, categoryName) {
     element.textContent = originalCode;
-    element.onclick = function() { startEditSkuCode(element); };
+    element.setAttribute('data-action', 'start-edit-sku-code');
     updateExampleSku(categoryName, originalCode);
 }
 
@@ -15365,7 +15365,7 @@ function enhancedStartEditCategory(element) {
     // Replace the div with input
     element.innerHTML = '';
     element.appendChild(input);
-    element.onclick = null; // Remove click handler temporarily
+    element.removeAttribute('data-action'); // Remove delegated handler temporarily
     
     // Focus and select text
     input.focus();
@@ -15432,7 +15432,7 @@ async function enhancedSaveCategoryEdit(element, input) {
             // Update the display
             element.textContent = newName;
             element.dataset.original = newName;
-            element.onclick = function() { startEditCategory(element); };
+            element.setAttribute('data-action', 'start-edit-category');
             
             // Update row data-category attribute
             const row = element.closest('tr');
@@ -17142,7 +17142,8 @@ async function loadTablesList() {
                         <div class="font-medium text-gray-800">${table}</div>
                         <div class="text-sm text-gray-500">Click to view table data</div>
                     `;
-                    tableItem.onclick = () => selectTable(table);
+                    tableItem.setAttribute('data-action', 'docs-select-table');
+                    tableItem.setAttribute('data-table', table);
                     tablesList.appendChild(tableItem);
                 });
             } else {
@@ -22667,8 +22668,8 @@ function updateCategoryFilter() {
         select.innerHTML += `<option value="${category}">${category}</option>`;
     });
     
-    // Add event listener for filter changes
-    select.onchange = () => filterDocuments();
+    // Delegated listener handles changes; ensure attribute present for targeting
+    select.setAttribute('data-action', 'docs-filter-change');
 }
 
 // Filter documents by category

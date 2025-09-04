@@ -110,7 +110,26 @@ function render_button($config = [])
     }
 
     if ($config['onclick']) {
-        $attributes['onclick'] = $config['onclick'];
+        // Migrate common pattern: return confirm('...') to data-action driven confirm
+        $onclick = trim($config['onclick']);
+        // Support single or double quotes around the confirm message via backreference
+        if (preg_match("/^return\\s+confirm\\(([\"']).*\\1\\)\\s*;?$/", $onclick)) {
+            // Extract message without surrounding quotes
+            $msg = $onclick;
+            $msg = preg_replace('/^return\\s+confirm\(/', '', $msg);
+            $msg = preg_replace('/\)\s*;?$/', '', $msg);
+            // Remove leading/trailing quotes (portable; avoids PHP 8 str_* helpers)
+            $firstChar = substr($msg, 0, 1);
+            $lastChar = substr($msg, -1);
+            if ((($firstChar === "'" && $lastChar === "'") || ($firstChar === '"' && $lastChar === '"')) && strlen($msg) >= 2) {
+                $msg = substr($msg, 1, -1);
+            }
+            $attributes['data-action'] = 'confirm';
+            $attributes['data-confirm'] = $msg;
+        } else {
+            // Preserve arbitrary onclick until migrated
+            $attributes['onclick'] = $config['onclick'];
+        }
     }
 
     // Merge custom attributes
@@ -276,18 +295,20 @@ function render_crud_buttons($config = [])
     }
 
     if ($config['show_delete']) {
-        $onclick = $config['delete_confirm']
-            ? "return confirm('Are you sure you want to delete this item?')"
-            : null;
-
-        $buttons[] = [
+        $btnConfig = [
             'text' => 'Delete',
             'type' => 'danger',
             'size' => 'sm',
             'href' => $config['delete_href'],
             'icon' => 'trash',
-            'onclick' => $onclick
         ];
+        if ($config['delete_confirm']) {
+            $btnConfig['attributes'] = [
+                'data-action' => 'confirm',
+                'data-confirm' => 'Are you sure you want to delete this item?'
+            ];
+        }
+        $buttons[] = $btnConfig;
     }
 
     return render_button_group($buttons, ['classes' => ['crud-buttons']]);
@@ -360,12 +381,18 @@ function cancel_button($href = null)
 
 function delete_button($href = '#', $confirm = true)
 {
-    return render_button([
+    $config = [
         'text' => 'Delete',
         'type' => 'danger',
         'icon' => 'trash',
         'href' => $href,
-        'onclick' => $confirm ? "return confirm('Are you sure?')" : null
-    ]);
+    ];
+    if ($confirm) {
+        $config['attributes'] = [
+            'data-action' => 'confirm',
+            'data-confirm' => 'Are you sure?'
+        ];
+    }
+    return render_button($config);
 }
 ?> 

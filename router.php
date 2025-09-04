@@ -44,6 +44,17 @@ if (is_file($filePath)) {
     return false; // Serve the requested file as-is.
 }
 
+// If a request targets the built assets directory but the file does not exist,
+// return a 404 instead of falling through to index.php. This avoids serving
+// an HTML page for JS/CSS requests, which triggers MIME-type errors in browsers
+// when stale or mismatched hashed filenames are referenced.
+if (strpos($requestedPath, '/dist/') === 0) {
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Not Found\n";
+    exit;
+}
+
 // For all other requests, rewrite to index.php to handle the routing.
 // This allows our application to handle clean URLs like /shop or /room/2.
 require_once __DIR__ . '/index.php';

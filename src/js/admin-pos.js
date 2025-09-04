@@ -432,8 +432,10 @@ const POSModule = {
                     </div>
                 </div>`;
             this.showPOSModal('', modalHTML, 'custom');
-            document.querySelector('#posModal .btn-primary').onclick = () => { this.hidePOSModal(); resolve(true); };
-            document.querySelector('#posModal .btn-secondary').onclick = () => { this.hidePOSModal(); resolve(false); };
+            const primaryBtn = document.querySelector('#posModal .btn-primary');
+            const secondaryBtn = document.querySelector('#posModal .btn-secondary');
+            if (primaryBtn) primaryBtn.addEventListener('click', () => { this.hidePOSModal(); resolve(true); });
+            if (secondaryBtn) secondaryBtn.addEventListener('click', () => { this.hidePOSModal(); resolve(false); });
         });
     },
 
@@ -448,10 +450,10 @@ const POSModule = {
         return new Promise(resolve => {
             this.showPOSModal('Select Payment Method', message, 'info');
             document.querySelectorAll('#posModal .payment-btn').forEach(btn => {
-                btn.onclick = () => {
+                btn.addEventListener('click', () => {
                     this.hidePOSModal();
                     resolve(btn.dataset.method);
-                };
+                });
             });
         });
     },
@@ -468,7 +470,8 @@ const POSModule = {
                 <button id="acceptCashBtn" class="btn btn-primary" data-action="accept-cash" data-total="${total}" disabled>Accept</button>`;
             this.showPOSModal('Cash Payment', message, 'info');
             this.generateQuickAmountButtons(total);
-            document.getElementById('cashReceived').oninput = () => this.calculateChange(total);
+            const cashInput = document.getElementById('cashReceived');
+            if (cashInput) cashInput.addEventListener('input', () => this.calculateChange(total));
         });
     },
 

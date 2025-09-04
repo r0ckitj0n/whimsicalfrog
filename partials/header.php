@@ -57,60 +57,64 @@ $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
     }
     // Always ensure admin navbar has a horizontal layout on admin pages (fallback before external CSS)
     if ($isAdmin) {
-        echo '<style id="wf-admin-nav-fallback-global">\n'
-           . ':root{--wf-header-height:64px}\n'
-           . '.site-header, .universal-page-header{margin:0!important;padding-top:4px!important;padding-bottom:4px!important}\n'
-           . '.header-container{margin:0 auto;max-width:1200px}\n'
-           . '.site-header .nav-links{display:flex!important;gap:14px!important;align-items:center!important;flex-wrap:wrap!important;margin:0!important;padding:0!important}\n'
-           . '.site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}\n'
-           . '.site-header nav ul{list-style:none;margin:0;padding:0;display:flex;gap:14px;flex-wrap:wrap}\n'
-           . '.site-header nav ul>li{display:inline-flex}\n'
-           . '.admin-tab-navigation{position:fixed!important;top:var(--wf-admin-nav-top, calc(var(--wf-header-height,64px) + 12px))!important;left:0;right:0;z-index:2000;margin:0!important;padding:4px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}\n'
-           . '.admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}\n'
-           . '.admin-tab-navigation ul{list-style:none!important;margin:0 auto!important;padding:0!important;display:flex!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}\n'
-           . '.admin-tab-navigation .container,.admin-tab-navigation .wrapper,.admin-tab-navigation .flex,.admin-tab-navigation > div,.admin-tab-navigation .u-display-flex{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}\n'
-           . '.admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}\n'
-           . '.admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}\n'
-           . 'body[data-page^=admin] #admin-section-content{padding-top:var(--wf-admin-content-pad,12px)!important}\n'
-           . '@media (min-width:0px){.admin-tab-navigation .flex,.admin-tab-navigation>div,.admin-tab-navigation ul{flex-direction:row!important;align-items:center!important}}\n'
-           . '</style>' . "\n";
+        echo <<<'STYLE'
+<style id="wf-admin-nav-fallback-global">
+:root{--wf-header-height:64px}
+.site-header, .universal-page-header{margin:0!important;padding-top:4px!important;padding-bottom:4px!important}
+.header-container{margin:0 auto;max-width:1200px}
+.site-header .nav-links{display:flex!important;gap:14px!important;align-items:center!important;flex-wrap:wrap!important;margin:0!important;padding:0!important}
+.site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
+.site-header nav ul{list-style:none;margin:0;padding:0;display:flex;gap:14px;flex-wrap:wrap}
+.site-header nav ul>li{display:inline-flex}
+.admin-tab-navigation{position:fixed!important;top:var(--wf-admin-nav-top, calc(var(--wf-header-height,64px) + 12px))!important;left:0;right:0;z-index:2000;margin:0!important;padding:4px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
+.admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
+.admin-tab-navigation ul{list-style:none!important;margin:0 auto!important;padding:0!important;display:flex!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
+.admin-tab-navigation .container,.admin-tab-navigation .wrapper,.admin-tab-navigation .flex,.admin-tab-navigation > div,.admin-tab-navigation .u-display-flex{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}
+.admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}
+.admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
+body[data-page^=admin] #admin-section-content{padding-top:var(--wf-admin-content-pad,12px)!important}
+@media (min-width:0px){.admin-tab-navigation .flex,.admin-tab-navigation>div,.admin-tab-navigation ul{flex-direction:row!important;align-items:center!important}}
+</style>
+STYLE;
         // Dynamically compute header height to tighten the gap precisely
-        echo '<script>\n'
-           . '(function(){\n'
-           . '  try {\n'
-           . '    var computeLayout = function(){\n'
-           . '      var h = document.querySelector(\'.site-header\') || document.querySelector(\'.universal-page-header\');\n'
-           . '      if (h && h.getBoundingClientRect) {\n'
-           . '        var hh = Math.max(40, Math.round(h.getBoundingClientRect().height));\n'
-           . '        document.documentElement.style.setProperty("--wf-header-height", hh + "px");\n'
-           . '      }\n'
-           . '      var hc = document.querySelector(\'.header-content\');\n'
-           . '      if (hc && hc.getBoundingClientRect) {\n'
-           . '        var bottom = Math.round(hc.getBoundingClientRect().bottom + 12);\n'
-           . '        document.documentElement.style.setProperty("--wf-admin-nav-top", bottom + "px");\n'
-           . '      }\n'
-           . '      var nav = document.querySelector(\'.admin-tab-navigation\');\n'
-           . '      if (nav && nav.getBoundingClientRect) {\n'
-           . '        var nh = Math.round(nav.getBoundingClientRect().height + 12);\n'
-           . '        document.documentElement.style.setProperty("--wf-admin-content-pad", nh + "px");\n'
-           . '      }\n'
-           . '    };\n'
-           . '    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", computeLayout, {once:true}); else computeLayout();\n'
-           . '    window.addEventListener("load", computeLayout, {once:true});\n'
-           . '    window.addEventListener("resize", computeLayout);\n'
-           . '    try {\n'
-           . '      if (window.ResizeObserver) {\n'
-           . '        var ro = new ResizeObserver(function(){computeLayout();});\n'
-           . '        var hc = document.querySelector(\'.header-content\'); if (hc) ro.observe(hc);\n'
-           . '        var h = document.querySelector(\'.site-header\') || document.querySelector(\'.universal-page-header\'); if (h) ro.observe(h);\n'
-           . '      } else {\n'
-           . '        var t = setInterval(computeLayout, 500);\n'
-           . '        setTimeout(function(){clearInterval(t);}, 4000);\n'
-           . '      }\n'
-           . '    } catch(_) {}\n'
-           . '  } catch(e) {}\n'
-           . '})();\n'
-           . '</script>' . "\n";
+        echo <<<'SCRIPT'
+<script>
+(function(){
+  try {
+    var computeLayout = function(){
+      var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header');
+      if (h && h.getBoundingClientRect) {
+        var hh = Math.max(40, Math.round(h.getBoundingClientRect().height));
+        document.documentElement.style.setProperty("--wf-header-height", hh + "px");
+      }
+      var hc = document.querySelector('.header-content');
+      if (hc && hc.getBoundingClientRect) {
+        var bottom = Math.round(hc.getBoundingClientRect().bottom + 12);
+        document.documentElement.style.setProperty("--wf-admin-nav-top", bottom + "px");
+      }
+      var nav = document.querySelector('.admin-tab-navigation');
+      if (nav && nav.getBoundingClientRect) {
+        var nh = Math.round(nav.getBoundingClientRect().height + 12);
+        document.documentElement.style.setProperty("--wf-admin-content-pad", nh + "px");
+      }
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", computeLayout, {once:true}); else computeLayout();
+    window.addEventListener("load", computeLayout, {once:true});
+    window.addEventListener("resize", computeLayout);
+    try {
+      if (window.ResizeObserver) {
+        var ro = new ResizeObserver(function(){computeLayout();});
+        var hc = document.querySelector('.header-content'); if (hc) ro.observe(hc);
+        var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header'); if (h) ro.observe(h);
+      } else {
+        var t = setInterval(computeLayout, 500);
+        setTimeout(function(){clearInterval(t);}, 4000);
+      }
+    } catch(_) {}
+  } catch(e) {}
+})();
+</script>
+SCRIPT;
     }
     // If on admin/settings ensure assets are emitted and avoid kill-switching JS
     if ($isAdmin && (strpos($pageSlug, 'admin/settings') === 0)) {
@@ -123,19 +127,21 @@ $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
         echo '<script>window.WF_ADMIN_LIGHT=' . ($lightByDefault ? 'true' : 'false') . ';window.WF_DISABLE_ADMIN_SETTINGS_JS=false;</script>' . "\n";
         if ($lightByDefault) {
             // Minimal inline CSS fallback to keep admin navbar horizontal in light mode
-            echo '<style id="wf-admin-nav-fallback">\n'
-                . ':root{--wf-header-height:64px}\n'
-                . '.site-header, .universal-page-header{margin:0!important;padding-top:6px!important;padding-bottom:6px!important}\n'
-                . '.header-container{margin:0 auto;max-width:1200px}\n'
-                . '.site-header .nav-links{display:flex!important;flex-direction:row!important;gap:14px!important;align-items:center!important;flex-wrap:nowrap!important;margin:0!important;padding:0!important}\n'
-                . '.site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}\n'
-                . '.site-header nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:row!important;gap:14px;flex-wrap:nowrap!important}\n'
-                . '.site-header nav ul>li{display:inline-flex}\n'
-               . '.admin-tab-navigation{position:fixed;top:var(--wf-admin-nav-top, calc(var(--wf-header-height,64px) + 22px));left:0;right:0;z-index:2000;margin:0!important;padding:6px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}\n'
-               . '.admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}\n'
-               . '.admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}\n'
-                . '.admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}\n'
-                . '</style>' . "\n";
+            echo <<<'STYLE'
+<style id="wf-admin-nav-fallback">
+:root{--wf-header-height:64px}
+.site-header, .universal-page-header{margin:0!important;padding-top:6px!important;padding-bottom:6px!important}
+.header-container{margin:0 auto;max-width:1200px}
+.site-header .nav-links{display:flex!important;flex-direction:row!important;gap:14px!important;align-items:center!important;flex-wrap:nowrap!important;margin:0!important;padding:0!important}
+.site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
+.site-header nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:row!important;gap:14px;flex-wrap:nowrap!important}
+.site-header nav ul>li{display:inline-flex}
+.admin-tab-navigation{position:fixed;top:var(--wf-admin-nav-top, calc(var(--wf-header-height,64px) + 22px));left:0;right:0;z-index:2000;margin:0!important;padding:6px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
+.admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
+.admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
+.admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}
+</style>
+STYLE;
             // Optional: Prevent hash-driven modal auto-opens and suppress overlays unless user triggered
             // Gated behind wf_light_guard=1 to avoid interfering by default
             if (isset($qs['wf_light_guard']) && $qs['wf_light_guard'] === '1') {

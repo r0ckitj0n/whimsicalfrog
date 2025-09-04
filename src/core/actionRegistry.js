@@ -12,6 +12,32 @@ export const centralFunctions = {
   runCommand: (el, p) => window.runCommand?.(p.command),
   loadRoomConfig: () => window.loadRoomConfig?.(),
   resetForm: () => window.resetForm?.(),
+  // Generic confirmation handler to replace inline onclick="return confirm(...)"
+  confirm: (el, p = {}) => {
+    const message = p.message || el.getAttribute('data-confirm') || 'Are you sure?';
+    const proceed = window.confirm(message);
+    if (!proceed) return;
+
+    // Navigate if anchor
+    if (el.tagName === 'A' && el.href) {
+      if (el.target === '_blank') {
+        window.open(el.href, '_blank');
+      } else {
+        window.location.href = el.href;
+      }
+      return;
+    }
+
+    // Submit associated form if present or specified
+    const form = el.form || (p.formId ? document.getElementById(p.formId) : null);
+    if (form) {
+      form.submit();
+      return;
+    }
+
+    // Fallback: dispatch a custom event consumers can hook into
+    document.dispatchEvent(new CustomEvent('wf:confirm:accepted', { detail: { element: el, params: p } }));
+  },
   // ...add more mappings if/when the functions are migrated.
 };
 

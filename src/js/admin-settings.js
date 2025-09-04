@@ -12,6 +12,25 @@ function __unusedDelegatedPreamble(e, closest, target) {
             return;
         }
 
+        // Maintenance: Retry compact/repair after failure
+        const retryBtn = closest('[data-action="retry-compact-repair"]');
+        if (retryBtn) {
+            e.preventDefault();
+            try {
+                if (typeof window !== 'undefined') {
+                    if (typeof window.closeBackupProgressModal === 'function') {
+                        window.closeBackupProgressModal();
+                    }
+                    if (typeof window.compactRepairDatabase === 'function') {
+                        window.compactRepairDatabase();
+                    } else {
+                        document.dispatchEvent(new CustomEvent('wf:retry-compact-repair'));
+                    }
+                }
+            } catch (_) {}
+            return;
+        }
+
         // -----------------------------
         // Admin Settings: Global Colors/Sizes/Genders edit/delete
         // -----------------------------
@@ -4712,6 +4731,16 @@ function initAdminSettingsDelegatedListeners() {
         }
     }, true);
 
+    // Delegated change: documentation filter dropdown
+    document.addEventListener('change', (e) => {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        const filter = t.closest('[data-action="docs-filter-change"]');
+        if (filter) {
+            try { if (typeof window !== 'undefined' && typeof window.filterDocuments === 'function') window.filterDocuments(); } catch (_) {}
+        }
+    }, true);
+
     // Delegated click handler
     document.addEventListener('click', (e) => {
         const target = e.target;
@@ -5028,6 +5057,55 @@ function initAdminSettingsDelegatedListeners() {
                     document.dispatchEvent(new CustomEvent('wf:cart-text-remove', { detail: { index: idx } }));
                 }
             } catch (_) {}
+            return;
+        }
+
+        // -----------------------------
+        // Admin Settings: Rooms editor card click -> edit room settings
+        // -----------------------------
+        const roomCard = closest('[data-action="edit-room-settings"]');
+        if (roomCard) {
+            e.preventDefault();
+            try {
+                let room = null;
+                const payload = roomCard.dataset.room;
+                if (payload) {
+                    try { room = JSON.parse(decodeURIComponent(payload)); } catch(_) {}
+                }
+                if (!room && typeof window !== 'undefined' && typeof window.getRoomFromElement === 'function') {
+                    room = window.getRoomFromElement(roomCard);
+                }
+                if (typeof window !== 'undefined' && typeof window.editRoomSettings === 'function') {
+                    window.editRoomSettings(room);
+                } else {
+                    document.dispatchEvent(new CustomEvent('wf:edit-room-settings', { detail: { room } }));
+                }
+            } catch(_) {}
+            return;
+        }
+
+        // Start inline edits for category name
+        const startEditCategoryBtn = closest('[data-action="start-edit-category"]');
+        if (startEditCategoryBtn) {
+            e.preventDefault();
+            try { if (typeof window !== 'undefined' && typeof window.startEditCategory === 'function') window.startEditCategory(startEditCategoryBtn); } catch(_) {}
+            return;
+        }
+
+        // Start inline edits for SKU code
+        const startEditSkuBtn = closest('[data-action="start-edit-sku-code"]');
+        if (startEditSkuBtn) {
+            e.preventDefault();
+            try { if (typeof window !== 'undefined' && typeof window.startEditSkuCode === 'function') window.startEditSkuCode(startEditSkuBtn); } catch(_) {}
+            return;
+        }
+
+        // Documentation: select table from list
+        const selectTableBtn = closest('[data-action="docs-select-table"]');
+        if (selectTableBtn) {
+            e.preventDefault();
+            const table = selectTableBtn.dataset.table;
+            try { if (typeof window !== 'undefined' && typeof window.selectTable === 'function') window.selectTable(table); } catch(_) {}
             return;
         }
 

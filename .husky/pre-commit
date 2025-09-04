@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Use lint-staged to process only staged files (concurrent for speed)
 # Guard against accidental duplicate-suffixed files/dirs being committed
 # Examples blocked: "image 2.png", "logo 3.webp", "css/core 2/"

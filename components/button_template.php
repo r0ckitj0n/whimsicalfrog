@@ -110,22 +110,24 @@ function render_button($config = [])
     }
 
     if ($config['onclick']) {
-        // Migrate common pattern: return confirm('...') to data-action driven confirm
+        // Migrate common pattern: "return confirm('...')" to data-action driven confirm
         $onclick = trim($config['onclick']);
-        // Support single or double quotes around the confirm message via backreference
-        if (preg_match("/^return\\s+confirm\\(([\"']).*\\1\\)\\s*;?$/", $onclick)) {
-            // Extract message without surrounding quotes
-            $msg = $onclick;
-            $msg = preg_replace('/^return\\s+confirm\(/', '', $msg);
-            $msg = preg_replace('/\)\s*;?$/', '', $msg);
-            // Remove leading/trailing quotes (portable; avoids PHP 8 str_* helpers)
+        if (preg_match('/^return\s+confirm\s*\(.*\)\s*;?$/i', $onclick)) {
+            // Extract inner contents between the first '(' and the last ')'
+            $firstParen = strpos($onclick, '(');
+            $lastParen = strrpos($onclick, ')');
+            $msg = $firstParen !== false && $lastParen !== false && $lastParen > $firstParen
+                ? substr($onclick, $firstParen + 1, $lastParen - $firstParen - 1)
+                : '';
+            // Trim surrounding quotes if present
+            $msg = trim($msg);
             $firstChar = substr($msg, 0, 1);
             $lastChar = substr($msg, -1);
             if ((($firstChar === "'" && $lastChar === "'") || ($firstChar === '"' && $lastChar === '"')) && strlen($msg) >= 2) {
                 $msg = substr($msg, 1, -1);
             }
             $attributes['data-action'] = 'confirm';
-            $attributes['data-confirm'] = $msg;
+            $attributes['data-confirm'] = $msg !== '' ? $msg : 'Are you sure?';
         } else {
             // Preserve arbitrary onclick until migrated
             $attributes['onclick'] = $config['onclick'];

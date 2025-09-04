@@ -14,6 +14,13 @@ if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
 require_once dirname(__DIR__) . '/includes/vite_helper.php';
 // Ensure core helpers are available (get_active_background, etc)
 require_once dirname(__DIR__) . '/includes/functions.php';
+
+// Ensure dynamic HTML is not cached so stale pages don't reference outdated hashed assets
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Expires: 0');
+}
 ?>
 <?php
 // Derive page slug with precedence: for admin, use full path (admin/<section>); otherwise use router-provided $page, then ?page=, then path

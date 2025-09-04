@@ -5,6 +5,7 @@
 
 // Import CSS to be processed by Vite
 import '../styles/main.css';
+import '../core/actionRegistry.js';
 import './body-background-from-data.js';
 
 // TEMP: detect duplicate module evaluations during dev or unexpected reloads

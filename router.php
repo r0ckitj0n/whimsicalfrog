@@ -45,10 +45,41 @@ if (is_file($filePath)) {
 }
 
 // If a request targets the built assets directory but the file does not exist,
-// return a 404 instead of falling through to index.php. This avoids serving
-// an HTML page for JS/CSS requests, which triggers MIME-type errors in browsers
-// when stale or mismatched hashed filenames are referenced.
+// provide a graceful fallback for the app entry bundle, and 404 for others.
 if (strpos($requestedPath, '/dist/') === 0) {
+    // Graceful fallback: if the request looks like the app entry bundle with a stale hash,
+    // redirect to the current hashed file based on the manifest. This mitigates cached HTML.
+    if (preg_match('#^/dist/assets/js/app\.js-[A-Za-z0-9_\-]+\.js$#', $requestedPath)) {
+        $manifestPaths = [ __DIR__ . '/dist/.vite/manifest.json', __DIR__ . '/dist/manifest.json' ];
+        $manifest = null;
+        foreach ($manifestPaths as $mp) {
+            if (is_file($mp)) {
+                $json = @file_get_contents($mp);
+                $data = $json ? json_decode($json, true) : null;
+                if (is_array($data)) { $manifest = $data; break; }
+            }
+        }
+        if (is_array($manifest)) {
+            $resolved = null;
+            // Try logical key first
+            if (isset($manifest['js/app.js'])) { $resolved = $manifest['js/app.js']; }
+            // Try source entry key
+            if (!$resolved && isset($manifest['src/entries/app.js'])) { $resolved = $manifest['src/entries/app.js']; }
+            // Try scan by name
+            if (!$resolved) {
+                foreach ($manifest as $k => $meta) {
+                    if (is_array($meta) && ($meta['name'] ?? '') === 'js/app.js') { $resolved = $meta; break; }
+                }
+            }
+            if (is_array($resolved) && !empty($resolved['file'])) {
+                $target = '/dist/' . ltrim($resolved['file'], '/');
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                header('Location: ' . $target, true, 302);
+                exit;
+            }
+        }
+    }
+    // Default: respond 404 for other missing dist assets to avoid HTML fallthrough
     http_response_code(404);
     header('Content-Type: text/plain; charset=utf-8');
     echo "Not Found\n";

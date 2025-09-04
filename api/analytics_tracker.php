@@ -1,8 +1,6 @@
 <?php
 require_once __DIR__ . '/api_bootstrap.php';
-require_once __DIR__ . '/../includes/database.php';
-
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 // Start session if not already started
 if (session_status() == PHP_SESSION_NONE) {

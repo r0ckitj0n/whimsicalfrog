@@ -1,13 +1,13 @@
 <?php
 
-require_once __DIR__ . '/../includes/database.php';
 // Help Tooltips API
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once 'config.php';
+// Centralized environment and DB config (includes Database class)
+require_once __DIR__ . '/config.php';
 
 // Get the action first to determine if authentication is needed
 $action = $_GET['action'] ?? 'get';

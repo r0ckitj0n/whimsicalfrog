@@ -8,8 +8,10 @@ RewriteEngine On
 RewriteBase /
 
 # Allow direct access to existing files and directories
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
+# Only allow direct access to existing files. Route other requests (including
+# missing files under existing directories) through router.php so it can
+# implement graceful fallbacks for built assets.
+RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
 # Route everything else through router.php (front controller)

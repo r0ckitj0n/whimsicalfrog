@@ -1,3 +1,29 @@
+# Release Notes - 2025-09-06
+
+## Summary
+- Consolidated all project documentation into the canonical `documentation/` folder.
+- Updated scripts/tooling to reference `documentation/`.
+- Excluded `documentation/` from live deployments.
+
+## Key Changes
+- Documentation move:
+  - Moved `docs/` tree to `documentation/` via `git mv` to preserve history.
+  - Updated links in `documentation/modal-testing-summary-final.md` from `/docs/...` → `/documentation/...`.
+- Tooling updates:
+  - `scripts/css-inventory.mjs` now writes to `documentation/frontend/css-reorg-plan.md` and console message updated.
+  - `scripts/disallow-inline-styles.mjs` guard now ignores `documentation/legacy-duplicates/`.
+  - `.lintstagedignore` updated to ignore `documentation/**`.
+- Deployment:
+  - `scripts/deploy.sh` and `scripts/deploy_full.sh` exclude `documentation/` from SFTP mirror so docs never sync to live.
+
+## Rationale
+- Single source of truth for docs improves discoverability and prevents drift.
+- Excluding docs from deploys prevents publishing internal notes and reduces upload size.
+
+## Next
+- Optionally add CODEOWNERS/labels for `documentation/`.
+- Update any external automation that referenced `docs/` to use `documentation/`.
+
 # Release Notes - 2025-09-02
 
 ## Summary

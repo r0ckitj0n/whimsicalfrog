@@ -50,16 +50,16 @@ body[data-page^='admin'] #admin-section-content {
 /* Admin pages: ensure all overlays/modals are hidden by default unless explicitly shown */
 body[data-page^='admin'] .admin-modal-overlay,
 body[data-page^='admin'] .modal-overlay,
-body[data-page^='admin'] .room-modal-overlay,
-body[data-page^='admin'] [id$="Modal"] {
+body[data-page^='admin'] .room-modal-overlay {
   display: none; /* default hidden */
+  /* Neutralize legacy animations that can cause shimmer/flicker */
+  transition: none !important;
 }
 
 /* Respect aria-hidden for accessibility */
 body[data-page^='admin'] .admin-modal-overlay[aria-hidden="true"],
 body[data-page^='admin'] .modal-overlay[aria-hidden="true"],
-body[data-page^='admin'] .room-modal-overlay[aria-hidden="true"],
-body[data-page^='admin'] [id$="Modal"][aria-hidden="true"] {
+body[data-page^='admin'] .room-modal-overlay[aria-hidden="true"] {
   display: none !important;
 }
 
@@ -68,9 +68,9 @@ body[data-page^='admin'] .admin-modal-overlay.show,
 body[data-page^='admin'] .modal-overlay.show,
 body[data-page^='admin'] .room-modal-overlay.show {
   display: flex !important;
-}
-body[data-page^='admin'] [id$="Modal"].show {
-  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 /* Ensure Square modal keeps flex centering when shown */
 body[data-page^='admin'] #squareSettingsModal.show { display: flex !important; }
@@ -85,15 +85,15 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   padding: 0 !important;
   position: fixed !important;
   inset: 0 !important;
-  z-index: 5000 !important;
+  z-index: 5000 !important; /* ensure above header/nav */
+  pointer-events: auto !important;
 }
 
 /* Admin Settings: overlay safety rules */
 /* Hidden overlays must not capture input or cover the viewport */
 .admin-modal-overlay.hidden,
 .modal-overlay.hidden,
-.room-modal-overlay.hidden,
-[id$="Modal"].hidden {
+.room-modal-overlay.hidden {
   display: none !important;
   visibility: hidden !important;
   pointer-events: none !important;
@@ -113,7 +113,6 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
 .admin-modal-overlay.show,
 .modal-overlay.show,
 .room-modal-overlay.show,
-[id$="Modal"].show,
 /* Additional open states used elsewhere */
 .modal-overlay.active,
 .admin-modal-overlay.active,
@@ -124,8 +123,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
 .room-modal-overlay:not(.hidden),
 .admin-modal-overlay:not(:is(.hidden, [aria-hidden="true"])),
 .modal-overlay:not(:is(.hidden, [aria-hidden="true"])),
-.room-modal-overlay:not(:is(.hidden, [aria-hidden="true"])),
-[id$="Modal"]:not(:is(.hidden, [aria-hidden="true"])) {
+.room-modal-overlay:not(:is(.hidden, [aria-hidden="true"])) {
   position: fixed !important;
   inset: 0 !important; /* cover full viewport */
   width: 100vw !important;
@@ -142,13 +140,24 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
 body[data-page^='admin'] :is(.admin-modal-overlay, .modal-overlay, .room-modal-overlay).under-header {
   top: var(--admin-header-height, 64px) !important;
   height: calc(100vh - var(--admin-header-height, 64px)) !important;
+  align-items: flex-start !important; /* prevent vertical centering that can cause jitter */
+  justify-content: center !important;
 }
 
 /* Ensure overlay tint is applied on the overlay itself */
-.admin-modal-overlay,
-.modal-overlay,
-.room-modal-overlay {
-  background: rgba(0, 0, 0, 0.5);
+/* Force consistent, opaque-ish overlay tint on admin to avoid see-through artifacts */
+body[data-page^='admin'] .admin-modal-overlay,
+body[data-page^='admin'] .modal-overlay,
+body[data-page^='admin'] .room-modal-overlay {
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Neutralize backdrop blur on admin overlays to avoid GPU shimmering/flicker */
+/* Remove any GPU filters and transitions that cause flicker on hover/move */
+body[data-page^='admin'] :is(.admin-modal-overlay, .modal-overlay, .room-modal-overlay) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transition: none !important;
 }
 
 /* Guard against inner panel margins that could force left alignment */
@@ -162,7 +171,29 @@ body[data-page^='admin'] :is(.admin-modal-overlay, .modal-overlay, .room-modal-o
 .admin-modal,
 .modal {
   margin: 0 !important;
+  opacity: 1 !important; /* ensure panel is fully visible */
+  background: #fff !important; /* enforce solid panel background */
+  position: relative !important;
+  z-index: 1 !important; /* ensure panel content sits above overlay tint */
+  transform: none !important; /* neutralize legacy scale/translate animations */
 }
+
+/* Guard: when overlays are visible, ensure pointer events are enabled and inner content is not faded */
+body[data-page^='admin'] .admin-modal-overlay.show .admin-modal,
+body[data-page^='admin'] .modal-overlay.show .admin-modal,
+body[data-page^='admin'] .room-modal-overlay.show .admin-modal,
+body[data-page^='admin'] .admin-modal-overlay.show .admin-modal-content,
+body[data-page^='admin'] .modal-overlay.show .admin-modal-content,
+body[data-page^='admin'] .room-modal-overlay.show .admin-modal-content {
+  opacity: 1 !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Debug aid: uncomment to visualize panel bounds if needed */
+/*
+body[data-page^='admin'] .admin-modal-overlay.show .admin-modal { outline: 2px solid #4ade80 !important; }
+*/
 
 /* Ensure only #admin-section-content scrolls; outer wrappers must not introduce scrollbars */
 body[data-page^='admin'] .admin-settings-scroll,

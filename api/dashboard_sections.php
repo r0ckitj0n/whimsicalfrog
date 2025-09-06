@@ -1,39 +1,75 @@
 <?php
 // Dashboard Sections Management API
-ob_start(); // Start output buffering to prevent header issues
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Clear any previous output that might interfere with headers
-ob_clean();
+// Disable HTML error output to keep responses strictly JSON
+@ini_set('display_errors', 0);
+@ini_set('html_errors', 0);
+// Clear any previous output buffers to prevent mixed output
+try { while (ob_get_level() > 0) { @ob_end_clean(); } } catch(Throwable $____) {}
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-    ob_end_clean();
-    exit(0);
-}
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') { exit(0); }
 
 // Check admin authentication using centralized helper
 AuthHelper::requireAdmin();
 
-try {
-    $db = Database::getInstance();
+// Ensure the dashboard_sections table exists (idempotent)
+if (!function_exists('wf_ensure_dashboard_sections_table')) {
+    function wf_ensure_dashboard_sections_table(PDO $db): void {
+        $sql = <<<SQL
+CREATE TABLE IF NOT EXISTS `dashboard_sections` (
+  `section_key` varchar(64) NOT NULL,
+  `display_order` int NOT NULL DEFAULT 0,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `show_title` tinyint(1) NOT NULL DEFAULT 1,
+  `show_description` tinyint(1) NOT NULL DEFAULT 1,
+  `custom_title` varchar(255) DEFAULT NULL,
+  `custom_description` text DEFAULT NULL,
+  `width_class` varchar(64) NOT NULL DEFAULT 'half-width',
+  PRIMARY KEY (`section_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SQL;
+        try { $db->exec($sql); } catch (Throwable $____) { /* ignore; will fail later if unusable */ }
+    }
+}
 
+try {
     // Parse JSON input for action and data
     $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $action = $_GET['action'] ?? $_POST['action'] ?? $input['action'] ?? 'get_sections';
 
     switch ($action) {
+        case 'diagnostics':
+            // Quick check for DB connectivity and table existence
+            $result = [
+                'db_connect' => false,
+                'table_exists' => false,
+            ];
+            try {
+                $db = Database::getInstance();
+                $result['db_connect'] = true;
+                try {
+                    $q = $db->query("SHOW TABLES LIKE 'dashboard_sections'");
+                    $result['table_exists'] = $q && $q->fetch() ? true : false;
+                } catch (Throwable $t2) {
+                    $result['table_exists'] = false;
+                }
+            } catch (Throwable $t) {
+                $result['db_connect'] = false;
+            }
+            Response::success(['diagnostics' => $result]);
+            break;
         case 'get_sections':
-            // Get all dashboard sections with available section info
-            $sections = $db->query('SELECT * FROM dashboard_sections ORDER BY display_order ASC')->fetchAll();
-
-            // Available section definitions
+            // Available section definitions (static map)
             $availableSections = [
                 'metrics' => [
                     'title' => '📊 Quick Metrics',
@@ -90,14 +126,46 @@ try {
                 ]
             ];
 
-            // Enhance sections with available section info
-            foreach ($sections as &$section) {
-                $sectionInfo = $availableSections[$section['section_key']] ?? null;
-                if ($sectionInfo) {
-                    $section['section_info'] = $sectionInfo;
-                    $section['display_title'] = $section['custom_title'] ?: $sectionInfo['title'];
-                    $section['display_description'] = $section['custom_description'] ?: $sectionInfo['description'];
+            // Try database; if it fails, attempt file-based fallback; otherwise return success with empty sections
+            $sections = [];
+            try {
+                $db = Database::getInstance();
+                // Get all dashboard sections with available section info
+                $sections = $db->query('SELECT * FROM dashboard_sections ORDER BY display_order ASC')->fetchAll();
+                // Enhance sections with available section info
+                foreach ($sections as &$section) {
+                    $sectionInfo = $availableSections[$section['section_key']] ?? null;
+                    if ($sectionInfo) {
+                        $section['section_info'] = $sectionInfo;
+                        $section['display_title'] = $section['custom_title'] ?: $sectionInfo['title'];
+                        $section['display_description'] = $section['custom_description'] ?: $sectionInfo['description'];
+                    }
                 }
+            } catch (Throwable $dbErr) {
+                // Fallback to file-based storage
+                try {
+                    $store = dirname(__DIR__) . '/storage';
+                    $file = $store . '/dashboard_sections.json';
+                    if (is_file($file) && is_readable($file)) {
+                        $json = file_get_contents($file);
+                        $saved = json_decode($json, true);
+                        if (is_array($saved)) {
+                            // Normalize to DB-like rows
+                            $sections = array_map(function($s){
+                                return [
+                                    'section_key' => $s['section_key'] ?? ($s['key'] ?? ''),
+                                    'display_order' => $s['display_order'] ?? 0,
+                                    'is_active' => $s['is_active'] ?? 1,
+                                    'show_title' => $s['show_title'] ?? 1,
+                                    'show_description' => $s['show_description'] ?? 1,
+                                    'custom_title' => $s['custom_title'] ?? null,
+                                    'custom_description' => $s['custom_description'] ?? null,
+                                    'width_class' => $s['width_class'] ?? 'half-width',
+                                ];
+                            }, $saved);
+                        }
+                    }
+                } catch (Throwable $ioErr) { /* ignore; leave empty */ }
             }
 
             Response::success([
@@ -114,6 +182,9 @@ try {
             }
 
             // Start transaction
+            $db = Database::getInstance();
+            // Detect-and-create: ensure table exists before attempting writes
+            wf_ensure_dashboard_sections_table($db);
             $db->beginTransaction();
 
             try {
@@ -149,8 +220,30 @@ try {
                 Response::success(['message' => 'Dashboard configuration updated successfully']);
 
             } catch (Exception $e) {
-                $db->rollback();
-                throw $e;
+                // DB path failed — fallback to file-based persistence
+                try { $db->rollback(); } catch(Throwable $____) {}
+                try {
+                    $store = dirname(__DIR__) . '/storage';
+                    if (!is_dir($store)) { @mkdir($store, 0775, true); }
+                    $file = $store . '/dashboard_sections.json';
+                    $payload = [];
+                    foreach ($data['sections'] as $idx => $s) {
+                        $payload[] = [
+                            'section_key' => (string)($s['section_key'] ?? ''),
+                            'display_order' => (int)($s['display_order'] ?? ($idx + 1)),
+                            'is_active' => !empty($s['is_active']) ? 1 : 0,
+                            'show_title' => !empty($s['show_title']) ? 1 : 0,
+                            'show_description' => !empty($s['show_description']) ? 1 : 0,
+                            'custom_title' => $s['custom_title'] ?? null,
+                            'custom_description' => $s['custom_description'] ?? null,
+                            'width_class' => $s['width_class'] ?? 'half-width',
+                        ];
+                    }
+                    @file_put_contents($file, json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                    Response::success(['message' => 'Dashboard configuration saved (file fallback)']);
+                } catch (Throwable $ioErr) {
+                    Response::serverError('Failed to save dashboard configuration');
+                }
             }
             break;
 
@@ -162,6 +255,9 @@ try {
             }
 
             // Get the highest display order
+            $db = Database::getInstance();
+            // Detect-and-create: ensure table exists before attempting writes
+            wf_ensure_dashboard_sections_table($db);
             $maxOrder = $db->query('SELECT COALESCE(MAX(display_order), 0) as max_order FROM dashboard_sections')->fetch()['max_order'];
 
             $stmt = $db->prepare('
@@ -198,7 +294,7 @@ try {
             if (!$data || !isset($data['section_key'])) {
                 Response::error('Section key is required');
             }
-
+            $db = Database::getInstance();
             $stmt = $db->prepare('DELETE FROM dashboard_sections WHERE section_key = ?');
             $stmt->execute([$data['section_key']]);
 
@@ -217,6 +313,7 @@ try {
             }
 
             // Update the specific section's order
+            $db = Database::getInstance();
             $stmt = $db->prepare('UPDATE dashboard_sections SET display_order = ? WHERE section_key = ?');
             $result = $stmt->execute([$data['new_order'], $data['section_key']]);
 
@@ -246,7 +343,7 @@ try {
             if (!$data || !isset($data['sections'])) {
                 Response::error('Section order data is required');
             }
-
+            $db = Database::getInstance();
             $stmt = $db->prepare('UPDATE dashboard_sections SET display_order = ? WHERE section_key = ?');
 
             foreach ($data['sections'] as $section) {
@@ -269,7 +366,7 @@ try {
             if (!$data || !isset($data['section_key'])) {
                 Response::error('Section key is required');
             }
-
+            $db = Database::getInstance();
             $stmt = $db->prepare('
                 UPDATE dashboard_sections 
                 SET width_class = ?, show_title = ?, show_description = ?, 
@@ -290,7 +387,7 @@ try {
             break;
 
         case 'get_available_sections':
-            // Get list of available sections that can be added
+            // Get list of available sections that can be added (no DB required)
             $availableSections = [
                 'metrics' => [
                     'title' => '📊 Quick Metrics',
@@ -347,13 +444,19 @@ try {
                 ]
             ];
 
-            // Get currently active sections
-            $activeSections = $db->query('SELECT section_key FROM dashboard_sections')->fetchAll(PDO::FETCH_COLUMN);
-
-            // Filter out already active sections
-            $available = array_filter($availableSections, function ($key) use ($activeSections) {
-                return !in_array($key, $activeSections);
-            }, ARRAY_FILTER_USE_KEY);
+            // Try to exclude active sections if DB is available; otherwise just return full list
+            $available = $availableSections;
+            try {
+                $db = Database::getInstance();
+                $activeSections = $db->query('SELECT section_key FROM dashboard_sections')->fetchAll(PDO::FETCH_COLUMN);
+                if (is_array($activeSections)) {
+                    $available = array_filter($availableSections, function ($key) use ($activeSections) {
+                        return !in_array($key, $activeSections);
+                    }, ARRAY_FILTER_USE_KEY);
+                }
+            } catch (Throwable $dbErr) {
+                // ignore; fall back to full list
+            }
 
             Response::success(['available_sections' => $available]);
             break;
@@ -363,11 +466,11 @@ try {
     }
 
 } catch (Exception $e) {
-    Logger::exception($e, 'Dashboard sections API error');
-    ob_clean(); // Clear any output before sending error response
+    // Guard logger to avoid secondary fatals blocking JSON output
+    try { if (class_exists('Logger') && method_exists('Logger', 'exception')) { Logger::exception($e, 'Dashboard sections API error'); } } catch (Throwable $____) {}
+    // Ensure buffers are clear before sending JSON error
+    try { while (ob_get_level() > 0) { @ob_end_clean(); } } catch(Throwable $____) {}
     Response::serverError('Failed to process dashboard sections request: ' . $e->getMessage());
 }
-
-ob_end_flush(); // Send the buffered output
 exit();
 ?> 

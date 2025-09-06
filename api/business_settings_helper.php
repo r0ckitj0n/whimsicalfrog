@@ -17,7 +17,12 @@ class BusinessSettings
             try {
                 self::$pdo = Database::getInstance();
             } catch (Exception $e) {
-                error_log("Database connection failed: " . $e->getMessage());
+                if (class_exists('Logger')) {
+                    Logger::exception('BusinessSettings DB connection failed', $e, [
+                        'source' => 'business_settings_helper',
+                        'stage' => 'db_connect',
+                    ]);
+                }
                 throw $e;
             }
         }

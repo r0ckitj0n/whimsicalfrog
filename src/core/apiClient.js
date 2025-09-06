@@ -71,7 +71,7 @@ export class ApiClient {
         throw new Error('Invalid JSON response from server.');
       }
       if (data && data.success === false) {
-        throw new Error(data.error || 'API request failed');
+        throw new Error(data.error || data.message || 'API request failed');
       }
       return data;
     }

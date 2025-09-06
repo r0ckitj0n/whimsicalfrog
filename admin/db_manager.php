@@ -17,20 +17,6 @@ require_once __DIR__ . '/../api/config.php';
 
 class DatabaseManager
 {
-    private $localConfig = [
-        'host' => 'localhost',
-        'db' => 'whimsicalfrog',
-        'user' => 'root',
-        'pass' => 'Palz2516'
-    ];
-
-    private $liveConfig = [
-        'host' => 'db5017975223.hosting-data.io',
-        'db' => 'dbs14295502',
-        'user' => 'dbu2826619',
-        'pass' => 'Palz2516!'
-    ];
-
     private $connections = [];
 
     public function __construct()
@@ -48,17 +34,17 @@ class DatabaseManager
             return $this->connections[$env];
         }
 
-        $config = $env === 'live' ? $this->liveConfig : $this->localConfig;
+        // Use centralized environment configs from api/config.php
+        $config = wf_get_db_config($env === 'live' ? 'live' : 'local');
 
         try {
-            $dsn = "mysql:host={$config['host']};dbname={$config['db']};charset=utf8mb4";
-            $options = [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-            ];
-
-            $pdo = new PDO($dsn, $config['user'], $config['pass'], $options);
+            // Use centralized Database helper for consistent connection options
+            $pdo = Database::createConnection(
+                $config['host'],
+                $config['db'],
+                $config['user'],
+                $config['pass']
+            );
             $this->connections[$env] = $pdo;
 
             echo "✅ Connected to {$env} database ({$config['host']}/{$config['db']})\n";
@@ -80,7 +66,7 @@ class DatabaseManager
             return;
         }
 
-        $config = $env === 'live' ? $this->liveConfig : $this->localConfig;
+        $config = wf_get_db_config($env === 'live' ? 'live' : 'local');
 
         echo "\n📊 Database Status ({$env})\n";
         echo "========================\n";
@@ -222,7 +208,7 @@ class DatabaseManager
      */
     public function backup($env = 'local', $outputFile = null)
     {
-        $config = $env === 'live' ? $this->liveConfig : $this->localConfig;
+        $config = wf_get_db_config($env === 'live' ? 'live' : 'local');
 
         if (!$outputFile) {
             $outputFile = "backup_{$env}_" . date('Y-m-d_H-i-s') . ".sql";
@@ -264,7 +250,7 @@ class DatabaseManager
             return;
         }
 
-        $config = $env === 'live' ? $this->liveConfig : $this->localConfig;
+        $config = wf_get_db_config($env === 'live' ? 'live' : 'local');
 
         echo "\n🔄 Restoring Database ({$env})\n";
         echo "============================\n";

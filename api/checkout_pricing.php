@@ -35,7 +35,12 @@ try {
     try {
         $pdo = Database::getInstance();
     } catch (Exception $e) {
-        error_log("checkout_pricing.php: DB error: " . $e->getMessage());
+        if (class_exists('Logger')) {
+            Logger::exception('Database error in checkout_pricing', $e, [
+                'endpoint' => 'checkout_pricing',
+                'stage' => 'db_connect',
+            ]);
+        }
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Database error']);
         exit;
@@ -81,7 +86,13 @@ try {
                 $priceStmt->execute([$cand]);
                 $candPrice = $priceStmt->fetchColumn();
                 if ($candPrice !== false && $candPrice !== null && (float)$candPrice > 0.0) {
-                    error_log("checkout_pricing.php: Normalized SKU '$sku' -> '$cand' for pricing lookup");
+                    if (class_exists('Logger')) {
+                        Logger::info('Normalized SKU for pricing lookup', [
+                            'endpoint' => 'checkout_pricing',
+                            'original_sku' => (string)$sku,
+                            'normalized_sku' => (string)$cand,
+                        ]);
+                    }
                     $effectiveSku = $cand;
                     $price = $candPrice;
                     break;
@@ -101,14 +112,9 @@ try {
         $subtotal += ((float)$price) * $qty;
     }
 
-    // Shipping rates and logic (STRICT: DB must provide settings)
-    try {
-        $shipCfg = BusinessSettings::getShippingConfig(true);
-    } catch (InvalidArgumentException $ex) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
-        exit;
-    }
+    // Shipping rates and logic (non-strict: allow sensible defaults during development)
+    // We intentionally avoid throwing here to prevent checkout from failing when settings are missing.
+    $shipCfg = BusinessSettings::getShippingConfig(false);
     $freeThreshold   = (float)$shipCfg['free_shipping_threshold'];
     $localDeliveryFee= (float)$shipCfg['local_delivery_fee'];
     $rateUSPS        = (float)$shipCfg['shipping_rate_usps'];
@@ -135,14 +141,8 @@ try {
         $shipping = $rateUSPS;
     }
 
-    // Tax logic (STRICT: DB must provide required settings when enabled)
-    try {
-        $taxCfg = BusinessSettings::getTaxConfig(true);
-    } catch (InvalidArgumentException $ex) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
-        exit;
-    }
+    // Tax logic (non-strict: allow operation even if some settings are missing)
+    $taxCfg = BusinessSettings::getTaxConfig(false);
     $taxShipping = (bool)$taxCfg['taxShipping'];
     $settingsEnabled = (bool)$taxCfg['enabled'];
     $settingsRate = (float)$taxCfg['rate'];
@@ -168,13 +168,8 @@ try {
     // Total
     $total = round($subtotal + $shipping + $tax, 2);
 
-    // Currency (no code fallback)
-    $currency = BusinessSettings::get('currency_code');
-    if (!$currency) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Missing required setting: currency_code']);
-        exit;
-    }
+    // Currency (fallback to USD if not configured to avoid hard failure in dev)
+    $currency = BusinessSettings::get('currency_code', 'USD');
 
     $response = [
         'success' => true,
@@ -204,16 +199,28 @@ try {
             'method' => $method,
             'freeShippingThreshold' => $freeThreshold,
             'items' => $itemsDebug,
-            'usedDefaultSettings' => [],
+            // Which shipping settings fell back to defaults (if any)
+            'shippingUsedDefaults' => isset($shipCfg['usedDefaults']) ? (array)$shipCfg['usedDefaults'] : [],
             'hasTaxShippingKey' => isset($taxCfg['hasTaxShippingKey']) ? (bool)$taxCfg['hasTaxShippingKey'] : null,
+            'settingsEnabled' => $settingsEnabled,
+            'settingsRate' => $settingsRate,
         ];
-        error_log('checkout_pricing.php debug: ' . json_encode($response['debug']));
+        if (class_exists('Logger')) {
+            Logger::debug('checkout_pricing debug payload', [
+                'endpoint' => 'checkout_pricing',
+                'debug' => $response['debug']
+            ]);
+        }
     }
 
     echo json_encode($response);
 
 } catch (Throwable $e) {
-    error_log('checkout_pricing.php error: ' . $e->getMessage());
+    if (class_exists('Logger')) {
+        Logger::exception('Unhandled error in checkout_pricing', $e, [
+            'endpoint' => 'checkout_pricing',
+        ]);
+    }
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Server error']);
 }

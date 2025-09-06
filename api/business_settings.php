@@ -36,29 +36,62 @@ function ensureAboutSettings($pdo)
     }
 }
 
-/**
- * Ensure Contact Page settings exist with defaults
- */
-function ensureContactSettings($pdo)
-{
-    try {
-        $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
-            VALUES 
-            ('site', 'contact_page_title', 'Contact Us', 'Title shown at the top of the Contact page', 'text', 'Contact Page Title'),
-            ('site', 'contact_page_intro', '<p>Have a question or special request? Send us a message and we\'ll get back to you soon.</p>', 'Introductory HTML content displayed above the contact form', 'html', 'Contact Page Intro (HTML)'),
-            ('business_info', 'business_owner', '', 'Owner or proprietor name', 'text', 'Business Owner'),
-            ('business_info', 'business_address', '123 Craft Lane, Creative City, CC 12345', 'Business address', 'text', 'Business Address'),
-            ('business_info', 'business_phone', '', 'Primary business phone number (displayed and used for tel: link)', 'text', 'Business Phone'),
-            ('business_info', 'business_hours', '', 'Business hours (multi-line text supported)', 'text', 'Business Hours')
-            ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
-        $stmt->execute();
+  /**
+   * Ensure Email Settings exist with sensible defaults
+   */
+  function ensureEmailSettings($pdo)
+  {
+      try {
+          $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name)
+              VALUES
+              ('email', 'from_email', '', 'Default From email address used for outgoing emails', 'text', 'From Email'),
+              ('email', 'from_name', '', 'Default From name used for outgoing emails', 'text', 'From Name'),
+              ('email', 'admin_email', '', 'Primary admin email address for notifications', 'text', 'Admin Email'),
+              ('email', 'bcc_email', '', 'Optional BCC email for order confirmations and notifications', 'text', 'BCC Email'),
+              ('email', 'smtp_enabled', 'false', 'Enable SMTP for sending emails (true/false)', 'boolean', 'SMTP Enabled'),
+              ('email', 'smtp_host', '', 'SMTP server hostname', 'text', 'SMTP Host'),
+              ('email', 'smtp_port', '587', 'SMTP server port (e.g., 587 for TLS, 465 for SSL)', 'number', 'SMTP Port'),
+              ('email', 'smtp_encryption', 'tls', 'SMTP encryption method (none, tls, ssl)', 'text', 'SMTP Encryption'),
+              ('email', 'reply_to', '', 'Reply-To email address for outgoing emails', 'text', 'Reply-To Email'),
+              ('email', 'test_recipient', '', 'Default recipient for test emails', 'text', 'Test Recipient Email'),
+              ('email', 'smtp_username', '', 'SMTP username if authentication is required', 'text', 'SMTP Username'),
+              ('email', 'smtp_password', '', 'SMTP password (store securely if supported)', 'text', 'SMTP Password'),
+              ('email', 'smtp_auth', 'true', 'Whether SMTP authentication is required', 'boolean', 'SMTP Auth Enabled'),
+              ('email', 'smtp_timeout', '30', 'Timeout in seconds for SMTP connections', 'number', 'SMTP Timeout'),
+              ('email', 'smtp_debug', 'false', 'Enable verbose SMTP debug logging', 'boolean', 'SMTP Debug')
+              ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
+          $stmt->execute();
 
-        echo json_encode(['success' => true]);
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-}
+          echo json_encode(['success' => true]);
+      } catch (Exception $e) {
+          http_response_code(500);
+          echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+      }
+  }
+
+  /**
+   * Ensure Contact Page settings exist with defaults
+   */
+  function ensureContactSettings($pdo)
+  {
+      try {
+          $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
+              VALUES 
+              ('site', 'contact_page_title', 'Contact Us', 'Title shown at the top of the Contact page', 'text', 'Contact Page Title'),
+              ('site', 'contact_page_intro', '<p>Have a question or special request? Send us a message and we\'ll get back to you soon.</p>', 'Introductory HTML content displayed above the contact form', 'html', 'Contact Page Intro (HTML)'),
+              ('business_info', 'business_owner', '', 'Owner or proprietor name', 'text', 'Business Owner'),
+              ('business_info', 'business_address', '123 Craft Lane, Creative City, CC 12345', 'Business address', 'text', 'Business Address'),
+              ('business_info', 'business_phone', '', 'Primary business phone number (displayed and used for tel: link)', 'text', 'Business Phone'),
+              ('business_info', 'business_hours', '', 'Business hours (multi-line text supported)', 'text', 'Business Hours')
+              ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
+          $stmt->execute();
+
+          echo json_encode(['success' => true]);
+      } catch (Exception $e) {
+          http_response_code(500);
+          echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+      }
+  }
 
 try {
     try {
@@ -128,6 +161,10 @@ try {
 
         case 'ensure_about_settings':
             ensureAboutSettings($pdo);
+            break;
+
+        case 'ensure_email_settings':
+            ensureEmailSettings($pdo);
             break;
 
         default:

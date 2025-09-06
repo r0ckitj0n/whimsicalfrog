@@ -14,9 +14,12 @@ class EmailHelper
         'smtp_enabled' => false,
         'smtp_host' => '',
         'smtp_port' => 587,
+        'smtp_auth' => true,
         'smtp_username' => '',
         'smtp_password' => '',
         'smtp_encryption' => 'tls',
+        'smtp_timeout' => 30,
+        'smtp_debug' => 0,
         'from_email' => '',
         'from_name' => '',
         'reply_to' => '',
@@ -182,7 +185,8 @@ class EmailHelper
             // SMTP configuration
             self::$mailer->isSMTP();
             self::$mailer->Host = self::$config['smtp_host'];
-            self::$mailer->SMTPAuth = true;
+            // Allow disabling SMTP auth when using trusted relays
+            self::$mailer->SMTPAuth = (bool) self::$config['smtp_auth'];
             self::$mailer->Username = self::$config['smtp_username'];
             self::$mailer->Password = self::$config['smtp_password'];
             self::$mailer->Port = self::$config['smtp_port'];
@@ -191,6 +195,18 @@ class EmailHelper
                 self::$mailer->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
             } elseif (self::$config['smtp_encryption'] === 'tls') {
                 self::$mailer->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            }
+
+            // Optional timeout and debug controls
+            if (isset(self::$config['smtp_timeout'])) {
+                self::$mailer->Timeout = (int) self::$config['smtp_timeout'];
+            }
+            if (isset(self::$config['smtp_debug'])) {
+                self::$mailer->SMTPDebug = (int) self::$config['smtp_debug'];
+                // Route debug output to error_log to avoid leaking to responses
+                self::$mailer->Debugoutput = function ($str, $level) {
+                    error_log('PHPMailer SMTP debug(' . $level . '): ' . $str);
+                };
             }
 
             self::$mailer->CharSet = self::$config['charset'];

@@ -49,6 +49,21 @@ if (isset($page) && $page === 'admin') {
 $pageSlug = preg_replace('/\.php$/i', '', $pageSlug);
 $segments = explode('/', $pageSlug);
 $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
+
+// If we are on /admin with a query param ?section=settings, normalize the slug so
+// admin-settings assets load and the bridge can detect the route consistently
+if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET['section'] !== '') {
+    $q = strtolower($_GET['section']);
+    $aliases = [
+        'index' => 'dashboard', 'home' => 'dashboard', 'order' => 'orders', 'product' => 'inventory', 'products' => 'inventory',
+        'customer' => 'customers', 'users' => 'customers', 'report' => 'reports', 'marketing' => 'marketing', 'pos' => 'pos',
+        'settings' => 'settings', 'admin_settings' => 'settings', 'admin_settings.php' => 'settings', 'categories' => 'categories',
+    ];
+    if (isset($aliases[$q])) { $q = $aliases[$q]; }
+    if ($q === 'settings') {
+        $pageSlug = 'admin/settings';
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -62,6 +77,8 @@ $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
     if (!$___is_admin_path) {
         echo vite('js/app.js');
     }
+    // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
+    echo vite('js/header-bootstrap.js');
     // Always ensure admin navbar has a horizontal layout on admin pages (fallback before external CSS)
     if ($isAdmin) {
         echo <<<'STYLE'
@@ -290,6 +307,76 @@ SCRIPT;
         if (function_exists('vite')) {
             if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) { define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true); echo vite('js/admin-settings.js'); }
         }
+        // Early squelch: prevent auto-opening of modals/panels before admin-settings bundle initializes
+        echo <<<'SCRIPT'
+<script>(function(){
+  try {
+    var isSettings = (document.body && (document.body.getAttribute('data-page')||'').indexOf('admin/settings') === 0) || (location.pathname.indexOf('/admin') === 0 && location.pathname.indexOf('settings') !== -1);
+    if (!isSettings) return;
+    var params = new URLSearchParams(location.search || '');
+    var allow = params.get('wf_allow_modals') === '1' || params.get('wf_allow_panels') === '1';
+    if (allow) return;
+
+    var STYLE_ID = 'wf-early-settings-squelch';
+    if (!document.getElementById(STYLE_ID)) {
+      var css = [
+        'html[data-early-settings-squelch="1"] .admin-modal-overlay,',
+        'html[data-early-settings-squelch="1"] .modal-overlay,',
+        'html[data-early-settings-squelch="1"] [role="dialog"],',
+        'html[data-early-settings-squelch="1"] .overlay,',
+        'html[data-early-settings-squelch="1"] .drawer,',
+        'html[data-early-settings-squelch="1"] .sheet,',
+        // Specific known IDs/panels
+        'html[data-early-settings-squelch="1"] #websiteLogsModal,',
+        'html[data-early-settings-squelch="1"] #websiteLogsContainer,',
+        'html[data-early-settings-squelch="1"] #websiteLogsPanel,',
+        'html[data-early-settings-squelch="1"] #databaseTablesModal,',
+        'html[data-early-settings-squelch="1"] #databaseTablesContainer,',
+        'html[data-early-settings-squelch="1"] #databaseTablesPanel,',
+        'html[data-early-settings-squelch="1"] #searchResultsModal,',
+        'html[data-early-settings-squelch="1"] #searchResults,',
+        'html[data-early-settings-squelch="1"] #searchResultsContainer,',
+        'html[data-early-settings-squelch="1"] #searchResultsPanel'
+      ].join('\n') + '{display:none!important;visibility:hidden!important;opacity:0!important;}';
+      var st = document.createElement('style');
+      st.id = STYLE_ID; st.textContent = css; document.head.appendChild(st);
+    }
+    document.documentElement.setAttribute('data-early-settings-squelch','1');
+
+    var mo = null, rafPending = false;
+    try {
+      var sweep = function(){
+        rafPending = false;
+        if (document.documentElement.getAttribute('data-early-settings-squelch') !== '1') return;
+        var targets = [
+          '#websiteLogsModal', '#websiteLogsContainer', '#websiteLogsPanel',
+          '#databaseTablesModal', '#databaseTablesContainer', '#databaseTablesPanel',
+          '#searchResultsModal', '#searchResults', '#searchResultsContainer', '#searchResultsPanel'
+        ];
+        targets.forEach(function(sel){
+          document.querySelectorAll(sel).forEach(function(el){
+            try { el.style.setProperty('display','none','important'); } catch(_) {}
+            try { el.style.setProperty('visibility','hidden','important'); } catch(_) {}
+            try { el.classList.add('hidden'); } catch(_) {}
+            try { el.classList.remove('show'); } catch(_) {}
+          });
+        });
+      };
+      mo = new MutationObserver(function(){
+        if (rafPending) return; rafPending = true; requestAnimationFrame(sweep);
+      });
+      mo.observe(document.documentElement, { subtree:true, attributes:true, childList:true, attributeFilter:['class','style','aria-hidden'] });
+    } catch(_) {}
+
+    var lift = function(){
+      try { document.documentElement.removeAttribute('data-early-settings-squelch'); } catch(_) {}
+      try { if (mo) mo.disconnect(); } catch(_) {}
+    };
+    window.addEventListener('pointerdown', lift, { once:true, capture:true });
+    window.addEventListener('keydown', lift, { once:true, capture:true });
+  } catch(_) {}
+})();</script>
+SCRIPT;
     }
     ?>
     <!-- Vite manages CSS; fallbacks removed -->

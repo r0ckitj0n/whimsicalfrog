@@ -111,6 +111,8 @@ function vite(string $entry): string
                 'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
                 'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
                 'js/admin-settings.js' => 'src/entries/admin-settings.js',
+                'js/admin-db-status.js' => 'src/entries/admin-db-status.js',
+                'js/header-bootstrap.js' => 'src/entries/header-bootstrap.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             $vite_log('info', 'Vite hot mode: emitting dev script tags directly to origin', [
@@ -143,6 +145,8 @@ function vite(string $entry): string
                 'js/admin-dashboard.js' => 'src/entries/admin-dashboard.js',
                 'js/admin-inventory.js' => 'src/entries/admin-inventory.js',
                 'js/admin-settings.js' => 'src/entries/admin-settings.js',
+                'js/admin-db-status.js' => 'src/entries/admin-db-status.js',
+                'js/header-bootstrap.js' => 'src/entries/header-bootstrap.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             return $bootScript .

@@ -34,12 +34,12 @@ $emailPrefill = $userData['email'] ?? '';
           <p class="section-description">Organize products, categories, and room content</p>
         </header>
         <div class="section-content">
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=dashboard">Dashboard Configuration</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=inventory#categories">Categories</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=inventory#attributes">Gender, Size &amp; Color Management</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=room_main">Room Settings</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=inventory#room-category-links">Room-Category Links</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=inventory#templates">Template Manager</a>
+          <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/inventory#categories">Categories</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/inventory#attributes">Gender, Size &amp; Color Management</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/room_main">Room Settings</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/inventory#room-category-links">Room-Category Links</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/inventory#templates">Template Manager</a>
         </div>
       </section>
 
@@ -50,10 +50,10 @@ $emailPrefill = $userData['email'] ?? '';
           <p class="section-description">Customize appearance and interactive elements</p>
         </header>
         <div class="section-content">
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=dashboard#css">CSS Rules</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=dashboard#background">Background Manager</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=room_main#mapper">Room Mapper</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=room_main#area-mapper">Area-Item Mapper</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/dashboard#css">CSS Rules</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/dashboard#background">Background Manager</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/room_main#mapper">Room Mapper</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/room_main#area-mapper">Area-Item Mapper</a>
         </div>
       </section>
 
@@ -92,11 +92,11 @@ $emailPrefill = $userData['email'] ?? '';
         </header>
         <div class="section-content">
           <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-account-settings">Account Settings</button>
-          <a class="admin-settings-button btn-secondary btn-full-width" href="/admin.php?section=account_settings">Open Account Settings Page (fallback)</a>
+          <a class="admin-settings-button btn-secondary btn-full-width" href="/admin/account_settings">Open Account Settings Page (fallback)</a>
           <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-secrets-modal">Secrets Manager</button>
-          <a class="admin-settings-button btn-secondary btn-full-width" href="/admin.php?section=secrets">Open Secrets Page (fallback)</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=cost_breakdown_manager">Cost Breakdown Manager</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin.php?section=customers">User Manager</a>
+          <a class="admin-settings-button btn-secondary btn-full-width" href="/admin/secrets">Open Secrets Page (fallback)</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/cost_breakdown_manager">Cost Breakdown Manager</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/customers">User Manager</a>
         </div>
       </section>
 
@@ -533,37 +533,93 @@ $emailPrefill = $userData['email'] ?? '';
         </div>
         <div class="modal-body">
           <form id="emailSettingsForm" data-action="prevent-submit" class="space-y-4">
+            <!-- Basic From and Admin Addresses -->
             <div class="grid gap-4 md:grid-cols-2">
               <div>
-                <label for="emailFromName" class="block text-sm font-medium mb-1">From Name</label>
-                <input id="emailFromName" name="from_name" type="text" class="form-input w-full" placeholder="Whimsical Frog" />
+                <label for="fromName" class="block text-sm font-medium mb-1">From Name</label>
+                <input id="fromName" name="from_name" type="text" class="form-input w-full" placeholder="Whimsical Frog" />
               </div>
               <div>
-                <label for="emailFromAddress" class="block text-sm font-medium mb-1">From Address</label>
-                <input id="emailFromAddress" name="from_address" type="email" class="form-input w-full" placeholder="no-reply@whimsicalfrog.com" />
+                <label for="fromEmail" class="block text-sm font-medium mb-1">From Address</label>
+                <input id="fromEmail" name="from_email" type="email" class="form-input w-full" placeholder="no-reply@whimsicalfrog.com" />
               </div>
-            </div>
-            <div>
-              <label for="smtpHost" class="block text-sm font-medium mb-1">SMTP Host</label>
-              <input id="smtpHost" name="smtp_host" type="text" class="form-input w-full" placeholder="smtp.mailprovider.com" />
             </div>
             <div class="grid gap-4 md:grid-cols-3">
               <div>
-                <label for="smtpPort" class="block text-sm font-medium mb-1">Port</label>
-                <input id="smtpPort" name="smtp_port" type="number" class="form-input w-full" placeholder="587" />
+                <label for="adminEmail" class="block text-sm font-medium mb-1">Admin Email</label>
+                <input id="adminEmail" name="admin_email" type="email" class="form-input w-full" placeholder="owner@whimsicalfrog.com" />
               </div>
               <div>
-                <label for="smtpUser" class="block text-sm font-medium mb-1">Username</label>
-                <input id="smtpUser" name="smtp_user" type="text" class="form-input w-full" placeholder="username" />
+                <label for="bccEmail" class="block text-sm font-medium mb-1">BCC Email</label>
+                <input id="bccEmail" name="bcc_email" type="email" class="form-input w-full" placeholder="archive@whimsicalfrog.com" />
               </div>
               <div>
-                <label for="smtpPass" class="block text-sm font-medium mb-1">Password</label>
-                <input id="smtpPass" name="smtp_pass" type="password" class="form-input w-full" placeholder="••••••••" />
+                <label for="replyToEmail" class="block text-sm font-medium mb-1">Reply-To</label>
+                <input id="replyToEmail" name="reply_to" type="email" class="form-input w-full" placeholder="support@whimsicalfrog.com" />
               </div>
             </div>
+
+            <!-- SMTP Toggle -->
+            <div class="flex items-center gap-2">
+              <input id="smtpEnabled" type="checkbox" class="form-checkbox" />
+              <label for="smtpEnabled" class="text-sm">Use SMTP</label>
+            </div>
+
+            <!-- SMTP Settings -->
+            <div id="smtpSettings" class="space-y-4">
+              <div>
+                <label for="smtpHost" class="block text-sm font-medium mb-1">SMTP Host</label>
+                <input id="smtpHost" name="smtp_host" type="text" class="form-input w-full" placeholder="smtp.mailprovider.com" />
+              </div>
+              <div class="grid gap-4 md:grid-cols-4">
+                <div>
+                  <label for="smtpPort" class="block text-sm font-medium mb-1">Port</label>
+                  <input id="smtpPort" name="smtp_port" type="number" class="form-input w-full" placeholder="587" />
+                </div>
+                <div>
+                  <label for="smtpEncryption" class="block text-sm font-medium mb-1">Encryption</label>
+                  <select id="smtpEncryption" name="smtp_encryption" class="form-select w-full">
+                    <option value="">None</option>
+                    <option value="ssl">SSL</option>
+                    <option value="tls">TLS</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="smtpTimeout" class="block text-sm font-medium mb-1">Timeout (sec)</label>
+                  <input id="smtpTimeout" name="smtp_timeout" type="number" class="form-input w-full" placeholder="30" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Authentication</label>
+                  <div class="flex items-center gap-2">
+                    <input id="smtpAuth" type="checkbox" class="form-checkbox" />
+                    <label for="smtpAuth" class="text-sm">Require Auth</label>
+                  </div>
+                </div>
+              </div>
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label for="smtpUsername" class="block text-sm font-medium mb-1">Username</label>
+                  <input id="smtpUsername" name="smtp_username" type="text" class="form-input w-full" placeholder="username" autocomplete="username" />
+                </div>
+                <div>
+                  <label for="smtpPassword" class="block text-sm font-medium mb-1">Password</label>
+                  <input id="smtpPassword" name="smtp_password" type="password" class="form-input w-full" placeholder="••••••••" autocomplete="new-password" />
+                  <p class="text-xs text-gray-500 mt-1">Password is never prefetched for security. Saving will store it server-side.</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <input id="smtpDebug" type="checkbox" class="form-checkbox" />
+                <label for="smtpDebug" class="text-sm">Enable SMTP Debug</label>
+              </div>
+            </div>
+
+            <!-- Actions -->
             <div class="flex flex-wrap items-center gap-3">
               <button type="button" class="btn-primary" data-action="email-save-settings">Save</button>
-              <button type="button" class="btn-secondary" data-action="email-send-test">Send Test Email</button>
+              <div class="flex items-center gap-2">
+                <input id="testRecipient" type="email" class="form-input" placeholder="test@whimsicalfrog.com" />
+                <button type="button" class="btn-secondary" data-action="email-send-test">Send Test Email</button>
+              </div>
             </div>
             <div id="emailSettingsResult" class="status status--info"></div>
           </form>

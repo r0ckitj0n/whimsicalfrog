@@ -231,3 +231,77 @@ Default Config → Database Config → Room-Specific Overrides → Applied Setti
 **Status**: Production Ready
 **Maintainer**: Development Team
 **Documentation**: This file + inline code comments 
+
+## Database Configuration Centralization
+
+### Overview
+All database access should go through the centralized bootstrap `api/config.php`, which exposes:
+
+- `Database::getInstance()` for the default environment connection.
+- `Database::createConnection($host, $db, $user, $pass, $port = 3306, $socket = null, array $options = [])` for alternate connections (e.g., live vs local in admin tools).
+- `wf_get_db_config($env = 'current')` to fetch normalized config arrays for `local`, `live`, or `current` (the auto-detected environment).
+
+### Usage Examples
+
+```php
+require_once __DIR__ . '/../api/config.php';
+
+// Default singleton
+$pdo = Database::getInstance();
+
+// Explicit live connection
+$liveCfg = wf_get_db_config('live');
+$livePdo = Database::createConnection(
+    $liveCfg['host'],
+    $liveCfg['db'],
+    $liveCfg['user'],
+    $liveCfg['pass'],
+    $liveCfg['port'] ?? 3306,
+    $liveCfg['socket'] ?? null,
+    [ PDO::ATTR_TIMEOUT => 5 ]
+);
+```
+
+### Environment Variables and .env Support
+
+`api/config.php` supports reading DB credentials from environment variables and an optional `.env` file at the repository root. This reduces duplication and prevents credential sprawl across scripts.
+
+Supported keys:
+
+- Local DB
+  - `WF_DB_LOCAL_HOST`
+  - `WF_DB_LOCAL_NAME`
+  - `WF_DB_LOCAL_USER`
+  - `WF_DB_LOCAL_PASS`
+  - `WF_DB_LOCAL_PORT` (default `3306`)
+  - `WF_DB_LOCAL_SOCKET` (optional)
+
+- Live DB
+  - `WF_DB_LIVE_HOST`
+  - `WF_DB_LIVE_NAME`
+  - `WF_DB_LIVE_USER`
+  - `WF_DB_LIVE_PASS`
+  - `WF_DB_LIVE_PORT` (default `3306`)
+  - `WF_DB_LIVE_SOCKET` (optional)
+
+The auto-detected environment can be overridden via `WHF_ENV` with values `local` or `prod`.
+
+Example `.env` snippet:
+
+```
+# Local
+WF_DB_LOCAL_HOST=127.0.0.1
+WF_DB_LOCAL_NAME=whimsicalfrog
+WF_DB_LOCAL_USER=root
+WF_DB_LOCAL_PASS=yourlocalpassword
+WF_DB_LOCAL_PORT=3306
+
+# Live
+WF_DB_LIVE_HOST=db5017975223.hosting-data.io
+WF_DB_LIVE_NAME=dbs14295502
+WF_DB_LIVE_USER=dbu2826619
+WF_DB_LIVE_PASS=yourlivepassword
+WF_DB_LIVE_PORT=3306
+```
+
+Note: `.env` is optional. On production servers, prefer real environment variables managed by the hosting platform or secret manager.

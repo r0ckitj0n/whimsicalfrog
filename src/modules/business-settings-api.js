@@ -14,17 +14,17 @@ function toQuery(params) {
 export const BusinessSettingsAPI = {
   async getByCategory(category) {
     if (!category) throw new Error('category is required');
-    // Assuming api/business_settings.php supports action=get&category=...
-    const qs = toQuery({ action: 'get', category });
+    // Backend expects get_by_category
+    const qs = toQuery({ action: 'get_by_category', category });
     return ApiClient.get(`/api/business_settings.php?${qs}`);
   },
 
   async upsert(category, settings) {
     if (!category) throw new Error('category is required');
     if (!settings || typeof settings !== 'object') throw new Error('settings map is required');
-    // upsertSettings() accepts JSON with { action: 'upsert', category, settings }
+    // upsertSettings() accepts JSON with { action: 'upsert_settings', category, settings }
     return ApiClient.post('business_settings.php', {
-      action: 'upsert',
+      action: 'upsert_settings',
       category,
       settings,
     });

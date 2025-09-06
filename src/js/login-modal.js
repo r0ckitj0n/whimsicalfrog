@@ -5,6 +5,7 @@
 // - Also intercepts existing /login page form for consistent UX
 
 (function initLoginModal() {
+  try { console.log('[LoginModal] init'); } catch(_) {}
   let overlay = null;
   let modal = null;
   let returnTo = null;
@@ -59,7 +60,9 @@
     lastOpenOptions = opts || {};
     returnTo = desiredReturn || window.location.pathname + window.location.search + window.location.hash;
     try { sessionStorage.setItem('wf_login_return_to', returnTo); } catch (_) {}
+    try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(overlay); } catch(_) {}
     overlay.classList.add('show');
+    try { overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
     // Apply standardized scroll lock via centralized helper
     WFModals?.lockScroll?.();
     const firstInput = modal.querySelector('input[name="username"]');
@@ -69,6 +72,7 @@
   function closeModal() {
     if (!overlay) return;
     overlay.classList.remove('show');
+    try { overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
     // Remove scroll lock only if no other modals are open
     WFModals?.unlockScrollIfNoneOpen?.();
   }
@@ -204,7 +208,8 @@
     const link = e.target.closest('[data-action="open-login-modal"]');
     if (!link) return;
     // Only intercept left click without modifier keys
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    try { console.log('[LoginModal] intercept click on login link'); } catch(_) {}
     e.preventDefault();
     const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
     openModal(desiredReturn);

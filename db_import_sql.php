@@ -15,8 +15,8 @@ if (php_sapi_name() !== 'cli') {
 require_once __DIR__ . '/api/config.php'; // provides $dsn, $user, $pass, $options
 
 try {
-  $pdo = new PDO($dsn, $user, $pass, $options);
-  $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+  // Use centralized singleton connection
+  $pdo = Database::getInstance();
 } catch (Exception $e) {
   http_response_code(500);
   echo 'DB connect failed: ' . $e->getMessage();

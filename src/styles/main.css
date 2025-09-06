@@ -1,38 +1,38 @@
 /* Z-Index utilities (foundational) */
 @import url('https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&family=Nunito:wght@400;600;700&display=swap');
-@import url('./z-index.css');
+@import './z-index.css';
 
 /* Brand variables (colors and gradients) */
-@import url('./variables.css');
+@import './variables.css';
 
 /* Main site styles - this contains all the site styles */
-@import url('./site-base.css');
+@import './site-base.css';
 
 /* Room main (consolidated) */
-@import url('./components/room-main.css');
+@import './components/room-main.css';
 
 /* Comprehensive quantity button fix to eliminate horizontal scrollbar */
-@import url('./components/qty-button.css');
+@import './components/qty-button.css';
 
 /* Additional styles previously imported directly in js/app.js */
-@import url('./components/components-base.css');
-@import url('./components/aux-styles.css');
+@import './components/components-base.css';
+@import './components/aux-styles.css';
 /* TEMP: Quarantined due to syntax errors in recovered CSS. Re-enable after cleanup. */
 /* @import '../../backups/unused_styles/comprehensive-missing-styles.css'; */
-@import url('./components/popup.css');
-@import url('./components/room-modal.css');
-@import url('./components/detailed-item-modal.css');
-@import url('./components/search-modal.css');
-@import url('./sales-system.css');
-@import url('./components/modal.css');
-@import url('./login-modal.css');
-@import url('./admin-modals.css');
+@import './components/popup.css';
+@import './components/room-modal.css';
+@import './components/detailed-item-modal.css';
+@import './components/search-modal.css';
+@import './sales-system.css';
+@import './components/modal.css';
+@import './login-modal.css';
+@import './admin-modals.css';
 /* Missing file removed to prevent Vite 500 during dev */
-/* @import url('./legacy_missing_admin.css'); */
-@import url('./admin-db-tools.css');
-@import url('./admin-inventory.css');
-@import url('./admin-filters.css');
-@import url('./utilities-ui.css');
+/* @import './legacy_missing_admin.css'; */
+@import './admin-db-tools.css';
+@import './admin-inventory.css';
+@import './admin-filters.css';
+@import './utilities-ui.css';
 
 /* --- Checkout page layering fix: ensure it appears above room modal overlay --- */
 body[data-page='payment'] #paymentPage,

@@ -26,17 +26,26 @@ try {
     }
 
     $to = trim((string)($data['to'] ?? ''));
-    if ($to === '') {
-        http_response_code(400);
-        echo json_encode([ 'success' => false, 'error' => 'Missing required field: to' ]);
-        exit;
-    }
 
     $subject = trim((string)($data['subject'] ?? 'WhimsicalFrog Test Email'));
     $message = (string)($data['message'] ?? '<p>This is a test email from WhimsicalFrog admin settings.</p>');
 
     // Use central configuration and sender
     require_once __DIR__ . '/email_config.php';
+
+    // Default recipient if not provided: TEST_RECIPIENT, falling back to ADMIN_EMAIL
+    if ($to === '') {
+        if (defined('TEST_RECIPIENT') && TEST_RECIPIENT) {
+            $to = (string) TEST_RECIPIENT;
+        } elseif (defined('ADMIN_EMAIL') && ADMIN_EMAIL) {
+            $to = (string) ADMIN_EMAIL;
+        }
+    }
+    if ($to === '') {
+        http_response_code(400);
+        echo json_encode([ 'success' => false, 'error' => 'Missing test recipient and no default configured' ]);
+        exit;
+    }
 
     $ok = sendEmail($to, $subject, $message, strip_tags($message));
     if ($ok) {

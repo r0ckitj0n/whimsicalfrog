@@ -39,6 +39,44 @@ class Database {
     }
 
     /**
+     * Create a new PDO connection with provided parameters.
+     * Useful for connecting to alternate databases (e.g., live vs local) in admin tools.
+     *
+     * @param string $host
+     * @param string $db
+     * @param string $user
+     * @param string $pass
+     * @param int $port
+     * @param string|null $socket
+     * @param array $options
+     * @return PDO
+     * @throws PDOException
+     */
+    public static function createConnection(
+        string $host,
+        string $db,
+        string $user,
+        string $pass,
+        int $port = 3306,
+        ?string $socket = null,
+        array $options = []
+    ): PDO {
+        $dsn = $socket
+            ? "mysql:unix_socket={$socket};dbname={$db};charset=utf8mb4;connect_timeout=3"
+            : "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4;connect_timeout=3";
+
+        $defaultOptions = [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+            PDO::ATTR_TIMEOUT            => 3,
+        ];
+        $opts = $options + $defaultOptions; // keep provided options but ensure defaults exist
+
+        return new PDO($dsn, $user, $pass, $opts);
+    }
+
+    /**
      * Execute a SELECT and return all rows
      * @param string $sql
      * @param array $params

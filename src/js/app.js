@@ -69,12 +69,10 @@ async function initializeCoreSystemsApp() {
         import('./wait-for-function.js'),
         import('./modal-manager.js'),
         import('./global-item-modal.js'),
-        import('../../js/detailed-item-modal.js'),
         import('./global-modals.js'),
         import('./cart-modal.js'),
         import('../ui/globalPopup.js'),
         import('./global-notifications.js'),
-        import('./landing-page.js'),
         import('./room-main.js'),
         import('./analytics.js'),
         import('./login-modal.js'),
@@ -225,6 +223,10 @@ if (__WF_IS_ADMIN) {
                 'account_settings': () => import('./pages/account-settings-page.js'),
                 'account-settings': () => import('./pages/account-settings-page.js'),
                 'payment': () => import('./pages/payment-page.js'),
+                // Only load landing page positioning on the landing page
+                'landing': () => import('./landing-page.js'),
+                // Shop page module binds product card and button click handlers to open the global item modal
+                'shop': () => import('./shop.js'),
             };
 
             // Resolve final page by preferring a candidate that maps to a loader
@@ -277,6 +279,10 @@ if (__WF_IS_ADMIN) {
             const isAdmin = (ds && ds.isAdmin === 'true') || (typeof page === 'string' && page.startsWith('admin'));
 
             if (!isAdmin) return;
+
+            // Ensure auth-related handlers are active on admin pages too
+            try { import('./login-modal.js').catch(() => {}); } catch (_) {}
+            try { import('./header-auth-sync.js').catch(() => {}); } catch (_) {}
 
             const fullPath = (ds && ds.path) || window.location.pathname || '';
             const cleanPath = fullPath.split('?')[0].split('#')[0];

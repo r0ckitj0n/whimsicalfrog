@@ -1,6 +1,6 @@
 {
-  "_apiClient-B02lZv_N.js": {
-    "file": "assets/apiClient-B02lZv_N.js",
+  "_apiClient-Dg9rmLIN.js": {
+    "file": "assets/apiClient-Dg9rmLIN.js",
     "name": "apiClient"
   },
   "_auto-C8LTT2Eg.js": {
@@ -33,6 +33,13 @@
   "_main-BuDA5izz.css": {
     "file": "assets/main-BuDA5izz.css",
     "src": "_main-BuDA5izz.css"
+  },
+  "_whimsical-frog-core-OfZK0Wtj.js": {
+    "file": "assets/whimsical-frog-core-OfZK0Wtj.js",
+    "name": "whimsical-frog-core",
+    "imports": [
+      "src/js/api-client.js"
+    ]
   },
   "images/backgrounds/background_home.png": {
     "file": "assets/background_home-BN2Fr02e.png",
@@ -90,18 +97,21 @@
     "file": "assets/background_room_main-CD7UiX_S.webp",
     "src": "images/backgrounds/background_room_main.webp"
   },
-  "js/detailed-item-modal.js": {
-    "file": "assets/detailed-item-modal-CHVps5ph.js",
-    "name": "detailed-item-modal",
-    "src": "js/detailed-item-modal.js",
-    "isDynamicEntry": true
-  },
   "src/entries/admin-dashboard.js": {
     "file": "assets/js/admin-dashboard.js-DwiDNz9L.js",
     "name": "js/admin-dashboard.js",
     "src": "src/entries/admin-dashboard.js",
     "isEntry": true,
     "isDynamicEntry": true
+  },
+  "src/entries/admin-db-status.js": {
+    "file": "assets/js/admin-db-status.js-BvoD3rcA.js",
+    "name": "js/admin-db-status.js",
+    "src": "src/entries/admin-db-status.js",
+    "isEntry": true,
+    "css": [
+      "assets/admin-db-status-CANIx8iA.css"
+    ]
   },
   "src/entries/admin-inventory.js": {
     "file": "assets/js/admin-inventory.js-BdJTqza9.js",
@@ -111,23 +121,25 @@
     "isDynamicEntry": true
   },
   "src/entries/admin-settings.js": {
-    "file": "assets/js/admin-settings.js-F0p4UIUK.js",
+    "file": "assets/js/admin-settings.js-C8bRgME8.js",
     "name": "js/admin-settings.js",
     "src": "src/entries/admin-settings.js",
     "isEntry": true,
     "imports": [
-      "_main-BatvMh3R.js",
-      "_apiClient-B02lZv_N.js"
+      "_main-BatvMh3R.js"
     ],
     "dynamicImports": [
+      "src/js/admin-settings-bridge.js",
+      "src/js/admin-settings.js",
+      "src/js/admin-settings.js",
       "src/js/admin-settings.js"
     ],
     "css": [
-      "assets/admin-settings-JHgzJdyC.css"
+      "assets/admin-settings-CZ0nUcvH.css"
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-BbFnSAYk.js",
+    "file": "assets/js/app.js-C8gvz6Yr.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -147,12 +159,10 @@
       "src/js/wait-for-function.js",
       "src/js/modal-manager.js",
       "src/js/global-item-modal.js",
-      "js/detailed-item-modal.js",
       "src/js/global-modals.js",
       "src/js/cart-modal.js",
       "src/ui/globalPopup.js",
       "src/js/global-notifications.js",
-      "src/js/landing-page.js",
       "src/js/room-main.js",
       "src/js/analytics.js",
       "src/js/login-modal.js",
@@ -175,8 +185,12 @@
       "src/js/pages/account-settings-page.js",
       "src/js/pages/account-settings-page.js",
       "src/js/pages/payment-page.js",
+      "src/js/landing-page.js",
+      "src/js/shop.js",
       "src/js/pages/room-page.js",
       "src/js/pages/payment-page.js",
+      "src/js/login-modal.js",
+      "src/js/header-auth-sync.js",
       "src/entries/admin-dashboard.js",
       "src/js/admin-customers.js",
       "src/entries/admin-inventory.js",
@@ -192,6 +206,19 @@
       "src/js/admin-cost-breakdown-manager.js",
       "src/js/admin-secrets.js",
       "src/entries/admin-dashboard.js"
+    ]
+  },
+  "src/entries/header-bootstrap.js": {
+    "file": "assets/js/header-bootstrap.js-DT2zPhe4.js",
+    "name": "js/header-bootstrap.js",
+    "src": "src/entries/header-bootstrap.js",
+    "isEntry": true,
+    "imports": [
+      "src/js/login-modal.js",
+      "src/js/header-auth-sync.js"
+    ],
+    "css": [
+      "assets/header-bootstrap-CaqpKgzs.css"
     ]
   },
   "src/js/admin-categories.js": {
@@ -266,8 +293,24 @@
     "src": "src/js/admin-secrets.js",
     "isDynamicEntry": true
   },
+  "src/js/admin-settings-bridge.js": {
+    "file": "assets/admin-settings-bridge-9CqDZlIv.js",
+    "name": "admin-settings-bridge",
+    "src": "src/js/admin-settings-bridge.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_main-BatvMh3R.js"
+    ],
+    "dynamicImports": [
+      "src/modules/business-settings-api.js",
+      "src/modules/business-settings-api.js",
+      "src/modules/background-manager.js",
+      "src/modules/css-rules-manager.js",
+      "src/js/admin-settings.js"
+    ]
+  },
   "src/js/admin-settings.js": {
-    "file": "assets/admin-settings-B0ACr-KK.js",
+    "file": "assets/admin-settings-DqbLKE1F.js",
     "name": "admin-settings",
     "src": "src/js/admin-settings.js",
     "isDynamicEntry": true
@@ -279,22 +322,22 @@
     "isDynamicEntry": true
   },
   "src/js/api-aliases.js": {
-    "file": "assets/api-aliases-dY80QSY2.js",
+    "file": "assets/api-aliases-CNzEMy4R.js",
     "name": "api-aliases",
     "src": "src/js/api-aliases.js",
     "isDynamicEntry": true,
     "imports": [
       "src/js/api-client.js",
-      "_apiClient-B02lZv_N.js"
+      "_apiClient-Dg9rmLIN.js"
     ]
   },
   "src/js/api-client.js": {
-    "file": "assets/api-client-De1gGOU3.js",
+    "file": "assets/api-client-CnFOVKIZ.js",
     "name": "api-client",
     "src": "src/js/api-client.js",
     "isDynamicEntry": true,
     "imports": [
-      "_apiClient-B02lZv_N.js"
+      "_apiClient-Dg9rmLIN.js"
     ]
   },
   "src/js/cart-modal.js": {
@@ -313,16 +356,16 @@
     "isDynamicEntry": true
   },
   "src/js/dynamic-background-loader.js": {
-    "file": "assets/dynamic-background-loader-B2tIXPWC.js",
+    "file": "assets/dynamic-background-loader-ClU4FVJ9.js",
     "name": "dynamic-background-loader",
     "src": "src/js/dynamic-background-loader.js",
     "isDynamicEntry": true,
     "imports": [
-      "_apiClient-B02lZv_N.js"
+      "_apiClient-Dg9rmLIN.js"
     ]
   },
   "src/js/global-item-modal.js": {
-    "file": "assets/global-item-modal-5udzb4-B.js",
+    "file": "assets/global-item-modal-MvAgyWKa.js",
     "name": "global-item-modal",
     "src": "src/js/global-item-modal.js",
     "isDynamicEntry": true
@@ -358,19 +401,20 @@
     "isDynamicEntry": true
   },
   "src/js/login-modal.js": {
-    "file": "assets/login-modal-Bn2RVJ6l.js",
+    "file": "assets/login-modal-Cta8SFiy.js",
     "name": "login-modal",
     "src": "src/js/login-modal.js",
     "isDynamicEntry": true
   },
   "src/js/main-application.js": {
-    "file": "assets/main-application-CEfwWMBo.js",
+    "file": "assets/main-application-B2t5Ox3P.js",
     "name": "main-application",
     "src": "src/js/main-application.js",
     "isDynamicEntry": true,
     "imports": [
+      "_whimsical-frog-core-OfZK0Wtj.js",
       "src/js/api-client.js",
-      "_apiClient-B02lZv_N.js"
+      "_apiClient-Dg9rmLIN.js"
     ]
   },
   "src/js/modal-manager.js": {
@@ -398,13 +442,13 @@
     "isDynamicEntry": true
   },
   "src/js/pages/payment-page.js": {
-    "file": "assets/payment-page-CSBbdk-s.js",
+    "file": "assets/payment-page-DOMfK5bS.js",
     "name": "payment-page",
     "src": "src/js/pages/payment-page.js",
     "isDynamicEntry": true,
     "imports": [
       "src/js/api-client.js",
-      "_apiClient-B02lZv_N.js"
+      "_apiClient-Dg9rmLIN.js"
     ]
   },
   "src/js/pages/register-page.js": {
@@ -420,13 +464,13 @@
     "isDynamicEntry": true
   },
   "src/js/payment-modal.js": {
-    "file": "assets/payment-modal-FhkADaWR.js",
+    "file": "assets/payment-modal-DPjIFUgM.js",
     "name": "payment-modal",
     "src": "src/js/payment-modal.js",
     "isDynamicEntry": true,
     "imports": [
       "src/js/api-client.js",
-      "_apiClient-B02lZv_N.js"
+      "_apiClient-Dg9rmLIN.js"
     ]
   },
   "src/js/receipt-modal.js": {
@@ -462,6 +506,17 @@
       "assets/room-main-B_WG7pzV.css"
     ]
   },
+  "src/js/shop.js": {
+    "file": "assets/shop-KJBsk8hL.js",
+    "name": "shop",
+    "src": "src/js/shop.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_whimsical-frog-core-OfZK0Wtj.js",
+      "src/js/api-client.js",
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
   "src/js/wait-for-function.js": {
     "file": "assets/wait-for-function-MVjdcQHd.js",
     "name": "wait-for-function",
@@ -474,6 +529,21 @@
     "src": "src/modules/ai-processing-modal.js",
     "isDynamicEntry": true
   },
+  "src/modules/background-manager.js": {
+    "file": "assets/background-manager-DZsq4j9N.js",
+    "name": "background-manager",
+    "src": "src/modules/background-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/business-settings-api.js": {
+    "file": "assets/business-settings-api-Dzk5x41B.js",
+    "name": "business-settings-api",
+    "src": "src/modules/business-settings-api.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
   "src/modules/cart-system.js": {
     "file": "assets/cart-system-Dk5nAM4x.js",
     "name": "cart-system",
@@ -482,6 +552,12 @@
     "css": [
       "assets/cart-system-C6tf12vy.css"
     ]
+  },
+  "src/modules/css-rules-manager.js": {
+    "file": "assets/css-rules-manager-D682l-Ab.js",
+    "name": "css-rules-manager",
+    "src": "src/modules/css-rules-manager.js",
+    "isDynamicEntry": true
   },
   "src/modules/footer-newsletter.js": {
     "file": "assets/footer-newsletter-DN6Z0J5v.js",
@@ -508,12 +584,12 @@
     "isDynamicEntry": true
   },
   "src/modules/sales-system.js": {
-    "file": "assets/sales-system-BpQtBsI3.js",
+    "file": "assets/sales-system-CQ-_vcLU.js",
     "name": "sales-system",
     "src": "src/modules/sales-system.js",
     "isDynamicEntry": true,
     "imports": [
-      "_apiClient-B02lZv_N.js"
+      "_apiClient-Dg9rmLIN.js"
     ],
     "css": [
       "assets/sales-system-BuVYAa1_.css"

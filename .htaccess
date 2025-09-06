@@ -8,9 +8,47 @@ RewriteEngine On
 RewriteBase /
 
 # Map stale app.js-* requests to the current bundle directly (internal rewrite, no redirect)
-RewriteRule ^dist/assets/js/app\.js-[A-Za-z0-9_\-]+\.js$ dist/assets/js/app.js-BbFnSAYk.js [L]
+RewriteRule ^dist/assets/js/app\.js-[A-Za-z0-9_\-]+\.js$ router.php [L,QSA]
 
-# Allow direct access to existing files and directories
+# Ensure correct MIME types and strong caching for built assets
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType application/javascript .mjs
+  AddType text/css .css
+  AddType image/webp .webp
+  AddType image/svg+xml .svg
+</IfModule>
+
+# Cache hashed assets aggressively; they are content-addressed
+<IfModule mod_expires.c>
+  ExpiresActive On
+  <FilesMatch "^dist/assets/.*$">
+    ExpiresDefault "access plus 1 year"
+  </FilesMatch>
+</IfModule>
+
+# Extra safety: set explicit headers for built assets
+<IfModule mod_headers.c>
+  <FilesMatch "^dist/assets/.*\.(js|css)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# Short-circuit /dist/* requests: serve if file exists
+RewriteCond %{REQUEST_URI} ^/dist/ [NC]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Route missing hashed JS/CSS chunks under /dist/assets to router.php for graceful fallback
+RewriteCond %{REQUEST_URI} ^/dist/assets/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ router.php [L,QSA]
+
+# For other missing /dist/* files, return 404 to avoid HTML fallthrough
+RewriteCond %{REQUEST_URI} ^/dist/ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule . - [R=404,L]
+
 # Only allow direct access to existing files. Route other requests (including
 # missing files under existing directories) through router.php so it can
 # implement graceful fallbacks for built assets.

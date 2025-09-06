@@ -9,6 +9,11 @@ require_once __DIR__ . '/business_settings_helper.php';
 require_once __DIR__ . '/../includes/email_helper.php';
 // Ensure secret_get() is available for pulling SMTP creds securely
 require_once __DIR__ . '/../includes/secret_store.php';
+// If Composer autoloader exists, include it so PHPMailer and other vendor libs are available
+$__wf_autoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($__wf_autoload)) {
+    require_once $__wf_autoload;
+}
 
 // Load dynamic email settings from DB ('email' category) and enforce required presence
 $__wf_email_cfg = BusinessSettings::getByCategory('email');
@@ -25,6 +30,13 @@ $__wf_SMTP_HOST  = (string)($__wf_email_cfg['smtp_host'] ?? '');
 $__wf_SMTP_PORT  = $__wf_email_cfg['smtp_port'] ?? null;
 $__wf_SMTP_ENC   = (string)($__wf_email_cfg['smtp_encryption'] ?? '');
 $__wf_SMTP_ENABLED_VAL = $__wf_email_cfg['smtp_enabled'] ?? null;
+// New optional fields
+$__wf_REPLY_TO_RAW = isset($__wf_email_cfg['reply_to']) ? (string)$__wf_email_cfg['reply_to'] : '';
+$__wf_REPLY_TO   = trim($__wf_REPLY_TO_RAW) !== '' ? (string) $__wf_REPLY_TO_RAW : (string) $__wf_FROM_EMAIL;
+$__wf_TEST_RECIPIENT = (string)($__wf_email_cfg['test_recipient'] ?? $__wf_ADMIN_EMAIL);
+$__wf_SMTP_AUTH_VAL  = $__wf_email_cfg['smtp_auth'] ?? true;
+$__wf_SMTP_TIMEOUT_VAL = $__wf_email_cfg['smtp_timeout'] ?? null;
+$__wf_SMTP_DEBUG_VAL = $__wf_email_cfg['smtp_debug'] ?? null;
 
 // Validate presence
 if ($__wf_FROM_EMAIL === '' || $__wf_FROM_NAME === '' || $__wf_ADMIN_EMAIL === '') {
@@ -39,6 +51,21 @@ $__wf_SMTP_PORT = is_numeric($__wf_SMTP_PORT) ? (int)$__wf_SMTP_PORT : (int) $__
 $__wf_smtpEnabled = is_bool($__wf_SMTP_ENABLED_VAL)
     ? $__wf_SMTP_ENABLED_VAL
     : in_array(strtolower((string)$__wf_SMTP_ENABLED_VAL), ['true','1','yes'], true);
+
+// Normalize optional SMTP controls
+$__wf_smtpAuth = is_bool($__wf_SMTP_AUTH_VAL)
+    ? $__wf_SMTP_AUTH_VAL
+    : in_array(strtolower((string)$__wf_SMTP_AUTH_VAL), ['true','1','yes'], true);
+$__wf_smtpTimeout = null;
+if ($__wf_SMTP_TIMEOUT_VAL !== null && $__wf_SMTP_TIMEOUT_VAL !== '') {
+    $__wf_smtpTimeout = is_numeric($__wf_SMTP_TIMEOUT_VAL) ? (int)$__wf_SMTP_TIMEOUT_VAL : null;
+}
+if ($__wf_smtpTimeout === null) { $__wf_smtpTimeout = 30; }
+$__wf_smtpDebug = 0;
+if ($__wf_SMTP_DEBUG_VAL !== null && $__wf_SMTP_DEBUG_VAL !== '') {
+    if (is_numeric($__wf_SMTP_DEBUG_VAL)) { $__wf_smtpDebug = (int)$__wf_SMTP_DEBUG_VAL; }
+    else if (in_array(strtolower((string)$__wf_SMTP_DEBUG_VAL), ['true','1','yes'], true)) { $__wf_smtpDebug = 1; }
+}
 
 // Credentials: prefer secret store; require username/password if SMTP is enabled
 $__wf_secret_user = function_exists('secret_get') ? secret_get('smtp_username') : null;
@@ -64,6 +91,11 @@ define('SMTP_USERNAME', $__wf_effective_user);
 // SMTP password is stored in the secret store; do not expose from DB beyond this runtime constant
 define('SMTP_PASSWORD', $__wf_effective_pass);
 define('SMTP_ENCRYPTION', $__wf_SMTP_ENC); // 'tls' or 'ssl'
+define('SMTP_AUTH', (bool)$__wf_smtpAuth);
+define('SMTP_TIMEOUT', (int)$__wf_smtpTimeout);
+define('SMTP_DEBUG', (int)$__wf_smtpDebug);
+define('REPLY_TO_EMAIL', $__wf_REPLY_TO);
+define('TEST_RECIPIENT', $__wf_TEST_RECIPIENT);
 
 /**
  * Build a URL by appending query parameters, preserving existing query and anchors
@@ -117,19 +149,22 @@ function sendEmail($to, $subject, $htmlBody, $plainTextBody = '')
         'smtp_enabled'   => (bool)SMTP_ENABLED,
         'smtp_host'      => (string)SMTP_HOST,
         'smtp_port'      => (int)SMTP_PORT,
+        'smtp_auth'      => (bool)SMTP_AUTH,
         'smtp_username'  => (!empty($secUser)) ? $secUser : (string)SMTP_USERNAME,
         'smtp_password'  => (!empty($secPass)) ? $secPass : (string)SMTP_PASSWORD,
         'smtp_encryption'=> (string)SMTP_ENCRYPTION,
+        'smtp_timeout'   => (int)SMTP_TIMEOUT,
+        'smtp_debug'     => (int)SMTP_DEBUG,
         'from_email'     => (string)FROM_EMAIL,
         'from_name'      => (string)FROM_NAME,
-        'reply_to'       => (string)FROM_EMAIL,
+        'reply_to'       => (string)REPLY_TO_EMAIL,
     ]);
 
     $options = [
         'is_html'   => true,
         'from_email'=> (string)FROM_EMAIL,
         'from_name' => (string)FROM_NAME,
-        'reply_to'  => (string)FROM_EMAIL,
+        'reply_to'  => (string)REPLY_TO_EMAIL,
     ];
 
     // Add BCC if configured

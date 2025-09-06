@@ -1,16 +1,74 @@
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+require_once __DIR__ . '/../api/config.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
+include __DIR__ . '/../partials/header.php';
+?>
     <div class="">
         <div class="header">
             <h1>🐸 WhimsicalFrog Database Status</h1>
             <p>Database Management Dashboard</p>
         </div>
+        <?php
+        // Optional on-demand smoke test runner via query params
+        // Usage: admin/db_status.php?smoke=1&target=current|local|live
+        $smokeResult = null;
+        if (isset($_GET['smoke'])) {
+            // Require admin privileges to run the inline smoke test runner
+            AuthHelper::requireAdmin(403, 'Admin access required to run smoke tests');
+            $target = $_GET['target'] ?? 'current';
+            if (!in_array($target, ['current','local','live'], true)) {
+                $target = 'current';
+            }
+            try {
+                if ($target === 'current') {
+                    $pdo = Database::getInstance();
+                    $cfg = wf_get_db_config('current');
+                } else {
+                    $cfg = wf_get_db_config($target);
+                    $pdo = Database::createConnection(
+                        $cfg['host'],
+                        $cfg['db'],
+                        $cfg['user'],
+                        $cfg['pass'],
+                        $cfg['port'] ?? 3306,
+                        $cfg['socket'] ?? null,
+                        [ PDO::ATTR_TIMEOUT => 5 ]
+                    );
+                }
+                $meta = $pdo->query("SELECT VERSION() AS version, DATABASE() AS dbname")->fetch(PDO::FETCH_ASSOC) ?: [];
+                $tables = null;
+                try {
+                    $dbName = $cfg['db'] ?? $meta['dbname'] ?? '';
+                    if ($dbName) {
+                        $row2 = $pdo->query("SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema = '" . addslashes($dbName) . "'")->fetch(PDO::FETCH_ASSOC) ?: [];
+                        $tables = (int)($row2['table_count'] ?? 0);
+                    }
+                } catch (Throwable $e) { $tables = null; }
+                $smokeResult = [
+                    'ok' => true,
+                    'target' => $target,
+                    'config' => [
+                        'host' => $cfg['host'] ?? null,
+                        'db' => $cfg['db'] ?? null,
+                        'user' => $cfg['user'] ?? null,
+                        'port' => $cfg['port'] ?? null,
+                        'socket' => $cfg['socket'] ?? null,
+                    ],
+                    'mysql_version' => $meta['version'] ?? null,
+                    'current_db' => $meta['dbname'] ?? null,
+                    'tables' => $tables,
+                ];
+            } catch (Throwable $e) {
+                $smokeResult = [ 'ok' => false, 'error' => $e->getMessage() ];
+            }
+        }
+        ?>
         
         <div class="status-grid">
             <?php
             // Local Database Status
             try {
-                $localDsn = "mysql:host=localhost;dbname=whimsicalfrog;charset=utf8mb4";
-                $localPdo = new PDO($localDsn, 'root', 'Palz2516', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                $localPdo = Database::getInstance();
                 $localStatus = 'online';
 
                 // Get local stats
@@ -64,13 +122,18 @@
             </div>
             
             <?php
-            // Live Database Status
+            // Live Database Status (use centralized config)
             try {
-                $liveDsn = "mysql:host=db5017975223.hosting-data.io;dbname=dbs14295502;charset=utf8mb4";
-                $livePdo = new PDO($liveDsn, 'dbu2826619', 'Palz2516!', [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_TIMEOUT => 5
-                ]);
+                $liveCfg = wf_get_db_config('live');
+                $livePdo = Database::createConnection(
+                    $liveCfg['host'],
+                    $liveCfg['db'],
+                    $liveCfg['user'],
+                    $liveCfg['pass'],
+                    $liveCfg['port'] ?? 3306,
+                    $liveCfg['socket'] ?? null,
+                    [ PDO::ATTR_TIMEOUT => 5 ]
+                );
                 $liveStatus = 'online';
 
                 // Get live stats
@@ -110,11 +173,11 @@
                     </div>
                     <div class="stat-row">
                         <span>Host</span>
-                        <span class="stat-value">db5017975223.hosting-data.io</span>
+                        <span class="stat-value"><?= htmlspecialchars($liveCfg['host']) ?></span>
                     </div>
                     <div class="stat-row">
                         <span>Database</span>
-                        <span class="stat-value">dbs14295502</span>
+                        <span class="stat-value"><?= htmlspecialchars($liveCfg['db']) ?></span>
                     </div>
                 <?php else: ?>
                     <div class="error">
@@ -123,7 +186,24 @@
                 <?php endif; ?>
             </div>
         </div>
-        
+        <?php if ($smokeResult !== null): ?>
+            <div class="status-card">
+                <h3>🧪 DB Smoke Test (<?= htmlspecialchars($smokeResult['target'] ?? 'current') ?>)</h3>
+                <?php if (!empty($smokeResult['ok'])): ?>
+                    <div class="stat-row"><span>Host</span><span class="stat-value"><?= htmlspecialchars($smokeResult['config']['host'] ?? '') ?></span></div>
+                    <div class="stat-row"><span>Database</span><span class="stat-value"><?= htmlspecialchars($smokeResult['config']['db'] ?? '') ?></span></div>
+                    <div class="stat-row"><span>User</span><span class="stat-value"><?= htmlspecialchars($smokeResult['config']['user'] ?? '') ?></span></div>
+                    <div class="stat-row"><span>Port</span><span class="stat-value"><?= htmlspecialchars((string)($smokeResult['config']['port'] ?? '')) ?></span></div>
+                    <div class="stat-row"><span>MySQL Version</span><span class="stat-value"><?= htmlspecialchars($smokeResult['mysql_version'] ?? '') ?></span></div>
+                    <div class="stat-row"><span>Current DB</span><span class="stat-value"><?= htmlspecialchars($smokeResult['current_db'] ?? '') ?></span></div>
+                    <div class="stat-row"><span>Tables</span><span class="stat-value"><?= htmlspecialchars((string)($smokeResult['tables'] ?? 'n/a')) ?></span></div>
+                    <div class="success">✅ Connection OK</div>
+                <?php else: ?>
+                    <div class="error">❌ Connection FAILED: <?= htmlspecialchars($smokeResult['error'] ?? 'Unknown error') ?></div>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <?php if ($localStatus === 'online' && $liveStatus === 'online'): ?>
             <div class="status-card">
                 <h3>🔄 Sync Status</h3>
@@ -139,7 +219,7 @@
                     <span>Rooms Difference</span>
                     <span class="stat-value"><?= abs($rooms - $liveRooms) ?> rooms</span>
                 </div>
-                
+
                 <?php if ($cssRules === $liveCssRules && $items === $liveItems && $rooms === $liveRooms): ?>
                     <div class="success">✅ Databases are in sync!</div>
                 <?php else: ?>
@@ -147,12 +227,38 @@
                 <?php endif; ?>
             </div>
         <?php endif; ?>
-        
+
         <div class="actions">
             <a href="db_web_manager.php" class="btn">🔧 Web Manager</a>
             <a href="?refresh=1" class="btn">🔄 Refresh Status</a>
             <a href="#" data-action="runCommand" data-params='{"command":"test-css"}' class="btn">🧪 Test CSS</a>
             <a href="#" data-action="runCommand" data-params='{"command":"generate-css"}' class="btn">🎨 Generate CSS</a>
+            <a href="?smoke=1&target=current" class="btn">🧪 Smoke Test (Current)</a>
+            <a href="?smoke=1&target=local" class="btn">🧪 Smoke Test (Local)</a>
+            <a href="?smoke=1&target=live" class="btn">🧪 Smoke Test (Live)</a>
+            <button id="runApiSmokeBtn" type="button" class="btn">⚡ Run via API</button>
+        </div>
+
+        <div id="apiSmokeTest" class="status-card is-hidden mt-12">
+            <h3>🧪 DB Smoke Test via API
+                <small class="subtle-note">(api/db_smoke_test.php)</small>
+            </h3>
+            <div class="stat-row">
+                <span>Target</span>
+                <span class="stat-value">
+                    <select id="apiTargetSelect">
+                        <option value="current">current</option>
+                        <option value="local">local</option>
+                        <option value="live">live</option>
+                    </select>
+                </span>
+            </div>
+            <div id="apiParsed" class="mt-8"></div>
+            <details id="apiRawWrap" class="mt-8">
+                <summary>Show Raw JSON</summary>
+                <pre id="apiRaw" class="json-output">(no data)</pre>
+            </details>
         </div>
     </div>
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+    <?php if (function_exists('vite')) { echo vite('js/admin-db-status.js'); } ?>
+    <?php include __DIR__ . '/../partials/footer.php'; ?>

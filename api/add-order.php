@@ -10,7 +10,12 @@ register_shutdown_function(function () {
     global $__wf_add_order_sent, $debug, $debugData;
     $error = error_get_last();
     if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
-        error_log("add-order.php: Fatal error detected: " . print_r($error, true));
+        if (class_exists('Logger')) {
+            Logger::exception('Fatal error in add-order', new Error($error['message'] ?? 'Fatal error'), [
+                'endpoint' => 'add-order',
+                'error' => $error,
+            ]);
+        }
         // Clear any buffered output before sending JSON
         while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
         if (!headers_sent()) {
@@ -57,17 +62,16 @@ require_once __DIR__ . '/../includes/stock_manager.php';
 try {
 
     // Add debugging
-    error_log("add-order.php: Received request");
-    error_log("add-order.php: Request method: " . $_SERVER['REQUEST_METHOD']);
+    if (class_exists('Logger')) { Logger::debug('add-order request received', ['endpoint' => 'add-order']); }
+    if (class_exists('Logger')) { Logger::debug('add-order request method', ['endpoint' => 'add-order', 'method' => $_SERVER['REQUEST_METHOD']]); }
     // getallheaders() is not available on all SAPIs; guard it
     if (function_exists('getallheaders')) {
-        error_log("add-order.php: Headers: " . print_r(getallheaders(), true));
+        if (class_exists('Logger')) { Logger::debug('add-order headers', ['endpoint' => 'add-order', 'headers' => getallheaders()]); }
     } else {
-        error_log("add-order.php: Headers: getallheaders() not available on this SAPI");
+        if (class_exists('Logger')) { Logger::debug('add-order headers unavailable', ['endpoint' => 'add-order']); }
     }
     $rawInput = file_get_contents('php://input');
-    error_log("add-order.php: Raw input: " . $rawInput);
-    error_log("add-order.php: Raw input length: " . strlen($rawInput));
+    if (class_exists('Logger')) { Logger::debug('add-order raw input', ['endpoint' => 'add-order', 'length' => strlen($rawInput)]); }
 
     // Stock management functions are now available from includes/functions.php
 
@@ -84,7 +88,7 @@ try {
     $input = json_decode($rawInput, true);
     if (!$input) {
         $jsonError = json_last_error_msg();
-        error_log("add-order.php: JSON decode error: " . $jsonError);
+        if (class_exists('Logger')) { Logger::debug('add-order JSON decode error', ['endpoint' => 'add-order', 'error' => $jsonError]); }
         http_response_code(400);
         while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
         echo json_encode(['success' => false,'error' => 'Invalid JSON: ' . $jsonError]);
@@ -93,7 +97,7 @@ try {
     }
 
     // Debug the parsed input
-    error_log("add-order.php: Parsed input: " . print_r($input, true));
+    if (class_exists('Logger')) { Logger::debug('add-order parsed input', ['endpoint' => 'add-order', 'input_keys' => array_keys($input)]); }
 
     // Debug flag and container
     $debug = !empty($input['debug']);
@@ -119,26 +123,26 @@ try {
             if ($len !== null && $len < 32) {
                 try {
                     $pdo->exec("ALTER TABLE order_items MODIFY COLUMN size VARCHAR(32) DEFAULT NULL");
-                    error_log("add-order.php: Widened 'size' column to VARCHAR(32)");
+                    if (class_exists('Logger')) { Logger::info("Widened 'size' column to VARCHAR(32)", ['endpoint' => 'add-order']); }
                     $orderItemSizeMaxLen = 32;
                 } catch (Exception $e) {
-                    error_log("add-order.php: Warning - Could not widen size column: " . $e->getMessage());
+                    if (class_exists('Logger')) { Logger::debug('Could not widen size column', ['endpoint' => 'add-order', 'error' => $e->getMessage()]); }
                 }
             }
         } else {
             try {
                 $pdo->exec("ALTER TABLE order_items ADD COLUMN size VARCHAR(32) DEFAULT NULL AFTER color");
-                error_log("add-order.php: Added 'size' column (VARCHAR(32)) to order_items table");
+                if (class_exists('Logger')) { Logger::info("Added 'size' column (VARCHAR(32)) to order_items table", ['endpoint' => 'add-order']); }
                 $hasSizeCol = true;
                 $orderItemSizeMaxLen = 32;
             } catch (Exception $e) {
                 // Likely due to permissions or engine limitations; proceed without size column
-                error_log("add-order.php: Warning - Could not add size column: " . $e->getMessage());
+                if (class_exists('Logger')) { Logger::debug('Could not add size column', ['endpoint' => 'add-order', 'error' => $e->getMessage()]); }
                 $hasSizeCol = false;
             }
         }
     } catch (Exception $e) {
-        error_log("add-order.php: Warning - Could not check/add size column: " . $e->getMessage());
+        if (class_exists('Logger')) { Logger::debug('Could not check/add size column', ['endpoint' => 'add-order', 'error' => $e->getMessage()]); }
         $hasSizeCol = false;
     }
 
@@ -149,15 +153,15 @@ try {
         if (!$hasShippingMethodCol) {
             try {
                 $pdo->exec("ALTER TABLE orders ADD COLUMN shippingMethod VARCHAR(50) DEFAULT 'Customer Pickup' AFTER paymentMethod");
-                error_log("add-order.php: Added 'shippingMethod' column to orders table");
+                if (class_exists('Logger')) { Logger::info("Added 'shippingMethod' column to orders table", ['endpoint' => 'add-order']); }
                 $hasShippingMethodCol = true;
             } catch (Exception $e) {
-                error_log("add-order.php: Warning - Could not add shippingMethod column: " . $e->getMessage());
+                if (class_exists('Logger')) { Logger::debug('Could not add shippingMethod column', ['endpoint' => 'add-order', 'error' => $e->getMessage()]); }
                 $hasShippingMethodCol = false;
             }
         }
     } catch (Exception $e) {
-        error_log("add-order.php: Warning - Could not check/add shippingMethod column: " . $e->getMessage());
+        if (class_exists('Logger')) { Logger::debug('Could not check/add shippingMethod column', ['endpoint' => 'add-order', 'error' => $e->getMessage()]); }
         $hasShippingMethodCol = false;
     }
     try {
@@ -166,16 +170,16 @@ try {
         if (!$hasShippingAddressCol) {
             try {
                 $pdo->exec("ALTER TABLE orders ADD COLUMN shippingAddress JSON NULL AFTER shippingMethod");
-                error_log("add-order.php: Added 'shippingAddress' column to orders table");
+                if (class_exists('Logger')) { Logger::info("Added 'shippingAddress' column to orders table", ['endpoint' => 'add-order']); }
                 $hasShippingAddressCol = true;
             } catch (Exception $e) {
                 // Fallback: some MySQL versions don't support JSON; we simply won't store it
-                error_log("add-order.php: Warning - Could not add shippingAddress column: " . $e->getMessage());
+                if (class_exists('Logger')) { Logger::debug('Could not add shippingAddress column', ['endpoint' => 'add-order', 'error' => $e->getMessage()]); }
                 $hasShippingAddressCol = false;
             }
         }
     } catch (Exception $e) {
-        error_log("add-order.php: Warning - Could not check/add shippingAddress column: " . $e->getMessage());
+        if (class_exists('Logger')) { Logger::debug('Could not check/add shippingAddress column', ['endpoint' => 'add-order', 'error' => $e->getMessage()]); }
         $hasShippingAddressCol = false;
     }
 
@@ -207,11 +211,16 @@ try {
     $colors = $input['colors'] ?? []; // Color information for each item
     $sizes = $input['sizes'] ?? []; // Size information for each item
 
-    // Debug the itemIds array
-    error_log("add-order.php: itemIds array: " . print_r($itemIds, true));
-    error_log("add-order.php: quantities array: " . print_r($quantities, true));
-    error_log("add-order.php: colors array: " . print_r($colors, true));
-    error_log("add-order.php: sizes array: " . print_r($sizes, true));
+    // Debug arrays at a glance (lengths only)
+    if (class_exists('Logger')) {
+        Logger::debug('add-order arrays summary', [
+            'endpoint' => 'add-order',
+            'itemIds_len' => is_array($itemIds) ? count($itemIds) : null,
+            'quantities_len' => is_array($quantities) ? count($quantities) : null,
+            'colors_len' => is_array($colors) ? count($colors) : null,
+            'sizes_len' => is_array($sizes) ? count($sizes) : null,
+        ]);
+    }
 
     if (!is_array($itemIds) || !is_array($quantities) || count($itemIds) !== count($quantities)) {
         http_response_code(400);
@@ -302,17 +311,8 @@ try {
         }
     }
 
-    // Shipping rules via BusinessSettings (STRICT)
-    try {
-        $shipCfg = BusinessSettings::getShippingConfig(true);
-    } catch (InvalidArgumentException $ex) {
-        error_log('add-order.php: Shipping configuration error: ' . $ex->getMessage());
-        http_response_code(500);
-        while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
-        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
-        $__wf_add_order_sent = true;
-        exit;
-    }
+    // Shipping rules via BusinessSettings (non-strict to avoid 500s when missing)
+    $shipCfg = BusinessSettings::getShippingConfig(false);
     $freeThreshold   = (float)$shipCfg['free_shipping_threshold'];
     $localDeliveryFee= (float)$shipCfg['local_delivery_fee'];
     $rateUSPS        = (float)$shipCfg['shipping_rate_usps'];
@@ -335,17 +335,8 @@ try {
         $computedShipping = $rateUSPS; // default fallback
     }
 
-    // Tax (ZIP-based base state tax support) - STRICT config
-    try {
-        $taxCfg = BusinessSettings::getTaxConfig(true);
-    } catch (InvalidArgumentException $ex) {
-        error_log('add-order.php: Tax configuration error: ' . $ex->getMessage());
-        http_response_code(500);
-        while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
-        echo json_encode(['success' => false, 'error' => $ex->getMessage()]);
-        $__wf_add_order_sent = true;
-        exit;
-    }
+    // Tax (ZIP-based base state tax support) - non-strict config
+    $taxCfg = BusinessSettings::getTaxConfig(false);
     $taxShipping = (bool)$taxCfg['taxShipping'];
     $settingsEnabled = (bool)$taxCfg['enabled'];
     $settingsRate = (float)$taxCfg['rate'];
@@ -402,7 +393,7 @@ try {
                 'source' => $taxSource,
                 'zip' => $zipForTax,
                 'zipState' => $zipState,
-                'hasTaxShippingKey' => true,
+                'hasTaxShippingKey' => isset($taxCfg['hasTaxShippingKey']) ? (bool)$taxCfg['hasTaxShippingKey'] : null,
             ],
             'items' => $itemsDebug,
         ];
@@ -412,7 +403,7 @@ try {
     $clientTotal = isset($input['total']) ? (float)$input['total'] : null;
     if ($clientTotal !== null && abs($clientTotal - $computedTotal) > 0.01) {
         $note = "Client total {$clientTotal} differs from computed total {$computedTotal}, using computed";
-        error_log("add-order.php: " . $note);
+        if (class_exists('Logger')) { Logger::info('add-order client/server total mismatch', ['endpoint' => 'add-order', 'clientTotal' => $clientTotal, 'computedTotal' => $computedTotal]); }
         if ($debug) { $debugData['notes'][] = $note; }
     }
 
@@ -439,7 +430,7 @@ try {
         $squareLocationId = (string) BusinessSettings::get('square_location_id', '');
 
         if (!$squareEnabled || empty($squareAccessToken) || empty($squareLocationId)) {
-            error_log('add-order.php: Square not properly configured');
+            if (class_exists('Logger')) { Logger::debug('Square not properly configured', ['endpoint' => 'add-order']); }
             echo json_encode(['success' => false, 'error' => 'Payment configuration error']);
             $__wf_add_order_sent = true;
             exit;
@@ -504,7 +495,7 @@ try {
         curl_close($ch);
 
         if ($resp === false || $httpCode < 200 || $httpCode >= 300) {
-            error_log('add-order.php: Square payment failed: HTTP ' . $httpCode . ' resp=' . $resp . ' err=' . $curlErr);
+            if (class_exists('Logger')) { Logger::debug('Square payment failed', ['endpoint' => 'add-order', 'httpCode' => $httpCode, 'resp' => $resp, 'curlErr' => $curlErr]); }
             http_response_code(400);
             while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
             echo json_encode(['success' => false, 'error' => 'Payment failed']);
@@ -514,7 +505,7 @@ try {
 
         $respData = json_decode($resp, true);
         if (!isset($respData['payment']) || ($respData['payment']['status'] ?? '') !== 'COMPLETED') {
-            error_log('add-order.php: Square payment not completed: ' . $resp);
+            if (class_exists('Logger')) { Logger::debug('Square payment not completed', ['endpoint' => 'add-order', 'resp' => $respData]); }
             http_response_code(400);
             while (function_exists('ob_get_level') && ob_get_level() > 0) { @ob_end_clean(); }
             echo json_encode(['success' => false, 'error' => 'Payment not completed']);
@@ -624,9 +615,9 @@ try {
         if ($maxId) {
             $currentSequence = (int)substr($maxId, 2); // Remove 'OI' prefix and convert to int
             $nextSequence = $currentSequence + 1;
-            error_log("add-order.php: Found max existing ID '$maxId', next sequence will be $nextSequence");
+            if (class_exists('Logger')) { Logger::debug('Found max existing order item ID', ['endpoint' => 'add-order', 'maxId' => $maxId, 'nextSequence' => $nextSequence]); }
         } else {
-            error_log("add-order.php: No existing order item IDs found, starting from sequence 1");
+            if (class_exists('Logger')) { Logger::debug('No existing order item IDs found; starting at sequence 1', ['endpoint' => 'add-order']); }
         }
 
         // Prepare statements for order items and stock updates
@@ -649,17 +640,17 @@ try {
                 if (strlen($size) > $orderItemSizeMaxLen) {
                     $orig = $size;
                     $size = substr($size, 0, $orderItemSizeMaxLen);
-                    error_log("add-order.php: Truncated size '$orig' to '$size' to fit column length $orderItemSizeMaxLen");
+                    if (class_exists('Logger')) { Logger::debug('Truncated size to fit column length', ['endpoint' => 'add-order', 'original' => $orig, 'truncated' => $size, 'maxLen' => $orderItemSizeMaxLen]); }
                     if (!empty($debug)) { $debugData['notes'][] = "Truncated size '$orig' to '$size' to fit column length $orderItemSizeMaxLen"; }
                 }
             }
 
             // Debug each SKU being processed
-            error_log("add-order.php: Processing item $i: SKU='$sku', Quantity=$quantity, Color='$color', Size='$size'");
+            if (class_exists('Logger')) { Logger::debug('Processing order item', ['endpoint' => 'add-order', 'index' => $i, 'sku' => $sku, 'qty' => $quantity, 'color' => $color, 'size' => $size]); }
 
             // Check if SKU is null or empty
             if (empty($sku)) {
-                error_log("add-order.php: ERROR - SKU is empty for item $i");
+                if (class_exists('Logger')) { Logger::exception('SKU is empty', new Exception('SKU is empty'), ['endpoint' => 'add-order', 'index' => $i]); }
                 throw new Exception("SKU is empty for item at index $i");
             }
 
@@ -693,7 +684,7 @@ try {
                     $priceStmt->execute([$cand]);
                     $candPrice = $priceStmt->fetchColumn();
                     if ($candPrice !== false && $candPrice !== null && (float)$candPrice > 0.0) {
-                        error_log("add-order.php: Normalized SKU '$sku' -> '$cand' for order processing");
+                        if (class_exists('Logger')) { Logger::info('Normalized SKU for order processing', ['endpoint' => 'add-order', 'original_sku' => (string)$sku, 'normalized_sku' => (string)$cand]); }
                         if ($debug) { $debugData['notes'][] = "Normalized SKU '$sku' -> '$cand' for order processing"; }
                         $effectiveSku = $cand;
                         $price = $candPrice;
@@ -703,7 +694,7 @@ try {
             }
 
             if ($price === false || $price === null) {
-                error_log("add-order.php: WARNING - No price found for SKU '$sku', using 0.00");
+                if (class_exists('Logger')) { Logger::debug('No price found for SKU; using 0.00', ['endpoint' => 'add-order', 'sku' => $sku]); }
                 $price = 0.00;  // Fallback price
             }
 
@@ -711,7 +702,7 @@ try {
             $orderItemId = 'OI' . str_pad($nextSequence + $i, 10, '0', STR_PAD_LEFT);
 
             // Insert order item with color and size information (store effective SKU)
-            error_log("add-order.php: Inserting order item: ID=$orderItemId, OrderID=$orderId, SKU=$effectiveSku (orig '$sku'), Qty=$quantity, Price=$price, Color=$color, Size=$size");
+            if (class_exists('Logger')) { Logger::debug('Inserting order item', ['endpoint' => 'add-order', 'orderItemId' => $orderItemId, 'orderId' => $orderId, 'sku' => $effectiveSku, 'origSku' => $sku, 'qty' => $quantity, 'price' => $price, 'color' => $color, 'size' => $size]); }
             if (!empty($hasSizeCol)) {
                 $orderItemStmt->execute([$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color, $size]);
             } else {

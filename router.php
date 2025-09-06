@@ -100,6 +100,54 @@ if (strpos($requestedPath, '/dist/') === 0) {
             }
         }
     }
+    // Generic graceful fallback for any missing hashed JS/CSS chunk under /dist/assets
+    if (preg_match('#^/dist/assets/(.+)-[A-Za-z0-9_\-]+\.(js|css)$#', $requestedPath, $mm)) {
+        $stem = $mm[1];
+        $ext = strtolower($mm[2]);
+        // Try resolve via manifest first
+        $manifestPaths = [ __DIR__ . '/dist/.vite/manifest.json', __DIR__ . '/dist/manifest.json' ];
+        $manifest = null;
+        foreach ($manifestPaths as $mp) {
+            if (is_file($mp)) {
+                $json = @file_get_contents($mp);
+                $data = $json ? json_decode($json, true) : null;
+                if (is_array($data)) { $manifest = $data; break; }
+            }
+        }
+        // Helper to serve a file with correct mime and no-store to break loops
+        $serve = function(string $fsPath, string $ext) {
+            if (!is_file($fsPath)) { return false; }
+            if ($ext === 'css') {
+                header('Content-Type: text/css; charset=utf-8');
+            } else {
+                header('Content-Type: application/javascript; charset=utf-8');
+            }
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            readfile($fsPath);
+            exit;
+        };
+        // Try manifest: find any entry whose output file matches the stem regardless of hash
+        if (is_array($manifest)) {
+            foreach ($manifest as $k => $meta) {
+                if (!is_array($meta) || empty($meta['file'])) { continue; }
+                $out = (string)$meta['file']; // e.g., assets/js/api-client-<hash>.js
+                // Does the output end with the same stem and extension? allow any hash in between
+                if (preg_match('#(^|/)'.preg_quote($stem, '#').'-[A-Za-z0-9_\-]+\.'.preg_quote($ext, '#').'$#', $out)) {
+                    $target = '/dist/' . ltrim($out, '/');
+                    $targetFs = __DIR__ . $target;
+                    if (is_file($targetFs)) { $serve($targetFs, $ext); }
+                }
+            }
+        }
+        // Fallback: scan filesystem for latest matching stem
+        $globPaths = glob(__DIR__ . '/dist/assets/' . $stem . '-*.' . $ext);
+        if (!empty($globPaths)) {
+            usort($globPaths, function($a, $b) { return filemtime($b) <=> filemtime($a); });
+            $latestFs = $globPaths[0];
+            if (is_file($latestFs)) { $serve($latestFs, $ext); }
+        }
+        // If not resolved, continue to default 404 below
+    }
     // Default: respond 404 for other missing dist assets to avoid HTML fallthrough
     http_response_code(404);
     header('Content-Type: text/plain; charset=utf-8');

@@ -78,7 +78,9 @@
     try { window.__wfReceiptOpen = true; } catch(_) {}
 
     state.content.innerHTML = '<div class="receipt-loading">Loading receipt…</div>';
+    try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
     state.overlay.classList.add('show');
+    try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
     try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_) {}
 
     try {
@@ -95,6 +97,7 @@
   function close() {
     if (!state.overlay) return;
     state.overlay.classList.remove('show');
+    try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
     try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_) {}
     // Unset receipt open flag and notify listeners that the modal closed
     try { window.__wfReceiptOpen = false; } catch(_) {}

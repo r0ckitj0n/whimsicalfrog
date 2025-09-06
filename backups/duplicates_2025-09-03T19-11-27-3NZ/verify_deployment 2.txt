@@ -1,9 +1,0 @@
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
-ls images/items/TS002A.webp
-ls process_multi_image_upload.php
-ls components/image_carousel.php
-ls dist/.vite/manifest.json
-ls dist/assets
-bye

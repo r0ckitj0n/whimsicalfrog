@@ -70,3 +70,29 @@ Enjoy coding! 🐸
 - The actual `.env` file is git-ignored; copy `.env.example` to `.env` and fill values locally.
 - Vite/dev server reads values from the shell process (e.g., `VITE_DEV_PORT`, `VITE_HMR_PORT`, `PORT`). Optional toggles read by PHP include `WF_VITE_DEV`, `WF_VITE_DISABLE_DEV`, `WF_VITE_ORIGIN`, `WF_PUBLIC_BASE`, `WF_BACKEND_ORIGIN`.
 
+
+## Database Configuration (Centralized)
+
+See `documentation/CENTRALIZATION_SUMMARY.md` for full details on the centralized database configuration, environment variable keys, and examples.
+
+Minimal usage in PHP scripts:
+
+```php
+require_once __DIR__ . '/api/config.php';
+
+// Default connection (auto-detected environment)
+$pdo = Database::getInstance();
+
+// Explicit environment connection if needed
+$live = wf_get_db_config('live');
+$livePdo = Database::createConnection(
+    $live['host'],
+    $live['db'],
+    $live['user'],
+    $live['pass'],
+    $live['port'] ?? 3306,
+    $live['socket'] ?? null
+);
+```
+
+Environment variables are supported (optionally via a `.env` file). See `.env.example` for the `WF_DB_LOCAL_*` and `WF_DB_LIVE_*` keys.

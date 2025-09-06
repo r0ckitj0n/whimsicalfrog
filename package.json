@@ -15,12 +15,17 @@
     "lint:css:fix": "stylelint \"src/styles/**/*.css\" --fix",
     "guard:styles": "node scripts/disallow-inline-styles.mjs",
     "guard:templates:css": "node scripts/guard-templates-css.mjs",
+    "guard:duplicates": "node scripts/dev/guard-duplicates.mjs",
     "check:css:orphans": "node scripts/check-orphaned-css.mjs",
     "check:css:orphans:write": "node scripts/check-orphaned-css.mjs --write",
     "check:css:inventory": "node scripts/css-inventory.mjs",
     "prefix-unused": "node scripts/auto-prefix-unused.mjs --run-eslint",
     "prefix-unused:write": "node scripts/auto-prefix-unused.mjs --run-eslint --write",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "tooltips:export": "node scripts/dev/export-admin-tooltips.mjs",
+    "tooltips:audit": "node scripts/dev/audit-tooltips.mjs",
+    "tooltips:seed:dry": "node scripts/dev/seed-admin-tooltips.mjs --dry-run",
+    "tooltips:seed": "node scripts/dev/seed-admin-tooltips.mjs --apply"
   },
   "devDependencies": {
     "@babel/parser": "^7.28.0",

@@ -51,13 +51,20 @@ class AIProcessingModal {
 
   show() {
     if (!this.modal) return;
+    try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(this.modal); } catch(_) {}
     this.modal.classList.remove('hidden');
+    this.modal.classList.add('show');
+    try { this.modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
+    try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_) {}
     this.reset();
   }
 
   hide() {
     if (!this.modal) return;
+    this.modal.classList.remove('show');
     this.modal.classList.add('hidden');
+    try { this.modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
+    try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_) {}
   }
 
   close() {

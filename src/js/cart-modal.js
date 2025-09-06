@@ -98,7 +98,9 @@ import '../styles/cart-modal.css';
         }
         createOverlay();
       }
+      try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
       state.overlay.classList.add('show');
+      try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
       try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
       // Always resync from storage upon open to avoid stale in-memory state
       try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
@@ -111,7 +113,8 @@ import '../styles/cart-modal.css';
     function close() {
       if (!state.overlay) return;
       state.overlay.classList.remove('show');
-      try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){}
+      try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+      try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
     }
 
     // Public API

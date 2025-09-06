@@ -2,12 +2,7 @@
 require_once __DIR__ . '/../../api/config.php';
 
 try {
-    // Use config globals for a direct PDO to avoid any autoload/env differences
-    if (!isset($dsn, $user, $pass, $options)) {
-        throw new RuntimeException('Database config globals ($dsn, $user, $pass, $options) are not set.');
-    }
-    $pdo = new PDO($dsn, $user, $pass, $options);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo = Database::getInstance();
 
     $count = (int)$pdo->query('SELECT COUNT(*) FROM dashboard_sections')->fetchColumn();
     echo "dashboard_sections rows: {$count}\n";

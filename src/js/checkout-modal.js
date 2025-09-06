@@ -103,13 +103,16 @@
     function open() {
       if (!state.overlay) createOverlay();
       render();
+      try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
       state.overlay.classList.add('show');
+      try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
       try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
     }
 
     function close() {
       if (!state.overlay) return;
       state.overlay.classList.remove('show');
+      try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
       try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
     }
 

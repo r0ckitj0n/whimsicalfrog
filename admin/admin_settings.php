@@ -5,18 +5,369 @@
 <?php
 // Load the dedicated Admin Settings module via Vite (dev/prod aware)
 require_once dirname(__DIR__) . '/includes/vite_helper.php';
-echo vite('js/admin-settings.js');
+// If the global layout (header/body with data attributes) hasn't been bootstrapped, include it now
+if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+    // Hint header about current route so it sets body data-page to admin/settings
+    $page = 'admin';
+    include dirname(__DIR__) . '/partials/header.php';
+    // Ensure footer closes the document even for standalone direct loads
+    if (!function_exists('__wf_admin_settings_footer_shutdown')) {
+        function __wf_admin_settings_footer_shutdown() {
+            @include __DIR__ . '/../partials/footer.php';
+        }
+    }
+    register_shutdown_function('__wf_admin_settings_footer_shutdown');
+}
+
+// IMPORTANT: Use the canonical settings markup from sections/admin_settings.php to avoid duplicate IDs and conflicting overlays.
+// Including the sections file here ensures a single source of truth for modals and buttons.
+include dirname(__DIR__) . '/sections/admin_settings.php';
+return;
+// Minimal render mode: if ?wf_minimal=1, output a tiny shell and skip heavy content/scripts
+if (isset($_GET['wf_minimal']) && $_GET['wf_minimal'] === '1') {
+    // Output a tiny, static placeholder to test if DOM/CSS load is the freeze source
+    echo "<div class=\"settings-page\" style=\"padding:16px;font-family:sans-serif\">" .
+         "<h1>Admin Settings (Minimal Mode)</h1>" .
+         "<p>This minimal render omits scripts and heavy sections. If this loads without freezing, the issue is likely DOM/layout volume or a specific section.</p>" .
+         "</div>";
+    return;
+}
+
+// If the global layout (header/body with data attributes) hasn't been bootstrapped, include it now.
+if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+    // Hint header about current route so it sets body data-page to admin/settings
+    $page = 'admin';
+    include dirname(__DIR__) . '/partials/header.php';
+    // Final safety: inline fallback to ensure horizontal admin tabs render and spacing under header is tight
+    echo '<style id="wf-admin-settings-inline-fallback">'
+       . 'body[data-page^="admin"] .admin-tab-navigation{position:fixed!important;top:var(--wf-admin-nav-top, 80px)!important;left:0;right:0;z-index:2000;margin:0!important;padding:6px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation>*,'
+       . 'body[data-page^="admin"] .admin-tab-navigation .flex,'
+       . 'body[data-page^="admin"] .admin-tab-navigation>div,'
+       . 'body[data-page^="admin"] .admin-tab-navigation ul{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;list-style:none!important;width:100%!important;text-align:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation .container, body[data-page^="admin"] .admin-tab-navigation .wrapper, body[data-page^="admin"] .admin-tab-navigation .flex, body[data-page^="admin"] .admin-tab-navigation > div{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}'
+       . 'body[data-page^="admin"] .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;width:auto!important;max-width:none!important;flex:0 0 auto!important;white-space:nowrap;text-decoration:none}'
+       . '</style>';
+    echo '<script>(function(){try{var compute=function(){var h=document.querySelector(".site-header")||document.querySelector(".universal-page-header");if(h&&h.getBoundingClientRect){var hh=Math.max(40,Math.round(h.getBoundingClientRect().height));document.documentElement.style.setProperty("--wf-header-height",hh+"px")}var hc=document.querySelector(".header-content");if(hc&&hc.getBoundingClientRect){var b=Math.round(hc.getBoundingClientRect().bottom+2);document.documentElement.style.setProperty("--wf-admin-nav-top",b+"px")}};if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",compute,{once:true})}else{compute()}window.addEventListener("load",compute,{once:true});window.addEventListener("resize",compute);try{if(window.ResizeObserver){var ro=new ResizeObserver(function(){compute()});var hc=document.querySelector(".header-content");if(hc)ro.observe(hc);var h=document.querySelector(".site-header")||document.querySelector(".universal-page-header");if(h)ro.observe(h)}else{var t=setInterval(compute,500);setTimeout(function(){clearInterval(t)},4000)}}catch(_){}}catch(e){}})();</script>';
+    // Ensure footer closes the document even for standalone direct loads
+    if (!function_exists('__wf_admin_settings_footer_shutdown')) {
+        function __wf_admin_settings_footer_shutdown() {
+            @include __DIR__ . '/../partials/footer.php';
+        }
+    }
+    register_shutdown_function('__wf_admin_settings_footer_shutdown');
+}
+// Optional section filter: /admin/settings?wf_section=content|visual|business|communication|technical
+$wf_section = isset($_GET['wf_section']) ? strtolower((string)$_GET['wf_section']) : '';
+// Default to LIGHT render unless explicitly opting into full heavy DOM
+$wf_full = isset($_GET['wf_full']) && $_GET['wf_full'] === '1';
+// In LIGHT mode, do NOT emit the admin-settings bundle to avoid any heavy JS costs
+// But DO render the full sections HTML so options are visible and usable for manual testing
+if (!$wf_full && $wf_section === '') {
+    if (function_exists('vite_css')) {
+        echo vite_css('js/app.js');
+        echo vite_css('js/admin-settings.js');
+    }
+    if (isset($_GET['wf_debug']) && $_GET['wf_debug'] === '1') {
+        echo '<div class="settings-page" style="padding:12px 16px 0">'
+           . '<div class="notice" style="margin:0 0 12px;color:#666;font-size:14px">'
+           . 'Light mode: heavy JS disabled by default. Append <code>?wf_full=1</code> or set <code>&wf_section=...</code> to lazy-load the legacy module for that section if required.'
+           . '</div>'
+           . '</div>';
+    }
+    // Do not return; continue to render the full sections below.
+}
+// Always emit the admin-settings entry so the lightweight bridge initializes.
+// The entry itself lazily loads the heavy legacy module only when requested.
+if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) {
+    define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true);
+    echo vite('js/admin-settings.js');
+}
 ?>
 
 <div class="settings-page">
     <div class="settings-grid">
     
     <!-- Content Management Section -->
+    <?php if (!$wf_section || $wf_section === 'content'): ?>
     <div class="settings-section content-section card-theme-blue">
       <div class="section-header">
         <h2 class="section-title">Content Management</h2>
         <p class="section-description">Organize products, categories, and room content</p>
       </div>
+
+
+
+<!-- Business Information Modal (normalized) -->
+<div id="businessInfoModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal">
+        <div class="modal-header">
+            <h2 class="admin-card-title">🏷️ Business Information</h2>
+            <button type="button" class="admin-modal-close" data-action="close-business-info" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-gray-700">Manage your business name, address, and contact details. Content coming soon.</p>
+            <div class="flex justify-end mt-3">
+                <button type="button" class="btn btn-secondary" data-action="close-business-info">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Settings Modal (normalized) -->
+<div id="emailSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal">
+        <div class="modal-header">
+            <h2 class="admin-card-title">✉️ Email Settings</h2>
+            <button type="button" class="admin-modal-close" data-action="close-email-settings" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <form id="emailConfigForm" class="form-grid">
+                <div class="form-row">
+                    <label for="fromEmail">From Email</label>
+                    <input type="email" id="fromEmail" name="fromEmail" placeholder="noreply@example.com" required />
+                </div>
+                <div class="form-row">
+                    <label for="fromName">From Name</label>
+                    <input type="text" id="fromName" name="fromName" placeholder="WhimsicalFrog" />
+                </div>
+                <div class="form-row">
+                    <label for="adminEmail">Admin Email</label>
+                    <input type="email" id="adminEmail" name="adminEmail" placeholder="admin@example.com" />
+                </div>
+                <div class="form-row">
+                    <label for="bccEmail">BCC Email</label>
+                    <input type="email" id="bccEmail" name="bccEmail" placeholder="ops@example.com" />
+                </div>
+
+                <hr />
+
+                <div class="form-row inline">
+                    <label for="smtpEnabled">Enable SMTP</label>
+                    <input type="checkbox" id="smtpEnabled" name="smtpEnabled" />
+                </div>
+
+                <div id="smtpSettings" class="smtp-settings hidden">
+                    <div class="form-row">
+                        <label for="smtpHost">SMTP Host</label>
+                        <input type="text" id="smtpHost" name="smtpHost" placeholder="smtp.mailprovider.com" />
+                    </div>
+                    <div class="form-row">
+                        <label for="smtpPort">SMTP Port</label>
+                        <select id="smtpPort" name="smtpPort">
+                            <option value="">Select…</option>
+                            <option value="25">25</option>
+                            <option value="465">465</option>
+                            <option value="587">587</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="smtpUsername">SMTP Username</label>
+                        <input type="text" id="smtpUsername" name="smtpUsername" placeholder="username" autocomplete="username" />
+                    </div>
+                    <div class="form-row">
+                        <label for="smtpPassword">SMTP Password</label>
+                        <input type="password" id="smtpPassword" name="smtpPassword" placeholder="••••••••" autocomplete="current-password" />
+                    </div>
+                    <div class="form-row">
+                        <label for="smtpEncryption">Encryption</label>
+                        <select id="smtpEncryption" name="smtpEncryption">
+                            <option value="">None</option>
+                            <option value="ssl">SSL</option>
+                            <option value="tls">TLS</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="form-row">
+                    <label for="testEmailAddress">Send Test Email To</label>
+                    <div class="input-with-button">
+                        <input type="email" id="testEmailAddress" name="testEmailAddress" placeholder="you@example.com" />
+                        <button type="button" class="btn" data-action="email-send-test">Send Test</button>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                    <button type="button" data-action="close-email-settings" class="btn btn-secondary">Close</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Square Settings Modal (canonical) -->
+<div id="squareSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal">
+        <div class="modal-header">
+            <h2 class="admin-card-title">🟩 Square Settings</h2>
+            <button type="button" class="admin-modal-close" data-action="close-square-settings" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="flex items-center justify-between mb-2">
+                <button id="squareSettingsBtn" type="button" class="btn-secondary">
+                    Status
+                    <span id="squareConfiguredChip" class="status-chip chip-off">Not configured</span>
+                </button>
+            </div>
+
+            <!-- Connection Status -->
+            <div id="squareConnectionStatus" class="mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+                <div class="flex items-center gap-2">
+                    <span id="connectionIndicator" class="w-3 h-3 rounded-full bg-gray-400"></span>
+                    <span id="connectionText" class="text-sm text-gray-700">Not Connected</span>
+                </div>
+            </div>
+
+            <!-- Config Form (client saves via JS) -->
+            <form id="squareConfigForm" data-action="prevent-submit" class="space-y-4">
+                <!-- Environment -->
+                <div>
+                    <label class="block text-sm font-medium mb-1">Environment</label>
+                    <div class="flex items-center gap-4">
+                        <label class="inline-flex items-center gap-2">
+                            <input type="radio" name="environment" value="sandbox" checked>
+                            <span>Sandbox</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2">
+                            <input type="radio" name="environment" value="production">
+                            <span>Production</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- App ID / Location ID -->
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label for="squareAppId" class="block text-sm font-medium mb-1">Application ID</label>
+                        <input id="squareAppId" name="app_id" type="text" class="form-input w-full" placeholder="sq0idp-...">
+                    </div>
+                    <div>
+                        <label for="squareLocationId" class="block text-sm font-medium mb-1">Location ID</label>
+                        <input id="squareLocationId" name="location_id" type="text" class="form-input w-full" placeholder="L8K4...">
+                    </div>
+                </div>
+
+                <!-- Access Token (never prefilled) -->
+                <div>
+                    <label for="squareAccessToken" class="block text-sm font-medium mb-1">Access Token</label>
+                    <input id="squareAccessToken" name="access_token" type="password" class="form-input w-full" placeholder="Paste your Square access token">
+                    <p class="text-xs text-gray-500 mt-1">Token is never prefetched for security. Saving will store it server-side.</p>
+                </div>
+
+                <!-- Sync options -->
+                <div>
+                    <label class="block text-sm font-medium mb-2">Sync Options</label>
+                    <div class="grid gap-2 md:grid-cols-2">
+                        <label class="inline-flex items-center gap-2">
+                            <input id="syncPrices" type="checkbox" checked>
+                            <span>Sync Prices</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2">
+                            <input id="syncInventory" type="checkbox" checked>
+                            <span>Sync Inventory</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2">
+                            <input id="syncDescriptions" type="checkbox">
+                            <span>Sync Descriptions</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2">
+                            <input id="autoSync" type="checkbox">
+                            <span>Enable Auto Sync</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <button id="saveSquareSettingsBtn" type="button" class="btn-primary" data-action="square-save-settings">Save Settings</button>
+                    <button type="button" class="btn-secondary" data-action="square-test-connection">Test Connection</button>
+                    <button type="button" class="btn-secondary" data-action="square-sync-items">Sync Items</button>
+                    <button type="button" class="btn-danger" data-action="square-clear-token">Clear Token</button>
+                </div>
+
+                <div id="connectionResult" class="text-sm text-gray-600"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Rules Modal (normalized) -->
+<div id="cssRulesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal">
+        <div class="modal-header">
+            <h2 class="admin-card-title">🎨 CSS Rules</h2>
+            <button type="button" class="admin-modal-close" data-action="close-css-rules" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-gray-700">Review and manage CSS rules. This will be powered by Vite modules. Content coming soon.</p>
+            <div class="flex justify-end mt-3">
+                <button type="button" class="btn btn-secondary" data-action="close-css-rules">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- AI Tools Modal (normalized structure) -->
+<div id="aiToolsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal">
+        <div class="modal-header">
+            <h2 class="admin-card-title">🧰 AI Tools</h2>
+            <button type="button" class="admin-modal-close" data-action="close-ai-tools" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-gray-700">Access AI-powered tools. Content coming soon.</p>
+            <div class="flex justify-end mt-3">
+                <button type="button" class="btn btn-secondary" data-action="close-ai-tools">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Secrets Manager Modal (normalized structure) -->
+<div id="secretsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal">
+        <div class="modal-header">
+            <h2 class="admin-card-title">🔐 Secrets Manager</h2>
+            <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-gray-700">Manage API keys and secrets. Content coming soon.</p>
+            <div class="flex justify-end mt-3">
+                <button type="button" class="btn btn-secondary" data-action="close-admin-modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!-- Database Maintenance Modal (normalized structure) -->
+<div id="dbMaintenanceModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal">
+        <div class="modal-header">
+            <h2 class="admin-card-title">🛠️ Database Maintenance</h2>
+            <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <p class="text-gray-700">Run compact/repair and other maintenance tasks. A fuller toolset will be available soon.</p>
+            <div class="mt-3">
+                <button data-action="open-database-tables" class="btn btn-primary">Open Database Tables</button>
+            </div>
+            <div class="flex justify-end mt-3">
+                <button type="button" class="btn btn-secondary" data-action="close-admin-modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
       <div class="section-content">
         <button id="dashboardConfigBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,15 +413,17 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Visual & Design Section -->
+    <?php if (!$wf_section || $wf_section === 'visual'): ?>
     <div class="settings-section visual-section card-theme-purple">
       <div class="section-header">
         <h2 class="section-title">Visual & Design</h2>
         <p class="section-description">Customize appearance and interactive elements</p>
       </div>
       <div class="section-content">
-        <button id="cssRulesBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="cssRulesBtn" data-action="open-css-rules"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z"></path>
           </svg>
@@ -99,8 +452,10 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Business & Analytics Section -->
+    <?php if (!$wf_section || $wf_section === 'business'): ?>
     <div class="settings-section business-section card-theme-emerald">
       <div class="section-header">
         <h2 class="section-title">Business & Analytics</h2>
@@ -108,6 +463,13 @@ echo vite('js/admin-settings.js');
       </div>
       <div class="section-content">
 
+        
+        <button id="businessInfoBtn" data-action="open-business-info" class="btn btn-primary btn-block admin-settings-button">
+          <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
+          </svg>
+          <span class="button-text">Business Information</span>
+        </button>
         
         <button id="marketingAnalyticsBtn"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,22 +507,24 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Communication Section -->
+    <?php if (!$wf_section || $wf_section === 'communication'): ?>
     <div class="settings-section communication-section card-theme-amber">
       <div class="section-header">
         <h2 class="section-title">Communication</h2>
         <p class="section-description">Email configuration and customer messaging</p>
       </div>
       <div class="section-content">
-        <button id="emailConfigBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="emailConfigBtn" data-action="open-email-settings"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
           <span class="button-text">Email Configuration</span>
         </button>
         
-        <button id="emailHistoryBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="emailHistoryBtn" data-action="open-email-history"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
@@ -174,7 +538,7 @@ echo vite('js/admin-settings.js');
           <span class="button-text">Fix Sample Email</span>
         </button>
 
-        <button  class="btn btn-primary btn-block admin-settings-button" id="loggingStatusBtn">
+        <button  class="btn btn-primary btn-block admin-settings-button" id="loggingStatusBtn" data-action="open-logging-status">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
@@ -189,8 +553,10 @@ echo vite('js/admin-settings.js');
         </button>
       </div>
     </div>
+    <?php endif; ?>
 
     <!-- Technical & System Section -->
+    <?php if (!$wf_section || $wf_section === 'technical'): ?>
     <div class="settings-section technical-section card-theme-red">
       <div class="section-header">
         <h2 class="section-title">Technical & System</h2>
@@ -228,13 +594,14 @@ echo vite('js/admin-settings.js');
     </div>
 
     <!-- AI & Automation Section -->
+    <?php if (!$wf_section || $wf_section === 'ai'): ?>
     <div class="settings-section integration-section card-theme-cyan">
       <div class="section-header">
         <h2 class="section-title">AI & Automation</h2>
         <p class="section-description">Artificial intelligence configuration and automation settings</p>
       </div>
       <div class="section-content">
-        <button id="aiSettingsBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="aiSettingsBtn" data-action="open-ai-settings"  class="btn btn-primary btn-block admin-settings-button">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
@@ -271,18 +638,24 @@ echo vite('js/admin-settings.js');
       </div>
     </div>
 
+    <?php endif; ?>
+    <?php endif; ?>
+
+    </div>
+    </div>
     </div>
 </div>
  
+<?php if ($wf_section) { return; } ?>
 
 
 
 <!-- Room Mapper Modal -->
-<div id="roomMapperModal" class="admin-modal-overlay hidden">
+<div id="roomMapperModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
-            <button class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button class="text-gray-500 hover:text-gray-700 text-2xl" data-action="close-admin-modal">&times;</button>
         </div>
         
         <div class="">
@@ -381,7 +754,7 @@ echo vite('js/admin-settings.js');
         </div>
     
 <!-- Continue with JS utilities -->
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Utility: sanitize unresolved template placeholders that may leak into DOM as "${...}"
 function fixUnresolvedTemplatePlaceholders(root, settings) {
     try {
@@ -1022,10 +1395,7 @@ async function compactRepairDatabase() {
         const retryButton = document.createElement('button');
         retryButton.className = 'mt-4 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors';
         retryButton.textContent = 'Retry Operation';
-        retryButton.onclick = () => {
-            closeBackupProgressModal();
-            compactRepairDatabase();
-        };
+        retryButton.setAttribute('data-action', 'retry-compact-repair');
         if (progressSteps) {
             progressSteps.appendChild(retryButton);
         }
@@ -1188,7 +1558,11 @@ function openDatabaseToolResultsModal(title, content, isSuccess = true) {
         </div>
     `;
     
+    try { modal.classList.add('admin-modal-offset-under-header'); } catch(_) {}
+    try { modal.classList.remove('hidden'); } catch(_) {}
+    try { modal.classList.add('show'); } catch(_) {}
     modal.style.display = 'flex';
+    return true;
 }
 
 function closeDatabaseToolResultsModal() {
@@ -3919,7 +4293,7 @@ async function removeAreaMapping(mappingId) {
 </script>
 
 <!-- Room-Category Manager Modal -->
-<div id="roomCategoryManagerModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="roomCategoryManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
@@ -3999,14 +4373,14 @@ async function removeAreaMapping(mappingId) {
 </div>
 
 <!-- Background Manager Modal -->
-<div id="backgroundManagerModal" class="admin-modal-overlay hidden" data-action="overlay-close">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
-        <div class="flex justify-between items-center border-b">
-            <h2 class="text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
-            <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+<div id="backgroundManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal w-full max-w-7xl h-[90vh] flex flex-col">
+        <div class="admin-modal-header section-header flex justify-between items-center">
+            <h2 class="admin-card-title text-xl font-bold text-gray-800">🖼️ Background Manager</h2>
+            <button data-action="close-admin-modal" class="admin-modal-close" aria-label="Close">&times;</button>
         </div>
         
-        <div class="">
+        <div class="modal-body flex-1 overflow-y-auto sm:p-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Left Panel: Room Selection & Controls (1/3 width) -->
                 <div class="lg:col-span-1">
@@ -4062,33 +4436,66 @@ async function removeAreaMapping(mappingId) {
                                 <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
                                 </svg>
-                                <p>Background preview will appear here</p>
-                            </div>
                         </div>
+                        <button data-action="upload-background" class="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold transition-colors flex items-center text-left">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Upload Background
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Available Backgrounds moved here -->
+                <div>
+                    <h3 class="font-semibold text-gray-800">Available Backgrounds</h3>
+                    <div id="backgroundsList" class="space-y-3 max-h-96 overflow-y-auto">
+                        Loading backgrounds...
                     </div>
                 </div>
             </div>
             
-            <div class="bg-blue-50 border border-blue-200 rounded">
-                <h3 class="font-semibold text-blue-800">📐 Background Dimension Guidelines</h3>
-                <div class="text-sm text-blue-700 space-y-1">
-                    <p><strong>Landing Page:</strong> 1920x1080px (16:9 ratio) - Full screen background</p>
-                    <p><strong>Main Room:</strong> 1920x1080px (16:9 ratio) - Full screen background</p>
-                    <p><strong>Room Pages:</strong> 1280x960px (4:3 ratio) - Room container background</p>
-                    <p class="text-xs italic">💡 Images will be automatically scaled to fit these dimensions while maintaining aspect ratio.</p>
-                </div>
+            <!-- Right Panel: Current Active Background Preview (2/3 width) -->
+            <div class="lg:col-span-2">
+                <div class="bg-gray-50 rounded-lg h-full">
+                    <h3 class="font-semibold text-gray-800">Current Active Background</h3>
+                    <div id="currentBackgroundInfo" class="text-sm text-gray-600">
+                        Loading...
+                    </div>
+                    <div id="currentBackgroundPreview" class="border rounded-lg overflow-hidden bg-white flex items-center justify-center min-height-400 max-height-80vh">
+                        <div class="text-gray-400 text-center">
+                            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                            </svg>
+                            <p>Background preview will appear here</p>
                         </div>
+                    </div>
+                </div>
+            </div>
         </div>
+        
+        <div class="bg-blue-50 border border-blue-200 rounded">
+            <h3 class="font-semibold text-blue-800">📐 Background Dimension Guidelines</h3>
+            <div class="text-sm text-blue-700 space-y-1">
+                <p><strong>Landing Page:</strong> 1920x1080px (16:9 ratio) - Full screen background</p>
+                <p><strong>Main Room:</strong> 1920x1080px (16:9 ratio) - Full screen background</p>
+                <p><strong>Room Pages:</strong> 1280x960px (4:3 ratio) - Room container background</p>
+                <p class="text-xs italic">💡 Images will be automatically scaled to fit these dimensions while maintaining aspect ratio.</p>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer sm:p-4 flex justify-end gap-2">
+        <button class="btn btn-secondary" data-action="close-admin-modal">Close</button>
     </div>
 </div>
 
 <!-- AI Settings Modal -->
-<div id="aiSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 sm:p-4 hidden" data-action="overlay-close">
-    <div class="bg-white shadow-xl rounded-lg w-full max-w-4xl h-full max-h-[95vh] flex flex-col">
+<div id="aiSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="admin-modal w-full max-w-7xl h-full max-h-[95vh] flex flex-col">
         <!-- Fixed Header -->
         <div class="flex justify-between items-center border-b bg-white rounded-t-lg flex-shrink-0">
             <h2 class="text-xl font-bold text-gray-800">🤖 AI Settings</h2>
-            <button data-action="ai-close-settings" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+            <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
         </div>
         
         <!-- Scrollable Content -->
@@ -4130,9 +4537,9 @@ async function removeAreaMapping(mappingId) {
             </div>
         </div>
     </div>
-</div> 
+</div>
 
-<template id="legacy-ai-settings" style="display:none">
+<template id="legacy-ai-settings">
 // AI Settings Modal Functions
 let aiSettingsData = {};
 
@@ -4235,7 +4642,7 @@ function displayAISettings(settings) {
                         <label class="block text-sm font-medium text-gray-700">OpenAI API Key</label>
                         <input type="password" id="openai_api_key" value="${settings.openai_api_key || ''}" 
                                class="w-full border border-gray-300 rounded-lg text-sm"
-                               placeholder="sk-...">
+                               placeholder="sk-..." autocomplete="off" autocapitalize="none" spellcheck="false">
                         <p class="text-xs text-gray-500">Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-600 hover:underline">OpenAI Platform</a></p>
                     </div>
                     <div>
@@ -4256,7 +4663,7 @@ function displayAISettings(settings) {
                         <label class="block text-sm font-medium text-gray-700">Anthropic API Key</label>
                         <input type="password" id="anthropic_api_key" value="${settings.anthropic_api_key || ''}" 
                                class="w-full border border-gray-300 rounded-lg text-sm"
-                               placeholder="sk-ant-...">
+                               placeholder="sk-ant-..." autocomplete="off" autocapitalize="none" spellcheck="false">
                         <p class="text-xs text-gray-500">Get your API key from <a href="https://console.anthropic.com/" target="_blank" class="text-blue-600 hover:underline">Anthropic Console</a></p>
                     </div>
                     <div>
@@ -4277,7 +4684,7 @@ function displayAISettings(settings) {
                         <label class="block text-sm font-medium text-gray-700">Google AI API Key</label>
                         <input type="password" id="google_api_key" value="${settings.google_api_key || ''}" 
                                class="w-full border border-gray-300 rounded-lg text-sm"
-                               placeholder="AI...">
+                               placeholder="AI..." autocomplete="off" autocapitalize="none" spellcheck="false">
                         <p class="text-xs text-gray-500">Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline">Google AI Studio</a></p>
                     </div>
                     <div>
@@ -4298,7 +4705,7 @@ function displayAISettings(settings) {
                         <label class="block text-sm font-medium text-gray-700">OpenRouter API Key</label>
                         <input type="password" id="meta_api_key" value="${settings.meta_api_key || ''}" 
                                class="w-full border border-gray-300 rounded-lg text-sm"
-                               placeholder="sk-or-...">
+                               placeholder="sk-or-..." autocomplete="off" autocapitalize="none" spellcheck="false">
                         <p class="text-xs text-gray-500">Get your API key from <a href="https://openrouter.ai/keys" target="_blank" class="text-blue-600 hover:underline">OpenRouter</a></p>
                     </div>
                     <div>
@@ -5575,7 +5982,7 @@ async function deleteBrandVoiceOptionFromDB(optionId) {
 
 </template>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Background Manager Functions
 async function openBackgroundManagerModal() {
     const modal = document.getElementById('backgroundManagerModal');
@@ -6681,7 +7088,7 @@ window.openLoggingStatusModal = function openLoggingStatusModal() {
 
 function createLoggingStatusModal() {
     const modalHtml = `
-        <div id="loggingStatusModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+        <div id="loggingStatusModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
             <div class="admin-modal-content technical-section">
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">📊 Logging System Status</h2>
@@ -6990,7 +7397,7 @@ function escapeHtml(text) {
 </script>
 
 <!-- Room Settings Modal -->
-<div id="roomSettingsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="roomSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings</h2>
@@ -7038,7 +7445,7 @@ function escapeHtml(text) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Room Settings Modal Functions
 let currentEditingRoom = null;
 let coreRooms = []; // Will be loaded dynamically from database
@@ -7123,7 +7530,9 @@ function displayRoomSettingsList(rooms) {
     rooms.forEach(room => {
         const roomCard = document.createElement('div');
         roomCard.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors';
-        roomCard.onclick = () => editRoomSettings(room);
+        // Delegate via data-action; embed minimal room payload for handler
+        roomCard.setAttribute('data-action', 'edit-room-settings');
+        try { roomCard.setAttribute('data-room', encodeURIComponent(JSON.stringify(room))); } catch(_) {}
         
         const roomTypeLabel = getRoomTypeLabel(room.room_number);
         const isCore = coreRooms.includes(room.room_number);
@@ -7361,12 +7770,12 @@ function showRoomSettingsSuccess(message) {
 </script>
 
 <!-- Email History Modal -->
-<div id="emailHistoryModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="emailHistoryModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="admin-modal-content content-section" >
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Email History</h3>
-                <button data-action="email-history-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
             <!-- Filter Controls -->
@@ -7451,7 +7860,7 @@ function showRoomSettingsSuccess(message) {
             
             <!-- Close Button -->
             <div class="flex justify-end border-t">
-                <button data-action="email-history-close" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
+                <button data-action="close-admin-modal" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">
                     Close
                 </button>
             </div>
@@ -7460,12 +7869,12 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Email Edit/Resend Modal -->
-<div id="emailEditModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="emailEditModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div class="">
             <div class="flex justify-between items-center">
                 <h3 class="text-xl font-bold text-gray-800">Edit & Resend Email</h3>
-                <button data-action="email-edit-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
             <form id="emailEditForm" class="space-y-4">
@@ -7512,109 +7921,7 @@ function showRoomSettingsSuccess(message) {
     </div>
 </div>
 
-<!-- Email Configuration Modal -->
-<div id="emailConfigModal" class="admin-modal-overlay hidden"  data-action="overlay-close">
-    <div class="admin-modal-content content-section" >
-        <div class="">
-            <div class="flex justify-between items-center">
-                <h3 class="text-xl font-bold text-gray-800">Email Configuration</h3>
-                <button data-action="email-config-close" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
-            </div>
-            
-            <form id="emailConfigForm" class="space-y-4">
-                <!-- Basic Settings -->
-                <div class="bg-gray-50 rounded-lg">
-                    <h4 class="font-semibold text-gray-800">Basic Email Settings</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">From Email Address</label>
-                            <input type="email" id="fromEmail" name="fromEmail" class="w-full border border-gray-300 rounded-md" autocomplete="email">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">From Name</label>
-                            <input type="text" id="fromName" name="fromName" class="w-full border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Admin Email</label>
-                            <input type="email" id="adminEmail" name="adminEmail" class="w-full border border-gray-300 rounded-md" autocomplete="email">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">BCC Email (Optional)</label>
-                            <input type="email" id="bccEmail" name="bccEmail" class="w-full border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SMTP Settings -->
-                <div class="bg-blue-50 rounded-lg">
-                    <div class="flex items-center">
-                        <input type="checkbox" id="smtpEnabled" name="smtpEnabled" class="">
-                        <label class="font-semibold text-gray-800">Enable SMTP (Recommended for IONOS)</label>
-                    </div>
-                    <div id="smtpSettings" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SMTP Host</label>
-                            <input type="text" id="smtpHost" name="smtpHost" class="w-full border border-gray-300 rounded-md">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SMTP Port</label>
-                            <select id="smtpPort" name="smtpPort" class="w-full border border-gray-300 rounded-md">
-                                <option value="587">587 (TLS - Recommended)</option>
-                                <option value="465">465 (SSL)</option>
-                                <option value="25">25 (Plain)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SMTP Username</label>
-                            <input type="text" id="smtpUsername" name="smtpUsername" class="w-full border border-gray-300 rounded-md" autocomplete="username">
-                            <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current username (stored securely).</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SMTP Password</label>
-                            <input type="password" id="smtpPassword" name="smtpPassword" class="w-full border border-gray-300 rounded-md" autocomplete="current-password">
-                            <p class="mt-1 text-xs text-gray-500">Leave blank to keep the current password (stored securely).</p>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Encryption</label>
-                            <select id="smtpEncryption" name="smtpEncryption" class="w-full border border-gray-300 rounded-md">
-                                <option value="tls">TLS (Recommended)</option>
-                                <option value="ssl">SSL</option>
-                                <option value="">None</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Test Email -->
-                <div class="bg-green-50 rounded-lg">
-                    <h4 class="font-semibold text-gray-800">Test Configuration</h4>
-                    <div class="flex gap-2">
-                        <input type="email" id="testEmailAddress" class="flex-1 border border-gray-300 rounded-md" placeholder="Enter test email address">
-                        <button type="button" data-action="email-send-test" class="bg-green-500 hover:bg-green-600 text-white rounded-md font-medium">
-                            Send Test Email
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="flex justify-end space-x-3 border-t">
-                    <button type="button" data-action="email-config-close" class="bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 flex items-center text-left">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        Cancel
-                    </button>
-                    <button type="submit" class="bg-orange-500 text-white rounded-md hover:bg-orange-600 font-medium flex items-center text-left">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
-                        </svg>
-                        Save Configuration
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+ 
 
 <!-- Custom Notification Modal -->
 <div id="customNotificationModal" class="admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] hidden" data-action="overlay-close">
@@ -7638,7 +7945,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Room-Category Visual Mapper Modal -->
-<div id="roomCategoryMapperModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="roomCategoryMapperModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🗺️ Room-Category Visual Mapper</h2>
@@ -7670,7 +7977,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Area-Item Mapper Modal -->
-<div id="areaItemMapperModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="areaItemMapperModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🎯 Area-Item Mapper</h2>
@@ -7764,7 +8071,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- System Configuration Modal -->
-<div id="systemConfigModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="systemConfigModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="admin-modal-content system-config-modal">
         <!-- Header -->
         <div class="admin-modal-header section-header">
@@ -7788,7 +8095,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Maintenance Modal -->
-<div id="databaseMaintenanceModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="databaseMaintenanceModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
@@ -7848,7 +8155,7 @@ function showRoomSettingsSuccess(message) {
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Password</label>
-                                <input type="password" id="testPassword" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="••••••••">
+                                <input type="password" id="testPassword" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500" placeholder="••••••••" autocomplete="off">
                             </div>
                         </div>
                         <div class="flex space-x-3">
@@ -7892,7 +8199,7 @@ function showRoomSettingsSuccess(message) {
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">New Password</label>
-                                <input type="password" id="newPassword" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                                <input type="password" id="newPassword" class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500" autocomplete="new-password">
                             </div>
                         </div>
                         
@@ -8305,7 +8612,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Tool Results Modal -->
-<div id="databaseToolResultsModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="databaseToolResultsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
@@ -8334,7 +8641,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Table View Modal -->
-<div id="tableViewModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="tableViewModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="relative top-10 border w-11/12 max-w-6xl shadow-lg rounded-md bg-white">
         <div class="">
             <!-- Modal Header -->
@@ -8356,7 +8663,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- File Explorer Modal -->
-<div id="fileExplorerModal" class="admin-modal-overlay hidden" data-action="overlay-close">
+<div id="fileExplorerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="admin-modal-content content-section">
         <!-- Header -->
         <div class="admin-modal-header section-header">
@@ -8466,7 +8773,7 @@ function showRoomSettingsSuccess(message) {
 </div>
 
 <!-- Database Restore Modal -->
-<div id="databaseRestoreModal" class="admin-modal-overlay hidden"  data-action="overlay-close">
+<div id="databaseRestoreModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="admin-modal-content content-section" >
         <div class="">
             <!-- Modal Header -->
@@ -8910,7 +9217,7 @@ function showRoomSettingsSuccess(message) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // File Explorer JavaScript
 let currentDirectory = '';
 let currentFile = null;
@@ -11727,7 +12034,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Template Manager functions migrated to Vite module (src/js/admin-settings.js)
 
 async function loadCostTemplates() {
@@ -13820,7 +14127,7 @@ async function saveSizeTemplate(event) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Marketing Analytics Modal Functions
 function openMarketingAnalyticsModal() {
     document.getElementById('marketingAnalyticsModal').classList.remove('hidden');
@@ -14754,7 +15061,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Third CSS block removed - styles moved to button-styles.css -->
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Categories Modal Functions
 function openCategoriesModal() {
     const modal = document.getElementById('categoriesModal');
@@ -15118,7 +15425,8 @@ function startEditCategory(element) {
     // Replace the div with input
     element.innerHTML = '';
     element.appendChild(input);
-    element.onclick = null; // Remove click handler temporarily
+    // Delegation handles clicks; remove any direct handler
+    element.removeAttribute('onclick');
     
     // Focus and select text
     input.focus();
@@ -15169,7 +15477,7 @@ async function saveCategoryEdit(element, input) {
             // Update the display
             element.textContent = newName;
             element.dataset.original = newName;
-            element.onclick = function() { startEditCategory(element); };
+            element.setAttribute('data-action', 'start-edit-category');
             
             showNotification('Category Updated', `Category renamed from "${originalName}" to "${newName}"`, 'success');
         } else {
@@ -15185,7 +15493,7 @@ async function saveCategoryEdit(element, input) {
 
 function cancelCategoryEdit(element, originalName) {
     element.textContent = originalName;
-    element.onclick = function() { startEditCategory(element); };
+    element.setAttribute('data-action', 'start-edit-category');
 }
 
 // SKU Code editing functions
@@ -15207,7 +15515,7 @@ function startEditSkuCode(element) {
     // Replace the span with input
     element.innerHTML = '';
     element.appendChild(input);
-    element.onclick = null; // Remove click handler temporarily
+    element.removeAttribute('data-action'); // Remove delegated handler temporarily
     
     // Focus and select text
     input.focus();
@@ -15256,7 +15564,7 @@ function saveSkuCodeEdit(element, input) {
     // Update the display
     element.textContent = newCode;
     element.dataset.original = newCode;
-    element.onclick = function() { startEditSkuCode(element); };
+    element.setAttribute('data-action', 'start-edit-sku-code');
     // Update the example SKU with force refresh
     setTimeout(() => {
         updateExampleSku(categoryName, newCode);
@@ -15271,7 +15579,7 @@ function saveSkuCodeEdit(element, input) {
 
 function cancelSkuCodeEdit(element, originalCode, categoryName) {
     element.textContent = originalCode;
-    element.onclick = function() { startEditSkuCode(element); };
+    element.setAttribute('data-action', 'start-edit-sku-code');
     updateExampleSku(categoryName, originalCode);
 }
 
@@ -15290,7 +15598,7 @@ function enhancedStartEditCategory(element) {
     // Replace the div with input
     element.innerHTML = '';
     element.appendChild(input);
-    element.onclick = null; // Remove click handler temporarily
+    element.removeAttribute('data-action'); // Remove delegated handler temporarily
     
     // Focus and select text
     input.focus();
@@ -15357,7 +15665,7 @@ async function enhancedSaveCategoryEdit(element, input) {
             // Update the display
             element.textContent = newName;
             element.dataset.original = newName;
-            element.onclick = function() { startEditCategory(element); };
+            element.setAttribute('data-action', 'start-edit-category');
             
             // Update row data-category attribute
             const row = element.closest('tr');
@@ -16412,7 +16720,7 @@ async function saveCartButtonTexts(texts) {
 </div>
 
 <!-- Dashboard Configuration Modal -->
-<div id="dashboardConfigModal" class="admin-modal-overlay dashboard-modal" class="hidden" data-action="overlay-close">
+<div id="dashboardConfigModal" class="admin-modal-overlay hidden admin-modal-offset-under-header dashboard-modal" data-action="overlay-close">
     <div class="admin-modal-content dashboard-config-modal">
         <!-- Header -->
         <div class="admin-modal-header section-header">
@@ -16490,15 +16798,11 @@ async function saveCartButtonTexts(texts) {
 <!-- Database Tables Modal -->
 <!-- Fourth CSS block removed - styles moved to button-styles.css -->
 
-<div id="databaseTablesModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" class="hidden" data-action="overlay-close">
-    <div class="bg-white shadow-xl w-full h-full overflow-hidden">
-        <div class="flex justify-between items-center border-b bg-gray-100">
-            <h2 class="text-xl font-semibold text-gray-800">🗄️ Database Tables Management</h2>
-            <button data-action="close-admin-modal" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
+<div id="databaseTablesModal" class="admin-modal-overlay hidden admin-modal-offset-under-header" data-action="overlay-close">
+    <div class="admin-modal-content content-section">
+        <div class="admin-modal-header section-header">
+            <h2>🗄️ Database Tables Management</h2>
+            <button class="modal-close-btn" data-action="close-admin-modal">×</button>
         </div>
         
         <div class="flex h-[calc(100vh-80px)]">
@@ -16632,7 +16936,7 @@ async function saveCartButtonTexts(texts) {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // ===== SALES ADMIN FUNCTIONALITY =====
 
 let currentEditingSaleId = null;
@@ -17029,18 +17333,42 @@ async function deleteSale(saleId) {
 // ===== DATABASE TABLES FUNCTIONALITY =====
 
 // Open Database Tables Modal
-function openDatabaseTablesModal() {
-    // Check authentication status
-    console.log('Session storage user:', sessionStorage.getItem('user'));
-    
-    document.getElementById('databaseTablesModal').style.display = 'flex';
-    loadTablesList();
-    loadDocumentation();
+function openDatabaseTablesModal(opts) {
+    // Require explicit user interaction or override to prevent auto-open on load
+    try {
+        var params = new URLSearchParams((window && window.location && window.location.search) || '');
+        var allow = (opts && opts.allow === true) || params.get('wf_allow_modals') === '1' || (window && window.__wfModalUserInteracted === true);
+        if (!allow) return false;
+    } catch (_) { /* fallthrough */ }
+
+    try {
+        var modal = document.getElementById('databaseTablesModal');
+        if (!modal) return false;
+        // Standardize classes/visibility
+        try { modal.classList.add('admin-modal-offset-under-header'); } catch(_) {}
+        try { modal.classList.remove('hidden'); } catch(_) {}
+        try { modal.classList.add('show'); } catch(_) {}
+        modal.style.display = 'flex';
+
+        // Defer heavy loads until actually opened
+        try { loadTablesList(); } catch(_) {}
+        try { loadDocumentation(); } catch(_) {}
+        return true;
+    } catch (e) {
+        console.error('Failed to open Database Tables Modal:', e);
+        return false;
+    }
 }
 
 // Close Database Tables Modal
 function closeDatabaseTablesModal() {
-    document.getElementById('databaseTablesModal').style.display = 'none';
+    try {
+        var modal = document.getElementById('databaseTablesModal');
+        if (!modal) return;
+        try { modal.classList.add('hidden'); } catch(_) {}
+        try { modal.classList.remove('show'); } catch(_) {}
+        modal.style.display = 'none';
+    } catch(_) {}
 }
 
 // Load list of database tables
@@ -17067,7 +17395,8 @@ async function loadTablesList() {
                         <div class="font-medium text-gray-800">${table}</div>
                         <div class="text-sm text-gray-500">Click to view table data</div>
                     `;
-                    tableItem.onclick = () => selectTable(table);
+                    tableItem.setAttribute('data-action', 'docs-select-table');
+                    tableItem.setAttribute('data-table', table);
                     tablesList.appendChild(tableItem);
                 });
             } else {
@@ -18320,7 +18649,7 @@ async function toggleGlobalTooltips() {
 
 
 <!-- Website Logs Modal -->
-<div id="websiteLogsModal" class="modal-overlay" class="hidden" data-action="overlay-close">
+<div id="websiteLogsModal" class="admin-modal-overlay hidden admin-modal-offset-under-header" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>Website Logs Management</h2>
@@ -18332,15 +18661,17 @@ async function toggleGlobalTooltips() {
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex-1 min-w-96">
                     <div class="relative">
+                        <label for="globalLogSearch" class="sr-only">Search across all logs</label>
                         <input type="text" id="globalLogSearch" placeholder="Search across all logs..." 
-                               class="w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search across all logs">
                         <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <select id="searchLogType" class="border border-gray-300 rounded-md text-sm">
+                    <label for="searchLogType" class="sr-only">Filter by log type</label>
+                    <select id="searchLogType" class="border border-gray-300 rounded-md text-sm" aria-label="Filter by log type">
                         <option value="all">All Log Types</option>
                         <option value="database">Database Logs</option>
                         <option value="files">File Logs</option>
@@ -18476,25 +18807,12 @@ async function toggleGlobalTooltips() {
             </div>
         </div>
         
-        <!-- Search Results Modal -->
-        <div id="searchResultsModal" class="modal-overlay" class="hidden">
-            <div class="admin-modal-content content-section" >
-                <div class="admin-modal-header section-header">
-                    <h2>Search Results</h2>
-                    <button class="modal-close-btn" data-action="close-admin-modal">×</button>
-                </div>
-                <div class="">
-                    <div id="searchResultsContent">
-                        <!-- Search results will be populated here -->
-                    </div>
-                </div>
-            </div>
-        </div>
+        
     </div>
 </div>
 
 <!-- Help Documentation Modal -->
-<div id="helpDocumentationModal" class="modal-overlay" class="hidden">
+<div id="helpDocumentationModal" class="admin-modal-overlay hidden admin-modal-offset-under-header" data-action="overlay-close">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2>📚 Help Documentation</h2>
@@ -18506,8 +18824,9 @@ async function toggleGlobalTooltips() {
             <div class="flex flex-wrap items-center gap-4">
                 <div class="flex-1 min-w-96">
                     <div class="relative">
+                        <label for="docSearchInput" class="sr-only">Search documentation</label>
                         <input type="text" id="docSearchInput" placeholder="Search documentation..." 
-                               class="w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Search documentation">
                         <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
@@ -18591,7 +18910,7 @@ async function toggleGlobalTooltips() {
         </div>
         
         <!-- Search Results Modal -->
-        <div id="searchResultsModal" class="modal-overlay hidden" data-action="overlay-close">
+        <div id="searchResultsModal" class="admin-modal-overlay hidden admin-modal-offset-under-header" data-action="overlay-close">
             <div class="admin-modal-content content-section" >
                 <div class="admin-modal-header section-header">
                     <h2>🔍 Search Results</h2>
@@ -18700,267 +19019,10 @@ async function toggleGlobalTooltips() {
 </div>
 
 <!-- Square Settings Modal -->
-<div id="squareSettingsModal" class="modal-overlay hidden" data-action="overlay-close">
-    <div class="admin-modal-content content-section" >
-        <div class="admin-modal-header section-header">
-            <h2>Square Integration Settings</h2>
-            <button data-action="close-admin-modal" class="close-button">×</button>
-        </div>
-        
-        <div class="modal-body">
-            <!-- Connection Status -->
-            <div class="rounded-lg" id="squareConnectionStatus">
-                <div class="flex items-center">
-                    <div id="connectionIndicator" class="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span id="connectionText" class="font-medium">Not Connected</span>
-                </div>
-            </div>
-
-            <!-- Configuration Form -->
-            <form id="squareConfigForm" class="space-y-6">
-                <!-- Environment Selection -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Environment</label>
-                    <div class="flex space-x-4">
-                        <label class="flex items-center">
-                            <input type="radio" name="environment" value="sandbox" checked class="">
-                            <span>Sandbox (Testing)</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="environment" value="production" class="">
-                            <span>Production (Live)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Application ID -->
-                <div>
-                    <label for="squareAppId" class="block text-sm font-medium text-gray-700">
-                        Application ID <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" id="squareAppId" name="app_id" required
-                           class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                           placeholder="Enter your Square Application ID">
-                    <p class="text-xs text-gray-500">Found in your Square Developer Dashboard</p>
-                </div>
-
-                <!-- Access Token -->
-                <div>
-                    <label for="squareAccessToken" class="block text-sm font-medium text-gray-700">
-                        Access Token <span class="text-red-500">*</span>
-                    </label>
-                    <input type="password" id="squareAccessToken" name="access_token" required
-                           class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                           placeholder="Enter your Square Access Token">
-                    <p class="text-xs text-gray-500">Keep this secure - it provides access to your Square account</p>
-                </div>
-
-                <!-- Location ID -->
-                <div>
-                    <label for="squareLocationId" class="block text-sm font-medium text-gray-700">
-                        Location ID
-                    </label>
-                    <input type="text" id="squareLocationId" name="location_id"
-                           class="w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                           placeholder="Will be auto-detected after connection">
-                    <p class="text-xs text-gray-500">Leave blank to use your default location</p>
-                </div>
-
-                <!-- Sync Options -->
-                <div class="border-t">
-                    <h3 class="text-lg font-medium text-gray-900">Synchronization Options</h3>
-                    
-                    <div class="space-y-3">
-                        <label class="flex items-center">
-                            <input type="checkbox" id="syncPrices" name="sync_prices" checked class="">
-                            <span>Sync item prices to Square</span>
-                        </label>
-                        
-                        <label class="flex items-center">
-                            <input type="checkbox" id="syncInventory" name="sync_inventory" checked class="">
-                            <span>Sync inventory levels to Square</span>
-                        </label>
-                        
-                        <label class="flex items-center">
-                            <input type="checkbox" id="syncDescriptions" name="sync_descriptions" class="">
-                            <span>Sync item descriptions to Square</span>
-                        </label>
-                        
-                        <label class="flex items-center">
-                            <input type="checkbox" id="autoSync" name="auto_sync" class="">
-                            <span>Enable automatic synchronization (every hour)</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Test Connection Button -->
-                <div class="border-t">
-                    <button type="button" data-action="square-test-connection" class="bg-blue-500 hover:bg-blue-600 text-white rounded-md">
-                        Test Connection
-                    </button>
-                    <span id="connectionResult" class="text-sm"></span>
-                </div>
-            </form>
-        </div>
-
-        <div class="modal-footer">
-            <button data-action="square-save-settings" class="btn btn-primary">Save Settings</button>
-            <button data-action="square-sync-items" class="bg-green-500 hover:bg-green-600 text-white rounded-md">
-                Sync Items Now
-            </button>
-            <button data-action="close-admin-modal" class="btn btn-secondary">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<script>
-// Square Settings Modal Functions
-function openSquareSettingsModal() {
-    document.getElementById("squareSettingsModal").style.display = "flex";
-    loadSquareSettings();
-}
-
-function closeSquareSettingsModal() {
-    document.getElementById("squareSettingsModal").style.display = "none";
-}
-
-async function loadSquareSettings() {
-    try {
-        const response = await fetch("/api/square_settings.php?action=get_settings");
-        const data = await response.json();
-        
-        if (data.success) {
-            const settings = data.settings;
-            
-            // Populate form fields
-            document.querySelector(`input[name="environment"][value="${settings.environment || "sandbox"}"]`).checked = true;
-            document.getElementById("squareAppId").value = settings.app_id || "";
-            document.getElementById("squareAccessToken").value = settings.access_token || "";
-            document.getElementById("squareLocationId").value = settings.location_id || "";
-            
-            // Sync options
-            document.getElementById("syncPrices").checked = settings.sync_prices !== false;
-            document.getElementById("syncInventory").checked = settings.sync_inventory !== false;
-            document.getElementById("syncDescriptions").checked = settings.sync_descriptions === true;
-            document.getElementById("autoSync").checked = settings.auto_sync === true;
-            
-            // Update connection status
-            updateConnectionStatus(settings.is_connected, settings.last_sync);
-        }
-    } catch (error) {
-        console.error("Error loading Square settings:", error);
-        showError("Error loading Square settings");
-    }
-}
-
-async function saveSquareSettings() {
-    const formData = new FormData(document.getElementById("squareConfigForm"));
-    
-    // Add checkbox values
-    formData.append("sync_prices", document.getElementById("syncPrices").checked);
-    formData.append("sync_inventory", document.getElementById("syncInventory").checked);
-    formData.append("sync_descriptions", document.getElementById("syncDescriptions").checked);
-    formData.append("auto_sync", document.getElementById("autoSync").checked);
-    
-    try {
-        const response = await fetch("/api/square_settings.php?action=save_settings", {
-            method: "POST",
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Square Settings', "Square settings saved successfully!", 'success');
-            updateConnectionStatus(data.is_connected, data.last_sync);
-        } else {
-            showNotification('Square Settings Error', data.message || "Error saving settings", 'error');
-        }
-    } catch (error) {
-        console.error("Error saving Square settings:", error);
-        showNotification('Square Settings Error', "Error saving Square settings", 'error');
-    }
-}
-
-async function testSquareConnection() {
-    const resultElement = document.getElementById("connectionResult");
-    resultElement.textContent = "Testing connection...";
-    resultElement.className = "text-sm text-blue-600";
-    
-    try {
-        const response = await fetch("/api/square_settings.php?action=test_connection", {
-            method: "POST"
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            resultElement.textContent = `✓ Connected successfully! Location: ${data.location_name}`;
-            resultElement.className = "text-sm text-green-600";
-            
-            // Auto-fill location ID if not set
-            if (data.location_id && !document.getElementById("squareLocationId").value) {
-                document.getElementById("squareLocationId").value = data.location_id;
-            }
-        } else {
-            resultElement.textContent = `✗ Connection failed: ${data.message}`;
-            resultElement.className = "text-sm text-red-600";
-        }
-    } catch (error) {
-        console.error("Error testing connection:", error);
-        resultElement.textContent = "✗ Connection test failed";
-        resultElement.className = "text-sm text-red-600";
-    }
-}
-
-async function syncItemsToSquare() {
-    if (!confirm("This will sync all your store items to Square. Continue?")) {
-        return;
-    }
-    
-    try {
-        const response = await fetch("/api/square_settings.php?action=sync_items", {
-            method: "POST"
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('Square Sync', `Successfully synced ${data.synced_count} items to Square!`, 'success');
-            updateConnectionStatus(true, new Date().toISOString());
-        } else {
-            showNotification('Square Sync Error', data.message || "Error syncing items", 'error');
-        }
-    } catch (error) {
-        console.error("Error syncing items:", error);
-        showNotification('Square Sync Error', "Error syncing items to Square", 'error');
-    }
-}
-
-function updateConnectionStatus(isConnected, lastSync) {
-    const indicator = document.getElementById("connectionIndicator");
-    const text = document.getElementById("connectionText");
-    const status = document.getElementById("squareConnectionStatus");
-    
-    if (isConnected) {
-        indicator.className = "w-3 h-3 rounded-full bg-green-500 mr-3";
-        text.textContent = "Connected to Square";
-        status.className = "mb-6 p-4 rounded-lg bg-green-50 border border-green-200";
-        
-        if (lastSync) {
-            const syncDate = new Date(lastSync).toLocaleString();
-            text.textContent += ` (Last sync: ${syncDate})`;
-        }
-    } else {
-        indicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3";
-        text.textContent = "Not Connected";
-        status.className = "mb-6 p-4 rounded-lg bg-red-50 border border-red-200";
-    }
-}
-</script>
+<!-- Removed duplicate modal and inline script; canonical markup lives in `sections/admin_settings.php`. -->
 
 <!-- Receipt Settings Modal -->
-<div id="receiptSettingsModal" class="modal-overlay hidden" data-action="overlay-close">
+<div id="receiptSettingsModal" class="admin-modal-overlay hidden">
     <div class="admin-modal-content content-section" >
         <div class="admin-modal-header section-header">
             <h2 class="modal-title">📧 Receipt Message Settings</h2>
@@ -19076,7 +19138,7 @@ function updateConnectionStatus(isConnected, lastSync) {
 
 <!-- Final CSS block removed - styles moved to button-styles.css -->
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // Receipt Settings Modal Functions
 let receiptSettingsData = {};
 
@@ -21060,7 +21122,7 @@ async function saveEmailTemplate() {
     </div>
 </div>
 
-<script>
+<script type="application/json" data-disabled-inline="true">
 // System Documentation Functions
 function openSystemDocumentationModal() {
     document.getElementById('systemDocumentationModal').classList.remove('hidden');
@@ -21608,16 +21670,40 @@ function closeCleanupResults() {
 }
 
 // Dashboard Configuration Functions
-function openDashboardConfigModal() {
-    // Force hide any hanging auto-save indicators first
-    forceHideAllAutoSaveIndicators();
-    
-    document.getElementById('dashboardConfigModal').style.display = 'block';
-    loadDashboardConfiguration();
+function openDashboardConfigModal(opts) {
+    try {
+        // Require explicit user interaction or override (consistent with other modal gates)
+        var allow = (opts && opts.allow === true) || (window.__wfModalUserInteracted === true);
+        if (!allow) return false;
+
+        // Force hide any hanging auto-save indicators first
+        forceHideAllAutoSaveIndicators();
+
+        var el = document.getElementById('dashboardConfigModal');
+        if (!el) return false;
+
+        // Standardized open behavior
+        el.classList.add('admin-modal-offset-under-header');
+        el.classList.add('show');
+        el.classList.remove('hidden');
+        el.style.display = 'flex';
+
+        // Defer heavy load until opened
+        loadDashboardConfiguration();
+        return true;
+    } catch (_) { return false; }
 }
 
 function closeDashboardConfigModal() {
-    document.getElementById('dashboardConfigModal').style.display = 'none';
+    try {
+        var el = document.getElementById('dashboardConfigModal');
+        if (!el) return false;
+        // Standardized close behavior
+        el.classList.add('hidden');
+        el.classList.remove('show');
+        el.style.display = 'none';
+        return true;
+    } catch (_) { return false; }
 }
 
 async function loadDashboardConfiguration() {
@@ -22401,13 +22487,13 @@ function hideAutoSaveIndicator(success = true) {
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash;
     if (hash === '#dashboard_config') {
-        // Clear the hash
+        // Clear the hash and do NOT auto-open the modal. Modals should only open on explicit user action.
         window.history.replaceState({}, '', window.location.pathname + window.location.search);
-        
-        // Open dashboard config modal
-        setTimeout(() => {
-            openDashboardConfigModal();
-        }, 100);
+        // Optionally, focus the dashboard config trigger if it exists to hint the user
+        try {
+            const trigger = document.querySelector('[data-action="open-dashboard-config"]') || document.getElementById('openDashboardConfigButton');
+            if (trigger && typeof trigger.focus === 'function') trigger.focus();
+        } catch (_) {}
     }
 });
 
@@ -22419,14 +22505,29 @@ let currentLogLimit = 100;
 let availableLogs = [];
 
 // Open Website Logs Modal
-function openWebsiteLogsModal() {
-    document.getElementById('websiteLogsModal').style.display = 'flex';
-    loadAvailableLogs();
+function openWebsiteLogsModal(opts) {
+    try {
+        // Require explicit user interaction or override to prevent auto-open on load
+        var allow = (opts && opts.allow === true) || (typeof window !== 'undefined' && window.__wfModalUserInteracted === true);
+        if (!allow) return false;
+        var el = document.getElementById('websiteLogsModal');
+        if (!el) return false;
+        try { el.classList.add('admin-modal-offset-under-header'); } catch(_) {}
+        try { el.classList.remove('hidden'); } catch(_) {}
+        el.style.display = 'flex';
+        loadAvailableLogs();
+        return true;
+    } catch(_) { return false; }
 }
 
 // Close Website Logs Modal
 function closeWebsiteLogsModal() {
-    document.getElementById('websiteLogsModal').style.display = 'none';
+    var el = document.getElementById('websiteLogsModal');
+    if (el) {
+        el.style.display = 'none';
+        try { el.classList.add('hidden'); } catch(_) {}
+        try { el.classList.remove('show'); } catch(_) {}
+    }
     currentLogData = null;
     currentLogType = null;
 }
@@ -22439,14 +22540,29 @@ let filteredDocuments = [];
 let masterGlossary = [];
 
 // Open Help Documentation Modal
-function openHelpDocumentationModal() {
-    document.getElementById('helpDocumentationModal').style.display = 'flex';
-    loadDocumentationList();
+function openHelpDocumentationModal(opts) {
+    try {
+        // Block programmatic auto-opens unless user has interacted or explicit override is passed
+        var allow = (opts && opts.allow === true) || (typeof window !== 'undefined' && window.__wfModalUserInteracted === true);
+        if (!allow) return false;
+        var el = document.getElementById('helpDocumentationModal');
+        if (!el) return false;
+        // Ensure it is offset below the header and visible
+        try { el.classList.add('admin-modal-offset-under-header'); } catch(e) {}
+        try { el.classList.remove('hidden'); } catch(e) {}
+        el.style.display = 'flex';
+        loadDocumentationList();
+        return true;
+    } catch(e) { return false; }
 }
 
 // Close Help Documentation Modal
 function closeHelpDocumentationModal() {
-    document.getElementById('helpDocumentationModal').style.display = 'none';
+    var el = document.getElementById('helpDocumentationModal');
+    if (!el) return;
+    el.style.display = 'none';
+    try { el.classList.add('hidden'); } catch(_) {}
+    try { el.classList.remove('show'); } catch(_) {}
     allDocuments = [];
     currentDocumentIndex = -1;
     filteredDocuments = [];
@@ -22592,8 +22708,8 @@ function updateCategoryFilter() {
         select.innerHTML += `<option value="${category}">${category}</option>`;
     });
     
-    // Add event listener for filter changes
-    select.onchange = () => filterDocuments();
+    // Delegated listener handles changes; ensure attribute present for targeting
+    select.setAttribute('data-action', 'docs-filter-change');
 }
 
 // Filter documents by category
@@ -22840,6 +22956,8 @@ async function searchDocumentation() {
 function displaySearchResults(results, query) {
     const modal = document.getElementById('searchResultsModal');
     const content = document.getElementById('searchResultsContent');
+    // Require user interaction before showing the modal to prevent auto-open on load
+    try { if (!(window && window.__wfModalUserInteracted === true)) return false; } catch(_) {}
     
     if (results.length === 0) {
         content.innerHTML = `
@@ -22892,7 +23010,11 @@ function displaySearchResults(results, query) {
 
 // Close search results modal
 function closeSearchResults() {
-    document.getElementById('searchResultsModal').style.display = 'none';
+    var el = document.getElementById('searchResultsModal');
+    if (!el) return;
+    el.style.display = 'none';
+    try { el.classList.add('hidden'); } catch(_) {}
+    try { el.classList.remove('show'); } catch(_) {}
 }
 
 // Generate and display glossary
@@ -23418,6 +23540,8 @@ async function searchAllLogs() {
 function showSearchResults(results, query) {
     const modal = document.getElementById('searchResultsModal');
     const content = document.getElementById('searchResultsContent');
+    // Require user interaction before showing the modal to prevent auto-open on load
+    try { if (!(window && window.__wfModalUserInteracted === true)) return false; } catch(_) {}
     
     if (!results || results.length === 0) {
         content.innerHTML = `

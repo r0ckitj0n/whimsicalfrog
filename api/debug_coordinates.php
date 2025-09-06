@@ -1,9 +1,9 @@
 <?php
 // Database coordinate audit script
-require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/config.php';
 
 try {
-    $pdo = Database::getInstance()->getPDO();
+    $pdo = Database::getInstance();
     
     echo "=== ROOM COORDINATE AUDIT ===\n\n";
     

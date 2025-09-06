@@ -29,6 +29,15 @@ whf_deploy_key.pub
 .idea/
 .vscode/
 
+# Root-level SQL dumps (do not track). Allow SQL under scripts/.
+/*.sql
+!scripts/**/*.sql
+
+# Root-level env/hot files (do not track)
+/.env*
+!/.env.example
+/hot*
+
 # Large files not tracked
 backups/
 logs/

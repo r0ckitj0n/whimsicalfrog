@@ -1,7 +1,45 @@
 {
+  "_apiClient-Dg9rmLIN.js": {
+    "file": "assets/apiClient-Dg9rmLIN.js",
+    "name": "apiClient"
+  },
   "_auto-C8LTT2Eg.js": {
     "file": "assets/auto-C8LTT2Eg.js",
     "name": "auto"
+  },
+  "_main-BatvMh3R.js": {
+    "file": "assets/main-BatvMh3R.js",
+    "name": "main",
+    "css": [
+      "assets/main-BuDA5izz.css"
+    ],
+    "assets": [
+      "assets/background_room_main-CD7UiX_S.webp",
+      "assets/background_room_main-Cjg0PIo1.png",
+      "assets/background_home-ygUgfduk.webp",
+      "assets/background_home-BN2Fr02e.png",
+      "assets/background_room1-wpDwXBWB.webp",
+      "assets/background_room1-BRAgtr92.png",
+      "assets/background_room2-BXdXijdr.webp",
+      "assets/background_room2-bZd0-sYF.png",
+      "assets/background_room3-BdYbvP-I.webp",
+      "assets/background_room3-BI57Zz5G.png",
+      "assets/background_room4-DT1MHV1f.webp",
+      "assets/background_room4-B8BMTk5G.png",
+      "assets/background_room5-YLYEOZt2.webp",
+      "assets/background_room5-DsaKXC6J.png"
+    ]
+  },
+  "_main-BuDA5izz.css": {
+    "file": "assets/main-BuDA5izz.css",
+    "src": "_main-BuDA5izz.css"
+  },
+  "_whimsical-frog-core-OfZK0Wtj.js": {
+    "file": "assets/whimsical-frog-core-OfZK0Wtj.js",
+    "name": "whimsical-frog-core",
+    "imports": [
+      "src/js/api-client.js"
+    ]
   },
   "images/backgrounds/background_home.png": {
     "file": "assets/background_home-BN2Fr02e.png",
@@ -60,11 +98,20 @@
     "src": "images/backgrounds/background_room_main.webp"
   },
   "src/entries/admin-dashboard.js": {
-    "file": "assets/js/admin-dashboard.js-DhjTgHlz.js",
+    "file": "assets/js/admin-dashboard.js-DwiDNz9L.js",
     "name": "js/admin-dashboard.js",
     "src": "src/entries/admin-dashboard.js",
     "isEntry": true,
     "isDynamicEntry": true
+  },
+  "src/entries/admin-db-status.js": {
+    "file": "assets/js/admin-db-status.js-BvoD3rcA.js",
+    "name": "js/admin-db-status.js",
+    "src": "src/entries/admin-db-status.js",
+    "isEntry": true,
+    "css": [
+      "assets/admin-db-status-CANIx8iA.css"
+    ]
   },
   "src/entries/admin-inventory.js": {
     "file": "assets/js/admin-inventory.js-BdJTqza9.js",
@@ -73,12 +120,64 @@
     "isEntry": true,
     "isDynamicEntry": true
   },
+  "src/entries/admin-settings.js": {
+    "file": "assets/js/admin-settings.js-C8bRgME8.js",
+    "name": "js/admin-settings.js",
+    "src": "src/entries/admin-settings.js",
+    "isEntry": true,
+    "imports": [
+      "_main-BatvMh3R.js"
+    ],
+    "dynamicImports": [
+      "src/js/admin-settings-bridge.js",
+      "src/js/admin-settings.js",
+      "src/js/admin-settings.js",
+      "src/js/admin-settings.js"
+    ],
+    "css": [
+      "assets/admin-settings-CZ0nUcvH.css"
+    ]
+  },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-pHw9tHSg.js",
+    "file": "assets/js/app.js-C8gvz6Yr.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
+    "imports": [
+      "_main-BatvMh3R.js"
+    ],
     "dynamicImports": [
+      "src/modules/cart-system.js",
+      "src/modules/room-modal-manager.js",
+      "src/modules/search-system.js",
+      "src/modules/sales-system.js",
+      "src/modules/utilities.js",
+      "src/js/dynamic-background-loader.js",
+      "src/js/room-coordinate-manager.js",
+      "src/js/api-client.js",
+      "src/js/api-aliases.js",
+      "src/js/wait-for-function.js",
+      "src/js/modal-manager.js",
+      "src/js/global-item-modal.js",
+      "src/js/global-modals.js",
+      "src/js/cart-modal.js",
+      "src/ui/globalPopup.js",
+      "src/js/global-notifications.js",
+      "src/js/room-main.js",
+      "src/js/analytics.js",
+      "src/js/login-modal.js",
+      "src/js/header-auth-sync.js",
+      "src/js/payment-modal.js",
+      "src/js/receipt-modal.js",
+      "src/js/header-offset.js",
+      "src/js/main-application.js",
+      "src/js/contact.js",
+      "src/js/reveal-company-modal.js",
+      "src/js/room-icons-init.js",
+      "src/modules/image-carousel.js",
+      "src/modules/footer-newsletter.js",
+      "src/modules/ai-processing-modal.js",
+      "src/modules/image-fallback.js",
       "src/js/pages/payment-page.js",
       "src/js/pages/cart-page.js",
       "src/js/pages/login-page.js",
@@ -86,8 +185,12 @@
       "src/js/pages/account-settings-page.js",
       "src/js/pages/account-settings-page.js",
       "src/js/pages/payment-page.js",
+      "src/js/landing-page.js",
+      "src/js/shop.js",
       "src/js/pages/room-page.js",
       "src/js/pages/payment-page.js",
+      "src/js/login-modal.js",
+      "src/js/header-auth-sync.js",
       "src/entries/admin-dashboard.js",
       "src/js/admin-customers.js",
       "src/entries/admin-inventory.js",
@@ -103,25 +206,19 @@
       "src/js/admin-cost-breakdown-manager.js",
       "src/js/admin-secrets.js",
       "src/entries/admin-dashboard.js"
+    ]
+  },
+  "src/entries/header-bootstrap.js": {
+    "file": "assets/js/header-bootstrap.js-DT2zPhe4.js",
+    "name": "js/header-bootstrap.js",
+    "src": "src/entries/header-bootstrap.js",
+    "isEntry": true,
+    "imports": [
+      "src/js/login-modal.js",
+      "src/js/header-auth-sync.js"
     ],
     "css": [
-      "assets/app-Du5Notjj.css"
-    ],
-    "assets": [
-      "assets/background_room_main-CD7UiX_S.webp",
-      "assets/background_room_main-Cjg0PIo1.png",
-      "assets/background_home-ygUgfduk.webp",
-      "assets/background_home-BN2Fr02e.png",
-      "assets/background_room1-wpDwXBWB.webp",
-      "assets/background_room1-BRAgtr92.png",
-      "assets/background_room2-BXdXijdr.webp",
-      "assets/background_room2-bZd0-sYF.png",
-      "assets/background_room3-BdYbvP-I.webp",
-      "assets/background_room3-BI57Zz5G.png",
-      "assets/background_room4-DT1MHV1f.webp",
-      "assets/background_room4-B8BMTk5G.png",
-      "assets/background_room5-YLYEOZt2.webp",
-      "assets/background_room5-DsaKXC6J.png"
+      "assets/header-bootstrap-CaqpKgzs.css"
     ]
   },
   "src/js/admin-categories.js": {
@@ -170,7 +267,7 @@
     "isDynamicEntry": true
   },
   "src/js/admin-pos.js": {
-    "file": "assets/admin-pos-BYVdJjvz.js",
+    "file": "assets/admin-pos-B_S9iV3_.js",
     "name": "admin-pos",
     "src": "src/js/admin-pos.js",
     "isDynamicEntry": true
@@ -196,10 +293,134 @@
     "src": "src/js/admin-secrets.js",
     "isDynamicEntry": true
   },
+  "src/js/admin-settings-bridge.js": {
+    "file": "assets/admin-settings-bridge-9CqDZlIv.js",
+    "name": "admin-settings-bridge",
+    "src": "src/js/admin-settings-bridge.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_main-BatvMh3R.js"
+    ],
+    "dynamicImports": [
+      "src/modules/business-settings-api.js",
+      "src/modules/business-settings-api.js",
+      "src/modules/background-manager.js",
+      "src/modules/css-rules-manager.js",
+      "src/js/admin-settings.js"
+    ]
+  },
   "src/js/admin-settings.js": {
-    "file": "assets/admin-settings-CDXpvmDj.js",
+    "file": "assets/admin-settings-DqbLKE1F.js",
     "name": "admin-settings",
     "src": "src/js/admin-settings.js",
+    "isDynamicEntry": true
+  },
+  "src/js/analytics.js": {
+    "file": "assets/analytics-B6vitc4a.js",
+    "name": "analytics",
+    "src": "src/js/analytics.js",
+    "isDynamicEntry": true
+  },
+  "src/js/api-aliases.js": {
+    "file": "assets/api-aliases-CNzEMy4R.js",
+    "name": "api-aliases",
+    "src": "src/js/api-aliases.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "src/js/api-client.js",
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
+  "src/js/api-client.js": {
+    "file": "assets/api-client-CnFOVKIZ.js",
+    "name": "api-client",
+    "src": "src/js/api-client.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
+  "src/js/cart-modal.js": {
+    "file": "assets/cart-modal-npRHIED4.js",
+    "name": "cart-modal",
+    "src": "src/js/cart-modal.js",
+    "isDynamicEntry": true,
+    "css": [
+      "assets/cart-modal-CHUarT1j.css"
+    ]
+  },
+  "src/js/contact.js": {
+    "file": "assets/contact-CmPWHAql.js",
+    "name": "contact",
+    "src": "src/js/contact.js",
+    "isDynamicEntry": true
+  },
+  "src/js/dynamic-background-loader.js": {
+    "file": "assets/dynamic-background-loader-ClU4FVJ9.js",
+    "name": "dynamic-background-loader",
+    "src": "src/js/dynamic-background-loader.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
+  "src/js/global-item-modal.js": {
+    "file": "assets/global-item-modal-MvAgyWKa.js",
+    "name": "global-item-modal",
+    "src": "src/js/global-item-modal.js",
+    "isDynamicEntry": true
+  },
+  "src/js/global-modals.js": {
+    "file": "assets/global-modals-CKbuXK5i.js",
+    "name": "global-modals",
+    "src": "src/js/global-modals.js",
+    "isDynamicEntry": true
+  },
+  "src/js/global-notifications.js": {
+    "file": "assets/global-notifications-BFxi27c9.js",
+    "name": "global-notifications",
+    "src": "src/js/global-notifications.js",
+    "isDynamicEntry": true
+  },
+  "src/js/header-auth-sync.js": {
+    "file": "assets/header-auth-sync-Di2G6yjI.js",
+    "name": "header-auth-sync",
+    "src": "src/js/header-auth-sync.js",
+    "isDynamicEntry": true
+  },
+  "src/js/header-offset.js": {
+    "file": "assets/header-offset-G-OXmlJN.js",
+    "name": "header-offset",
+    "src": "src/js/header-offset.js",
+    "isDynamicEntry": true
+  },
+  "src/js/landing-page.js": {
+    "file": "assets/landing-page-Da3RjhMV.js",
+    "name": "landing-page",
+    "src": "src/js/landing-page.js",
+    "isDynamicEntry": true
+  },
+  "src/js/login-modal.js": {
+    "file": "assets/login-modal-Cta8SFiy.js",
+    "name": "login-modal",
+    "src": "src/js/login-modal.js",
+    "isDynamicEntry": true
+  },
+  "src/js/main-application.js": {
+    "file": "assets/main-application-B2t5Ox3P.js",
+    "name": "main-application",
+    "src": "src/js/main-application.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_whimsical-frog-core-OfZK0Wtj.js",
+      "src/js/api-client.js",
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
+  "src/js/modal-manager.js": {
+    "file": "assets/modal-manager-BypfyNal.js",
+    "name": "modal-manager",
+    "src": "src/js/modal-manager.js",
     "isDynamicEntry": true
   },
   "src/js/pages/account-settings-page.js": {
@@ -215,21 +436,19 @@
     "isDynamicEntry": true
   },
   "src/js/pages/login-page.js": {
-    "file": "assets/login-page-D5cdVXVS.js",
+    "file": "assets/login-page-GUqeTKZ5.js",
     "name": "login-page",
     "src": "src/js/pages/login-page.js",
-    "isDynamicEntry": true,
-    "imports": [
-      "src/entries/app.js"
-    ]
+    "isDynamicEntry": true
   },
   "src/js/pages/payment-page.js": {
-    "file": "assets/payment-page-fK9rC0ee.js",
+    "file": "assets/payment-page-DOMfK5bS.js",
     "name": "payment-page",
     "src": "src/js/pages/payment-page.js",
     "isDynamicEntry": true,
     "imports": [
-      "src/entries/app.js"
+      "src/js/api-client.js",
+      "_apiClient-Dg9rmLIN.js"
     ]
   },
   "src/js/pages/register-page.js": {
@@ -242,6 +461,156 @@
     "file": "assets/room-page-BJ-FGt20.js",
     "name": "room-page",
     "src": "src/js/pages/room-page.js",
+    "isDynamicEntry": true
+  },
+  "src/js/payment-modal.js": {
+    "file": "assets/payment-modal-DPjIFUgM.js",
+    "name": "payment-modal",
+    "src": "src/js/payment-modal.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "src/js/api-client.js",
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
+  "src/js/receipt-modal.js": {
+    "file": "assets/receipt-modal-Cq731TOt.js",
+    "name": "receipt-modal",
+    "src": "src/js/receipt-modal.js",
+    "isDynamicEntry": true
+  },
+  "src/js/reveal-company-modal.js": {
+    "file": "assets/reveal-company-modal-B07UM1v4.js",
+    "name": "reveal-company-modal",
+    "src": "src/js/reveal-company-modal.js",
+    "isDynamicEntry": true
+  },
+  "src/js/room-coordinate-manager.js": {
+    "file": "assets/room-coordinate-manager-Co35eym4.js",
+    "name": "room-coordinate-manager",
+    "src": "src/js/room-coordinate-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/js/room-icons-init.js": {
+    "file": "assets/room-icons-init-Cm9QhoH6.js",
+    "name": "room-icons-init",
+    "src": "src/js/room-icons-init.js",
+    "isDynamicEntry": true
+  },
+  "src/js/room-main.js": {
+    "file": "assets/room-main-B5pYbM00.js",
+    "name": "room-main",
+    "src": "src/js/room-main.js",
+    "isDynamicEntry": true,
+    "css": [
+      "assets/room-main-B_WG7pzV.css"
+    ]
+  },
+  "src/js/shop.js": {
+    "file": "assets/shop-KJBsk8hL.js",
+    "name": "shop",
+    "src": "src/js/shop.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_whimsical-frog-core-OfZK0Wtj.js",
+      "src/js/api-client.js",
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
+  "src/js/wait-for-function.js": {
+    "file": "assets/wait-for-function-MVjdcQHd.js",
+    "name": "wait-for-function",
+    "src": "src/js/wait-for-function.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/ai-processing-modal.js": {
+    "file": "assets/ai-processing-modal-BL72sKvf.js",
+    "name": "ai-processing-modal",
+    "src": "src/modules/ai-processing-modal.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/background-manager.js": {
+    "file": "assets/background-manager-DZsq4j9N.js",
+    "name": "background-manager",
+    "src": "src/modules/background-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/business-settings-api.js": {
+    "file": "assets/business-settings-api-Dzk5x41B.js",
+    "name": "business-settings-api",
+    "src": "src/modules/business-settings-api.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_apiClient-Dg9rmLIN.js"
+    ]
+  },
+  "src/modules/cart-system.js": {
+    "file": "assets/cart-system-Dk5nAM4x.js",
+    "name": "cart-system",
+    "src": "src/modules/cart-system.js",
+    "isDynamicEntry": true,
+    "css": [
+      "assets/cart-system-C6tf12vy.css"
+    ]
+  },
+  "src/modules/css-rules-manager.js": {
+    "file": "assets/css-rules-manager-D682l-Ab.js",
+    "name": "css-rules-manager",
+    "src": "src/modules/css-rules-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/footer-newsletter.js": {
+    "file": "assets/footer-newsletter-DN6Z0J5v.js",
+    "name": "footer-newsletter",
+    "src": "src/modules/footer-newsletter.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/image-carousel.js": {
+    "file": "assets/image-carousel-6wuiEgc0.js",
+    "name": "image-carousel",
+    "src": "src/modules/image-carousel.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/image-fallback.js": {
+    "file": "assets/image-fallback-CrgOHGCZ.js",
+    "name": "image-fallback",
+    "src": "src/modules/image-fallback.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/room-modal-manager.js": {
+    "file": "assets/room-modal-manager-CnOA_hZS.js",
+    "name": "room-modal-manager",
+    "src": "src/modules/room-modal-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/sales-system.js": {
+    "file": "assets/sales-system-CQ-_vcLU.js",
+    "name": "sales-system",
+    "src": "src/modules/sales-system.js",
+    "isDynamicEntry": true,
+    "imports": [
+      "_apiClient-Dg9rmLIN.js"
+    ],
+    "css": [
+      "assets/sales-system-BuVYAa1_.css"
+    ]
+  },
+  "src/modules/search-system.js": {
+    "file": "assets/search-system-C6JULfc2.js",
+    "name": "search-system",
+    "src": "src/modules/search-system.js",
+    "isDynamicEntry": true
+  },
+  "src/modules/utilities.js": {
+    "file": "assets/utilities-CZavJS32.js",
+    "name": "utilities",
+    "src": "src/modules/utilities.js",
+    "isDynamicEntry": true
+  },
+  "src/ui/globalPopup.js": {
+    "file": "assets/globalPopup-BY1Poh2A.js",
+    "name": "globalPopup",
+    "src": "src/ui/globalPopup.js",
     "isDynamicEntry": true
   }
 }

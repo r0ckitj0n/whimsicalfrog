@@ -17,7 +17,12 @@ class BusinessSettings
             try {
                 self::$pdo = Database::getInstance();
             } catch (Exception $e) {
-                error_log("Database connection failed: " . $e->getMessage());
+                if (class_exists('Logger')) {
+                    Logger::exception('BusinessSettings DB connection failed', $e, [
+                        'source' => 'business_settings_helper',
+                        'stage' => 'db_connect',
+                    ]);
+                }
                 throw $e;
             }
         }
@@ -202,6 +207,101 @@ class BusinessSettings
     public static function isMaintenanceMode()
     {
         return self::get('maintenance_mode', false);
+    }
+
+    /**
+     * Robust boolean getter that accepts common truthy strings
+     */
+    public static function getBooleanSetting($key, $default = false)
+    {
+        $val = self::get($key, null);
+        if ($val === null) { return (bool)$default; }
+        if (is_bool($val)) { return $val; }
+        $str = strtolower(trim((string)$val));
+        return in_array($str, ['1','true','yes','on','y'], true);
+    }
+
+    /**
+     * Retrieve shipping configuration.
+     * When $strict is true, throws InvalidArgumentException on missing/invalid keys.
+     * When false, applies sane defaults and reports which keys defaulted in 'usedDefaults'.
+     */
+    public static function getShippingConfig($strict = false)
+    {
+        $keys = [
+            'free_shipping_threshold' => 50.00,
+            'local_delivery_fee' => 5.00,
+            'shipping_rate_usps' => 8.99,
+            'shipping_rate_fedex' => 12.99,
+            'shipping_rate_ups' => 12.99,
+        ];
+
+        $out = [
+            'free_shipping_threshold' => null,
+            'local_delivery_fee' => null,
+            'shipping_rate_usps' => null,
+            'shipping_rate_fedex' => null,
+            'shipping_rate_ups' => null,
+            'usedDefaults' => [],
+        ];
+
+        foreach ($keys as $k => $def) {
+            $val = self::get($k, null);
+            if ($val === null || $val === '') {
+                if ($strict) {
+                    throw new InvalidArgumentException("Missing required setting: {$k}");
+                }
+                $out[$k] = (float)$def;
+                $out['usedDefaults'][] = $k;
+                continue;
+            }
+            if (!is_numeric($val)) {
+                if ($strict) {
+                    throw new InvalidArgumentException("Invalid numeric setting: {$k}");
+                }
+                $out[$k] = (float)$def;
+                $out['usedDefaults'][] = $k;
+                continue;
+            }
+            $out[$k] = (float)$val;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Retrieve tax configuration.
+     * - enabled: bool via isTaxEnabled()
+     * - rate: float via getTaxRate()
+     * - taxShipping: robust boolean for 'tax_shipping'
+     * Strict mode enforces: if enabled and (rate <= 0) or tax_shipping missing -> throw.
+     */
+    public static function getTaxConfig($strict = false)
+    {
+        $enabled = (bool) self::isTaxEnabled();
+        $rate = (float) self::getTaxRate();
+
+        // Detect presence of tax_shipping key distinctly from its value
+        $taxShippingRaw = self::get('tax_shipping', null);
+        $hasTaxShippingKey = ($taxShippingRaw !== null && $taxShippingRaw !== '');
+        $taxShipping = self::getBooleanSetting('tax_shipping', false);
+
+        if ($strict) {
+            if ($enabled && ($rate <= 0)) {
+                throw new InvalidArgumentException('Missing or invalid setting: tax_rate');
+            }
+            // Require explicit tax_shipping only when tax is enabled; otherwise default to false
+            if ($enabled && !$hasTaxShippingKey) {
+                throw new InvalidArgumentException('Missing required setting: tax_shipping');
+            }
+        }
+
+        return [
+            'enabled' => $enabled,
+            'rate' => $rate,
+            'taxShipping' => $taxShipping,
+            'hasTaxShippingKey' => $hasTaxShippingKey,
+        ];
     }
 
     /**

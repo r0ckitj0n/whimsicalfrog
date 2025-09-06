@@ -1,9 +1,9 @@
 <?php
 // Fix missing room coordinate data in room_maps table
-require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/config.php';
 
 try {
-    $pdo = Database::getInstance()->getPDO();
+    $pdo = Database::getInstance();
     
     echo "=== FIXING ROOM COORDINATES ===\n\n";
     

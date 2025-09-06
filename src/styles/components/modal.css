@@ -1,5 +1,20 @@
 /* Modal formatting fixes for detailed item modal */
 
+/* Defensive overlay visibility class for legacy overlays */
+.wf-modal-force-visible {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 2147483600 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
 /* Fix for Why You'll Love This section */
 .detailed-item-modal .space-y-2 {
     display: block !important;

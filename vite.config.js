@@ -62,6 +62,8 @@ export default defineConfig({
                 'js/admin-dashboard.js': resolve(__dirname, 'src/entries/admin-dashboard.js'),
                 'js/admin-inventory.js': resolve(__dirname, 'src/entries/admin-inventory.js'),
                 'js/admin-settings.js': resolve(__dirname, 'src/entries/admin-settings.js'),
+                'js/admin-db-status.js': resolve(__dirname, 'src/entries/admin-db-status.js'),
+                'js/header-bootstrap.js': resolve(__dirname, 'src/entries/header-bootstrap.js'),
             },
         }
     },

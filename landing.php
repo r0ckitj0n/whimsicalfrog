@@ -17,7 +17,7 @@ try {
 }
 ?>
 
-<section id="landingPage" class="relative" data-coords='<?php echo htmlspecialchars($landingCoordsJson, ENT_QUOTES, 'UTF-8'); ?>'>
+<section id="landingPage" class="relative" data-coords='<?php echo htmlspecialchars($landingCoordsJson, ENT_NOQUOTES, 'UTF-8'); ?>'>
     <a href="/room_main" class="clickable-area area-1" title="Enter the Main Room">
         <picture>
             <source srcset="images/signs/sign_welcome.webp" type="image/webp">

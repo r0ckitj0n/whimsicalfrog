@@ -1,2 +1,13 @@
 # Use lint-staged to process only staged files (concurrent for speed)
+# Guard against accidental duplicate-suffixed files/dirs being committed
+# Examples blocked: "image 2.png", "logo 3.webp", "css/core 2/"
+
+# Collect staged paths
+STAGED=$(git diff --cached --name-only -z)
+if printf "%s" "$STAGED" | tr '\0' '\n' | grep -E '(^|/).+ [0-9](/|$|\.)' >/dev/null; then
+  echo "\033[0;31m✖ Commit blocked: staged changes include files or directories with a trailing space-number (e.g., 'file 2.png', 'dir 3/').\033[0m" >&2
+  echo "\033[1;33m→ Please run scripts/dev/quarantine-duplicates.sh to move duplicates to backups, or rename/remove them.\033[0m" >&2
+  exit 1
+fi
+
 npx lint-staged --concurrent=true

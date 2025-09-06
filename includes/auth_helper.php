@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/auth.php';
 
 /**
  * Centralized Authentication Helper for WhimsicalFrog
@@ -22,7 +23,7 @@ class AuthHelper
     public static function isAdmin(): bool
     {
         // Initialize session for session-based authentication
-        SessionManager::init();
+        if (class_exists('SessionManager')) { SessionManager::init(); }
         // Parse JSON input for token-based requests
         $input = json_decode(file_get_contents('php://input'), true) ?? [];
 
@@ -34,7 +35,6 @@ class AuthHelper
         }
 
         // Check session-based authentication using centralized auth functions
-        require_once __DIR__ . '/auth.php';
 
         if (isAdmin()) {
             return true;

@@ -10,8 +10,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Include database configuration
-require_once __DIR__ . '/includes/database.php';
+// Include centralized API config (bootstraps Database singleton)
+require_once __DIR__ . '/../api/config.php';
 
 function connectLocal()
 {
@@ -113,11 +113,15 @@ switch ($action) {
 
         // Live database
         try {
-            $liveDsn = "mysql:host=db5017975223.hosting-data.io;dbname=dbs14295502;charset=utf8mb4";
-            $livePdo = new PDO($liveDsn, 'dbu2826619', 'Palz2516!', [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_TIMEOUT => 5
-            ]);
+            $livePdo = Database::createConnection(
+                'db5017975223.hosting-data.io',
+                'dbs14295502',
+                'dbu2826619',
+                'Palz2516!',
+                3306,
+                null,
+                [ PDO::ATTR_TIMEOUT => 5 ]
+            );
 
             $stmt = $livePdo->query("SELECT COUNT(*) as count FROM global_css_rules");
             $status['live'] = [

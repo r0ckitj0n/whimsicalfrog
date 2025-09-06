@@ -8,6 +8,9 @@ HOST="home419172903.1and1-data.host"
 USER="acc899014616"
 PASS="Palz2516!"
 REMOTE_PATH="/"
+# Optional public base for sites under a subdirectory (e.g., /wf)
+PUBLIC_BASE="${WF_PUBLIC_BASE:-}"
+BASE_URL="https://whimsicalfrog.us${PUBLIC_BASE}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -40,6 +43,24 @@ else
   echo -e "${GREEN}✅ No changes to commit${NC}"
 fi
 
+# Ensure frontend build artifacts exist
+echo -e "${GREEN}🧱 Ensuring Vite build artifacts exist...${NC}"
+if [ ! -f dist/manifest.json ]; then
+  echo -e "${YELLOW}⚠️  dist/manifest.json not found. Running vite build...${NC}"
+  if command -v npm >/dev/null 2>&1; then
+    if npm run build; then
+      echo -e "${GREEN}✅ Vite build completed${NC}"
+    else
+      echo -e "${RED}❌ Vite build failed. Aborting deployment.${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${YELLOW}⚠️  npm not available; skipping build step${NC}"
+  fi
+else
+  echo -e "${GREEN}✅ Found dist/manifest.json${NC}"
+fi
+
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
 cat > deploy_commands.txt << EOL
@@ -47,13 +68,18 @@ set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --verbose \
+# Note: SFTP lacks checksums; use size-only + only-newer to avoid re-uploading identical files
+# - only-newer: don't overwrite if remote is same/newer
+# - ignore-time: ignore mtime differences; compare by size only to skip identical files
+# - no-perms: don't try to sync permissions (reduces needless diffs)
+mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob .git/ \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
   --exclude-glob backups/ \
+  --exclude-glob documentation/ \
   --exclude-glob Documentation/ \
   --exclude-glob Scripts/ \
   --exclude-glob scripts/ \
@@ -71,6 +97,9 @@ mirror --reverse --delete --verbose \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
   --exclude-glob config/my.cnf \
+  --exclude-glob "* [0-9].*" \
+  --exclude-glob "* [0-9]/*" \
+  --exclude-glob "* copy*" \
   --include-glob credentials.json \
   . $REMOTE_PATH
 bye
@@ -102,31 +131,36 @@ EOL
 lftp -f cleanup_hot.txt > /dev/null 2>&1 || true
 rm cleanup_hot.txt
 
-# Verify critical files exist on server
-echo -e "${GREEN}🔍 Verifying deployment...${NC}"
+# Verify deployment (HTTP-based, avoids dotfile visibility issues)
+echo -e "${GREEN}🔍 Verifying deployment over HTTP...${NC}"
 
-# Create verification script
-cat > verify_deployment.txt << EOL
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://$USER:$PASS@$HOST
-ls images/items/TS002A.webp
-ls process_multi_image_upload.php
-ls components/image_carousel.php
-ls dist/.vite/manifest.json
-ls dist/assets
-bye
-EOL
-
-echo -e "${GREEN}📋 Checking if critical files were uploaded...${NC}"
-if lftp -f verify_deployment.txt 2>/dev/null | grep -q "TS002A.webp"; then
-  echo -e "${GREEN}✅ TS002A.webp found on server${NC}"
+# Check Vite manifest availability (prefer .vite/manifest.json)
+HTTP_MANIFEST_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/.vite/manifest.json")
+if [ "$HTTP_MANIFEST_CODE" != "200" ]; then
+  HTTP_MANIFEST_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/manifest.json")
+fi
+if [ "$HTTP_MANIFEST_CODE" = "200" ]; then
+  echo -e "${GREEN}✅ Vite manifest accessible over HTTP${NC}"
 else
-  echo -e "${YELLOW}⚠️  TS002A.webp not found - may need manual upload${NC}"
+  echo -e "${YELLOW}⚠️  Vite manifest not accessible over HTTP (code $HTTP_MANIFEST_CODE)${NC}"
 fi
 
-# Clean up verification script
-rm verify_deployment.txt
+# Extract one JS and one CSS asset from homepage HTML and verify
+HOME_HTML=$(curl -s "$BASE_URL/")
+APP_JS=$(echo "$HOME_HTML" | grep -Eo "/dist/assets/js/app.js-[^\"']+\\.js" | head -n1)
+MAIN_CSS=$(echo "$HOME_HTML" | grep -Eo "/dist/assets/[^\"']+\\.css" | head -n1)
+if [ -n "$APP_JS" ]; then
+  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$APP_JS")
+  echo -e "  • JS $APP_JS -> HTTP $CODE_JS"
+else
+  echo -e "  • JS: ⚠️ Not found in homepage HTML"
+fi
+if [ -n "$MAIN_CSS" ]; then
+  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$MAIN_CSS")
+  echo -e "  • CSS $MAIN_CSS -> HTTP $CODE_CSS"
+else
+  echo -e "  • CSS: ⚠️ Not found in homepage HTML"
+fi
 
 # Fix permissions automatically after deployment
 echo -e "${GREEN}🔧 Fixing image permissions on server...${NC}"
@@ -146,15 +180,59 @@ EOL
 lftp -f fix_permissions.txt > /dev/null 2>&1 || true
 rm fix_permissions.txt
 
-# Test image accessibility
+# List duplicate-suffixed files on server (for visibility)
+echo -e "${GREEN}🧹 Listing duplicate-suffixed files on server (space-number)...${NC}"
+cat > list_server_duplicates.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+# images root
+cls -1 images/*\\ 2.* || true
+cls -1 images/*\\ 3.* || true
+# subdirs
+cls -1 images/items/*\\ 2.* || true
+cls -1 images/items/*\\ 3.* || true
+cls -1 images/backgrounds/*\\ 2.* || true
+cls -1 images/backgrounds/*\\ 3.* || true
+cls -1 images/logos/*\\ 2.* || true
+cls -1 images/logos/*\\ 3.* || true
+cls -1 images/signs/*\\ 2.* || true
+cls -1 images/signs/*\\ 3.* || true
+bye
+EOL
+lftp -f list_server_duplicates.txt || true
+rm list_server_duplicates.txt
+
+# Delete duplicate-suffixed files on server
+echo -e "${GREEN}🧽 Removing duplicate-suffixed files on server...${NC}"
+cat > delete_server_duplicates.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+rm -f images/*\\ 2.* || true
+rm -f images/*\\ 3.* || true
+rm -f images/items/*\\ 2.* || true
+rm -f images/items/*\\ 3.* || true
+rm -f images/backgrounds/*\\ 2.* || true
+rm -f images/backgrounds/*\\ 3.* || true
+rm -f images/logos/*\\ 2.* || true
+rm -f images/logos/*\\ 3.* || true
+rm -f images/signs/*\\ 2.* || true
+rm -f images/signs/*\\ 3.* || true
+bye
+EOL
+lftp -f delete_server_duplicates.txt || true
+rm delete_server_duplicates.txt
+
+# Test image accessibility (use a stable, non-legacy asset)
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.us/images/items/TS002A.webp")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/images/logos/logo_whimsicalfrog.webp")
 if [ "$HTTP_CODE" = "200" ]; then
-  echo -e "${GREEN}✅ Clown frog image is accessible online!${NC}"
+  echo -e "${GREEN}✅ Logo image is accessible online!${NC}"
 elif [ "$HTTP_CODE" = "404" ]; then
-  echo -e "${YELLOW}⚠️  Image returns 404 - may need a few minutes to propagate${NC}"
+  echo -e "${YELLOW}⚠️  Logo image returns 404 - may need a few minutes to propagate${NC}"
 else
-  echo -e "${YELLOW}⚠️  Image returned HTTP code: $HTTP_CODE${NC}"
+  echo -e "${YELLOW}⚠️  Logo image returned HTTP code: $HTTP_CODE${NC}"
 fi
 
 # Final summary

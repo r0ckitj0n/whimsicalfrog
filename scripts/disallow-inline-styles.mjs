@@ -20,10 +20,27 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const args = process.argv.slice(2);
-const files = args.length ? args : globSync('src/**/*.js', { ignore: ['**/recovered/**'] });
+const files = (args.length ? args : globSync('src/**/*.js', { ignore: ['**/recovered/**'] }))
+  .filter((f) => shouldConsiderPath(f));
 const thisFile = path.resolve(__filename);
 
 const violations = [];
+
+function shouldConsiderPath(filePath) {
+  // Normalize to posix-style
+  const p = filePath.replace(/\\/g, '/');
+  // Skip backups, dist, node_modules
+  if (p.includes('/backups/')) return false;
+  if (p.includes('/dist/')) return false;
+  if (p.includes('/node_modules/')) return false;
+  // Skip documentation legacy duplicates
+  if (p.includes('/documentation/legacy-duplicates/')) return false;
+  // Skip public duplicates and any file that clearly is a duplicate name with " 2.js"
+  if (p.includes('/public/js/') && / 2\.js$/i.test(p)) return false;
+  // Also skip any duplicate style in src that ends with " 2.js"
+  if (/ 2\.js$/i.test(p)) return false;
+  return true;
+}
 
 function record(file, loc, message) {
   violations.push({ file, loc, message });
@@ -34,6 +51,9 @@ for (const file of files) {
   if (path.resolve(file) === thisFile) continue;
   if (!fs.existsSync(file)) continue;
   const code = fs.readFileSync(file, 'utf8');
+
+  // Allow explicit per-file opt-out via token comment
+  if (code.includes('WF_GUARD_JS_INLINE_STYLES_IGNORE')) continue;
 
   try {
     const ast = parse(code, {

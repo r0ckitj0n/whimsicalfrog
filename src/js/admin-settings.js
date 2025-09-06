@@ -12,6 +12,25 @@ function __unusedDelegatedPreamble(e, closest, target) {
             return;
         }
 
+        // Maintenance: Retry compact/repair after failure
+        const retryBtn = closest('[data-action="retry-compact-repair"]');
+        if (retryBtn) {
+            e.preventDefault();
+            try {
+                if (typeof window !== 'undefined') {
+                    if (typeof window.closeBackupProgressModal === 'function') {
+                        window.closeBackupProgressModal();
+                    }
+                    if (typeof window.compactRepairDatabase === 'function') {
+                        window.compactRepairDatabase();
+                    } else {
+                        document.dispatchEvent(new CustomEvent('wf:retry-compact-repair'));
+                    }
+                }
+            } catch (_) {}
+            return;
+        }
+
         // -----------------------------
         // Admin Settings: Global Colors/Sizes/Genders edit/delete
         // -----------------------------
@@ -3945,9 +3964,41 @@ if (typeof window !== 'undefined') {
 
 let WF_AdminSettingsListenersInitialized = false;
 
+// Performance guard: reduce heavy work for partial/minimal renders
+function __wfIsAdminSettingsLightMode() {
+    try {
+        const params = new URLSearchParams(window.location.search || '');
+        if (params.get('wf_noscripts') === '1') return true;
+        if (params.get('wf_minimal') === '1') return true;
+        if (params.has('wf_section') && params.get('wf_section')) return true;
+        if (window.WF_ADMIN_LIGHT === 1 || window.WF_ADMIN_LIGHT === true) return true;
+        // Default to light mode on Admin Settings unless explicitly overridden
+        try {
+            const body = document.body;
+            const dp = body && body.getAttribute ? body.getAttribute('data-page') : '';
+            const onSettings = !!(dp && (dp === 'admin/settings' || dp === 'admin')) || !!document.querySelector('.settings-page');
+            if (onSettings && params.get('wf_full') !== '1') return true;
+        } catch (_) {}
+        return false;
+    } catch (_) { return false; }
+}
+
+function __wfIsOnAdminSettingsPage() {
+    try {
+        const body = document.body;
+        const dp = body && body.getAttribute ? body.getAttribute('data-page') : '';
+        if (dp && (dp === 'admin/settings' || dp === 'admin')) return true;
+        // Fallback: presence of .settings-page container
+        return !!document.querySelector('.settings-page');
+    } catch (_) { return true; }
+}
+
 function tagInlineHandlersForMigration(root = document) {
     // Add data-action tags based on existing inline onclick attributes to ease removal later
     try {
+        const localRoot = (root && root.nodeType)
+            ? (root instanceof Document ? (document.querySelector('.settings-page') || document) : root)
+            : (document.querySelector('.settings-page') || document);
         const mappings = [
             { contains: 'scanDatabaseConnections', action: 'scan-db' },
             { contains: 'convertDatabaseConnections', action: 'convert-db' },
@@ -3974,7 +4025,7 @@ function tagInlineHandlersForMigration(root = document) {
             { contains: 'addBrandVoiceOption', action: 'brand-voice-add' },
             { contains: 'saveBrandVoiceOptions', action: 'brand-voice-save' }
         ];
-        const clickable = root.querySelectorAll('[onclick], [onchange]');
+        const clickable = localRoot.querySelectorAll('[onclick], [onchange]');
         clickable.forEach(el => {
             const code = (el.getAttribute('onclick') || el.getAttribute('onchange') || '').toString();
             for (const map of mappings) {
@@ -4033,7 +4084,7 @@ function tagInlineHandlersForMigration(root = document) {
     }
 }
 
-function stripInlineHandlersForMigration(root = document) {
+function stripInlineHandlersForMigration(root = document.querySelector('.settings-page') || document) {
     try {
         const selectors = [
             '[onclick*="scanDatabaseConnections"]',
@@ -4067,10 +4118,9 @@ function stripInlineHandlersForMigration(root = document) {
         root.querySelectorAll(selectors.join(',')).forEach(el => {
             // Preserve original inline handler for debugging/rollback visibility
             if (!el.dataset.onclickLegacy) {
-                el.dataset.onclickLegacy = el.getAttribute('onclick') || '';
+                try { el.dataset.onclickLegacy = (el.getAttribute('onclick') || ''); } catch (_) {}
             }
-            el.removeAttribute('onclick');
-            el.dataset.migrated = 'true';
+            try { el.removeAttribute('onclick'); } catch (_) {}
         });
     } catch (e) {
         console.debug('[AdminSettings] stripInlineHandlersForMigration error', e);
@@ -4081,44 +4131,47 @@ function initAdminSettingsDelegatedListeners() {
     if (WF_AdminSettingsListenersInitialized) return;
     WF_AdminSettingsListenersInitialized = true;
 
-    // Tag existing inline handlers for smoother migration
-    const runTagAndStrip = () => { tagInlineHandlersForMigration(); stripInlineHandlersForMigration(); };
-    if (document.readyState !== 'loading') {
-        runTagAndStrip();
-    } else {
-        document.addEventListener('DOMContentLoaded', () => runTagAndStrip(), { once: true });
+    // Tag existing inline handlers for smoother migration (opt-in only, and skip in light mode)
+    if (__wfMigrationEnabled() && !__wfIsAdminSettingsLightMode()) {
+        const runTagAndStrip = () => { try { tagInlineHandlersForMigration(); stripInlineHandlersForMigration(); } catch(_) {} };
+        const schedule = () => {
+            if ('requestIdleCallback' in window) {
+                try { window.requestIdleCallback(runTagAndStrip, { timeout: 300 }); } catch(_) { setTimeout(runTagAndStrip, 0); }
+            } else { setTimeout(runTagAndStrip, 0); }
+        };
+        if (document.readyState !== 'loading') schedule();
+        else document.addEventListener('DOMContentLoaded', schedule, { once: true });
     }
     
     // Initialize SSL option visibility on load
     initSSLHandlers();
     
-    // Observe future DOM changes to tag dynamically injected elements
-    try {
-        const observer = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-                if (m.type === 'childList') {
-                    m.addedNodes.forEach(node => {
-                        if (node.nodeType === 1) {
-                            tagInlineHandlersForMigration(node);
-                            stripInlineHandlersForMigration(node);
-                            // Re-evaluate SSL option visibility for injected content
-                            initSSLHandlers(node);
+    // Observe future DOM changes (opt-in only, limited to settings-page, skip in light mode)
+    if (__wfMigrationEnabled() && !__wfIsAdminSettingsLightMode()) {
+        try {
+            const obsRoot = document.querySelector('.settings-page');
+            if (obsRoot) {
+                const observer = new MutationObserver((mutations) => {
+                    for (const m of mutations) {
+                        if (m.type === 'childList') {
+                            for (const node of m.addedNodes) {
+                                if (node && node.nodeType === 1) {
+                                    try { tagInlineHandlersForMigration(node); } catch(_) {}
+                                    try { stripInlineHandlersForMigration(node); } catch(_) {}
+                                    try { initSSLHandlers(node); } catch(_) {}
+                                }
+                            }
+                        } else if (m.type === 'attributes' && m.attributeName === 'onclick') {
+                            try { tagInlineHandlersForMigration(m.target); } catch(_) {}
+                            try { stripInlineHandlersForMigration(m.target); } catch(_) {}
                         }
-                    });
-                } else if (m.type === 'attributes' && m.attributeName === 'onclick') {
-                    tagInlineHandlersForMigration(m.target);
-                    stripInlineHandlersForMigration(m.target);
-                }
+                    }
+                });
+                observer.observe(obsRoot, { childList: true, subtree: true, attributes: true, attributeFilter: ['onclick'] });
             }
-        });
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['onclick']
-        });
-    } catch (err) {
-        console.debug('[AdminSettings] MutationObserver unavailable', err);
+        } catch (err) {
+            console.debug('[AdminSettings] MutationObserver unavailable', err);
+        }
     }
 
     // Delegated change handler (SSL checkbox)
@@ -4611,6 +4664,552 @@ function initAdminSettingsDelegatedListeners() {
         }
     } catch (_) {}
     
+    // -----------------------------
+    // Room Settings (migrated)
+    // -----------------------------
+    let currentEditingRoom = null;
+    let coreRooms = [];
+    
+    async function loadRoomData() {
+        try {
+            const res = await fetch('/api/get_room_data.php');
+            const data = await res.json();
+            if (data && data.success && data.data) {
+                coreRooms = Array.isArray(data.data.coreRooms) ? data.data.coreRooms : [];
+            } else {
+                coreRooms = [];
+            }
+        } catch (err) {
+            console.warn('[RoomSettings] Failed to load room data', err);
+            coreRooms = [];
+        }
+    }
+    
+    function openRoomSettingsModal() {
+        const modal = document.getElementById('roomSettingsModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        try { if (typeof updateModalScrollLock === 'function') updateModalScrollLock(); } catch(_) {}
+        loadRoomSettings();
+    }
+    function closeRoomSettingsModal() {
+        const modal = document.getElementById('roomSettingsModal');
+        if (modal) modal.classList.add('hidden');
+        currentEditingRoom = null;
+        try { if (typeof updateModalScrollLock === 'function') updateModalScrollLock(); } catch(_) {}
+    }
+    
+    async function loadRoomSettings() {
+        try {
+            const [roomDataRes, roomSettingsRes] = await Promise.all([
+                fetch('/api/get_room_data.php'),
+                fetch('/api/room_settings.php?action=get_all')
+            ]);
+            const roomData = await roomDataRes.json().catch(() => ({}));
+            const roomSettings = await roomSettingsRes.json().catch(() => ({}));
+            if (roomData && roomData.success && roomData.data && Array.isArray(roomData.data.coreRooms)) {
+                coreRooms = roomData.data.coreRooms;
+            } else {
+                coreRooms = [];
+            }
+            if (roomSettings && roomSettings.success && Array.isArray(roomSettings.rooms)) {
+                displayRoomSettingsList(roomSettings.rooms);
+            } else {
+                showRoomSettingsError('Failed to load room settings');
+            }
+        } catch (err) {
+            showRoomSettingsError('Error loading room settings');
+        }
+    }
+    
+    function showRoomSettingsError(msg) {
+        const container = document.getElementById('roomSettingsList');
+        if (container) container.innerHTML = `<div class="text-red-600 text-sm">${(msg||'Error').replace(/</g,'&lt;')}</div>`;
+    }
+    
+    function displayRoomSettingsList(rooms) {
+        const container = document.getElementById('roomSettingsList');
+        if (!container) return;
+        if (!rooms || rooms.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-gray-500">
+                    <p>No rooms found</p>
+                    <button data-action="initialize-room-settings" class="bg-cyan-500 hover:bg-cyan-600 text-white rounded flex items-center text-left px-3 py-2 text-sm">Initialize Room Settings</button>
+                </div>
+            `;
+            return;
+        }
+        container.innerHTML = '';
+        rooms.forEach((room) => {
+            const card = document.createElement('div');
+            card.className = 'border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors';
+            card.setAttribute('data-action', 'edit-room-settings');
+            try { card.setAttribute('data-room', encodeURIComponent(JSON.stringify(room))); } catch(_) {}
+            const isCore = Array.isArray(coreRooms) && coreRooms.includes(room.room_number);
+            card.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-gray-600">Room ${room.room_number}</span>
+                            ${isCore ? '<span class="text-xs bg-blue-100 text-blue-800 rounded px-2">Core</span>' : ''}
+                        </div>
+                        <h4 class="font-semibold text-gray-800">${(room.room_name||'').replace(/</g,'&lt;')}</h4>
+                        <p class="text-sm text-gray-600">${(room.door_label||'').replace(/</g,'&lt;')}</p>
+                        <p class="text-xs text-gray-500">${(room.description||'No description').replace(/</g,'&lt;')}</p>
+                    </div>
+                    <div class="text-right text-xs text-gray-500">
+                        <div>Order: ${room.display_order}</div>
+                        <div class="text-cyan-600">Edit →</div>
+                    </div>
+                </div>`;
+            container.appendChild(card);
+        });
+    }
+    
+    function editRoomSettings(room) {
+        currentEditingRoom = room;
+        const formContainer = document.getElementById('roomEditForm');
+        if (!formContainer) return;
+        const isCore = Array.isArray(coreRooms) && coreRooms.includes(room.room_number);
+        formContainer.innerHTML = `
+            <form data-action="save-room-settings" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Room Number ${isCore ? '<span class="text-red-500">*</span>' : ''}</label>
+                    <input type="number" id="editRoomNumber" value="${room.room_number}" class="w-full border border-gray-300 rounded-lg ${isCore ? 'bg-gray-100' : ''}" ${isCore ? 'readonly' : ''}>
+                    ${isCore ? '<p class="text-xs text-gray-500">Core rooms cannot change numbers</p>' : ''}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Room Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="editRoomName" value="${(room.room_name||'').replace(/\"/g,'&quot;')}" class="w-full border border-gray-300 rounded-lg" required>
+                    <p class="text-xs text-gray-500">This appears as the main title in the room</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Door Label <span class="text-red-500">*</span></label>
+                    <input type="text" id="editDoorLabel" value="${(room.door_label||'').replace(/\"/g,'&quot;')}" class="w-full border border-gray-300 rounded-lg" required>
+                    <p class="text-xs text-gray-500">This appears on door signs in the main room</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea id="editRoomDescription" rows="3" class="w-full border border-gray-300 rounded-lg">${(room.description||'').replace(/</g,'&lt;')}</textarea>
+                    <p class="text-xs text-gray-500">This appears as subtitle text in the room</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Display Order</label>
+                    <input type="number" id="editDisplayOrder" value="${room.display_order}" class="w-full border border-gray-300 rounded-lg" min="0">
+                    <p class="text-xs text-gray-500">Lower numbers appear first in navigation</p>
+                </div>
+                <div>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="checkbox" id="editShowSearchBar" ${room.show_search_bar ? 'checked' : ''} class="rounded border-gray-300 text-cyan-600 focus:ring-cyan-500">
+                        <span class="text-sm font-medium text-gray-700">Show Search Bar</span>
+                    </label>
+                </div>
+                <div class="flex gap-3 border-t pt-3">
+                    <button type="submit" class="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-medium px-3 py-2">Save Changes</button>
+                    <button type="button" data-action="cancel-room-edit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-3 py-2">Cancel</button>
+                </div>
+            </form>`;
+    }
+    
+    async function initializeRoomSettings() {
+        try {
+            const res = await fetch('/api/room_settings.php?action=initialize', { method: 'POST' });
+            const data = await res.json().catch(() => ({}));
+            if (data && data.success) {
+                await loadRoomSettings();
+            } else {
+                alert((data && (data.error || data.message)) || 'Failed to initialize room settings');
+            }
+        } catch (err) {
+            console.warn('[RoomSettings] initialize error', err);
+        }
+    }
+    
+    async function saveRoomSettings(e) {
+        try {
+            const form = e && e.target ? e.target : document.querySelector('form[data-action="save-room-settings"]');
+            if (!form) return;
+            const payload = {
+                original_room_number: currentEditingRoom ? currentEditingRoom.room_number : undefined,
+                room_number: Number(document.getElementById('editRoomNumber')?.value || 0),
+                room_name: document.getElementById('editRoomName')?.value || '',
+                door_label: document.getElementById('editDoorLabel')?.value || '',
+                description: document.getElementById('editRoomDescription')?.value || '',
+                display_order: Number(document.getElementById('editDisplayOrder')?.value || 0),
+                show_search_bar: !!document.getElementById('editShowSearchBar')?.checked,
+            };
+            const res = await fetch('/api/room_settings.php?action=save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data && data.success) {
+                try { if (typeof window.showSuccess === 'function') window.showSuccess('Room settings saved'); } catch(_) {}
+                await loadRoomSettings();
+                currentEditingRoom = null;
+            } else {
+                const msg = (data && (data.error || data.message)) || 'Failed to save';
+                try { if (typeof window.showError === 'function') window.showError(msg); } catch(_) { alert(msg); }
+            }
+        } catch (err) {
+            console.warn('[RoomSettings] save error', err);
+        }
+    }
+    
+    // Window shims for compatibility
+    try {
+        if (typeof window !== 'undefined') {
+            window.openRoomSettingsModal = openRoomSettingsModal;
+            window.closeRoomSettingsModal = closeRoomSettingsModal;
+            window.loadRoomSettings = loadRoomSettings;
+            window.editRoomSettings = editRoomSettings;
+            window.loadRoomData = loadRoomData;
+        }
+    } catch(_) {}
+    
+    // Delegated handlers specific to Room Settings
+    document.addEventListener('click', (e) => {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        const initBtn = t.closest('[data-action="initialize-room-settings"]');
+        if (initBtn) {
+            e.preventDefault();
+            initializeRoomSettings();
+            return;
+        }
+        const editCard = t.closest('[data-action="edit-room-settings"]');
+        if (editCard && editCard.hasAttribute('data-room')) {
+            e.preventDefault();
+            try {
+                const payload = JSON.parse(decodeURIComponent(editCard.getAttribute('data-room')));
+                editRoomSettings(payload);
+            } catch (err) { console.warn('[RoomSettings] bad data-room payload', err); }
+            return;
+        }
+        const cancelBtn = t.closest('[data-action="cancel-room-edit"]');
+        if (cancelBtn) {
+            e.preventDefault();
+            // Close modal or just reload list
+            try { closeRoomSettingsModal(); } catch(_) {}
+            return;
+        }
+    }, true);
+    document.addEventListener('submit', (e) => {
+        const form = e.target;
+        if (!form || !form.matches) return;
+        if (form.matches('form[data-action="save-room-settings"]')) {
+            e.preventDefault();
+            saveRoomSettings(e);
+            return;
+        }
+    }, true);
+    
+    // -----------------------------
+    // File Explorer (migrated)
+    // -----------------------------
+    let currentDirectory = '';
+    let currentFile = null;
+    let fileExplorerData = {};
+    
+    function openFileExplorerModal() {
+        const modal = document.getElementById('fileExplorerModal');
+        if (!modal) return;
+        try { modal.classList.remove('hidden'); } catch(_) {}
+        try { modal.classList.add('show'); } catch(_) {}
+        try { modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
+        setTimeout(() => loadDirectory(''), 10);
+    }
+    function closeFileExplorerModal() {
+        const modal = document.getElementById('fileExplorerModal');
+        if (modal) {
+            try { modal.classList.add('hidden'); } catch(_) {}
+            try { modal.classList.remove('show'); } catch(_) {}
+            try { modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
+        }
+        closeEditor();
+    }
+    
+    async function loadDirectory(path = '') {
+        try {
+            const res = await fetch(`/api/file_manager.php?action=list&path=${encodeURIComponent(path)}`);
+            const result = await res.json();
+            if (result && result.success) {
+                currentDirectory = result.path || '';
+                fileExplorerData = result;
+                displayFileList(result.items || []);
+                updatePathDisplay();
+                updateUpButton();
+            } else {
+                try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to load directory'); } catch(_) { alert(result?.error || 'Failed to load directory'); }
+            }
+        } catch (err) {
+            console.warn('[FileExplorer] loadDirectory error', err);
+            try { if (typeof window.showError === 'function') window.showError('Failed to load directory'); } catch(_) {}
+        }
+    }
+    
+    function displayFileList(items) {
+        const listEl = document.getElementById('fileList');
+        const loadingEl = document.getElementById('fileListLoading');
+        if (!listEl) { console.warn('[FileExplorer] #fileList missing'); return; }
+        if (loadingEl) { try { loadingEl.classList.add('hidden'); } catch(_) {} }
+        if (!items || items.length === 0) {
+            listEl.innerHTML = '<p class="text-gray-500 text-center">Directory is empty</p>';
+            return;
+        }
+        let html = '<div class="space-y-1">';
+        for (const item of items) {
+            const icon = item.type === 'directory' ? '📁' : getFileIcon(item.extension);
+            const sizeText = item.type === 'file' ? (item.size_formatted || '') : '';
+            const modifiedDate = item.modified ? new Date(item.modified * 1000).toLocaleDateString() : '';
+            html += `
+                <div class="flex items-center justify-between hover:bg-gray-100 rounded cursor-pointer" data-action="fm-item" data-type="${item.type}" data-path="${item.path}">
+                    <div class="flex items-center flex-1 gap-2">
+                        <span>${icon}</span>
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800">${(item.name||'').replace(/</g,'&lt;')}</div>
+                            <div class="text-xs text-gray-500">${sizeText} ${modifiedDate}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        ${item.type === 'file' && item.viewable ? `<button data-action="fm-view-file" data-path="${item.path}" class="text-xs bg-blue-500 hover:bg-blue-600 text-white rounded px-2 py-1">View</button>` : ''}
+                        ${item.type === 'file' && item.editable ? `<button data-action="fm-edit-file" data-path="${item.path}" class="text-xs bg-green-500 hover:bg-green-600 text-white rounded px-2 py-1">Edit</button>` : ''}
+                        <button data-action="fm-delete-item" data-path="${item.path}" data-type="${item.type}" class="text-xs bg-red-500 hover:bg-red-600 text-white rounded px-2 py-1">Delete</button>
+                    </div>
+                </div>`;
+        }
+        html += '</div>';
+        listEl.innerHTML = html;
+    }
+    
+    function getFileIcon(ext) {
+        const icons = { php:'🐘', js:'📜', css:'🎨', html:'🌐', json:'📋', txt:'📄', md:'📝', png:'🖼️', jpg:'🖼️', jpeg:'🖼️', webp:'🖼️', svg:'🖼️', log:'📊', sh:'⚙️' };
+        return icons[ext] || '📄';
+    }
+    function updatePathDisplay() {
+        const fullPathElement = document.getElementById('fullPath');
+        if (fullPathElement) {
+            const basePath = '/Users/jongraves/Documents/Websites/WhimsicalFrog';
+            const fullPath = currentDirectory === '' ? basePath : basePath + '/' + currentDirectory;
+            fullPathElement.textContent = fullPath;
+        }
+    }
+    function updateUpButton() {
+        const upButton = document.getElementById('upButton');
+        if (upButton) upButton.disabled = currentDirectory === '';
+    }
+    function navigateUp() {
+        if (currentDirectory !== '' && fileExplorerData && fileExplorerData.parent !== null) {
+            loadDirectory(fileExplorerData.parent === '.' ? '' : fileExplorerData.parent);
+        }
+    }
+    function refreshDirectory() { loadDirectory(currentDirectory); }
+    function selectFile(path) { showFileInfo(path); }
+    
+    async function viewFile(path) {
+        try {
+            const res = await fetch(`/api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
+            const result = await res.json();
+            if (result && result.success) {
+                currentFile = { path: result.path, content: result.content, editable: result.editable, readonly: true };
+                displayFileInEditor(result);
+            } else {
+                try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to read file'); } catch(_) {}
+            }
+        } catch (err) {
+            console.warn('[FileExplorer] viewFile error', err);
+        }
+    }
+    async function editFile(path) {
+        try {
+            const res = await fetch(`/api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
+            const result = await res.json();
+            if (result && result.success) {
+                currentFile = { path: result.path, content: result.content, editable: result.editable, readonly: false };
+                displayFileInEditor(result);
+            } else {
+                try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to read file'); } catch(_) {}
+            }
+        } catch (err) {
+            console.warn('[FileExplorer] editFile error', err);
+        }
+    }
+    function displayFileInEditor(fileData) {
+        const editorDiv = document.getElementById('fileEditor');
+        const actionsDiv = document.getElementById('editorActions');
+        if (!editorDiv || !actionsDiv) return;
+        const isReadonly = (currentFile && currentFile.readonly) || !fileData.editable;
+        editorDiv.innerHTML = `
+            <div class="">
+                <div class="flex items-center justify-between">
+                    <h5 class="font-medium text-gray-800">${(fileData.filename||'').replace(/</g,'&lt;')}</h5>
+                    <span class="text-xs text-gray-500">${isReadonly ? 'Read-only' : 'Editable'}</span>
+                </div>
+            </div>
+            <textarea id="fileContent" class="w-full h-80 border border-gray-300 rounded font-mono text-sm resize-none" ${isReadonly ? 'readonly' : ''} placeholder="File content will appear here...">${fileData.content||''}</textarea>`;
+        if (!isReadonly) actionsDiv.classList.remove('hidden'); else actionsDiv.classList.add('hidden');
+        showFileInfo(fileData.path, fileData);
+    }
+    function showFileInfo(path, fileData = null) {
+        const panel = document.getElementById('fileInfoPanel');
+        if (fileData && panel) {
+            const fileSizeEl = document.getElementById('fileSize');
+            const fileModifiedEl = document.getElementById('fileModified');
+            const filePermissionsEl = document.getElementById('filePermissions');
+            const fileTypeEl = document.getElementById('fileType');
+            if (fileSizeEl) fileSizeEl.textContent = formatFileSize(fileData.size);
+            if (fileModifiedEl) fileModifiedEl.textContent = new Date(fileData.modified * 1000).toLocaleString();
+            if (filePermissionsEl) filePermissionsEl.textContent = '-';
+            if (fileTypeEl) fileTypeEl.textContent = (fileData.filename||'').split('.').pop().toUpperCase();
+            panel.classList.remove('hidden');
+        }
+    }
+    function formatFileSize(bytes) {
+        if (typeof bytes !== 'number') return '-';
+        if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2) + ' GB';
+        if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB';
+        if (bytes >= 1024) return (bytes / 1024).toFixed(2) + ' KB';
+        return bytes + ' bytes';
+    }
+    async function saveFile() {
+        if (!currentFile || currentFile.readonly) {
+            try { if (typeof window.showError === 'function') window.showError('No editable file selected'); } catch(_) { alert('No editable file selected'); }
+            return;
+        }
+        const content = (document.getElementById('fileContent')||{}).value || '';
+        try {
+            const res = await fetch('/api/file_manager.php?action=write', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: currentFile.path, content })
+            });
+            const result = await res.json();
+            if (result && result.success) {
+                try { if (typeof window.showSuccess === 'function') window.showSuccess('File saved successfully'); } catch(_) {}
+                currentFile.content = content;
+            } else {
+                try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to save file'); } catch(_) {}
+            }
+        } catch (err) {
+            console.warn('[FileExplorer] saveFile error', err);
+        }
+    }
+    function closeEditor() {
+        const editorDiv = document.getElementById('fileEditor');
+        const actionsDiv = document.getElementById('editorActions');
+        const infoPanel = document.getElementById('fileInfoPanel');
+        if (!editorDiv || !actionsDiv || !infoPanel) return;
+        editorDiv.innerHTML = `
+            <div class="text-center text-gray-500">
+                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p>Select a file to view or edit</p>
+            </div>`;
+        actionsDiv.classList.add('hidden');
+        infoPanel.classList.add('hidden');
+        currentFile = null;
+    }
+    async function deleteItem(path, type) {
+        const itemType = type === 'directory' ? 'folder' : 'file';
+        if (!confirm(`Are you sure you want to delete this ${itemType}?\n\n${path}`)) return;
+        try {
+            const res = await fetch(`/api/file_manager.php?action=delete&path=${encodeURIComponent(path)}`, { method: 'DELETE' });
+            const result = await res.json();
+            if (result && result.success) {
+                try { if (typeof window.showSuccess === 'function') window.showSuccess(`${itemType[0].toUpperCase()+itemType.slice(1)} deleted successfully`); } catch(_) {}
+                refreshDirectory();
+                if (currentFile && currentFile.path === path) closeEditor();
+            } else {
+                try { if (typeof window.showError === 'function') window.showError(result?.error || `Failed to delete ${itemType}`); } catch(_) {}
+            }
+        } catch (err) {
+            console.warn('[FileExplorer] deleteItem error', err);
+        }
+    }
+    function showCreateFolderDialog() {
+        const name = prompt('Enter folder name:');
+        if (name && name.trim()) createFolder(name.trim());
+    }
+    function showCreateFileDialog() {
+        const name = prompt('Enter file name (with extension):');
+        if (name && name.trim()) createFile(name.trim());
+    }
+    async function createFolder(name) {
+        const path = currentDirectory ? `${currentDirectory}/${name}` : name;
+        try {
+            const res = await fetch('/api/file_manager.php?action=mkdir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path }) });
+            const result = await res.json();
+            if (result && result.success) { try { if (typeof window.showSuccess === 'function') window.showSuccess('Folder created successfully'); } catch(_) {} refreshDirectory(); }
+            else { try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to create folder'); } catch(_) {} }
+        } catch (err) { console.warn('[FileExplorer] createFolder error', err); }
+    }
+    async function createFile(name) {
+        const path = currentDirectory ? `${currentDirectory}/${name}` : name;
+        try {
+            const res = await fetch('/api/file_manager.php?action=write', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, content: '' }) });
+            const result = await res.json();
+            if (result && result.success) { try { if (typeof window.showSuccess === 'function') window.showSuccess('File created successfully'); } catch(_) {} refreshDirectory(); }
+            else { try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to create file'); } catch(_) {} }
+        } catch (err) { console.warn('[FileExplorer] createFile error', err); }
+    }
+    
+    // Window shims
+    try {
+        if (typeof window !== 'undefined') {
+            window.openFileExplorerModal = openFileExplorerModal;
+            window.closeFileExplorerModal = closeFileExplorerModal;
+            window.loadDirectory = loadDirectory;
+            window.viewFile = viewFile;
+            window.editFile = editFile;
+            window.saveFile = saveFile;
+            window.refreshDirectory = refreshDirectory;
+            window.navigateUp = navigateUp;
+            window.createFolder = createFolder;
+            window.createFile = createFile;
+            window.deleteItem = deleteItem;
+        }
+    } catch(_) {}
+    
+    // Delegated handlers for File Explorer
+    document.addEventListener('click', (e) => {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        const item = t.closest('[data-action="fm-item"]');
+        if (item) {
+            const type = item.getAttribute('data-type');
+            const path = item.getAttribute('data-path') || '';
+            if (type === 'directory') {
+                e.preventDefault();
+                loadDirectory(path);
+                return;
+            }
+            if (type === 'file') {
+                e.preventDefault();
+                selectFile(path);
+                return;
+            }
+        }
+        const viewBtn = t.closest('[data-action="fm-view-file"]');
+        if (viewBtn) { e.preventDefault(); viewFile(viewBtn.getAttribute('data-path')); return; }
+        const editBtn = t.closest('[data-action="fm-edit-file"]');
+        if (editBtn) { e.preventDefault(); editFile(editBtn.getAttribute('data-path')); return; }
+        const delBtn = t.closest('[data-action="fm-delete-item"]');
+        if (delBtn) { e.preventDefault(); deleteItem(delBtn.getAttribute('data-path'), delBtn.getAttribute('data-type')); return; }
+        const upBtn = t.closest('#upButton');
+        if (upBtn) { e.preventDefault(); navigateUp(); return; }
+        const refreshBtn = t.closest('[data-action="fm-refresh"], #refreshButton');
+        if (refreshBtn) { e.preventDefault(); refreshDirectory(); return; }
+        const saveBtn = t.closest('[data-action="fm-save"], #saveFileButton');
+        if (saveBtn) { e.preventDefault(); saveFile(); return; }
+        const mkDirBtn = t.closest('[data-action="fm-create-folder"]');
+        if (mkDirBtn) { e.preventDefault(); showCreateFolderDialog(); return; }
+        const mkFileBtn = t.closest('[data-action="fm-create-file"]');
+        if (mkFileBtn) { e.preventDefault(); showCreateFileDialog(); return; }
+        const closeBtn = t.closest('[data-action="close-file-explorer"]');
+        if (closeBtn) { e.preventDefault(); closeFileExplorerModal(); return; }
+    }, true);
+    
     // Delegated change handler (room select)
     document.addEventListener('change', (e) => {
         const t = e.target;
@@ -4678,6 +5277,16 @@ function initAdminSettingsDelegatedListeners() {
         }
     }, true);
 
+    // Delegated change: documentation filter dropdown
+    document.addEventListener('change', (e) => {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        const filter = t.closest('[data-action="docs-filter-change"]');
+        if (filter) {
+            try { if (typeof window !== 'undefined' && typeof window.filterDocuments === 'function') window.filterDocuments(); } catch (_) {}
+        }
+    }, true);
+
     // Delegated click handler
     document.addEventListener('click', (e) => {
         const target = e.target;
@@ -4694,7 +5303,16 @@ function initAdminSettingsDelegatedListeners() {
                 if (typeof cb === 'string') {
                     const f = new Function(`return (${cb});`);
                     const fn = f();
-                    if (typeof fn === 'function') fn();
+                    if (typeof fn === 'function') {
+                        (function(){
+                          try {
+                            if (typeof window !== 'undefined' && (window.WF_DISABLE_ADMIN_SETTINGS_JS === 1 || window.WF_DISABLE_ADMIN_SETTINGS_JS === true)) {
+                              return; // global kill switch for safety during debugging
+                            }
+                          } catch(_) {}
+                        })();
+                        fn();
+                    }
                 }
             } catch (err) {
                 console.warn('[AdminSettings] modal callback failed', err);
@@ -4702,25 +5320,32 @@ function initAdminSettingsDelegatedListeners() {
         };
 
         // -----------------------------
-        // Generic overlay close: any element with data-action="overlay-close"
+        // Generic overlay close (legacy path)
+        // Only handle if bridge is NOT active. Require clicking the actual overlay backdrop.
         // -----------------------------
-        if (target && target.dataset && target.dataset.action === 'overlay-close') {
-            e.preventDefault();
-            try {
-                target.classList.add('hidden');
-                updateModalScrollLock();
-            } catch (_) {}
-            return;
-        }
+        try {
+            if (!window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) {
+                if (target && target.classList && (target.classList.contains('admin-modal-overlay') || target.classList.contains('modal-overlay'))) {
+                    e.preventDefault();
+                    target.classList.add('hidden');
+                    updateModalScrollLock();
+                    return;
+                }
+            }
+        } catch (_) {}
 
         // -----------------------------
         // Generic close button for admin modals
         // -----------------------------
-        const genericClose = closest('[data-action="close-admin-modal"]');
+        const genericClose = closest('[data-action="close-admin-modal"], .admin-modal-close');
         if (genericClose) {
+            // If bridge is active, let it handle modal close to avoid double-handling
+            if (window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) {
+                return; // bridge listener will process and stop propagation
+            }
             e.preventDefault();
             try {
-                const overlay = genericClose.closest('[data-action="overlay-close"], .admin-modal-overlay, .modal-overlay');
+                const overlay = genericClose.closest('.admin-modal-overlay, .modal-overlay');
                 if (overlay) overlay.classList.add('hidden');
                 updateModalScrollLock();
             } catch (_) {}
@@ -4985,6 +5610,55 @@ function initAdminSettingsDelegatedListeners() {
                     document.dispatchEvent(new CustomEvent('wf:cart-text-remove', { detail: { index: idx } }));
                 }
             } catch (_) {}
+            return;
+        }
+
+        // -----------------------------
+        // Admin Settings: Rooms editor card click -> edit room settings
+        // -----------------------------
+        const roomCard = closest('[data-action="edit-room-settings"]');
+        if (roomCard) {
+            e.preventDefault();
+            try {
+                let room = null;
+                const payload = roomCard.dataset.room;
+                if (payload) {
+                    try { room = JSON.parse(decodeURIComponent(payload)); } catch(_) {}
+                }
+                if (!room && typeof window !== 'undefined' && typeof window.getRoomFromElement === 'function') {
+                    room = window.getRoomFromElement(roomCard);
+                }
+                if (typeof window !== 'undefined' && typeof window.editRoomSettings === 'function') {
+                    window.editRoomSettings(room);
+                } else {
+                    document.dispatchEvent(new CustomEvent('wf:edit-room-settings', { detail: { room } }));
+                }
+            } catch(_) {}
+            return;
+        }
+
+        // Start inline edits for category name
+        const startEditCategoryBtn = closest('[data-action="start-edit-category"]');
+        if (startEditCategoryBtn) {
+            e.preventDefault();
+            try { if (typeof window !== 'undefined' && typeof window.startEditCategory === 'function') window.startEditCategory(startEditCategoryBtn); } catch(_) {}
+            return;
+        }
+
+        // Start inline edits for SKU code
+        const startEditSkuBtn = closest('[data-action="start-edit-sku-code"]');
+        if (startEditSkuBtn) {
+            e.preventDefault();
+            try { if (typeof window !== 'undefined' && typeof window.startEditSkuCode === 'function') window.startEditSkuCode(startEditSkuBtn); } catch(_) {}
+            return;
+        }
+
+        // Documentation: select table from list
+        const selectTableBtn = closest('[data-action="docs-select-table"]');
+        if (selectTableBtn) {
+            e.preventDefault();
+            const table = selectTableBtn.dataset.table;
+            try { if (typeof window !== 'undefined' && typeof window.selectTable === 'function') window.selectTable(table); } catch(_) {}
             return;
         }
 
@@ -6935,11 +7609,13 @@ function initAdminSettingsDelegatedListeners() {
 
 // Initialize listeners ASAP
 if (typeof window !== 'undefined') {
-    if (document.readyState !== 'loading') {
+    const bootInit = () => {
+        if (!__wfIsOnAdminSettingsPage()) return;
+        if (__wfIsAdminSettingsLightMode()) return; // skip heavy delegated init in light mode
         initAdminSettingsDelegatedListeners();
-    } else {
-        document.addEventListener('DOMContentLoaded', () => initAdminSettingsDelegatedListeners(), { once: true });
-    }
+    };
+    if (document.readyState !== 'loading') bootInit();
+    else document.addEventListener('DOMContentLoaded', bootInit, { once: true });
 }
 
 // Hard guard to prevent legacy inline scripts or markup from auto-opening modals on page load
@@ -6947,8 +7623,6 @@ function forceHideAdminModalsOnLoad() {
     try {
         // Do not force-hide if a modal is already visible or user has interacted
         if (window.__wfModalUserInteracted) return;
-        const anyVisible = document.querySelector('.admin-modal-overlay.show, .modal-overlay.show, .room-modal-overlay.show, [id$="Modal"].show');
-        if (anyVisible) return;
         const allowHash = (window.location && typeof window.location.hash === 'string') ? window.location.hash : '';
         const selectors = [
             '.admin-modal-overlay',
@@ -6981,23 +7655,222 @@ function forceHideAdminModalsOnLoad() {
 // Invoke the guard as soon as DOM is ready
 if (typeof window !== 'undefined') {
     // Block programmatic modal opens during initial load; allow only user-initiated
-    const WF_SQUELCH_MS = 500;
+    const WF_SQUELCH_MS = 2000; // still used for optional allowParam auto-lift timing
     const WF_SQUELCH_START = Date.now();
     const isSquelchActive = () => (Date.now() - WF_SQUELCH_START) < WF_SQUELCH_MS;
-    // Expose for other closures in this module
+    // Expose for other closures in this module (legacy consumers)
     window.__wfIsSquelchActive = isSquelchActive;
     // Track if user has interacted with modals to avoid late force-hide
     if (typeof window.__wfModalUserInteracted === 'undefined') window.__wfModalUserInteracted = false;
-    if (document.readyState !== 'loading') {
-        forceHideAdminModalsOnLoad();
-    } else {
-        document.addEventListener('DOMContentLoaded', () => forceHideAdminModalsOnLoad(), { once: true });
+
+    // Install short-lived guards that suppress programmatic modal opens during initial load
+    function installModalSquelchGuards() {
+        try {
+            if (!__wfIsOnAdminSettingsPage()) return;
+            const params = new URLSearchParams(window.location.search || '');
+            const allowParam = params.get('wf_allow_modals') === '1';
+            // Persist guard until user interaction (or explicit allow). Do not expire purely by time.
+            const shouldGuard = !allowParam && !window.__wfModalUserInteracted;
+            if (!shouldGuard) return;
+
+            const originals = {};
+
+            // Temporary CSS squelch to prevent visual flash of overlays during initial load
+            try {
+                const styleId = 'wf-admin-modal-squelch';
+                if (!document.getElementById(styleId)) {
+                    const style = document.createElement('style');
+                    style.id = styleId;
+                    style.textContent = `
+                      html[data-admin-squelch="1"] .admin-modal-overlay,
+                      html[data-admin-squelch="1"] .modal-overlay,
+                      html[data-admin-squelch="1"] .room-modal-overlay,
+                      html[data-admin-squelch="1"] .wf-revealco-overlay,
+                      html[data-admin-squelch="1"] #global-confirmation-modal,
+                      html[data-admin-squelch="1"] .confirmation-modal-overlay,
+                      html[data-admin-squelch="1"] #searchModal,
+                      html[data-admin-squelch="1"] .wf-login-overlay,
+                      html[data-admin-squelch="1"] #quantityModal,
+                      html[data-admin-squelch="1"] #detailedItemModal,
+                      html[data-admin-squelch="1"] [id$="Modal"] {
+                        display: none !important;
+                        visibility: hidden !important;
+                        opacity: 0 !important;
+                      }
+                    `;
+                    document.head.appendChild(style);
+                }
+                document.documentElement.setAttribute('data-admin-squelch', '1');
+                const lift = () => {
+                    try { document.documentElement.removeAttribute('data-admin-squelch'); } catch (_) {}
+                };
+                // lift on first interaction; do NOT auto-lift by timer unless explicitly allowed via query param
+                window.addEventListener('pointerdown', lift, { once: true, capture: true });
+                window.addEventListener('keydown', lift, { once: true, capture: true });
+                if (allowParam) {
+                    setTimeout(lift, WF_SQUELCH_MS + 150);
+                }
+            } catch (_) {}
+            const wrapNoop = (obj, key) => {
+                try {
+                    if (!obj) return;
+                    const fn = obj[key];
+                    if (typeof fn !== 'function') return;
+                    if (!originals[key]) originals[key] = fn;
+                    obj[key] = function guardedOpen() {
+                        // Only allow after explicit user interaction or allowParam
+                        if (window.__wfModalUserInteracted || allowParam) {
+                            try { return originals[key].apply(this, arguments); } catch (_) { return; }
+                        }
+                        return; // swallow auto-open during squelch
+                    };
+                } catch (_) {}
+            };
+
+            // Wrap common global openers
+            wrapNoop(window, 'openModal');
+            wrapNoop(window, 'openOverlay');
+            wrapNoop(window, 'showModal');
+            wrapNoop(window, 'displayModal');
+            // Wrap specific admin-settings openers that have historically auto-opened on load
+            wrapNoop(window, 'openWebsiteLogsModal');
+            wrapNoop(window, 'openDatabaseTablesModal');
+            wrapNoop(window, 'openLoggingStatusModal');
+            wrapNoop(window, 'createLoggingStatusModal');
+            wrapNoop(window, 'openSearchModal');
+            wrapNoop(window, 'showSearchResults');
+            wrapNoop(window, 'openSearchResultsModal');
+            wrapNoop(window, 'openHelpDocumentationModal');
+            wrapNoop(window, 'openDocumentationHubModal');
+            // Framework-level opener if present
+            if (window.WFModals && typeof window.WFModals.open === 'function') {
+                if (!originals['WFModals.open']) originals['WFModals.open'] = window.WFModals.open;
+                window.WFModals.open = function guardedWFOpen() {
+                    if (window.__wfModalUserInteracted || !isSquelchActive()) {
+                        try { return originals['WFModals.open'].apply(this, arguments); } catch (_) { return; }
+                    }
+                    return;
+                };
+            }
+
+            // DOM observer to hide overlays that appear during squelch
+            let mo = null;
+            try {
+                mo = new MutationObserver((_muts) => {
+                    // Keep hiding overlays until interaction or allowParam
+                    if (allowParam || window.__wfModalUserInteracted) return;
+                    const sel = [
+                        '.admin-modal-overlay',
+                        '.modal-overlay',
+                        '.room-modal-overlay',
+                        '.wf-revealco-overlay',
+                        '#global-confirmation-modal',
+                        '.confirmation-modal-overlay',
+                        '#searchModal',
+                        '.wf-login-overlay',
+                        '#quantityModal',
+                        '#detailedItemModal',
+                        '[id$="Modal"]',
+                        '[role="dialog"]',
+                        '.modal',
+                        '.overlay',
+                        '.drawer',
+                        '.sheet',
+                        '.dialog-backdrop'
+                    ].join(', ');
+                    document.querySelectorAll(sel).forEach((el) => {
+                        try { el.classList.remove('show'); } catch (_) {}
+                        try { el.classList.add('hidden'); } catch (_) {}
+                        try { el.setAttribute('data-wf-squelched', '1'); } catch (_) {}
+                    });
+                });
+                mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class','style'] });
+            } catch (_) {}
+
+            // Restore originals only upon interaction (or when explicitly allowed)
+            const restore = () => {
+                try {
+                    ['openModal','openOverlay','showModal','displayModal','openWebsiteLogsModal','openDatabaseTablesModal','openLoggingStatusModal','createLoggingStatusModal','openSearchModal','showSearchResults','openSearchResultsModal','openHelpDocumentationModal','openDocumentationHubModal'].forEach((k) => {
+                        if (originals[k]) { window[k] = originals[k]; }
+                    });
+                    if (originals['WFModals.open'] && window.WFModals) {
+                        window.WFModals.open = originals['WFModals.open'];
+                    }
+                    if (mo) try { mo.disconnect(); } catch(_) {}
+                } catch (_) {}
+            };
+            window.addEventListener('pointerdown', () => { window.__wfModalUserInteracted = true; restore(); }, { once: true, capture: true });
+            window.addEventListener('keydown', () => { window.__wfModalUserInteracted = true; restore(); }, { once: true, capture: true });
+            if (allowParam) {
+                setTimeout(restore, 0);
+            }
+        } catch (_) {}
     }
+    // Force-hide common non-overlay panels (search results, website logs) until user interacts
+    function installPanelSquelchGuards() {
+        try {
+            if (!__wfIsOnAdminSettingsPage()) return;
+            const params = new URLSearchParams(window.location.search || '');
+            const allowParam = params.get('wf_allow_panels') === '1' || params.get('wf_allow_modals') === '1';
+            if (allowParam || window.__wfModalUserInteracted) return;
+
+            const selList = [
+                '#websiteLogsModal', '#websiteLogsContainer', '#websiteLogsPanel',
+                '#databaseTablesModal', '#databaseTablesContainer', '#databaseTablesPanel',
+                '#searchResults', '#searchResultsContainer', '#searchResultsPanel', '#searchResultsModal'
+            ];
+            const hideNode = (el) => {
+                if (!el) return;
+                try { el.classList.add('hidden'); } catch (_) {}
+                try { el.classList.remove('show'); } catch (_) {}
+                try { el.setAttribute('data-wf-panel-squelched', '1'); } catch (_) {}
+            };
+            const sweep = () => {
+                if (allowParam || window.__wfModalUserInteracted) return;
+                selList.forEach((s) => {
+                    document.querySelectorAll(s).forEach(hideNode);
+                });
+            };
+            // Initial sweep
+            sweep();
+            // Observe attribute changes that might re-show these panels before interaction
+            try {
+                const mo = new MutationObserver((_muts) => {
+                    if (allowParam || window.__wfModalUserInteracted) return;
+                    let touched = false;
+                    for (const m of _muts) {
+                        if (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName === 'style')) {
+                            touched = true; break;
+                        }
+                    }
+                    if (touched) sweep();
+                });
+                mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class','style'] });
+                const release = () => { try { mo.disconnect(); } catch(_) {}; };
+                window.addEventListener('pointerdown', () => { window.__wfModalUserInteracted = true; release(); }, { once: true, capture: true });
+                window.addEventListener('keydown', () => { window.__wfModalUserInteracted = true; release(); }, { once: true, capture: true });
+                if (allowParam) setTimeout(release, 0);
+            } catch (_) {}
+        } catch (_) {}
+    }
+    const bootHide = () => {
+        if (!__wfIsOnAdminSettingsPage()) return;
+        // Always install squelch guards on admin settings, even in light/minimal renders
+        installModalSquelchGuards();
+        installPanelSquelchGuards();
+        // Only run the heavier legacy force-hide when not in light/minimal/section renders
+        if (__wfIsAdminSettingsLightMode()) return;
+        forceHideAdminModalsOnLoad();
+    };
+    if (document.readyState !== 'loading') bootHide();
+    else document.addEventListener('DOMContentLoaded', bootHide, { once: true });
     // Also enforce on full load and shortly after to suppress late auto-opens
     window.addEventListener('load', () => {
-        try { forceHideAdminModalsOnLoad(); } catch(_) {}
+        try { bootHide(); } catch(_) {}
         // One quick retry; abort if user interacted
-        setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 200);
+        setTimeout(() => { try { bootHide(); } catch(_) {} }, 200);
+        setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 1000);
+        setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 3000);
     }, { once: true });
 
     // Mark user interaction early to disable any further force-hides
@@ -7303,8 +8176,14 @@ if (typeof window !== 'undefined') {
             }
         }, { capture: true });
     };
-    if (document.readyState !== 'loading') onReady();
-    else document.addEventListener('DOMContentLoaded', onReady, { once: true });
+    const bootDelegation = () => {
+        if (!__wfIsOnAdminSettingsPage()) return;
+        // Run delegated admin modal handlers even in light mode so buttons remain responsive.
+        // Heavier initializations elsewhere remain gated by light mode.
+        onReady();
+    };
+    if (document.readyState !== 'loading') bootDelegation();
+    else document.addEventListener('DOMContentLoaded', bootDelegation, { once: true });
 }
 
 // Helper to initialize SSL checkbox-driven visibility

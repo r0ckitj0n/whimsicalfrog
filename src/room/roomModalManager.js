@@ -52,7 +52,7 @@ export class RoomModalManager {
     const backBtn = document.createElement('button');
     backBtn.className = 'room-modal-back-btn';
     backBtn.textContent = '← Back to Main Room';
-    backBtn.onclick = () => this.hide();
+    backBtn.addEventListener('click', () => this.hide());
     backBtnWrap.appendChild(backBtn);
 
     const titleOverlay = document.createElement('div');
@@ -180,12 +180,12 @@ export class RoomModalManager {
       return;
     }
 
-    iframe.onload = () => {
+    iframe.addEventListener('load', () => {
       spinner.classList.add('hidden');
       iframe.classList.remove('hidden');
       // Emit event for external hooks (e.g., analytics)
       eventBus.emit('roomModalLoaded', { roomNumber });
-    };
+    });
   }
 
   /* ---------- DATA ---------- */

@@ -50,10 +50,12 @@ for (const relPath of files) {
     // Skip unreadable files
     continue;
   }
-  const content = stripHtmlComments(src);
 
-  // Skip if file explicitly opts out
-  if (/WF_GUARD_TEMPLATES_CSS_IGNORE/.test(content)) continue;
+  // IMPORTANT: Check ignore token on the raw source BEFORE stripping comments
+  // so that HTML comment tokens like <!-- WF_GUARD_TEMPLATES_CSS_IGNORE --> are honored.
+  if (/WF_GUARD_TEMPLATES_CSS_IGNORE/.test(src)) continue;
+
+  const content = stripHtmlComments(src);
 
   const hits = [];
   if (linkRelStylesheetRe.test(content)) {

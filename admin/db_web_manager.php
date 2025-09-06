@@ -50,25 +50,13 @@ if (!$authenticated) {
     exit;
 }
 
-// Include database configuration
-require_once __DIR__ . '/includes/database.php';
+// Include centralized API config (bootstraps logging and Database singleton)
+require_once __DIR__ . '/../api/config.php';
 
-// Database configurations
+// Database configurations (centralized)
 $configs = [
-    'local' => [
-        'host' => 'localhost',
-        'db' => 'whimsicalfrog',
-        'user' => 'root',
-        'pass' => 'Palz2516',
-        'name' => 'Local Database'
-    ],
-    'live' => [
-        'host' => 'db5017975223.hosting-data.io',
-        'db' => 'dbs14295502',
-        'user' => 'dbu2826619',
-        'pass' => 'Palz2516!',
-        'name' => 'Live Database (IONOS)'
-    ]
+    'local' => array_merge(wf_get_db_config('local'), ['name' => 'Local Database']),
+    'live'  => array_merge(wf_get_db_config('live'),  ['name' => 'Live Database (IONOS)'])
 ];
 
 $currentEnv = $_GET['env'] ?? 'local';
@@ -79,15 +67,19 @@ if (isset($_POST['action'])) {
     header('Content-Type: application/json');
 
     try {
-        $dsn = "mysql:host={$config['host']};dbname={$config['db']};charset=utf8mb4";
+        // Use centralized helper for consistent connection handling
         $options = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
             PDO::ATTR_TIMEOUT => 10
         ];
-
-        $pdo = new PDO($dsn, $config['user'], $config['pass'], $options);
+        $pdo = Database::createConnection(
+            $config['host'],
+            $config['db'],
+            $config['user'],
+            $config['pass'],
+            3306,
+            null,
+            $options
+        );
 
         switch ($_POST['action']) {
             case 'status':

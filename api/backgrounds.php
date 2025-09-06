@@ -1,58 +1,43 @@
 <?php
 
-require_once __DIR__ . '/../includes/functions.php';
-// Background management API
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Bootstrap consistent API behavior and DB config
+require_once __DIR__ . '/api_bootstrap.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/../includes/response.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
-
-// Database connection
-$host = 'localhost';
-$dbname = 'whimsicalfrog';
-$username = 'root';
-$password = 'Palz2516';
-
-try {
-    try {
-        $pdo = Database::getInstance();
-    } catch (Exception $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw $e;
-    }
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]);
+// Early exit on preflight
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
+    http_response_code(200);
     exit;
 }
 
-$method = $_SERVER['REQUEST_METHOD'];
-$input = json_decode(file_get_contents('php://input'), true);
+// Database connection (centralized via Database singleton)
+try {
+    $pdo = Database::getInstance();
+} catch (Throwable $e) {
+    Response::serverError('Database connection failed', $e->getMessage());
+}
 
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+// Router
 switch ($method) {
     case 'GET':
-        handleGet($pdo);
+        wf_handle_backgrounds_get($pdo);
         break;
     case 'POST':
-        handlePost($pdo, $input);
+        wf_handle_backgrounds_post($pdo);
         break;
     case 'PUT':
-        handlePut($pdo, $input);
+        wf_handle_backgrounds_put($pdo);
         break;
     case 'DELETE':
-        handleDelete($pdo, $input);
+        wf_handle_backgrounds_delete($pdo);
         break;
     default:
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-        break;
+        Response::methodNotAllowed();
 }
-// handlePost function moved to api_handlers_extended.php for centralization
 
 function saveBackground($pdo, $input)
 {
@@ -85,13 +70,12 @@ function saveBackground($pdo, $input)
 
         if ($stmt->execute([$roomType, $backgroundName, $imageFilename, $webpFilename])) {
             $backgroundId = $pdo->lastInsertId();
-            echo json_encode(['success' => true, 'message' => 'Background saved successfully', 'id' => $backgroundId]);
+            Response::success(['id' => $backgroundId], 'Background saved successfully');
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to save background']);
+            Response::error('Failed to save background');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error', $e->getMessage());
     }
 }
 
@@ -119,15 +103,14 @@ function applyBackground($pdo, $input)
 
         if ($activateStmt->rowCount() > 0) {
             $pdo->commit();
-            echo json_encode(['success' => true, 'message' => 'Background applied successfully']);
+            Response::success(null, 'Background applied successfully');
         } else {
-            $pdo->rollback();
-            echo json_encode(['success' => false, 'message' => 'Background not found or invalid room type']);
+            $pdo->rollBack();
+            Response::error('Background not found or invalid room type');
         }
     } catch (PDOException $e) {
-        $pdo->rollback();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        $pdo->rollBack();
+        Response::serverError('Database error', $e->getMessage());
     }
 }
 
@@ -169,13 +152,12 @@ function handleDelete($pdo, $input)
             //     unlink("../images/" . $background['webp_filename']);
             // }
 
-            echo json_encode(['success' => true, 'message' => 'Background deleted successfully']);
+            Response::success(null, 'Background deleted successfully');
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to delete background']);
+            Response::error('Failed to delete background');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error', $e->getMessage());
     }
 }
 
@@ -183,6 +165,82 @@ function handleUpload($pdo, $input)
 {
     // This would handle file uploads - for now, just return success
     // In a full implementation, this would process uploaded files
-    echo json_encode(['success' => true, 'message' => 'Upload endpoint ready']);
+    Response::success(null, 'Upload endpoint ready');
+}
+
+// Local request handlers using Response helper
+function wf_handle_backgrounds_get(PDO $pdo): void {
+    try {
+        $roomType = $_GET['room_type'] ?? null;
+        $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
+
+        if ($roomType !== null) {
+            $sql = "SELECT * FROM backgrounds WHERE room_type = ?";
+            $params = [$roomType];
+            if ($activeOnly) { $sql .= " AND is_active = 1"; }
+            $sql .= " ORDER BY background_name = 'Original' DESC, created_at DESC";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($activeOnly && count($rows) > 0) {
+                Response::success(['background' => $rows[0]]);
+            } else {
+                Response::success(['backgrounds' => $rows]);
+            }
+        } else {
+            $stmt = $pdo->prepare("SELECT room_type, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_type ORDER BY room_type");
+            $stmt->execute();
+            $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            Response::success(['summary' => $summary]);
+        }
+    } catch (Throwable $e) {
+        Response::serverError('Database error', $e->getMessage());
+    }
+}
+
+function wf_handle_backgrounds_post(PDO $pdo): void {
+    $data = Response::getPostData(true);
+    if (!is_array($data)) { Response::validationError('Invalid payload'); }
+    $action = $data['action'] ?? '';
+    switch ($action) {
+        case 'save':
+            saveBackground($pdo, $data);
+            return;
+        case 'apply':
+            applyBackground($pdo, $data);
+            return;
+        case 'upload':
+            handleUpload($pdo, $data);
+            return;
+        default:
+            Response::error('Invalid action');
+    }
+}
+
+function wf_handle_backgrounds_put(PDO $pdo): void {
+    // Expect x-www-form-urlencoded or JSON
+    $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+    if (strpos($contentType, 'application/json') !== false) {
+        $data = Response::getJsonInput() ?? [];
+    } else {
+        parse_str(file_get_contents('php://input'), $data);
+    }
+    $id = $data['id'] ?? '';
+    $cssValue = $data['css_value'] ?? '';
+    if (empty($id) || $cssValue === '') {
+        Response::validationError(['id' => 'required', 'css_value' => 'required']);
+    }
+    try {
+        $stmt = $pdo->prepare("UPDATE global_css_rules SET css_value = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+        $stmt->execute([$cssValue, $id]);
+        Response::success(null, 'CSS rule updated successfully');
+    } catch (Throwable $e) {
+        Response::serverError('Database error', $e->getMessage());
+    }
+}
+
+function wf_handle_backgrounds_delete(PDO $pdo): void {
+    $data = Response::getJsonInput() ?? [];
+    handleDelete($pdo, $data);
 }
 ?> 

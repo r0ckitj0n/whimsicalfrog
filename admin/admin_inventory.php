@@ -11,8 +11,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     require_once __DIR__ . '/../api/config.php';
 } else {
     // When included from index.php, config.php is already loaded.
-    require_once __DIR__ . '/../includes/database.php';
-    require_once __DIR__ . '/../includes/logger.php';
+    // No additional includes needed here.
 }
 
 // Get database instance
@@ -6089,7 +6088,7 @@ async function loadAvailableImages() {
             data.images.forEach(image => {
                 const imgContainer = document.createElement('div');
                 imgContainer.className = 'relative cursor-pointer hover:opacity-75 transition-all hover:scale-105 hover:shadow-md p-1 rounded';
-                imgContainer.onclick = () => selectImageFromGrid(image.image_path);
+                imgContainer.addEventListener('click', () => selectImageFromGrid(image.image_path));
                 
                 const img = document.createElement('img');
                 // Handle image path - don't double up the /images/items/ prefix

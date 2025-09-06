@@ -28,7 +28,7 @@ exit;
 // CSS Generator for Global CSS Rules
 // This endpoint generates actual CSS content for linking in HTML
 
-require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/config.php';
 
 try {
     $pdo = Database::getInstance();

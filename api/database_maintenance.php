@@ -146,12 +146,9 @@ function testConnection()
     }
 
     try {
-        $testDsn = "mysql:host=$testHost;dbname=$testDb;charset=utf8mb4";
+        // Use centralized helper with consistent defaults; override timeout and add SSL if requested
         $testOptions = [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::ATTR_TIMEOUT => 10 // 10 second timeout
+            PDO::ATTR_TIMEOUT => 10
         ];
 
         // Add SSL options if enabled
@@ -160,7 +157,15 @@ function testConnection()
             $testOptions[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
         }
 
-        $testPdo = new PDO($testDsn, $testUser, $testPass, $testOptions);
+        $testPdo = Database::createConnection(
+            $testHost,
+            $testDb,
+            $testUser,
+            $testPass,
+            3306,
+            null,
+            $testOptions
+        );
 
         // Test basic query
         $stmt = $testPdo->query("SELECT VERSION() as version, DATABASE() as current_db");

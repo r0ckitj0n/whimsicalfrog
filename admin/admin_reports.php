@@ -1,180 +1,23 @@
 <?php
-// Admin Reports - Business analytics and insights
-if (!defined('INCLUDED_FROM_INDEX')) {
-    define('INCLUDED_FROM_INDEX', true);
+// Admin Reports (Thin Delegator)
+// Bootstraps layout if needed and delegates rendering to the canonical sections/admin_reports.php
+
+require_once dirname(__DIR__) . '/includes/vite_helper.php';
+
+if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+    $page = 'admin';
+    include dirname(__DIR__) . '/partials/header.php';
+    if (!function_exists('__wf_admin_reports_footer_shutdown')) {
+        function __wf_admin_reports_footer_shutdown() {
+            @include __DIR__ . '/../partials/footer.php';
+        }
+    }
+    register_shutdown_function('__wf_admin_reports_footer_shutdown');
 }
 
-require_once __DIR__ . '/../includes/functions.php';
-
-// Get database instance
-$db = Database::getInstance();
-
-// Date filtering
-$startDate = $_GET['start_date'] ?? '';
-$endDate = $_GET['end_date'] ?? '';
-$startParam = $startDate ?: '1900-01-01';
-$endParam = $endDate ?: '2100-12-31';
-
-// Initialize metrics
-$metrics = [
-    'totalRevenue' => 0,
-    'filteredRevenue' => 0,
-    'totalOrders' => 0,
-    'filteredOrderCount' => 0,
-    'totalCustomers' => 0,
-    'averageOrderValue' => 0
-];
-
-$paymentStats = ['status' => [], 'method' => []];
-$ordersByDate = [];
-$topProducts = [];
-$lowStockProducts = [];
-$paymentsReceived = 0;
-$paymentsPending = 0;
-
-try {
-
-
-    // Get total customers (non-admin users)
-    $metrics['totalCustomers'] = Database::queryRow("SELECT COUNT(*) FROM users WHERE role != 'admin'") ?: 0;
-
-    // Get total orders and revenue (YTD)
-    $currentYear = date('Y');
-    $stmt = $db->prepare("SELECT COUNT(*) as orderCount, COALESCE(SUM(total), 0) as totalRevenue 
-                          FROM orders 
-                          WHERE YEAR(date) = ?");
-    $stmt->execute([$currentYear]);
-    $ytdData = $stmt->fetch();
-
-    $metrics['totalOrders'] = $ytdData['orderCount'] ?? 0;
-    $metrics['totalRevenue'] = $ytdData['totalRevenue'] ?? 0;
-
-    // Get filtered orders and revenue
-    $stmt = $db->prepare("SELECT COUNT(*) as orderCount, COALESCE(SUM(total), 0) as totalRevenue 
-                          FROM orders 
-                          WHERE DATE(date) BETWEEN ? AND ?");
-    $stmt->execute([$startParam, $endParam]);
-    $filteredData = $stmt->fetch();
-
-    $metrics['filteredOrderCount'] = $filteredData['orderCount'] ?? 0;
-    $metrics['filteredRevenue'] = $filteredData['totalRevenue'] ?? 0;
-
-    // Calculate average order value
-    $metrics['averageOrderValue'] = $metrics['totalOrders'] > 0 ? $metrics['totalRevenue'] / $metrics['totalOrders'] : 0;
-
-    // Get payment status stats for filtered period
-    $stmt = $db->prepare("SELECT paymentStatus, COUNT(*) as count 
-                          FROM orders 
-                          WHERE DATE(date) BETWEEN ? AND ? 
-                          GROUP BY paymentStatus");
-    $stmt->execute([$startParam, $endParam]);
-    $paymentStatusData = $stmt->fetchAll();
-
-    foreach ($paymentStatusData as $row) {
-        $status = $row['paymentStatus'] ?? 'Unknown';
-        $paymentStats['status'][$status] = intval($row['count']);
-    }
-
-    $paymentsReceived = $paymentStats['status']['Received'] ?? 0;
-    $paymentsPending = $paymentStats['status']['Pending'] ?? 0;
-
-    // Get payment method stats for filtered period
-    $stmt = $db->prepare("SELECT paymentMethod, COUNT(*) as count 
-                          FROM orders 
-                          WHERE DATE(date) BETWEEN ? AND ? 
-                          GROUP BY paymentMethod");
-    $stmt->execute([$startParam, $endParam]);
-    $paymentMethodData = $stmt->fetchAll();
-
-    foreach ($paymentMethodData as $row) {
-        $method = $row['paymentMethod'] ?? 'Unknown';
-        $paymentStats['method'][$method] = intval($row['count']);
-    }
-
-    // Get orders by date for chart
-    $stmt = $db->prepare("SELECT DATE(date) as order_date, COUNT(*) as order_count, COALESCE(SUM(total), 0) as revenue 
-                          FROM orders 
-                          WHERE DATE(date) BETWEEN ? AND ? 
-                          GROUP BY DATE(date) 
-                          ORDER BY order_date");
-    $stmt->execute([$startParam, $endParam]);
-    $dailyOrderData = $stmt->fetchAll();
-
-    foreach ($dailyOrderData as $row) {
-        $ordersByDate[$row['order_date']] = [
-            'count' => intval($row['order_count']),
-            'revenue' => floatval($row['revenue'])
-        ];
-    }
-
-    // Get top products for filtered period
-    $stmt = $db->prepare("SELECT i.name, SUM(oi.quantity) as quantity, SUM(oi.quantity * oi.price) as revenue 
-                          FROM order_items oi
-                          JOIN orders o ON oi.orderId = o.id
-                          LEFT JOIN items i ON oi.sku = i.sku
-                          WHERE DATE(o.date) BETWEEN ? AND ?
-                          GROUP BY oi.sku, i.name
-                          ORDER BY revenue DESC
-                          LIMIT 5");
-    $stmt->execute([$startParam, $endParam]);
-    $topProductsData = $stmt->fetchAll();
-
-    foreach ($topProductsData as $row) {
-        $sku = $row['sku'] ?? 'unknown';
-        $topProducts[$sku] = [
-            'name' => $row['name'] ?? 'Unknown Product',
-            'quantity' => intval($row['quantity']),
-            'revenue' => floatval($row['revenue'])
-        ];
-    }
-
-    // Get low stock products
-    $lowStockProducts = Database::queryAll("SELECT name, stockLevel, reorderPoint 
-                                    FROM items 
-                                    WHERE stockLevel <= reorderPoint 
-                                    ORDER BY stockLevel ASC");
-
-} catch (Exception $e) {
-    Logger::error('Admin Reports Database Error: ' . $e->getMessage());
-}
-
-// Prepare data for charts (will be JSON encoded later)
-$chartData = [
-    'labels' => array_keys($ordersByDate),
-    'orders' => array_values(array_column($ordersByDate, 'count')),
-    'revenue' => array_values(array_column($ordersByDate, 'revenue')),
-    'paymentLabels' => array_keys($paymentStats['method']),
-    'paymentCounts' => array_values($paymentStats['method'])
-];
+include dirname(__DIR__) . '/sections/admin_reports.php';
+return;
 ?>
-
-<div class="admin-content-container">
-    <div class="admin-filter-section">
-        <div class="admin-filters">
-        <form action="/admin/reports" method="GET" class="admin-filter-form">
-            
-            <input type="date" name="start_date" id="start_date" 
-                   value="<?= htmlspecialchars($startDate) ?>" class="admin-form-input">
-            
-            <input type="date" name="end_date" id="end_date" 
-                   value="<?= htmlspecialchars($endDate) ?>" class="admin-form-input">
-            
-            <span class="admin-actions">
-                <button type="submit" class="btn btn-primary admin-filter-button">Apply Filter</button>
-                <a href="/admin/reports" class="btn btn-secondary admin-filter-button">Clear</a>
-            </span>
-        </form>
-        </div>
-    </div>
-
-    <div class="admin-table-section">
-        <!- Key Metrics Dashboard ->
-        <div class="metrics-grid">
-        <div class="metric-card success">
-            <div class="metric-label">Total Revenue</div>
-            <div class="metric-value">$<?= number_format($metrics['filteredRevenue'], 2) ?></div>
-            <div class="metric-meta">For selected period</div>
-        </div>
         
         <div class="metric-card primary">
             <div class="metric-label">Orders</div>

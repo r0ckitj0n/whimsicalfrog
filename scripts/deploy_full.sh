@@ -10,6 +10,7 @@ PASS="Palz2516!"
 REMOTE_PATH="/"
 # Optional public base for sites under a subdirectory (e.g., /wf)
 PUBLIC_BASE="${WF_PUBLIC_BASE:-}"
+BASE_URL="https://whimsicalfrog.us${PUBLIC_BASE}"
 DB_HOST="whimsicalfrog.com"
 DB_USER="jongraves"
 DB_PASS="Palz2516"
@@ -57,13 +58,18 @@ set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --verbose \
+# Use only-newer + ignore-time to skip identical files; avoid re-upload churn
+# - only-newer: don't overwrite if remote is same/newer
+# - ignore-time: ignore mtime differences; compare by size only to skip identical files
+# - no-perms: don't try to sync permissions (reduces needless diffs)
+mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob .git/ \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
   --exclude-glob backups/ \
+  --exclude-glob documentation/ \
   --exclude-glob Documentation/ \
   --exclude-glob Scripts/ \
   --exclude-glob scripts/ \
@@ -197,52 +203,46 @@ else
   DB_STATUS="Dump failed"
 fi
 
-# Verify critical files exist on server
-echo -e "${GREEN}🔍 Verifying deployment...${NC}"
+# Verify deployment over HTTP (avoids dotfile visibility issues)
+echo -e "${GREEN}🔍 Verifying deployment over HTTP...${NC}"
 
-# Create verification script
-cat > verify_deployment.txt << EOL
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://$USER:$PASS@$HOST
-ls images/items/TS002A.webp
-ls process_multi_image_upload.php
-ls components/image_carousel.php
-ls dist/.vite/manifest.json
-ls dist/assets
-bye
-EOL
-
-echo -e "${GREEN}📋 Checking if critical files were uploaded...${NC}"
-VERIFY_OUT=$(lftp -f verify_deployment.txt 2>/dev/null)
-if echo "$VERIFY_OUT" | grep -q "TS002A.webp"; then
-  echo -e "${GREEN}✅ TS002A.webp found on server${NC}"
-else
-  echo -e "${YELLOW}⚠️  TS002A.webp not found - may need manual upload${NC}"
+# Check Vite manifest accessibility
+HTTP_MANIFEST_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/.vite/manifest.json")
+if [ "$HTTP_MANIFEST_CODE" != "200" ]; then
+  HTTP_MANIFEST_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/manifest.json")
 fi
-if echo "$VERIFY_OUT" | grep -q "manifest.json"; then
-  echo -e "${GREEN}✅ dist/.vite/manifest.json found on server${NC}"
+if [ "$HTTP_MANIFEST_CODE" = "200" ]; then
+  echo -e "${GREEN}✅ Vite manifest accessible over HTTP${NC}"
 else
-  echo -e "${YELLOW}⚠️  dist/.vite/manifest.json not found - build assets may be missing${NC}"
-fi
-if echo "$VERIFY_OUT" | grep -q "dist/assets"; then
-  echo -e "${GREEN}✅ dist/assets found on server${NC}"
-else
-  echo -e "${YELLOW}⚠️  dist/assets directory not found - build assets may be missing${NC}"
+  echo -e "${YELLOW}⚠️  Vite manifest not accessible over HTTP (code $HTTP_MANIFEST_CODE)${NC}"
 fi
 
-# Clean up verification script
-rm verify_deployment.txt
+# Extract one JS and one CSS asset from homepage HTML and verify
+HOME_HTML=$(curl -s "$BASE_URL/")
+APP_JS=$(echo "$HOME_HTML" | grep -Eo "/dist/assets/js/app.js-[^\"']+\\.js" | head -n1)
+MAIN_CSS=$(echo "$HOME_HTML" | grep -Eo "/dist/assets/[^\"']+\\.css" | head -n1)
+if [ -n "$APP_JS" ]; then
+  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$APP_JS")
+  echo -e "  • JS $APP_JS -> HTTP $CODE_JS"
+else
+  echo -e "  • JS: ⚠️ Not found in homepage HTML"
+fi
+if [ -n "$MAIN_CSS" ]; then
+  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$MAIN_CSS")
+  echo -e "  • CSS $MAIN_CSS -> HTTP $CODE_CSS"
+else
+  echo -e "  • CSS: ⚠️ Not found in homepage HTML"
+fi
 
-# Test image accessibility
+# Test image accessibility (use a stable, non-legacy asset)
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://whimsicalfrog.us/images/items/TS002A.webp")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/images/logos/logo_whimsicalfrog.webp")
 if [ "$HTTP_CODE" = "200" ]; then
-  echo -e "${GREEN}✅ Product images are accessible online!${NC}"
+  echo -e "${GREEN}✅ Logo image is accessible online!${NC}"
 elif [ "$HTTP_CODE" = "404" ]; then
-  echo -e "${YELLOW}⚠️  Image returns 404 - may need a few minutes to propagate${NC}"
+  echo -e "${YELLOW}⚠️  Logo image returns 404 - may need a few minutes to propagate${NC}"
 else
-  echo -e "${YELLOW}⚠️  Image returned HTTP code: $HTTP_CODE${NC}"
+  echo -e "${YELLOW}⚠️  Logo image returned HTTP code: $HTTP_CODE${NC}"
 fi
 
 # Final summary
@@ -253,36 +253,22 @@ echo -e "  • Images: ✅ Included in deployment"
 echo -e "  • Permissions: ✅ Image directory permissions fixed"
 echo -e "  • Verification: ✅ Completed"
 
-# Verify Vite assets over HTTP using manifest (ensures correct base path and availability)
+# Verify Vite assets over HTTP using homepage extraction (ensures correct base path and availability)
 echo -e "${GREEN}🔎 Verifying Vite assets over HTTP...${NC}"
-BASE_URL="https://whimsicalfrog.us${PUBLIC_BASE}"
-MANIFEST_PATH="dist/.vite/manifest.json"
-if [ ! -f "$MANIFEST_PATH" ]; then
-  MANIFEST_PATH="dist/manifest.json"
-fi
-JS_FILE=""
-CSS_FILE=""
-if [ -f "$MANIFEST_PATH" ]; then
-  JS_FILE=$(sed -n 's/.*"file":"\([^"]*app.js-[^"]*\)".*/\1/p' "$MANIFEST_PATH" | head -n1)
-  if [ -z "$JS_FILE" ]; then
-    JS_FILE=$(ls -1 dist/assets/js/app.js-*.js 2>/dev/null | head -n1 | sed 's#^dist/##')
-  fi
-  CSS_FILE=$(sed -n 's/.*"css":\["\([^"]*\)".*/\1/p' "$MANIFEST_PATH" | head -n1)
-fi
-
-if [ -n "$JS_FILE" ]; then
-  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/$JS_FILE")
-  echo -e "  • JS $JS_FILE -> HTTP $CODE_JS"
+# Reuse APP_JS and MAIN_CSS from above
+if [ -n "$APP_JS" ]; then
+  CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$APP_JS")
+  echo -e "  • JS $APP_JS -> HTTP $CODE_JS"
 else
-  echo -e "  • JS: ⚠️ Unable to resolve app.js hashed file from manifest"
+  echo -e "  • JS: ⚠️ Not found in homepage HTML"
 fi
-if [ -n "$CSS_FILE" ]; then
-  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/$CSS_FILE")
-  echo -e "  • CSS $CSS_FILE -> HTTP $CODE_CSS"
+if [ -n "$MAIN_CSS" ]; then
+  CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$MAIN_CSS")
+  echo -e "  • CSS $MAIN_CSS -> HTTP $CODE_CSS"
 else
-  echo -e "  • CSS: ⚠️ Unable to resolve first CSS file from manifest"
+  echo -e "  • CSS: ⚠️ Not found in homepage HTML"
 fi
 
 echo -e "\n${GREEN}🎉 Full deployment completed!${NC}"
 echo -e "${YELLOW}💡 If images still don't appear, wait 5-10 minutes for server cache to clear${NC}"
-echo -e "${GREEN}💡 Database is now automatically synced with every full deployment${NC}" 
+echo -e "${GREEN}💡 Database is now automatically synced with every full deployment${NC}"

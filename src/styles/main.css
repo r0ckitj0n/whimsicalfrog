@@ -28,7 +28,7 @@
 @import url('./login-modal.css');
 @import url('./admin-modals.css');
 /* Missing file removed to prevent Vite 500 during dev */
-/* @import url('./legacy_missing_admin.css'); */
+/* @import './legacy_missing_admin.css'; */
 @import url('./admin-db-tools.css');
 @import url('./admin-inventory.css');
 @import url('./admin-filters.css');

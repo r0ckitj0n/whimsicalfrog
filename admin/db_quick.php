@@ -6,8 +6,8 @@
  * Simple command-line tool for database operations
  */
 
-// Include database configuration
-require_once __DIR__ . '/includes/database.php';
+// Include centralized API config (bootstraps Database singleton and logging)
+require_once __DIR__ . '/../api/config.php';
 
 function connectLocal()
 {

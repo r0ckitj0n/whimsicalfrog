@@ -69,6 +69,7 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
   --exclude-glob backups/ \
+  --exclude-glob documentation/ \
   --exclude-glob Documentation/ \
   --exclude-glob Scripts/ \
   --exclude-glob scripts/ \

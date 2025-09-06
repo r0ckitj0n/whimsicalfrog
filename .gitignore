@@ -44,3 +44,6 @@ backups/
 !backups/duplicates/**
 logs/
 logs/*.log
+
+# Allow quarantined legacy files to be committed
+!backups/legacy/**

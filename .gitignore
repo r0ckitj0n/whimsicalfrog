@@ -40,5 +40,7 @@ whf_deploy_key.pub
 
 # Large files not tracked
 backups/
+# Allow quarantined duplicates to be committed
+!backups/duplicates/**
 logs/
 logs/*.log

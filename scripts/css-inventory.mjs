@@ -4,7 +4,7 @@
 // Outputs:
 //  - logs/css-inventory.json: per-file selectors, media, rule counts
 //  - logs/css-duplicates.json: cross-file duplicate and conflict report
-//  - docs/frontend/css-reorg-plan.md: proposed cohesive structure and mapping
+//  - documentation/frontend/css-reorg-plan.md: proposed cohesive structure and mapping
 //
 // Notes:
 //  - Reads from src/styles/**/*.css (excludes backups, dist, node_modules)
@@ -31,7 +31,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const projectRoot = path.resolve(__dirname, '..');
 const SRC_STYLES = path.resolve(projectRoot, 'src/styles');
 const LOGS_DIR = path.resolve(projectRoot, 'logs');
-const DOCS_DIR = path.resolve(projectRoot, 'docs/frontend');
+const DOCS_DIR = path.resolve(projectRoot, 'documentation/frontend');
 
 const FLAG_PATTERNS = /(legacy|recovered|fixes?|final-fix)/i;
 
@@ -243,7 +243,7 @@ async function main() {
   // Console summary
   console.log(`CSS inventory written to: logs/css-inventory.json`);
   console.log(`Duplicates report written to: logs/css-duplicates.json`);
-  console.log(`Reorg plan written to: docs/frontend/css-reorg-plan.md`);
+  console.log(`Reorg plan written to: documentation/frontend/css-reorg-plan.md`);
 }
 
 function generatePlanMarkdown(inventory, proposedMappings, duplicates, conflicts) {

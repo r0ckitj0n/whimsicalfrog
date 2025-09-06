@@ -26,6 +26,13 @@
     pointer-events: none;
 }
 
+/* Standard modal overlay: support .show toggling as well */
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
 /* Admin Modal Overlay (for larger admin modals) */
 .admin-modal-overlay {
     position: fixed;
@@ -44,6 +51,13 @@
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
+}
+
+/* Ensure admin overlays become visible when .show is applied (parity with confirmation overlays) */
+.admin-modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 /* Full Screen Modal Overlay (for settings modals) */
@@ -543,8 +557,8 @@ body:has(#cartPage) {
 }
 
 .modal-button:focus {
-    ring: 2px solid;
-    ring-offset: 2px;
+    outline: 2px solid currentcolor;
+    outline-offset: 2px;
 }
 
 .modal-button.btn-primary {
@@ -558,9 +572,7 @@ body:has(#cartPage) {
     border-color: #6b8e23;
 }
 
-.modal-button.btn-primary:focus {
-    ring-color: #87ac3a;
-}
+.modal-button.btn-primary:focus { outline-color: #87ac3a; }
 
 .modal-button.btn-secondary {
     background: #f3f4f6;
@@ -572,9 +584,7 @@ body:has(#cartPage) {
     background: #e5e7eb;
 }
 
-.modal-button.btn-secondary:focus {
-    ring-color: #9ca3af;
-}
+.modal-button.btn-secondary:focus { outline-color: #9ca3af; }
 
 .modal-button.btn-danger {
     background: #ef4444;
@@ -587,9 +597,7 @@ body:has(#cartPage) {
     border-color: #dc2626;
 }
 
-.modal-button.btn-danger:focus {
-    ring-color: #ef4444;
-}
+.modal-button.btn-danger:focus { outline-color: #ef4444; }
 
 .modal-button:disabled {
     opacity: 0.5;
@@ -611,10 +619,7 @@ body:has(#cartPage) {
     gap: 8px;
 }
 
-.confirmation-modal-button:focus {
-    ring: 2px solid;
-    ring-offset: 2px;
-}
+.confirmation-modal-button:focus { outline: 2px solid currentcolor; outline-offset: 2px; }
 
 .confirmation-modal-button.cancel {
     background: #f3f4f6;
@@ -626,9 +631,7 @@ body:has(#cartPage) {
     background: #e5e7eb;
 }
 
-.confirmation-modal-button.cancel:focus {
-    ring-color: #9ca3af;
-}
+.confirmation-modal-button.cancel:focus { outline-color: #9ca3af; }
 
 .confirmation-modal-button.confirm {
     background: #87ac3a;
@@ -639,9 +642,7 @@ body:has(#cartPage) {
     background: #6b8e23;
 }
 
-.confirmation-modal-button.confirm:focus {
-    ring-color: #87ac3a;
-}
+.confirmation-modal-button.confirm:focus { outline-color: #87ac3a; }
 
 .confirmation-modal-button.danger {
     background: #ef4444;
@@ -652,9 +653,7 @@ body:has(#cartPage) {
     background: #dc2626;
 }
 
-.confirmation-modal-button.danger:focus {
-    ring-color: #ef4444;
-}
+.confirmation-modal-button.danger:focus { outline-color: #ef4444; }
 
 .confirmation-modal-button:disabled {
     opacity: 0.5;
@@ -1297,40 +1296,9 @@ html.modal-open {
 
 /* Ensure modals always appear above room overlay elements */
 
-.room-header-overlay {
-}
-
-body:has(.modal-overlay:not(.hidden)),
-body:has(#detailedItemModal:not(.hidden)),
-body:has(#quantityModal:not(.hidden)) {
-    .room-header-overlay {
-    }
-    
-    .back-button-container {
-    }
-    
-    /* Room title overlay styles moved to centralized room-modal.css */
-}
+/* Room title overlay styles moved to centralized room-modal.css */
 
 /* Fallback for browsers that don't support :has() */
-.modal-open .room-header-overlay,
-.modal-open .back-button-container {
-}
-
-.modal-overlay,
-#quantityModal,
-.admin-modal-overlay {
-}
-
-
-/* Admin navbar should stay above regular content but below modals */
-.admin-tab-navigation {
-}
-
-/* When modals are open, admin navbar can go higher if needed */
-body:has(.modal-overlay:not(.hidden)) .admin-tab-navigation,
-body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
-}
 
 /* Ensure modal content is above modal overlay */
 .modal-content,
@@ -1476,7 +1444,6 @@ body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
     
     .structure-analysis-section .flex.space-x-2 {
         flex-direction: column;
-        space-x: 0;
         gap: 0.5rem;
     }
     
@@ -1664,10 +1631,6 @@ input[type="checkbox"].color-checkbox:checked {
     position: relative;
     display: inline-block;
 }
-
-/* Ensure badge appears over modals and other elements */
-.step-badge {
-} 
 
 /* Detailed Item Modal Header Overrides */
 .detailed-item-modal-container .modal-header {

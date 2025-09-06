@@ -7,10 +7,10 @@
  */
 ?>
 
-<!- AI Processing Modal ->
-<div id="aiProcessingModal" class="modal-overlay hidden">
+<!-- AI Processing Modal -->
+<div id="aiProcessingModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-content">
-        <!- Modal Header ->
+        <!-- Modal Header -->
         <div class="modal-header">
             <h3 class="modal-title">
                 AI Image Processing
@@ -22,9 +22,9 @@
             </button>
         </div>
         
-        <!- Modal Body ->
+        <!-- Modal Body -->
         <div class="modal-body">
-            <!- Processing Status ->
+            <!-- Processing Status -->
             <div id="aiProcessingStatus" class="u-mb-4">
                 <div class="u-text-sm u-text-gray-600 u-mb-2">Processing your image...</div>
                 <div class="u-w-full u-bg-gray-200 u-rounded-full u-h-2">
@@ -32,9 +32,9 @@
                 </div>
             </div>
             
-            <!- Processing Steps ->
+            <!-- Processing Steps -->
             <div id="aiProcessingSteps" class="u-space-y-3">
-                <!- Step 1: AI Analysis ->
+                <!-- Step 1: AI Analysis -->
                 <div id="step1" class="u-display-flex u-items-center u-space-x-3">
                     <div id="step1Icon" class="u-w-6 u-h-6 u-rounded-full u-border-2 u-border-gray-300 u-display-flex u-items-center u-justify-center">
                         <div class="u-w-2 u-h-2 u-bg-gray-300 u-rounded-full"></div>
@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 
-                <!- Step 2: Smart Cropping ->
+                <!-- Step 2: Smart Cropping -->
                 <div id="step2" class="u-display-flex u-items-center u-space-x-3">
                     <div id="step2Icon" class="u-w-6 u-h-6 u-rounded-full u-border-2 u-border-gray-300 u-display-flex u-items-center u-justify-center">
                         <div class="u-w-2 u-h-2 u-bg-gray-300 u-rounded-full"></div>
@@ -56,7 +56,7 @@
                     </div>
                 </div>
                 
-                <!- Step 3: WebP Conversion ->
+                <!-- Step 3: WebP Conversion -->
                 <div id="step3" class="u-display-flex u-items-center u-space-x-3">
                     <div id="step3Icon" class="u-w-6 u-h-6 u-rounded-full u-border-2 u-border-gray-300 u-display-flex u-items-center u-justify-center">
                         <div class="u-w-2 u-h-2 u-bg-gray-300 u-rounded-full"></div>
@@ -68,7 +68,7 @@
                 </div>
             </div>
             
-            <!- Processing Results ->
+            <!-- Processing Results -->
             <div id="aiProcessingResults" class="u-mt-4 hidden">
                 <div class="modal-success">
                     <div class="u-display-flex u-items-center">
@@ -85,7 +85,7 @@
                 </div>
             </div>
             
-            <!- Error Display ->
+            <!-- Error Display -->
             <div id="aiProcessingError" class="u-mt-4 hidden">
                 <div class="modal-error">
                     <div class="u-display-flex u-items-center">
@@ -102,7 +102,7 @@
                 </div>
             </div>
             
-            <!- Processing Details ->
+            <!-- Processing Details -->
             <div id="aiProcessingDetails" class="u-mt-4 hidden">
                 <div class="u-bg-blue-50 u-border u-border-blue-200 u-rounded-lg u-p-3">
                     <div class="u-text-sm u-font-medium u-text-blue-800 u-mb-2">Processing Details:</div>
@@ -111,7 +111,7 @@
             </div>
         </div>
         
-        <!- Modal Footer ->
+        <!-- Modal Footer -->
         <div class="modal-footer">
             <button id="aiProcessingCancelBtn" class="btn btn-secondary">
                 Cancel

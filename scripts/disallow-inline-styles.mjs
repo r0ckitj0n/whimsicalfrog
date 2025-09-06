@@ -33,8 +33,8 @@ function shouldConsiderPath(filePath) {
   if (p.includes('/backups/')) return false;
   if (p.includes('/dist/')) return false;
   if (p.includes('/node_modules/')) return false;
-  // Skip docs legacy duplicates
-  if (p.includes('/docs/legacy-duplicates/')) return false;
+  // Skip documentation legacy duplicates
+  if (p.includes('/documentation/legacy-duplicates/')) return false;
   // Skip public duplicates and any file that clearly is a duplicate name with " 2.js"
   if (p.includes('/public/js/') && / 2\.js$/i.test(p)) return false;
   // Also skip any duplicate style in src that ends with " 2.js"

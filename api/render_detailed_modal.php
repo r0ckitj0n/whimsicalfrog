@@ -1,9 +1,12 @@
 <?php
 // Render Detailed Modal API
-header('Content-Type: text/html');
+// Use shared config to align DB, sessions, and environment
+require_once __DIR__ . '/config.php';
+
+header('Content-Type: text/html; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-Requested-With');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -22,7 +25,7 @@ try {
 
     if (!isset($input['item']) || !isset($input['images'])) {
         http_response_code(400);
-        echo 'Missing required parameters';
+        echo '<!-- Missing required parameters -->';
         exit;
     }
 
@@ -42,6 +45,6 @@ try {
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo 'Server error: ' . $e->getMessage();
+    echo '<!-- Server error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . ' -->';
 }
-?> 
+?>

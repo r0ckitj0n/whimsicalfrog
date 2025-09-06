@@ -4915,12 +4915,18 @@ function initAdminSettingsDelegatedListeners() {
     function openFileExplorerModal() {
         const modal = document.getElementById('fileExplorerModal');
         if (!modal) return;
-        modal.style.display = 'block';
+        try { modal.classList.remove('hidden'); } catch(_) {}
+        try { modal.classList.add('show'); } catch(_) {}
+        try { modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
         setTimeout(() => loadDirectory(''), 10);
     }
     function closeFileExplorerModal() {
         const modal = document.getElementById('fileExplorerModal');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            try { modal.classList.add('hidden'); } catch(_) {}
+            try { modal.classList.remove('show'); } catch(_) {}
+            try { modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
+        }
         closeEditor();
     }
     
@@ -4947,7 +4953,7 @@ function initAdminSettingsDelegatedListeners() {
         const listEl = document.getElementById('fileList');
         const loadingEl = document.getElementById('fileListLoading');
         if (!listEl) { console.warn('[FileExplorer] #fileList missing'); return; }
-        if (loadingEl) loadingEl.style.display = 'none';
+        if (loadingEl) { try { loadingEl.classList.add('hidden'); } catch(_) {} }
         if (!items || items.length === 0) {
             listEl.innerHTML = '<p class="text-gray-500 text-center">Directory is empty</p>';
             return;
@@ -7750,7 +7756,7 @@ if (typeof window !== 'undefined') {
             // DOM observer to hide overlays that appear during squelch
             let mo = null;
             try {
-                mo = new MutationObserver((muts) => {
+                mo = new MutationObserver((_muts) => {
                     // Keep hiding overlays until interaction or allowParam
                     if (allowParam || window.__wfModalUserInteracted) return;
                     const sel = [
@@ -7776,10 +7782,6 @@ if (typeof window !== 'undefined') {
                         try { el.classList.remove('show'); } catch (_) {}
                         try { el.classList.add('hidden'); } catch (_) {}
                         try { el.setAttribute('data-wf-squelched', '1'); } catch (_) {}
-                        // Override inline styles that may force visibility
-                        try { el.style.setProperty('display', 'none', 'important'); } catch (_) {}
-                        try { el.style.setProperty('visibility', 'hidden', 'important'); } catch (_) {}
-                        try { el.style.setProperty('opacity', '0', 'important'); } catch (_) {}
                     });
                 });
                 mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class','style'] });
@@ -7821,7 +7823,6 @@ if (typeof window !== 'undefined') {
                 if (!el) return;
                 try { el.classList.add('hidden'); } catch (_) {}
                 try { el.classList.remove('show'); } catch (_) {}
-                try { el.style.setProperty('display', 'none', 'important'); } catch (_) {}
                 try { el.setAttribute('data-wf-panel-squelched', '1'); } catch (_) {}
             };
             const sweep = () => {
@@ -7834,10 +7835,10 @@ if (typeof window !== 'undefined') {
             sweep();
             // Observe attribute changes that might re-show these panels before interaction
             try {
-                const mo = new MutationObserver((muts) => {
+                const mo = new MutationObserver((_muts) => {
                     if (allowParam || window.__wfModalUserInteracted) return;
                     let touched = false;
-                    for (const m of muts) {
+                    for (const m of _muts) {
                         if (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName === 'style')) {
                             touched = true; break;
                         }

@@ -7,9 +7,9 @@
 /* Ensure overlay stays flex-centred even if later CSS alters display */
 .detailed-item-modal.show {
     /* position the overlay below the universal header using a dynamic CSS var */
-    top: var(--wf-header-offset, 0px) !important;
+    top: var(--wf-header-offset, 0) !important;
     bottom: auto !important; /* override Tailwind's inset-0 bottom */
-    height: calc(100vh - var(--wf-header-offset, 0px)) !important;
+    height: calc(100vh - var(--wf-header-offset, 0)) !important;
     padding-top: 0 !important;
     display: flex !important;
     align-items: flex-start !important;
@@ -261,13 +261,13 @@
     width: 100% !important;
     object-fit: contain !important;
     /* About 50px less than the current available modal viewport */
-    max-height: calc(95vh - var(--wf-header-offset, 0px) - 50px) !important;
+    max-height: calc(95vh - var(--wf-header-offset, 0) - 50px) !important;
 }
 
 /* Override the aspect-square wrapper for the main image so it shrinks with the image */
 .detailed-item-modal .aspect-square {
     aspect-ratio: auto !important;
-    max-height: calc(95vh - var(--wf-header-offset, 0px) - 50px) !important;
+    max-height: calc(95vh - var(--wf-header-offset, 0) - 50px) !important;
 }
 
 /* NUCLEAR FIX: Completely eliminate horizontal scrollbar at container level */

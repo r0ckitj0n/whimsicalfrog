@@ -27,9 +27,26 @@
   overflow: hidden; /* keep header/footer fixed */
 }
 
+/* Normalize inner panel appearance (used by JS instead of inline styles) */
+.wf-admin-panel-visible {
+  opacity: 1 !important;
+  transform: none !important;
+  display: block !important;
+  background: #fff !important;
+  position: relative !important;
+  z-index: 1 !important;
+  pointer-events: auto !important;
+  max-width: 960px;
+  width: 96vw;
+  max-height: 90vh;
+}
+
 /* Scrollable body area when used inside a flex column layout */
 .admin-modal .modal-body { overflow-y: auto; }
 .admin-modal .flex-1 { overflow-y: auto; }
+
+/* Busy indicator without inline styles */
+.modal-body.is-busy { cursor: progress; }
 
 /* Buttons focus visibility for accessibility */
 .admin-modal button:focus-visible {
@@ -65,6 +82,10 @@ body.wf-no-scroll { overflow: hidden !important; }
   margin-top: 0.25rem; /* mt-1 */
 }
 .form-error.hidden { display: none; }
+
+/* Result text colors */
+#dashboardConfigResult.wf-ok { color: #166534; } /* green-800 */
+#dashboardConfigResult.wf-error { color: #991B1B; } /* red-800 */
 
 /* Invalid form fields visual */
 [aria-invalid="true"] {

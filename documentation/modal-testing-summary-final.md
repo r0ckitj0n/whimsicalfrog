@@ -140,8 +140,8 @@ The room modal visibility issue has been **completely resolved** through systema
 - `/css/modal-responsive.css` - New responsive design stylesheet
 
 **Documentation:**
-- `/docs/modal-system-flow-documentation.md` - Complete system documentation
-- `/docs/modal-testing-summary-final.md` - This testing summary
+- `/documentation/modal-system-flow-documentation.md` - Complete system documentation
+- `/documentation/modal-testing-summary-final.md` - This testing summary
 
 ---
 

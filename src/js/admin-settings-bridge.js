@@ -300,38 +300,15 @@ export function init(){
         el.classList.remove('hidden');
         el.classList.add('show');
         el.setAttribute('aria-hidden', 'false');
-        el.style.display = 'flex';
-        el.style.visibility = 'visible';
-        el.style.opacity = '1';
         // Ensure full-viewport coverage regardless of external CSS
         try { el.classList.remove('under-header'); } catch(_) {}
-        el.style.position = 'fixed';
-        el.style.top = '0';
-        el.style.left = '0';
-        el.style.right = '0';
-        el.style.bottom = '0';
-        el.style.width = '100vw';
-        el.style.height = '100vh';
-        el.style.zIndex = '2147483600';
-        el.style.pointerEvents = 'auto';
+        try { el.classList.add('wf-modal-force-visible'); } catch(_) {}
         try { document.documentElement.classList.add('modal-open'); } catch(_) {}
         try { document.body.classList.add('modal-open'); } catch(_) {}
         try {
-          // Normalize inner panel styles to counteract legacy animations or opacity rules
+          // Normalize inner panel via a CSS class
           const panel = el.querySelector('.admin-modal, .modal, .admin-modal-content');
-          if (panel) {
-            panel.style.opacity = '1';
-            panel.style.transform = 'none';
-            panel.style.display = 'block';
-            panel.style.background = panel.style.background || '#fff';
-            panel.style.position = 'relative';
-            panel.style.zIndex = '1';
-            panel.style.pointerEvents = 'auto';
-            // Reasonable defaults to ensure presence
-            if (!panel.style.maxWidth) panel.style.maxWidth = '960px';
-            if (!panel.style.width) panel.style.width = '96vw';
-            if (!panel.style.maxHeight) panel.style.maxHeight = '90vh';
-          }
+          if (panel) panel.classList.add('wf-admin-panel-visible');
         } catch(_) {}
         try { console.info('[AdminSettingsBridge] forceVisible ->', el.id); } catch(_) {}
       } catch(_) {}
@@ -400,7 +377,6 @@ export function init(){
       el.classList.add('hidden');
       el.classList.remove('show');
       el.setAttribute('aria-hidden', 'true');
-      el.style.pointerEvents = '';
       try { document.documentElement.classList.remove('modal-open'); } catch(_) {}
       try { document.body.classList.remove('modal-open'); } catch(_) {}
       try { if (typeof window.updateModalScrollLock === 'function') window.updateModalScrollLock(); } catch(_) {}
@@ -517,9 +493,9 @@ export function init(){
       const body = el.querySelector('.modal-body');
       if (!body) return;
       try {
-        body.style.cursor = 'progress';
+        body.classList.add('is-busy');
         const data = await dashApi('/api/dashboard_sections.php?action=get_sections');
-        let sections = data?.data?.sections || data?.sections || [];
+        const sections = data?.data?.sections || data?.sections || [];
         try { console.info('[DashboardConfigFallback] get_sections result', data); } catch(_) {}
         const lists = renderDashboardLists(el);
         if (!lists.activeUl) return;
@@ -594,7 +570,7 @@ export function init(){
         if (saveBtn) {
           saveBtn.onclick = async () => {
             const result = el.querySelector('#dashboardConfigResult');
-            const setResult = (msg, ok) => { if (result) { result.textContent = msg; result.style.color = ok ? '#166534' : '#991B1B'; } };
+            const setResult = (msg, ok) => { if (result) { result.textContent = msg; result.classList.toggle('wf-ok', !!ok); result.classList.toggle('wf-error', !ok); } };
             try {
               // Gather Active with de-duplication by section_key
               const seen = new Set();
@@ -696,7 +672,6 @@ export function init(){
           const lists = renderDashboardLists(el);
           if (lists.activeUl) {
             // Hydrate active from local snapshot if available first
-            let hydrated = false;
             try {
               const raw = localStorage.getItem('wf.dashboard.sections');
               const activeSnap = raw ? JSON.parse(raw) : [];
@@ -710,7 +685,6 @@ export function init(){
                   };
                   lists.activeUl.appendChild(lists.makeLi(it, true));
                 });
-                hydrated = true;
               }
             } catch(_) {}
             const seeded = {
@@ -736,7 +710,7 @@ export function init(){
           } catch(_) {}
         }
       } finally {
-        body.style.cursor = '';
+        body.classList.remove('is-busy');
       }
     }
 
@@ -744,40 +718,33 @@ export function init(){
     async function loadBackgroundManager(modalId = 'backgroundManagerModal'){
       try {
         const el = getModalEl(modalId);
-        const mod = await import('../modules/background-manager.js');
-        if (mod && typeof mod.init === 'function') mod.init(el);
+        await import('../modules/background-manager.js').then(m => { if (m && typeof m.init === 'function') m.init(el); });
       } catch (e) {
-        console.error('[AdminSettingsBridge] Failed to init Background Manager', e);
+        console.warn('[AdminSettingsBridge] background-manager unavailable', e);
       }
     }
     async function loadCssRulesManager(modalId = 'cssRulesModal'){
       try {
         const el = getModalEl(modalId);
-        const mod = await import('../modules/css-rules-manager.js');
-        if (mod && typeof mod.init === 'function') mod.init(el);
+        await import('../modules/css-rules-manager.js').then(m => { if (m && typeof m.init === 'function') m.init(el); });
       } catch (e) {
         console.error('[AdminSettingsBridge] Failed to init CSS Rules Manager', e);
       }
     }
 
-    // Ensure the heavy legacy module is loaded when needed (idempotent)
-    async function ensureLegacyLoaded() {
-      if (window.__WF_ADMIN_SETTINGS_LEGACY_LOADED) return true;
-      try {
-        const mod = await import('../js/admin-settings.js');
-        // If module exposes an init, run it once
-        try {
-          if (typeof window.WF_AdminSettings?.init === 'function') {
-            window.WF_AdminSettings.init();
-          }
-        } catch (_) {}
-        window.__WF_ADMIN_SETTINGS_LEGACY_LOADED = true;
-        return true;
-      } catch (e) {
-        console.error('[AdminSettingsBridge] Failed to load legacy admin-settings module for File Explorer', e);
-        return false;
-      }
-    }
+// Ensure the heavy legacy module is loaded when needed (idempotent)
+async function ensureLegacyLoaded() {
+  if (window.__WF_ADMIN_SETTINGS_LEGACY_LOADED) return true;
+  try {
+    await import('../js/admin-settings.js');
+    window.__WF_ADMIN_SETTINGS_LEGACY_LOADED = true;
+    return true;
+  } catch (e) {
+    console.error('[AdminSettingsBridge] Failed to load legacy admin-settings.js', e);
+    return false;
+  }
+}
+    
 
     // Delegated clicks for opening/closing modals and routing
     document.addEventListener('click', (e) => {

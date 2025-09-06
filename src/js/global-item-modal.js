@@ -393,6 +393,7 @@
             const modal = document.getElementById('detailedItemModal');
             if (modal) {
                 // ARIA and visibility
+                try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(modal); } catch(_) {}
                 modal.setAttribute('role', 'dialog');
                 modal.setAttribute('aria-modal', 'true');
                 modal.setAttribute('aria-hidden', 'false');
@@ -436,6 +437,7 @@
         console.log('[GlobalModal] close:start');
         const modal = document.getElementById('detailedItemModal');
         if (modal) {
+            try { modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
             modal.remove(); // Use remove() for simplicity
             console.log('[GlobalModal] close:removed');
         } else {

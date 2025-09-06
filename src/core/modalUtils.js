@@ -50,20 +50,8 @@ export function hideModalById(id) {
 }
 
 export function forceVisibleStyles(el) {
-  // Defensive styles for legacy overlays that may be clipped by transforms/overflow
-  try {
-    el.style.position = 'fixed';
-    el.style.top = '0';
-    el.style.left = '0';
-    el.style.right = '0';
-    el.style.bottom = '0';
-    el.style.width = '100vw';
-    el.style.height = '100vh';
-    el.style.zIndex = '2147483600';
-    el.style.visibility = 'visible';
-    el.style.opacity = '1';
-    el.style.pointerEvents = 'auto';
-  } catch(_) {}
+  // Apply defensive overlay style via CSS class instead of inline styles
+  try { el.classList.add('wf-modal-force-visible'); } catch (_) {}
 }
 
 // Optional: attach safe global helpers for legacy callers without imports

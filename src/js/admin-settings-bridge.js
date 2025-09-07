@@ -301,7 +301,11 @@ export function init(){
       try { document.documentElement.removeAttribute('data-early-settings-squelch'); } catch(_) {}
       try { document.documentElement.removeAttribute('data-wf-squelch'); } catch(_) {}
       try { const st = document.getElementById('wf-early-settings-squelch'); if (st) st.remove(); } catch(_) {}
-      try { const st2 = document.querySelector('style[data-wf-squelch-style="1"]'); if (st2) st2.remove(); } catch(_) {}
+      try {
+        const styles = Array.from(document.getElementsByTagName('style'));
+        const target = styles.find((el) => el.getAttribute && el.getAttribute('data-wf-squelch-style') === '1');
+        if (target) target.remove();
+      } catch(_) {}
     };
     // Track open overlays and last trigger elements
     const openStack = [];

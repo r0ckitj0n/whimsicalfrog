@@ -9,8 +9,8 @@
   let payload = {};
   try { payload = JSON.parse(payloadEl.textContent || '{}'); } catch(_){ payload = {}; }
 
-  const show = (el) => { if (el) { el.classList.remove('hidden'); el.setAttribute('aria-hidden', 'false'); } };
-  const hide = (el) => { if (el) { el.classList.add('hidden'); el.setAttribute('aria-hidden', 'true'); } };
+  const show = (el) => { if (el) { el.classList.remove('hidden'); el.style.display = ''; } };
+  const hide = (el) => { if (el) { el.classList.add('hidden'); el.style.display = 'none'; } };
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

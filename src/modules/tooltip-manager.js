@@ -46,7 +46,19 @@ function createTooltipEl(title, content, position = 'top') {
   return tip;
 }
 
-function positionTooltip(tip, target, position) {
+let __wfTipStyleEl = null;
+let __wfTipRuleCounter = 0;
+
+function ensureTipStyleEl() {
+  if (!__wfTipStyleEl) {
+    __wfTipStyleEl = document.createElement('style');
+    __wfTipStyleEl.setAttribute('data-wf-tooltip-dynamic', '1');
+    document.head.appendChild(__wfTipStyleEl);
+  }
+  return __wfTipStyleEl;
+}
+
+function computeTooltipPosition(target, tip, position) {
   const rect = target.getBoundingClientRect();
   const tipRect = tip.getBoundingClientRect();
   const topOffsets = {
@@ -60,8 +72,10 @@ function positionTooltip(tip, target, position) {
   if (position === 'bottom') top = topOffsets.bottom;
   if (position === 'left') { left = rect.left + window.scrollX - tipRect.width - 8; top = topOffsets.left; }
   if (position === 'right') { left = rect.right + window.scrollX + 8; top = topOffsets.right; }
-  tip.style.left = `${Math.max(8, left)}px`;
-  tip.style.top = `${Math.max(8, top)}px`;
+  return {
+    left: Math.max(8, left),
+    top: Math.max(8, top)
+  };
 }
 
 function attachTooltip(target, tipData) {
@@ -71,7 +85,21 @@ function attachTooltip(target, tipData) {
     hide();
     tip = createTooltipEl(tipData.title, tipData.content, tipData.position || 'top');
     document.body.appendChild(tip);
-    positionTooltip(tip, target, tipData.position || 'top');
+    // Compute position and inject via dynamic CSS rule to avoid inline styles
+    const pos = computeTooltipPosition(target, tip, tipData.position || 'top');
+    const ruleId = (++__wfTipRuleCounter);
+    const cls = `wf-tip-pos-${ruleId}`;
+    tip.classList.add(cls);
+    const styleEl = ensureTipStyleEl();
+    try {
+      const sheet = styleEl.sheet;
+      const rule = `.wf-tooltip.${cls}{ left:${pos.left}px; top:${pos.top}px; }`;
+      // Insert rule at the end
+      sheet.insertRule(rule, sheet.cssRules.length);
+    } catch(_) {
+      // Fallback: appendText if insertRule fails
+      styleEl.appendChild(document.createTextNode(`.wf-tooltip.${cls}{ left:${pos.left}px; top:${pos.top}px; }`));
+    }
   };
   const hide = () => {
     if (tip && tip.parentNode) tip.parentNode.removeChild(tip);

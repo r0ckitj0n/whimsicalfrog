@@ -5,7 +5,11 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
+
+// Prevent notices/warnings from corrupting JSON; buffer early output
+ini_set('display_errors', 0);
+ob_start();
 
 try {
     try {
@@ -55,6 +59,9 @@ try {
         'images' => $images
     ];
 
+    if (ob_get_length() !== false) {
+        ob_end_clean();
+    }
     echo json_encode($response);
 
 } catch (PDOException $e) {

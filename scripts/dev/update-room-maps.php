@@ -118,6 +118,23 @@ try {
         ],
     ];
 
+    // Optional filter by room via GET or env: prefer 'room' (number) then 'room_type' (roomN)
+    $filterRoom = null;
+    if (isset($_GET['room']) && $_GET['room'] !== '') {
+        $r = $_GET['room'];
+        if (preg_match('/^room(\d+)$/i', (string)$r, $m)) { $filterRoom = 'room' . (int)$m[1]; }
+        else { $filterRoom = 'room' . (int)$r; }
+    } elseif (isset($_GET['room_type'])) {
+        $filterRoom = $_GET['room_type'];
+    } elseif (($env = getenv('ROOM')) !== false && $env !== '') {
+        if (preg_match('/^room(\d+)$/i', (string)$env, $m)) { $filterRoom = 'room' . (int)$m[1]; }
+        else { $filterRoom = 'room' . (int)$env; }
+    }
+
+    if ($filterRoom && isset($maps[$filterRoom])) {
+        $maps = [$filterRoom => $maps[$filterRoom]];
+    }
+
     Database::beginTransaction();
 
     $applied = [];

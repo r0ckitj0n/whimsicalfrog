@@ -46,6 +46,22 @@ try {
         ]
     ];
     
+    // Optional filter by room via GET: prefer 'room' (1..5), fallback 'room_type' (room1..room5)
+    $filterRoom = null;
+    if (isset($_GET['room']) && $_GET['room'] !== '') {
+        $r = $_GET['room'];
+        if (preg_match('/^room(\d+)$/i', (string)$r, $m)) { $filterRoom = 'room' . (int)$m[1]; }
+        else { $filterRoom = 'room' . (int)$r; }
+    } elseif (isset($_GET['room_type'])) {
+        $filterRoom = $_GET['room_type'];
+    }
+
+    if ($filterRoom && isset($roomCoordinates[$filterRoom])) {
+        // Narrow to just the requested room
+        $roomCoordinates = [$filterRoom => $roomCoordinates[$filterRoom]];
+        echo "Filtering to {$filterRoom} based on request parameter.\n";
+    }
+
     echo "\n2. INSERTING/UPDATING COORDINATE DATA:\n";
     
     foreach ($roomCoordinates as $roomType => $coordinates) {

@@ -40,6 +40,21 @@ try {
     
     $results = [];
     $roomCoordinates = getRoomCoordinatesData();
+
+    // Optional filter: prefer 'room' (1..5), fallback 'room_type' (room1..room5)
+    $filterRoom = null;
+    if (isset($_GET['room']) && $_GET['room'] !== '') {
+        $r = $_GET['room'];
+        if (preg_match('/^room(\d+)$/i', (string)$r, $m)) { $filterRoom = 'room' . (int)$m[1]; }
+        else { $filterRoom = 'room' . (int)$r; }
+    } elseif (isset($_GET['room_type'])) {
+        $filterRoom = $_GET['room_type'];
+    }
+
+    if ($filterRoom && isset($roomCoordinates[$filterRoom])) {
+        $roomCoordinates = [$filterRoom => $roomCoordinates[$filterRoom]];
+        $results['info'] = "Filtering to {$filterRoom}";
+    }
     
     foreach ($roomCoordinates as $roomType => $coordinates) {
         // Check if entry exists
@@ -61,7 +76,8 @@ try {
     
     // Verify results
     $verification = [];
-    $verifyRows = Database::queryAll("\n        SELECT room_type, coordinates, is_active \n        FROM room_maps \n        WHERE room_type IN ('room1','room2','room3','room4','room5') \n        ORDER BY room_type\n    ");
+    $verifySql = "SELECT room_type, coordinates, is_active FROM room_maps WHERE room_type IN ('room1','room2','room3','room4','room5') ORDER BY room_type";
+    $verifyRows = Database::queryAll($verifySql);
     
     foreach ($verifyRows as $row) {
         $coords = json_decode($row['coordinates'], true);

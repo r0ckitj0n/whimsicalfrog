@@ -2,6 +2,12 @@
 // Version: 2.0 - With Original map protection
 require_once 'config.php';
 
+function normalize_room_type($value) {
+    if ($value === null || $value === '') return '';
+    if (preg_match('/^room(\d+)$/i', (string)$value, $m)) return 'room' . (int)$m[1];
+    return 'room' . (int)$value;
+}
+
 try {
     try {
         Database::getInstance();
@@ -28,14 +34,16 @@ try {
 
     $method = $_SERVER['REQUEST_METHOD'];
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) $input = [];
 
     switch ($method) {
         case 'POST':
-            if ($input['action'] === 'save') {
+            $action = $input['action'] ?? '';
+            if ($action === 'save') {
                 // Save a new room map
                 $result = Database::execute(
                     "INSERT INTO room_maps (room_type, map_name, coordinates) VALUES (?, ?, ?)",
-                    [$input['room_type'], $input['map_name'], json_encode($input['coordinates'])]
+                    [normalize_room_type($input['room'] ?? ($input['room_type'] ?? '')), $input['map_name'], json_encode($input['coordinates'])]
                 ) > 0;
 
                 if ($result) {
@@ -43,12 +51,13 @@ try {
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Failed to save room map']);
                 }
-            } elseif ($input['action'] === 'apply') {
+            } elseif ($action === 'apply') {
                 // Apply a map to a room (set as active and deactivate others)
                 Database::beginTransaction();
                 try {
                     // Deactivate all maps for this room type
-                    Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?", [$input['room_type']]);
+                    $rt = normalize_room_type($input['room'] ?? ($input['room_type'] ?? ''));
+                    Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?", [$rt]);
 
                     // Activate the selected map
                     Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$input['map_id']]);
@@ -59,7 +68,7 @@ try {
                     Database::rollBack();
                     echo json_encode(['success' => false, 'message' => 'Failed to apply room map: ' . $e->getMessage()]);
                 }
-            } elseif ($input['action'] === 'restore') {
+            } elseif ($action === 'restore') {
                 // Restore a historical map (create a new map based on an old one)
                 Database::beginTransaction();
                 try {
@@ -103,10 +112,17 @@ try {
             break;
 
         case 'GET':
-            if (isset($_GET['room_type'])) {
+            // Prefer 'room' query param; fallback to legacy 'room_type'
+            $roomType = null;
+            if (isset($_GET['room']) && $_GET['room'] !== '') {
+                $roomType = normalize_room_type($_GET['room']);
+            } elseif (isset($_GET['room_type'])) {
+                $roomType = $_GET['room_type'];
+            }
+            if ($roomType !== null) {
                 if (isset($_GET['active_only']) && $_GET['active_only'] === 'true') {
                     // Get active map for a specific room
-                    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE", [$_GET['room_type']]);
+                    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE", [$roomType]);
 
                     if ($map) {
                         $map['coordinates'] = json_decode($map['coordinates'], true);
@@ -116,7 +132,7 @@ try {
                     }
                 } else {
                     // Get all maps for a specific room
-                    $maps = Database::queryAll("SELECT * FROM room_maps WHERE room_type = ? ORDER BY created_at DESC", [$_GET['room_type']]);
+                    $maps = Database::queryAll("SELECT * FROM room_maps WHERE room_type = ? ORDER BY created_at DESC", [$roomType]);
 
                     foreach ($maps as &$map) {
                         $map['coordinates'] = json_decode($map['coordinates'], true);

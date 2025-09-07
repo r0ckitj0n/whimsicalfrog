@@ -38,16 +38,29 @@ switch ($method) {
         Response::methodNotAllowed();
 }
 
+function normalizeRoomTypeFromInput($input)
+{
+    $roomParam = $input['room'] ?? null;
+    $legacy = $input['room_type'] ?? null;
+    if ($roomParam !== null && $roomParam !== '') {
+        if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
+            return 'room' . (int)$m[1];
+        }
+        return 'room' . (int)$roomParam;
+    }
+    return $legacy ?? '';
+}
+
 function saveBackground($input)
 {
-    $roomType = $input['room_type'] ?? '';
+    $roomType = normalizeRoomTypeFromInput($input);
     $backgroundName = $input['background_name'] ?? '';
     $imageFilename = $input['image_filename'] ?? '';
     $webpFilename = $input['webp_filename'] ?? null;
 
-    if (empty($roomType) || empty($backgroundName) || empty($imageFilename)) {
+    if (empty($roomType) || !preg_match('/^room[1-5]$/', $roomType) || empty($backgroundName) || empty($imageFilename)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+        echo json_encode(['success' => false, 'message' => 'Missing or invalid fields']);
         return;
     }
 
@@ -79,12 +92,12 @@ function saveBackground($input)
 
 function applyBackground($input)
 {
-    $roomType = $input['room_type'] ?? '';
+    $roomType = normalizeRoomTypeFromInput($input);
     $backgroundId = $input['background_id'] ?? '';
 
-    if (empty($roomType) || empty($backgroundId)) {
+    if (empty($roomType) || !preg_match('/^room[1-5]$/', $roomType) || empty($backgroundId)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+        echo json_encode(['success' => false, 'message' => 'Missing or invalid fields']);
         return;
     }
 
@@ -165,7 +178,16 @@ function handleUpload($input)
 // Local request handlers using Response helper
 function wf_handle_backgrounds_get(): void {
     try {
+        // Prefer 'room', fallback to legacy 'room_type'
+        $roomParam = $_GET['room'] ?? null;
         $roomType = $_GET['room_type'] ?? null;
+        if ($roomParam !== null && $roomParam !== '') {
+            if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
+                $roomType = 'room' . (int)$m[1];
+            } else {
+                $roomType = 'room' . (int)$roomParam;
+            }
+        }
         $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
 
         if ($roomType !== null) {

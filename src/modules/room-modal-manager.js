@@ -325,9 +325,8 @@ class RoomModalManager {
         const roomWrapper = this.overlay.querySelector('.room-overlay-wrapper') || this.overlay.querySelector('.room-modal-body');
         const loadRoomBackground = async () => {
             if (!roomWrapper || !rn) return;
-            const roomType = `room${rn}`;
             try {
-                const response = await fetch(`/api/get_background.php?room_type=${roomType}`);
+                const response = await fetch(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
                 const data = await response.json();
                 if (data.success && data.background) {
                     const bg = data.background;

@@ -30,8 +30,8 @@ function rcmEnsureRule(cls, t, l, w, h) {
 }
 
 // Simple coordinate system that just scales from database size to display size
-function simpleCoordinateSystem(roomType) {
-    console.log(`🎯 Initializing simple coordinate system for ${roomType}...`);
+function simpleCoordinateSystem(roomNumber) {
+    console.log(`🎯 Initializing simple coordinate system for room ${roomNumber}...`);
     
     // Get room overlay wrapper
     const roomWrapper = document.querySelector('.room-overlay-wrapper');
@@ -43,8 +43,8 @@ function simpleCoordinateSystem(roomType) {
     console.log('✅ Room overlay wrapper found:', roomWrapper);
     
     // Fetch coordinates from database
-    console.log(`📡 Fetching coordinates from /api/get_room_coordinates.php?room_type=${roomType}`);
-    fetch(`/api/get_room_coordinates.php?room_type=${roomType}`)
+    console.log(`📡 Fetching coordinates from /api/get_room_coordinates.php?room=${roomNumber}`);
+    fetch(`/api/get_room_coordinates.php?room=${encodeURIComponent(roomNumber)}`)
         .then(response => {
             console.log('📡 Response received:', response.status, response.statusText);
             return response.json();

@@ -79,11 +79,22 @@ try {
     exit;
 }
 
-$roomType = $_GET['room_type'] ?? '';
+// New contract: use 'room' (1..5). Fallback to legacy 'room_type' (room1..room5) if present.
+$roomParam = $_GET['room'] ?? null;
+$legacyRoomType = $_GET['room_type'] ?? null;
+if ($roomParam !== null && $roomParam !== '') {
+    if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
+        $roomType = 'room' . (int)$m[1];
+    } else {
+        $roomType = 'room' . (int)$roomParam;
+    }
+} else {
+    $roomType = $legacyRoomType ?? '';
+}
 
-if (empty($roomType)) {
+if ($roomType === '' || !preg_match('/^room[1-5]$/', $roomType)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Room type is required']);
+    echo json_encode(['success' => false, 'message' => 'Room is required (use room=1..5)']);
     exit;
 }
 

@@ -6,14 +6,12 @@ require_once __DIR__ . '/room_helpers.php';
 header('Content-Type: text/plain');
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
     echo "=== ROOM-CATEGORY MAPPING FIX ===\n\n";
     
     // 1. Check existing categories
     echo "1. Available Categories:\n";
-    $stmt = $pdo->prepare("SELECT id, name FROM categories ORDER BY name");
-    $stmt->execute();
-    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $categories = Database::queryAll("SELECT id, name FROM categories ORDER BY name");
     foreach ($categories as $cat) {
         echo "   - ID {$cat['id']}: {$cat['name']}\n";
     }
@@ -21,9 +19,7 @@ try {
     
     // 2. Check current room settings
     echo "2. Current Room Settings:\n";
-    $stmt = $pdo->prepare("SELECT room_number, room_name, description FROM room_settings ORDER BY room_number");
-    $stmt->execute();
-    $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rooms = Database::queryAll("SELECT room_number, room_name, description FROM room_settings ORDER BY room_number");
     foreach ($rooms as $room) {
         echo "   - Room {$room['room_number']}: {$room['room_name']}\n";
     }
@@ -45,15 +41,11 @@ try {
         echo "   Processing Room $roomNum -> $categoryName:\n";
         
         // Try exact match first, then partial match
-        $stmt = $pdo->prepare("SELECT id, name FROM categories WHERE name = ?");
-        $stmt->execute([$categoryName]);
-        $categoryData = $stmt->fetch(PDO::FETCH_ASSOC);
+        $categoryData = Database::queryOne("SELECT id, name FROM categories WHERE name = ?", [$categoryName]);
         
         if (!$categoryData) {
             // Try partial match
-            $stmt = $pdo->prepare("SELECT id, name FROM categories WHERE name LIKE ?");
-            $stmt->execute(["%$categoryName%"]);
-            $categoryData = $stmt->fetch(PDO::FETCH_ASSOC);
+            $categoryData = Database::queryOne("SELECT id, name FROM categories WHERE name LIKE ?", ["%$categoryName%"]); 
         }
         
         if ($categoryData) {
@@ -62,38 +54,26 @@ try {
             echo "     Found category: ID $categoryId ($actualName)\n";
             
             // Clear existing assignments for this room
-            $stmt = $pdo->prepare("DELETE FROM room_category_assignments WHERE room_number = ?");
-            $stmt->execute([$roomNum]);
+            Database::execute("DELETE FROM room_category_assignments WHERE room_number = ?", [$roomNum]);
             echo "     Cleared old assignments\n";
             
             // Get room name for the assignment
-            $stmt = $pdo->prepare("SELECT room_name FROM room_settings WHERE room_number = ?");
-            $stmt->execute([$roomNum]);
-            $roomData = $stmt->fetch(PDO::FETCH_ASSOC);
+            $roomData = Database::queryOne("SELECT room_name FROM room_settings WHERE room_number = ?", [$roomNum]);
             $roomName = $roomData['room_name'] ?? "Room $roomNum";
             
             // Create new primary assignment
-            $stmt = $pdo->prepare("
-                INSERT INTO room_category_assignments (room_number, room_name, category_id, is_primary) 
-                VALUES (?, ?, ?, 1)
-                ON DUPLICATE KEY UPDATE category_id = VALUES(category_id), is_primary = VALUES(is_primary)
-            ");
-            $stmt->execute([$roomNum, $roomName, $categoryId]);
+            Database::execute("\n                INSERT INTO room_category_assignments (room_number, room_name, category_id, is_primary) \n                VALUES (?, ?, ?, 1)\n                ON DUPLICATE KEY UPDATE category_id = VALUES(category_id), is_primary = VALUES(is_primary)\n            ", [$roomNum, $roomName, $categoryId]);
             echo "     ✅ Created primary assignment: Room $roomNum -> $actualName\n";
             
             // Test item count
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM items WHERE category = ?");
-            $stmt->execute([$actualName]);
-            $itemCount = $stmt->fetch(PDO::FETCH_ASSOC);
+            $itemCount = Database::queryOne("SELECT COUNT(*) as count FROM items WHERE category = ?", [$actualName]);
             echo "     Items available: {$itemCount['count']}\n";
             
         } else {
             echo "     ❌ Category '$categoryName' not found\n";
             
             // Show available categories that might match
-            $stmt = $pdo->prepare("SELECT name FROM categories WHERE name LIKE ? OR name LIKE ? LIMIT 5");
-            $stmt->execute(["%$categoryName%", "%" . explode(' ', $categoryName)[0] . "%"]);
-            $similar = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $similar = array_column(Database::queryAll("SELECT name FROM categories WHERE name LIKE ? OR name LIKE ? LIMIT 5", ["%$categoryName%", "%" . explode(' ', $categoryName)[0] . "%"]) , 'name');
             if ($similar) {
                 echo "     Available categories: " . implode(', ', $similar) . "\n";
             }
@@ -102,16 +82,7 @@ try {
     }
     
     echo "4. Final Verification - Updated Room-Category Mappings:\n";
-    $stmt = $pdo->prepare("
-        SELECT rca.room_number, rs.room_name, c.name as category_name, c.id as category_id
-        FROM room_category_assignments rca
-        JOIN categories c ON rca.category_id = c.id
-        LEFT JOIN room_settings rs ON rca.room_number = rs.room_number
-        WHERE rca.is_primary = 1
-        ORDER BY rca.room_number
-    ");
-    $stmt->execute();
-    $finalMappings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $finalMappings = Database::queryAll("\n        SELECT rca.room_number, rs.room_name, c.name as category_name, c.id as category_id\n        FROM room_category_assignments rca\n        JOIN categories c ON rca.category_id = c.id\n        LEFT JOIN room_settings rs ON rca.room_number = rs.room_number\n        WHERE rca.is_primary = 1\n        ORDER BY rca.room_number\n    ");
     
     foreach ($finalMappings as $mapping) {
         echo "   ✅ Room {$mapping['room_number']} ({$mapping['room_name']}) -> {$mapping['category_name']} (ID: {$mapping['category_id']})\n";

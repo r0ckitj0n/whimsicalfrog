@@ -86,8 +86,8 @@ try {
 
         // Prepare and execute update - use items table with sku as primary key
         $query = "UPDATE items SET $field = ? WHERE sku = ?";
-        $stmt = $pdo->prepare($query);
-        if ($stmt->execute([$value, $itemSku])) {
+        $affected = Database::execute($query, [$value, $itemSku]);
+        if ($affected !== false) {
             returnSuccess(ucfirst($field) . ' updated successfully');
         } else {
             returnError('Failed to update ' . $field);
@@ -124,9 +124,7 @@ try {
                     return $map[$cat] ?? strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $cat), 0, 2));
                 }
                 $code = cat_code($category);
-                $stmtSku = $pdo->prepare("SELECT sku FROM items WHERE sku LIKE :pat ORDER BY sku DESC LIMIT 1");
-                $stmtSku->execute([':pat' => 'WF-'.$code.'-%']);
-                $rowSku = $stmtSku->fetch(PDO::FETCH_ASSOC);
+                $rowSku = Database::queryOne("SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1", ['WF-' . $code . '-%']);
                 $num = 1;
                 if ($rowSku && preg_match('/WF-'.$code.'-(\d{3})$/', $rowSku['sku'], $m)) {
                     $num = intval($m[1]) + 1;
@@ -171,11 +169,11 @@ try {
                 // Insert query - items table now uses sku as primary key
                 $sql = "INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description, imageUrl) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                $stmt = $pdo->prepare($sql);
-                $success = $stmt->execute([
+                $affected = Database::execute($sql, [
                     $sku, $name, $category, $stockLevel, $reorderPoint,
                     $costPrice, $retailPrice, $description, $imageUrl
                 ]);
+                $success = ($affected !== false);
                 $itemId = $sku; // For consistency with return data
             } else {
                 // Update existing item - use itemSku (original SKU) for WHERE clause
@@ -186,11 +184,11 @@ try {
                         name = ?, category = ?, sku = ?, stockLevel = ?, 
                         reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ?, imageUrl = ? 
                         WHERE sku = ?";
-                $stmt = $pdo->prepare($sql);
-                $success = $stmt->execute([
+                $affected = Database::execute($sql, [
                     $name, $category, $sku, $stockLevel, $reorderPoint,
                     $costPrice, $retailPrice, $description, $imageUrl, $originalSku
                 ]);
+                $success = ($affected !== false);
                 $itemSku = $sku; // Use the new SKU for response
             }
 
@@ -229,9 +227,9 @@ try {
             $costPrice = floatval($data['costPrice']);
 
             $query = "UPDATE items SET costPrice = ? WHERE sku = ?";
-            $stmt = $pdo->prepare($query);
+            $affected = Database::execute($query, [$costPrice, $itemSku]);
 
-            if ($stmt->execute([$costPrice, $itemSku])) {
+            if ($affected !== false) {
                 returnSuccess('Cost price updated successfully');
             } else {
                 returnError('Failed to update cost price');
@@ -247,8 +245,8 @@ try {
         if (isset($params['action']) && $params['action'] === 'delete' && isset($params['sku'])) {
             $itemSku = trim($params['sku']);
 
-            $stmt = $pdo->prepare("DELETE FROM items WHERE sku = ?");
-            if ($stmt->execute([$itemSku])) {
+            $affected = Database::execute("DELETE FROM items WHERE sku = ?", [$itemSku]);
+            if ($affected !== false) {
                 returnSuccess('Item deleted successfully');
             } else {
                 returnError('Failed to delete item');

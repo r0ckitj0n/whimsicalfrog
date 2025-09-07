@@ -4,9 +4,9 @@ require_once 'config.php';
 header('Content-Type: application/json');
 
 try {
-    // Create PDO connection
+    // Ensure database is initialized via shared helper
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -66,9 +66,7 @@ try {
     }
 
     // Get explanation from database
-    $stmt = $pdo->prepare("SELECT title, explanation FROM pricing_explanations WHERE keyword = ?");
-    $stmt->execute([$matchedKeyword]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $result = Database::queryOne("SELECT title, explanation FROM pricing_explanations WHERE keyword = ?", [$matchedKeyword]);
 
     if ($result) {
         echo json_encode([

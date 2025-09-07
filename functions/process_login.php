@@ -72,9 +72,7 @@ try {
     $pdo = Database::getInstance();
 
     // Query for user (only get username, not password in WHERE clause)
-    $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ?');
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
+    $user = Database::queryOne('SELECT * FROM users WHERE username = ?', [$username]);
 
     // Verify user exists and password is correct using password_verify
     if ($user && password_verify($password, $user['password'])) {

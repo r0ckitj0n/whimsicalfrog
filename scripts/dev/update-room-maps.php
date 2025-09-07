@@ -10,8 +10,7 @@ header('Content-Type: application/json');
 
 try {
     require_once __DIR__ . '/../../api/config.php';
-    $pdo = Database::getInstance();
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    Database::getInstance();
 
     // Create JSON backup of current room_maps
     $backupDir = realpath(__DIR__ . '/../../backups/sql_migrations');
@@ -21,17 +20,15 @@ try {
     }
     $ts = date('Ymd_His');
     $backupPath = rtrim($backupDir, '/')."/room_maps_pre_update_{$ts}.json";
-    $allMapsStmt = $pdo->query("SELECT * FROM room_maps ORDER BY room_type, created_at DESC");
-    $allMaps = $allMapsStmt->fetchAll(PDO::FETCH_ASSOC);
+    $allMaps = Database::queryAll("SELECT * FROM room_maps ORDER BY room_type, created_at DESC");
     // No mutation yet, safe to back up raw rows
     file_put_contents($backupPath, json_encode($allMaps, JSON_PRETTY_PRINT));
 
     // Helper to resolve room_type synonyms based on what's present in DB
     $resolveRoomType = function(array $candidates) use ($pdo): string {
         foreach ($candidates as $cand) {
-            $stmt = $pdo->prepare("SELECT 1 FROM room_maps WHERE room_type = ? LIMIT 1");
-            $stmt->execute([$cand]);
-            if ($stmt->fetchColumn()) {
+            $row = Database::queryOne("SELECT 1 AS c FROM room_maps WHERE room_type = ? LIMIT 1", [$cand]);
+            if ($row) {
                 return $cand;
             }
         }
@@ -121,50 +118,43 @@ try {
         ],
     ];
 
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     $applied = [];
     foreach ($maps as $roomType => $coords) {
         // Ensure a map row exists; prefer 'Original' name
-        $stmt = $pdo->prepare("SELECT id FROM room_maps WHERE room_type = ? AND map_name = 'Original' LIMIT 1");
-        $stmt->execute([$roomType]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $row = Database::queryOne("SELECT id FROM room_maps WHERE room_type = ? AND map_name = 'Original' LIMIT 1", [$roomType]);
 
         if ($row) {
             // Update coordinates and ensure it's active
             $mapId = (int)$row['id'];
-            $u1 = $pdo->prepare("UPDATE room_maps SET coordinates = ? WHERE id = ?");
-            $u1->execute([json_encode($coords, JSON_UNESCAPED_SLASHES), $mapId]);
+            Database::execute("UPDATE room_maps SET coordinates = ? WHERE id = ?", [json_encode($coords, JSON_UNESCAPED_SLASHES), $mapId]);
             // Activate this map and deactivate others for the room
-            $pdo->prepare("UPDATE room_maps SET is_active = 0 WHERE room_type = ? AND id <> ?")->execute([$roomType, $mapId]);
-            $pdo->prepare("UPDATE room_maps SET is_active = 1 WHERE id = ?")->execute([$mapId]);
+            Database::execute("UPDATE room_maps SET is_active = 0 WHERE room_type = ? AND id <> ?", [$roomType, $mapId]);
+            Database::execute("UPDATE room_maps SET is_active = 1 WHERE id = ?", [$mapId]);
             $applied[] = ['room_type' => $roomType, 'map_id' => $mapId, 'updated' => true];
         } else {
             // If any active map exists, update that one; else insert new
-            $stmt = $pdo->prepare("SELECT id FROM room_maps WHERE room_type = ? AND is_active = 1 LIMIT 1");
-            $stmt->execute([$roomType]);
-            $active = $stmt->fetch(PDO::FETCH_ASSOC);
+            $active = Database::queryOne("SELECT id FROM room_maps WHERE room_type = ? AND is_active = 1 LIMIT 1", [$roomType]);
             if ($active) {
                 $mapId = (int)$active['id'];
-                $u1 = $pdo->prepare("UPDATE room_maps SET map_name = 'Original', coordinates = ? WHERE id = ?");
-                $u1->execute([json_encode($coords, JSON_UNESCAPED_SLASHES), $mapId]);
+                Database::execute("UPDATE room_maps SET map_name = 'Original', coordinates = ? WHERE id = ?", [json_encode($coords, JSON_UNESCAPED_SLASHES), $mapId]);
                 $applied[] = ['room_type' => $roomType, 'map_id' => $mapId, 'updated' => true];
             } else {
                 // Insert a new Original map and set active
-                $i1 = $pdo->prepare("INSERT INTO room_maps (room_type, map_name, coordinates, is_active) VALUES (?, 'Original', ?, 1)");
-                $i1->execute([$roomType, json_encode($coords, JSON_UNESCAPED_SLASHES)]);
-                $mapId = (int)$pdo->lastInsertId();
+                Database::execute("INSERT INTO room_maps (room_type, map_name, coordinates, is_active) VALUES (?, 'Original', ?, 1)", [$roomType, json_encode($coords, JSON_UNESCAPED_SLASHES)]);
+                $mapId = (int)Database::lastInsertId();
                 // Deactivate any others just in case
-                $pdo->prepare("UPDATE room_maps SET is_active = 0 WHERE room_type = ? AND id <> ?")->execute([$roomType, $mapId]);
+                Database::execute("UPDATE room_maps SET is_active = 0 WHERE room_type = ? AND id <> ?", [$roomType, $mapId]);
                 $applied[] = ['room_type' => $roomType, 'map_id' => $mapId, 'inserted' => true];
             }
         }
     }
 
-    $pdo->commit();
+    Database::commit();
     echo json_encode(['ok' => true, 'applied' => $applied], JSON_PRETTY_PRINT);
 } catch (Throwable $e) {
-    if (isset($pdo) && $pdo->inTransaction()) { $pdo->rollBack(); }
+    try { Database::rollBack(); } catch (Throwable $t) {}
     http_response_code(500);
     echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }

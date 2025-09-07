@@ -93,13 +93,7 @@ function handlePut($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("
-        UPDATE global_css_rules 
-        SET css_value = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    ");
-
-    $stmt->execute([$cssValue, $id]);
+    Database::execute("\n        UPDATE global_css_rules \n        SET css_value = ?, updated_at = CURRENT_TIMESTAMP\n        WHERE id = ?\n    ", [$cssValue, $id]);
 
     echo json_encode([
         'success' => true,
@@ -119,13 +113,7 @@ function handleDelete($pdo)
     }
 
     // Soft delete by setting is_active to false
-    $stmt = $pdo->prepare("
-        UPDATE global_css_rules 
-        SET is_active = 0, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    ");
-
-    $stmt->execute([$id]);
+    Database::execute("\n        UPDATE global_css_rules \n        SET is_active = 0, updated_at = CURRENT_TIMESTAMP\n        WHERE id = ?\n    ", [$id]);
 
     echo json_encode([
         'success' => true,
@@ -185,12 +173,7 @@ function handleGet($pdo)
         case 'generate_css':
             // Generate CSS content for public use
             try {
-                $rules = $pdo->query("
-                    SELECT rule_name, css_property, css_value, category 
-                    FROM global_css_rules 
-                    WHERE is_active = 1 
-                    ORDER BY category, rule_name
-                ")->fetchAll(PDO::FETCH_ASSOC);
+                $rules = Database::queryAll("\n                    SELECT rule_name, css_property, css_value, category \n                    FROM global_css_rules \n                    WHERE is_active = 1 \n                    ORDER BY category, rule_name\n                ");
 
                 $cssContent = generateCSSContent($rules);
 
@@ -209,10 +192,7 @@ function handleGet($pdo)
         case 'get_all':
             // Get all CSS rules for admin
             try {
-                $rules = $pdo->query("
-                    SELECT * FROM global_css_rules 
-                    ORDER BY category, rule_name
-                ")->fetchAll(PDO::FETCH_ASSOC);
+                $rules = Database::queryAll("\n                    SELECT * FROM global_css_rules \n                    ORDER BY category, rule_name\n                ");
 
                 echo json_encode([
                     'success' => true,

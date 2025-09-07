@@ -34,25 +34,24 @@ $orderId = $input['orderId'];
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
     // Ensure order exists
-    $chk = $pdo->prepare('SELECT id FROM orders WHERE id = ?');
-    $chk->execute([$orderId]);
-    if (!$chk->fetch()) {
+    $row = Database::queryOne('SELECT id FROM orders WHERE id = ?', [$orderId]);
+    if (!$row) {
         http_response_code(404);
         echo json_encode(['error' => 'Order not found']);
         exit;
     }
 
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     // -- Update order scalar fields (reuse logic similar to update-payment-status) --
     $updateMap = [];
-    $params = [':orderId' => $orderId];
+    $params = [];
     $scalarFields = [
         'status' => 'order_status',
         'trackingNumber' => 'trackingNumber',
@@ -66,27 +65,25 @@ try {
     ];
     foreach ($scalarFields as $k => $col) {
         if (array_key_exists($k, $input)) {
-            $updateMap[] = "$col = :$k";
-            $params[":$k"] = $input[$k] === '' ? null : $input[$k];
+            $updateMap[] = "$col = ?";
+            $params[] = ($input[$k] === '' ? null : $input[$k]);
         }
     }
     if ($updateMap) {
-        $sql = 'UPDATE orders SET '.implode(', ', $updateMap).' WHERE id = :orderId';
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
+        $sql = 'UPDATE orders SET '.implode(', ', $updateMap).' WHERE id = ?';
+        $params[] = $orderId;
+        Database::execute($sql, $params);
     }
 
     // -- Update items --
     if (isset($input['items']) && is_array($input['items'])) {
         // delete existing items
-        $pdo->prepare('DELETE FROM order_items WHERE orderId = ?')->execute([$orderId]);
+        Database::execute('DELETE FROM order_items WHERE orderId = ?', [$orderId]);
 
         // Get the next order item ID sequence number
-        $itemCountStmt = $pdo->prepare('SELECT COUNT(*) FROM order_items');
-        $itemCountStmt->execute();
-        $itemCount = $itemCountStmt->fetchColumn();
+        $countRow = Database::queryOne('SELECT COUNT(*) AS c FROM order_items');
+        $itemCount = $countRow ? (int)$countRow['c'] : 0;
 
-        $insert = $pdo->prepare('INSERT INTO order_items (id, orderId, sku, quantity, price) VALUES (?,?,?,?, (SELECT retailPrice FROM items WHERE sku = ?))');
         $itemIndex = 0;
         foreach ($input['items'] as $row) {
             if (empty($row['sku']) || empty($row['quantity'])) {
@@ -100,21 +97,18 @@ try {
 
             $qty = (int)$row['quantity'];
             $sku = $row['sku'];
-            $insert->execute([$itemId, $orderId, $sku, $qty, $sku]);
+            Database::execute('INSERT INTO order_items (id, orderId, sku, quantity, price) VALUES (?,?,?,?, (SELECT retailPrice FROM items WHERE sku = ?))', [$itemId, $orderId, $sku, $qty, $sku]);
         }
         // recalc total
-        $totalStmt = $pdo->prepare('SELECT SUM(quantity*price) AS total FROM order_items WHERE orderId = ?');
-        $totalStmt->execute([$orderId]);
-        $newTotal = $totalStmt->fetchColumn() ?: 0;
-        $pdo->prepare('UPDATE orders SET total = ? WHERE id = ?')->execute([$newTotal, $orderId]);
+        $totalRow = Database::queryOne('SELECT SUM(quantity*price) AS total FROM order_items WHERE orderId = ?', [$orderId]);
+        $newTotal = $totalRow && $totalRow['total'] !== null ? (float)$totalRow['total'] : 0;
+        Database::execute('UPDATE orders SET total = ? WHERE id = ?', [$newTotal, $orderId]);
     }
 
-    $pdo->commit();
+    Database::commit();
     echo json_encode(['success' => true,'orderId' => $orderId]);
 } catch (Exception $e) {
-    if ($pdo && $pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
+    Database::rollBack();
     http_response_code(500);
     echo json_encode(['error' => 'Server error','details' => $e->getMessage()]);
 }

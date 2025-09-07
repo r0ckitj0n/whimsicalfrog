@@ -45,19 +45,17 @@ try {
     }
 
     // Check if item exists
-    $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE sku = ?');
-    $checkStmt->execute([$sku]);
-    if ($checkStmt->fetchColumn() == 0) {
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM items WHERE sku = ?', [$sku]);
+    if ((int)($row['c'] ?? 0) === 0) {
         http_response_code(404);
         echo json_encode(['error' => 'Item not found']);
         exit;
     }
 
     // Delete item
-    $stmt = $pdo->prepare('DELETE FROM items WHERE sku = ?');
-    $result = $stmt->execute([$sku]);
+    $affected = Database::execute('DELETE FROM items WHERE sku = ?', [$sku]);
 
-    if ($result) {
+    if ($affected !== false) {
         // Return success response
         echo json_encode([
             'success' => true,

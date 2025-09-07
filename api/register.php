@@ -54,16 +54,14 @@ try {
     $zipCode = trim($data['zipCode'] ?? '');
 
     // Check if username already exists
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = ?');
-    $stmt->execute([$username]);
-    if ($stmt->fetchColumn() > 0) {
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE username = ?', [$username]);
+    if (($row['c'] ?? 0) > 0) {
         Response::error('Username already exists');
     }
 
     // Check if email already exists
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ?');
-    $stmt->execute([$email]);
-    if ($stmt->fetchColumn() > 0) {
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE email = ?', [$email]);
+    if (($row['c'] ?? 0) > 0) {
         Response::error('Email already exists');
     }
 
@@ -77,9 +75,8 @@ try {
     $compactDate = $monthLetter . $dayOfMonth;
 
     // Get the next sequence number (total customer count + 1)
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users');
-    $stmt->execute();
-    $totalCount = $stmt->fetchColumn();
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM users');
+    $totalCount = (int)($row['c'] ?? 0);
     $sequenceNum = str_pad($totalCount + 1, 3, '0', STR_PAD_LEFT);
 
     // Create customer ID: A15001
@@ -89,8 +86,7 @@ try {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
     // Insert new user
-    $stmt = $pdo->prepare('INSERT INTO users (id, username, password, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $stmt->execute([
+    Database::execute('INSERT INTO users (id, username, password, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
         $userId,
         $username,
         $hashedPassword,

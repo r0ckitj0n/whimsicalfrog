@@ -36,15 +36,10 @@ if ($roomNumber === null) {
 
 try {
     // Get all categories for the room, ordered by primary first
-    $stmt = $pdo->prepare("
-        SELECT rca.*, c.name as category_name, c.description as category_description
-        FROM room_category_assignments rca 
-        JOIN categories c ON rca.category_id = c.id 
-        WHERE rca.room_number = ? 
-        ORDER BY rca.is_primary DESC, rca.display_order ASC, c.name ASC
-    ");
-    $stmt->execute([$roomNumber]);
-    $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $assignments = Database::queryAll(
+        "\n        SELECT rca.*, c.name as category_name, c.description as category_description\n        FROM room_category_assignments rca \n        JOIN categories c ON rca.category_id = c.id \n        WHERE rca.room_number = ? \n        ORDER BY rca.is_primary DESC, rca.display_order ASC, c.name ASC\n        ",
+        [$roomNumber]
+    );
 
     $primaryCategory = null;
     $allCategories = [];

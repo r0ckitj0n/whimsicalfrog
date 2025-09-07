@@ -35,12 +35,7 @@ function checkAuth()
 }
 
 try {
-    try {
-        $pdo = Database::getInstance();
-    } catch (Exception $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw $e;
-    }
+    try { Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
     // Get action from query params, form data, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -56,8 +51,8 @@ try {
         case 'list':
             checkAuth();
 
-            $stmt = $pdo->prepare("
-                SELECT s.*, 
+            $sales = Database::queryAll(
+                "SELECT s.*, 
                        COUNT(si.item_sku) as item_count,
                        CASE 
                            WHEN s.is_active = 1 AND NOW() BETWEEN s.start_date AND s.end_date THEN 'active'
@@ -68,10 +63,8 @@ try {
                 FROM sales s
                 LEFT JOIN sale_items si ON s.id = si.sale_id
                 GROUP BY s.id
-                ORDER BY s.created_at DESC
-            ");
-            $stmt->execute();
-            $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                ORDER BY s.created_at DESC"
+            );
 
             echo json_encode(['success' => true, 'sales' => $sales]);
             break;
@@ -86,9 +79,7 @@ try {
             }
 
             // Get sale details
-            $stmt = $pdo->prepare("SELECT * FROM sales WHERE id = ?");
-            $stmt->execute([$saleId]);
-            $sale = $stmt->fetch(PDO::FETCH_ASSOC);
+            $sale = Database::queryOne("SELECT * FROM sales WHERE id = ?", [$saleId]);
 
             if (!$sale) {
                 echo json_encode(['error' => 'Sale not found']);
@@ -96,14 +87,13 @@ try {
             }
 
             // Get sale items
-            $stmt = $pdo->prepare("
-                SELECT si.item_sku, i.name as item_name, i.retailPrice as original_price
-                FROM sale_items si
-                JOIN items i ON si.item_sku = i.sku
-                WHERE si.sale_id = ?
-            ");
-            $stmt->execute([$saleId]);
-            $saleItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $saleItems = Database::queryAll(
+                "SELECT si.item_sku, i.name as item_name, i.retailPrice as original_price
+                 FROM sale_items si
+                 JOIN items i ON si.item_sku = i.sku
+                 WHERE si.sale_id = ?",
+                [$saleId]
+            );
 
             $sale['items'] = $saleItems;
             echo json_encode(['success' => true, 'sale' => $sale]);
@@ -127,30 +117,29 @@ try {
                 break;
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Create sale
-                $stmt = $pdo->prepare("
-                    INSERT INTO sales (name, description, discount_percentage, start_date, end_date, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([$name, $description, $discountPercentage, $startDate, $endDate, $isActive]);
-                $saleId = $pdo->lastInsertId();
+                Database::execute(
+                    "INSERT INTO sales (name, description, discount_percentage, start_date, end_date, is_active)
+                     VALUES (?, ?, ?, ?, ?, ?)",
+                    [$name, $description, $discountPercentage, $startDate, $endDate, $isActive]
+                );
+                $saleId = Database::lastInsertId();
 
                 // Add sale items
                 if (!empty($items)) {
-                    $stmt = $pdo->prepare("INSERT INTO sale_items (sale_id, item_sku) VALUES (?, ?)");
                     foreach ($items as $itemSku) {
-                        $stmt->execute([$saleId, $itemSku]);
+                        Database::execute("INSERT INTO sale_items (sale_id, item_sku) VALUES (?, ?)", [$saleId, $itemSku]);
                     }
                 }
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'sale_id' => $saleId, 'message' => 'Sale created successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 echo json_encode(['error' => 'Failed to create sale: ' . $e->getMessage()]);
             }
             break;
@@ -174,34 +163,32 @@ try {
                 break;
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Update sale
-                $stmt = $pdo->prepare("
-                    UPDATE sales 
-                    SET name = ?, description = ?, discount_percentage = ?, start_date = ?, end_date = ?, is_active = ?
-                    WHERE id = ?
-                ");
-                $stmt->execute([$name, $description, $discountPercentage, $startDate, $endDate, $isActive, $saleId]);
+                Database::execute(
+                    "UPDATE sales 
+                     SET name = ?, description = ?, discount_percentage = ?, start_date = ?, end_date = ?, is_active = ?
+                     WHERE id = ?",
+                    [$name, $description, $discountPercentage, $startDate, $endDate, $isActive, $saleId]
+                );
 
                 // Remove existing sale items
-                $stmt = $pdo->prepare("DELETE FROM sale_items WHERE sale_id = ?");
-                $stmt->execute([$saleId]);
+                Database::execute("DELETE FROM sale_items WHERE sale_id = ?", [$saleId]);
 
                 // Add new sale items
                 if (!empty($items)) {
-                    $stmt = $pdo->prepare("INSERT INTO sale_items (sale_id, item_sku) VALUES (?, ?)");
                     foreach ($items as $itemSku) {
-                        $stmt->execute([$saleId, $itemSku]);
+                        Database::execute("INSERT INTO sale_items (sale_id, item_sku) VALUES (?, ?)", [$saleId, $itemSku]);
                     }
                 }
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'message' => 'Sale updated successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 echo json_encode(['error' => 'Failed to update sale: ' . $e->getMessage()]);
             }
             break;
@@ -215,8 +202,7 @@ try {
                 break;
             }
 
-            $stmt = $pdo->prepare("DELETE FROM sales WHERE id = ?");
-            $result = $stmt->execute([$saleId]);
+            $result = Database::execute("DELETE FROM sales WHERE id = ?", [$saleId]);
 
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Sale deleted successfully']);
@@ -230,33 +216,32 @@ try {
             $itemSku = $_GET['item_sku'] ?? '';
 
             if (!$itemSku) {
-                echo json_encode(['success' => true, 'sales' => []]);
-                break;
+                http_response_code(200);
+                echo json_encode(['success' => true, 'sale' => null]);
+                exit;
             }
 
-            $stmt = $pdo->prepare("
-                SELECT s.*, si.item_sku
-                FROM sales s
-                JOIN sale_items si ON s.id = si.sale_id
-                WHERE si.item_sku = ? 
-                AND s.is_active = 1
-                AND NOW() BETWEEN s.start_date AND s.end_date
-                ORDER BY s.discount_percentage DESC
-                LIMIT 1
-            ");
-            $stmt->execute([$itemSku]);
-            $activeSale = $stmt->fetch(PDO::FETCH_ASSOC);
+            $activeSale = Database::queryOne(
+                "SELECT s.*, si.item_sku
+                 FROM sales s
+                 JOIN sale_items si ON s.id = si.sale_id
+                 WHERE si.item_sku = ? 
+                 AND s.is_active = 1
+                 AND NOW() BETWEEN s.start_date AND s.end_date
+                 ORDER BY s.discount_percentage DESC
+                 LIMIT 1",
+                [$itemSku]
+            );
 
-            echo json_encode(['success' => true, 'sale' => $activeSale]);
-            break;
+            http_response_code(200);
+            echo json_encode(['success' => true, 'sale' => $activeSale ?: null]);
+            exit;
 
         case 'get_all_items':
             checkAuth();
 
             // Get all items for sale assignment
-            $stmt = $pdo->prepare("SELECT sku, name, retailPrice FROM items ORDER BY name");
-            $stmt->execute();
-            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $items = Database::queryAll("SELECT sku, name, retailPrice FROM items ORDER BY name");
 
             echo json_encode(['success' => true, 'items' => $items]);
             break;
@@ -270,8 +255,7 @@ try {
                 break;
             }
 
-            $stmt = $pdo->prepare("UPDATE sales SET is_active = NOT is_active WHERE id = ?");
-            $result = $stmt->execute([$saleId]);
+            $result = Database::execute("UPDATE sales SET is_active = NOT is_active WHERE id = ?", [$saleId]);
 
             if ($result) {
                 echo json_encode(['success' => true, 'message' => 'Sale status updated']);

@@ -4,11 +4,11 @@ require_once __DIR__ . '/../../api/config.php';
 try {
     $pdo = Database::getInstance();
 
-    $count = (int)$pdo->query('SELECT COUNT(*) FROM dashboard_sections')->fetchColumn();
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM dashboard_sections');
+    $count = (int)($row['c'] ?? 0);
     echo "dashboard_sections rows: {$count}\n";
 
-    $stmt = $pdo->query('SELECT section_key, display_order, is_active, width_class FROM dashboard_sections ORDER BY display_order');
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = Database::queryAll('SELECT section_key, display_order, is_active, width_class FROM dashboard_sections ORDER BY display_order');
     if (!$rows) {
         echo "No rows found.\n";
         exit(0);

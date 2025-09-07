@@ -7,10 +7,10 @@
 .admin-filters {
   display: block; /* the form inside will be the flex row */
   padding: 10px 12px;
-  background: #fff;
-  border: 1px solid #e5e7eb; /* gray-300 */
-  border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(0,0,0,.06);
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   overflow-x: auto; /* allow horizontal scroll instead of wrapping */
 }
 

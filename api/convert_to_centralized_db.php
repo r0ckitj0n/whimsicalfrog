@@ -294,8 +294,7 @@ if (PHP_SAPI === 'cli' || isset($_GET['action'])) {
             // Test centralized database connection
             try {
                 $pdo = Database::getInstance();
-                $stmt = $pdo->query("SELECT 1 as test");
-                $result = $stmt->fetch();
+                $result = Database::queryOne("SELECT 1 as test");
 
                 if ($result && $result['test'] == 1) {
                     if (isset($_GET['format']) && $_GET['format'] === 'json') {

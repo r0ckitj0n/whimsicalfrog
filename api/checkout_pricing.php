@@ -48,7 +48,6 @@ try {
 
     // Compute subtotal based on current item prices
     $subtotal = 0.0;
-    $priceStmt = $pdo->prepare('SELECT retailPrice FROM items WHERE sku = ?');
     $itemsDebug = [];
 
     for ($i = 0; $i < count($itemIds); $i++) {
@@ -57,8 +56,8 @@ try {
         if (!$sku || $qty <= 0) continue;
         // Attempt primary and normalized price lookups
         $effectiveSku = $sku;
-        $priceStmt->execute([$effectiveSku]);
-        $price = $priceStmt->fetchColumn();
+        $rowPrice = Database::queryOne('SELECT retailPrice FROM items WHERE sku = ?', [$effectiveSku]);
+        $price = $rowPrice ? $rowPrice['retailPrice'] : null;
 
         // Build candidate SKUs by stripping trailing letters and progressively removing hyphenated segments
         if ($price === false || $price === null || (float)$price <= 0.0) {
@@ -83,8 +82,8 @@ try {
             }
 
             foreach ($candidates as $cand) {
-                $priceStmt->execute([$cand]);
-                $candPrice = $priceStmt->fetchColumn();
+                $rowCand = Database::queryOne('SELECT retailPrice FROM items WHERE sku = ?', [$cand]);
+                $candPrice = $rowCand ? $rowCand['retailPrice'] : null;
                 if ($candPrice !== false && $candPrice !== null && (float)$candPrice > 0.0) {
                     if (class_exists('Logger')) {
                         Logger::info('Normalized SKU for pricing lookup', [

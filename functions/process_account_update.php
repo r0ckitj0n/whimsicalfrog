@@ -50,9 +50,7 @@ try {
     }
 
     // Verify the user exists and the current password is correct
-    $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ? AND password = ?');
-    $stmt->execute([$userId, $currentPassword]);
-    $user = $stmt->fetch();
+    $user = Database::queryOne('SELECT * FROM users WHERE id = ? AND password = ?', [$userId, $currentPassword]);
 
     if (!$user) {
         http_response_code(401);
@@ -62,9 +60,8 @@ try {
 
     // Check if email is already used by another user
     if ($email !== $user['email']) {
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ? AND id != ?');
-        $stmt->execute([$email, $userId]);
-        if ($stmt->fetchColumn() > 0) {
+        $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE email = ? AND id != ?', [$email, $userId]);
+        if ((int)($row['c'] ?? 0) > 0) {
             http_response_code(409); // Conflict
             echo json_encode(['error' => 'Email already in use by another account']);
             exit;
@@ -73,18 +70,16 @@ try {
 
     // Prepare update query based on whether a new password is provided
     if (!empty($newPassword)) {
-        $stmt = $pdo->prepare('UPDATE users SET email = ?, first_name = ?, last_name = ?, password = ? WHERE id = ?');
-        $result = $stmt->execute([$email, $firstName, $lastName, $newPassword, $userId]);
+        $affected = Database::execute('UPDATE users SET email = ?, first_name = ?, last_name = ?, password = ? WHERE id = ?', [$email, $firstName, $lastName, $newPassword, $userId]);
+        $result = ($affected !== false);
     } else {
-        $stmt = $pdo->prepare('UPDATE users SET email = ?, first_name = ?, last_name = ? WHERE id = ?');
-        $result = $stmt->execute([$email, $firstName, $lastName, $userId]);
+        $affected = Database::execute('UPDATE users SET email = ?, first_name = ?, last_name = ? WHERE id = ?', [$email, $firstName, $lastName, $userId]);
+        $result = ($affected !== false);
     }
 
     if ($result) {
         // Get updated user data
-        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
-        $stmt->execute([$userId]);
-        $updatedUser = $stmt->fetch();
+        $updatedUser = Database::queryOne('SELECT * FROM users WHERE id = ?', [$userId]);
 
         // Return success response with updated user data
         echo json_encode([

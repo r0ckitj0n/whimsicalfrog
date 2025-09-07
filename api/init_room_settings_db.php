@@ -7,7 +7,7 @@ require_once __DIR__ . '/config.php';
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -30,10 +30,10 @@ try {
         INDEX idx_is_active (is_active)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-    $pdo->exec($createTable);
+    Database::execute($createTable);
     // Ensure background_display_type column exists
     try {
-        $pdo->exec("ALTER TABLE room_settings ADD COLUMN background_display_type ENUM('fullscreen','modal') NOT NULL DEFAULT 'fullscreen'");
+        Database::execute("ALTER TABLE room_settings ADD COLUMN background_display_type ENUM('fullscreen','modal') NOT NULL DEFAULT 'fullscreen'");
     } catch (Exception $e) {
         // Column already exists, skip
     }
@@ -92,18 +92,12 @@ try {
     ];
 
     // Check if data already exists
-    $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM room_settings");
-    $checkStmt->execute();
-    $count = $checkStmt->fetchColumn();
+    $rowCount = Database::queryOne("SELECT COUNT(*) as c FROM room_settings");
+    $count = $rowCount ? (int)$rowCount['c'] : 0;
 
     if ($count == 0) {
-        $insertStmt = $pdo->prepare("
-            INSERT INTO room_settings (room_number, room_name, door_label, description, display_order) 
-            VALUES (?, ?, ?, ?, ?)
-        ");
-
         foreach ($defaultRooms as $room) {
-            $insertStmt->execute([
+            Database::execute("\n            INSERT INTO room_settings (room_number, room_name, door_label, description, display_order) \n            VALUES (?, ?, ?, ?, ?)\n            ", [
                 $room['room_number'],
                 $room['room_name'],
                 $room['door_label'],

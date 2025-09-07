@@ -31,7 +31,7 @@ if (!$isAdmin) {
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -48,22 +48,16 @@ try {
             }
 
             // Check if we have the CORRECT structure: color-size combinations with size_id
-            $correctStructureStmt = $pdo->prepare("
-                SELECT COUNT(*) FROM item_colors 
-                WHERE item_sku = ? AND size_id IS NOT NULL AND is_active = 1
-            ");
-            $correctStructureStmt->execute([$itemSku]);
-            $correctCombinations = $correctStructureStmt->fetchColumn();
+            $row = Database::queryOne("SELECT COUNT(*) as cnt FROM item_colors WHERE item_sku = ? AND size_id IS NOT NULL AND is_active = 1", [$itemSku]);
+            $correctCombinations = (int)($row['cnt'] ?? 0);
 
             // Count main sizes
-            $sizesCountStmt = $pdo->prepare("SELECT COUNT(*) FROM item_sizes WHERE item_sku = ? AND is_active = 1");
-            $sizesCountStmt->execute([$itemSku]);
-            $sizeCount = $sizesCountStmt->fetchColumn();
+            $row = Database::queryOne("SELECT COUNT(*) as cnt FROM item_sizes WHERE item_sku = ? AND is_active = 1", [$itemSku]);
+            $sizeCount = (int)($row['cnt'] ?? 0);
 
             // Count total color entries (including old duplicate structure)
-            $colorsCountStmt = $pdo->prepare("SELECT COUNT(*) FROM item_colors WHERE item_sku = ? AND is_active = 1");
-            $colorsCountStmt->execute([$itemSku]);
-            $colorCount = $colorsCountStmt->fetchColumn();
+            $row = Database::queryOne("SELECT COUNT(*) as cnt FROM item_colors WHERE item_sku = ? AND is_active = 1", [$itemSku]);
+            $colorCount = (int)($row['cnt'] ?? 0);
 
             // Structure is CORRECT if we have color-size combinations with size_id
             // Structure is BACKWARDS if we have colors without size_id (old duplicate structure)
@@ -74,12 +68,8 @@ try {
                 $isBackwards = false;
             } else {
                 // No correct combinations found - check for old backwards structure
-                $oldColorsStmt = $pdo->prepare("
-                    SELECT COUNT(*) FROM item_colors 
-                    WHERE item_sku = ? AND size_id IS NULL AND is_active = 1
-                ");
-                $oldColorsStmt->execute([$itemSku]);
-                $oldColors = $oldColorsStmt->fetchColumn();
+                $row = Database::queryOne("SELECT COUNT(*) as cnt FROM item_colors WHERE item_sku = ? AND size_id IS NULL AND is_active = 1", [$itemSku]);
+                $oldColors = (int)($row['cnt'] ?? 0);
 
                 if ($oldColors > $sizeCount && $oldColors > 8) {
                     $isBackwards = true;
@@ -104,24 +94,22 @@ try {
             }
 
             // Get current colors
-            $colorsStmt = $pdo->prepare("
-                SELECT id, color_name, color_code, stock_level, is_active 
-                FROM item_colors 
-                WHERE item_sku = ? 
-                ORDER BY display_order ASC, color_name ASC
-            ");
-            $colorsStmt->execute([$itemSku]);
-            $colors = $colorsStmt->fetchAll(PDO::FETCH_ASSOC);
+            $colors = Database::queryAll(
+                "SELECT id, color_name, color_code, stock_level, is_active 
+                 FROM item_colors 
+                 WHERE item_sku = ? 
+                 ORDER BY display_order ASC, color_name ASC",
+                [$itemSku]
+            );
 
             // Get current sizes
-            $sizesStmt = $pdo->prepare("
-                SELECT id, color_id, size_name, size_code, stock_level, price_adjustment, is_active 
-                FROM item_sizes 
-                WHERE item_sku = ? 
-                ORDER BY display_order ASC, size_name ASC
-            ");
-            $sizesStmt->execute([$itemSku]);
-            $sizes = $sizesStmt->fetchAll(PDO::FETCH_ASSOC);
+            $sizes = Database::queryAll(
+                "SELECT id, color_id, size_name, size_code, stock_level, price_adjustment, is_active 
+                 FROM item_sizes 
+                 WHERE item_sku = ? 
+                 ORDER BY display_order ASC, size_name ASC",
+                [$itemSku]
+            );
 
             // Analyze the structure
             $analysis = [
@@ -203,17 +191,16 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $sizesStmt = $pdo->prepare("SELECT id, size_name, size_code, price_adjustment, stock_level FROM item_sizes WHERE item_sku = ? AND is_active = 1 ORDER BY display_order");
-            $sizesStmt->execute([$itemSku]);
-            $sizes = $sizesStmt->fetchAll(PDO::FETCH_ASSOC);
+            $sizes = Database::queryAll("SELECT id, size_name, size_code, price_adjustment, stock_level FROM item_sizes WHERE item_sku = ? AND is_active = 1 ORDER BY display_order", [$itemSku]);
 
-            $colorsStmt = $pdo->prepare("SELECT c.id, c.size_id, c.color_name, c.color_code, c.stock_level, s.size_name 
-                                        FROM item_colors c 
-                                        JOIN item_sizes s ON c.size_id = s.id 
-                                        WHERE c.item_sku = ? AND c.is_active = 1 
-                                        ORDER BY s.display_order, c.display_order");
-            $colorsStmt->execute([$itemSku]);
-            $colors = $colorsStmt->fetchAll(PDO::FETCH_ASSOC);
+            $colors = Database::queryAll(
+                "SELECT c.id, c.size_id, c.color_name, c.color_code, c.stock_level, s.size_name 
+                 FROM item_colors c 
+                 JOIN item_sizes s ON c.size_id = s.id 
+                 WHERE c.item_sku = ? AND c.is_active = 1 
+                 ORDER BY s.display_order, c.display_order",
+                [$itemSku]
+            );
 
             // Build the CORRECT structure: Sizes -> Colors
             $proposedSizes = [];
@@ -272,30 +259,18 @@ try {
                 throw new Exception('Item SKU and new structure are required');
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Step 1: Backup current data
-                $backupStmt = $pdo->prepare("
-                    CREATE TEMPORARY TABLE IF NOT EXISTS temp_color_backup AS 
-                    SELECT * FROM item_colors WHERE item_sku = ?
-                ");
-                $backupStmt->execute([$itemSku]);
+                Database::execute("CREATE TEMPORARY TABLE IF NOT EXISTS temp_color_backup AS SELECT * FROM item_colors WHERE item_sku = ?", [$itemSku]);
 
-                $backupSizeStmt = $pdo->prepare("
-                    CREATE TEMPORARY TABLE IF NOT EXISTS temp_size_backup AS 
-                    SELECT * FROM item_sizes WHERE item_sku = ?
-                ");
-                $backupSizeStmt->execute([$itemSku]);
+                Database::execute("CREATE TEMPORARY TABLE IF NOT EXISTS temp_size_backup AS SELECT * FROM item_sizes WHERE item_sku = ?", [$itemSku]);
 
                 // Step 2: Clear existing data for this item (sizes first due to foreign keys)
-                $deleteSizesStmt = $pdo->prepare("DELETE FROM item_sizes WHERE item_sku = ?");
-                $deleteSizesStmt->execute([$itemSku]);
-                $sizesDeletedCount = $deleteSizesStmt->rowCount();
+                $sizesDeletedCount = Database::execute("DELETE FROM item_sizes WHERE item_sku = ?", [$itemSku]);
 
-                $deleteColorsStmt = $pdo->prepare("DELETE FROM item_colors WHERE item_sku = ?");
-                $deleteColorsStmt->execute([$itemSku]);
-                $colorsDeletedCount = $deleteColorsStmt->rowCount();
+                $colorsDeletedCount = Database::execute("DELETE FROM item_colors WHERE item_sku = ?", [$itemSku]);
 
                 error_log("Migration for $itemSku: Deleted $sizesDeletedCount sizes, $colorsDeletedCount colors");
 
@@ -319,13 +294,11 @@ try {
                 // Insert unique colors first
                 $colorOrder = 1;
                 foreach ($allColors as $colorName => $colorCode) {
-                    $insertColorStmt = $pdo->prepare("
-                        INSERT INTO item_colors (item_sku, color_name, color_code, stock_level, display_order, is_active) 
-                        VALUES (?, ?, ?, 0, ?, 1)
-                    ");
-
-                    $insertColorStmt->execute([$itemSku, $colorName, $colorCode, $colorOrder]);
-                    $colorId = $pdo->lastInsertId();
+                    Database::execute(
+                        "INSERT INTO item_colors (item_sku, color_name, color_code, stock_level, display_order, is_active) VALUES (?, ?, ?, 0, ?, 1)",
+                        [$itemSku, $colorName, $colorCode, $colorOrder]
+                    );
+                    $colorId = Database::lastInsertId();
                     $colorMap[$colorName] = $colorId;
                     error_log("Inserted color $colorName with ID $colorId");
                     $colorOrder++;
@@ -354,12 +327,10 @@ try {
                         $colorId = $colorMap[$colorName];
 
                         // Each size-color combination gets its own row
-                        $insertSizeStmt = $pdo->prepare("
-                            INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order, is_active) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-                        ");
-
-                        $insertSizeStmt->execute([$itemSku, $colorId, $sizeName, $sizeCode, $stockLevel, $priceAdjustment, $sizeOrder]);
+                        Database::execute(
+                            "INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+                            [$itemSku, $colorId, $sizeName, $sizeCode, $stockLevel, $priceAdjustment, $sizeOrder]
+                        );
                         error_log("Inserted size-color: $sizeName ($sizeCode) in $colorName with stock $stockLevel");
                         $totalStock += $stockLevel;
                     }
@@ -369,24 +340,23 @@ try {
 
                 // Update color totals
                 foreach ($colorMap as $colorName => $colorId) {
-                    $colorStockStmt = $pdo->prepare("
-                        UPDATE item_colors 
-                        SET stock_level = (
+                    Database::execute(
+                        "UPDATE item_colors 
+                         SET stock_level = (
                             SELECT COALESCE(SUM(stock_level), 0) 
                             FROM item_sizes 
                             WHERE color_id = ? AND item_sku = ?
-                        ) 
-                        WHERE id = ?
-                    ");
-                    $colorStockStmt->execute([$colorId, $itemSku, $colorId]);
+                         ) 
+                         WHERE id = ?",
+                        [$colorId, $itemSku, $colorId]
+                    );
                     error_log("Updated color $colorName total stock");
                 }
 
                 // Step 4: Update main item stock
-                $updateItemStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
-                $updateItemStmt->execute([$totalStock, $itemSku]);
+                Database::execute("UPDATE items SET stockLevel = ? WHERE sku = ?", [$totalStock, $itemSku]);
 
-                $pdo->commit();
+                Database::commit();
 
                 echo json_encode([
                     'success' => true,
@@ -396,7 +366,7 @@ try {
                 ]);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -409,18 +379,17 @@ try {
             }
 
             // Get all size-color combinations
-            $stmt = $pdo->prepare("
-                SELECT 
+            $combinations = Database::queryAll(
+                "SELECT 
                     s.size_name, s.size_code, s.price_adjustment,
                     c.color_name, c.color_code, s.stock_level,
                     s.is_active
-                FROM item_sizes s
-                JOIN item_colors c ON s.color_id = c.id
-                WHERE s.item_sku = ? AND s.is_active = 1 AND c.is_active = 1
-                ORDER BY s.display_order ASC, s.size_name ASC, c.display_order ASC, c.color_name ASC
-            ");
-            $stmt->execute([$itemSku]);
-            $combinations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                 FROM item_sizes s
+                 JOIN item_colors c ON s.color_id = c.id
+                 WHERE s.item_sku = ? AND s.is_active = 1 AND c.is_active = 1
+                 ORDER BY s.display_order ASC, s.size_name ASC, c.display_order ASC, c.color_name ASC",
+                [$itemSku]
+            );
 
             // Group by size
             $structure = [];

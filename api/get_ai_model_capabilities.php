@@ -21,24 +21,19 @@ try {
     switch ($action) {
         case 'get_current':
             // Get current AI provider and model
-            $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'");
-
-            $stmt->execute(['ai_provider']);
-            $provider = $stmt->fetchColumn() ?: 'jons_ai';
+            $row = Database::queryOne("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'", ['ai_provider']);
+            $provider = $row && isset($row['setting_value']) ? $row['setting_value'] : 'jons_ai';
 
             $modelKey = $provider . '_model';
-            $stmt->execute([$modelKey]);
-            $modelId = $stmt->fetchColumn() ?: 'jons-ai-basic';
+            $row = Database::queryOne("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'", [$modelKey]);
+            $modelId = $row && isset($row['setting_value']) ? $row['setting_value'] : 'jons-ai-basic';
 
             // Get model capabilities
-            $stmt = $pdo->prepare("SELECT * FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1");
-            $stmt->execute([$provider, $modelId]);
-            $model = $stmt->fetch(PDO::FETCH_ASSOC);
+            $model = Database::queryOne("SELECT * FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1", [$provider, $modelId]);
 
             if (!$model) {
                 // Fallback to Jon's AI if model not found
-                $stmt->execute(['jons_ai', 'jons-ai-basic']);
-                $model = $stmt->fetch(PDO::FETCH_ASSOC);
+                $model = Database::queryOne("SELECT * FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1", ['jons_ai', 'jons-ai-basic']);
             }
 
             echo json_encode([
@@ -51,8 +46,7 @@ try {
 
         case 'get_all':
             // Get all available models
-            $stmt = $pdo->query("SELECT * FROM ai_models WHERE is_active = 1 ORDER BY provider, model_name");
-            $models = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $models = Database::queryAll("SELECT * FROM ai_models WHERE is_active = 1 ORDER BY provider, model_name");
 
             $grouped = [];
             foreach ($models as $model) {
@@ -72,19 +66,16 @@ try {
 
             if (!$provider || !$modelId) {
                 // Get current settings
-                $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'");
-
-                $stmt->execute(['ai_provider']);
-                $provider = $stmt->fetchColumn() ?: 'jons_ai';
+                $row = Database::queryOne("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'", ['ai_provider']);
+                $provider = $row && isset($row['setting_value']) ? $row['setting_value'] : 'jons_ai';
 
                 $modelKey = $provider . '_model';
-                $stmt->execute([$modelKey]);
-                $modelId = $stmt->fetchColumn() ?: 'jons-ai-basic';
+                $row = Database::queryOne("SELECT setting_value FROM business_settings WHERE setting_key = ? AND category = 'ai'", [$modelKey]);
+                $modelId = $row && isset($row['setting_value']) ? $row['setting_value'] : 'jons-ai-basic';
             }
 
-            $stmt = $pdo->prepare("SELECT supports_images FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1");
-            $stmt->execute([$provider, $modelId]);
-            $supportsImages = $stmt->fetchColumn();
+            $row = Database::queryOne("SELECT supports_images FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1", [$provider, $modelId]);
+            $supportsImages = $row ? $row['supports_images'] : 0;
 
             echo json_encode([
                 'success' => true,

@@ -22,31 +22,8 @@ if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
 // IMPORTANT: Use the canonical settings markup from sections/admin_settings.php to avoid duplicate IDs and conflicting overlays.
 // Including the sections file here ensures a single source of truth for modals and buttons.
 include dirname(__DIR__) . '/sections/admin_settings.php';
-return;
-// Minimal render mode: if ?wf_minimal=1, output a tiny shell and skip heavy content/scripts
-if (isset($_GET['wf_minimal']) && $_GET['wf_minimal'] === '1') {
-    // Output a tiny, static placeholder to test if DOM/CSS load is the freeze source
-    echo "<div class=\"settings-page\" style=\"padding:16px;font-family:sans-serif\">" .
-         "<h1>Admin Settings (Minimal Mode)</h1>" .
-         "<p>This minimal render omits scripts and heavy sections. If this loads without freezing, the issue is likely DOM/layout volume or a specific section.</p>" .
-         "</div>";
-    return;
-}
-
-// If the global layout (header/body with data attributes) hasn't been bootstrapped, include it now.
-if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
-    // Hint header about current route so it sets body data-page to admin/settings
-    $page = 'admin';
-    include dirname(__DIR__) . '/partials/header.php';
-    // Final safety: inline fallback to ensure horizontal admin tabs render and spacing under header is tight
-    echo '<style id="wf-admin-settings-inline-fallback">'
-       . 'body[data-page^="admin"] .admin-tab-navigation{position:fixed!important;top:var(--wf-admin-nav-top, 80px)!important;left:0;right:0;z-index:2000;margin:0!important;padding:6px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}'
-       . 'body[data-page^="admin"] .admin-tab-navigation>*,'
-       . 'body[data-page^="admin"] .admin-tab-navigation .flex,'
-       . 'body[data-page^="admin"] .admin-tab-navigation>div,'
-       . 'body[data-page^="admin"] .admin-tab-navigation ul{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;list-style:none!important;width:100%!important;text-align:center!important}'
-       . 'body[data-page^="admin"] .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}'
-       . 'body[data-page^="admin"] .admin-tab-navigation .container, body[data-page^="admin"] .admin-tab-navigation .wrapper, body[data-page^="admin"] .admin-tab-navigation .flex, body[data-page^="admin"] .admin-tab-navigation > div{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}'
+ return;
+?>
        . 'body[data-page^="admin"] .admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}'
        . 'body[data-page^="admin"] .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;width:auto!important;max-width:none!important;flex:0 0 auto!important;white-space:nowrap;text-decoration:none}'
        . '</style>';
@@ -66,24 +43,15 @@ $wf_full = isset($_GET['wf_full']) && $_GET['wf_full'] === '1';
 // In LIGHT mode, do NOT emit the admin-settings bundle to avoid any heavy JS costs
 // But DO render the full sections HTML so options are visible and usable for manual testing
 if (!$wf_full && $wf_section === '') {
-    if (function_exists('vite_css')) {
-        echo vite_css('js/app.js');
-        echo vite_css('js/admin-settings.js');
-    }
+    // Light mode hint remains, but asset emission is centralized via partials/header.php and app.js
     if (isset($_GET['wf_debug']) && $_GET['wf_debug'] === '1') {
         echo '<div class="settings-page" style="padding:12px 16px 0">'
            . '<div class="notice" style="margin:0 0 12px;color:#666;font-size:14px">'
-           . 'Light mode: heavy JS disabled by default. Append <code>?wf_full=1</code> or set <code>&wf_section=...</code> to lazy-load the legacy module for that section if required.'
+           . 'Light mode is active. The admin bundle will be loaded via app.js per-page imports as needed.'
            . '</div>'
            . '</div>';
     }
-    // Do not return; continue to render the full sections below.
-}
-// Always emit the admin-settings entry so the lightweight bridge initializes.
-// The entry itself lazily loads the heavy legacy module only when requested.
-if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) {
-    define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true);
-    echo vite('js/admin-settings.js');
+    // Continue to render the full sections below.
 }
 ?>
 

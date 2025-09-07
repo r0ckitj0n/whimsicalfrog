@@ -49,8 +49,7 @@ try {
         }
 
         // Update the field
-        $stmt = $pdo->prepare("UPDATE items SET `$field` = ? WHERE sku = ?");
-        $result = $stmt->execute([$value, $sku]);
+        $result = Database::execute("UPDATE items SET `$field` = ? WHERE sku = ?", [$value, $sku]);
 
         if ($result) {
             echo json_encode([
@@ -81,8 +80,7 @@ try {
         $description = $data['description'] ?? '';
 
         // Update the item
-        $stmt = $pdo->prepare('UPDATE items SET name = ?, category = ?, stockLevel = ?, reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ? WHERE sku = ?');
-        $result = $stmt->execute([$name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description, $sku]);
+        $result = Database::execute('UPDATE items SET name = ?, category = ?, stockLevel = ?, reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ? WHERE sku = ?', [$name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description, $sku]);
 
         if ($result) {
             echo json_encode([

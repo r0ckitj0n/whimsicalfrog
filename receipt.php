@@ -14,23 +14,21 @@ if ($orderId === '') {
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
-    $pdo->query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+    Database::execute("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
 
     // Get order details
-    $stmt = $pdo->prepare('SELECT * FROM orders WHERE id = ?');
-    $stmt->execute([$orderId]);
-    $order = $stmt->fetch(PDO::FETCH_ASSOC);
+    $order = Database::queryOne('SELECT * FROM orders WHERE id = ?', [$orderId]);
     if (!$order) {
         throw new Exception('Order not found');
     }
 
     // Get order items with details
-    $itemsStmt = $pdo->prepare("
+    $orderItems = Database::queryAll("
         SELECT 
             oi.sku,
             oi.quantity,
@@ -40,39 +38,38 @@ try {
         FROM order_items oi
         LEFT JOIN items i ON oi.sku = i.sku
         WHERE oi.orderId = ?
-    ");
-    $itemsStmt->execute([$orderId]);
-    $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+    ", [$orderId]);
 
     // Get receipt message based on context
-    $receiptMessage = getReceiptMessage($pdo, $order, $orderItems);
+    $receiptMessage = getReceiptMessage($order, $orderItems);
 
     // Get sales verbiage
-    $salesVerbiage = getSalesVerbiage($pdo);
+    $salesVerbiage = getSalesVerbiage();
 
 } catch (Exception $e) {
     echo '<div class="text-center"><h1 class="text-brand-primary">Error loading order</h1><p>'.htmlspecialchars($e->getMessage()).'</p></div>';
     return;
 }
 
-function getSalesVerbiage($pdo)
+function getSalesVerbiage()
 {
     try {
-        $stmt = $pdo->prepare("
+        $rows = Database::queryAll("
             SELECT setting_key, setting_value 
             FROM business_settings 
             WHERE category = 'sales' AND setting_key LIKE 'receipt_%'
             ORDER BY display_order
         ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        $out = [];
+        foreach ($rows as $r) { $out[$r['setting_key']] = $r['setting_value']; }
+        return $out;
     } catch (Exception $e) {
         error_log("Error getting sales verbiage: " . $e->getMessage());
         return [];
     }
 }
 
-function getReceiptMessage($pdo, $order, $orderItems)
+function getReceiptMessage($order, $orderItems)
 {
     // Default message
     $defaultMessage = [
@@ -96,22 +93,20 @@ function getReceiptMessage($pdo, $order, $orderItems)
                 INDEX idx_condition (setting_type, condition_key, condition_value)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ";
-        $pdo->exec($createTableSQL);
+        Database::execute($createTableSQL);
 
         // Priority order: shipping method > item category > item count > default
 
         // 1. Check for shipping method specific message
         if (!empty($order['shippingMethod'])) {
-            $stmt = $pdo->prepare("
+            $result = Database::queryOne("
                 SELECT message_title, message_content 
                 FROM receipt_settings 
                 WHERE setting_type = 'shipping_method' 
                 AND condition_key = 'method' 
                 AND condition_value = ?
                 LIMIT 1
-            ");
-            $stmt->execute([$order['shippingMethod']]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            ", [$order['shippingMethod']]);
 
             if ($result) {
                 return [
@@ -130,16 +125,14 @@ function getReceiptMessage($pdo, $order, $orderItems)
                 $categoryCounts = array_count_values($categories);
                 $dominantCategory = array_keys($categoryCounts, max($categoryCounts))[0];
 
-                $stmt = $pdo->prepare("
+                $result = Database::queryOne("
                     SELECT message_title, message_content 
                     FROM receipt_settings 
                     WHERE setting_type = 'item_category' 
                     AND condition_key = 'category' 
                     AND condition_value = ?
                     LIMIT 1
-                ");
-                $stmt->execute([$dominantCategory]);
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                ", [$dominantCategory]);
 
                 if ($result) {
                     return [
@@ -154,16 +147,14 @@ function getReceiptMessage($pdo, $order, $orderItems)
         $itemCount = count($orderItems);
         $countCondition = $itemCount === 1 ? '1' : 'multiple';
 
-        $stmt = $pdo->prepare("
+        $result = Database::queryOne("
             SELECT message_title, message_content 
             FROM receipt_settings 
             WHERE setting_type = 'item_count' 
             AND condition_key = 'count' 
             AND condition_value = ?
             LIMIT 1
-        ");
-        $stmt->execute([$countCondition]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        ", [$countCondition]);
 
         if ($result) {
             return [
@@ -173,14 +164,12 @@ function getReceiptMessage($pdo, $order, $orderItems)
         }
 
         // 4. Check for default message
-        $stmt = $pdo->prepare("
+        $result = Database::queryOne("
             SELECT message_title, message_content 
             FROM receipt_settings 
             WHERE setting_type = 'default' 
             LIMIT 1
         ");
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($result) {
             return [

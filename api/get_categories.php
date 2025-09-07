@@ -12,8 +12,7 @@ try {
     }
 
     // Get all categories from categories table
-    $stmt = $pdo->query("SELECT id, name FROM categories ORDER BY id");
-    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $categories = Database::queryAll("SELECT id, name FROM categories ORDER BY id");
 
     if (!is_array($categories)) {
         $categories = [];

@@ -52,16 +52,14 @@ try {
     $zipCode = trim($data['zipCode'] ?? '');
 
     // Check if username already exists
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE username = ?');
-    $stmt->execute([$username]);
-    if ($stmt->fetchColumn() > 0) {
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE username = ?', [$username]);
+    if ((int)($row['c'] ?? 0) > 0) {
         Response::error('Username already exists', null, 409);
     }
 
     // Check if email already exists
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE email = ?');
-    $stmt->execute([$email]);
-    if ($stmt->fetchColumn() > 0) {
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE email = ?', [$email]);
+    if ((int)($row['c'] ?? 0) > 0) {
         Response::error('Email already exists', null, 409);
     }
 
@@ -72,9 +70,8 @@ try {
     $compactDate = $monthLetter . $dayOfMonth;
 
     // Get the next sequence number
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM users WHERE role = "Customer"');
-    $stmt->execute();
-    $customerCount = $stmt->fetchColumn();
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM users WHERE role = "Customer"');
+    $customerCount = (int)($row['c'] ?? 0);
     $sequenceNum = str_pad($customerCount + 1, 3, '0', STR_PAD_LEFT);
 
     // Create customer ID
@@ -84,8 +81,7 @@ try {
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
     // Insert new user with all fields
-    $stmt = $pdo->prepare("INSERT INTO users (id, username, email, password, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode, role, roleType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Customer', 'Customer')");
-    $stmt->execute([
+    Database::execute("INSERT INTO users (id, username, email, password, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode, role, roleType) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Customer', 'Customer')", [
         $userId,
         $username,
         $email,

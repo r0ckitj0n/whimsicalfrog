@@ -87,7 +87,7 @@ function generateSkuForCategory($category)
     }
 
     // Find the highest existing number for this category using centralized database
-    $lastSku = Database::queryRow(
+    $lastSku = Database::queryOne(
         "SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1",
         ["WF-{$categoryCode}-%"]
     );
@@ -143,7 +143,7 @@ function generateEnhancedSku($category, $gender = '', $size = '', $color = '')
     $searchPattern = "WF-{$categoryCode}{$attributeString}-%";
 
     // Find the highest existing number for this category/attribute combination
-    $lastSku = Database::queryRow(
+    $lastSku = Database::queryOne(
         "SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1",
         [$searchPattern]
     );

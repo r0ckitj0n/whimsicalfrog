@@ -53,19 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         }
 
         // Fetch materials costs
-        $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE inventoryId = ?");
-        $materialStmt->execute([$inventoryId]);
-        $materials = $materialStmt->fetchAll(PDO::FETCH_ASSOC);
+        $materials = Database::queryAll("SELECT * FROM inventory_materials WHERE inventoryId = ?", [$inventoryId]);
 
         // Fetch labor costs
-        $laborStmt = $pdo->prepare("SELECT * FROM inventory_labor WHERE inventoryId = ?");
-        $laborStmt->execute([$inventoryId]);
-        $labor = $laborStmt->fetchAll(PDO::FETCH_ASSOC);
+        $labor = Database::queryAll("SELECT * FROM inventory_labor WHERE inventoryId = ?", [$inventoryId]);
 
         // Fetch energy costs
-        $energyStmt = $pdo->prepare("SELECT * FROM inventory_energy WHERE inventoryId = ?");
-        $energyStmt->execute([$inventoryId]);
-        $energy = $energyStmt->fetchAll(PDO::FETCH_ASSOC);
+        $energy = Database::queryAll("SELECT * FROM inventory_energy WHERE inventoryId = ?", [$inventoryId]);
 
         // Calculate totals
         $materialTotal = array_reduce($materials, function ($sum, $item) {

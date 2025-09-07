@@ -12,14 +12,12 @@ function sendOrderConfirmationEmails($orderId, $pdo)
 
     try {
         // Get order details
-        $orderStmt = $pdo->prepare("
+        $order = Database::queryOne("
             SELECT o.*, u.firstName, u.lastName, u.email, u.username, u.phoneNumber 
             FROM orders o 
             LEFT JOIN users u ON o.userId = u.id 
             WHERE o.id = ?
-        ");
-        $orderStmt->execute([$orderId]);
-        $order = $orderStmt->fetch(PDO::FETCH_ASSOC);
+        ", [$orderId]);
 
         if (!$order) {
             error_log("Email notification: Order $orderId not found");
@@ -27,24 +25,20 @@ function sendOrderConfirmationEmails($orderId, $pdo)
         }
 
         // Get order items
-        $itemsStmt = $pdo->prepare("
+        $orderItems = Database::queryAll("
             SELECT oi.*, i.name, i.sku, oi.quantity, oi.price 
             FROM order_items oi 
             LEFT JOIN items i ON oi.sku = i.sku 
             WHERE oi.orderId = ?
-        ");
-        $itemsStmt->execute([$orderId]);
-        $orderItems = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
+        ", [$orderId]);
 
         // Get email template assignments
-        $assignmentsStmt = $pdo->prepare("
+        $assignments = Database::queryAll("
             SELECT eta.email_type, et.* 
             FROM email_template_assignments eta
             JOIN email_templates et ON eta.template_id = et.id
             WHERE eta.email_type IN ('order_confirmation', 'admin_notification') AND et.is_active = 1
         ");
-        $assignmentsStmt->execute();
-        $assignments = $assignmentsStmt->fetchAll(PDO::FETCH_ASSOC);
 
         $templates = [];
         foreach ($assignments as $assignment) {
@@ -137,11 +131,9 @@ function sendOrderConfirmationEmails($orderId, $pdo)
             // Also try to get from business settings
             if (!$adminEmail) {
                 try {
-                    $adminStmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE setting_key = 'admin_email'");
-                    $adminStmt->execute();
-                    $adminEmailResult = $adminStmt->fetchColumn();
-                    if ($adminEmailResult) {
-                        $adminEmail = $adminEmailResult;
+                    $adminRow = Database::queryOne("SELECT setting_value FROM business_settings WHERE setting_key = 'admin_email'");
+                    if ($adminRow && isset($adminRow['setting_value'])) {
+                        $adminEmail = $adminRow['setting_value'];
                     }
                 } catch (Exception $e) {
                     error_log("Email notification: Could not get admin email from business settings: " . $e->getMessage());
@@ -284,15 +276,11 @@ function sendTemplatedEmail($template, $toEmail, $variables, $emailType)
 function logEmailSend($toEmail, $subject, $emailType, $status, $templateId = null, $errorMessage = null)
 {
     try {
-        $pdo = Database::getInstance();
-
-        $stmt = $pdo->prepare("
+        Database::execute("
             INSERT INTO email_logs 
             (to_email, subject, email_type, template_id, status, sent_at, error_message) 
             VALUES (?, ?, ?, ?, ?, NOW(), ?)
-        ");
-
-        $stmt->execute([
+        ", [
             $toEmail,
             $subject,
             $emailType,

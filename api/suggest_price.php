@@ -63,9 +63,7 @@ try {
     $images = [];
     if ($useImages && !empty($sku)) {
         try {
-            $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3");
-            $stmt->execute([$sku]);
-            $imageRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $imageRows = Database::queryAll("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3", [$sku]);
 
             foreach ($imageRows as $row) {
                 $imagePath = __DIR__ . '/../' . $row['image_path'];
@@ -115,7 +113,7 @@ try {
         try {
             // Enhanced price_suggestions table already exists with proper structure
 
-            $stmt = $pdo->prepare("
+            Database::execute("
                 INSERT INTO price_suggestions (
                     sku, suggested_price, reasoning, confidence, factors, components,
                     detected_materials, detected_features, market_intelligence, pricing_strategy,
@@ -159,8 +157,7 @@ try {
                 profit_margin_analysis = VALUES(profit_margin_analysis),
                 pricing_elasticity_notes = VALUES(pricing_elasticity_notes),
                 created_at = CURRENT_TIMESTAMP
-            ");
-            $stmt->execute([
+            ", [
                 $sku,
                 $pricingData['price'],
                 $pricingData['reasoning'],
@@ -609,16 +606,8 @@ function getCompetitiveAnalysis($name, $category, $pdo)
 {
     try {
         // Get similar items from database
-        $stmt = $pdo->prepare("
-            SELECT retailPrice 
-            FROM items 
-            WHERE category = ? 
-            AND name != ? 
-            AND retailPrice > 0 
-            ORDER BY retailPrice
-        ");
-        $stmt->execute([$category, $name]);
-        $prices = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $rows = Database::queryAll("\n            SELECT retailPrice \n            FROM items \n            WHERE category = ? \n            AND name != ? \n            AND retailPrice > 0 \n            ORDER BY retailPrice\n        ", [$category, $name]);
+        $prices = array_map(function($r){ return array_values($r)[0]; }, $rows);
 
         if (count($prices) > 0) {
             return [

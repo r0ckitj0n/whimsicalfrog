@@ -149,8 +149,7 @@ try {
 
     // DB insert
     try {
-        $pdo = Database::getInstance();
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        Database::getInstance();
 
         // If no background_name provided, build a nice name
         if (empty($backgroundName)) {
@@ -158,16 +157,14 @@ try {
         }
 
         // Prevent duplicate names for room
-        $check = $pdo->prepare('SELECT id FROM backgrounds WHERE room_type = ? AND background_name = ?');
-        $check->execute([$roomType, $backgroundName]);
-        if ($check->fetch()) {
+        $row = Database::queryOne('SELECT id FROM backgrounds WHERE room_type = ? AND background_name = ?', [$roomType, $backgroundName]);
+        if ($row) {
             // Append unique suffix rather than failing
             $backgroundName .= ' ' . date('Ymd-His');
         }
 
-        $stmt = $pdo->prepare('INSERT INTO backgrounds (room_type, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)');
-        $stmt->execute([$roomType, $backgroundName, $destOriginalRel, $destWebpRel]);
-        $id = $pdo->lastInsertId();
+        Database::execute('INSERT INTO backgrounds (room_type, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)', [$roomType, $backgroundName, $destOriginalRel, $destWebpRel]);
+        $id = Database::lastInsertId();
 
         echo json_encode([
             'success' => true,

@@ -13,6 +13,8 @@
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
   box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
   padding: 8px 12px; /* space around pills */
   margin: 0;
   border-bottom: none !important;
@@ -27,6 +29,9 @@
   justify-content: center !important;
   align-items: center !important;
   overflow: visible; /* ensure starburst not clipped by wrappers */
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
 }
 
 /* Also target common utility wrappers used in markup to ensure centering */

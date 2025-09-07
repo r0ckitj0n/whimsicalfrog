@@ -4,7 +4,7 @@ require_once 'config.php';
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -24,7 +24,7 @@ try {
         INDEX idx_active (is_active),
         INDEX idx_room_active (room_type, is_active)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
-    $pdo->exec($createTableSQL);
+    Database::execute($createTableSQL);
 
     $method = $_SERVER['REQUEST_METHOD'];
     $input = json_decode(file_get_contents('php://input'), true);
@@ -33,12 +33,10 @@ try {
         case 'POST':
             if ($input['action'] === 'save') {
                 // Save a new room map
-                $stmt = $pdo->prepare("INSERT INTO room_maps (room_type, map_name, coordinates) VALUES (?, ?, ?)");
-                $result = $stmt->execute([
-                    $input['room_type'],
-                    $input['map_name'],
-                    json_encode($input['coordinates'])
-                ]);
+                $result = Database::execute(
+                    "INSERT INTO room_maps (room_type, map_name, coordinates) VALUES (?, ?, ?)",
+                    [$input['room_type'], $input['map_name'], json_encode($input['coordinates'])]
+                ) > 0;
 
                 if ($result) {
                     echo json_encode(['success' => true, 'message' => 'Room map saved successfully']);
@@ -47,30 +45,26 @@ try {
                 }
             } elseif ($input['action'] === 'apply') {
                 // Apply a map to a room (set as active and deactivate others)
-                $pdo->beginTransaction();
+                Database::beginTransaction();
                 try {
                     // Deactivate all maps for this room type
-                    $stmt = $pdo->prepare("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?");
-                    $stmt->execute([$input['room_type']]);
+                    Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?", [$input['room_type']]);
 
                     // Activate the selected map
-                    $stmt = $pdo->prepare("UPDATE room_maps SET is_active = TRUE WHERE id = ?");
-                    $stmt->execute([$input['map_id']]);
+                    Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$input['map_id']]);
 
-                    $pdo->commit();
+                    Database::commit();
                     echo json_encode(['success' => true, 'message' => 'Room map applied successfully']);
                 } catch (Exception $e) {
-                    $pdo->rollBack();
+                    Database::rollBack();
                     echo json_encode(['success' => false, 'message' => 'Failed to apply room map: ' . $e->getMessage()]);
                 }
             } elseif ($input['action'] === 'restore') {
                 // Restore a historical map (create a new map based on an old one)
-                $pdo->beginTransaction();
+                Database::beginTransaction();
                 try {
                     // Get the historical map data
-                    $stmt = $pdo->prepare("SELECT * FROM room_maps WHERE id = ?");
-                    $stmt->execute([$input['map_id']]);
-                    $originalMap = $stmt->fetch();
+                    $originalMap = Database::queryOne("SELECT * FROM room_maps WHERE id = ?", [$input['map_id']]);
 
                     if (!$originalMap) {
                         throw new Exception('Original map not found');
@@ -78,27 +72,23 @@ try {
 
                     // Create a new map with restored data
                     $newMapName = $originalMap['map_name'] . ' (Restored ' . date('Y-m-d H:i') . ')';
-                    $stmt = $pdo->prepare("INSERT INTO room_maps (room_type, map_name, coordinates) VALUES (?, ?, ?)");
-                    $stmt->execute([
-                        $originalMap['room_type'],
-                        $newMapName,
-                        $originalMap['coordinates']
-                    ]);
+                    Database::execute(
+                        "INSERT INTO room_maps (room_type, map_name, coordinates) VALUES (?, ?, ?)",
+                        [$originalMap['room_type'], $newMapName, $originalMap['coordinates']]
+                    );
 
-                    $newMapId = $pdo->lastInsertId();
+                    $newMapId = Database::lastInsertId();
 
                     // Optionally apply it immediately if requested
                     if (isset($input['apply_immediately']) && $input['apply_immediately']) {
                         // Deactivate all maps for this room type
-                        $stmt = $pdo->prepare("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?");
-                        $stmt->execute([$originalMap['room_type']]);
+                        Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?", [$originalMap['room_type']]);
 
                         // Activate the restored map
-                        $stmt = $pdo->prepare("UPDATE room_maps SET is_active = TRUE WHERE id = ?");
-                        $stmt->execute([$newMapId]);
+                        Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$newMapId]);
                     }
 
-                    $pdo->commit();
+                    Database::commit();
                     echo json_encode([
                         'success' => true,
                         'message' => 'Map restored successfully',
@@ -106,7 +96,7 @@ try {
                         'new_map_name' => $newMapName
                     ]);
                 } catch (Exception $e) {
-                    $pdo->rollBack();
+                    Database::rollBack();
                     echo json_encode(['success' => false, 'message' => 'Failed to restore map: ' . $e->getMessage()]);
                 }
             }
@@ -116,9 +106,7 @@ try {
             if (isset($_GET['room_type'])) {
                 if (isset($_GET['active_only']) && $_GET['active_only'] === 'true') {
                     // Get active map for a specific room
-                    $stmt = $pdo->prepare("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE");
-                    $stmt->execute([$_GET['room_type']]);
-                    $map = $stmt->fetch();
+                    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE", [$_GET['room_type']]);
 
                     if ($map) {
                         $map['coordinates'] = json_decode($map['coordinates'], true);
@@ -128,9 +116,7 @@ try {
                     }
                 } else {
                     // Get all maps for a specific room
-                    $stmt = $pdo->prepare("SELECT * FROM room_maps WHERE room_type = ? ORDER BY created_at DESC");
-                    $stmt->execute([$_GET['room_type']]);
-                    $maps = $stmt->fetchAll();
+                    $maps = Database::queryAll("SELECT * FROM room_maps WHERE room_type = ? ORDER BY created_at DESC", [$_GET['room_type']]);
 
                     foreach ($maps as &$map) {
                         $map['coordinates'] = json_decode($map['coordinates'], true);
@@ -140,8 +126,7 @@ try {
                 }
             } else {
                 // Get all room maps
-                $stmt = $pdo->query("SELECT * FROM room_maps ORDER BY room_type, created_at DESC");
-                $maps = $stmt->fetchAll();
+                $maps = Database::queryAll("SELECT * FROM room_maps ORDER BY room_type, created_at DESC");
 
                 foreach ($maps as &$map) {
                     $map['coordinates'] = json_decode($map['coordinates'], true);
@@ -154,9 +139,7 @@ try {
         case 'DELETE':
             if (isset($input['map_id'])) {
                 // Check if this is an "Original" map - these cannot be deleted
-                $checkStmt = $pdo->prepare("SELECT map_name FROM room_maps WHERE id = ?");
-                $checkStmt->execute([$input['map_id']]);
-                $map = $checkStmt->fetch();
+                $map = Database::queryOne("SELECT map_name FROM room_maps WHERE id = ?", [$input['map_id']]);
 
                 if (!$map) {
                     echo json_encode(['success' => false, 'message' => 'Map not found']);
@@ -168,10 +151,9 @@ try {
                     break;
                 }
 
-                $stmt = $pdo->prepare("DELETE FROM room_maps WHERE id = ?");
-                $result = $stmt->execute([$input['map_id']]);
+                $result = Database::execute("DELETE FROM room_maps WHERE id = ?", [$input['map_id']]);
 
-                if ($result) {
+                if ($result > 0) {
                     echo json_encode(['success' => true, 'message' => 'Room map deleted successfully']);
                 } else {
                     echo json_encode(['success' => false, 'message' => 'Failed to delete room map']);

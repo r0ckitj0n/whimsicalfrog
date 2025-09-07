@@ -127,9 +127,7 @@ function getAISettings()
     ];
 
     try {
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
 
         foreach ($results as $row) {
             $key = $row['setting_key'];
@@ -170,12 +168,6 @@ function updateAISettings($settings, $pdo)
         'ai_conservative_mode', 'ai_market_research_weight',
         'ai_cost_plus_weight', 'ai_value_based_weight'
     ];
-
-    $stmt = $pdo->prepare("
-        INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
-        VALUES ('ai', ?, ?, ?, ?, ?) 
-        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)
-    ");
 
     foreach ($settings as $key => $value) {
         if (!in_array($key, $validSettings)) {
@@ -246,7 +238,7 @@ function updateAISettings($settings, $pdo)
         $description = $descriptions[$key] ?? '';
         $displayName = $displayNames[$key] ?? ucwords(str_replace('_', ' ', $key));
 
-        $stmt->execute([$key, $value, $description, $settingType, $displayName]);
+        Database::execute("\n            INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) \n            VALUES ('ai', ?, ?, ?, ?, ?) \n            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)\n        ", [$key, $value, $description, $settingType, $displayName]);
     }
 
     return true;
@@ -282,17 +274,10 @@ function initializeAISettings($pdo)
         'ai_value_based_weight' => ['0.3', 'Weight given to value-based pricing (0.0-1.0)', 'number', 'Value-Based Weight']
     ];
 
-    $stmt = $pdo->prepare("
-        INSERT IGNORE INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
-        VALUES ('ai', ?, ?, ?, ?, ?)
-    ");
-
     $inserted = 0;
     foreach ($defaultSettings as $key => $data) {
-        $result = $stmt->execute([$key, $data[0], $data[1], $data[2], $data[3]]);
-        if ($stmt->rowCount() > 0) {
-            $inserted++;
-        }
+        $affected = Database::execute("\n            INSERT IGNORE INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) \n            VALUES ('ai', ?, ?, ?, ?, ?)\n        ", [$key, $data[0], $data[1], $data[2], $data[3]]);
+        if ($affected > 0) { $inserted++; }
     }
 
     return $inserted;

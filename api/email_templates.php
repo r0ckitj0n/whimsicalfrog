@@ -89,9 +89,7 @@ function handleGetAllTemplates($pdo)
         ORDER BY et.template_type, et.template_name
     ";
 
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $templates = Database::queryAll($query);
 
     echo json_encode([
         'success' => true,
@@ -107,9 +105,7 @@ function handleGetTemplate($pdo)
         throw new Exception('Template ID is required');
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM email_templates WHERE id = ?");
-    $stmt->execute([$templateId]);
-    $template = $stmt->fetch(PDO::FETCH_ASSOC);
+    $template = Database::queryOne("SELECT * FROM email_templates WHERE id = ?", [$templateId]);
 
     if (!$template) {
         throw new Exception('Template not found');
@@ -143,13 +139,11 @@ function handleCreateTemplate($pdo)
         throw new Exception('Invalid template type');
     }
 
-    $stmt = $pdo->prepare("
+    Database::execute("
         INSERT INTO email_templates 
         (template_name, template_type, subject, html_content, text_content, description, variables, is_active, created_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, 1, NOW())
-    ");
-
-    $stmt->execute([
+    ", [
         $templateName,
         $templateType,
         $subject,
@@ -159,7 +153,7 @@ function handleCreateTemplate($pdo)
         json_encode($variables)
     ]);
 
-    $templateId = $pdo->lastInsertId();
+    $templateId = Database::lastInsertId();
 
     echo json_encode([
         'success' => true,
@@ -186,14 +180,12 @@ function handleUpdateTemplate($pdo)
         throw new Exception('Template ID, name, type, subject, and HTML content are required');
     }
 
-    $stmt = $pdo->prepare("
+    Database::execute("
         UPDATE email_templates 
         SET template_name = ?, template_type = ?, subject = ?, html_content = ?, 
             text_content = ?, description = ?, variables = ?, is_active = ?, updated_at = NOW()
         WHERE id = ?
-    ");
-
-    $stmt->execute([
+    ", [
         $templateName,
         $templateType,
         $subject,
@@ -220,16 +212,14 @@ function handleDeleteTemplate($pdo)
     }
 
     // Check if template is assigned
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM email_template_assignments WHERE template_id = ?");
-    $stmt->execute([$templateId]);
-    $assignmentCount = $stmt->fetchColumn();
+    $row = Database::queryOne("SELECT COUNT(*) AS c FROM email_template_assignments WHERE template_id = ?", [$templateId]);
+    $assignmentCount = $row ? (int)$row['c'] : 0;
 
     if ($assignmentCount > 0) {
         throw new Exception('Cannot delete template that is currently assigned to email types. Please reassign first.');
     }
 
-    $stmt = $pdo->prepare("DELETE FROM email_templates WHERE id = ?");
-    $stmt->execute([$templateId]);
+    Database::execute("DELETE FROM email_templates WHERE id = ?", [$templateId]);
 
     echo json_encode([
         'success' => true,
@@ -285,9 +275,7 @@ function handleGetTemplateAssignments($pdo)
         ORDER BY eta.email_type
     ";
 
-    $stmt = $pdo->prepare($query);
-    $stmt->execute();
-    $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $assignments = Database::queryAll($query);
 
     echo json_encode([
         'success' => true,
@@ -309,18 +297,14 @@ function handleSetTemplateAssignment($pdo)
     }
 
     // Check if assignment exists
-    $stmt = $pdo->prepare("SELECT id FROM email_template_assignments WHERE email_type = ?");
-    $stmt->execute([$emailType]);
-    $existingAssignment = $stmt->fetch();
+    $existingAssignment = Database::queryOne("SELECT id FROM email_template_assignments WHERE email_type = ?", [$emailType]);
 
     if ($existingAssignment) {
         // Update existing assignment
-        $stmt = $pdo->prepare("UPDATE email_template_assignments SET template_id = ?, updated_at = NOW() WHERE email_type = ?");
-        $stmt->execute([$templateId, $emailType]);
+        Database::execute("UPDATE email_template_assignments SET template_id = ?, updated_at = NOW() WHERE email_type = ?", [$templateId, $emailType]);
     } else {
         // Create new assignment
-        $stmt = $pdo->prepare("INSERT INTO email_template_assignments (email_type, template_id, created_at) VALUES (?, ?, NOW())");
-        $stmt->execute([$emailType, $templateId]);
+        Database::execute("INSERT INTO email_template_assignments (email_type, template_id, created_at) VALUES (?, ?, NOW())", [$emailType, $templateId]);
     }
 
     echo json_encode([
@@ -337,9 +321,7 @@ function handlePreviewTemplate($pdo)
         throw new Exception('Template ID is required');
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM email_templates WHERE id = ?");
-    $stmt->execute([$templateId]);
-    $template = $stmt->fetch(PDO::FETCH_ASSOC);
+    $template = Database::queryOne("SELECT * FROM email_templates WHERE id = ?", [$templateId]);
 
     if (!$template) {
         throw new Exception('Template not found');
@@ -430,16 +412,14 @@ function handleSendTestEmail($pdo)
         // Treat provided value as email_type; find assigned template
         $emailType = trim((string)$templateId);
         if ($emailType !== '') {
-            $stmt = $pdo->prepare("SELECT template_id FROM email_template_assignments WHERE email_type = ?");
-            $stmt->execute([$emailType]);
-            $assignedId = $stmt->fetchColumn();
+            $rowA = Database::queryOne("SELECT template_id FROM email_template_assignments WHERE email_type = ?", [$emailType]);
+            $assignedId = $rowA ? $rowA['template_id'] : null;
             if ($assignedId) {
                 $resolvedTemplateId = (int)$assignedId;
             } else {
                 // Fallback: first active template matching this type
-                $stmt2 = $pdo->prepare("SELECT id FROM email_templates WHERE template_type = ? AND is_active = 1 ORDER BY updated_at DESC, created_at DESC LIMIT 1");
-                $stmt2->execute([$emailType]);
-                $fallbackId = $stmt2->fetchColumn();
+                $rowB = Database::queryOne("SELECT id FROM email_templates WHERE template_type = ? AND is_active = 1 ORDER BY updated_at DESC, created_at DESC LIMIT 1", [$emailType]);
+                $fallbackId = $rowB ? $rowB['id'] : null;
                 if ($fallbackId) {
                     $resolvedTemplateId = (int)$fallbackId;
                 }

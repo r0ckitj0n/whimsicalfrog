@@ -85,7 +85,8 @@ function analyzeSystem($pdo)
 function getEmptyTables($pdo)
 {
     $tables = [];
-    $allTables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+    $allTables = Database::queryAll("SHOW TABLES");
+    $allTables = array_map(function($r){ return array_values($r)[0]; }, $allTables);
 
     // Tables that are safe to remove if empty (not core functionality)
     $removableTables = [
@@ -99,8 +100,8 @@ function getEmptyTables($pdo)
 
     foreach ($allTables as $table) {
         if (in_array($table, $removableTables)) {
-            $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
-            $count = $stmt->fetchColumn();
+            $row = Database::queryOne("SELECT COUNT(*) AS c FROM `$table`");
+            $count = $row ? (int)$row['c'] : 0;
 
             if ($count == 0) {
                 // Check if table is referenced in code
@@ -250,14 +251,15 @@ function getOptimizationOpportunities($pdo)
     $opportunities = [];
 
     // Check for tables without indexes
-    $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+    $tables = Database::queryAll("SHOW TABLES");
+    $tables = array_map(function($r){ return array_values($r)[0]; }, $tables);
 
     foreach ($tables as $table) {
-        $indexes = $pdo->query("SHOW INDEX FROM `$table`")->fetchAll(PDO::FETCH_ASSOC);
+        $indexes = Database::queryAll("SHOW INDEX FROM `$table`");
 
         if (count($indexes) <= 1) { // Only PRIMARY key
-            $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
-            $rowCount = $stmt->fetchColumn();
+            $row = Database::queryOne("SELECT COUNT(*) AS c FROM `$table`");
+            $rowCount = $row ? (int)$row['c'] : 0;
 
             if ($rowCount > 100) {
                 $opportunities[] = [
@@ -272,8 +274,8 @@ function getOptimizationOpportunities($pdo)
 
     // Check for large tables that might benefit from optimization
     foreach ($tables as $table) {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
-        $rowCount = $stmt->fetchColumn();
+        $row = Database::queryOne("SELECT COUNT(*) AS c FROM `$table`");
+        $rowCount = $row ? (int)$row['c'] : 0;
 
         if ($rowCount > 10000) {
             $opportunities[] = [
@@ -341,7 +343,7 @@ function removeEmptyTables($pdo)
     foreach ($emptyTables as $table) {
         if ($table['safe_to_remove']) {
             try {
-                $pdo->exec("DROP TABLE IF EXISTS `{$table['name']}`");
+                Database::execute("DROP TABLE IF EXISTS `{$table['name']}`");
                 $removed[] = $table['name'];
             } catch (Exception $e) {
                 $errors[] = [
@@ -426,7 +428,8 @@ function optimizeDatabase($pdo)
 
     try {
         // Get all tables with their sizes
-        $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        $tables = Database::queryAll("SHOW TABLES");
+        $tables = array_map(function($r){ return array_values($r)[0]; }, $tables);
         $totalTables = count($tables);
 
         foreach ($tables as $index => $table) {
@@ -441,23 +444,20 @@ function optimizeDatabase($pdo)
                 FROM information_schema.TABLES 
                 WHERE table_schema = DATABASE() AND table_name = ?";
 
-                $stmt = $pdo->prepare($sizeQuery);
-                $stmt->execute([$table]);
-                $beforeInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                $beforeInfo = Database::queryOne($sizeQuery, [$table]);
 
                 // Optimize table
-                $optimizeResult = $pdo->query("OPTIMIZE TABLE `$table`")->fetch(PDO::FETCH_ASSOC);
+                $optimizeRow = Database::queryOne("OPTIMIZE TABLE `$table`");
 
                 // Get table info after optimization
-                $stmt->execute([$table]);
-                $afterInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                $afterInfo = Database::queryOne($sizeQuery, [$table]);
 
                 $tableEndTime = microtime(true);
                 $tableTime = round(($tableEndTime - $tableStartTime), 3);
 
                 $tableDetails = [
                     'table' => $table,
-                    'status' => $optimizeResult['Msg_text'] ?? 'OK',
+                    'status' => $optimizeRow['Msg_text'] ?? ($optimizeRow['Message_text'] ?? 'OK'),
                     'rows' => (int)($afterInfo['table_rows'] ?? 0),
                     'size_mb' => (float)($afterInfo['size_mb'] ?? 0),
                     'time_seconds' => $tableTime,

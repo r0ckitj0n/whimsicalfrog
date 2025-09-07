@@ -29,8 +29,8 @@ try {
     $pdo = Database::getInstance();
 
     // Get list of all tables
-    $stmt = $pdo->query("SHOW TABLES");
-    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $rows = Database::queryAll("SHOW TABLES");
+    $tables = array_map(function($r){ return array_values($r)[0]; }, $rows);
 
     $results = [];
     $processed_count = 0;
@@ -39,12 +39,10 @@ try {
     foreach ($tables as $table) {
         try {
             // Run OPTIMIZE TABLE
-            $stmt = $pdo->query("OPTIMIZE TABLE `$table`");
-            $optimize_result = $stmt->fetch();
+            $optimize_result = Database::queryOne("OPTIMIZE TABLE `$table`");
 
             // Run REPAIR TABLE
-            $stmt = $pdo->query("REPAIR TABLE `$table`");
-            $repair_result = $stmt->fetch();
+            $repair_result = Database::queryOne("REPAIR TABLE `$table`");
 
             $results[$table] = [
                 'optimize' => $optimize_result,

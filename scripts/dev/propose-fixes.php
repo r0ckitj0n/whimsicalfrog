@@ -12,7 +12,7 @@ function fileExistsRel($rel) {
 
 try {
     require_once __DIR__ . '/../../api/config.php';
-    $pdo = Database::getInstance();
+    $pdo = Database::getInstance(); // Keep for quote() when generating SQL strings
 
     $proposals = [
         'backgrounds' => [
@@ -26,8 +26,7 @@ try {
     ];
 
     // 1) Backgrounds filename reconciliation
-    $stmt = $pdo->query("SELECT id, room_type, background_name, image_filename, webp_filename, is_active FROM backgrounds ORDER BY room_type");
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rows = Database::queryAll("SELECT id, room_type, background_name, image_filename, webp_filename, is_active FROM backgrounds ORDER BY room_type");
 
     foreach ($rows as $row) {
         $desiredPng = $row['image_filename'];
@@ -70,8 +69,7 @@ try {
     }
 
     // 2) room_settings numbering corrections (0->A, 1->B)
-    $stmt = $pdo->query("SELECT id, room_number, room_name FROM room_settings ORDER BY display_order, id");
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $settings = Database::queryAll("SELECT id, room_number, room_name FROM room_settings ORDER BY display_order, id");
     foreach ($settings as $r) {
         $old = (string)$r['room_number'];
         $new = null;

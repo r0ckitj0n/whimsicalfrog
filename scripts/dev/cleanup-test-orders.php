@@ -12,22 +12,19 @@ $ordersToDelete = [
 ];
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     foreach ($ordersToDelete as $orderId) {
         echo "Processing order {$orderId}\n";
-        $pdo->beginTransaction();
+        Database::beginTransaction();
         try {
             // Get items for this order
-            $stmt = $pdo->prepare("SELECT sku, quantity, color, size FROM order_items WHERE orderId = ?");
-            $stmt->execute([$orderId]);
-            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $items = Database::queryAll("SELECT sku, quantity, color, size FROM order_items WHERE orderId = ?", [$orderId]);
 
             if (!$items) {
                 echo "  No order_items found; skipping stock restore\n";
             } else {
                 // Restore stock for simple items (no color/size)
-                $restoreStmt = $pdo->prepare("UPDATE items SET stockLevel = stockLevel + ? WHERE sku = ?");
                 foreach ($items as $it) {
                     $sku = $it['sku'];
                     $qty = (int)($it['quantity'] ?? 0);
@@ -37,7 +34,7 @@ try {
                     if ($qty <= 0) { continue; }
 
                     if (empty($color) && empty($size)) {
-                        $restoreStmt->execute([$qty, $sku]);
+                        Database::execute("UPDATE items SET stockLevel = stockLevel + ? WHERE sku = ?", [$qty, $sku]);
                         echo "  Restored +{$qty} to items.stockLevel for SKU {$sku}\n";
                     } else {
                         // For color/size-specific items, this script does not attempt complex restoration.
@@ -48,18 +45,16 @@ try {
             }
 
             // Delete order_items and order
-            $delItems = $pdo->prepare("DELETE FROM order_items WHERE orderId = ?");
-            $delItems->execute([$orderId]);
-            echo "  Deleted order_items rows: " . $delItems->rowCount() . "\n";
+            $delItemsCount = Database::execute("DELETE FROM order_items WHERE orderId = ?", [$orderId]);
+            echo "  Deleted order_items rows: " . ((int)$delItemsCount) . "\n";
 
-            $delOrder = $pdo->prepare("DELETE FROM orders WHERE id = ?");
-            $delOrder->execute([$orderId]);
-            echo "  Deleted orders rows: " . $delOrder->rowCount() . "\n";
+            $delOrderCount = Database::execute("DELETE FROM orders WHERE id = ?", [$orderId]);
+            echo "  Deleted orders rows: " . ((int)$delOrderCount) . "\n";
 
-            $pdo->commit();
+            Database::commit();
             echo "  Done.\n";
         } catch (Throwable $e) {
-            $pdo->rollBack();
+            Database::rollBack();
             echo "  ERROR: " . $e->getMessage() . "\n";
         }
     }

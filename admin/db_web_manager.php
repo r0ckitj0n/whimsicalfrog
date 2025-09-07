@@ -81,20 +81,39 @@ if (isset($_POST['action'])) {
             $options
         );
 
+        // Lightweight helpers bound to this PDO connection (since this tool can target multiple DBs)
+        $qAll = function(string $sql, array $params = []) use ($pdo): array {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        };
+        $qOne = function(string $sql, array $params = []) use ($pdo): ?array {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row === false ? null : $row;
+        };
+        $execStmt = function(string $sql, array $params = []) use ($pdo): int {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            return (int)$stmt->rowCount();
+        };
+
         switch ($_POST['action']) {
             case 'status':
-                $stmt = $pdo->query("SELECT VERSION() as version");
-                $version = $stmt->fetch()['version'];
+                $versionRow = $qOne("SELECT VERSION() as version");
+                $version = $versionRow['version'] ?? '';
 
-                $stmt = $pdo->query("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = '{$config['db']}'");
-                $tableCount = $stmt->fetch()['count'];
+                $countRow = $qOne("SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = ?", [$config['db']]);
+                $tableCount = $countRow['count'] ?? 0;
 
-                $stmt = $pdo->query("
-                    SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
-                    FROM information_schema.tables 
-                    WHERE table_schema = '{$config['db']}'
-                ");
-                $size = $stmt->fetch()['size_mb'];
+                $sizeRow = $qOne(
+                    "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb
+                     FROM information_schema.tables 
+                     WHERE table_schema = ?",
+                    [$config['db']]
+                );
+                $size = $sizeRow['size_mb'] ?? 0;
 
                 echo json_encode([
                     'success' => true,
@@ -109,14 +128,16 @@ if (isset($_POST['action'])) {
                 break;
 
             case 'tables':
-                $stmt = $pdo->query("SHOW TABLES");
-                $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                $tablesRaw = $qAll("SHOW TABLES");
+                // Map first column values to table names
+                $tables = array_map(function($r){ return array_values($r)[0]; }, $tablesRaw);
 
                 $tableData = [];
                 foreach ($tables as $table) {
-                    $stmt = $pdo->query("SELECT COUNT(*) as count FROM `{$table}`");
-                    $count = $stmt->fetch()['count'];
-                    $tableData[] = ['name' => $table, 'rows' => $count];
+                    // Note: table name cannot be parameterized; value comes from SHOW TABLES
+                    $row = $qOne("SELECT COUNT(*) as count FROM `{$table}`");
+                    $count = $row['count'] ?? 0;
+                    $tableData[] = ['name' => $table, 'rows' => (int)$count];
                 }
 
                 echo json_encode(['success' => true, 'data' => $tableData]);
@@ -129,10 +150,9 @@ if (isset($_POST['action'])) {
                     break;
                 }
 
-                $stmt = $pdo->query($sql);
-
-                if ($stmt->columnCount() > 0) {
-                    $results = $stmt->fetchAll();
+                $op = strtoupper(trim(explode(' ', trim($sql))[0]));
+                if (in_array($op, ['SELECT','SHOW','DESCRIBE','EXPLAIN'])) {
+                    $results = $qAll($sql);
                     echo json_encode([
                         'success' => true,
                         'data' => $results,
@@ -140,11 +160,12 @@ if (isset($_POST['action'])) {
                         'rows' => count($results)
                     ]);
                 } else {
+                    $affected = $execStmt($sql);
                     echo json_encode([
                         'success' => true,
                         'data' => [],
                         'type' => 'update',
-                        'affected' => $stmt->rowCount()
+                        'affected' => (int)$affected
                     ]);
                 }
                 break;
@@ -156,8 +177,7 @@ if (isset($_POST['action'])) {
                     break;
                 }
 
-                $stmt = $pdo->query("DESCRIBE `{$table}`");
-                $structure = $stmt->fetchAll();
+                $structure = $qAll("DESCRIBE `{$table}`");
 
                 echo json_encode(['success' => true, 'data' => $structure]);
                 break;

@@ -14,6 +14,7 @@ Quick links:
 * [Full Documentation](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md)
 * [Contribution Guide](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#11-contribution-guide)
 * [Local Development Setup](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#4-local-development)
+* [Admin Tooltip System](documentation/includes/tooltip-system.md)
 
 ## Front-end Quick Start (Vite)
 
@@ -26,6 +27,8 @@ npm run dev
 ```
 
 The dev server runs on [http://localhost:5176](http://localhost:5176) and hot-reloads whenever you edit files under `js/`, `src/`, or `css/`.
+
+Tooltips on admin pages are Vite-managed (styling/loader) but the content is dynamic from the database. See `documentation/includes/tooltip-system.md` for API endpoints and the seeding/audit/export scripts.
 
 To generate the production bundle used in `dist/`, run:
 

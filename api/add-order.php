@@ -110,19 +110,19 @@ try {
 
     // Ensure order_items table has size column (migration)
     try {
-        $stmt = $pdo->query("SHOW COLUMNS FROM order_items LIKE 'size'");
-        $hasSizeCol = $stmt->rowCount() > 0;
+        $cols = Database::queryAll("SHOW COLUMNS FROM order_items LIKE 'size'");
+        $hasSizeCol = count($cols) > 0;
         $orderItemSizeMaxLen = null;
         if ($hasSizeCol) {
             // Check existing length and widen if needed
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $row = $cols[0] ?? [];
             $type = isset($row['Type']) ? strtolower($row['Type']) : '';
             $len = null;
             if (preg_match('/varchar\((\d+)\)/i', $type, $m)) { $len = (int)$m[1]; }
             if ($len !== null) { $orderItemSizeMaxLen = $len; }
             if ($len !== null && $len < 32) {
                 try {
-                    $pdo->exec("ALTER TABLE order_items MODIFY COLUMN size VARCHAR(32) DEFAULT NULL");
+                    Database::execute("ALTER TABLE order_items MODIFY COLUMN size VARCHAR(32) DEFAULT NULL");
                     if (class_exists('Logger')) { Logger::info("Widened 'size' column to VARCHAR(32)", ['endpoint' => 'add-order']); }
                     $orderItemSizeMaxLen = 32;
                 } catch (Exception $e) {
@@ -131,7 +131,7 @@ try {
             }
         } else {
             try {
-                $pdo->exec("ALTER TABLE order_items ADD COLUMN size VARCHAR(32) DEFAULT NULL AFTER color");
+                Database::execute("ALTER TABLE order_items ADD COLUMN size VARCHAR(32) DEFAULT NULL AFTER color");
                 if (class_exists('Logger')) { Logger::info("Added 'size' column (VARCHAR(32)) to order_items table", ['endpoint' => 'add-order']); }
                 $hasSizeCol = true;
                 $orderItemSizeMaxLen = 32;
@@ -148,11 +148,11 @@ try {
 
     // Ensure orders table has shippingMethod and shippingAddress columns (migration)
     try {
-        $stmt = $pdo->query("SHOW COLUMNS FROM orders LIKE 'shippingMethod'");
-        $hasShippingMethodCol = $stmt->rowCount() > 0;
+        $cols = Database::queryAll("SHOW COLUMNS FROM orders LIKE 'shippingMethod'");
+        $hasShippingMethodCol = count($cols) > 0;
         if (!$hasShippingMethodCol) {
             try {
-                $pdo->exec("ALTER TABLE orders ADD COLUMN shippingMethod VARCHAR(50) DEFAULT 'Customer Pickup' AFTER paymentMethod");
+                Database::execute("ALTER TABLE orders ADD COLUMN shippingMethod VARCHAR(50) DEFAULT 'Customer Pickup' AFTER paymentMethod");
                 if (class_exists('Logger')) { Logger::info("Added 'shippingMethod' column to orders table", ['endpoint' => 'add-order']); }
                 $hasShippingMethodCol = true;
             } catch (Exception $e) {
@@ -165,11 +165,11 @@ try {
         $hasShippingMethodCol = false;
     }
     try {
-        $stmt = $pdo->query("SHOW COLUMNS FROM orders LIKE 'shippingAddress'");
-        $hasShippingAddressCol = $stmt->rowCount() > 0;
+        $cols = Database::queryAll("SHOW COLUMNS FROM orders LIKE 'shippingAddress'");
+        $hasShippingAddressCol = count($cols) > 0;
         if (!$hasShippingAddressCol) {
             try {
-                $pdo->exec("ALTER TABLE orders ADD COLUMN shippingAddress JSON NULL AFTER shippingMethod");
+                Database::execute("ALTER TABLE orders ADD COLUMN shippingAddress JSON NULL AFTER shippingMethod");
                 if (class_exists('Logger')) { Logger::info("Added 'shippingAddress' column to orders table", ['endpoint' => 'add-order']); }
                 $hasShippingAddressCol = true;
             } catch (Exception $e) {
@@ -250,7 +250,6 @@ try {
     $itemsDebug = [];
 
     // Price lookup
-    $priceStmt = $pdo->prepare("SELECT retailPrice FROM items WHERE sku = ?");
     for ($i = 0; $i < count($itemIds); $i++) {
         $sku = $itemIds[$i];
         $qty = (int)($quantities[$i] ?? 0);
@@ -258,8 +257,8 @@ try {
 
         $effectiveSku = $sku;
         // Primary lookup
-        $priceStmt->execute([$effectiveSku]);
-        $p = $priceStmt->fetchColumn();
+        $row = Database::queryOne("SELECT retailPrice FROM items WHERE sku = ?", [$effectiveSku]);
+        $p = $row ? $row['retailPrice'] : null;
 
         // If not found/zero, build candidate SKUs by stripping trailing letters and hyphenated suffixes
         if ($p === false || $p === null || (float)$p <= 0.0) {
@@ -285,8 +284,8 @@ try {
             }
 
             foreach ($candidates as $cand) {
-                $priceStmt->execute([$cand]);
-                $candPrice = $priceStmt->fetchColumn();
+                $rowCand = Database::queryOne("SELECT retailPrice FROM items WHERE sku = ?", [$cand]);
+                $candPrice = $rowCand ? $rowCand['retailPrice'] : null;
                 if ($candPrice !== false && $candPrice !== null && (float)$candPrice > 0.0) {
                     error_log("add-order.php: Normalized SKU '$sku' -> '$cand' for pricing computation");
                     if ($debug) { $debugData['notes'][] = "Normalized SKU '$sku' -> '$cand' for pricing"; }
@@ -557,11 +556,8 @@ try {
         $attempt++;
         $randomNum = str_pad(rand(1, 99), 2, '0', STR_PAD_LEFT);
         $candidate = $customerNum . $compactDate . $shippingCode . $randomNum; // e.g., 01A15P23
-        if ($existsStmt === null) {
-            $existsStmt = $pdo->prepare('SELECT 1 FROM orders WHERE id = ? LIMIT 1');
-        }
-        $existsStmt->execute([$candidate]);
-        if ($existsStmt->fetchColumn() === false) {
+        $exists = Database::queryOne('SELECT 1 FROM orders WHERE id = ? LIMIT 1', [$candidate]);
+        if (!$exists) {
             $orderId = $candidate;
             if (!empty($debug) && $attempt > 1) {
                 $debugData['notes'][] = "Order ID collision avoided after $attempt attempts; using $orderId";
@@ -578,7 +574,7 @@ try {
         if (!empty($debug)) { $debugData['notes'][] = "Order ID fallback used: $orderId"; }
     }
 
-    $pdo->beginTransaction();
+    Database::beginTransaction();
     try {
         // Format shipping address for storage
         $shippingAddressJson = null;
@@ -602,13 +598,11 @@ try {
                 'columns' => $orderCols,
             ];
         }
-        $stmt = $pdo->prepare($sql);
-        $success = $stmt->execute($orderVals);
+        $success = Database::execute($sql, $orderVals) > 0;
 
         // Get the next order item ID sequence number by finding the highest existing ID
-        $maxIdStmt = $pdo->prepare("SELECT id FROM order_items WHERE id REGEXP '^OI[0-9]+$' ORDER BY CAST(SUBSTRING(id, 3) AS UNSIGNED) DESC LIMIT 1");
-        $maxIdStmt->execute();
-        $maxId = $maxIdStmt->fetchColumn();
+        $maxRow = Database::queryOne("SELECT id FROM order_items WHERE id REGEXP '^OI[0-9]+$' ORDER BY CAST(SUBSTRING(id, 3) AS UNSIGNED) DESC LIMIT 1");
+        $maxId = $maxRow ? $maxRow['id'] : false;
 
         // Extract the sequence number from the highest ID
         $nextSequence = 1; // Default starting sequence
@@ -620,14 +614,9 @@ try {
             if (class_exists('Logger')) { Logger::debug('No existing order item IDs found; starting at sequence 1', ['endpoint' => 'add-order']); }
         }
 
-        // Prepare statements for order items and stock updates
-        $priceStmt = $pdo->prepare("SELECT retailPrice FROM items WHERE sku = ?");
-        // Prepare order_items insert; include size only if column exists
-        if (!empty($hasSizeCol)) {
-            $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        } else {
-            $orderItemStmt = $pdo->prepare("INSERT INTO order_items (id, orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?, ?)");
-        }
+        // Prepare order_items insert logic; include size only if column exists
+        $orderItemSqlWithSize = "INSERT INTO order_items (id, orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $orderItemSqlNoSize   = "INSERT INTO order_items (id, orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?, ?)";
 
         // Process each item (SKU)
         for ($i = 0; $i < count($itemIds); $i++) {
@@ -656,8 +645,8 @@ try {
 
             // Determine effective SKU and get item price (with advanced normalization fallback)
             $effectiveSku = $sku;
-            $priceStmt->execute([$effectiveSku]);
-            $price = $priceStmt->fetchColumn();
+            $priceRow = Database::queryOne("SELECT retailPrice FROM items WHERE sku = ?", [$effectiveSku]);
+            $price = $priceRow ? $priceRow['retailPrice'] : null;
             if ($price === false || $price === null || (float)$price <= 0.0) {
                 $candidates = [];
                 $skuStr = (string)$sku;
@@ -681,8 +670,8 @@ try {
                 }
 
                 foreach ($candidates as $cand) {
-                    $priceStmt->execute([$cand]);
-                    $candPrice = $priceStmt->fetchColumn();
+                    $candRow = Database::queryOne("SELECT retailPrice FROM items WHERE sku = ?", [$cand]);
+                    $candPrice = $candRow ? $candRow['retailPrice'] : null;
                     if ($candPrice !== false && $candPrice !== null && (float)$candPrice > 0.0) {
                         if (class_exists('Logger')) { Logger::info('Normalized SKU for order processing', ['endpoint' => 'add-order', 'original_sku' => (string)$sku, 'normalized_sku' => (string)$cand]); }
                         if ($debug) { $debugData['notes'][] = "Normalized SKU '$sku' -> '$cand' for order processing"; }
@@ -704,9 +693,9 @@ try {
             // Insert order item with color and size information (store effective SKU)
             if (class_exists('Logger')) { Logger::debug('Inserting order item', ['endpoint' => 'add-order', 'orderItemId' => $orderItemId, 'orderId' => $orderId, 'sku' => $effectiveSku, 'origSku' => $sku, 'qty' => $quantity, 'price' => $price, 'color' => $color, 'size' => $size]); }
             if (!empty($hasSizeCol)) {
-                $orderItemStmt->execute([$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color, $size]);
+                Database::execute($orderItemSqlWithSize, [$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color, $size]);
             } else {
-                $orderItemStmt->execute([$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color]);
+                Database::execute($orderItemSqlNoSize,   [$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color]);
             }
 
             // Handle stock reduction - prioritize size-specific, then color-specific, then general
@@ -716,10 +705,8 @@ try {
                 // Size-specific stock reduction - need to get color ID if color is specified
                 $colorId = null;
                 if (!empty($color)) {
-                    $colorStmt = $pdo->prepare("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND is_active = 1");
-                    $colorStmt->execute([$effectiveSku, $color]);
-                    $colorResult = $colorStmt->fetch(PDO::FETCH_ASSOC);
-                    $colorId = $colorResult ? $colorResult['id'] : null;
+                    $colorRow = Database::queryOne("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND is_active = 1", [$effectiveSku, $color]);
+                    $colorId = $colorRow ? $colorRow['id'] : null;
                 }
 
                 // Manually reduce size-specific stock
@@ -733,22 +720,21 @@ try {
                     $whereClause .= " AND color_id IS NULL";
                 }
 
-                $sizeStockStmt = $pdo->prepare("UPDATE item_sizes SET stock_level = GREATEST(stock_level - ?, 0) WHERE $whereClause");
-                $sizeStockStmt->execute(array_merge([$quantity], $params));
+                Database::execute("UPDATE item_sizes SET stock_level = GREATEST(stock_level - ?, 0) WHERE $whereClause", array_merge([$quantity], $params));
                 $stockReduced = true;
 
                 // If color is specified, sync color stock from its sizes
                 if ($colorId) {
-                    $colorSyncStmt = $pdo->prepare("
-                        UPDATE item_colors 
-                        SET stock_level = (
-                            SELECT COALESCE(SUM(stock_level), 0) 
-                            FROM item_sizes 
-                            WHERE item_sku = ? AND is_active = 1
-                        ) 
-                        WHERE item_sku = ?
-                    ");
-                    $colorSyncStmt->execute([$effectiveSku, $effectiveSku]);
+                    Database::execute(
+                        "UPDATE item_colors 
+                         SET stock_level = (
+                             SELECT COALESCE(SUM(stock_level), 0) 
+                             FROM item_sizes 
+                             WHERE item_sku = ? AND is_active = 1
+                         ) 
+                         WHERE item_sku = ?",
+                        [$effectiveSku, $effectiveSku]
+                    );
                 }
 
                 error_log("add-order.php: Size-specific stock reduced for SKU '$sku', Size '$size', Color '$color'");
@@ -766,8 +752,7 @@ try {
 
             if (!$stockReduced) {
                 // Fall back to regular stock reduction for items without colors/sizes
-                $updateStockStmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
-                $updateStockStmt->execute([$quantity, $effectiveSku]);
+                Database::execute("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?", [$quantity, $effectiveSku]);
                 error_log("add-order.php: General stock reduced for SKU '$effectiveSku' (orig '$sku')");
             }
             } catch (PDOException $ie) {
@@ -783,7 +768,7 @@ try {
             }
         }
 
-        $pdo->commit();
+        Database::commit();
 
         // Send order confirmation emails (non-fatal)
         $emailResults = null;
@@ -823,7 +808,7 @@ try {
         echo $jsonOut;
         $__wf_add_order_sent = true;
     } catch (PDOException $e) {
-        if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) { $pdo->rollBack(); }
+        Database::rollBack();
         error_log("add-order.php: Database error: " . $e->getMessage());
         if (!empty($debug)) {
             http_response_code(200); // surface debug in client
@@ -846,7 +831,7 @@ try {
         echo $jsonOut;
         $__wf_add_order_sent = true;
     } catch (Throwable $e) {
-        if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) { $pdo->rollBack(); }
+        Database::rollBack();
         error_log("add-order.php: General error: " . $e->getMessage());
         if (!empty($debug)) {
             http_response_code(200);

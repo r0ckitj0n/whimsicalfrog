@@ -19,10 +19,9 @@ try {
     $sql = "INSERT INTO business_settings (category, setting_key, setting_value, display_name, description, setting_type, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, NOW())
             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), description = VALUES(description), setting_type = VALUES(setting_type), updated_at = NOW()";
-    $stmt = $pdo->prepare($sql);
-    if (!$stmt->execute([$category, $key, $val, $display, $desc, $type])) {
-        $info = $stmt->errorInfo();
-        throw new Exception('DB execute failed: ' . implode(' | ', $info));
+    $affected = Database::execute($sql, [$category, $key, $val, $display, $desc, $type]);
+    if ($affected === false) {
+        throw new Exception('DB execute failed');
     }
 
     // Clear cache so reads reflect new value
@@ -33,9 +32,6 @@ try {
     exit(0);
 } catch (Throwable $e) {
     fwrite(STDERR, 'Error: ' . $e->getMessage() . "\n");
-    if (isset($stmt)) {
-        $info = $stmt->errorInfo();
-        fwrite(STDERR, 'PDO errorInfo: ' . implode(' | ', $info) . "\n");
-    }
+    // No PDO stmt available when using Database helpers
     exit(1);
 }

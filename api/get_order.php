@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     // Create database connection
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     // Get order ID
     $orderId = $_GET['id'] ?? '';
@@ -35,12 +35,10 @@ try {
     }
 
     // Get order with user information
-    $stmt = $pdo->prepare("SELECT o.*, u.username, u.email, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
+    $order = Database::queryOne("SELECT o.*, u.username, u.email, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
                           FROM orders o 
                           JOIN users u ON o.userId = u.id 
-                          WHERE o.id = ?");
-    $stmt->execute([$orderId]);
-    $order = $stmt->fetch(PDO::FETCH_ASSOC);
+                          WHERE o.id = ?", [$orderId]);
 
     if (!$order) {
         echo json_encode(['success' => false, 'error' => 'Order not found']);
@@ -48,12 +46,10 @@ try {
     }
 
     // Get order items
-    $stmt = $pdo->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) as item_name, i.retailPrice 
+    $items = Database::queryAll("SELECT oi.*, COALESCE(i.name, oi.sku) as item_name, i.retailPrice 
                           FROM order_items oi 
                           LEFT JOIN items i ON oi.sku = i.sku 
-                          WHERE oi.orderId = ?");
-    $stmt->execute([$orderId]);
-    $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                          WHERE oi.orderId = ?", [$orderId]);
 
     // Return the order details
     echo json_encode([

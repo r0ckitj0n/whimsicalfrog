@@ -36,49 +36,34 @@ require_once __DIR__ . '/config.php';
 header('Content-Type: application/json');
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
     
     $results = [];
     $roomCoordinates = getRoomCoordinatesData();
     
     foreach ($roomCoordinates as $roomType => $coordinates) {
         // Check if entry exists
-        $stmt = $pdo->prepare("SELECT id FROM room_maps WHERE room_type = ?");
-        $stmt->execute([$roomType]);
-        $existingId = $stmt->fetchColumn();
+        $row = Database::queryOne("SELECT id FROM room_maps WHERE room_type = ?", [$roomType]);
+        $existingId = $row ? $row['id'] : null;
         
         $coordinateJson = json_encode($coordinates);
         
         if ($existingId) {
             // Update existing entry
-            $stmt = $pdo->prepare("
-                UPDATE room_maps 
-                SET coordinates = ?, is_active = 1, updated_at = NOW() 
-                WHERE id = ?
-            ");
-            $stmt->execute([$coordinateJson, $existingId]);
+            Database::execute("\n                UPDATE room_maps \n                SET coordinates = ?, is_active = 1, updated_at = NOW() \n                WHERE id = ?\n            ", [$coordinateJson, $existingId]);
             $results[$roomType] = "Updated with " . count($coordinates) . " coordinates";
         } else {
             // Insert new entry
-            $stmt = $pdo->prepare("
-                INSERT INTO room_maps (room_type, coordinates, is_active, created_at, updated_at) 
-                VALUES (?, ?, 1, NOW(), NOW())
-            ");
-            $stmt->execute([$roomType, $coordinateJson]);
+            Database::execute("\n                INSERT INTO room_maps (room_type, coordinates, is_active, created_at, updated_at) \n                VALUES (?, ?, 1, NOW(), NOW())\n            ", [$roomType, $coordinateJson]);
             $results[$roomType] = "Created with " . count($coordinates) . " coordinates";
         }
     }
     
     // Verify results
     $verification = [];
-    $stmt = $pdo->query("
-        SELECT room_type, coordinates, is_active 
-        FROM room_maps 
-        WHERE room_type IN ('room1','room2','room3','room4','room5') 
-        ORDER BY room_type
-    ");
+    $verifyRows = Database::queryAll("\n        SELECT room_type, coordinates, is_active \n        FROM room_maps \n        WHERE room_type IN ('room1','room2','room3','room4','room5') \n        ORDER BY room_type\n    ");
     
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    foreach ($verifyRows as $row) {
         $coords = json_decode($row['coordinates'], true);
         $verification[$row['room_type']] = [
             'coordinate_count' => is_array($coords) ? count($coords) : 0,

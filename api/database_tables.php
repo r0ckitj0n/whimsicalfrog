@@ -2,10 +2,10 @@
 // Database Tables Management API
 require_once __DIR__ . '/config.php';
 
-// Create PDO connection
+// Initialize Database connection
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -78,11 +78,9 @@ try {
             $sql = "UPDATE `$tableName` SET `$column` = ? WHERE $whereClause LIMIT 1";
             $params = array_merge([$newValue], $whereParams);
 
-            $stmt = $pdo->prepare($sql);
-            $result = $stmt->execute($params);
+            $affectedRows = Database::execute($sql, $params);
 
-            if ($result) {
-                $affectedRows = $stmt->rowCount();
+            if ($affectedRows !== false) {
                 if ($affectedRows > 0) {
                     echo json_encode([
                         'success' => true,
@@ -101,8 +99,8 @@ try {
             break;
 
         case 'list_tables':
-            $stmt = $pdo->query("SHOW TABLES");
-            $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $rows = Database::queryAll("SHOW TABLES");
+            $tables = array_column($rows, array_key_first($rows[0] ?? ['Tables_in_db' => null]));
             echo json_encode(['success' => true, 'tables' => $tables]);
             break;
 
@@ -113,19 +111,14 @@ try {
             }
 
             // Get table structure
-            $stmt = $pdo->prepare("DESCRIBE `$tableName`");
-            $stmt->execute();
-            $structure = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $structure = Database::queryAll("DESCRIBE `$tableName`");
 
             // Get row count
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM `$tableName`");
-            $stmt->execute();
-            $rowCount = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+            $rowCountRow = Database::queryOne("SELECT COUNT(*) as count FROM `$tableName`");
+            $rowCount = $rowCountRow['count'] ?? 0;
 
             // Get table status
-            $stmt = $pdo->prepare("SHOW TABLE STATUS WHERE Name = ?");
-            $stmt->execute([$tableName]);
-            $status = $stmt->fetch(PDO::FETCH_ASSOC);
+            $status = Database::queryOne("SHOW TABLE STATUS WHERE Name = ?", [$tableName]);
 
             echo json_encode([
                 'success' => true,
@@ -149,9 +142,8 @@ try {
 
             // Sanitize order by
             if (!empty($orderBy)) {
-                $stmt = $pdo->prepare("DESCRIBE `$tableName`");
-                $stmt->execute();
-                $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                $desc = Database::queryAll("DESCRIBE `$tableName`");
+                $columns = array_column($desc, 'Field');
                 if (!in_array($orderBy, $columns)) {
                     $orderBy = '';
                 }
@@ -161,9 +153,8 @@ try {
 
             // Get total count if requested
             if ($countTotal) {
-                $countStmt = $pdo->prepare("SELECT COUNT(*) as total FROM `$tableName`");
-                $countStmt->execute();
-                $response['total_count'] = intval($countStmt->fetch(PDO::FETCH_ASSOC)['total']);
+                $countRow = Database::queryOne("SELECT COUNT(*) as total FROM `$tableName`");
+                $response['total_count'] = intval($countRow['total'] ?? 0);
             }
 
             // Build query for data
@@ -174,9 +165,7 @@ try {
             }
             $sql .= " LIMIT $limit OFFSET $offset";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $data = Database::queryAll($sql);
 
             $response['data'] = $data;
             $response['returned_rows'] = count($data);
@@ -196,23 +185,12 @@ try {
                 throw new Exception('Only SELECT queries are allowed for security reasons');
             }
 
-            $stmt = $pdo->prepare($query);
-            $stmt->execute();
-
-            if ($stmt->columnCount() > 0) {
-                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                echo json_encode([
-                    'success' => true,
-                    'data' => $data,
-                    'rowCount' => count($data)
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Query executed successfully',
-                    'rowsAffected' => $stmt->rowCount()
-                ]);
-            }
+            $data = Database::queryAll($query);
+            echo json_encode([
+                'success' => true,
+                'data' => $data,
+                'rowCount' => count($data)
+            ]);
             break;
 
         case 'get_documentation':

@@ -1,12 +1,20 @@
 <?php
-// Enable CORS for all API requests (development only)
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-// Handle OPTIONS preflight
-if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+// Enable CORS only for true API requests and only if headers have not been sent yet
+try {
+    $__wf_req_path_early = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+} catch (Throwable $e) { $__wf_req_path_early = '/'; }
+$__wf_script_early = $_SERVER['SCRIPT_NAME'] ?? '';
+$__wf_is_api_context_early = (strpos($__wf_script_early, '/api/') !== false) || (strpos($__wf_req_path_early, '/api/') === 0);
+if ($__wf_is_api_context_early && !headers_sent()) {
+    // Development CORS for API endpoints
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization');
+    // Handle OPTIONS preflight
+    if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit;
+    }
 }
 
 // Improved environment detection with multiple checks

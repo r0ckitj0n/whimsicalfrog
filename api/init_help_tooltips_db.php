@@ -27,7 +27,7 @@ try {
         INDEX idx_active (is_active)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-    $pdo->exec($createTableSQL);
+    Database::execute($createTableSQL);
 
     // Insert default tooltips for admin settings
     $defaultTooltips = [
@@ -147,23 +147,20 @@ try {
     ];
 
     // Check if tooltips already exist and insert only new ones
-    $insertStmt = $pdo->prepare("
-        INSERT IGNORE INTO help_tooltips (element_id, page_context, title, content, position) 
-        VALUES (?, ?, ?, ?, ?)
-    ");
-
     $insertedCount = 0;
     foreach ($defaultTooltips as $tooltip) {
-        if ($insertStmt->execute([
-            $tooltip['element_id'],
-            $tooltip['page_context'],
-            $tooltip['title'],
-            $tooltip['content'],
-            $tooltip['position']
-        ])) {
-            if ($insertStmt->rowCount() > 0) {
-                $insertedCount++;
-            }
+        $affected = Database::execute(
+            "INSERT IGNORE INTO help_tooltips (element_id, page_context, title, content, position) VALUES (?, ?, ?, ?, ?)",
+            [
+                $tooltip['element_id'],
+                $tooltip['page_context'],
+                $tooltip['title'],
+                $tooltip['content'],
+                $tooltip['position']
+            ]
+        );
+        if ($affected > 0) {
+            $insertedCount++;
         }
     }
 

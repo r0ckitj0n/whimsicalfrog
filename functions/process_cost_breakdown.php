@@ -141,24 +141,16 @@ try {
                 // Get all cost types
 
                 // Get materials costs
-                $materialStmt = $pdo->prepare("SELECT * FROM inventory_materials WHERE sku = ?");
-                $materialStmt->execute([$inventoryId]);
-                $materials = $materialStmt->fetchAll(PDO::FETCH_ASSOC);
+                $materials = Database::queryAll("SELECT * FROM inventory_materials WHERE sku = ?", [$inventoryId]);
 
                 // Get labor costs
-                $laborStmt = $pdo->prepare("SELECT * FROM inventory_labor WHERE sku = ?");
-                $laborStmt->execute([$inventoryId]);
-                $labor = $laborStmt->fetchAll(PDO::FETCH_ASSOC);
+                $labor = Database::queryAll("SELECT * FROM inventory_labor WHERE sku = ?", [$inventoryId]);
 
                 // Get energy costs
-                $energyStmt = $pdo->prepare("SELECT * FROM inventory_energy WHERE sku = ?");
-                $energyStmt->execute([$inventoryId]);
-                $energy = $energyStmt->fetchAll(PDO::FETCH_ASSOC);
+                $energy = Database::queryAll("SELECT * FROM inventory_energy WHERE sku = ?", [$inventoryId]);
 
                 // Get equipment costs
-                $equipmentStmt = $pdo->prepare("SELECT * FROM inventory_equipment WHERE sku = ?");
-                $equipmentStmt->execute([$inventoryId]);
-                $equipment = $equipmentStmt->fetchAll(PDO::FETCH_ASSOC);
+                $equipment = Database::queryAll("SELECT * FROM inventory_equipment WHERE sku = ?", [$inventoryId]);
 
                 // Calculate totals
                 $materialTotal = 0;
@@ -218,9 +210,7 @@ try {
                     echo json_encode(['success' => false, 'error' => 'Internal error: Invalid table for cost type']);
                     exit;
                 }
-                $stmt = $pdo->prepare("SELECT * FROM $tableName WHERE sku = ?");
-                $stmt->execute([$inventoryId]);
-                $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $items = Database::queryAll("SELECT * FROM $tableName WHERE sku = ?", [$inventoryId]);
 
                 // Calculate total
                 $total = 0;
@@ -243,21 +233,20 @@ try {
             if (isset($input['action']) && $input['action'] === 'clear_all') {
                 // Clear all cost breakdown data for this inventory item
                 try {
-                    $pdo->beginTransaction();
+                    Database::beginTransaction();
 
                     // Delete from all cost tables
                     $tables = ['inventory_materials', 'inventory_labor', 'inventory_energy', 'inventory_equipment'];
                     $deletedCount = 0;
 
                     foreach ($tables as $table) {
-                        $stmt = $pdo->prepare("DELETE FROM $table WHERE sku = ?");
-                        $result = $stmt->execute([$inventoryId]);
-                        if ($result) {
-                            $deletedCount += $stmt->rowCount();
+                        $affected = Database::execute("DELETE FROM $table WHERE sku = ?", [$inventoryId]);
+                        if ($affected > 0) {
+                            $deletedCount += $affected;
                         }
                     }
 
-                    $pdo->commit();
+                    Database::commit();
 
                     echo json_encode([
                         'success' => true,
@@ -265,7 +254,7 @@ try {
                         'deletedCount' => $deletedCount
                     ]);
                 } catch (Exception $e) {
-                    $pdo->rollBack();
+                    Database::rollBack();
                     http_response_code(500);
                     echo json_encode([
                         'success' => false,
@@ -308,20 +297,16 @@ try {
 
             // Insert new cost item
             if ($costType === 'materials') {
-                $stmt = $pdo->prepare("INSERT INTO $tableName (sku, name, cost) VALUES (?, ?, ?)");
-                $result = $stmt->execute([$inventoryId, $input['name'], $input['cost']]);
+                $affected = Database::execute("INSERT INTO $tableName (sku, name, cost) VALUES (?, ?, ?)", [$inventoryId, $input['name'], $input['cost']]);
             } else {
-                $stmt = $pdo->prepare("INSERT INTO $tableName (sku, description, cost) VALUES (?, ?, ?)");
-                $result = $stmt->execute([$inventoryId, $input['description'], $input['cost']]);
+                $affected = Database::execute("INSERT INTO $tableName (sku, description, cost) VALUES (?, ?, ?)", [$inventoryId, $input['description'], $input['cost']]);
             }
 
-            if ($result) {
-                $newId = $pdo->lastInsertId();
+            if ($affected > 0) {
+                $newId = Database::lastInsertId();
 
                 // Get the newly created item
-                $stmt = $pdo->prepare("SELECT * FROM $tableName WHERE id = ?");
-                $stmt->execute([$newId]);
-                $newItem = $stmt->fetch(PDO::FETCH_ASSOC);
+                $newItem = Database::queryOne("SELECT * FROM $tableName WHERE id = ?", [$newId]);
 
                 echo json_encode([
                     'success' => true,
@@ -379,9 +364,8 @@ try {
             }
 
             // Verify the item exists and belongs to the specified inventory
-            $checkStmt = $pdo->prepare("SELECT id FROM $tableName WHERE id = ? AND sku = ?");
-            $checkStmt->execute([$id, $inventoryId]);
-            if (!$checkStmt->fetch()) {
+            $exists = Database::queryOne("SELECT id FROM $tableName WHERE id = ? AND sku = ?", [$id, $inventoryId]);
+            if (!$exists) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
@@ -392,18 +376,14 @@ try {
 
             // Update the item
             if ($costType === 'materials') {
-                $stmt = $pdo->prepare("UPDATE $tableName SET name = ?, cost = ? WHERE id = ?");
-                $result = $stmt->execute([$input['name'], $input['cost'], $id]);
+                $affected = Database::execute("UPDATE $tableName SET name = ?, cost = ? WHERE id = ?", [$input['name'], $input['cost'], $id]);
             } else {
-                $stmt = $pdo->prepare("UPDATE $tableName SET description = ?, cost = ? WHERE id = ?");
-                $result = $stmt->execute([$input['description'], $input['cost'], $id]);
+                $affected = Database::execute("UPDATE $tableName SET description = ?, cost = ? WHERE id = ?", [$input['description'], $input['cost'], $id]);
             }
 
-            if ($result) {
+            if ($affected > 0) {
                 // Get the updated item
-                $stmt = $pdo->prepare("SELECT * FROM $tableName WHERE id = ?");
-                $stmt->execute([$id]);
-                $updatedItem = $stmt->fetch(PDO::FETCH_ASSOC);
+                $updatedItem = Database::queryOne("SELECT * FROM $tableName WHERE id = ?", [$id]);
 
                 echo json_encode([
                     'success' => true,
@@ -448,9 +428,8 @@ try {
             }
 
             // Verify the item exists and belongs to the specified inventory
-            $checkStmt = $pdo->prepare("SELECT id FROM $tableName WHERE id = ? AND sku = ?");
-            $checkStmt->execute([$id, $inventoryId]);
-            if (!$checkStmt->fetch()) {
+            $exists = Database::queryOne("SELECT id FROM $tableName WHERE id = ? AND sku = ?", [$id, $inventoryId]);
+            if (!$exists) {
                 http_response_code(404);
                 echo json_encode([
                     'success' => false,
@@ -460,10 +439,9 @@ try {
             }
 
             // Delete the item
-            $stmt = $pdo->prepare("DELETE FROM $tableName WHERE id = ?");
-            $result = $stmt->execute([$id]);
+            $affected = Database::execute("DELETE FROM $tableName WHERE id = ?", [$id]);
 
-            if ($result) {
+            if ($affected > 0) {
                 echo json_encode([
                     'success' => true,
                     'message' => ucfirst(rtrim($costType, 's')) . ' cost deleted successfully'

@@ -53,14 +53,12 @@ try {
 
     // If this is marked as primary, unset any existing primary images for this item
     if ($isPrimary) {
-        $stmt = $pdo->prepare("UPDATE item_images SET is_primary = 0 WHERE sku = ?");
-        $stmt->execute([$sku]);
+        Database::execute("UPDATE item_images SET is_primary = 0 WHERE sku = ?", [$sku]);
     }
 
     // Get existing image paths to determine what letter suffixes are already used
-    $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ?");
-    $stmt->execute([$sku]);
-    $existingPaths = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $rows = Database::queryAll("SELECT image_path FROM item_images WHERE sku = ?", [$sku]);
+    $existingPaths = array_map(function($r){ return $r['image_path']; }, $rows);
 
     // Extract used letter suffixes
     $usedSuffixes = [];
@@ -218,25 +216,21 @@ try {
             // Determine if this should be primary
             $isThisPrimary = ($isPrimary && $i === 0) ? 1 : 0; // Only first image can be primary if multiple uploaded
 
-            // Get sort order (use letter index for consistent ordering)
-            $sortOrder = ord($suffix) - 65; // Convert A=0, B=1, C=2, etc.
-
-            // Insert into database
-            $stmt = $pdo->prepare("
-                INSERT INTO item_images (sku, image_path, is_primary, alt_text, sort_order, processed_with_ai, original_path, processing_date)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-
-            $stmt->execute([
-                $sku,
-                $finalPath,
-                $isThisPrimary,
-                $altText ?: $originalName,
-                $sortOrder,
-                $aiProcessed ? 1 : 0,
-                $aiProcessed ? $relPath : null,
-                $aiProcessed ? date('Y-m-d H:i:s') : null
-            ]);
+            // Insert into database (restored complete parameter list)
+            Database::execute(
+                "INSERT INTO item_images (sku, image_path, is_primary, alt_text, sort_order, processed_with_ai, original_path, processing_date)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    $sku,
+                    $finalPath,
+                    $isThisPrimary,
+                    $altText ?: $originalName,
+                    $sortOrder,
+                    $aiProcessed ? 1 : 0,
+                    $aiProcessed ? $relPath : null,
+                    $aiProcessed ? date('Y-m-d H:i:s') : null
+                ]
+            );
 
             $uploadedImages[] = [
                 'filename' => $filename,
@@ -248,8 +242,7 @@ try {
 
             // Update items table with primary image
             if ($isThisPrimary) {
-                $stmt = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
-                $stmt->execute([$finalPath, $sku]);
+                Database::execute("UPDATE items SET imageUrl = ? WHERE sku = ?", [$finalPath, $sku]);
             }
 
         } else {
@@ -259,18 +252,15 @@ try {
 
     // If no primary image exists for this item, make the first uploaded image primary
     if (!empty($uploadedImages)) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM item_images WHERE sku = ? AND is_primary = 1");
-        $stmt->execute([$sku]);
-        $hasPrimary = $stmt->fetchColumn() > 0;
+        $rowCnt = Database::queryOne("SELECT COUNT(*) AS c FROM item_images WHERE sku = ? AND is_primary = 1", [$sku]);
+        $hasPrimary = $rowCnt ? ((int)$rowCnt['c'] > 0) : false;
 
         if (!$hasPrimary && !empty($uploadedImages)) {
             $firstImage = $uploadedImages[0];
-            $stmt = $pdo->prepare("UPDATE item_images SET is_primary = 1 WHERE sku = ? AND image_path = ?");
-            $stmt->execute([$sku, $firstImage['path']]);
+            Database::execute("UPDATE item_images SET is_primary = 1 WHERE sku = ? AND image_path = ?", [$sku, $firstImage['path']]);
 
             // Update items table
-            $stmt = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
-            $stmt->execute([$firstImage['path'], $sku]);
+            Database::execute("UPDATE items SET imageUrl = ? WHERE sku = ?", [$firstImage['path'], $sku]);
 
             $uploadedImages[0]['isPrimary'] = true;
         }

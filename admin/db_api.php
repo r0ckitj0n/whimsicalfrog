@@ -33,8 +33,8 @@ switch ($action) {
         }
 
         try {
-            $stmt = $pdo->query("SELECT COUNT(*) as count FROM global_css_rules WHERE is_active = 1");
-            $count = $stmt->fetch()['count'];
+            $row = Database::queryOne("SELECT COUNT(*) as count FROM global_css_rules WHERE is_active = 1");
+            $count = $row['count'] ?? 0;
 
             echo json_encode([
                 'success' => true,
@@ -54,8 +54,7 @@ switch ($action) {
         }
 
         try {
-            $stmt = $pdo->query("SELECT * FROM global_css_rules WHERE is_active = 1 ORDER BY category, rule_name");
-            $rules = $stmt->fetchAll();
+            $rules = Database::queryAll("SELECT * FROM global_css_rules WHERE is_active = 1 ORDER BY category, rule_name");
 
             $css = "/* Generated CSS from Database - " . date('Y-m-d H:i:s') . " */\n\n";
             $currentCategory = '';
@@ -99,10 +98,10 @@ switch ($action) {
         try {
             $pdo = connectLocal();
             if ($pdo) {
-                $stmt = $pdo->query("SELECT COUNT(*) as count FROM global_css_rules");
+                $row = Database::queryOne("SELECT COUNT(*) as count FROM global_css_rules");
                 $status['local'] = [
                     'online' => true,
-                    'css_rules' => $stmt->fetch()['count']
+                    'css_rules' => $row['count'] ?? 0
                 ];
             } else {
                 $status['local'] = ['online' => false];

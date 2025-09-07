@@ -64,6 +64,12 @@ export default defineConfig({
                 'js/admin-settings.js': resolve(__dirname, 'src/entries/admin-settings.js'),
                 'js/admin-db-status.js': resolve(__dirname, 'src/entries/admin-db-status.js'),
                 'js/header-bootstrap.js': resolve(__dirname, 'src/entries/header-bootstrap.js'),
+                'js/admin-email-settings.js': resolve(__dirname, 'src/entries/admin-email-settings.js'),
+                'js/admin-customers.js': resolve(__dirname, 'src/entries/admin-customers.js'),
+                'js/admin-account-settings.js': resolve(__dirname, 'src/entries/admin-account-settings.js'),
+                'js/admin-orders.js': resolve(__dirname, 'src/entries/admin-orders.js'),
+                'js/admin-pos.js': resolve(__dirname, 'src/entries/admin-pos.js'),
+                'js/admin-cost-breakdown.js': resolve(__dirname, 'src/entries/admin-cost-breakdown.js'),
             },
         }
     },

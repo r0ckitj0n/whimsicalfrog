@@ -8,7 +8,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 } catch (Exception $e) {
     error_log("Database connection failed: " . $e->getMessage());
     throw $e;
@@ -36,8 +36,7 @@ try {
             echo json_encode(['success' => false,'error' => 'Tracking number required']);
             exit;
         }
-        $stmt = $pdo->prepare("UPDATE orders SET order_status='Shipped', trackingNumber=?, fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END, paymentStatus=IF(paymentStatus='Received', paymentStatus, 'Received') WHERE id=?");
-        $stmt->execute([$tracking, $noteLine, $noteLine, $payLine, $payLine, $orderId]);
+        Database::execute("UPDATE orders SET order_status='Shipped', trackingNumber=?, fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END, paymentStatus=IF(paymentStatus='Received', paymentStatus, 'Received') WHERE id=?", [$tracking, $noteLine, $noteLine, $payLine, $payLine, $orderId]);
 
         // Log admin activity
         if (class_exists('DatabaseLogger')) {
@@ -51,8 +50,7 @@ try {
 
         echo json_encode(['success' => true,'message' => 'Order marked as shipped.']);
     } elseif ($action === 'deliver') {
-        $stmt = $pdo->prepare("UPDATE orders SET order_status='Delivered', fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?");
-        $stmt->execute([$noteLine, $noteLine, $payLine, $payLine, $orderId]);
+        Database::execute("UPDATE orders SET order_status='Delivered', fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?", [$noteLine, $noteLine, $payLine, $payLine, $orderId]);
 
         // Log admin activity
         if (class_exists('DatabaseLogger')) {
@@ -70,8 +68,7 @@ try {
             echo json_encode(['success' => false,'error' => 'No note provided']);
             exit;
         }
-        $stmt = $pdo->prepare("UPDATE orders SET fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?");
-        $stmt->execute([$noteLine, $noteLine, $payLine, $payLine, $orderId]);
+        Database::execute("UPDATE orders SET fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?", [$noteLine, $noteLine, $payLine, $payLine, $orderId]);
 
         // Log admin activity
         if (class_exists('DatabaseLogger')) {
@@ -141,20 +138,18 @@ try {
         }
 
         // Update the field
-        $stmt = $pdo->prepare("UPDATE orders SET `$dbField` = ? WHERE id = ?");
-        $stmt->execute([$value, $orderId]);
+        $affected = Database::execute("UPDATE orders SET `$dbField` = ? WHERE id = ?", [$value, $orderId]);
 
         // Create proper display name for field
         $displayField = ($field === 'order_status' || $field === 'status') ? 'OrderStatus' :
                        (($field === 'date') ? 'Date' : ucfirst($field));
 
-        if ($stmt->rowCount() > 0) {
+        if ($affected > 0) {
             echo json_encode(['success' => true,'message' => $displayField . ' updated successfully']);
         } else {
             // Check if order exists
-            $checkStmt = $pdo->prepare("SELECT id FROM orders WHERE id = ?");
-            $checkStmt->execute([$orderId]);
-            if ($checkStmt->fetch()) {
+            $exists = Database::queryOne("SELECT id FROM orders WHERE id = ?", [$orderId]);
+            if ($exists) {
                 echo json_encode(['success' => true,'message' => 'No change needed - ' . $displayField . ' is already set to that value']);
             } else {
                 echo json_encode(['success' => false,'error' => 'Order not found']);

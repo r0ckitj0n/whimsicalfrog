@@ -36,9 +36,7 @@ try {
 
     if ($userId) {
         // Query for specific user
-        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = ?');
-        $stmt->execute([$userId]);
-        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+        $userData = Database::queryOne('SELECT * FROM users WHERE id = ?', [$userId]);
 
         if (!$userData) {
             http_response_code(404);
@@ -67,8 +65,7 @@ try {
         echo json_encode($formattedUser);
     } else {
         // Query for all users
-        $stmt = $pdo->query('SELECT * FROM users');
-        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $users = Database::queryAll('SELECT * FROM users');
 
         // Map database fields to expected output format
         $formattedUsers = array_map(function ($user) {

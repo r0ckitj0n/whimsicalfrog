@@ -57,15 +57,9 @@ try {
         }
 
         // Update the item_images table with alt text and AI description
-        $stmt = $pdo->prepare("
-            UPDATE item_images 
-            SET alt_text = ?, ai_description = ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE sku = ? AND image_path = ?
-        ");
+        $affected = Database::execute("\n            UPDATE item_images \n            SET alt_text = ?, ai_description = ?, updated_at = CURRENT_TIMESTAMP \n            WHERE sku = ? AND image_path = ?\n        ", [$altText, $aiDescription, $sku, $imagePath]);
 
-        $result = $stmt->execute([$altText, $aiDescription, $sku, $imagePath]);
-
-        if ($result && $stmt->rowCount() > 0) {
+        if ($affected > 0) {
             $updatedImages++;
         } else {
             $errors[] = "Failed to update image: " . $imagePath;

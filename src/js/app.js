@@ -283,10 +283,12 @@ if (__WF_IS_ADMIN) {
             // Ensure auth-related handlers are active on admin pages too
             try { import('./login-modal.js').catch(() => {}); } catch (_) {}
             try { import('./header-auth-sync.js').catch(() => {}); } catch (_) {}
+            // Enable dynamic admin tooltips (DB-driven)
+            try { import('../modules/tooltip-manager.js').catch(() => {}); } catch (_) {}
 
             const fullPath = (ds && ds.path) || window.location.pathname || '';
             const cleanPath = fullPath.split('?')[0].split('#')[0];
-            const parts = cleanPath.split('/').filter(Boolean); // e.g., ['admin','inventory']
+            const parts = cleanPath.split('/').filter(Boolean); // e.g., ['admin','inventory'] or ['admin','admin.php']
             let section = (parts[0] === 'admin') ? (parts[1] || 'dashboard') : '';
             section = (section || '').toLowerCase();
             // Strip file extensions like .php
@@ -294,6 +296,8 @@ if (__WF_IS_ADMIN) {
 
             // Map aliases to canonical section names
             const aliases = {
+                // Router file names → canonical sections
+                'admin': 'dashboard',
                 'index': 'dashboard',
                 'home': 'dashboard',
                 'order': 'orders',
@@ -322,6 +326,15 @@ if (__WF_IS_ADMIN) {
             };
             if (aliases[section]) section = aliases[section];
 
+            // If navigating via admin router e.g. /admin/admin.php?section=settings, prefer the query param
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const qSection = (params.get('section') || '').toLowerCase();
+                if (qSection) {
+                    section = aliases[qSection] || qSection;
+                }
+            } catch (_) {}
+
             // Dynamic import per admin section
             const loaders = {
                 'dashboard': () => import('./admin-dashboard.js'),
@@ -331,7 +344,9 @@ if (__WF_IS_ADMIN) {
                 'pos': () => import('./admin-pos.js'),
                 'reports': () => import('./admin-reports.js'),
                 'marketing': () => import('./admin-marketing.js'),
-                'settings': () => import('./admin-settings.js'),
+                // Use the lightweight admin-settings entry that loads the bridge first
+                // and only lazy-loads the heavy legacy module on demand
+                'settings': () => import('../entries/admin-settings.js'),
                 'categories': () => import('./admin-categories.js'),
                 'db-status': () => import('./admin-db-status.js'),
                 'db-web-manager': () => import('./admin-db-web-manager.js'),
@@ -341,9 +356,33 @@ if (__WF_IS_ADMIN) {
             };
 
             const load = loaders[section] || (() => import('./admin-dashboard.js'));
-            load()
-                .then(() => console.log(`[App] Admin module loaded for section: ${section}`))
-                .catch(err => console.error(`[App] Failed to load admin module for section: ${section}`, err));
+            // Diagnostic guard: allow disabling specific admin sections via flag/URL to isolate freezes
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const disableAdmin = (window.WF_DISABLE_ADMIN_SETTINGS_JS === true) || (params.get('wf_disable_admin') === '1');
+                if (section === 'settings' && disableAdmin) {
+                    console.warn('[App] Admin settings module disabled by flag (?wf_disable_admin=1 or WF_DISABLE_ADMIN_SETTINGS_JS)');
+                    return;
+                }
+            } catch (_) {}
+            const doLoad = () => {
+                load()
+                    .then(() => console.log(`[App] Admin module loaded for section: ${section}`))
+                    .catch(err => console.error(`[App] Failed to load admin module for section: ${section}`, err));
+            };
+            if (section === 'settings') {
+                try {
+                    if ('requestIdleCallback' in window) {
+                        window.requestIdleCallback(() => doLoad(), { timeout: 200 });
+                    } else {
+                        setTimeout(doLoad, 50);
+                    }
+                } catch (_) {
+                    setTimeout(doLoad, 50);
+                }
+            } else {
+                doLoad();
+            }
         } catch (e) {
             console.error('[App] Error setting up per-page imports', e);
         }

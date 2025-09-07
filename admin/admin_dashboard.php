@@ -278,7 +278,7 @@ if (empty($dashboardConfig)) {
                         <!- Marketing Tools Section ->
                         <div class="space-y-3">
                             <?php
-                        $marketingStats = Database::queryRow('SELECT 
+                        $marketingStats = Database::queryOne('SELECT 
                                 (SELECT COUNT(*) FROM email_campaigns) as email_campaigns,
                                 (SELECT COUNT(*) FROM discount_codes WHERE (end_date IS NULL OR end_date >= CURDATE())) as active_discounts,
                                 (SELECT COUNT(*) FROM social_posts WHERE scheduled_date >= CURDATE()) as scheduled_posts
@@ -685,7 +685,7 @@ if (empty($dashboardConfig)) {
                         <!- Reports Summary Section ->
                         <div class="space-y-2">
                             <?php
-                            $reportsStats = Database::queryRow('SELECT 
+                            $reportsStats = Database::queryOne('SELECT 
                                 COUNT(*) as total_orders,
                                 SUM(total) as total_revenue,
                                 AVG(total) as avg_order_value

@@ -28,12 +28,14 @@ try {
         exit;
     }
 
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     // Fetch images for SKU
-    $stmt = $pdo->prepare("SELECT id, sku, image_path, is_primary, processed_with_ai, original_path FROM item_images WHERE sku = ? ORDER BY sort_order ASC, id ASC");
-    $stmt->execute([$sku]);
-    $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $images = Database::queryAll(
+        "SELECT id, sku, image_path, is_primary, processed_with_ai, original_path 
+         FROM item_images WHERE sku = ? ORDER BY sort_order ASC, id ASC",
+        [$sku]
+    );
 
     if (!$images) {
         echo json_encode(['success' => false, 'error' => 'No images found for SKU']);
@@ -127,15 +129,16 @@ try {
             }
 
             // 3) Update DB: item_images
-            $update = $pdo->prepare("UPDATE item_images
-                SET image_path = ?, processed_with_ai = 1, original_path = COALESCE(original_path, ?), processing_date = NOW()
-                WHERE id = ?");
-            $update->execute([$relWebp, $relPath, $id]);
+            Database::execute(
+                "UPDATE item_images
+                 SET image_path = ?, processed_with_ai = 1, original_path = COALESCE(original_path, ?), processing_date = NOW()
+                 WHERE id = ?",
+                [$relWebp, $relPath, $id]
+            );
 
             // 4) If primary, sync items.imageUrl
             if ($isPrimary) {
-                $updItem = $pdo->prepare("UPDATE items SET imageUrl = ? WHERE sku = ?");
-                $updItem->execute([$relWebp, $sku]);
+                Database::execute("UPDATE items SET imageUrl = ? WHERE sku = ?", [$relWebp, $sku]);
             }
 
             $processedCount++;

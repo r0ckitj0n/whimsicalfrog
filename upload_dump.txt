@@ -1,0 +1,7 @@
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
+mkdir backups
+cd backups
+put "local_db_dump_2025-09-06_08-33-02.sql"
+bye

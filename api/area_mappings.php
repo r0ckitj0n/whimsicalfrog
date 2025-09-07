@@ -14,7 +14,7 @@ require_once __DIR__ . '/config.php';
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -77,22 +77,21 @@ function addMapping($pdo, $input)
 
     try {
         // Check if mapping already exists for this area
-        $checkStmt = $pdo->prepare("SELECT id FROM area_mappings WHERE room_type = ? AND area_selector = ? AND is_active = 1");
-        $checkStmt->execute([$roomType, $areaSelector]);
+        $exists = Database::queryOne("SELECT id FROM area_mappings WHERE room_type = ? AND area_selector = ? AND is_active = 1", [$roomType, $areaSelector]);
 
-        if ($checkStmt->fetch()) {
+        if ($exists) {
             echo json_encode(['success' => false, 'message' => 'This area already has a mapping. Use swap or update instead.']);
             return;
         }
 
         // Add new mapping
-        $stmt = $pdo->prepare("
-            INSERT INTO area_mappings (room_type, area_selector, mapping_type, item_id, category_id, display_order) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
+        $rows = Database::execute(
+            "INSERT INTO area_mappings (room_type, area_selector, mapping_type, item_id, category_id, display_order) VALUES (?, ?, ?, ?, ?, ?)",
+            [$roomType, $areaSelector, $mappingType, $itemId, $categoryId, $displayOrder]
+        );
 
-        if ($stmt->execute([$roomType, $areaSelector, $mappingType, $itemId, $categoryId, $displayOrder])) {
-            $mappingId = $pdo->lastInsertId();
+        if ($rows > 0) {
+            $mappingId = Database::lastInsertId();
             echo json_encode(['success' => true, 'message' => 'Area mapping added successfully', 'id' => $mappingId]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to add mapping']);
@@ -103,7 +102,7 @@ function addMapping($pdo, $input)
     }
 }
 
-function swapMappings($pdo, $input)
+function swapMappings($input)
 {
     $area1Id = $input['area1_id'] ?? null;
     $area2Id = $input['area2_id'] ?? null;
@@ -115,15 +114,13 @@ function swapMappings($pdo, $input)
     }
 
     try {
-        $pdo->beginTransaction();
+        Database::beginTransaction();
 
         // Get both mappings
-        $stmt = $pdo->prepare("SELECT * FROM area_mappings WHERE id IN (?, ?) AND is_active = 1");
-        $stmt->execute([$area1Id, $area2Id]);
-        $mappings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $mappings = Database::queryAll("SELECT * FROM area_mappings WHERE id IN (?, ?) AND is_active = 1", [$area1Id, $area2Id]);
 
         if (count($mappings) !== 2) {
-            $pdo->rollback();
+            Database::rollBack();
             echo json_encode(['success' => false, 'message' => 'One or both mappings not found']);
             return;
         }
@@ -132,39 +129,29 @@ function swapMappings($pdo, $input)
         $mapping2 = $mappings[1];
 
         // Swap the mappings
-        $updateStmt = $pdo->prepare("
-            UPDATE area_mappings 
-            SET mapping_type = ?, item_id = ?, category_id = ? 
-            WHERE id = ?
-        ");
-
         // Update first mapping with second mapping's data
-        $updateStmt->execute([
-            $mapping2['mapping_type'],
-            $mapping2['item_id'],
-            $mapping2['category_id'],
-            $mapping1['id']
-        ]);
+        Database::execute(
+            "UPDATE area_mappings SET mapping_type = ?, item_id = ?, category_id = ? WHERE id = ?",
+            [$mapping2['mapping_type'], $mapping2['item_id'], $mapping2['category_id'], $mapping1['id']]
+        );
 
         // Update second mapping with first mapping's data
-        $updateStmt->execute([
-            $mapping1['mapping_type'],
-            $mapping1['item_id'],
-            $mapping1['category_id'],
-            $mapping2['id']
-        ]);
+        Database::execute(
+            "UPDATE area_mappings SET mapping_type = ?, item_id = ?, category_id = ? WHERE id = ?",
+            [$mapping1['mapping_type'], $mapping1['item_id'], $mapping1['category_id'], $mapping2['id']]
+        );
 
-        $pdo->commit();
+        Database::commit();
         echo json_encode(['success' => true, 'message' => 'Area mappings swapped successfully']);
 
     } catch (PDOException $e) {
-        $pdo->rollback();
+        Database::rollBack();
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
 }
 
-function handlePut($pdo, $input)
+function handlePut($input)
 {
     $mappingId = $input['id'] ?? null;
     $mappingType = $input['mapping_type'] ?? null;
@@ -206,10 +193,9 @@ function handlePut($pdo, $input)
 
         $updateValues[] = $mappingId;
 
-        $stmt = $pdo->prepare("UPDATE area_mappings SET " . implode(', ', $updateFields) . " WHERE id = ?");
-        $result = $stmt->execute($updateValues);
+        $result = Database::execute("UPDATE area_mappings SET " . implode(', ', $updateFields) . " WHERE id = ?", $updateValues);
 
-        if ($result && $stmt->rowCount() > 0) {
+        if ($result > 0) {
             echo json_encode(['success' => true, 'message' => 'Area mapping updated successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Mapping not found or no changes made']);
@@ -231,10 +217,9 @@ function handleDelete($pdo, $input)
     }
 
     try {
-        $stmt = $pdo->prepare("UPDATE area_mappings SET is_active = 0 WHERE id = ?");
-        $result = $stmt->execute([$mappingId]);
+        $result = Database::execute("UPDATE area_mappings SET is_active = 0 WHERE id = ?", [$mappingId]);
 
-        if ($result && $stmt->rowCount() > 0) {
+        if ($result > 0) {
             echo json_encode(['success' => true, 'message' => 'Area mapping removed successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Mapping not found']);

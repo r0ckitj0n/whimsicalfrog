@@ -81,9 +81,7 @@ try {
     }
 
     // Check if customer exists
-    $stmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');
-    $stmt->execute([$customerId]);
-    $existingCustomer = $stmt->fetch(PDO::FETCH_ASSOC);
+    $existingCustomer = Database::queryOne('SELECT id FROM users WHERE id = ?', [$customerId]);
 
     if (!$existingCustomer) {
         http_response_code(404);
@@ -95,9 +93,7 @@ try {
     }
 
     // Check if username or email already exists for different customer
-    $stmt = $pdo->prepare('SELECT id FROM users WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)) AND id != ?');
-    $stmt->execute([$username, $email, $customerId]);
-    $duplicate = $stmt->fetch(PDO::FETCH_ASSOC);
+    $duplicate = Database::queryOne('SELECT id FROM users WHERE (LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)) AND id != ?', [$username, $email, $customerId]);
 
     if ($duplicate) {
         http_response_code(400);
@@ -125,8 +121,7 @@ try {
                         password = ?
                       WHERE id = ?";
 
-        $stmt = $pdo->prepare($updateSql);
-        $result = $stmt->execute([
+        $affected = Database::execute($updateSql, [
             $firstName,
             $lastName,
             $username,
@@ -141,6 +136,7 @@ try {
             $newPassword,
             $customerId
         ]);
+        $result = ($affected !== false);
 
         $successMessage = 'Customer updated successfully (password changed)';
     } else {
@@ -158,8 +154,7 @@ try {
                         zipCode = ?
                       WHERE id = ?";
 
-        $stmt = $pdo->prepare($updateSql);
-        $result = $stmt->execute([
+        $affected = Database::execute($updateSql, [
             $firstName,
             $lastName,
             $username,
@@ -173,6 +168,7 @@ try {
             $zipCode,
             $customerId
         ]);
+        $result = ($affected !== false);
 
         $successMessage = 'Customer updated successfully';
     }

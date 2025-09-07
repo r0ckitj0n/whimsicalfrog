@@ -14,14 +14,50 @@ body[data-page='admin/settings'] {
   overflow: visible;
   position: static;
   /* Extra bottom space so last cards aren't clipped by sticky bars */
-  padding-bottom: 96px;
+  padding-bottom: 96px; /* ensure last row is fully visible with root scroll */
 }
 
 /* Admin pages: disable full-page (root) scrollbar; scroll only content area */
-/* Note: This overrides earlier safety setting now that the page is stable */
+/* Note: Admin pages use an inner scroller, but allow the Settings page to show scrollbars as expected */
 body[data-page^='admin'] { overflow: hidden !important; }
 html:has(body[data-page^='admin']) { overflow: hidden !important; }
-body[data-page='admin/settings'] { pointer-events: auto; }
+/* On settings route, allow root scroll now that overlays are suppressed */
+body[data-page='admin/settings'] { overflow: auto !important; pointer-events: auto; }
+html:has(body[data-page='admin/settings']) { overflow: auto !important; }
+
+/* Ensure the settings page and its content stack above any backgrounds/overlays */
+body[data-page='admin/settings'] .settings-page,
+body[data-page='admin/settings'] #adminSettingsRoot,
+body[data-page='admin/settings'] .settings-grid,
+body[data-page='admin/settings'] .settings-section {
+  position: relative;
+  z-index: 2;
+  overflow: visible !important;
+}
+
+/*
+ * Footer layering on Admin Settings
+ * Ensure any global footer elements do not obscure the settings cards.
+ * We neutralize fixed/sticky positioning and drop the z-index, while making
+ * the background transparent on this page only.
+ */
+/* Hide footer completely on settings page */
+body[data-page='admin/settings'] footer,
+body[data-page='admin/settings'] .site-footer,
+body[data-page='admin/settings'] .footer,
+body[data-page='admin/settings'] .footer-container {
+  display: none !important;
+}
+
+/* Elevate settings cards above footer just in case */
+body[data-page='admin/settings'] .settings-section {
+  position: relative;
+  z-index: 3;
+}
+
+/* Suppress bottom gradient overlay on admin routes (causes a 50-60px band) */
+body[data-page^='admin'] .overlay-gradient-bottom { display: none !important; }
+body[data-page^='admin'] .bg-container.mode-fullscreen { z-index: 0 !important; }
 
 /* Ensure admin navbar (tabs) starts below the fixed page header */
 body[data-page^='admin'] .admin-tab-navigation {
@@ -251,13 +287,13 @@ body[data-page^='admin'] #settingsContent {
 /* Ensure the admin content wrapper does not clip the settings page */
 body[data-page='admin/settings'] #admin-section-content {
   display: block;
-  overflow: auto !important;
-  /* Use dynamic viewport and include tabs height to avoid clipping */
-  height: calc(100dvh - (var(--header-height, 80px) + var(--admin-tabs-height, 56px))) !important;
-  max-height: calc(100dvh - (var(--header-height, 80px) + var(--admin-tabs-height, 56px))) !important;
-  padding-bottom: 96px; /* ensure last row of cards is fully reachable */
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  /* Root scroll: let content define height; keep a minimum to fill viewport below header+tabs */
+  height: auto !important;
+  max-height: none !important;
+  min-height: calc(100dvh - (var(--wf-header-height, var(--header-height, 80px)) + var(--admin-tabs-height, 56px))) !important;
+  overflow: visible !important;
+  padding-bottom: 96px; /* match outer padding */
+  background: transparent !important;
 }
 
 /* Extra safety: overlays never capture input unless visible */

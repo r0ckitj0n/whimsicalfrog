@@ -43,7 +43,7 @@ if (in_array($action, $adminOnlyActions)) {
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -71,9 +71,7 @@ try {
 
             $sql .= " ORDER BY page_context, element_id";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $tooltips = $stmt->fetchAll();
+            $tooltips = Database::queryAll($sql, $params);
 
             echo json_encode([
                 'success' => true,
@@ -83,49 +81,34 @@ try {
 
         case 'get_stats':
             // Get statistics about tooltips (PUBLIC ACCESS for basic stats)
-            $stmt = $pdo->prepare("
-                SELECT 
-                    COUNT(*) as total_tooltips,
-                    COUNT(CASE WHEN is_active = 1 THEN 1 END) as active_tooltips,
-                    COUNT(CASE WHEN is_active = 0 THEN 1 END) as inactive_tooltips,
-                    COUNT(DISTINCT page_context) as unique_pages
-                FROM help_tooltips
-            ");
-            $stmt->execute();
-            $stats = $stmt->fetch();
+            $stats = Database::queryOne("\n                SELECT \n                    COUNT(*) as total_tooltips,\n                    COUNT(CASE WHEN is_active = 1 THEN 1 END) as active_tooltips,\n                    COUNT(CASE WHEN is_active = 0 THEN 1 END) as inactive_tooltips,\n                    COUNT(DISTINCT page_context) as unique_pages\n                FROM help_tooltips\n            ");
 
             // Check if tooltips are globally enabled
             $globalEnabled = true; // Default to enabled
             try {
                 if (file_exists(__DIR__ . '/business_settings_helper.php')) {
                     require_once __DIR__ . '/business_settings_helper.php';
-                    $globalEnabled = BusinessSettings::get('tooltips_enabled', true);
-                } elseif (file_exists(__DIR__ . '/tooltip_global_setting.txt')) {
-                    // Fallback: read from simple file
-                    $globalEnabled = (bool) intval(file_get_contents(__DIR__ . '/tooltip_global_setting.txt'));
+                    // Note: BusinessSettings class doesn't have a setSetting method, use fallback
+                    file_put_contents(__DIR__ . '/tooltip_global_setting.txt', $enabled ? '1' : '0');
+                } else {
+                    // Fallback: store in a simple file
+                    file_put_contents(__DIR__ . '/tooltip_global_setting.txt', $enabled ? '1' : '0');
                 }
-            } catch (Exception $e) {
-                // If business settings not available, default to enabled
-                $globalEnabled = true;
-            }
 
-            echo json_encode([
-                'success' => true,
-                'stats' => $stats,
-                'global_enabled' => $globalEnabled
-            ]);
+                echo json_encode([
+                    'success' => true,
+                    'stats' => $stats,
+                    'global_enabled' => $globalEnabled
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error updating global setting: ' . $e->getMessage()]);
+            }
             break;
 
         case 'list_all':
             // Get all tooltips including inactive ones for management (ADMIN ONLY)
-            $stmt = $pdo->prepare("
-                SELECT id, element_id, page_context, title, content, position, is_active, 
-                       created_at, updated_at 
-                FROM help_tooltips 
-                ORDER BY page_context, element_id
-            ");
-            $stmt->execute();
-            $tooltips = $stmt->fetchAll();
+            $tooltips = Database::queryAll("\n                SELECT id, element_id, page_context, title, content, position, is_active, \n                       created_at, updated_at \n                FROM help_tooltips \n                ORDER BY page_context, element_id\n            ");
 
             echo json_encode([
                 'success' => true,
@@ -135,15 +118,7 @@ try {
 
         case 'get_pages':
             // Get list of unique page contexts (PUBLIC ACCESS)
-            $stmt = $pdo->prepare("
-                SELECT DISTINCT page_context, COUNT(*) as tooltip_count 
-                FROM help_tooltips 
-                WHERE is_active = 1
-                GROUP BY page_context 
-                ORDER BY page_context
-            ");
-            $stmt->execute();
-            $pages = $stmt->fetchAll();
+            $pages = Database::queryAll("\n                SELECT DISTINCT page_context, COUNT(*) as tooltip_count \n                FROM help_tooltips \n                WHERE is_active = 1\n                GROUP BY page_context \n                ORDER BY page_context\n            ");
 
             echo json_encode([
                 'success' => true,
@@ -199,14 +174,7 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("
-                UPDATE help_tooltips 
-                SET element_id = ?, page_context = ?, title = ?, content = ?, position = ?, 
-                    is_active = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ");
-
-            $result = $stmt->execute([
+            $result = Database::execute("\n                UPDATE help_tooltips \n                SET element_id = ?, page_context = ?, title = ?, content = ?, position = ?, \n                    is_active = ?, updated_at = CURRENT_TIMESTAMP\n                WHERE id = ?\n            ", [
                 $data['element_id'],
                 $data['page_context'],
                 $data['title'],
@@ -216,7 +184,7 @@ try {
                 $data['id']
             ]);
 
-            if ($result) {
+            if ($result > 0) {
                 echo json_encode(['success' => true, 'message' => 'Tooltip updated successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to update tooltip']);
@@ -241,33 +209,27 @@ try {
             }
 
             // Check if element_id already exists for this page_context
-            $checkStmt = $pdo->prepare("
-                SELECT id FROM help_tooltips 
-                WHERE element_id = ? AND page_context = ?
-            ");
-            $checkStmt->execute([$data['element_id'], $data['page_context']]);
+            $exists = Database::queryOne("SELECT id FROM help_tooltips WHERE element_id = ? AND page_context = ?", [$data['element_id'], $data['page_context']]);
 
-            if ($checkStmt->fetch()) {
+            if ($exists) {
                 echo json_encode(['success' => false, 'message' => 'Tooltip already exists for this element on this page']);
                 exit;
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO help_tooltips (element_id, page_context, title, content, position, is_active)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
+            $result = Database::execute(
+                "INSERT INTO help_tooltips (element_id, page_context, title, content, position, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+                [
+                    $data['element_id'],
+                    $data['page_context'],
+                    $data['title'],
+                    $data['content'],
+                    $data['position'] ?? 'top',
+                    $data['is_active'] ?? 1
+                ]
+            );
 
-            $result = $stmt->execute([
-                $data['element_id'],
-                $data['page_context'],
-                $data['title'],
-                $data['content'],
-                $data['position'] ?? 'top',
-                $data['is_active'] ?? 1
-            ]);
-
-            if ($result) {
-                $newId = $pdo->lastInsertId();
+            if ($result > 0) {
+                $newId = Database::lastInsertId();
                 echo json_encode(['success' => true, 'message' => 'Tooltip created successfully', 'id' => $newId]);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to create tooltip']);
@@ -291,10 +253,9 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("UPDATE help_tooltips SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-            $result = $stmt->execute([$id]);
+            $result = Database::execute("UPDATE help_tooltips SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [$id]);
 
-            if ($result) {
+            if ($result > 0) {
                 echo json_encode(['success' => true, 'message' => 'Tooltip deactivated successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to deactivate tooltip']);
@@ -318,10 +279,9 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("DELETE FROM help_tooltips WHERE id = ?");
-            $result = $stmt->execute([$id]);
+            $result = Database::execute("DELETE FROM help_tooltips WHERE id = ?", [$id]);
 
-            if ($result) {
+            if ($result > 0) {
                 echo json_encode(['success' => true, 'message' => 'Tooltip permanently deleted']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to delete tooltip']);
@@ -345,10 +305,9 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("UPDATE help_tooltips SET is_active = NOT is_active, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-            $result = $stmt->execute([$id]);
+            $result = Database::execute("UPDATE help_tooltips SET is_active = NOT is_active, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [$id]);
 
-            if ($result) {
+            if ($result > 0) {
                 echo json_encode(['success' => true, 'message' => 'Tooltip status toggled successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to toggle tooltip status']);
@@ -373,10 +332,9 @@ try {
                 exit;
             }
 
-            $stmt = $pdo->prepare("UPDATE help_tooltips SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE page_context = ?");
-            $result = $stmt->execute([$active ? 1 : 0, $pageContext]);
+            $result = Database::execute("UPDATE help_tooltips SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE page_context = ?", [$active ? 1 : 0, $pageContext]);
 
-            if ($result) {
+            if ($result > 0) {
                 $action_text = $active ? 'activated' : 'deactivated';
                 echo json_encode(['success' => true, 'message' => "All tooltips for page '$pageContext' have been $action_text"]);
             } else {
@@ -386,13 +344,7 @@ try {
 
         case 'export':
             // Export tooltips as JSON
-            $stmt = $pdo->prepare("
-                SELECT element_id, page_context, title, content, position, is_active 
-                FROM help_tooltips 
-                ORDER BY page_context, element_id
-            ");
-            $stmt->execute();
-            $tooltips = $stmt->fetchAll();
+            $tooltips = Database::queryAll("\n                SELECT element_id, page_context, title, content, position, is_active \n                FROM help_tooltips \n                ORDER BY page_context, element_id\n            ");
 
             header('Content-Type: application/json');
             header('Content-Disposition: attachment; filename="help_tooltips_export.json"');
@@ -422,31 +374,27 @@ try {
 
             foreach ($tooltips as $tooltip) {
                 // Check if tooltip already exists
-                $checkStmt = $pdo->prepare("
-                    SELECT id FROM help_tooltips 
-                    WHERE element_id = ? AND page_context = ?
-                ");
-                $checkStmt->execute([$tooltip['element_id'], $tooltip['page_context']]);
+                $exists = Database::queryOne("SELECT id FROM help_tooltips WHERE element_id = ? AND page_context = ?", [$tooltip['element_id'], $tooltip['page_context']]);
 
-                if ($checkStmt->fetch()) {
+                if ($exists) {
                     $skipped++;
                     continue;
                 }
 
                 // Insert new tooltip
-                $insertStmt = $pdo->prepare("
-                    INSERT INTO help_tooltips (element_id, page_context, title, content, position, is_active)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ");
+                $rows = Database::execute(
+                    "INSERT INTO help_tooltips (element_id, page_context, title, content, position, is_active) VALUES (?, ?, ?, ?, ?, ?)",
+                    [
+                        $tooltip['element_id'],
+                        $tooltip['page_context'],
+                        $tooltip['title'],
+                        $tooltip['content'],
+                        $tooltip['position'] ?? 'top',
+                        $tooltip['is_active'] ?? 1
+                    ]
+                );
 
-                if ($insertStmt->execute([
-                    $tooltip['element_id'],
-                    $tooltip['page_context'],
-                    $tooltip['title'],
-                    $tooltip['content'],
-                    $tooltip['position'] ?? 'top',
-                    $tooltip['is_active'] ?? 1
-                ])) {
+                if ($rows > 0) {
                     $imported++;
                 }
             }
@@ -459,10 +407,42 @@ try {
             ]);
             break;
 
+        case 'upsert':
+            // Insert or update by unique element_id (ADMIN ONLY)
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                http_response_code(405);
+                echo json_encode(['success' => false, 'message' => 'POST method required']);
+                exit;
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            $elementId = $data['element_id'] ?? null;
+            $pageContext = $data['page_context'] ?? null;
+            $title = $data['title'] ?? null;
+            $content = $data['content'] ?? null;
+            $position = $data['position'] ?? 'top';
+            $isActive = isset($data['is_active']) ? (int)!!$data['is_active'] : 1;
+
+            if (!$elementId || !$pageContext || !$title || !$content) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit;
+            }
+
+            // Prefer element_id as unique key; update fields on conflict
+            $ok = Database::execute("\n                INSERT INTO help_tooltips (element_id, page_context, title, content, position, is_active)\n                VALUES (?, ?, ?, ?, ?, ?)\n                ON DUPLICATE KEY UPDATE\n                    page_context = VALUES(page_context),\n                    title = VALUES(title),\n                    content = VALUES(content),\n                    position = VALUES(position),\n                    is_active = VALUES(is_active),\n                    updated_at = CURRENT_TIMESTAMP\n            ", [$elementId, $pageContext, $title, $content, $position, $isActive]);
+            if ($ok > 0) {
+                echo json_encode(['success' => true, 'message' => 'Tooltip upserted', 'element_id' => $elementId]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to upsert tooltip']);
+            }
+            break;
+
         case 'init_comprehensive':
             // Initialize comprehensive tooltips for all admin pages
             header('Content-Type: application/json');
-            echo json_encode(initializeComprehensiveTooltips($pdo));
+            echo json_encode(initializeComprehensiveTooltips());
             exit;
             break;
 
@@ -511,7 +491,7 @@ try {
 /**
  * Initialize comprehensive tooltips for all admin pages
  */
-function initializeComprehensiveTooltips($pdo)
+function initializeComprehensiveTooltips()
 {
     try {
         // Admin Settings Page Tooltips
@@ -712,12 +692,18 @@ function initializeComprehensiveTooltips($pdo)
         $allTooltips = array_merge($settingsTooltips, $adminNavigationForAllPages, $reportsTooltips, $marketingTooltips, $analyticsTooltips, $inventoryTooltips, $ordersTooltips, $customersTooltips, $commonTooltips);
 
         // Insert tooltips into database
-        $stmt = $pdo->prepare("INSERT INTO help_tooltips (element_id, page_context, title, content, position, is_active) VALUES (?, ?, ?, ?, ?, 1) ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), position = VALUES(position), updated_at = CURRENT_TIMESTAMP");
-
         $insertedCount = 0;
         foreach ($allTooltips as $tooltip) {
-            if ($stmt->execute($tooltip)) {
-                $insertedCount++;
+            try {
+                $rows = Database::execute(
+                    "INSERT INTO help_tooltips (element_id, page_context, title, content, position, is_active) VALUES (?, ?, ?, ?, ?, 1)
+                     ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), position = VALUES(position), updated_at = CURRENT_TIMESTAMP",
+                    [$tooltip[0], $tooltip[1], $tooltip[2], $tooltip[3], $tooltip[4]]
+                );
+                if ($rows > 0) { $insertedCount++; }
+            } catch (Exception $e) {
+                // Continue on individual failures
+                continue;
             }
         }
 
@@ -868,12 +854,10 @@ function generateTooltipCSS()
 function generateTooltipJS()
 {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
 
         // Get all active tooltips from database
-        $stmt = $pdo->prepare("SELECT element_id, page_context, title, content, position FROM help_tooltips WHERE is_active = 1");
-        $stmt->execute();
-        $tooltips = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $tooltips = Database::queryAll("SELECT element_id, page_context, title, content, position FROM help_tooltips WHERE is_active = 1");
 
         $js = "/* Help Tooltips JS - Generated from Database */\n\n";
 

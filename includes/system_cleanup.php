@@ -96,7 +96,7 @@ function removeUnusedCode()
 }
 
 
-function optimizeDatabase($pdo)
+function optimizeDatabase()
 {
     $startTime = microtime(true);
     $optimized = [];
@@ -105,7 +105,8 @@ function optimizeDatabase($pdo)
 
     try {
         // Get all tables with their sizes
-        $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+        $rows = Database::queryAll("SHOW TABLES");
+        $tables = array_map(function($r){ return array_values($r)[0]; }, $rows);
         $totalTables = count($tables);
 
         foreach ($tables as $index => $table) {
@@ -119,17 +120,14 @@ function optimizeDatabase($pdo)
                     table_rows
                 FROM information_schema.TABLES 
                 WHERE table_schema = DATABASE() AND table_name = ?";
-
-                $stmt = $pdo->prepare($sizeQuery);
-                $stmt->execute([$table]);
-                $beforeInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                $beforeInfo = Database::queryOne($sizeQuery, [$table]);
 
                 // Optimize table
-                $optimizeResult = $pdo->query("OPTIMIZE TABLE `$table`")->fetch(PDO::FETCH_ASSOC);
+                $optimizeRows = Database::queryAll("OPTIMIZE TABLE `$table`");
+                $optimizeResult = $optimizeRows ? $optimizeRows[0] : [];
 
                 // Get table info after optimization
-                $stmt->execute([$table]);
-                $afterInfo = $stmt->fetch(PDO::FETCH_ASSOC);
+                $afterInfo = Database::queryOne($sizeQuery, [$table]);
 
                 $tableEndTime = microtime(true);
                 $tableTime = round(($tableEndTime - $tableStartTime), 3);

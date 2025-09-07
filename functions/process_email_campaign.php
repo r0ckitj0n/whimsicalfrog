@@ -53,8 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             $sql = "INSERT INTO email_campaigns (id, name, subject, content, status, created_date, sent_date, target_audience) 
                     VALUES (:id, :name, :subject, :content, :status, NOW(), :sent_date, :target_audience)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
+            Database::execute($sql, [
                 ':id' => $id,
                 ':name' => $name,
                 ':subject' => $subject,
@@ -101,8 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     sent_date = :sent_date, 
                     target_audience = :target_audience 
                     WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
+            Database::execute($sql, [
                 ':id' => $id,
                 ':name' => $name,
                 ':subject' => $subject,
@@ -126,10 +124,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // $stmt_sends->execute([':campaign_id' => $id]);
 
             $sql = "DELETE FROM email_campaigns WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':id' => $id]);
+            $affected = Database::execute($sql, [':id' => $id]);
 
-            if ($stmt->rowCount() > 0) {
+            if ($affected > 0) {
                 $_SESSION['success_message'] = "Email campaign deleted successfully!";
                 $response = ['success' => true, 'message' => "Email campaign deleted successfully!"];
             } else {
@@ -142,9 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $campaign_id = $_POST['id'];
 
             // Fetch campaign details
-            $stmt_campaign = $pdo->prepare("SELECT * FROM email_campaigns WHERE id = :id");
-            $stmt_campaign->execute([':id' => $campaign_id]);
-            $campaign = $stmt_campaign->fetch(PDO::FETCH_ASSOC);
+            $campaign = Database::queryOne("SELECT * FROM email_campaigns WHERE id = :id", [':id' => $campaign_id]);
 
             if (!$campaign) {
                 throw new Exception("Campaign not found.");
@@ -177,24 +172,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $subscribers_sql = "SELECT id, email FROM email_subscribers WHERE status = 'active'";
             }
 
-            $stmt_subscribers = $pdo->prepare($subscribers_sql);
-            $stmt_subscribers->execute();
-            $subscribers = $stmt_subscribers->fetchAll(PDO::FETCH_ASSOC);
+            $subscribers = Database::queryAll($subscribers_sql);
 
             if (empty($subscribers)) {
                 throw new Exception("No active subscribers found for this campaign.");
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
             $sent_count = 0;
             $current_time = date('Y-m-d H:i:s');
 
             // In a real application, you would loop and send emails here.
             // For this simulation, we'll just record the sends.
-            $stmt_insert_send = $pdo->prepare(
-                "INSERT INTO email_campaign_sends (id, campaign_id, subscriber_id, sent_date) 
-                 VALUES (:id, :campaign_id, :subscriber_id, :sent_date)"
-            );
+            // Insert sends
 
             foreach ($subscribers as $subscriber) {
                 $send_id_prefix = 'ECS';
@@ -204,22 +194,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $send_id .= $send_id_chars[rand(0, strlen($send_id_chars) - 1)];
                 }
 
-                $stmt_insert_send->execute([
-                    ':id' => $send_id,
-                    ':campaign_id' => $campaign_id,
-                    ':subscriber_id' => $subscriber['id'],
-                    ':sent_date' => $current_time
-                ]);
+                Database::execute(
+                    "INSERT INTO email_campaign_sends (id, campaign_id, subscriber_id, sent_date) VALUES (:id, :campaign_id, :subscriber_id, :sent_date)",
+                    [
+                        ':id' => $send_id,
+                        ':campaign_id' => $campaign_id,
+                        ':subscriber_id' => $subscriber['id'],
+                        ':sent_date' => $current_time
+                    ]
+                );
                 $sent_count++;
             }
 
             // Update campaign status and sent_date
-            $stmt_update_campaign = $pdo->prepare(
-                "UPDATE email_campaigns SET status = 'sent', sent_date = :sent_date WHERE id = :id"
+            Database::execute(
+                "UPDATE email_campaigns SET status = 'sent', sent_date = :sent_date WHERE id = :id",
+                [':sent_date' => $current_time, ':id' => $campaign_id]
             );
-            $stmt_update_campaign->execute([':sent_date' => $current_time, ':id' => $campaign_id]);
 
-            $pdo->commit();
+            Database::commit();
             $_SESSION['success_message'] = "Campaign '{$campaign['name']}' sent to {$sent_count} subscribers.";
             $response = ['success' => true, 'message' => "Campaign '{$campaign['name']}' sent to {$sent_count} subscribers."];
 
@@ -229,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     } catch (PDOException $e) {
         if ($pdo && $pdo->inTransaction()) {
-            $pdo->rollBack();
+            Database::rollBack();
         }
         $_SESSION['error_message'] = "Database error: " . $e->getMessage();
         $response = ['success' => false, 'message' => "Database error: " . $e->getMessage(), 'details' => $e->getTraceAsString()];

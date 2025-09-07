@@ -43,14 +43,10 @@ try {
     }
 
     // Get existing marketing suggestion for this SKU
-    $stmt = $pdo->prepare("
-        SELECT * FROM marketing_suggestions 
-        WHERE sku = ? 
-        ORDER BY created_at DESC 
-        LIMIT 1
-    ");
-    $stmt->execute([$sku]);
-    $suggestion = $stmt->fetch();
+    $suggestion = Database::queryOne(
+        "SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1",
+        [$sku]
+    );
 
     if ($suggestion) {
         // Decode JSON fields

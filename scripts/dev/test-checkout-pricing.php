@@ -40,7 +40,6 @@ if (!is_array($itemIds) || !is_array($quantities) || count($itemIds) !== count($
 
 // Subtotal with SKU normalization logic
 $subtotal = 0.0;
-$priceStmt = $pdo->prepare('SELECT retailPrice FROM items WHERE sku = ?');
 $itemsDebug = [];
 for ($i = 0; $i < count($itemIds); $i++) {
     $sku = (string)$itemIds[$i];
@@ -48,8 +47,8 @@ for ($i = 0; $i < count($itemIds); $i++) {
     if (!$sku || $qty <= 0) continue;
 
     $effectiveSku = $sku;
-    $priceStmt->execute([$effectiveSku]);
-    $price = $priceStmt->fetchColumn();
+    $row = Database::queryOne('SELECT retailPrice FROM items WHERE sku = ?', [$effectiveSku]);
+    $price = $row ? $row['retailPrice'] : null;
 
     if ($price === false || $price === null || (float)$price <= 0.0) {
         $candidates = [];
@@ -68,8 +67,8 @@ for ($i = 0; $i < count($itemIds); $i++) {
             }
         }
         foreach ($candidates as $cand) {
-            $priceStmt->execute([$cand]);
-            $candPrice = $priceStmt->fetchColumn();
+            $r2 = Database::queryOne('SELECT retailPrice FROM items WHERE sku = ?', [$cand]);
+            $candPrice = $r2 ? $r2['retailPrice'] : null;
             if ($candPrice !== false && $candPrice !== null && (float)$candPrice > 0.0) {
                 $effectiveSku = $cand;
                 $price = $candPrice;

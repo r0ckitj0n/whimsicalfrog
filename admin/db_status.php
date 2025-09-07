@@ -260,5 +260,5 @@ include __DIR__ . '/../partials/header.php';
             </details>
         </div>
     </div>
-    <?php if (function_exists('vite')) { echo vite('js/admin-db-status.js'); } ?>
+    <?php /* admin-db-status.js is loaded via app.js per-page imports */ ?>
     <?php include __DIR__ . '/../partials/footer.php'; ?>

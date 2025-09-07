@@ -311,41 +311,34 @@ function updateConfig()
 function getConnectionStats()
 {
     try {
-        $pdo = Database::getInstance();
+        // Ensure connection initialized
+        Database::getInstance();
 
-        // Get current connections
-        $stmt = $pdo->query("SHOW STATUS LIKE 'Threads_connected'");
-        $connections = $stmt->fetch();
+        // Get current connections and max connections
+        $connections = Database::queryOne("SHOW STATUS LIKE 'Threads_connected'") ?? [];
+        $maxConnections = Database::queryOne("SHOW VARIABLES LIKE 'max_connections'") ?? [];
 
-        // Get max connections
-        $stmt = $pdo->query("SHOW VARIABLES LIKE 'max_connections'");
-        $maxConnections = $stmt->fetch();
-
-        // Get database size
+        // Get database size and table count
         global $db;
-        $stmt = $pdo->query("
-            SELECT 
-                ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS database_size_mb
-            FROM information_schema.tables 
-            WHERE table_schema = '$db'
-        ");
-        $sizeInfo = $stmt->fetch();
+        $sizeInfo = Database::queryOne(
+            "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 1) AS database_size_mb
+             FROM information_schema.tables 
+             WHERE table_schema = '$db'"
+        ) ?? [];
 
-        // Get table count
-        $stmt = $pdo->query("
-            SELECT COUNT(*) as table_count 
-            FROM information_schema.tables 
-            WHERE table_schema = '$db'
-        ");
-        $tableCount = $stmt->fetch();
+        $tableCount = Database::queryOne(
+            "SELECT COUNT(*) as table_count 
+             FROM information_schema.tables 
+             WHERE table_schema = '$db'"
+        ) ?? [];
 
         echo json_encode([
             'success' => true,
             'stats' => [
-                'current_connections' => $connections['Value'],
-                'max_connections' => $maxConnections['Value'],
-                'database_size_mb' => $sizeInfo['database_size_mb'],
-                'table_count' => $tableCount['table_count'],
+                'current_connections' => $connections['Value'] ?? null,
+                'max_connections' => $maxConnections['Value'] ?? null,
+                'database_size_mb' => $sizeInfo['database_size_mb'] ?? null,
+                'table_count' => $tableCount['table_count'] ?? null,
                 'last_updated' => date('Y-m-d H:i:s')
             ]
         ]);
@@ -365,20 +358,19 @@ function getConnectionStats()
 function optimizeTables()
 {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
         global $db;
 
         // Get all tables in the database
-        $stmt = $pdo->query("SHOW TABLES FROM `$db`");
-        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $tables = array_column(Database::queryAll("SHOW TABLES FROM `$db`"), 0);
 
         $optimizedCount = 0;
         $details = [];
 
         foreach ($tables as $table) {
-            $stmt = $pdo->query("OPTIMIZE TABLE `$table`");
-            $result = $stmt->fetch();
-            $details[] = "$table: " . $result['Msg_text'];
+            $result = Database::queryOne("OPTIMIZE TABLE `$table`") ?? [];
+            $msg = $result['Msg_text'] ?? ($result['Message_text'] ?? 'OK');
+            $details[] = "$table: " . $msg;
             $optimizedCount++;
         }
 
@@ -399,11 +391,7 @@ function optimizeTables()
 function analyzeIndexes()
 {
     try {
-        $pdo = Database::getInstance();
-        global $db;
-
-        // Get index information
-        $stmt = $pdo->query("
+        $indexes = Database::queryAll("
             SELECT 
                 table_name,
                 index_name,
@@ -413,13 +401,12 @@ function analyzeIndexes()
             WHERE table_schema = '$db'
             ORDER BY table_name, index_name
         ");
-        $indexes = $stmt->fetchAll();
 
         $indexCount = count($indexes);
         $recommendations = [];
 
         // Simple analysis - check for tables without indexes
-        $stmt = $pdo->query("
+        $rowsNoIdx = Database::queryAll("
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = '$db' 
@@ -429,7 +416,8 @@ function analyzeIndexes()
                 WHERE table_schema = '$db'
             )
         ");
-        $noIndexTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $noIndexTables = array_map(function($r){ return $r['table_name'] ?? null; }, $rowsNoIdx);
+        $noIndexTables = array_values(array_filter($noIndexTables, function($v){ return $v !== null; }));
 
         if (!empty($noIndexTables)) {
             $recommendations[] = "Tables without indexes: " . implode(', ', $noIndexTables);
@@ -452,27 +440,24 @@ function analyzeIndexes()
 function cleanupDatabase()
 {
     try {
-        $pdo = Database::getInstance();
         $orphanedRecords = 0;
         $tempFiles = 0;
 
         // Example cleanup - remove orphaned order items
-        $stmt = $pdo->prepare("
+        $affected = Database::execute("
             DELETE oi FROM order_items oi 
             LEFT JOIN orders o ON oi.order_id = o.id 
             WHERE o.id IS NULL
         ");
-        $stmt->execute();
-        $orphanedRecords += $stmt->rowCount();
+        $orphanedRecords += ($affected > 0 ? $affected : 0);
 
         // Example cleanup - remove orphaned item images
-        $stmt = $pdo->prepare("
+        $affected2 = Database::execute("
             DELETE ii FROM item_images ii 
             LEFT JOIN items i ON ii.item_sku = i.sku 
             WHERE i.sku IS NULL
         ");
-        $stmt->execute();
-        $orphanedRecords += $stmt->rowCount();
+        $orphanedRecords += ($affected2 > 0 ? $affected2 : 0);
 
         echo json_encode([
             'success' => true,
@@ -488,48 +473,10 @@ function cleanupDatabase()
     }
 }
 
-function repairTables()
-{
-    try {
-        $pdo = Database::getInstance();
-        global $db;
-
-        // Get all tables in the database
-        $stmt = $pdo->query("SHOW TABLES FROM `$db`");
-        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-        $repairedCount = 0;
-        $details = [];
-
-        foreach ($tables as $table) {
-            $stmt = $pdo->query("REPAIR TABLE `$table`");
-            $result = $stmt->fetch();
-            $details[] = "$table: " . $result['Msg_text'];
-            $repairedCount++;
-        }
-
-        echo json_encode([
-            'success' => true,
-            'tables_repaired' => $repairedCount,
-            'details' => implode('; ', $details)
-        ]);
-
-    } catch (Exception $e) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Table repair failed: ' . $e->getMessage()
-        ]);
-    }
-}
-
 function analyzeDatabaseSize()
 {
     try {
-        $pdo = Database::getInstance();
-        global $db;
-
-        // Get database size information
-        $stmt = $pdo->query("
+        $sizeInfo = Database::queryOne("
             SELECT 
                 ROUND(SUM(data_length) / 1024 / 1024, 2) AS data_size_mb,
                 ROUND(SUM(index_length) / 1024 / 1024, 2) AS index_size_mb,
@@ -537,10 +484,9 @@ function analyzeDatabaseSize()
             FROM information_schema.tables 
             WHERE table_schema = '$db'
         ");
-        $sizeInfo = $stmt->fetch();
 
         // Get largest table
-        $stmt = $pdo->query("
+        $largestTable = Database::queryOne("
             SELECT 
                 table_name,
                 ROUND((data_length + index_length) / 1024 / 1024, 2) AS size_mb
@@ -549,7 +495,6 @@ function analyzeDatabaseSize()
             ORDER BY (data_length + index_length) DESC
             LIMIT 1
         ");
-        $largestTable = $stmt->fetch();
 
         echo json_encode([
             'success' => true,
@@ -573,22 +518,17 @@ function performanceMonitor()
         $pdo = Database::getInstance();
 
         // Get connection count
-        $stmt = $pdo->query("SHOW STATUS LIKE 'Threads_connected'");
-        $connections = $stmt->fetch();
+        $connections = Database::queryOne("SHOW STATUS LIKE 'Threads_connected'") ?? [];
 
         // Get slow query log status
-        $stmt = $pdo->query("SHOW VARIABLES LIKE 'slow_query_log'");
-        $slowLogStatus = $stmt->fetch();
+        $slowLogStatus = Database::queryOne("SHOW VARIABLES LIKE 'slow_query_log'") ?? [];
 
         // Get uptime
-        $stmt = $pdo->query("SHOW STATUS LIKE 'Uptime'");
-        $uptime = $stmt->fetch();
+        $uptime = Database::queryOne("SHOW STATUS LIKE 'Uptime'") ?? [];
 
         // Get query cache hit rate
-        $stmt = $pdo->query("SHOW STATUS LIKE 'Qcache_hits'");
-        $hits = $stmt->fetch();
-        $stmt = $pdo->query("SHOW STATUS LIKE 'Com_select'");
-        $selects = $stmt->fetch();
+        $hits = Database::queryOne("SHOW STATUS LIKE 'Qcache_hits'") ?? [];
+        $selects = Database::queryOne("SHOW STATUS LIKE 'Com_select'") ?? [];
 
         $hitRate = 'N/A';
         if ($hits && $selects && ($hits['Value'] + $selects['Value']) > 0) {
@@ -597,8 +537,8 @@ function performanceMonitor()
 
         echo json_encode([
             'success' => true,
-            'connections' => $connections['Value'],
-            'slow_queries' => $slowLogStatus['Value'] === 'ON' ? 'Enabled' : 'Disabled',
+            'connections' => $connections['Value'] ?? null,
+            'slow_queries' => (($slowLogStatus['Value'] ?? 'OFF') === 'ON') ? 'Enabled' : 'Disabled',
             'cache_hit_rate' => $hitRate,
             'avg_query_time' => 'N/A' // Would need more complex calculation
         ]);

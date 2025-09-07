@@ -34,11 +34,8 @@ function loadAISettings()
     ];
 
     try {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+        Database::getInstance();
+        $results = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai'");
         foreach ($results as $row) {
             $defaults[$row['setting_key']] = $row['setting_value'];
         }

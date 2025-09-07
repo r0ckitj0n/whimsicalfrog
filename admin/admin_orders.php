@@ -595,6 +595,8 @@ function getPaymentStatusBadgeClass($status)
     ?>
 </script>
 
+<?php // Admin orders script is loaded via app.js per-page imports ?>
+
 <!-- Include the dedicated JavaScript for this page -->
 
         return window.showError(message);

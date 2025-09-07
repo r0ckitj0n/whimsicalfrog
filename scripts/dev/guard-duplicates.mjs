@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 const repoRoot = process.cwd();
 
@@ -46,6 +47,9 @@ function shouldSkipDir(relPath) {
   return false;
 }
 
+const args = new Set(process.argv.slice(2));
+const WRITE = args.has('--write');
+
 const offenders = [];
 
 function walk(currentDir) {
@@ -72,10 +76,40 @@ function walk(currentDir) {
 
 walk(repoRoot);
 
+function ensureDir(p){ fs.mkdirSync(p, { recursive: true }); }
+
+function gitMv(src, dest){
+  const res = spawnSync('git', ['mv', '--', src, dest], { cwd: repoRoot, stdio: 'inherit' });
+  if (res.status !== 0) {
+    ensureDir(path.dirname(dest));
+    fs.renameSync(src, dest);
+  }
+}
+
 if (offenders.length > 0) {
-  console.error('✖ Duplicate/backup guard failed. The following paths are not allowed outside backups/duplicates/:');
-  for (const p of offenders) console.error(' -', p);
-  process.exit(1);
+  if (!WRITE) {
+    console.error('✖ Duplicate/backup guard failed. The following paths are not allowed outside backups/duplicates/:');
+    for (const p of offenders) console.error(' -', p);
+    process.exit(1);
+  } else {
+    let moved = 0;
+    for (const rel of offenders) {
+      const abs = path.join(repoRoot, rel);
+      if (!fs.existsSync(abs)) continue;
+      const dest = path.join(repoRoot, 'backups/duplicates', rel);
+      console.log('Quarantining', rel, '->', path.relative(repoRoot, dest));
+      ensureDir(path.dirname(dest));
+      gitMv(abs, dest);
+      moved++;
+    }
+    if (moved > 0) {
+      spawnSync('git', ['add', '-f', '--', 'backups/duplicates'], { cwd: repoRoot, stdio: 'inherit' });
+      console.log(`Moved ${moved} path(s) to backups/duplicates/`);
+    } else {
+      console.log('No offenders moved.');
+    }
+    process.exit(0);
+  }
 } else {
   console.log('✓ Duplicate/backup guard passed.');
 }

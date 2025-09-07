@@ -16,8 +16,8 @@ try {
     }
 
     // Check if orders table exists
-    $stmt = $pdo->query("SHOW TABLES LIKE 'orders'");
-    $tableExists = $stmt->rowCount() > 0;
+    $rows = Database::queryAll("SHOW TABLES LIKE 'orders'");
+    $tableExists = count($rows) > 0;
 
     if (!$tableExists) {
         // Orders table doesn't exist yet
@@ -36,20 +36,19 @@ try {
     // Prepare SQL query based on filters
     if ($orderId) {
         // Fetch specific order with details
-        $stmt = $pdo->prepare('
+        $rows = Database::queryAll('
             SELECT o.*, oi.*, i.name as item_name, i.image as item_image 
             FROM orders o
             LEFT JOIN order_items oi ON o.id = oi.orderId
             LEFT JOIN items i ON oi.itemId = i.id
             WHERE o.id = ?
-        ');
-        $stmt->execute([$orderId]);
+        ', [$orderId]);
 
         // Group order items by order
         $orderData = null;
         $items = [];
 
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        foreach ($rows as $row) {
             if ($orderData === null) {
                 // First row contains the order data
                 $orderData = [
@@ -86,9 +85,7 @@ try {
         }
     } elseif ($userId) {
         // Fetch orders for specific user
-        $stmt = $pdo->prepare('SELECT * FROM orders WHERE userId = ? ORDER BY date DESC');
-        $stmt->execute([$userId]);
-        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $orders = Database::queryAll('SELECT * FROM orders WHERE userId = ? ORDER BY date DESC', [$userId]);
 
         echo json_encode($orders);
     } else {
@@ -98,11 +95,11 @@ try {
         $offset = ($page - 1) * $limit;
 
         // Get total count
-        $countStmt = $pdo->query('SELECT COUNT(*) FROM orders');
-        $totalOrders = $countStmt->fetchColumn();
+        $countRow = Database::queryOne('SELECT COUNT(*) AS c FROM orders');
+        $totalOrders = $countRow ? (int)$countRow['c'] : 0;
 
         // Get orders for current page
-        $stmt = $pdo->prepare("
+        $orders = Database::queryAll("
             SELECT 
                 o.id,
                 o.orderId,
@@ -129,12 +126,9 @@ try {
             LEFT JOIN order_items oi ON o.orderId = oi.orderId
             LEFT JOIN items i ON oi.sku = i.sku
             ORDER BY o.orderDate DESC
-        ");
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
-        $stmt->execute();
-
-        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            LIMIT ?
+            OFFSET ?
+        ", [$limit, $offset]);
 
         // Return orders with pagination info
         echo json_encode([

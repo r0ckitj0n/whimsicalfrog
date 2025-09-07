@@ -96,19 +96,17 @@ try {
 
     // Prepare and execute the update query
     $sql = "UPDATE users SET " . implode(', ', $updateFields) . " WHERE id = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    $affected = Database::execute($sql, $params);
 
     // Check if any rows were affected
-    if ($stmt->rowCount() > 0) {
+    if ($affected > 0) {
         echo json_encode(['success' => true, 'message' => 'User updated successfully']);
     } else {
         // No rows updated could mean the user doesn't exist or no changes were made
         // Check if the user exists
-        $checkStmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');
-        $checkStmt->execute([$userId]);
+        $exists = Database::queryOne('SELECT id FROM users WHERE id = ?', [$userId]);
 
-        if ($checkStmt->rowCount() === 0) {
+        if (!$exists) {
             http_response_code(404);
             echo json_encode(['error' => 'User not found']);
         } else {

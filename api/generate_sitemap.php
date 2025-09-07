@@ -40,16 +40,7 @@ try {
     echo "    </url>\n";
 
     // Get all room-category assignments
-    $stmt = $pdo->prepare("
-        SELECT DISTINCT rca.room_number, c.name as category_name, rs.room_name, rs.description
-        FROM room_category_assignments rca 
-        JOIN categories c ON rca.category_id = c.id 
-        LEFT JOIN room_settings rs ON rca.room_number = rs.room_number
-        WHERE rca.is_primary = 1
-        ORDER BY rca.room_number
-    ");
-    $stmt->execute();
-    $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rooms = Database::queryAll("\n        SELECT DISTINCT rca.room_number, c.name as category_name, rs.room_name, rs.description\n        FROM room_category_assignments rca \n        JOIN categories c ON rca.category_id = c.id \n        LEFT JOIN room_settings rs ON rca.room_number = rs.room_number\n        WHERE rca.is_primary = 1\n        ORDER BY rca.room_number\n    ");
 
     // Add room pages
     foreach ($rooms as $room) {

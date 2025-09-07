@@ -11,21 +11,17 @@ $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
 $isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
 
 // Function to sync color stock with its sizes
-function syncColorStockWithSizes($pdo, $colorId)
+function syncColorStockWithSizes($colorId)
 {
     try {
-        $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(stock_level), 0) as total_size_stock
-            FROM item_sizes 
-            WHERE color_id = ? AND is_active = 1
-        ");
-        $stmt->execute([$colorId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totalSizeStock = $result['total_size_stock'];
+        $row = Database::queryOne(
+            "SELECT COALESCE(SUM(stock_level), 0) as total_size_stock FROM item_sizes WHERE color_id = ? AND is_active = 1",
+            [$colorId]
+        );
+        $totalSizeStock = $row['total_size_stock'] ?? 0;
 
         // Update the color's stock level
-        $updateStmt = $pdo->prepare("UPDATE item_colors SET stock_level = ? WHERE id = ?");
-        $updateStmt->execute([$totalSizeStock, $colorId]);
+        Database::execute("UPDATE item_colors SET stock_level = ? WHERE id = ?", [$totalSizeStock, $colorId]);
 
         return $totalSizeStock;
     } catch (Exception $e) {
@@ -35,34 +31,27 @@ function syncColorStockWithSizes($pdo, $colorId)
 }
 
 // Function to sync total item stock with all sizes
-function syncTotalStockWithSizes($pdo, $itemSku)
+function syncTotalStockWithSizes($itemSku)
 {
     try {
         // Calculate total stock from all active sizes
-        $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(stock_level), 0) as total_size_stock
-            FROM item_sizes 
-            WHERE item_sku = ? AND is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totalSizeStock = $result['total_size_stock'];
+        $row = Database::queryOne(
+            "SELECT COALESCE(SUM(stock_level), 0) as total_size_stock FROM item_sizes WHERE item_sku = ? AND is_active = 1",
+            [$itemSku]
+        );
+        $totalSizeStock = $row['total_size_stock'] ?? 0;
 
         // Update the main item's stock level
-        $updateStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
-        $updateStmt->execute([$totalSizeStock, $itemSku]);
+        Database::execute("UPDATE items SET stockLevel = ? WHERE sku = ?", [$totalSizeStock, $itemSku]);
 
         // Also sync color stocks if there are color-specific sizes
-        $colorStmt = $pdo->prepare("
-            SELECT DISTINCT color_id 
-            FROM item_sizes 
-            WHERE item_sku = ? AND color_id IS NOT NULL
-        ");
-        $colorStmt->execute([$itemSku]);
-        $colorIds = $colorStmt->fetchAll(PDO::FETCH_COLUMN);
+        $colorIds = array_column(
+            Database::queryAll("SELECT DISTINCT color_id FROM item_sizes WHERE item_sku = ? AND color_id IS NOT NULL", [$itemSku]),
+            'color_id'
+        );
 
         foreach ($colorIds as $colorId) {
-            syncColorStockWithSizes($pdo, $colorId);
+            syncColorStockWithSizes($colorId);
         }
 
         return $totalSizeStock;
@@ -73,10 +62,10 @@ function syncTotalStockWithSizes($pdo, $itemSku)
 }
 
 // Function to reduce stock for a sale
-function reduceStockForSale($pdo, $itemSku, $colorId, $sizeCode, $quantity)
+function reduceStockForSale($itemSku, $colorId, $sizeCode, $quantity)
 {
     try {
-        $pdo->beginTransaction();
+        Database::beginTransaction();
 
         // Find the specific size record
         $whereClause = "item_sku = ? AND size_code = ? AND is_active = 1";
@@ -90,35 +79,28 @@ function reduceStockForSale($pdo, $itemSku, $colorId, $sizeCode, $quantity)
         }
 
         // Reduce size-specific stock
-        $stmt = $pdo->prepare("
-            UPDATE item_sizes 
-            SET stock_level = GREATEST(stock_level - ?, 0) 
-            WHERE $whereClause
-        ");
-        $stmt->execute(array_merge([$quantity], $params));
+        Database::execute(
+            "UPDATE item_sizes SET stock_level = GREATEST(stock_level - ?, 0) WHERE $whereClause",
+            array_merge([$quantity], $params)
+        );
 
         // Sync stock levels
         if ($colorId) {
-            syncColorStockWithSizes($pdo, $colorId);
+            syncColorStockWithSizes($colorId);
         }
-        syncTotalStockWithSizes($pdo, $itemSku);
+        syncTotalStockWithSizes($itemSku);
 
-        $pdo->commit();
+        Database::commit();
         return true;
     } catch (Exception $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         error_log("Error reducing stock for $itemSku: " . $e->getMessage());
         return false;
     }
 }
 
 try {
-    try {
-        $pdo = Database::getInstance();
-    } catch (Exception $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw $e;
-    }
+    try { Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
     // Parse action from GET, POST, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -154,7 +136,7 @@ try {
                 }
             }
 
-            $stmt = $pdo->prepare("
+            $sizes = Database::queryAll("
                 SELECT s.id, s.item_sku, s.color_id, s.size_name, s.size_code, 
                        s.stock_level, s.price_adjustment, s.is_active, s.display_order,
                        c.color_name, c.color_code
@@ -162,9 +144,7 @@ try {
                 LEFT JOIN item_colors c ON s.color_id = c.id
                 WHERE $whereClause 
                 ORDER BY s.display_order ASC, s.size_name ASC
-            ");
-            $stmt->execute($params);
-            $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            ", $params);
 
             echo json_encode(['success' => true, 'sizes' => $sizes]);
             break;
@@ -182,7 +162,7 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $stmt = $pdo->prepare("
+            $sizes = Database::queryAll("
                 SELECT s.id, s.item_sku, s.color_id, s.size_name, s.size_code, 
                        s.stock_level, s.price_adjustment, s.is_active, s.display_order,
                        c.color_name, c.color_code
@@ -190,9 +170,7 @@ try {
                 LEFT JOIN item_colors c ON s.color_id = c.id
                 WHERE s.item_sku = ? 
                 ORDER BY s.color_id ASC, s.display_order ASC, s.size_name ASC
-            ");
-            $stmt->execute([$itemSku]);
-            $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            ", [$itemSku]);
 
             echo json_encode(['success' => true, 'sizes' => $sizes]);
             break;
@@ -209,7 +187,7 @@ try {
             $colorId = !empty($data['color_id']) ? (int)$data['color_id'] : null;
             $sizeName = trim($data['size_name'] ?? '');
             $sizeCode = trim($data['size_code'] ?? '');
-            $stockLevel = (int)($data['stock_level'] ?? 0);
+            $initialStock = (int)($data['initial_stock'] ?? 0);
             $priceAdjustment = (float)($data['price_adjustment'] ?? 0.00);
             $displayOrder = (int)($data['display_order'] ?? 0);
 
@@ -217,19 +195,17 @@ try {
                 throw new Exception('Item SKU, size name, and size code are required');
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$itemSku, $colorId, $sizeName, $sizeCode, $stockLevel, $priceAdjustment, $displayOrder]);
+            Database::execute(
+                "INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [$itemSku, $colorId, $sizeName, $sizeCode, $initialStock, $priceAdjustment, $displayOrder]
+            );
 
-            $sizeId = $pdo->lastInsertId();
+            $sizeId = Database::lastInsertId();
 
             // Sync stock levels
-            if ($colorId) {
-                syncColorStockWithSizes($pdo, $colorId);
-            }
-            $newTotalStock = syncTotalStockWithSizes($pdo, $itemSku);
+            if ($colorId) { syncColorStockWithSizes($colorId); }
+            $newTotalStock = syncTotalStockWithSizes($itemSku);
 
             echo json_encode([
                 'success' => true,
@@ -250,7 +226,7 @@ try {
             $itemSku = $data['item_sku'] ?? '';
             $globalSizeId = (int)($data['global_size_id'] ?? 0);
             $colorId = !empty($data['color_id']) ? (int)$data['color_id'] : null;
-            $stockLevel = (int)($data['stock_level'] ?? 0);
+            $initialStock = (int)($data['initial_stock'] ?? 0);
             $priceAdjustment = (float)($data['price_adjustment'] ?? 0.00);
             $displayOrder = (int)($data['display_order'] ?? 0);
 
@@ -259,9 +235,7 @@ try {
             }
 
             // Get global size data
-            $globalStmt = $pdo->prepare("SELECT size_name, size_code FROM global_sizes WHERE id = ? AND is_active = 1");
-            $globalStmt->execute([$globalSizeId]);
-            $globalSize = $globalStmt->fetch(PDO::FETCH_ASSOC);
+            $globalSize = Database::queryOne("SELECT size_name, size_code FROM global_sizes WHERE id = ? AND is_active = 1", [$globalSizeId]);
 
             if (!$globalSize) {
                 throw new Exception('Global size not found or inactive');
@@ -278,27 +252,26 @@ try {
                 $checkWhere .= " AND color_id IS NULL";
             }
 
-            $checkStmt = $pdo->prepare("SELECT id FROM item_sizes WHERE $checkWhere");
-            $checkStmt->execute($checkParams);
-
-            if ($checkStmt->fetch()) {
-                throw new Exception('This size already exists for this item/color combination');
+            $exists = Database::queryOne("SELECT id FROM item_sizes WHERE $checkWhere", $checkParams);
+            if ($exists) {
+                echo json_encode(['success' => false, 'message' => 'This size already exists for the specified item/color.']);
+                break;
             }
 
             // Add the size from global data
-            $stmt = $pdo->prepare("
-                INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-            ");
-            $stmt->execute([$itemSku, $colorId, $globalSize['size_name'], $globalSize['size_code'], $stockLevel, $priceAdjustment, $displayOrder]);
+            Database::execute(
+                "INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order, is_active) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
+                [$itemSku, $colorId, $globalSize['size_name'], $globalSize['size_code'], $initialStock, $priceAdjustment, $displayOrder]
+            );
 
-            $sizeId = $pdo->lastInsertId();
+            $sizeId = Database::lastInsertId();
 
             // Sync stock levels
             if ($colorId) {
-                syncColorStockWithSizes($pdo, $colorId);
+                syncColorStockWithSizes($colorId);
             }
-            $newTotalStock = syncTotalStockWithSizes($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithSizes($itemSku);
 
             echo json_encode([
                 'success' => true,
@@ -331,22 +304,18 @@ try {
             }
 
             // Get the current size info for stock sync
-            $currentStmt = $pdo->prepare("SELECT item_sku, color_id FROM item_sizes WHERE id = ?");
-            $currentStmt->execute([$sizeId]);
-            $currentSize = $currentStmt->fetch(PDO::FETCH_ASSOC);
+            $currentSize = Database::queryOne("SELECT item_sku, color_id FROM item_sizes WHERE id = ?", [$sizeId]);
 
-            $stmt = $pdo->prepare("
-                UPDATE item_sizes 
-                SET size_name = ?, size_code = ?, stock_level = ?, price_adjustment = ?, display_order = ?, is_active = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$sizeName, $sizeCode, $stockLevel, $priceAdjustment, $displayOrder, $isActive, $sizeId]);
+            Database::execute(
+                "UPDATE item_sizes 
+                 SET size_name = ?, size_code = ?, stock_level = ?, price_adjustment = ?, display_order = ?, is_active = ?
+                 WHERE id = ?",
+                [$sizeName, $sizeCode, $stockLevel, $priceAdjustment, $displayOrder, $isActive, $sizeId]
+            );
 
             // Sync stock levels
-            if ($currentSize['color_id']) {
-                syncColorStockWithSizes($pdo, $currentSize['color_id']);
-            }
-            $newTotalStock = syncTotalStockWithSizes($pdo, $currentSize['item_sku']);
+            if (!empty($currentSize['color_id'])) { syncColorStockWithSizes($currentSize['color_id']); }
+            $newTotalStock = syncTotalStockWithSizes($currentSize['item_sku']);
 
             echo json_encode([
                 'success' => true,
@@ -370,22 +339,17 @@ try {
             }
 
             // Get size info before deletion for stock sync
-            $sizeStmt = $pdo->prepare("SELECT item_sku, color_id FROM item_sizes WHERE id = ?");
-            $sizeStmt->execute([$sizeId]);
-            $sizeInfo = $sizeStmt->fetch(PDO::FETCH_ASSOC);
+            $sizeInfo = Database::queryOne("SELECT item_sku, color_id FROM item_sizes WHERE id = ?", [$sizeId]);
 
             if (!$sizeInfo) {
                 throw new Exception('Size not found');
             }
 
-            $stmt = $pdo->prepare("DELETE FROM item_sizes WHERE id = ?");
-            $stmt->execute([$sizeId]);
+            Database::execute("DELETE FROM item_sizes WHERE id = ?", [$sizeId]);
 
             // Sync stock levels
-            if ($sizeInfo['color_id']) {
-                syncColorStockWithSizes($pdo, $sizeInfo['color_id']);
-            }
-            $newTotalStock = syncTotalStockWithSizes($pdo, $sizeInfo['item_sku']);
+            if (!empty($sizeInfo['color_id'])) { syncColorStockWithSizes($sizeInfo['color_id']); }
+            $newTotalStock = syncTotalStockWithSizes($sizeInfo['item_sku']);
 
             echo json_encode([
                 'success' => true,
@@ -410,23 +374,20 @@ try {
             }
 
             // Get the current size info for stock sync
-            $currentStmt = $pdo->prepare("SELECT item_sku, color_id FROM item_sizes WHERE id = ?");
-            $currentStmt->execute([$sizeId]);
-            $currentSize = $currentStmt->fetch(PDO::FETCH_ASSOC);
+            $currentSize = Database::queryOne("SELECT item_sku, color_id FROM item_sizes WHERE id = ?", [$sizeId]);
 
             if (!$currentSize) {
                 throw new Exception('Size not found');
             }
 
             // Update only the stock level
-            $stmt = $pdo->prepare("UPDATE item_sizes SET stock_level = ? WHERE id = ?");
-            $stmt->execute([$stockLevel, $sizeId]);
+            Database::execute("UPDATE item_sizes SET stock_level = ? WHERE id = ?", [$stockLevel, $sizeId]);
 
             // Sync stock levels
             if ($currentSize['color_id']) {
-                syncColorStockWithSizes($pdo, $currentSize['color_id']);
+                syncColorStockWithSizes($currentSize['color_id']);
             }
-            $newTotalStock = syncTotalStockWithSizes($pdo, $currentSize['item_sku']);
+            $newTotalStock = syncTotalStockWithSizes($currentSize['item_sku']);
 
             echo json_encode([
                 'success' => true,
@@ -449,7 +410,7 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $newTotalStock = syncTotalStockWithSizes($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithSizes($itemSku);
 
             echo json_encode([
                 'success' => true,
@@ -490,14 +451,13 @@ try {
             }
 
             // Get all size records for this size name to sync stock levels afterwards
-            $sizesStmt = $pdo->prepare("SELECT DISTINCT color_id FROM item_sizes WHERE item_sku = ? AND size_name = ?");
-            $sizesStmt->execute([$itemSku, $sizeName]);
-            $affectedColorIds = $sizesStmt->fetchAll(PDO::FETCH_COLUMN);
+            $affectedColorIds = array_column(
+                Database::queryAll("SELECT DISTINCT color_id FROM item_sizes WHERE item_sku = ? AND size_name = ?", [$itemSku, $sizeName]),
+                'color_id'
+            );
 
             // Delete all size records for this size name
-            $stmt = $pdo->prepare("DELETE FROM item_sizes WHERE item_sku = ? AND size_name = ?");
-            $stmt->execute([$itemSku, $sizeName]);
-            $deletedCount = $stmt->rowCount();
+            $deletedCount = Database::execute("DELETE FROM item_sizes WHERE item_sku = ? AND size_name = ?", [$itemSku, $sizeName]);
 
             if ($deletedCount === 0) {
                 throw new Exception('No size records found for the specified size name');
@@ -506,12 +466,12 @@ try {
             // Sync stock levels for affected colors
             foreach ($affectedColorIds as $colorId) {
                 if ($colorId) {
-                    syncColorStockWithSizes($pdo, $colorId);
+                    syncColorStockWithSizes($colorId);
                 }
             }
 
             // Sync total stock
-            $newTotalStock = syncTotalStockWithSizes($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithSizes($itemSku);
 
             echo json_encode([
                 'success' => true,

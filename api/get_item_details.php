@@ -24,7 +24,7 @@ try {
     $sku = $_GET['sku'];
 
     // Get item details with all fields
-    $stmt = $pdo->prepare("
+    $item = Database::queryOne("
         SELECT 
             sku, name, description, category, retailPrice, stockLevel, reorderPoint,
             materials, dimensions, weight, care_instructions, technical_details,
@@ -32,9 +32,7 @@ try {
             customization_options, usage_tips, warranty_info
         FROM items 
         WHERE sku = ?
-    ");
-    $stmt->execute([$sku]);
-    $item = $stmt->fetch(PDO::FETCH_ASSOC);
+    ", [$sku]);
 
     if (!$item) {
         http_response_code(404);
@@ -43,14 +41,12 @@ try {
     }
 
     // Get item images
-    $stmt = $pdo->prepare("
+    $images = Database::queryAll("
         SELECT image_path, alt_text, is_primary, sort_order
         FROM item_images 
         WHERE sku = ? 
         ORDER BY is_primary DESC, sort_order ASC
-    ");
-    $stmt->execute([$sku]);
-    $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ", [$sku]);
 
     // Format the response
     $response = [

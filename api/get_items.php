@@ -1,12 +1,16 @@
 <?php
 // Include the configuration file
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
+
+// Suppress warnings/notices from leaking into JSON and buffer early output
+ini_set('display_errors', 0);
+ob_start();
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -50,9 +54,7 @@ try {
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.sku IN ($placeholders)";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($skus);
-            $items = $stmt->fetchAll();
+            $items = Database::queryAll($sql, $skus);
 
             // Format the data
             foreach ($items as &$item) {
@@ -85,9 +87,7 @@ try {
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.category = ?";
-
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$_GET['category']]);
+            $items = Database::queryAll($sql, [$_GET['category']]);
         } else {
             // Return all items if no category specified
             $sql = "SELECT 
@@ -102,12 +102,9 @@ try {
                         COALESCE(img.image_path, i.imageUrl) as imageUrl
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1";
-
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
+            $items = Database::queryAll($sql);
         }
 
-        $items = $stmt->fetchAll();
 
         // Format the data
         foreach ($items as &$item) {
@@ -125,7 +122,10 @@ try {
         }
     }
 
-    // Return items as JSON
+    // Discard any accidental output captured earlier and return JSON
+    if (ob_get_length() !== false) {
+        ob_end_clean();
+    }
     echo json_encode($items);
 
 } catch (PDOException $e) {
@@ -145,4 +145,4 @@ try {
     ]);
     exit;
 }
-?> 
+?>

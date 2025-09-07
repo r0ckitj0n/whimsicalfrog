@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -31,31 +31,25 @@ try {
             }
 
             // Check if item already exists in order
-            $stmt = $pdo->prepare("SELECT id, quantity FROM order_items WHERE orderId = ? AND sku = ?");
-            $stmt->execute([$data['order_id'], $data['sku']]);
-            $existing = $stmt->fetch();
+            $existing = Database::queryOne("SELECT id, quantity FROM order_items WHERE orderId = ? AND sku = ?", [$data['order_id'], $data['sku']]);
 
             if ($existing) {
                 // Update existing item quantity
                 $newQuantity = $existing['quantity'] + $data['quantity'];
-                $stmt = $pdo->prepare("UPDATE order_items SET quantity = ?, price = ? WHERE id = ?");
-                $stmt->execute([$newQuantity, $data['price'], $existing['id']]);
+                Database::execute("UPDATE order_items SET quantity = ?, price = ? WHERE id = ?", [$newQuantity, $data['price'], $existing['id']]);
                 $message = 'Item quantity updated in order';
             } else {
                 // Add new item to order
-                $stmt = $pdo->prepare("INSERT INTO order_items (orderId, sku, quantity, price) VALUES (?, ?, ?, ?)");
-                $stmt->execute([$data['order_id'], $data['sku'], $data['quantity'], $data['price']]);
+                Database::execute("INSERT INTO order_items (orderId, sku, quantity, price) VALUES (?, ?, ?, ?)", [$data['order_id'], $data['sku'], $data['quantity'], $data['price']]);
                 $message = 'Item added to order';
             }
 
             // Recalculate order total
-            $stmt = $pdo->prepare("SELECT SUM(quantity * price) as total FROM order_items WHERE orderId = ?");
-            $stmt->execute([$data['order_id']]);
-            $newTotal = $stmt->fetchColumn() ?: 0;
+            $row = Database::queryOne("SELECT SUM(quantity * price) as total FROM order_items WHERE orderId = ?", [$data['order_id']]);
+            $newTotal = $row['total'] ?? 0;
 
             // Update order total
-            $stmt = $pdo->prepare("UPDATE orders SET total = ? WHERE id = ?");
-            $stmt->execute([$newTotal, $data['order_id']]);
+            Database::execute("UPDATE orders SET total = ? WHERE id = ?", [$newTotal, $data['order_id']]);
 
             echo json_encode([
                 'success' => true,
@@ -72,26 +66,22 @@ try {
             }
 
             // Get order ID before deleting
-            $stmt = $pdo->prepare("SELECT orderId FROM order_items WHERE id = ?");
-            $stmt->execute([$data['order_item_id']]);
-            $orderId = $stmt->fetchColumn();
+            $orderRow = Database::queryOne("SELECT orderId FROM order_items WHERE id = ?", [$data['order_item_id']]);
+            $orderId = $orderRow ? $orderRow['orderId'] : null;
 
             if (!$orderId) {
                 throw new Exception('Order item not found');
             }
 
             // Delete the item
-            $stmt = $pdo->prepare("DELETE FROM order_items WHERE id = ?");
-            $stmt->execute([$data['order_item_id']]);
+            Database::execute("DELETE FROM order_items WHERE id = ?", [$data['order_item_id']]);
 
             // Recalculate order total
-            $stmt = $pdo->prepare("SELECT SUM(quantity * price) as total FROM order_items WHERE orderId = ?");
-            $stmt->execute([$orderId]);
-            $newTotal = $stmt->fetchColumn() ?: 0;
+            $row = Database::queryOne("SELECT SUM(quantity * price) as total FROM order_items WHERE orderId = ?", [$orderId]);
+            $newTotal = $row['total'] ?? 0;
 
             // Update order total
-            $stmt = $pdo->prepare("UPDATE orders SET total = ? WHERE id = ?");
-            $stmt->execute([$newTotal, $orderId]);
+            Database::execute("UPDATE orders SET total = ? WHERE id = ?", [$newTotal, $orderId]);
 
             echo json_encode([
                 'success' => true,
@@ -115,26 +105,22 @@ try {
             }
 
             // Get order ID
-            $stmt = $pdo->prepare("SELECT orderId FROM order_items WHERE id = ?");
-            $stmt->execute([$data['order_item_id']]);
-            $orderId = $stmt->fetchColumn();
+            $rowOrder = Database::queryOne("SELECT orderId FROM order_items WHERE id = ?", [$data['order_item_id']]);
+            $orderId = $rowOrder ? $rowOrder['orderId'] : null;
 
             if (!$orderId) {
                 throw new Exception('Order item not found');
             }
 
             // Update quantity
-            $stmt = $pdo->prepare("UPDATE order_items SET quantity = ? WHERE id = ?");
-            $stmt->execute([$data['quantity'], $data['order_item_id']]);
+            Database::execute("UPDATE order_items SET quantity = ? WHERE id = ?", [$data['quantity'], $data['order_item_id']]);
 
             // Recalculate order total
-            $stmt = $pdo->prepare("SELECT SUM(quantity * price) as total FROM order_items WHERE orderId = ?");
-            $stmt->execute([$orderId]);
-            $newTotal = $stmt->fetchColumn() ?: 0;
+            $rowTotal = Database::queryOne("SELECT SUM(quantity * price) as total FROM order_items WHERE orderId = ?", [$orderId]);
+            $newTotal = $rowTotal && isset($rowTotal['total']) ? (float)$rowTotal['total'] : 0;
 
             // Update order total
-            $stmt = $pdo->prepare("UPDATE orders SET total = ? WHERE id = ?");
-            $stmt->execute([$newTotal, $orderId]);
+            Database::execute("UPDATE orders SET total = ? WHERE id = ?", [$newTotal, $orderId]);
 
             echo json_encode([
                 'success' => true,
@@ -156,16 +142,14 @@ try {
             $address = $data['address_data'];
 
             // Update the user's address fields in the users table (since orders join with users for address)
-            $stmt = $pdo->prepare("SELECT userId FROM orders WHERE id = ?");
-            $stmt->execute([$data['order_id']]);
-            $userId = $stmt->fetchColumn();
+            $row = Database::queryOne("SELECT userId FROM orders WHERE id = ?", [$data['order_id']]);
+            $userId = $row ? $row['userId'] : null;
 
             if (!$userId) {
                 throw new Exception('Order not found');
             }
 
-            $stmt = $pdo->prepare("UPDATE users SET addressLine1 = ?, addressLine2 = ?, city = ?, state = ?, zipCode = ? WHERE id = ?");
-            $stmt->execute([
+            Database::execute("UPDATE users SET addressLine1 = ?, addressLine2 = ?, city = ?, state = ?, zipCode = ? WHERE id = ?", [
                 $address['address_line1'] ?? $address['addressLine1'] ?? '',
                 $address['address_line2'] ?? $address['addressLine2'] ?? '',
                 $address['city'] ?? '',
@@ -193,9 +177,7 @@ try {
 
             $sql .= " ORDER BY i.name LIMIT 50";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $items = Database::queryAll($sql, $params);
 
             echo json_encode([
                 'success' => true,
@@ -211,9 +193,7 @@ try {
             }
 
             // Get customer details
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ? AND role = 'Customer'");
-            $stmt->execute([$data['customer_id']]);
-            $customer = $stmt->fetch();
+            $customer = Database::queryOne("SELECT * FROM users WHERE id = ? AND role = 'Customer'", [$data['customer_id']]);
 
             if (!$customer) {
                 throw new Exception('Customer not found');

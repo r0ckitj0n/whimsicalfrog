@@ -53,34 +53,29 @@ try {
     }
 
     // Start transaction for safety
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     $deletedData = [];
     $errors = [];
 
     try {
         // 1. Delete order-related data
-        $stmt = $pdo->prepare("DELETE FROM order_items");
-        $stmt->execute();
-        $deletedData['order_items'] = $stmt->rowCount();
+        $affected = Database::execute("DELETE FROM order_items");
+        $deletedData['order_items'] = $affected > 0 ? $affected : 0;
 
-        $stmt = $pdo->prepare("DELETE FROM orders");
-        $stmt->execute();
-        $deletedData['orders'] = $stmt->rowCount();
+        $affected = Database::execute("DELETE FROM orders");
+        $deletedData['orders'] = $affected > 0 ? $affected : 0;
 
         // 2. Delete item-related data
-        $stmt = $pdo->prepare("DELETE FROM item_images");
-        $stmt->execute();
-        $deletedData['item_images'] = $stmt->rowCount();
+        $affected = Database::execute("DELETE FROM item_images");
+        $deletedData['item_images'] = $affected > 0 ? $affected : 0;
 
-        $stmt = $pdo->prepare("DELETE FROM items");
-        $stmt->execute();
-        $deletedData['items'] = $stmt->rowCount();
+        $affected = Database::execute("DELETE FROM items");
+        $deletedData['items'] = $affected > 0 ? $affected : 0;
 
         // 3. Delete customer accounts (but preserve admins)
-        $stmt = $pdo->prepare("DELETE FROM users WHERE LOWER(role) != 'admin'");
-        $stmt->execute();
-        $deletedData['customer_accounts'] = $stmt->rowCount();
+        $affected = Database::execute("DELETE FROM users WHERE LOWER(role) != 'admin'");
+        $deletedData['customer_accounts'] = $affected > 0 ? $affected : 0;
 
         // 4. Delete related data tables that reference the above
         $relatedTables = [
@@ -101,13 +96,11 @@ try {
         foreach ($relatedTables as $table) {
             try {
                 // Check if table exists first
-                $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
-                $stmt->execute([$table]);
+                $rows = Database::queryAll("SHOW TABLES LIKE ?", [$table]);
 
-                if ($stmt->rowCount() > 0) {
-                    $stmt = $pdo->prepare("DELETE FROM `$table`");
-                    $stmt->execute();
-                    $deletedData[$table] = $stmt->rowCount();
+                if (count($rows) > 0) {
+                    $affected = Database::execute("DELETE FROM `$table`");
+                    $deletedData[$table] = $affected > 0 ? $affected : 0;
                 }
             } catch (Exception $e) {
                 $errors[] = "Warning: Could not clear table $table: " . $e->getMessage();
@@ -125,8 +118,7 @@ try {
 
         foreach ($resetTables as $table => $startValue) {
             try {
-                $stmt = $pdo->prepare("ALTER TABLE `$table` AUTO_INCREMENT = ?");
-                $stmt->execute([$startValue]);
+                Database::execute("ALTER TABLE `$table` AUTO_INCREMENT = $startValue");
             } catch (Exception $e) {
                 $errors[] = "Warning: Could not reset auto-increment for $table: " . $e->getMessage();
             }
@@ -151,12 +143,11 @@ try {
         }
 
         // Commit transaction
-        $pdo->commit();
+        Database::commit();
 
         // Get count of preserved admin accounts
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE LOWER(role) = 'admin'");
-        $stmt->execute();
-        $preservedAdmins = $stmt->fetchColumn();
+        $row = Database::queryOne("SELECT COUNT(*) AS c FROM users WHERE LOWER(role) = 'admin'");
+        $preservedAdmins = $row ? (int)$row['c'] : 0;
 
         echo json_encode([
             'success' => true,
@@ -174,7 +165,7 @@ try {
 
     } catch (Exception $e) {
         // Rollback transaction on error
-        $pdo->rollback();
+        Database::rollBack();
         throw $e;
     }
 

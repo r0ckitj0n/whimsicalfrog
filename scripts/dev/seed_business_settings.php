@@ -5,17 +5,10 @@
 require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../../api/business_settings_helper.php';
 
-function pdo(): PDO {
-    return Database::getInstance();
-}
-
 function setSetting(string $key, $value, string $type = 'number', string $category = 'ecommerce', bool $forceUpdate = false, ?string $displayName = null): void {
-    $pdo = pdo();
-
     // Check if a row exists for this key
-    $stmt = $pdo->prepare("SELECT id FROM business_settings WHERE setting_key = ? LIMIT 1");
-    $stmt->execute([$key]);
-    $existingId = $stmt->fetchColumn();
+    $row = Database::queryOne("SELECT id FROM business_settings WHERE setting_key = ? LIMIT 1", [$key]);
+    $existingId = $row['id'] ?? null;
 
     if ($displayName === null) {
         // Generate a human-friendly display name from key, e.g., 'tax_enabled' -> 'Tax Enabled'
@@ -26,19 +19,19 @@ function setSetting(string $key, $value, string $type = 'number', string $catego
 
     if ($existingId) {
         if ($forceUpdate) {
-            $upd = $pdo->prepare(
-                "UPDATE business_settings SET display_name = ?, setting_value = ?, setting_type = ?, category = ?, updated_at = NOW() WHERE setting_key = ?"
+            Database::execute(
+                "UPDATE business_settings SET display_name = ?, setting_value = ?, setting_type = ?, category = ?, updated_at = NOW() WHERE setting_key = ?",
+                [$displayName, $val, $type, $category, $key]
             );
-            $upd->execute([$displayName, $val, $type, $category, $key]);
             echo "Updated: {$key} [{$displayName}]={$val} ({$type}) in {$category}\n";
         } else {
             echo "Skip (exists): {$key}\n";
         }
     } else {
-        $ins = $pdo->prepare(
-            "INSERT INTO business_settings (setting_key, display_name, setting_value, setting_type, category, updated_at) VALUES (?, ?, ?, ?, ?, NOW())"
+        Database::execute(
+            "INSERT INTO business_settings (setting_key, display_name, setting_value, setting_type, category, updated_at) VALUES (?, ?, ?, ?, ?, NOW())",
+            [$key, $displayName, $val, $type, $category]
         );
-        $ins->execute([$key, $displayName, $val, $type, $category]);
         echo "Inserted: {$key} [{$displayName}]={$val} ({$type}) in {$category}\n";
     }
 }
@@ -49,11 +42,9 @@ try {
 
     // 2) Ensure a non-zero tax rate exists (use 0.08 if missing)
     // Do not overwrite an existing number unless missing
-    $pdo = pdo();
     $hasTaxRate = false;
-    $chk = $pdo->prepare("SELECT 1 FROM business_settings WHERE setting_key = 'tax_rate' LIMIT 1");
-    $chk->execute();
-    $hasTaxRate = (bool)$chk->fetchColumn();
+    $chk = Database::queryOne("SELECT 1 AS present FROM business_settings WHERE setting_key = 'tax_rate' LIMIT 1");
+    $hasTaxRate = isset($chk['present']);
     if (!$hasTaxRate) {
         setSetting('tax_rate', 0.08, 'number', 'business_info');
     } else {
@@ -64,9 +55,8 @@ try {
     setSetting('tax_default_fallback_rate', 0.08, 'number', 'business_info', true);
 
     // 3) Default tax_shipping to false unless it already exists (keep current behavior)
-    $chk2 = $pdo->prepare("SELECT 1 FROM business_settings WHERE setting_key = 'tax_shipping' LIMIT 1");
-    $chk2->execute();
-    $hasTaxShipping = (bool)$chk2->fetchColumn();
+    $chk2 = Database::queryOne("SELECT 1 AS present FROM business_settings WHERE setting_key = 'tax_shipping' LIMIT 1");
+    $hasTaxShipping = isset($chk2['present']);
     if (!$hasTaxShipping) {
         setSetting('tax_shipping', 'false', 'boolean', 'business_info');
     } else {
@@ -82,9 +72,8 @@ try {
         'shipping_rate_ups' => 12.99,
     ];
     foreach ($shippingDefaults as $k => $v) {
-        $stmt = $pdo->prepare("SELECT 1 FROM business_settings WHERE setting_key = ? LIMIT 1");
-        $stmt->execute([$k]);
-        $exists = (bool)$stmt->fetchColumn();
+        $row = Database::queryOne("SELECT 1 AS present FROM business_settings WHERE setting_key = ? LIMIT 1", [$k]);
+        $exists = isset($row['present']);
         if ($k === 'local_delivery_fee') {
             // Force-update local_delivery_fee to 35.00 as requested
             setSetting($k, $v, 'number', 'ecommerce', true);
@@ -96,9 +85,8 @@ try {
     }
 
     // 5) Optionally set a default shipping method key (not used by code, informational)
-    $stmt = $pdo->prepare("SELECT 1 FROM business_settings WHERE setting_key = 'default_shipping_method' LIMIT 1");
-    $stmt->execute();
-    if (!$stmt->fetchColumn()) {
+    $stmt = Database::queryOne("SELECT 1 AS present FROM business_settings WHERE setting_key = 'default_shipping_method' LIMIT 1");
+    if (!isset($stmt['present'])) {
         setSetting('default_shipping_method', 'USPS', 'text', 'ecommerce');
     } else {
         echo "Skip (exists): default_shipping_method\n";

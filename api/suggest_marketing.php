@@ -70,7 +70,7 @@ if (empty($name)) {
 try {
     try {
         $pdo = Database::getInstance();
-    } catch (Exception $e) {
+} catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
@@ -117,15 +117,13 @@ try {
         INDEX idx_created_at (created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-    $pdo->exec($createTableSql);
+    Database::execute($createTableSql);
 
     // Get existing marketing data to incorporate into new generation
     $existingMarketingData = null;
     if (!empty($sku)) {
         try {
-            $stmt = $pdo->prepare("SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1");
-            $stmt->execute([$sku]);
-            $existingMarketingData = $stmt->fetch();
+            $existingMarketingData = Database::queryOne("SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1", [$sku]);
             if ($existingMarketingData) {
                 error_log("Found existing marketing data for SKU: $sku - incorporating into AI generation");
             }
@@ -138,9 +136,7 @@ try {
     $images = [];
     if ($useImages && !empty($sku)) {
         try {
-            $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3");
-            $stmt->execute([$sku]);
-            $imageRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $imageRows = Database::queryAll("SELECT image_path FROM item_images WHERE sku = ? ORDER BY display_order ASC LIMIT 3", [$sku]);
 
             foreach ($imageRows as $row) {
                 $imagePath = __DIR__ . '/../' . $row['image_path'];
@@ -193,7 +189,7 @@ try {
         error_log("AI Response received for Request ID: $requestId - Title: '" . substr($marketingData['title'], 0, 50) . "...'");
 
     } catch (Exception $e) {
-        // Fallback to Jon's AI if external API fails
+        // Fallback to Jon's AI if external AI fails
         error_log("External AI Provider failed, using Jon's AI fallback: " . $e->getMessage());
 
         // Restore execution time for local processing
@@ -209,101 +205,7 @@ try {
         error_log("Local fallback completed for Request ID: $requestId");
     }
 
-    // Save marketing suggestion to database
-    if (!empty($sku)) {
-        try {
-            $stmt = $pdo->prepare("
-                INSERT INTO marketing_suggestions (
-                    sku, suggested_title, suggested_description, keywords, target_audience,
-                    emotional_triggers, psychographic_profile, demographic_targeting, selling_points,
-                    market_positioning, competitive_advantages, unique_selling_points, value_propositions,
-                    brand_voice, content_tone, marketing_channels, seasonal_relevance, pricing_psychology,
-                    urgency_factors, social_proof_elements, call_to_action_suggestions, conversion_triggers,
-                    objection_handlers, seo_keywords, search_intent, content_themes, customer_benefits,
-                    pain_points_addressed, lifestyle_alignment, confidence_score, analysis_factors,
-                    market_trends, recommendation_reasoning
-                ) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                suggested_title = VALUES(suggested_title),
-                suggested_description = VALUES(suggested_description),
-                keywords = VALUES(keywords),
-                target_audience = VALUES(target_audience),
-                emotional_triggers = VALUES(emotional_triggers),
-                psychographic_profile = VALUES(psychographic_profile),
-                demographic_targeting = VALUES(demographic_targeting),
-                selling_points = VALUES(selling_points),
-                market_positioning = VALUES(market_positioning),
-                competitive_advantages = VALUES(competitive_advantages),
-                unique_selling_points = VALUES(unique_selling_points),
-                value_propositions = VALUES(value_propositions),
-                brand_voice = VALUES(brand_voice),
-                content_tone = VALUES(content_tone),
-                marketing_channels = VALUES(marketing_channels),
-                seasonal_relevance = VALUES(seasonal_relevance),
-                pricing_psychology = VALUES(pricing_psychology),
-                urgency_factors = VALUES(urgency_factors),
-                social_proof_elements = VALUES(social_proof_elements),
-                call_to_action_suggestions = VALUES(call_to_action_suggestions),
-                conversion_triggers = VALUES(conversion_triggers),
-                objection_handlers = VALUES(objection_handlers),
-                seo_keywords = VALUES(seo_keywords),
-                search_intent = VALUES(search_intent),
-                content_themes = VALUES(content_themes),
-                customer_benefits = VALUES(customer_benefits),
-                pain_points_addressed = VALUES(pain_points_addressed),
-                lifestyle_alignment = VALUES(lifestyle_alignment),
-                confidence_score = VALUES(confidence_score),
-                analysis_factors = VALUES(analysis_factors),
-                market_trends = VALUES(market_trends),
-                recommendation_reasoning = VALUES(recommendation_reasoning),
-                updated_at = CURRENT_TIMESTAMP
-            ");
-
-            $stmt->execute([
-                $sku,
-                $marketingData['title'],
-                $marketingData['description'],
-                json_encode($marketingData['keywords']),
-                $marketingData['target_audience'],
-                json_encode($marketingData['emotional_triggers']),
-                $marketingData['psychographic_profile'],
-                $marketingData['demographic_targeting'],
-                json_encode($marketingData['selling_points']),
-                $marketingData['market_positioning'],
-                json_encode($marketingData['competitive_advantages']),
-                json_encode($marketingData['unique_selling_points']),
-                json_encode($marketingData['value_propositions']),
-                $marketingData['brand_voice'],
-                $marketingData['content_tone'],
-                json_encode($marketingData['marketing_channels']),
-                $marketingData['seasonal_relevance'],
-                $marketingData['pricing_psychology'],
-                json_encode($marketingData['urgency_factors']),
-                json_encode($marketingData['social_proof_elements']),
-                json_encode($marketingData['call_to_action_suggestions']),
-                json_encode($marketingData['conversion_triggers']),
-                json_encode($marketingData['objection_handlers']),
-                json_encode($marketingData['seo_keywords']),
-                $marketingData['search_intent'],
-                json_encode($marketingData['content_themes']),
-                json_encode($marketingData['customer_benefits']),
-                json_encode($marketingData['pain_points_addressed']),
-                json_encode($marketingData['lifestyle_alignment']),
-                $marketingData['confidence_score'],
-                json_encode($marketingData['analysis_factors']),
-                json_encode($marketingData['market_trends']),
-                $marketingData['recommendation_reasoning']
-            ]);
-        } catch (PDOException $e) {
-            error_log("Error saving marketing suggestion: " . $e->getMessage());
-        }
-    }
-
-    // Image analysis is now integrated into the sequential AI process above
-    $imageAnalysis = $imageAnalysisData;
-
-    // Clear any buffered output and send clean JSON
+    // Clear any buffered output and send clean JSON (after AI try/catch completes)
     ob_clean();
     echo json_encode([
         'success' => true,
@@ -311,7 +213,7 @@ try {
         'description' => $marketingData['description'],
         'keywords' => $marketingData['keywords'],
         'targetAudience' => $marketingData['target_audience'],
-        'imageAnalysis' => $imageAnalysis, // New field for image analysis
+        'imageAnalysis' => $imageAnalysisData, // New field for image analysis
         'marketingIntelligence' => [
             // Target Audience data
             'demographic_targeting' => $marketingData['demographic_targeting'],

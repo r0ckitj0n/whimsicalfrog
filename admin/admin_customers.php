@@ -17,19 +17,14 @@ $customersData = [];
 $ordersData = [];
 
 try {
-    // Create a PDO connection using centralized Database class
-    $pdo = Database::getInstance();
+    // Initialize database (singleton)
+    Database::getInstance();
 
     // Fetch customers/users data directly from database
-    $stmt = $pdo->query('SELECT * FROM users');
-    $customersData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $customersData = Database::queryAll('SELECT * FROM users');
 
     // Fetch orders data directly from database
-    $ordersStmt = $pdo->query('SELECT * FROM orders');
-    $ordersData = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Close the connection
-    $pdo = null;
+    $ordersData = Database::queryAll('SELECT * FROM orders');
 } catch (PDOException $e) {
     error_log('Database Error: ' . $e->getMessage());
 } catch (Exception $e) {
@@ -186,19 +181,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_customer'])) {
     $customerId = $_POST['customer_id'] ?? '';
 
     try {
-        // Create a PDO connection
-        try {
-        } catch (Exception $e) {
-            error_log("Database connection failed: " . $e->getMessage());
-            throw $e;
-        }
+        // Initialize database (singleton)
+        Database::getInstance();
 
         // Delete customer from database
-        $stmt = $pdo->prepare('DELETE FROM users WHERE id = ?');
-        $result = $stmt->execute([$customerId]);
-
-        // Close the connection
-        $pdo = null;
+        $affected = Database::execute('DELETE FROM users WHERE id = ?', [$customerId]);
+        $result = $affected > 0;
 
         if ($result) {
             $deleteSuccess = true;
@@ -601,3 +589,5 @@ $messageType = $_GET['type'] ?? '';
     'modalMode' => $modalMode ?? null,
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
 </script>
+
+<?php // Admin customers script is loaded via app.js per-page imports ?>

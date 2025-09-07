@@ -8,7 +8,7 @@ AuthHelper::requireAdmin();
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     switch ($action) {
         case 'list_logs':
@@ -116,8 +116,8 @@ function listAvailableLogs($pdo)
         $tableName = $info['table'];
 
         // Check if table exists
-        $stmt = $pdo->query("SHOW TABLES LIKE '$tableName'");
-        $tableExists = $stmt->rowCount() > 0;
+        $rows = Database::queryAll("SHOW TABLES LIKE '$tableName'");
+        $tableExists = count($rows) > 0;
 
         if (!$tableExists) {
             // Create table based on type
@@ -126,14 +126,13 @@ function listAvailableLogs($pdo)
 
         // Count entries
         try {
-            $stmt = $pdo->query("SELECT COUNT(*) as count FROM $tableName");
-            $count = $stmt->fetch()['count'];
+            $rowCount = Database::queryOne("SELECT COUNT(*) as count FROM $tableName");
+            $count = $rowCount ? (int)$rowCount['count'] : 0;
 
             // Get last entry timestamp
             $lastEntryTime = null;
             $timestampField = $info['timestamp_field'];
-            $lastStmt = $pdo->query("SELECT MAX($timestampField) as last_entry FROM $tableName");
-            $lastResult = $lastStmt->fetch();
+            $lastResult = Database::queryOne("SELECT MAX($timestampField) as last_entry FROM $tableName");
             if ($lastResult && $lastResult['last_entry']) {
                 $lastEntryTime = $lastResult['last_entry'];
             }
@@ -287,7 +286,7 @@ function createLogTable($pdo, $tableName, $type)
 
     if ($sql) {
         try {
-            $pdo->exec($sql);
+            Database::execute($sql);
         } catch (Exception $e) {
             error_log("Failed to create log table $tableName: " . $e->getMessage());
         }
@@ -362,19 +361,11 @@ function getDatabaseLogContent($pdo, $type, $page, $limit, $offset)
 
     try {
         // Get total count
-        $countStmt = $pdo->prepare("SELECT COUNT(*) as total FROM $table");
-        $countStmt->execute();
-        $totalCount = $countStmt->fetch()['total'];
+        $countRow = Database::queryOne("SELECT COUNT(*) as total FROM $table");
+        $totalCount = $countRow ? (int)$countRow['total'] : 0;
 
         // Get log entries
-        $stmt = $pdo->prepare("
-            SELECT $fields 
-            FROM $table 
-            ORDER BY $timestampField DESC 
-            LIMIT ? OFFSET ?
-        ");
-        $stmt->execute([$limit, $offset]);
-        $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $entries = Database::queryAll("\n            SELECT $fields \n            FROM $table \n            ORDER BY $timestampField DESC \n            LIMIT ? OFFSET ?\n        ", [$limit, $offset]);
 
         echo json_encode([
             'success' => true,
@@ -441,9 +432,7 @@ function searchDatabaseLogs($pdo, $query, $type = '')
 
             $sql = "SELECT *, '$table' as source_table FROM $table WHERE " . implode(' OR ', $whereConditions) . " ORDER BY $timestampField DESC LIMIT 20";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $tableResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $tableResults = Database::queryAll($sql, $params);
 
             $results = array_merge($results, $tableResults);
 
@@ -481,12 +470,11 @@ function clearDatabaseLog($pdo, $type)
     }
 
     try {
-        $stmt = $pdo->prepare("DELETE FROM $type");
-        $result = $stmt->execute();
+        $affected = Database::execute("DELETE FROM $type");
 
-        if ($result) {
+        if ($affected !== false) {
             // Reset auto-increment
-            $pdo->exec("ALTER TABLE $type AUTO_INCREMENT = 1");
+            Database::execute("ALTER TABLE $type AUTO_INCREMENT = 1");
             echo json_encode(['success' => true, 'message' => ucfirst(str_replace('_', ' ', $type)) . ' cleared successfully']);
         } else {
             echo json_encode(['success' => false, 'error' => 'Failed to clear log']);
@@ -522,9 +510,7 @@ function downloadDatabaseLog($pdo, $type)
     }
 
     try {
-        $stmt = $pdo->prepare("SELECT * FROM $type ORDER BY id DESC");
-        $stmt->execute();
-        $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $entries = Database::queryAll("SELECT * FROM $type ORDER BY id DESC");
 
         // Set headers for file download
         header('Content-Type: text/csv');
@@ -572,16 +558,14 @@ function cleanupOldLogs($pdo)
     foreach ($logTables as $table => $timestampField) {
         try {
             // Count old entries first
-            $countStmt = $pdo->prepare("SELECT COUNT(*) as count FROM $table WHERE $timestampField < ?");
-            $countStmt->execute([$cutoffDate]);
-            $oldCount = $countStmt->fetch()['count'];
+            $countRow = Database::queryOne("SELECT COUNT(*) as count FROM $table WHERE $timestampField < ?", [$cutoffDate]);
+            $oldCount = $countRow ? (int)$countRow['count'] : 0;
 
             if ($oldCount > 0) {
                 // Delete old entries
-                $deleteStmt = $pdo->prepare("DELETE FROM $table WHERE $timestampField < ?");
-                $deleted = $deleteStmt->execute([$cutoffDate]);
+                $deleted = Database::execute("DELETE FROM $table WHERE $timestampField < ?", [$cutoffDate]);
 
-                if ($deleted) {
+                if ($deleted !== false) {
                     $results[$table] = [
                         'deleted' => $oldCount,
                         'status' => 'success'
@@ -646,9 +630,8 @@ function getLoggingStatus($pdo) {
         $tables = ['error_logs', 'analytics_logs', 'admin_activity_logs', 'email_logs'];
         foreach ($tables as $table) {
             try {
-                $stmt = $pdo->query("SELECT COUNT(*) as count FROM {$table}");
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                $databaseLogging[$table] = (int)$result['count'];
+                $row = Database::queryOne("SELECT COUNT(*) as count FROM {$table}");
+                $databaseLogging[$table] = $row ? (int)$row['count'] : 0;
             } catch (Exception $e) {
                 $databaseLogging[$table] = 0;
             }

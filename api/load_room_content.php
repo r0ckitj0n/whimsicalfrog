@@ -62,15 +62,13 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     // fetch category info by name
 
     // fetch category info by name
-    $stmt = $pdo->prepare("SELECT id, description FROM categories WHERE name = ? LIMIT 1");
-    $stmt->execute([$categoryName]);
-    $catInfo = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $catInfo = Database::queryOne("SELECT id, description FROM categories WHERE name = ? LIMIT 1", [$categoryName]) ?: [];
     $catId = $catInfo['id'] ?? null;
     
 
     $items = [];
     if ($catId) {
-        $stmt = $pdo->prepare(
+        $items = Database::queryAll(
             "SELECT i.*,
                     i.stockLevel,
                     i.retailPrice,
@@ -79,16 +77,13 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
                     img.alt_text
              FROM items i
              LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
-             WHERE i.category = ? ORDER BY i.sku ASC"
+             WHERE i.category = ? ORDER BY i.sku ASC",
+            [$meta['category']]
         );
-        $stmt->execute([$meta['category']]);
-        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     // fetch room settings
-    $stmt = $pdo->prepare("SELECT room_name, description FROM room_settings WHERE room_number = ?");
-    $stmt->execute([$roomNumber]);
-    $rs = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $rs = Database::queryOne("SELECT room_name, description FROM room_settings WHERE room_number = ?", [$roomNumber]) ?: [];
 
     // load coordinates
     $cd = loadRoomCoordinates($roomType, $pdo);
@@ -215,11 +210,10 @@ function getDefaultRoomCoordinates($roomType)
 function loadRoomCoordinates($roomType, $pdo)
 {
     try {
-        $stmt = $pdo->prepare(
-            "SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1"
+        $row = Database::queryOne(
+            "SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1",
+            [$roomType]
         );
-        $stmt->execute([$roomType]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
             $coords = json_decode($row['coordinates'], true);
             // Validate that coordinates look plausible (non-zero). If not, fall back to defaults.
@@ -247,20 +241,17 @@ function loadRoomCoordinates($roomType, $pdo)
 function getRoomMetadata($roomNumber, $pdo)
 {
     // Get room settings
-    $stmt = $pdo->prepare("SELECT room_name, description FROM room_settings WHERE room_number = ?");
-    $stmt->execute([$roomNumber]);
-    $rs = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $rs = Database::queryOne("SELECT room_name, description FROM room_settings WHERE room_number = ?", [$roomNumber]) ?: [];
 
     // Get primary category for this room
-    $stmt = $pdo->prepare("
-        SELECT c.name as category_name
+    $categoryData = Database::queryOne(
+        "SELECT c.name as category_name
         FROM room_category_assignments rca
         JOIN categories c ON rca.category_id = c.id
         WHERE rca.room_number = ? AND rca.is_primary = 1
-        LIMIT 1
-    ");
-    $stmt->execute([$roomNumber]);
-    $categoryData = $stmt->fetch(PDO::FETCH_ASSOC);
+        LIMIT 1",
+        [$roomNumber]
+    );
     $categoryName = $categoryData ? $categoryData['category_name'] : '';
 
     return [

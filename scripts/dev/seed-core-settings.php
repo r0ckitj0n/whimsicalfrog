@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../api/config.php';
 require_once __DIR__ . '/../../api/business_settings_helper.php';
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     $rows = [
         // Site URLs
@@ -34,11 +34,11 @@ try {
     $sql = "INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, NOW())
             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), setting_type = VALUES(setting_type), display_name = VALUES(display_name), description = VALUES(description), updated_at = NOW()";
-    $stmt = $pdo->prepare($sql);
 
     $saved = 0;
     foreach ($rows as $r) {
-        if ($stmt->execute($r)) { $saved++; }
+        $affected = Database::execute($sql, $r);
+        if ($affected >= 0) { $saved++; }
     }
 
     // Clear cache
@@ -50,9 +50,5 @@ try {
     exit(0);
 } catch (Throwable $e) {
     fwrite(STDERR, 'Error seeding settings: ' . $e->getMessage() . "\n");
-    if (isset($stmt)) {
-        $info = $stmt->errorInfo();
-        fwrite(STDERR, 'PDO errorInfo: ' . implode(' | ', $info) . "\n");
-    }
     exit(1);
 }

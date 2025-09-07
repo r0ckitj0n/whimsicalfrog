@@ -51,12 +51,11 @@ function generateDynamicFallbacks()
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     // Return dynamic fallback backgrounds if database fails
     $roomType = $_GET['room_type'] ?? '';
@@ -90,14 +89,13 @@ if (empty($roomType)) {
 
 try {
     // Get active background for the room
-    $stmt = $pdo->prepare("
-        SELECT background_name, image_filename, webp_filename, created_at 
-        FROM backgrounds 
-        WHERE room_type = ? AND is_active = 1 
-        LIMIT 1
-    ");
-    $stmt->execute([$roomType]);
-    $background = $stmt->fetch(PDO::FETCH_ASSOC);
+    $background = Database::queryOne(
+        "SELECT background_name, image_filename, webp_filename, created_at 
+         FROM backgrounds 
+         WHERE room_type = ? AND is_active = 1 
+         LIMIT 1",
+        [$roomType]
+    );
 
     if ($background) {
         echo json_encode(['success' => true, 'background' => $background]);

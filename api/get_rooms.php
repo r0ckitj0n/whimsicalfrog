@@ -14,12 +14,10 @@ require_once __DIR__ . '/config.php';
 
 try {
     // Fetch primary room assignments
-    $pdo = Database::getInstance();
-    $stmt = $pdo->prepare(
+    Database::getInstance();
+    $rooms = Database::queryAll(
         "SELECT room_number AS id, room_name AS name, category_id FROM room_category_assignments WHERE is_primary = 1 ORDER BY room_number"
     );
-    $stmt->execute();
-    $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($rooms);
 } catch (Exception $e) {
     http_response_code(500);

@@ -26,9 +26,7 @@ try {
                 throw new Exception('User ID is required');
             }
 
-            $stmt = $pdo->prepare("SELECT * FROM customer_addresses WHERE user_id = ? ORDER BY is_default DESC, address_name ASC");
-            $stmt->execute([$userId]);
-            $addresses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $addresses = Database::queryAll("SELECT * FROM customer_addresses WHERE user_id = ? ORDER BY is_default DESC, address_name ASC", [$userId]);
 
             echo json_encode([
                 'success' => true,
@@ -48,12 +46,10 @@ try {
 
             // If this is set as default, unset other defaults
             if (!empty($data['is_default'])) {
-                $stmt = $pdo->prepare("UPDATE customer_addresses SET is_default = 0 WHERE user_id = ?");
-                $stmt->execute([$data['user_id']]);
+                Database::execute("UPDATE customer_addresses SET is_default = 0 WHERE user_id = ?", [$data['user_id']]);
             }
 
-            $stmt = $pdo->prepare("INSERT INTO customer_addresses (user_id, address_name, address_line1, address_line2, city, state, zip_code, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([
+            Database::execute("INSERT INTO customer_addresses (user_id, address_name, address_line1, address_line2, city, state, zip_code, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
                 $data['user_id'],
                 $data['address_name'],
                 $data['address_line1'],
@@ -64,7 +60,7 @@ try {
                 !empty($data['is_default']) ? 1 : 0
             ]);
 
-            $addressId = $pdo->lastInsertId();
+            $addressId = Database::lastInsertId();
 
             echo json_encode([
                 'success' => true,
@@ -82,12 +78,10 @@ try {
 
             // If this is set as default, unset other defaults for this user
             if (!empty($data['is_default'])) {
-                $stmt = $pdo->prepare("UPDATE customer_addresses SET is_default = 0 WHERE user_id = (SELECT user_id FROM customer_addresses WHERE id = ?)");
-                $stmt->execute([$data['id']]);
+                Database::execute("UPDATE customer_addresses SET is_default = 0 WHERE user_id = (SELECT user_id FROM customer_addresses WHERE id = ?)", [$data['id']]);
             }
 
-            $stmt = $pdo->prepare("UPDATE customer_addresses SET address_name = ?, address_line1 = ?, address_line2 = ?, city = ?, state = ?, zip_code = ?, is_default = ? WHERE id = ?");
-            $stmt->execute([
+            Database::execute("UPDATE customer_addresses SET address_name = ?, address_line1 = ?, address_line2 = ?, city = ?, state = ?, zip_code = ?, is_default = ? WHERE id = ?", [
                 $data['address_name'],
                 $data['address_line1'],
                 $data['address_line2'] ?? '',
@@ -111,8 +105,7 @@ try {
                 throw new Exception('Address ID is required');
             }
 
-            $stmt = $pdo->prepare("DELETE FROM customer_addresses WHERE id = ?");
-            $stmt->execute([$addressId]);
+            Database::execute("DELETE FROM customer_addresses WHERE id = ?", [$addressId]);
 
             echo json_encode([
                 'success' => true,
@@ -128,21 +121,17 @@ try {
             }
 
             // Get user ID for this address
-            $stmt = $pdo->prepare("SELECT user_id FROM customer_addresses WHERE id = ?");
-            $stmt->execute([$addressId]);
-            $address = $stmt->fetch();
+            $address = Database::queryOne("SELECT user_id FROM customer_addresses WHERE id = ?", [$addressId]);
 
             if (!$address) {
                 throw new Exception('Address not found');
             }
 
             // Unset all defaults for this user
-            $stmt = $pdo->prepare("UPDATE customer_addresses SET is_default = 0 WHERE user_id = ?");
-            $stmt->execute([$address['user_id']]);
+            Database::execute("UPDATE customer_addresses SET is_default = 0 WHERE user_id = ?", [$address['user_id']]);
 
             // Set this as default
-            $stmt = $pdo->prepare("UPDATE customer_addresses SET is_default = 1 WHERE id = ?");
-            $stmt->execute([$addressId]);
+            Database::execute("UPDATE customer_addresses SET is_default = 1 WHERE id = ?", [$addressId]);
 
             echo json_encode([
                 'success' => true,

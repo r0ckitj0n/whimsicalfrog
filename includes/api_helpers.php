@@ -29,9 +29,7 @@ function handleGet($pdo)
 
             $sql .= " ORDER BY background_name = 'Original' DESC, created_at DESC";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $backgrounds = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $backgrounds = Database::queryAll($sql, $params);
 
             if ($activeOnly && count($backgrounds) > 0) {
                 echo json_encode(['success' => true, 'background' => $backgrounds[0]]);
@@ -40,16 +38,7 @@ function handleGet($pdo)
             }
         } else {
             // Get all backgrounds grouped by room
-            $stmt = $pdo->prepare("
-                SELECT room_type, COUNT(*) as total_count, 
-                       SUM(is_active) as active_count,
-                       GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background
-                FROM backgrounds 
-                GROUP BY room_type 
-                ORDER BY room_type
-            ");
-            $stmt->execute();
-            $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $summary = Database::queryAll("\n                SELECT room_type, COUNT(*) as total_count, \n                       SUM(is_active) as active_count,\n                       GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background\n                FROM backgrounds \n                GROUP BY room_type \n                ORDER BY room_type\n            ");
 
             echo json_encode(['success' => true, 'summary' => $summary]);
         }
@@ -74,13 +63,7 @@ function handlePut($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("
-        UPDATE global_css_rules 
-        SET css_value = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-    ");
-
-    $stmt->execute([$cssValue, $id]);
+    Database::execute("\n        UPDATE global_css_rules \n        SET css_value = ?, updated_at = CURRENT_TIMESTAMP\n        WHERE id = ?\n    ", [$cssValue, $id]);
 
     echo json_encode([
         'success' => true,
@@ -101,9 +84,7 @@ function handleDelete($pdo, $input)
 
     try {
         // Check if it's an Original background
-        $checkStmt = $pdo->prepare("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?");
-        $checkStmt->execute([$backgroundId]);
-        $background = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        $background = Database::queryOne("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?", [$backgroundId]);
 
         if (!$background) {
             echo json_encode(['success' => false, 'message' => 'Background not found']);
@@ -116,9 +97,9 @@ function handleDelete($pdo, $input)
         }
 
         // Delete the background
-        $deleteStmt = $pdo->prepare("DELETE FROM backgrounds WHERE id = ?");
+        $affected = Database::execute("DELETE FROM backgrounds WHERE id = ?", [$backgroundId]);
 
-        if ($deleteStmt->execute([$backgroundId])) {
+        if ($affected !== false) {
             // Optionally delete the image files (commented out for safety)
             // if (file_exists("../images/" . $background['image_filename'])) {
             //     unlink("../images/" . $background['image_filename']);

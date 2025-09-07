@@ -50,7 +50,7 @@ try {
     }
 
     // Get the most recent price suggestion for this SKU
-    $stmt = $pdo->prepare("
+    $result = Database::queryOne("
         SELECT 
             suggested_price,
             reasoning,
@@ -87,9 +87,7 @@ try {
         WHERE sku = ? 
         ORDER BY created_at DESC 
         LIMIT 1
-    ");
-    $stmt->execute([$sku]);
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    ", [$sku]);
 
     if ($result) {
         // Get components from database first, fallback to parsing if not available

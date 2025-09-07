@@ -9,8 +9,7 @@ header('Content-Type: application/json');
 
 try {
     require_once __DIR__ . '/../../api/config.php';
-    $pdo = Database::getInstance();
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    Database::getInstance();
 
     // Backup current assignments and categories
     $backupDir = realpath(__DIR__ . '/../../backups/sql_migrations');
@@ -22,25 +21,23 @@ try {
     $rcaPath = rtrim($backupDir, '/')."/room_category_assignments_backup_{$ts}.json";
     $catPath = rtrim($backupDir, '/')."/categories_backup_{$ts}.json";
 
-    $allRca = $pdo->query('SELECT * FROM room_category_assignments ORDER BY room_number, is_primary DESC')->fetchAll(PDO::FETCH_ASSOC);
-    $allCats = $pdo->query('SELECT * FROM categories ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+    $allRca = Database::queryAll('SELECT * FROM room_category_assignments ORDER BY room_number, is_primary DESC');
+    $allCats = Database::queryAll('SELECT * FROM categories ORDER BY id');
     file_put_contents($rcaPath, json_encode($allRca, JSON_PRETTY_PRINT));
     file_put_contents($catPath, json_encode($allCats, JSON_PRETTY_PRINT));
 
     // Helper: resolve category by aliases
-    $resolveCategory = function(array $aliases) use ($pdo): ?int {
+    $resolveCategory = function(array $aliases): ?int {
         // Try exact name match first
-        $stmt = $pdo->prepare('SELECT id FROM categories WHERE name = ? LIMIT 1');
         foreach ($aliases as $alias) {
-            $stmt->execute([$alias]);
-            $id = $stmt->fetchColumn();
+            $row = Database::queryOne('SELECT id FROM categories WHERE name = ? LIMIT 1', [$alias]);
+            $id = $row['id'] ?? null;
             if ($id) return (int)$id;
         }
         // Try LIKE match
         foreach ($aliases as $alias) {
-            $stmt = $pdo->prepare('SELECT id FROM categories WHERE name LIKE ? ORDER BY LENGTH(name) ASC LIMIT 1');
-            $stmt->execute(['%'.$alias.'%']);
-            $id = $stmt->fetchColumn();
+            $row = Database::queryOne('SELECT id FROM categories WHERE name LIKE ? ORDER BY LENGTH(name) ASC LIMIT 1', ['%'.$alias.'%']);
+            $id = $row['id'] ?? null;
             if ($id) return (int)$id;
         }
         return null;
@@ -55,7 +52,7 @@ try {
         5 => ['Window Wraps','Windowwraps','Window Graphics','Window Wrap'],
     ];
 
-    $pdo->beginTransaction();
+    Database::beginTransaction();
     $result = [];
 
     foreach ($targets as $roomNumber => $aliases) {
@@ -71,27 +68,25 @@ try {
         }
 
         // Ensure only one primary per room: set others to 0
-        $pdo->prepare('UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?')->execute([$roomNumber]);
+        Database::execute('UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?', [$roomNumber]);
 
         // If assignment exists for this category, set primary; else insert
-        $stmt = $pdo->prepare('SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ? LIMIT 1');
-        $stmt->execute([$roomNumber, $catId]);
-        $existingId = $stmt->fetchColumn();
+        $row = Database::queryOne('SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ? LIMIT 1', [$roomNumber, $catId]);
+        $existingId = $row['id'] ?? null;
         if ($existingId) {
-            $pdo->prepare('UPDATE room_category_assignments SET is_primary = 1 WHERE id = ?')->execute([(int)$existingId]);
+            Database::execute('UPDATE room_category_assignments SET is_primary = 1 WHERE id = ?', [(int)$existingId]);
             $result[] = ['room_number' => $roomNumber, 'category_id' => $catId, 'action' => 'updated_primary'];
         } else {
-            $pdo->prepare('INSERT INTO room_category_assignments (room_number, category_id, is_primary) VALUES (?, ?, 1)')
-                ->execute([$roomNumber, $catId]);
+            Database::execute('INSERT INTO room_category_assignments (room_number, category_id, is_primary) VALUES (?, ?, 1)', [$roomNumber, $catId]);
             $result[] = ['room_number' => $roomNumber, 'category_id' => $catId, 'action' => 'inserted_primary'];
         }
     }
 
-    $pdo->commit();
+    Database::commit();
 
     echo json_encode(['ok' => true, 'result' => $result, 'backup' => ['rca' => $rcaPath, 'categories' => $catPath]], JSON_PRETTY_PRINT);
 } catch (Throwable $e) {
-    if (isset($pdo) && $pdo->inTransaction()) { $pdo->rollBack(); }
+    try { if (Database::inTransaction()) { Database::rollBack(); } } catch (Throwable $t) {}
     http_response_code(500);
     echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }

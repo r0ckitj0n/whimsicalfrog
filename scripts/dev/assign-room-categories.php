@@ -9,26 +9,25 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../../api/config.php';
 
-function tableExists(PDO $pdo, string $table): bool {
+function tableExists(string $table): bool {
     try {
-        $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
-        $stmt->execute([$table]);
-        return (bool)$stmt->fetchColumn();
+        $row = Database::queryOne("SHOW TABLES LIKE ?", [$table]);
+        // queryOne returns associative array for the first row; if any row exists, table exists
+        return is_array($row) && !empty($row);
     } catch (Throwable $e) {
         return false;
     }
 }
 
 try {
-    $pdo = Database::getInstance();
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    Database::getInstance();
 
-    if (!tableExists($pdo, 'room_category_assignments')) {
+    if (!tableExists('room_category_assignments')) {
         throw new RuntimeException('Table room_category_assignments does not exist');
     }
 
     // Verify categories table
-    if (!tableExists($pdo, 'categories')) {
+    if (!tableExists('categories')) {
         throw new RuntimeException('Table categories does not exist');
     }
 
@@ -47,34 +46,33 @@ try {
     if (!is_dir($backupDir)) { @mkdir($backupDir, 0775, true); }
     $ts = date('Ymd_His');
     $backupPath = rtrim($backupDir,'/')."/room_category_assignments_pre_fix_{$ts}.json";
-    $data = $pdo->query('SELECT * FROM room_category_assignments ORDER BY room_number, is_primary DESC')->fetchAll(PDO::FETCH_ASSOC);
+    $data = Database::queryAll('SELECT * FROM room_category_assignments ORDER BY room_number, is_primary DESC');
     file_put_contents($backupPath, json_encode($data, JSON_PRETTY_PRINT));
 
-    $pdo->beginTransaction();
+    Database::beginTransaction();
     $changes = [];
 
     foreach ($desired as $room => $catId) {
         // Set all to non-primary first
-        $pdo->prepare('UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?')->execute([$room]);
+        Database::execute('UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?', [$room]);
 
         // Upsert desired category as primary
-        $sel = $pdo->prepare('SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ? LIMIT 1');
-        $sel->execute([$room, $catId]);
-        $id = $sel->fetchColumn();
+        $row = Database::queryOne('SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ? LIMIT 1', [$room, $catId]);
+        $id = $row['id'] ?? null;
         if ($id) {
-            $pdo->prepare('UPDATE room_category_assignments SET is_primary = 1 WHERE id = ?')->execute([(int)$id]);
+            Database::execute('UPDATE room_category_assignments SET is_primary = 1 WHERE id = ?', [(int)$id]);
             $changes[] = ['room' => $room, 'category_id' => (int)$catId, 'action' => 'updated_existing_to_primary'];
         } else {
-            $pdo->prepare('INSERT INTO room_category_assignments (room_number, category_id, is_primary) VALUES (?, ?, 1)')->execute([$room, $catId]);
+            Database::execute('INSERT INTO room_category_assignments (room_number, category_id, is_primary) VALUES (?, ?, 1)', [$room, $catId]);
             $changes[] = ['room' => $room, 'category_id' => (int)$catId, 'action' => 'inserted_primary'];
         }
     }
 
-    $pdo->commit();
+    Database::commit();
 
     echo json_encode(['ok' => true, 'backup' => $backupPath, 'changes' => $changes], JSON_PRETTY_PRINT);
 } catch (Throwable $e) {
-    if (isset($pdo) && $pdo->inTransaction()) { $pdo->rollBack(); }
+    try { if (Database::inTransaction()) { Database::rollBack(); } } catch (Throwable $t) {}
     http_response_code(500);
     echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
 }

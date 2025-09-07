@@ -10,10 +10,10 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     // Start transaction to ensure data integrity
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     echo "Starting room numbering migration from 2-6 to 1-5...\n";
 
@@ -23,7 +23,7 @@ try {
         old_room_number INT,
         new_room_number INT
     )";
-    $pdo->exec($mappingTable);
+    Database::execute($mappingTable);
 
     // Insert mapping data
     $mappings = [
@@ -34,18 +34,17 @@ try {
         [6, 5]  // Window wraps: room6 → room5
     ];
 
-    $mapStmt = $pdo->prepare("INSERT INTO room_number_mapping (old_room_number, new_room_number) VALUES (?, ?)");
     foreach ($mappings as $mapping) {
-        $mapStmt->execute($mapping);
+        Database::execute("INSERT INTO room_number_mapping (old_room_number, new_room_number) VALUES (?, ?)", $mapping);
     }
 
     // First, temporarily move the Main Room to avoid conflicts
     echo "Temporarily moving Main Room to avoid conflicts...\n";
-    $pdo->prepare("UPDATE room_settings SET room_number = ? WHERE room_number = ?")->execute([999, 1]);
-    $pdo->prepare("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?")->execute([999, 1]);
-    $tableCheck = $pdo->query("SHOW TABLES LIKE 'room_config'");
-    if ($tableCheck->rowCount() > 0) {
-        $pdo->prepare("UPDATE room_config SET room_number = ? WHERE room_number = ?")->execute([999, 1]);
+    Database::execute("UPDATE room_settings SET room_number = ? WHERE room_number = ?", [999, 1]);
+    Database::execute("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?", [999, 1]);
+    $tableCheck = Database::queryAll("SHOW TABLES LIKE 'room_config'");
+    if (count($tableCheck) > 0) {
+        Database::execute("UPDATE room_config SET room_number = ? WHERE room_number = ?", [999, 1]);
     }
 
     // Update product rooms to temporary negative numbers to avoid conflicts
@@ -60,15 +59,15 @@ try {
 
     foreach ($tempMappings as $mapping) {
         // Update room_settings
-        $pdo->prepare("UPDATE room_settings SET room_number = ? WHERE room_number = ?")->execute([$mapping[1], $mapping[0]]);
+        Database::execute("UPDATE room_settings SET room_number = ? WHERE room_number = ?", [$mapping[1], $mapping[0]]);
 
         // Update room_category_assignments
-        $pdo->prepare("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?")->execute([$mapping[1], $mapping[0]]);
+        Database::execute("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?", [$mapping[1], $mapping[0]]);
 
         // Update room_config if it exists
-        $tableCheck = $pdo->query("SHOW TABLES LIKE 'room_config'");
-        if ($tableCheck->rowCount() > 0) {
-            $pdo->prepare("UPDATE room_config SET room_number = ? WHERE room_number = ?")->execute([$mapping[1], $mapping[0]]);
+        $tableCheck = Database::queryAll("SHOW TABLES LIKE 'room_config'");
+        if (count($tableCheck) > 0) {
+            Database::execute("UPDATE room_config SET room_number = ? WHERE room_number = ?", [$mapping[1], $mapping[0]]);
         }
     }
 
@@ -84,15 +83,15 @@ try {
 
     foreach ($finalMappings as $mapping) {
         // Update room_settings
-        $pdo->prepare("UPDATE room_settings SET room_number = ? WHERE room_number = ?")->execute([$mapping[1], $mapping[0]]);
+        Database::execute("UPDATE room_settings SET room_number = ? WHERE room_number = ?", [$mapping[1], $mapping[0]]);
 
         // Update room_category_assignments
-        $pdo->prepare("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?")->execute([$mapping[1], $mapping[0]]);
+        Database::execute("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?", [$mapping[1], $mapping[0]]);
 
         // Update room_config if it exists
-        $tableCheck = $pdo->query("SHOW TABLES LIKE 'room_config'");
-        if ($tableCheck->rowCount() > 0) {
-            $pdo->prepare("UPDATE room_config SET room_number = ? WHERE room_number = ?")->execute([$mapping[1], $mapping[0]]);
+        $tableCheck = Database::queryAll("SHOW TABLES LIKE 'room_config'");
+        if (count($tableCheck) > 0) {
+            Database::execute("UPDATE room_config SET room_number = ? WHERE room_number = ?", [$mapping[1], $mapping[0]]);
         }
     }
 
@@ -106,31 +105,29 @@ try {
         ['room6', 'room5']
     ];
 
-    $updateRoomMaps = $pdo->prepare("UPDATE room_maps SET room_type = ? WHERE room_type = ?");
     foreach ($roomTypeUpdates as $update) {
-        $updateRoomMaps->execute([$update[1], $update[0]]);
+        Database::execute("UPDATE room_maps SET room_type = ? WHERE room_type = ?", [$update[1], $update[0]]);
     }
 
     // Update backgrounds table (room_type column)
     echo "Updating backgrounds table...\n";
-    $updateBackgrounds = $pdo->prepare("UPDATE backgrounds SET room_type = ? WHERE room_type = ?");
     foreach ($roomTypeUpdates as $update) {
-        $updateBackgrounds->execute([$update[1], $update[0]]);
+        Database::execute("UPDATE backgrounds SET room_type = ? WHERE room_type = ?", [$update[1], $update[0]]);
     }
 
     // Room config was already updated above
 
     // Move the Main Room to room 6 (next available number)
     echo "Moving Main Room to room 6...\n";
-    $pdo->prepare("UPDATE room_settings SET room_number = ? WHERE room_number = ?")->execute([6, 999]);
-    $pdo->prepare("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?")->execute([6, 999]);
-    $tableCheck = $pdo->query("SHOW TABLES LIKE 'room_config'");
-    if ($tableCheck->rowCount() > 0) {
-        $pdo->prepare("UPDATE room_config SET room_number = ? WHERE room_number = ?")->execute([6, 999]);
+    Database::execute("UPDATE room_settings SET room_number = ? WHERE room_number = ?", [6, 999]);
+    Database::execute("UPDATE room_category_assignments SET room_number = ? WHERE room_number = ?", [6, 999]);
+    $tableCheck = Database::queryAll("SHOW TABLES LIKE 'room_config'");
+    if (count($tableCheck) > 0) {
+        Database::execute("UPDATE room_config SET room_number = ? WHERE room_number = ?", [6, 999]);
     }
 
     // Commit the transaction
-    $pdo->commit();
+    Database::commit();
 
     echo "Migration completed successfully!\n";
     echo json_encode([
@@ -141,9 +138,7 @@ try {
 
 } catch (Exception $e) {
     // Rollback transaction on error
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
+    try { Database::rollBack(); } catch (Throwable $t) { /* ignore */ }
 
     echo "Migration failed: " . $e->getMessage() . "\n";
     echo json_encode([

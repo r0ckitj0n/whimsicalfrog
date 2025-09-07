@@ -35,13 +35,9 @@ $modalMode = match(true) {
 // Process modal data based on mode
 $editItem = null;
 if ($modalMode === 'view' || $modalMode === 'edit') {
-    $stmt = $pdo->prepare("SELECT * FROM items WHERE sku = ?");
-    $stmt->execute([$_GET[$modalMode]]);
-    $editItem = $stmt->fetch() ?: null;
+    $editItem = Database::queryOne("SELECT * FROM items WHERE sku = ?", [$_GET[$modalMode]]) ?: null;
 } elseif ($modalMode === 'add') {
-    $stmt = $pdo->prepare("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
-    $stmt->execute();
-    $lastSku = $stmt->fetch();
+    $lastSku = Database::queryOne("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
     $lastNum = $lastSku ? (int)substr($lastSku['sku'], -3) : 0;
     $editItem = ['sku' => 'WF-GEN-' . str_pad($lastNum + 1, 3, '0', STR_PAD_LEFT)];
 }
@@ -50,9 +46,10 @@ if ($modalMode === 'view' || $modalMode === 'edit') {
 $editCostBreakdown = null;
 
 // Get categories for dropdown
-$stmt = $pdo->prepare("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
-$stmt->execute();
-$categories = $stmt->fetchAll(PDO::FETCH_COLUMN) ?? [];
+$categories = array_column(
+    Database::queryAll("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category"),
+    'category'
+) ?? [];
 
 // Process search and filters using modern PHP
 $filters = [
@@ -94,13 +91,12 @@ $currentPage = isset($_GET['pageNum']) ? max(1, (int)$_GET['pageNum']) : 1;
 $offset = ($currentPage - 1) * $perPage;
 
 // Get total record count for pagination controls
-$countSql = "SELECT COUNT(*) FROM items i WHERE " . implode(' AND ', $whereConditions);
-$countStmt = $pdo->prepare($countSql);
-$countStmt->execute($queryParams);
-$totalRecords = (int)$countStmt->fetchColumn();
+$countSql = "SELECT COUNT(*) AS cnt FROM items i WHERE " . implode(' AND ', $whereConditions);
+$countRow = Database::queryOne($countSql, $queryParams);
+$totalRecords = (int)($countRow['cnt'] ?? 0);
 $totalPages = (int)ceil($totalRecords / $perPage);
 
-// Main paginated query
+// Main paginated query (inline limit/offset to preserve integer typing)
 $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count 
         FROM items i 
         LEFT JOIN (
@@ -110,17 +106,9 @@ $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count
         ) img_count ON i.sku = img_count.sku 
         WHERE " . implode(' AND ', $whereConditions) . " 
         ORDER BY i.sku ASC
-        LIMIT :limit OFFSET :offset";
+        LIMIT " . intval($perPage) . " OFFSET " . intval($offset);
 
-$stmt = $pdo->prepare($sql);
-// Bind pagination params separately because they must be integers
-foreach ($queryParams as $key => $val) {
-    $stmt->bindValue($key, $val);
-}
-$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$stmt->execute();
-$items = $stmt->fetchAll();
+$items = Database::queryAll($sql, $queryParams);
 
 // Message handling for user feedback
 $message = $_GET['message'] ?? '';

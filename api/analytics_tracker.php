@@ -176,12 +176,12 @@ function initializeAnalyticsTables($pdo)
         INDEX idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-    $pdo->exec($sessionsTable);
-    $pdo->exec($pageViewsTable);
-    $pdo->exec($interactionsTable);
-    $pdo->exec($itemAnalyticsTable);
-    $pdo->exec($conversionFunnelsTable);
-    $pdo->exec($optimizationTable);
+    Database::execute($sessionsTable);
+    Database::execute($pageViewsTable);
+    Database::execute($interactionsTable);
+    Database::execute($itemAnalyticsTable);
+    Database::execute($conversionFunnelsTable);
+    Database::execute($optimizationTable);
 }
 
 function trackVisit($pdo)
@@ -198,25 +198,14 @@ function trackVisit($pdo)
     $deviceInfo = parseUserAgent($userAgent);
 
     // Check if session already exists
-    $stmt = $pdo->prepare("SELECT id FROM user_sessions WHERE session_id = ?");
-    $stmt->execute([$sessionId]);
+    $exists = Database::queryOne("SELECT id FROM user_sessions WHERE session_id = ?", [$sessionId]);
 
-    if (!$stmt->fetch()) {
+    if (!$exists) {
         // Create new session
-        $stmt = $pdo->prepare("
-            INSERT INTO user_sessions (session_id, ip_address, user_agent, referrer, landing_page, device_type, browser, operating_system) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $sessionId,
-            $ipAddress,
-            $userAgent,
-            $referrer,
-            $landingPage,
-            $deviceInfo['device_type'],
-            $deviceInfo['browser'],
-            $deviceInfo['os']
-        ]);
+        Database::execute(
+            "INSERT INTO user_sessions (session_id, ip_address, user_agent, referrer, landing_page, device_type, browser, operating_system) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            [$sessionId, $ipAddress, $userAgent, $referrer, $landingPage, $deviceInfo['device_type'], $deviceInfo['browser'], $deviceInfo['os']]
+        );
     }
 
     echo json_encode(['success' => true, 'session_id' => $sessionId]);
@@ -235,21 +224,16 @@ function trackPageView($pdo)
     $scrollDepth = $input['scroll_depth'] ?? 0;
 
     // Insert page view
-    $stmt = $pdo->prepare("
-        INSERT INTO page_views (session_id, page_url, page_title, page_type, item_sku, time_on_page, scroll_depth) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->execute([$sessionId, $pageUrl, $pageTitle, $pageType, $itemSku, $timeOnPage, $scrollDepth]);
+    Database::execute(
+        "INSERT INTO page_views (session_id, page_url, page_title, page_type, item_sku, time_on_page, scroll_depth) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [$sessionId, $pageUrl, $pageTitle, $pageType, $itemSku, $timeOnPage, $scrollDepth]
+    );
 
     // Update session stats
-    $stmt = $pdo->prepare("
-        UPDATE user_sessions 
-        SET total_page_views = total_page_views + 1, 
-            bounce = (total_page_views <= 1),
-            last_activity = CURRENT_TIMESTAMP
-        WHERE session_id = ?
-    ");
-    $stmt->execute([$sessionId]);
+    Database::execute(
+        "UPDATE user_sessions SET total_page_views = total_page_views + 1, bounce = (total_page_views <= 1), last_activity = CURRENT_TIMESTAMP WHERE session_id = ?",
+        [$sessionId]
+    );
 
     // Track conversion funnel
     if ($pageType === 'item' || $pageType === 'product' || $pageType === 'shop') {
@@ -273,11 +257,10 @@ function trackInteraction($pdo)
     $interactionData = json_encode($input['interaction_data'] ?? []);
 
     // Insert interaction
-    $stmt = $pdo->prepare("
-        INSERT INTO user_interactions (session_id, page_url, interaction_type, element_type, element_id, element_text, item_sku, interaction_data) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ");
-    $stmt->execute([$sessionId, $pageUrl, $interactionType, $elementType, $elementId, $elementText, $itemSku, $interactionData]);
+    Database::execute(
+        "INSERT INTO user_interactions (session_id, page_url, interaction_type, element_type, element_id, element_text, item_sku, interaction_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [$sessionId, $pageUrl, $interactionType, $elementType, $elementId, $elementText, $itemSku, $interactionData]
+    );
 
     // Track specific funnel steps
     if ($interactionType === 'cart_add') {
@@ -288,8 +271,7 @@ function trackInteraction($pdo)
         trackFunnelStep($pdo, $sessionId, 'checkout_complete', $pageUrl, $itemSku);
 
         // Mark session as converted
-        $stmt = $pdo->prepare("UPDATE user_sessions SET converted = TRUE WHERE session_id = ?");
-        $stmt->execute([$sessionId]);
+        Database::execute("UPDATE user_sessions SET converted = TRUE WHERE session_id = ?", [$sessionId]);
     }
 
     echo json_encode(['success' => true]);
@@ -297,11 +279,10 @@ function trackInteraction($pdo)
 
 function trackFunnelStep($pdo, $sessionId, $step, $pageUrl, $itemSku)
 {
-    $stmt = $pdo->prepare("
-        INSERT INTO conversion_funnels (session_id, funnel_step, page_url, item_sku) 
-        VALUES (?, ?, ?, ?)
-    ");
-    $stmt->execute([$sessionId, $step, $pageUrl, $itemSku]);
+    Database::execute(
+        "INSERT INTO conversion_funnels (session_id, funnel_step, page_url, item_sku) VALUES (?, ?, ?, ?)",
+        [$sessionId, $step, $pageUrl, $itemSku]
+    );
 }
 
 function trackItemView($pdo)
@@ -316,14 +297,10 @@ function trackItemView($pdo)
     }
 
     // Update or insert item analytics
-    $stmt = $pdo->prepare("
-        INSERT INTO item_analytics (item_sku, views_count, unique_views_count, avg_time_on_page) 
-        VALUES (?, 1, 1, ?) 
-        ON DUPLICATE KEY UPDATE 
-            views_count = views_count + 1,
-            avg_time_on_page = (avg_time_on_page * (views_count - 1) + ?) / views_count
-    ");
-    $stmt->execute([$itemSku, $timeOnPage, $timeOnPage]);
+    Database::execute(
+        "INSERT INTO item_analytics (item_sku, views_count, unique_views_count, avg_time_on_page) VALUES (?, 1, 1, ?) ON DUPLICATE KEY UPDATE views_count = views_count + 1, avg_time_on_page = (avg_time_on_page * (views_count - 1) + ?) / views_count",
+        [$itemSku, $timeOnPage, $timeOnPage]
+    );
 
     echo json_encode(['success' => true]);
 }
@@ -341,12 +318,10 @@ function trackCartAction($pdo)
 
     $field = $action === 'add' ? 'cart_adds_count' : 'cart_removes_count';
 
-    $stmt = $pdo->prepare("
-        INSERT INTO item_analytics (item_sku, {$field}) 
-        VALUES (?, 1) 
-        ON DUPLICATE KEY UPDATE {$field} = {$field} + 1
-    ");
-    $stmt->execute([$itemSku]);
+    Database::execute(
+        "INSERT INTO item_analytics (item_sku, {$field}) VALUES (?, 1) ON DUPLICATE KEY UPDATE {$field} = {$field} + 1",
+        [$itemSku]
+    );
 
     echo json_encode(['success' => true]);
 }
@@ -357,34 +332,32 @@ function getAnalyticsReport($pdo)
     $dateFilter = getDateFilter($timeframe);
 
     // Overall stats
-    $stmt = $pdo->prepare("
-        SELECT 
+    $overallStats = Database::queryOne(
+        "SELECT 
             COUNT(DISTINCT session_id) as total_sessions,
             COUNT(DISTINCT CASE WHEN converted = 1 THEN session_id END) as conversions,
             AVG(session_duration) as avg_session_duration,
             AVG(total_page_views) as avg_pages_per_session,
             (COUNT(DISTINCT CASE WHEN bounce = 1 THEN session_id END) / COUNT(DISTINCT session_id)) * 100 as bounce_rate
         FROM user_sessions 
-        WHERE started_at >= ?
-    ");
-    $stmt->execute([$dateFilter]);
-    $overallStats = $stmt->fetch();
+        WHERE started_at >= ?",
+        [$dateFilter]
+    );
 
     // Top pages
-    $stmt = $pdo->prepare("
-        SELECT page_url, page_type, COUNT(*) as views, AVG(time_on_page) as avg_time
+    $topPages = Database::queryAll(
+        "SELECT page_url, page_type, COUNT(*) as views, AVG(time_on_page) as avg_time
         FROM page_views 
         WHERE viewed_at >= ?
         GROUP BY page_url, page_type
         ORDER BY views DESC
-        LIMIT 10
-    ");
-    $stmt->execute([$dateFilter]);
-    $topPages = $stmt->fetchAll();
+        LIMIT 10",
+        [$dateFilter]
+    );
 
     // Item performance
-    $stmt = $pdo->prepare("
-        SELECT 
+    $itemPerformance = Database::queryAll(
+        "SELECT 
             p.item_sku,
             i.name as item_name,
             p.views_count,
@@ -395,23 +368,20 @@ function getAnalyticsReport($pdo)
         FROM item_analytics p
         LEFT JOIN items i ON p.item_sku = i.sku
         ORDER BY p.views_count DESC
-        LIMIT 10
-    ");
-    $stmt->execute();
-    $itemPerformance = $stmt->fetchAll();
+        LIMIT 10"
+    );
 
     // Conversion funnel
-    $stmt = $pdo->prepare("
-        SELECT 
+    $conversionFunnel = Database::queryAll(
+        "SELECT 
             funnel_step,
             COUNT(DISTINCT session_id) as sessions_count
         FROM conversion_funnels 
         WHERE step_timestamp >= ?
         GROUP BY funnel_step
-        ORDER BY FIELD(funnel_step, 'landing', 'item_view', 'cart_add', 'checkout_start', 'checkout_complete')
-    ");
-    $stmt->execute([$dateFilter]);
-    $conversionFunnel = $stmt->fetchAll();
+        ORDER BY FIELD(funnel_step, 'landing', 'item_view', 'cart_add', 'checkout_start', 'checkout_complete')",
+        [$dateFilter]
+    );
 
     echo json_encode([
         'success' => true,
@@ -431,8 +401,8 @@ function getOptimizationSuggestions($pdo)
     $suggestions = [];
 
     // Analyze bounce rate
-    $stmt = $pdo->prepare("
-        SELECT 
+    $highBouncePagesPages = Database::queryAll(
+        "SELECT 
             page_url,
             page_type,
             (COUNT(CASE WHEN bounce = 1 THEN 1 END) / COUNT(*)) * 100 as bounce_rate,
@@ -443,10 +413,8 @@ function getOptimizationSuggestions($pdo)
         GROUP BY page_url, page_type
         HAVING total_sessions >= 10 AND bounce_rate > 70
         ORDER BY bounce_rate DESC
-        LIMIT 5
-    ");
-    $stmt->execute();
-    $highBouncePagesPages = $stmt->fetchAll();
+        LIMIT 5"
+    );
 
     foreach ($highBouncePagesPages as $page) {
         $suggestions[] = [
@@ -461,16 +429,14 @@ function getOptimizationSuggestions($pdo)
     }
 
     // Analyze cart abandonment
-    $stmt = $pdo->prepare("
-        SELECT COUNT(*) as cart_adds, 
+    $cartData = Database::queryOne(
+        "SELECT COUNT(*) as cart_adds, 
                COUNT(CASE WHEN cf2.funnel_step = 'checkout_complete' THEN 1 END) as completions
         FROM conversion_funnels cf1
         LEFT JOIN conversion_funnels cf2 ON cf1.session_id = cf2.session_id AND cf2.funnel_step = 'checkout_complete'
         WHERE cf1.funnel_step = 'cart_add' 
-        AND cf1.step_timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-    ");
-    $stmt->execute();
-    $cartData = $stmt->fetch();
+        AND cf1.step_timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+    );
 
     if ($cartData['cart_adds'] > 0) {
         $abandonment_rate = (($cartData['cart_adds'] - $cartData['completions']) / $cartData['cart_adds']) * 100;
@@ -489,17 +455,15 @@ function getOptimizationSuggestions($pdo)
     }
 
     // Analyze slow-loading pages
-    $stmt = $pdo->prepare("
-        SELECT page_url, AVG(time_on_page) as avg_time, COUNT(*) as views
+    $quickExitPages = Database::queryAll(
+        "SELECT page_url, AVG(time_on_page) as avg_time, COUNT(*) as views
         FROM page_views 
         WHERE viewed_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
         GROUP BY page_url
         HAVING views >= 10 AND avg_time < 30
         ORDER BY avg_time ASC
-        LIMIT 3
-    ");
-    $stmt->execute();
-    $quickExitPages = $stmt->fetchAll();
+        LIMIT 3"
+    );
 
     foreach ($quickExitPages as $page) {
         $suggestions[] = [
@@ -514,17 +478,15 @@ function getOptimizationSuggestions($pdo)
     }
 
     // Analyze item performance
-    $stmt = $pdo->prepare("
-        SELECT item_sku, views_count, cart_adds_count, 
+    $poorPerformingItems = Database::queryAll(
+        "SELECT item_sku, views_count, cart_adds_count, 
                (cart_adds_count / views_count) * 100 as conversion_rate
         FROM item_analytics 
         WHERE views_count >= 20
         HAVING conversion_rate < 5
         ORDER BY views_count DESC
-        LIMIT 3
-    ");
-    $stmt->execute();
-    $poorPerformingItems = $stmt->fetchAll();
+        LIMIT 3"
+    );
 
     foreach ($poorPerformingItems as $item) {
         $suggestions[] = [
@@ -540,20 +502,18 @@ function getOptimizationSuggestions($pdo)
 
     // Save suggestions to database
     foreach ($suggestions as $suggestion) {
-        $stmt = $pdo->prepare("
-            INSERT INTO optimization_suggestions 
-            (suggestion_type, priority, title, description, suggested_action, confidence_score, potential_impact) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([
-            $suggestion['type'],
-            $suggestion['priority'],
-            $suggestion['title'],
-            $suggestion['description'],
-            $suggestion['suggested_action'],
-            $suggestion['confidence_score'],
-            $suggestion['potential_impact']
-        ]);
+        Database::execute(
+            "INSERT INTO optimization_suggestions (suggestion_type, priority, title, description, suggested_action, confidence_score, potential_impact) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                $suggestion['type'],
+                $suggestion['priority'],
+                $suggestion['title'],
+                $suggestion['description'],
+                $suggestion['suggested_action'],
+                $suggestion['confidence_score'],
+                $suggestion['potential_impact']
+            ]
+        );
     }
 
     echo json_encode(['success' => true, 'suggestions' => $suggestions]);

@@ -14,7 +14,7 @@ require_once __DIR__ . '/config.php';
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -70,13 +70,12 @@ function handleGet($pdo)
 function getAllAssignments($pdo)
 {
     try {
-        $stmt = $pdo->query("
-            SELECT rca.*, c.name as category_name, c.description as category_description
-            FROM room_category_assignments rca 
-            JOIN categories c ON rca.category_id = c.id 
-            ORDER BY rca.room_number, rca.display_order
-        ");
-        $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $assignments = Database::queryAll(
+            "SELECT rca.*, c.name as category_name, c.description as category_description
+             FROM room_category_assignments rca 
+             JOIN categories c ON rca.category_id = c.id 
+             ORDER BY rca.room_number, rca.display_order"
+        );
         echo json_encode(['success' => true, 'assignments' => $assignments]);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -87,19 +86,18 @@ function getAllAssignments($pdo)
 function getSummary($pdo)
 {
     try {
-        $stmt = $pdo->query("
-            SELECT 
+        $summary = Database::queryAll(
+            "SELECT 
                 rca.room_number,
                 rca.room_name,
                 GROUP_CONCAT(c.name ORDER BY rca.display_order SEPARATOR ', ') as categories,
                 COUNT(*) as category_count,
                 MAX(CASE WHEN rca.is_primary = 1 THEN c.name END) as primary_category
-            FROM room_category_assignments rca 
-            JOIN categories c ON rca.category_id = c.id 
-            GROUP BY rca.room_number, rca.room_name
-            ORDER BY rca.room_number
-        ");
-        $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+             FROM room_category_assignments rca 
+             JOIN categories c ON rca.category_id = c.id 
+             GROUP BY rca.room_number, rca.room_name
+             ORDER BY rca.room_number"
+        );
         echo json_encode(['success' => true, 'summary' => $summary]);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -118,15 +116,14 @@ function getRoomAssignments($pdo)
     }
 
     try {
-        $stmt = $pdo->prepare("
-            SELECT rca.*, c.name as category_name, c.description as category_description
-            FROM room_category_assignments rca 
-            JOIN categories c ON rca.category_id = c.id 
-            WHERE rca.room_number = ?
-            ORDER BY rca.display_order
-        ");
-        $stmt->execute([$roomNumber]);
-        $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $assignments = Database::queryAll(
+            "SELECT rca.*, c.name as category_name, c.description as category_description
+             FROM room_category_assignments rca 
+             JOIN categories c ON rca.category_id = c.id 
+             WHERE rca.room_number = ?
+             ORDER BY rca.display_order",
+            [$roomNumber]
+        );
         echo json_encode(['success' => true, 'assignments' => $assignments]);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -179,28 +176,26 @@ function addAssignment($pdo, $input)
 
     try {
         // Check if assignment already exists
-        $checkStmt = $pdo->prepare("SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ?");
-        $checkStmt->execute([$roomNumber, $categoryId]);
+        $exists = Database::queryOne("SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ?", [$roomNumber, $categoryId]);
 
-        if ($checkStmt->fetch()) {
+        if ($exists) {
             echo json_encode(['success' => false, 'message' => 'This room-category assignment already exists']);
             return;
         }
 
         // If setting as primary, remove primary status from other categories in this room
         if ($isPrimary) {
-            $updateStmt = $pdo->prepare("UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?");
-            $updateStmt->execute([$roomNumber]);
+            Database::execute("UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?", [$roomNumber]);
         }
 
         // Add new assignment
-        $stmt = $pdo->prepare("
-            INSERT INTO room_category_assignments (room_number, room_name, category_id, is_primary, display_order) 
-            VALUES (?, ?, ?, ?, ?)
-        ");
+        $rows = Database::execute(
+            "INSERT INTO room_category_assignments (room_number, room_name, category_id, is_primary, display_order) VALUES (?, ?, ?, ?, ?)",
+            [$roomNumber, $roomName, $categoryId, $isPrimary, $displayOrder]
+        );
 
-        if ($stmt->execute([$roomNumber, $roomName, $categoryId, $isPrimary, $displayOrder])) {
-            $assignmentId = $pdo->lastInsertId();
+        if ($rows > 0) {
+            $assignmentId = Database::lastInsertId();
             echo json_encode(['success' => true, 'message' => 'Room-category assignment added successfully', 'id' => $assignmentId]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to add assignment']);
@@ -223,25 +218,23 @@ function setPrimary($pdo, $input)
     }
 
     try {
-        $pdo->beginTransaction();
+        Database::beginTransaction();
 
         // Remove primary status from all categories in this room
-        $clearStmt = $pdo->prepare("UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?");
-        $clearStmt->execute([$roomNumber]);
+        Database::execute("UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?", [$roomNumber]);
 
         // Set the specified category as primary
-        $setPrimaryStmt = $pdo->prepare("UPDATE room_category_assignments SET is_primary = 1 WHERE room_number = ? AND category_id = ?");
-        $setPrimaryStmt->execute([$roomNumber, $categoryId]);
+        $affected = Database::execute("UPDATE room_category_assignments SET is_primary = 1 WHERE room_number = ? AND category_id = ?", [$roomNumber, $categoryId]);
 
-        if ($setPrimaryStmt->rowCount() > 0) {
-            $pdo->commit();
+        if ($affected > 0) {
+            Database::commit();
             echo json_encode(['success' => true, 'message' => 'Primary category updated successfully']);
         } else {
-            $pdo->rollback();
+            Database::rollBack();
             echo json_encode(['success' => false, 'message' => 'Assignment not found']);
         }
     } catch (PDOException $e) {
-        $pdo->rollback();
+        Database::rollBack();
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
@@ -258,18 +251,16 @@ function updateOrder($pdo, $input)
     }
 
     try {
-        $pdo->beginTransaction();
-
-        $stmt = $pdo->prepare("UPDATE room_category_assignments SET display_order = ? WHERE id = ?");
+        Database::beginTransaction();
 
         foreach ($assignments as $assignment) {
-            $stmt->execute([$assignment['display_order'], $assignment['id']]);
+            Database::execute("UPDATE room_category_assignments SET display_order = ? WHERE id = ?", [$assignment['display_order'], $assignment['id']]);
         }
 
-        $pdo->commit();
+        Database::commit();
         echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
     } catch (PDOException $e) {
-        $pdo->rollback();
+        Database::rollBack();
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
@@ -287,10 +278,9 @@ function updateSingleOrder($pdo, $input)
     }
 
     try {
-        $stmt = $pdo->prepare("UPDATE room_category_assignments SET display_order = ? WHERE id = ?");
-        $result = $stmt->execute([$displayOrder, $assignmentId]);
+        $result = Database::execute("UPDATE room_category_assignments SET display_order = ? WHERE id = ?", [$displayOrder, $assignmentId]);
 
-        if ($result && $stmt->rowCount() > 0) {
+        if ($result > 0) {
             echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Assignment not found']);
@@ -315,14 +305,12 @@ function handleDelete($pdo, $input)
 
     try {
         if ($assignmentId !== null) {
-            $stmt = $pdo->prepare("DELETE FROM room_category_assignments WHERE id = ?");
-            $result = $stmt->execute([$assignmentId]);
+            $result = Database::execute("DELETE FROM room_category_assignments WHERE id = ?", [$assignmentId]);
         } else {
-            $stmt = $pdo->prepare("DELETE FROM room_category_assignments WHERE room_number = ? AND category_id = ?");
-            $result = $stmt->execute([$roomNumber, $categoryId]);
+            $result = Database::execute("DELETE FROM room_category_assignments WHERE room_number = ? AND category_id = ?", [$roomNumber, $categoryId]);
         }
 
-        if ($result && $stmt->rowCount() > 0) {
+        if ($result > 0) {
             echo json_encode(['success' => true, 'message' => 'Room-category assignment deleted successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Assignment not found']);

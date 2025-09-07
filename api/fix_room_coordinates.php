@@ -9,8 +9,7 @@ try {
     
     // Check current room_maps entries
     echo "1. CURRENT ROOM_MAPS ENTRIES:\n";
-    $stmt = $pdo->query("SELECT room_type, is_active, updated_at FROM room_maps ORDER BY room_type");
-    $existing = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $existing = Database::queryAll("SELECT room_type, is_active, updated_at FROM room_maps ORDER BY room_type");
     
     if (empty($existing)) {
         echo "  ❌ NO ENTRIES in room_maps table!\n";
@@ -51,41 +50,38 @@ try {
     
     foreach ($roomCoordinates as $roomType => $coordinates) {
         // Check if entry exists
-        $stmt = $pdo->prepare("SELECT id FROM room_maps WHERE room_type = ?");
-        $stmt->execute([$roomType]);
-        $existingId = $stmt->fetchColumn();
+        $row = Database::queryOne("SELECT id FROM room_maps WHERE room_type = ?", [$roomType]);
+        $existingId = $row ? $row['id'] : null;
         
         $coordinateJson = json_encode($coordinates);
         
         if ($existingId) {
             // Update existing entry
-            $stmt = $pdo->prepare("
+            Database::execute("
                 UPDATE room_maps 
                 SET coordinates = ?, is_active = 1, updated_at = NOW() 
                 WHERE id = ?
-            ");
-            $stmt->execute([$coordinateJson, $existingId]);
+            ", [$coordinateJson, $existingId]);
             echo "  ✅ Updated {$roomType}: " . count($coordinates) . " coordinate points\n";
         } else {
             // Insert new entry
-            $stmt = $pdo->prepare("
+            Database::execute("
                 INSERT INTO room_maps (room_type, coordinates, is_active, created_at, updated_at) 
                 VALUES (?, ?, 1, NOW(), NOW())
-            ");
-            $stmt->execute([$roomType, $coordinateJson]);
+            ", [$roomType, $coordinateJson]);
             echo "  ✅ Created {$roomType}: " . count($coordinates) . " coordinate points\n";
         }
     }
     
     echo "\n3. VERIFICATION - CHECKING UPDATED ENTRIES:\n";
-    $stmt = $pdo->query("
+    $rows = Database::queryAll("
         SELECT room_type, coordinates, is_active, updated_at 
         FROM room_maps 
         WHERE room_type IN ('room1','room2','room3','room4','room5') 
         ORDER BY room_type
     ");
     
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    foreach ($rows as $row) {
         $coords = json_decode($row['coordinates'], true);
         $coordCount = is_array($coords) ? count($coords) : 0;
         echo "  {$row['room_type']}: {$coordCount} coordinates - Active: {$row['is_active']} - Updated: {$row['updated_at']}\n";

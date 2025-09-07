@@ -48,21 +48,19 @@ try {
     }
 
     // First check if the customer exists
-    $checkStmt = $pdo->prepare('SELECT id FROM users WHERE id = ?');
-    $checkStmt->execute([$customerId]);
+    $exists = Database::queryOne('SELECT id FROM users WHERE id = ?', [$customerId]);
 
-    if ($checkStmt->rowCount() === 0) {
+    if (!$exists) {
         http_response_code(404);
         echo json_encode(['error' => 'Customer not found']);
         exit;
     }
 
     // Delete the customer
-    $deleteStmt = $pdo->prepare('DELETE FROM users WHERE id = ?');
-    $deleteStmt->execute([$customerId]);
+    $affected = Database::execute('DELETE FROM users WHERE id = ?', [$customerId]);
 
     // Check if deletion was successful
-    if ($deleteStmt->rowCount() > 0) {
+    if ($affected > 0) {
         echo json_encode([
             'success' => true,
             'message' => 'Customer deleted successfully'

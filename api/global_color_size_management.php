@@ -21,12 +21,7 @@ if (!$isAdmin && !$isValidToken) {
 }
 
 try {
-    try {
-        $pdo = Database::getInstance();
-    } catch (Exception $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw $e;
-    }
+    try { Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
     // Parse action from GET, POST, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -49,26 +44,22 @@ try {
                 $params[] = $category;
             }
 
-            $stmt = $pdo->prepare("
-                SELECT id, color_name, color_code, category, description, display_order
-                FROM global_colors 
-                WHERE $whereClause 
-                ORDER BY display_order ASC, color_name ASC
-            ");
-            $stmt->execute($params);
-            $colors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $colors = Database::queryAll(
+                "SELECT id, color_name, color_code, category, description, display_order
+                 FROM global_colors 
+                 WHERE $whereClause 
+                 ORDER BY display_order ASC, color_name ASC",
+                $params
+            );
 
             echo json_encode(['success' => true, 'colors' => $colors]);
             break;
 
         case 'get_color_categories':
-            $stmt = $pdo->query("
-                SELECT DISTINCT category 
-                FROM global_colors 
-                WHERE is_active = 1 
-                ORDER BY category ASC
-            ");
-            $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $categories = array_column(
+                Database::queryAll("SELECT DISTINCT category FROM global_colors WHERE is_active = 1 ORDER BY category ASC"),
+                'category'
+            );
 
             echo json_encode(['success' => true, 'categories' => $categories]);
             break;
@@ -90,13 +81,13 @@ try {
                 throw new Exception('Invalid color code format. Use #RRGGBB format.');
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO global_colors (color_name, color_code, category, description, display_order) 
-                VALUES (?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$colorName, $colorCode, $category, $description, $displayOrder]);
+            Database::execute(
+                "INSERT INTO global_colors (color_name, color_code, category, description, display_order) 
+                 VALUES (?, ?, ?, ?, ?)",
+                [$colorName, $colorCode, $category, $description, $displayOrder]
+            );
 
-            $colorId = $pdo->lastInsertId();
+            $colorId = Database::lastInsertId();
 
             echo json_encode([
                 'success' => true,
@@ -124,12 +115,12 @@ try {
                 throw new Exception('Invalid color code format. Use #RRGGBB format.');
             }
 
-            $stmt = $pdo->prepare("
-                UPDATE global_colors 
-                SET color_name = ?, color_code = ?, category = ?, description = ?, display_order = ?, is_active = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$colorName, $colorCode, $category, $description, $displayOrder, $isActive, $colorId]);
+            Database::execute(
+                "UPDATE global_colors 
+                 SET color_name = ?, color_code = ?, category = ?, description = ?, display_order = ?, is_active = ?
+                 WHERE id = ?",
+                [$colorName, $colorCode, $category, $description, $displayOrder, $isActive, $colorId]
+            );
 
             echo json_encode(['success' => true, 'message' => 'Global color updated successfully']);
             break;
@@ -143,19 +134,16 @@ try {
             }
 
             // Check if color is in use
-            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM item_color_assignments WHERE global_color_id = ?");
-            $checkStmt->execute([$colorId]);
-            $inUse = $checkStmt->fetchColumn() > 0;
+            $inUseRow = Database::queryOne("SELECT COUNT(*) as cnt FROM item_color_assignments WHERE global_color_id = ?", [$colorId]);
+            $inUse = (int)($inUseRow['cnt'] ?? 0) > 0;
 
             if ($inUse) {
                 // Soft delete - deactivate instead of deleting
-                $stmt = $pdo->prepare("UPDATE global_colors SET is_active = 0 WHERE id = ?");
-                $stmt->execute([$colorId]);
+                Database::execute("UPDATE global_colors SET is_active = 0 WHERE id = ?", [$colorId]);
                 echo json_encode(['success' => true, 'message' => 'Global color deactivated (was in use by items)']);
             } else {
                 // Hard delete
-                $stmt = $pdo->prepare("DELETE FROM global_colors WHERE id = ?");
-                $stmt->execute([$colorId]);
+                Database::execute("DELETE FROM global_colors WHERE id = ?", [$colorId]);
                 echo json_encode(['success' => true, 'message' => 'Global color deleted successfully']);
             }
             break;
@@ -171,26 +159,22 @@ try {
                 $params[] = $category;
             }
 
-            $stmt = $pdo->prepare("
-                SELECT id, size_name, size_code, category, description, display_order
-                FROM global_sizes 
-                WHERE $whereClause 
-                ORDER BY display_order ASC, size_name ASC
-            ");
-            $stmt->execute($params);
-            $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $sizes = Database::queryAll(
+                "SELECT id, size_name, size_code, category, description, display_order
+                 FROM global_sizes 
+                 WHERE $whereClause 
+                 ORDER BY display_order ASC, size_name ASC",
+                $params
+            );
 
             echo json_encode(['success' => true, 'sizes' => $sizes]);
             break;
 
         case 'get_size_categories':
-            $stmt = $pdo->query("
-                SELECT DISTINCT category 
-                FROM global_sizes 
-                WHERE is_active = 1 
-                ORDER BY category ASC
-            ");
-            $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $categories = array_column(
+                Database::queryAll("SELECT DISTINCT category FROM global_sizes WHERE is_active = 1 ORDER BY category ASC"),
+                'category'
+            );
 
             echo json_encode(['success' => true, 'categories' => $categories]);
             break;
@@ -207,13 +191,13 @@ try {
                 throw new Exception('Size name and size code are required');
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO global_sizes (size_name, size_code, category, description, display_order) 
-                VALUES (?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$sizeName, $sizeCode, $category, $description, $displayOrder]);
+            Database::execute(
+                "INSERT INTO global_sizes (size_name, size_code, category, description, display_order) 
+                 VALUES (?, ?, ?, ?, ?)",
+                [$sizeName, $sizeCode, $category, $description, $displayOrder]
+            );
 
-            $sizeId = $pdo->lastInsertId();
+            $sizeId = Database::lastInsertId();
 
             echo json_encode([
                 'success' => true,
@@ -236,12 +220,12 @@ try {
                 throw new Exception('Size ID and size name are required');
             }
 
-            $stmt = $pdo->prepare("
-                UPDATE global_sizes 
-                SET size_name = ?, size_code = ?, category = ?, description = ?, display_order = ?, is_active = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$sizeName, $sizeCode, $category, $description, $displayOrder, $isActive, $sizeId]);
+            Database::execute(
+                "UPDATE global_sizes 
+                 SET size_name = ?, size_code = ?, category = ?, description = ?, display_order = ?, is_active = ?
+                 WHERE id = ?",
+                [$sizeName, $sizeCode, $category, $description, $displayOrder, $isActive, $sizeId]
+            );
 
             echo json_encode(['success' => true, 'message' => 'Global size updated successfully']);
             break;
@@ -255,23 +239,21 @@ try {
             }
 
             // Check if size is in use
-            $checkStmt = $pdo->prepare("
-                SELECT COUNT(*) FROM item_size_assignments WHERE global_size_id = ?
-                UNION ALL
-                SELECT COUNT(*) FROM item_color_assignments WHERE global_size_id = ?
-            ");
-            $checkStmt->execute([$sizeId, $sizeId]);
-            $inUse = array_sum($checkStmt->fetchAll(PDO::FETCH_COLUMN)) > 0;
+            $rows = Database::queryAll(
+                "SELECT COUNT(*) as c FROM item_size_assignments WHERE global_size_id = ?
+                 UNION ALL
+                 SELECT COUNT(*) as c FROM item_color_assignments WHERE global_size_id = ?",
+                [$sizeId, $sizeId]
+            );
+            $inUse = array_sum(array_map(function($r){return (int)($r['c'] ?? 0);}, $rows)) > 0;
 
             if ($inUse) {
                 // Soft delete - deactivate instead of deleting
-                $stmt = $pdo->prepare("UPDATE global_sizes SET is_active = 0 WHERE id = ?");
-                $stmt->execute([$sizeId]);
+                Database::execute("UPDATE global_sizes SET is_active = 0 WHERE id = ?", [$sizeId]);
                 echo json_encode(['success' => true, 'message' => 'Global size deactivated (was in use by items)']);
             } else {
                 // Hard delete
-                $stmt = $pdo->prepare("DELETE FROM global_sizes WHERE id = ?");
-                $stmt->execute([$sizeId]);
+                Database::execute("DELETE FROM global_sizes WHERE id = ?", [$sizeId]);
                 echo json_encode(['success' => true, 'message' => 'Global size deleted successfully']);
             }
             break;
@@ -283,16 +265,15 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $stmt = $pdo->prepare("
-                SELECT isa.id, isa.item_sku, isa.global_size_id, isa.is_active,
+            $assignments = Database::queryAll(
+                "SELECT isa.id, isa.item_sku, isa.global_size_id, isa.is_active,
                        gs.size_name, gs.size_code, gs.category, gs.description
                 FROM item_size_assignments isa
                 JOIN global_sizes gs ON isa.global_size_id = gs.id
                 WHERE isa.item_sku = ? AND isa.is_active = 1
-                ORDER BY gs.display_order ASC, gs.size_name ASC
-            ");
-            $stmt->execute([$itemSku]);
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                ORDER BY gs.display_order ASC, gs.size_name ASC",
+                [$itemSku]
+            );
 
             echo json_encode(['success' => true, 'assignments' => $assignments]);
             break;
@@ -313,8 +294,8 @@ try {
                 $params[] = (int)$sizeId;
             }
 
-            $stmt = $pdo->prepare("
-                SELECT ica.id, ica.item_sku, ica.global_size_id, ica.global_color_id, 
+            $assignments = Database::queryAll(
+                "SELECT ica.id, ica.item_sku, ica.global_size_id, ica.global_color_id, 
                        ica.stock_level, ica.price_adjustment, ica.is_active,
                        gs.size_name, gs.size_code,
                        gc.color_name, gc.color_code, gc.category as color_category
@@ -322,10 +303,9 @@ try {
                 JOIN global_sizes gs ON ica.global_size_id = gs.id
                 JOIN global_colors gc ON ica.global_color_id = gc.id
                 WHERE $whereClause
-                ORDER BY gs.display_order ASC, gc.display_order ASC, gc.color_name ASC
-            ");
-            $stmt->execute($params);
-            $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                ORDER BY gs.display_order ASC, gc.display_order ASC, gc.color_name ASC",
+                $params
+            );
 
             echo json_encode(['success' => true, 'assignments' => $assignments]);
             break;
@@ -339,30 +319,24 @@ try {
                 throw new Exception('Item SKU and size IDs are required');
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Remove existing assignments if replace mode
                 if ($data['replace_existing'] ?? false) {
-                    $stmt = $pdo->prepare("DELETE FROM item_size_assignments WHERE item_sku = ?");
-                    $stmt->execute([$itemSku]);
+                    Database::execute("DELETE FROM item_size_assignments WHERE item_sku = ?", [$itemSku]);
                 }
 
                 // Insert new assignments
-                $insertStmt = $pdo->prepare("
-                    INSERT IGNORE INTO item_size_assignments (item_sku, global_size_id) 
-                    VALUES (?, ?)
-                ");
-
                 foreach ($sizeIds as $sizeId) {
-                    $insertStmt->execute([$itemSku, (int)$sizeId]);
+                    Database::execute("INSERT IGNORE INTO item_size_assignments (item_sku, global_size_id) VALUES (?, ?)", [$itemSku, (int)$sizeId]);
                 }
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'message' => 'Sizes assigned to item successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -377,39 +351,30 @@ try {
                 throw new Exception('Item SKU, size ID, and color assignments are required');
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Remove existing color assignments for this size if replace mode
                 if ($data['replace_existing'] ?? false) {
-                    $stmt = $pdo->prepare("DELETE FROM item_color_assignments WHERE item_sku = ? AND global_size_id = ?");
-                    $stmt->execute([$itemSku, $sizeId]);
+                    Database::execute("DELETE FROM item_color_assignments WHERE item_sku = ? AND global_size_id = ?", [$itemSku, $sizeId]);
                 }
 
                 // Insert new color assignments
-                $insertStmt = $pdo->prepare("
-                    INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) 
-                    VALUES (?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE 
-                    stock_level = VALUES(stock_level),
-                    price_adjustment = VALUES(price_adjustment)
-                ");
-
                 foreach ($colorAssignments as $assignment) {
                     $colorId = (int)($assignment['color_id'] ?? 0);
                     $stockLevel = (int)($assignment['stock_level'] ?? 0);
                     $priceAdjustment = (float)($assignment['price_adjustment'] ?? 0);
 
                     if ($colorId > 0) {
-                        $insertStmt->execute([$itemSku, $sizeId, $colorId, $stockLevel, $priceAdjustment]);
+                        Database::execute("\n                            INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) \n                            VALUES (?, ?, ?, ?, ?)\n                            ON DUPLICATE KEY UPDATE \n                            stock_level = VALUES(stock_level),\n                            price_adjustment = VALUES(price_adjustment)\n                        ", [$itemSku, $sizeId, $colorId, $stockLevel, $priceAdjustment]);
                     }
                 }
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'message' => 'Colors assigned to item size successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -423,8 +388,7 @@ try {
                 throw new Exception('Valid assignment ID is required');
             }
 
-            $stmt = $pdo->prepare("UPDATE item_color_assignments SET stock_level = ? WHERE id = ?");
-            $stmt->execute([$stockLevel, $assignmentId]);
+            Database::execute("UPDATE item_color_assignments SET stock_level = ? WHERE id = ?", [$stockLevel, $assignmentId]);
 
             echo json_encode(['success' => true, 'message' => 'Stock level updated successfully']);
             break;
@@ -438,17 +402,14 @@ try {
                 throw new Exception('Item SKU and structure data are required');
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Clear existing assignments
-                $pdo->prepare("DELETE FROM item_size_assignments WHERE item_sku = ?")->execute([$itemSku]);
-                $pdo->prepare("DELETE FROM item_color_assignments WHERE item_sku = ?")->execute([$itemSku]);
+                Database::execute("DELETE FROM item_size_assignments WHERE item_sku = ?", [$itemSku]);
+                Database::execute("DELETE FROM item_color_assignments WHERE item_sku = ?", [$itemSku]);
 
                 // Insert new structure
-                $sizeStmt = $pdo->prepare("INSERT INTO item_size_assignments (item_sku, global_size_id) VALUES (?, ?)");
-                $colorStmt = $pdo->prepare("INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) VALUES (?, ?, ?, ?, ?)");
-
                 foreach ($structure as $sizeData) {
                     $sizeId = (int)($sizeData['size_id'] ?? 0);
                     if ($sizeId <= 0) {
@@ -456,7 +417,7 @@ try {
                     }
 
                     // Add size assignment
-                    $sizeStmt->execute([$itemSku, $sizeId]);
+                    Database::execute("INSERT INTO item_size_assignments (item_sku, global_size_id) VALUES (?, ?)", [$itemSku, $sizeId]);
 
                     // Add color assignments for this size
                     foreach ($sizeData['colors'] ?? [] as $colorData) {
@@ -465,29 +426,28 @@ try {
                         $priceAdjustment = (float)($colorData['price_adjustment'] ?? 0);
 
                         if ($colorId > 0) {
-                            $colorStmt->execute([$itemSku, $sizeId, $colorId, $stockLevel, $priceAdjustment]);
+                            Database::execute("INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) VALUES (?, ?, ?, ?, ?)", [$itemSku, $sizeId, $colorId, $stockLevel, $priceAdjustment]);
                         }
                     }
                 }
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'message' => 'Item structure updated successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
 
             // ========== GLOBAL GENDERS MANAGEMENT ==========
         case 'get_global_genders':
-            $stmt = $pdo->query("
-                SELECT id, gender_name, description, display_order
+            $genders = Database::queryAll(
+                "SELECT id, gender_name, description, display_order
                 FROM global_genders 
                 WHERE is_active = 1 
-                ORDER BY display_order ASC, gender_name ASC
-            ");
-            $genders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                ORDER BY display_order ASC, gender_name ASC"
+            );
 
             echo json_encode(['success' => true, 'genders' => $genders]);
             break;
@@ -504,22 +464,20 @@ try {
             }
 
             // Check if gender already exists
-            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM global_genders WHERE gender_name = ? AND is_active = 1");
-            $checkStmt->execute([$genderName]);
-            if ($checkStmt->fetchColumn() > 0) {
+            $row = Database::queryOne("SELECT COUNT(*) AS c FROM global_genders WHERE gender_name = ? AND is_active = 1", [$genderName]);
+            if ((int)($row['c'] ?? 0) > 0) {
                 throw new Exception('A gender with this name already exists');
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO global_genders (gender_name, description, display_order) 
-                VALUES (?, ?, ?)
-            ");
-            $stmt->execute([$genderName, $description, $displayOrder]);
+            Database::execute(
+                "INSERT INTO global_genders (gender_name, description, display_order) VALUES (?, ?, ?)",
+                [$genderName, $description, $displayOrder]
+            );
 
             echo json_encode([
                 'success' => true,
                 'message' => 'Global gender added successfully',
-                'gender_id' => $pdo->lastInsertId()
+                'gender_id' => Database::lastInsertId()
             ]);
             break;
 
@@ -540,18 +498,15 @@ try {
             }
 
             // Check if another gender with the same name exists (excluding current one)
-            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM global_genders WHERE gender_name = ? AND id != ? AND is_active = 1");
-            $checkStmt->execute([$genderName, $genderId]);
-            if ($checkStmt->fetchColumn() > 0) {
+            $row = Database::queryOne("SELECT COUNT(*) AS c FROM global_genders WHERE gender_name = ? AND id != ? AND is_active = 1", [$genderName, $genderId]);
+            if ((int)($row['c'] ?? 0) > 0) {
                 throw new Exception('A gender with this name already exists');
             }
 
-            $stmt = $pdo->prepare("
-                UPDATE global_genders 
-                SET gender_name = ?, description = ?, display_order = ?, updated_at = NOW()
-                WHERE id = ?
-            ");
-            $stmt->execute([$genderName, $description, $displayOrder, $genderId]);
+            Database::execute(
+                "UPDATE global_genders SET gender_name = ?, description = ?, display_order = ?, updated_at = NOW() WHERE id = ?",
+                [$genderName, $description, $displayOrder, $genderId]
+            );
 
             echo json_encode([
                 'success' => true,
@@ -568,19 +523,16 @@ try {
             }
 
             // Check if gender is in use by items
-            $checkStmt = $pdo->prepare("SELECT COUNT(*) FROM item_genders WHERE gender = (SELECT gender_name FROM global_genders WHERE id = ?)");
-            $checkStmt->execute([$genderId]);
-            $inUse = $checkStmt->fetchColumn() > 0;
+            $row = Database::queryOne("SELECT COUNT(*) AS c FROM item_genders WHERE gender = (SELECT gender_name FROM global_genders WHERE id = ?)", [$genderId]);
+            $inUse = ((int)($row['c'] ?? 0)) > 0;
 
             if ($inUse) {
                 // Soft delete - deactivate instead of deleting
-                $stmt = $pdo->prepare("UPDATE global_genders SET is_active = 0 WHERE id = ?");
-                $stmt->execute([$genderId]);
+                Database::execute("UPDATE global_genders SET is_active = 0 WHERE id = ?", [$genderId]);
                 echo json_encode(['success' => true, 'message' => 'Global gender deactivated (was in use by items)']);
             } else {
                 // Hard delete
-                $stmt = $pdo->prepare("DELETE FROM global_genders WHERE id = ?");
-                $stmt->execute([$genderId]);
+                Database::execute("DELETE FROM global_genders WHERE id = ?", [$genderId]);
                 echo json_encode(['success' => true, 'message' => 'Global gender deleted successfully']);
             }
             break;

@@ -17,6 +17,7 @@
     "guard:templates:css": "node scripts/guard-templates-css.mjs",
     "guard:duplicates": "node scripts/dev/guard-duplicates.mjs",
     "guard:legacy": "node scripts/dev/legacy-scan.mjs",
+    "guard:legacy:write": "node scripts/dev/legacy-scan.mjs --write",
     "check:css:orphans": "node scripts/check-orphaned-css.mjs",
     "check:css:orphans:write": "node scripts/check-orphaned-css.mjs --write",
     "check:css:inventory": "node scripts/css-inventory.mjs",
@@ -26,7 +27,8 @@
     "tooltips:export": "node scripts/dev/export-admin-tooltips.mjs",
     "tooltips:audit": "node scripts/dev/audit-tooltips.mjs",
     "tooltips:seed:dry": "node scripts/dev/seed-admin-tooltips.mjs --dry-run",
-    "tooltips:seed": "node scripts/dev/seed-admin-tooltips.mjs --apply"
+    "tooltips:seed": "node scripts/dev/seed-admin-tooltips.mjs --apply",
+    "smoke:apis": "bash scripts/dev/smoke-all-apis.sh"
   },
   "devDependencies": {
     "@babel/parser": "^7.28.0",

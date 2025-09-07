@@ -15,7 +15,7 @@ function handleReceiptSettings()
             error_log("Database connection failed: " . $e->getMessage());
             throw $e;
         }
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        // Attributes handled by Database helper
 
         $action = $_GET['action'] ?? $_POST['action'] ?? 'get_settings';
 
@@ -55,11 +55,10 @@ function getReceiptSettings($pdo)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ";
 
-    $pdo->exec($createTableSQL);
+    Database::execute($createTableSQL);
 
     // Get all settings
-    $stmt = $pdo->query("SELECT * FROM receipt_settings ORDER BY setting_type, condition_key, condition_value");
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $settings = Database::queryAll("SELECT * FROM receipt_settings ORDER BY setting_type, condition_key, condition_value");
 
     // Group by setting type
     $grouped = [
@@ -85,18 +84,17 @@ function updateReceiptSettings($pdo)
     }
 
     // Begin transaction
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     try {
         foreach ($input['settings'] as $setting) {
             if (isset($setting['id']) && $setting['id'] > 0) {
                 // Update existing
-                $stmt = $pdo->prepare("
+                Database::execute("
                     UPDATE receipt_settings 
                     SET condition_key = ?, condition_value = ?, message_title = ?, message_content = ?, ai_generated = ?
                     WHERE id = ?
-                ");
-                $stmt->execute([
+                ", [
                     $setting['condition_key'],
                     $setting['condition_value'],
                     $setting['message_title'],
@@ -106,11 +104,10 @@ function updateReceiptSettings($pdo)
                 ]);
             } else {
                 // Insert new
-                $stmt = $pdo->prepare("
+                Database::execute("
                     INSERT INTO receipt_settings (setting_type, condition_key, condition_value, message_title, message_content, ai_generated)
                     VALUES (?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([
+                ", [
                     $setting['setting_type'],
                     $setting['condition_key'],
                     $setting['condition_value'],
@@ -121,11 +118,11 @@ function updateReceiptSettings($pdo)
             }
         }
 
-        $pdo->commit();
+        Database::commit();
         return ['success' => true, 'message' => 'Receipt settings updated successfully'];
 
     } catch (Exception $e) {
-        $pdo->rollback();
+        Database::rollBack();
         throw $e;
     }
 }
@@ -284,9 +281,7 @@ function getAISettings($pdo)
     ];
 
     try {
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai' AND setting_key IN ('ai_brand_voice', 'ai_content_tone')");
-        $stmt->execute();
-        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai' AND setting_key IN ('ai_brand_voice', 'ai_content_tone')");
 
         foreach ($results as $row) {
             $defaults[$row['setting_key']] = $row['setting_value'];
@@ -301,8 +296,7 @@ function getAISettings($pdo)
 function initializeDefaultSettings($pdo)
 {
     // Check if settings already exist
-    $stmt = $pdo->query("SELECT COUNT(*) as count FROM receipt_settings");
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    $result = Database::queryOne("SELECT COUNT(*) as count FROM receipt_settings");
 
     if ($result['count'] > 0) {
         return ['success' => true, 'message' => 'Settings already initialized'];
@@ -331,13 +325,11 @@ function initializeDefaultSettings($pdo)
         ['default', 'status', 'completed', 'Payment Received', 'Your order is being processed with care. You\'ll receive updates as your custom items are prepared and shipped.']
     ];
 
-    $stmt = $pdo->prepare("
-        INSERT INTO receipt_settings (setting_type, condition_key, condition_value, message_title, message_content)
-        VALUES (?, ?, ?, ?, ?)
-    ");
-
     foreach ($defaultSettings as $setting) {
-        $stmt->execute($setting);
+        Database::execute("
+            INSERT INTO receipt_settings (setting_type, condition_key, condition_value, message_title, message_content)
+            VALUES (?, ?, ?, ?, ?)
+        ", $setting);
     }
 
     return ['success' => true, 'message' => 'Default receipt settings initialized'];

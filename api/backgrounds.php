@@ -3,7 +3,6 @@
 // Bootstrap consistent API behavior and DB config
 require_once __DIR__ . '/api_bootstrap.php';
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/../includes/database.php';
 require_once __DIR__ . '/../includes/response.php';
 
 // Early exit on preflight
@@ -14,7 +13,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
 
 // Database connection (centralized via Database singleton)
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 } catch (Throwable $e) {
     Response::serverError('Database connection failed', $e->getMessage());
 }
@@ -24,22 +23,22 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 // Router
 switch ($method) {
     case 'GET':
-        wf_handle_backgrounds_get($pdo);
+        wf_handle_backgrounds_get();
         break;
     case 'POST':
-        wf_handle_backgrounds_post($pdo);
+        wf_handle_backgrounds_post();
         break;
     case 'PUT':
-        wf_handle_backgrounds_put($pdo);
+        wf_handle_backgrounds_put();
         break;
     case 'DELETE':
-        wf_handle_backgrounds_delete($pdo);
+        wf_handle_backgrounds_delete();
         break;
     default:
         Response::methodNotAllowed();
 }
 
-function saveBackground($pdo, $input)
+function saveBackground($input)
 {
     $roomType = $input['room_type'] ?? '';
     $backgroundName = $input['background_name'] ?? '';
@@ -54,22 +53,21 @@ function saveBackground($pdo, $input)
 
     try {
         // Check if background name already exists for this room
-        $checkStmt = $pdo->prepare("SELECT id FROM backgrounds WHERE room_type = ? AND background_name = ?");
-        $checkStmt->execute([$roomType, $backgroundName]);
+        $exists = Database::queryOne("SELECT id FROM backgrounds WHERE room_type = ? AND background_name = ?", [$roomType, $backgroundName]);
 
-        if ($checkStmt->fetch()) {
+        if ($exists) {
             echo json_encode(['success' => false, 'message' => 'Background name already exists for this room']);
             return;
         }
 
         // Insert new background
-        $stmt = $pdo->prepare("
-            INSERT INTO backgrounds (room_type, background_name, image_filename, webp_filename, is_active) 
-            VALUES (?, ?, ?, ?, 0)
-        ");
+        $rows = Database::execute(
+            "INSERT INTO backgrounds (room_type, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)",
+            [$roomType, $backgroundName, $imageFilename, $webpFilename]
+        );
 
-        if ($stmt->execute([$roomType, $backgroundName, $imageFilename, $webpFilename])) {
-            $backgroundId = $pdo->lastInsertId();
+        if ($rows > 0) {
+            $backgroundId = Database::lastInsertId();
             Response::success(['id' => $backgroundId], 'Background saved successfully');
         } else {
             Response::error('Failed to save background');
@@ -79,7 +77,7 @@ function saveBackground($pdo, $input)
     }
 }
 
-function applyBackground($pdo, $input)
+function applyBackground($input)
 {
     $roomType = $input['room_type'] ?? '';
     $backgroundId = $input['background_id'] ?? '';
@@ -91,30 +89,28 @@ function applyBackground($pdo, $input)
     }
 
     try {
-        $pdo->beginTransaction();
+        Database::beginTransaction();
 
         // Deactivate all backgrounds for this room
-        $deactivateStmt = $pdo->prepare("UPDATE backgrounds SET is_active = 0 WHERE room_type = ?");
-        $deactivateStmt->execute([$roomType]);
+        Database::execute("UPDATE backgrounds SET is_active = 0 WHERE room_type = ?", [$roomType]);
 
         // Activate the selected background
-        $activateStmt = $pdo->prepare("UPDATE backgrounds SET is_active = 1 WHERE id = ? AND room_type = ?");
-        $activateStmt->execute([$backgroundId, $roomType]);
+        $affected = Database::execute("UPDATE backgrounds SET is_active = 1 WHERE id = ? AND room_type = ?", [$backgroundId, $roomType]);
 
-        if ($activateStmt->rowCount() > 0) {
-            $pdo->commit();
+        if ($affected > 0) {
+            Database::commit();
             Response::success(null, 'Background applied successfully');
         } else {
-            $pdo->rollBack();
+            Database::rollBack();
             Response::error('Background not found or invalid room type');
         }
     } catch (PDOException $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         Response::serverError('Database error', $e->getMessage());
     }
 }
 
-function handleDelete($pdo, $input)
+function handleDelete($input)
 {
     $backgroundId = $input['background_id'] ?? '';
 
@@ -126,9 +122,7 @@ function handleDelete($pdo, $input)
 
     try {
         // Check if it's an Original background
-        $checkStmt = $pdo->prepare("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?");
-        $checkStmt->execute([$backgroundId]);
-        $background = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        $background = Database::queryOne("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?", [$backgroundId]);
 
         if (!$background) {
             echo json_encode(['success' => false, 'message' => 'Background not found']);
@@ -141,9 +135,9 @@ function handleDelete($pdo, $input)
         }
 
         // Delete the background
-        $deleteStmt = $pdo->prepare("DELETE FROM backgrounds WHERE id = ?");
+        $deleted = Database::execute("DELETE FROM backgrounds WHERE id = ?", [$backgroundId]);
 
-        if ($deleteStmt->execute([$backgroundId])) {
+        if ($deleted > 0) {
             // Optionally delete the image files (commented out for safety)
             // if (file_exists("../images/" . $background['image_filename'])) {
             //     unlink("../images/" . $background['image_filename']);
@@ -161,7 +155,7 @@ function handleDelete($pdo, $input)
     }
 }
 
-function handleUpload($pdo, $input)
+function handleUpload($input)
 {
     // This would handle file uploads - for now, just return success
     // In a full implementation, this would process uploaded files
@@ -169,7 +163,7 @@ function handleUpload($pdo, $input)
 }
 
 // Local request handlers using Response helper
-function wf_handle_backgrounds_get(PDO $pdo): void {
+function wf_handle_backgrounds_get(): void {
     try {
         $roomType = $_GET['room_type'] ?? null;
         $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
@@ -179,18 +173,14 @@ function wf_handle_backgrounds_get(PDO $pdo): void {
             $params = [$roomType];
             if ($activeOnly) { $sql .= " AND is_active = 1"; }
             $sql .= " ORDER BY background_name = 'Original' DESC, created_at DESC";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $rows = Database::queryAll($sql, $params);
             if ($activeOnly && count($rows) > 0) {
                 Response::success(['background' => $rows[0]]);
             } else {
                 Response::success(['backgrounds' => $rows]);
             }
         } else {
-            $stmt = $pdo->prepare("SELECT room_type, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_type ORDER BY room_type");
-            $stmt->execute();
-            $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $summary = Database::queryAll("SELECT room_type, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_type ORDER BY room_type");
             Response::success(['summary' => $summary]);
         }
     } catch (Throwable $e) {
@@ -198,26 +188,26 @@ function wf_handle_backgrounds_get(PDO $pdo): void {
     }
 }
 
-function wf_handle_backgrounds_post(PDO $pdo): void {
+function wf_handle_backgrounds_post(): void {
     $data = Response::getPostData(true);
     if (!is_array($data)) { Response::validationError('Invalid payload'); }
     $action = $data['action'] ?? '';
     switch ($action) {
         case 'save':
-            saveBackground($pdo, $data);
+            saveBackground($data);
             return;
         case 'apply':
-            applyBackground($pdo, $data);
+            applyBackground($data);
             return;
         case 'upload':
-            handleUpload($pdo, $data);
+            handleUpload($data);
             return;
         default:
             Response::error('Invalid action');
     }
 }
 
-function wf_handle_backgrounds_put(PDO $pdo): void {
+function wf_handle_backgrounds_put(): void {
     // Expect x-www-form-urlencoded or JSON
     $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
     if (strpos($contentType, 'application/json') !== false) {
@@ -231,16 +221,15 @@ function wf_handle_backgrounds_put(PDO $pdo): void {
         Response::validationError(['id' => 'required', 'css_value' => 'required']);
     }
     try {
-        $stmt = $pdo->prepare("UPDATE global_css_rules SET css_value = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-        $stmt->execute([$cssValue, $id]);
+        Database::execute("UPDATE global_css_rules SET css_value = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [$cssValue, $id]);
         Response::success(null, 'CSS rule updated successfully');
     } catch (Throwable $e) {
         Response::serverError('Database error', $e->getMessage());
     }
 }
 
-function wf_handle_backgrounds_delete(PDO $pdo): void {
+function wf_handle_backgrounds_delete(): void {
     $data = Response::getJsonInput() ?? [];
-    handleDelete($pdo, $data);
+    handleDelete($data);
 }
 ?> 

@@ -78,3 +78,5 @@ if (!isset($isLoggedIn) || !$isLoggedIn) {
     'userId' => $userData['userId'] ?? null,
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
 </script>
+
+<?php // Admin account settings script is loaded via app.js per-page imports ?>

@@ -6,10 +6,10 @@
 require_once __DIR__ . '/../../api/config.php';
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 
     // Ensure table exists
-    $pdo->exec('CREATE TABLE IF NOT EXISTS dashboard_sections (
+    Database::execute('CREATE TABLE IF NOT EXISTS dashboard_sections (
         section_key VARCHAR(64) NOT NULL,
         display_order INT NOT NULL DEFAULT 0,
         is_active TINYINT(1) NOT NULL DEFAULT 1,
@@ -35,9 +35,8 @@ try {
 
     // Load existing sections keyed by section_key
     $existing = [];
-    foreach ($pdo->query('SELECT * FROM dashboard_sections') as $row) {
-        $existing[$row['section_key']] = $row;
-    }
+    $rows = Database::queryAll('SELECT * FROM dashboard_sections');
+    foreach ($rows as $row) { $existing[$row['section_key']] = $row; }
 
     // Prepare upsert statement similar to api/dashboard_sections.php
     $sql = 'INSERT INTO dashboard_sections 
@@ -49,7 +48,7 @@ try {
               width_class = VALUES(width_class),
               show_title = VALUES(show_title),
               show_description = VALUES(show_description)';
-    $stmt = $pdo->prepare($sql);
+    // We'll execute per-section using Database::execute with positional params matching order
 
     $inserted = 0; $updated = 0; $skipped = 0;
     foreach ($desired as $sec) {
@@ -60,17 +59,28 @@ try {
             if (!empty($row['custom_description'])) { $sec['custom_description'] = $row['custom_description']; }
         }
 
-        $ok = $stmt->execute([
-            ':section_key' => $sec['section_key'],
-            ':display_order' => $sec['display_order'],
-            ':is_active' => $sec['is_active'],
-            ':show_title' => $sec['show_title'],
-            ':show_description' => $sec['show_description'],
-            ':custom_title' => $sec['custom_title'],
-            ':custom_description' => $sec['custom_description'],
-            ':width_class' => $sec['width_class'],
-        ]);
-        if ($ok) {
+        $affected = Database::execute(
+            'INSERT INTO dashboard_sections 
+             (section_key, display_order, is_active, show_title, show_description, custom_title, custom_description, width_class)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE 
+               is_active = VALUES(is_active),
+               display_order = VALUES(display_order),
+               width_class = VALUES(width_class),
+               show_title = VALUES(show_title),
+               show_description = VALUES(show_description)',
+            [
+                $sec['section_key'],
+                $sec['display_order'],
+                $sec['is_active'],
+                $sec['show_title'],
+                $sec['show_description'],
+                $sec['custom_title'],
+                $sec['custom_description'],
+                $sec['width_class'],
+            ]
+        );
+        if ($affected >= 0) {
             if (isset($existing[$sec['section_key']])) { $updated++; } else { $inserted++; }
         } else {
             $skipped++;
@@ -78,13 +88,13 @@ try {
     }
 
     // Normalize display_order to be contiguous starting at 1
-    $rows = $pdo->query('SELECT section_key FROM dashboard_sections ORDER BY display_order ASC')->fetchAll(PDO::FETCH_COLUMN);
-    $norm = $pdo->prepare('UPDATE dashboard_sections SET display_order = ? WHERE section_key = ?');
-    foreach ($rows as $i => $key) {
-        $norm->execute([$i + 1, $key]);
+    $rows = Database::queryAll('SELECT section_key FROM dashboard_sections ORDER BY display_order ASC');
+    foreach ($rows as $i => $r) {
+        Database::execute('UPDATE dashboard_sections SET display_order = ? WHERE section_key = ?', [$i + 1, $r['section_key']]);
     }
 
-    $count = (int)$pdo->query('SELECT COUNT(*) FROM dashboard_sections')->fetchColumn();
+    $countRow = Database::queryOne('SELECT COUNT(*) AS c FROM dashboard_sections');
+    $count = (int)($countRow['c'] ?? 0);
     echo "Dashboard sections seeded. Inserted: {$inserted}, Updated: {$updated}, Skipped: {$skipped}. Total rows: {$count}\n";
     exit(0);
 } catch (Throwable $e) {

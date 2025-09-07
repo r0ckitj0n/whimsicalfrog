@@ -11,7 +11,7 @@ import '../styles/admin-settings.css';
 
 // Important: only load the heavy legacy module when explicitly requested.
 // Always load the lightweight bridge.
-// Load bridge dynamically to avoid hard-failing the whole entry if Vite errors while serving it
+// Load bridge dynamically (deferred) to avoid blocking main thread; allow diagnostic skip
 const loadBridge = async () => {
   try {
     await import('../js/admin-settings-bridge.js');
@@ -100,12 +100,29 @@ if (typeof window !== 'undefined') {
   const disableByWindow = (typeof window.WF_DISABLE_ADMIN_SETTINGS_JS !== 'undefined') ? !!window.WF_DISABLE_ADMIN_SETTINGS_JS : false;
   const shouldLoadLegacy = !disableByWindow && (wantLegacy === '1' || (wfSection && wfSection !== ''));
 
+  const noBridge = params.get('wf_no_bridge');
   if (killSwitch === '1' || killSwitch === 'true' || disableByWindow) {
     console.warn('[AdminSettings] Kill-switch active: skipping admin settings JS initialization');
   } else {
     const runInit = () => {
-      // Always try to load the lightweight bridge first
-      loadBridge();
+      // Always try to load the lightweight bridge first (deferred)
+      try {
+        if ('requestIdleCallback' in window) {
+          if (noBridge === '1' || noBridge === 'true') {
+            console.warn('[AdminSettings] wf_no_bridge=1 -> skipping bridge load');
+          } else {
+            window.requestIdleCallback(() => loadBridge(), { timeout: 200 });
+          }
+        } else {
+          if (noBridge === '1' || noBridge === 'true') {
+            console.warn('[AdminSettings] wf_no_bridge=1 -> skipping bridge load');
+          } else {
+            setTimeout(loadBridge, 50);
+          }
+        }
+      } catch (_) {
+        if (!(noBridge === '1' || noBridge === 'true')) setTimeout(loadBridge, 50);
+      }
       // Only attempt to init the legacy module when explicitly requested
       if (!shouldLoadLegacy) {
         console.info('[AdminSettings] Skipping legacy module (light mode or no section). Bridge remains active.');

@@ -28,18 +28,11 @@ function syncTotalStockWithColors($pdo, $itemSku)
 {
     try {
         // Calculate total stock from all active colors
-        $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(stock_level), 0) as total_color_stock
-            FROM item_colors 
-            WHERE item_sku = ? AND is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totalColorStock = $result['total_color_stock'];
+        $result = Database::queryOne("\n            SELECT COALESCE(SUM(stock_level), 0) as total_color_stock\n            FROM item_colors \n            WHERE item_sku = ? AND is_active = 1\n        ", [$itemSku]);
+        $totalColorStock = (int)($result['total_color_stock'] ?? 0);
 
         // Update the main item's stock level
-        $updateStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
-        $updateStmt->execute([$totalColorStock, $itemSku]);
+        Database::execute("UPDATE items SET stockLevel = ? WHERE sku = ?", [$totalColorStock, $itemSku]);
 
         return $totalColorStock;
     } catch (Exception $e) {
@@ -57,18 +50,11 @@ function syncTotalStockWithColors($pdo, $itemSku)
 function syncColorStockWithSizes($pdo, $colorId)
 {
     try {
-        $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(stock_level), 0) as total_size_stock
-            FROM item_sizes 
-            WHERE color_id = ? AND is_active = 1
-        ");
-        $stmt->execute([$colorId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totalSizeStock = $result['total_size_stock'];
+        $result = Database::queryOne("\n            SELECT COALESCE(SUM(stock_level), 0) as total_size_stock\n            FROM item_sizes \n            WHERE color_id = ? AND is_active = 1\n        ", [$colorId]);
+        $totalSizeStock = (int)($result['total_size_stock'] ?? 0);
 
         // Update the color's stock level
-        $updateStmt = $pdo->prepare("UPDATE item_colors SET stock_level = ? WHERE id = ?");
-        $updateStmt->execute([$totalSizeStock, $colorId]);
+        Database::execute("UPDATE item_colors SET stock_level = ? WHERE id = ?", [$totalSizeStock, $colorId]);
 
         return $totalSizeStock;
     } catch (Exception $e) {
@@ -87,27 +73,15 @@ function syncTotalStockWithSizes($pdo, $itemSku)
 {
     try {
         // Calculate total stock from all active sizes
-        $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(stock_level), 0) as total_size_stock
-            FROM item_sizes 
-            WHERE item_sku = ? AND is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totalSizeStock = $result['total_size_stock'];
+        $result = Database::queryOne("\n            SELECT COALESCE(SUM(stock_level), 0) as total_size_stock\n            FROM item_sizes \n            WHERE item_sku = ? AND is_active = 1\n        ", [$itemSku]);
+        $totalSizeStock = (int)($result['total_size_stock'] ?? 0);
 
         // Update the main item's stock level
-        $updateStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
-        $updateStmt->execute([$totalSizeStock, $itemSku]);
+        Database::execute("UPDATE items SET stockLevel = ? WHERE sku = ?", [$totalSizeStock, $itemSku]);
 
         // Also sync color stocks if there are color-specific sizes
-        $colorStmt = $pdo->prepare("
-            SELECT DISTINCT color_id 
-            FROM item_sizes 
-            WHERE item_sku = ? AND color_id IS NOT NULL
-        ");
-        $colorStmt->execute([$itemSku]);
-        $colorIds = $colorStmt->fetchAll(PDO::FETCH_COLUMN);
+        $rows = Database::queryAll("\n            SELECT DISTINCT color_id \n            FROM item_sizes \n            WHERE item_sku = ? AND color_id IS NOT NULL\n        ", [$itemSku]);
+        $colorIds = array_map(function($r){ return $r['color_id']; }, $rows);
 
         foreach ($colorIds as $colorId) {
             syncColorStockWithSizes($pdo, $colorId);
@@ -133,37 +107,27 @@ function reduceStockForSaleByColor($pdo, $itemSku, $colorName, $quantity, $useTr
 {
     try {
         if ($useTransaction) {
-            $pdo->beginTransaction();
+            Database::beginTransaction();
         }
 
         if (!empty($colorName)) {
             // Reduce color-specific stock
-            $stmt = $pdo->prepare("
-                UPDATE item_colors 
-                SET stock_level = GREATEST(stock_level - ?, 0) 
-                WHERE item_sku = ? AND color_name = ? AND is_active = 1
-            ");
-            $stmt->execute([$quantity, $itemSku, $colorName]);
+            Database::execute("\n                UPDATE item_colors \n                SET stock_level = GREATEST(stock_level - ?, 0) \n                WHERE item_sku = ? AND color_name = ? AND is_active = 1\n            ", [$quantity, $itemSku, $colorName]);
 
             // Sync total stock with color quantities
             syncTotalStockWithColors($pdo, $itemSku);
         } else {
             // No color specified, reduce total stock only
-            $stmt = $pdo->prepare("
-                UPDATE items 
-                SET stockLevel = GREATEST(stockLevel - ?, 0) 
-                WHERE sku = ?
-            ");
-            $stmt->execute([$quantity, $itemSku]);
+            Database::execute("\n                UPDATE items \n                SET stockLevel = GREATEST(stockLevel - ?, 0) \n                WHERE sku = ?\n            ", [$quantity, $itemSku]);
         }
 
         if ($useTransaction) {
-            $pdo->commit();
+            Database::commit();
         }
         return true;
     } catch (Exception $e) {
         if ($useTransaction) {
-            $pdo->rollBack();
+            Database::rollBack();
         }
         error_log("Error reducing stock by color for $itemSku: " . $e->getMessage());
         return false;
@@ -184,16 +148,14 @@ function reduceStockForSaleBySize($pdo, $itemSku, $sizeCode, $quantity, $colorNa
 {
     try {
         if ($useTransaction) {
-            $pdo->beginTransaction();
+            Database::beginTransaction();
         }
 
         // Get color ID if color is specified
         $colorId = null;
         if (!empty($colorName)) {
-            $colorStmt = $pdo->prepare("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND is_active = 1");
-            $colorStmt->execute([$itemSku, $colorName]);
-            $colorResult = $colorStmt->fetch(PDO::FETCH_ASSOC);
-            $colorId = $colorResult ? $colorResult['id'] : null;
+            $row = Database::queryOne("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND is_active = 1", [$itemSku, $colorName]);
+            $colorId = $row ? $row['id'] : null;
         }
 
         // Build WHERE clause for size reduction
@@ -208,12 +170,7 @@ function reduceStockForSaleBySize($pdo, $itemSku, $sizeCode, $quantity, $colorNa
         }
 
         // Reduce size-specific stock
-        $stmt = $pdo->prepare("
-            UPDATE item_sizes 
-            SET stock_level = GREATEST(stock_level - ?, 0) 
-            WHERE $whereClause
-        ");
-        $stmt->execute(array_merge([$quantity], $params));
+        Database::execute("\n            UPDATE item_sizes \n            SET stock_level = GREATEST(stock_level - ?, 0) \n            WHERE $whereClause\n        ", array_merge([$quantity], $params));
 
         // Sync stock levels
         if ($colorId) {
@@ -222,12 +179,12 @@ function reduceStockForSaleBySize($pdo, $itemSku, $sizeCode, $quantity, $colorNa
         syncTotalStockWithSizes($pdo, $itemSku);
 
         if ($useTransaction) {
-            $pdo->commit();
+            Database::commit();
         }
         return true;
     } catch (Exception $e) {
         if ($useTransaction) {
-            $pdo->rollBack();
+            Database::rollBack();
         }
         error_log("Error reducing stock by size for $itemSku: " . $e->getMessage());
         return false;
@@ -249,7 +206,7 @@ function reduceStockForSale($pdo, $itemSku, $quantity, $colorName = null, $sizeC
 {
     try {
         if ($useTransaction) {
-            $pdo->beginTransaction();
+            Database::beginTransaction();
         }
 
         $stockReduced = false;
@@ -272,20 +229,19 @@ function reduceStockForSale($pdo, $itemSku, $quantity, $colorName = null, $sizeC
 
         // Priority 3: General stock reduction (fallback)
         if (!$stockReduced) {
-            $stmt = $pdo->prepare("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?");
-            $stmt->execute([$quantity, $itemSku]);
+            Database::execute("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?", [$quantity, $itemSku]);
             $stockReduced = true;
             error_log("General stock reduced for SKU '$itemSku'");
         }
 
         if ($useTransaction) {
-            $pdo->commit();
+            Database::commit();
         }
 
         return $stockReduced;
     } catch (Exception $e) {
         if ($useTransaction) {
-            $pdo->rollBack();
+            Database::rollBack();
         }
         error_log("Error reducing stock for $itemSku: " . $e->getMessage());
         return false;
@@ -305,14 +261,8 @@ function getStockLevel($pdo, $itemSku, $colorName = null, $sizeCode = null)
     try {
         // Most specific: size + color
         if (!empty($sizeCode) && !empty($colorName)) {
-            $stmt = $pdo->prepare("
-                SELECT s.stock_level 
-                FROM item_sizes s
-                JOIN item_colors c ON s.color_id = c.id
-                WHERE s.item_sku = ? AND c.color_name = ? AND s.size_code = ? AND s.is_active = 1 AND c.is_active = 1
-            ");
-            $stmt->execute([$itemSku, $colorName, $sizeCode]);
-            $result = $stmt->fetchColumn();
+            $row = Database::queryOne("\n                SELECT s.stock_level \n                FROM item_sizes s\n                JOIN item_colors c ON s.color_id = c.id\n                WHERE s.item_sku = ? AND c.color_name = ? AND s.size_code = ? AND s.is_active = 1 AND c.is_active = 1\n            ", [$itemSku, $colorName, $sizeCode]);
+            $result = $row !== null ? $row['stock_level'] : false;
             if ($result !== false) {
                 return (int)$result;
             }
@@ -320,13 +270,8 @@ function getStockLevel($pdo, $itemSku, $colorName = null, $sizeCode = null)
 
         // Size only (no color)
         if (!empty($sizeCode)) {
-            $stmt = $pdo->prepare("
-                SELECT stock_level 
-                FROM item_sizes 
-                WHERE item_sku = ? AND size_code = ? AND color_id IS NULL AND is_active = 1
-            ");
-            $stmt->execute([$itemSku, $sizeCode]);
-            $result = $stmt->fetchColumn();
+            $row = Database::queryOne("\n                SELECT stock_level \n                FROM item_sizes \n                WHERE item_sku = ? AND size_code = ? AND color_id IS NULL AND is_active = 1\n            ", [$itemSku, $sizeCode]);
+            $result = $row !== null ? $row['stock_level'] : false;
             if ($result !== false) {
                 return (int)$result;
             }
@@ -334,22 +279,16 @@ function getStockLevel($pdo, $itemSku, $colorName = null, $sizeCode = null)
 
         // Color only
         if (!empty($colorName)) {
-            $stmt = $pdo->prepare("
-                SELECT stock_level 
-                FROM item_colors 
-                WHERE item_sku = ? AND color_name = ? AND is_active = 1
-            ");
-            $stmt->execute([$itemSku, $colorName]);
-            $result = $stmt->fetchColumn();
+            $row = Database::queryOne("\n                SELECT stock_level \n                FROM item_colors \n                WHERE item_sku = ? AND color_name = ? AND is_active = 1\n            ", [$itemSku, $colorName]);
+            $result = $row !== null ? $row['stock_level'] : false;
             if ($result !== false) {
                 return (int)$result;
             }
         }
 
         // General item stock
-        $stmt = $pdo->prepare("SELECT stockLevel FROM items WHERE sku = ?");
-        $stmt->execute([$itemSku]);
-        $result = $stmt->fetchColumn();
+        $row = Database::queryOne("SELECT stockLevel FROM items WHERE sku = ?", [$itemSku]);
+        $result = $row !== null ? $row['stockLevel'] : false;
         return $result !== false ? (int)$result : 0;
 
     } catch (Exception $e) {
@@ -390,37 +329,17 @@ function getStockBreakdown($pdo, $itemSku)
         ];
 
         // Get total stock
-        $stmt = $pdo->prepare("SELECT stockLevel FROM items WHERE sku = ?");
-        $stmt->execute([$itemSku]);
-        $breakdown['total'] = (int)$stmt->fetchColumn();
+        $row = Database::queryOne("SELECT stockLevel FROM items WHERE sku = ?", [$itemSku]);
+        $breakdown['total'] = (int)($row['stockLevel'] ?? 0);
 
         // Get color breakdown
-        $stmt = $pdo->prepare("
-            SELECT color_name, stock_level 
-            FROM item_colors 
-            WHERE item_sku = ? AND is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $breakdown['colors'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $breakdown['colors'] = Database::queryAll("\n            SELECT color_name, stock_level \n            FROM item_colors \n            WHERE item_sku = ? AND is_active = 1\n        ", [$itemSku]);
 
         // Get size breakdown
-        $stmt = $pdo->prepare("
-            SELECT size_code, stock_level 
-            FROM item_sizes 
-            WHERE item_sku = ? AND color_id IS NULL AND is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $breakdown['sizes'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $breakdown['sizes'] = Database::queryAll("\n            SELECT size_code, stock_level \n            FROM item_sizes \n            WHERE item_sku = ? AND color_id IS NULL AND is_active = 1\n        ", [$itemSku]);
 
         // Get color+size breakdown
-        $stmt = $pdo->prepare("
-            SELECT c.color_name, s.size_code, s.stock_level
-            FROM item_sizes s
-            JOIN item_colors c ON s.color_id = c.id
-            WHERE s.item_sku = ? AND s.is_active = 1 AND c.is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $breakdown['color_sizes'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $breakdown['color_sizes'] = Database::queryAll("\n            SELECT c.color_name, s.size_code, s.stock_level\n            FROM item_sizes s\n            JOIN item_colors c ON s.color_id = c.id\n            WHERE s.item_sku = ? AND s.is_active = 1 AND c.is_active = 1\n        ", [$itemSku]);
 
         return $breakdown;
     } catch (Exception $e) {

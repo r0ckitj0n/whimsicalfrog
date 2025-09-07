@@ -28,15 +28,13 @@ try {
     }
 
     // Fetch customer orders
-    $stmt = $pdo->prepare('
+    $orders = Database::queryAll('
         SELECT id, order_status, totalAmount, paymentMethod, shippingMethod, paymentStatus, 
                createdAt, shippingAddress
         FROM orders 
         WHERE userId = ? 
         ORDER BY createdAt DESC
-    ');
-    $stmt->execute([$customerId]);
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    ', [$customerId]);
 
     // Return orders as JSON
     echo json_encode($orders);

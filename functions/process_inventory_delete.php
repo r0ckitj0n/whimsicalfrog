@@ -37,17 +37,15 @@ try {
     $pdo = Database::getInstance();
 
     // Check if item exists
-    $checkStmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE sku = ?');
-    $checkStmt->execute([$id]);
-    if ($checkStmt->fetchColumn() == 0) {
+    $row = Database::queryOne('SELECT COUNT(*) AS c FROM items WHERE sku = ?', [$id]);
+    if ((int)($row['c'] ?? 0) === 0) {
         Response::notFound('Item not found');
     }
 
     // Delete item
-    $stmt = $pdo->prepare('DELETE FROM items WHERE sku = ?');
-    $result = $stmt->execute([$id]);
+    $affected = Database::execute('DELETE FROM items WHERE sku = ?', [$id]);
 
-    if ($result) {
+    if ($affected !== false) {
         // Log successful deletion using centralized logging
         Logger::info("Item deleted successfully", [
             'sku' => $id

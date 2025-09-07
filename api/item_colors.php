@@ -11,22 +11,18 @@ $isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
 $isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
 
 // Function to sync total stock with color quantities
-function syncTotalStockWithColors($pdo, $itemSku)
+function syncTotalStockWithColors($itemSku)
 {
     try {
         // Calculate total stock from all active colors
-        $stmt = $pdo->prepare("
-            SELECT COALESCE(SUM(stock_level), 0) as total_color_stock
-            FROM item_colors 
-            WHERE item_sku = ? AND is_active = 1
-        ");
-        $stmt->execute([$itemSku]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        $totalColorStock = $result['total_color_stock'];
+        $row = Database::queryOne(
+            "SELECT COALESCE(SUM(stock_level), 0) as total_color_stock FROM item_colors WHERE item_sku = ? AND is_active = 1",
+            [$itemSku]
+        );
+        $totalColorStock = $row['total_color_stock'] ?? 0;
 
         // Update the main item's stock level
-        $updateStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
-        $updateStmt->execute([$totalColorStock, $itemSku]);
+        Database::execute("UPDATE items SET stockLevel = ? WHERE sku = ?", [$totalColorStock, $itemSku]);
 
         return $totalColorStock;
     } catch (Exception $e) {
@@ -36,48 +32,36 @@ function syncTotalStockWithColors($pdo, $itemSku)
 }
 
 // Function to reduce stock for a sale (both color and total stock)
-function reduceStockForSale($pdo, $itemSku, $colorName, $quantity)
+function reduceStockForSale($itemSku, $colorName, $quantity)
 {
     try {
-        $pdo->beginTransaction();
+        Database::beginTransaction();
 
         if (!empty($colorName)) {
             // Reduce color-specific stock
-            $stmt = $pdo->prepare("
-                UPDATE item_colors 
-                SET stock_level = GREATEST(stock_level - ?, 0) 
-                WHERE item_sku = ? AND color_name = ? AND is_active = 1
-            ");
-            $stmt->execute([$quantity, $itemSku, $colorName]);
+            Database::execute(
+                "UPDATE item_colors SET stock_level = GREATEST(stock_level - ?, 0) WHERE item_sku = ? AND color_name = ? AND is_active = 1",
+                [$quantity, $itemSku, $colorName]
+            );
 
             // Sync total stock with color quantities
-            syncTotalStockWithColors($pdo, $itemSku);
+            syncTotalStockWithColors($itemSku);
         } else {
             // No color specified, reduce total stock only
-            $stmt = $pdo->prepare("
-                UPDATE items 
-                SET stockLevel = GREATEST(stockLevel - ?, 0) 
-                WHERE sku = ?
-            ");
-            $stmt->execute([$quantity, $itemSku]);
+            Database::execute("UPDATE items SET stockLevel = GREATEST(stockLevel - ?, 0) WHERE sku = ?", [$quantity, $itemSku]);
         }
 
-        $pdo->commit();
+        Database::commit();
         return true;
     } catch (Exception $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         error_log("Error reducing stock for $itemSku: " . $e->getMessage());
         return false;
     }
 }
 
 try {
-    try {
-        $pdo = Database::getInstance();
-    } catch (Exception $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw $e;
-    }
+    try { Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
     // Parse action from GET, POST, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -97,14 +81,13 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $stmt = $pdo->prepare("
-                SELECT id, item_sku, color_name, color_code, image_path, stock_level, is_active, display_order
-                FROM item_colors 
-                WHERE item_sku = ? AND is_active = 1 
-                ORDER BY display_order ASC, color_name ASC
-            ");
-            $stmt->execute([$itemSku]);
-            $colors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $colors = Database::queryAll(
+                "SELECT id, item_sku, color_name, color_code, image_path, stock_level, is_active, display_order
+                 FROM item_colors 
+                 WHERE item_sku = ? AND is_active = 1 
+                 ORDER BY display_order ASC, color_name ASC",
+                [$itemSku]
+            );
 
             echo json_encode(['success' => true, 'colors' => $colors]);
             break;
@@ -122,14 +105,13 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $stmt = $pdo->prepare("
-                SELECT id, item_sku, color_name, color_code, image_path, stock_level, is_active, display_order
-                FROM item_colors 
-                WHERE item_sku = ? 
-                ORDER BY display_order ASC, color_name ASC
-            ");
-            $stmt->execute([$itemSku]);
-            $colors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $colors = Database::queryAll(
+                "SELECT id, item_sku, color_name, color_code, image_path, stock_level, is_active, display_order
+                 FROM item_colors 
+                 WHERE item_sku = ? 
+                 ORDER BY display_order ASC, color_name ASC",
+                [$itemSku]
+            );
 
             echo json_encode(['success' => true, 'colors' => $colors]);
             break;
@@ -158,16 +140,16 @@ try {
                 throw new Exception('Invalid color code format. Use #RRGGBB format.');
             }
 
-            $stmt = $pdo->prepare("
-                INSERT INTO item_colors (item_sku, color_name, color_code, image_path, stock_level, display_order) 
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$itemSku, $colorName, $colorCode, $imagePath, $stockLevel, $displayOrder]);
+            Database::execute(
+                "INSERT INTO item_colors (item_sku, color_name, color_code, image_path, stock_level, display_order) 
+                 VALUES (?, ?, ?, ?, ?, ?)",
+                [$itemSku, $colorName, $colorCode, $imagePath, $stockLevel, $displayOrder]
+            );
 
-            $colorId = $pdo->lastInsertId();
+            $colorId = Database::lastInsertId();
 
             // Sync total stock with color quantities
-            $newTotalStock = syncTotalStockWithColors($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithColors($itemSku);
 
             echo json_encode([
                 'success' => true,
@@ -197,33 +179,30 @@ try {
             }
 
             // Get global color data
-            $globalStmt = $pdo->prepare("SELECT color_name, color_code FROM global_colors WHERE id = ? AND is_active = 1");
-            $globalStmt->execute([$globalColorId]);
-            $globalColor = $globalStmt->fetch(PDO::FETCH_ASSOC);
+            $globalColor = Database::queryOne("SELECT color_name, color_code FROM global_colors WHERE id = ? AND is_active = 1", [$globalColorId]);
 
             if (!$globalColor) {
                 throw new Exception('Global color not found or inactive');
             }
 
             // Check if this color already exists for this item
-            $checkStmt = $pdo->prepare("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND color_code = ?");
-            $checkStmt->execute([$itemSku, $globalColor['color_name'], $globalColor['color_code']]);
+            $exists = Database::queryOne("SELECT id FROM item_colors WHERE item_sku = ? AND color_name = ? AND color_code = ?", [$itemSku, $globalColor['color_name'], $globalColor['color_code']]);
 
-            if ($checkStmt->fetch()) {
+            if ($exists) {
                 throw new Exception('This color already exists for this item');
             }
 
             // Add the color from global data
-            $stmt = $pdo->prepare("
-                INSERT INTO item_colors (item_sku, color_name, color_code, image_path, stock_level, display_order, is_active) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-            $stmt->execute([$itemSku, $globalColor['color_name'], $globalColor['color_code'], $imagePath, $stockLevel, $displayOrder, $isActive]);
+            Database::execute(
+                "INSERT INTO item_colors (item_sku, color_name, color_code, image_path, stock_level, display_order, is_active) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [$itemSku, $globalColor['color_name'], $globalColor['color_code'], $imagePath, $stockLevel, $displayOrder, $isActive]
+            );
 
-            $colorId = $pdo->lastInsertId();
+            $colorId = Database::lastInsertId();
 
             // Sync total stock with color quantities
-            $newTotalStock = syncTotalStockWithColors($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithColors($itemSku);
 
             echo json_encode([
                 'success' => true,
@@ -261,19 +240,18 @@ try {
             }
 
             // Get the item SKU for this color
-            $skuStmt = $pdo->prepare("SELECT item_sku FROM item_colors WHERE id = ?");
-            $skuStmt->execute([$colorId]);
-            $itemSku = $skuStmt->fetchColumn();
+            $row = Database::queryOne("SELECT item_sku FROM item_colors WHERE id = ?", [$colorId]);
+            $itemSku = $row ? $row['item_sku'] : null;
 
-            $stmt = $pdo->prepare("
-                UPDATE item_colors 
-                SET color_name = ?, color_code = ?, image_path = ?, stock_level = ?, display_order = ?, is_active = ?
-                WHERE id = ?
-            ");
-            $stmt->execute([$colorName, $colorCode, $imagePath, $stockLevel, $displayOrder, $isActive, $colorId]);
+            Database::execute(
+                "UPDATE item_colors 
+                 SET color_name = ?, color_code = ?, image_path = ?, stock_level = ?, display_order = ?, is_active = ?
+                 WHERE id = ?",
+                [$colorName, $colorCode, $imagePath, $stockLevel, $displayOrder, $isActive, $colorId]
+            );
 
             // Sync total stock with color quantities
-            $newTotalStock = syncTotalStockWithColors($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithColors($itemSku);
 
             echo json_encode([
                 'success' => true,
@@ -298,16 +276,14 @@ try {
             }
 
             // Get the item SKU before deleting
-            $skuStmt = $pdo->prepare("SELECT item_sku FROM item_colors WHERE id = ?");
-            $skuStmt->execute([$colorId]);
-            $itemSku = $skuStmt->fetchColumn();
+            $row = Database::queryOne("SELECT item_sku FROM item_colors WHERE id = ?", [$colorId]);
+            $itemSku = $row['item_sku'] ?? null;
 
-            $stmt = $pdo->prepare("DELETE FROM item_colors WHERE id = ?");
-            $stmt->execute([$colorId]);
+            Database::execute("DELETE FROM item_colors WHERE id = ?", [$colorId]);
 
             // Sync total stock with remaining color quantities
             if ($itemSku) {
-                $newTotalStock = syncTotalStockWithColors($pdo, $itemSku);
+                $newTotalStock = syncTotalStockWithColors($itemSku);
             }
 
             echo json_encode([
@@ -333,15 +309,13 @@ try {
             }
 
             // Get the item SKU for this color
-            $skuStmt = $pdo->prepare("SELECT item_sku FROM item_colors WHERE id = ?");
-            $skuStmt->execute([$colorId]);
-            $itemSku = $skuStmt->fetchColumn();
+            $row = Database::queryOne("SELECT item_sku FROM item_colors WHERE id = ?", [$colorId]);
+            $itemSku = $row['item_sku'] ?? null;
 
-            $stmt = $pdo->prepare("UPDATE item_colors SET stock_level = ? WHERE id = ?");
-            $stmt->execute([$stockLevel, $colorId]);
+            Database::execute("UPDATE item_colors SET stock_level = ? WHERE id = ?", [$stockLevel, $colorId]);
 
             // Sync total stock with color quantities
-            $newTotalStock = syncTotalStockWithColors($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithColors($itemSku);
 
             echo json_encode([
                 'success' => true,
@@ -361,7 +335,7 @@ try {
                 throw new Exception('Item SKU and valid quantity are required');
             }
 
-            $success = reduceStockForSale($pdo, $itemSku, $colorName, $quantity);
+            $success = reduceStockForSale($itemSku, $colorName, $quantity);
 
             if ($success) {
                 echo json_encode([
@@ -388,7 +362,7 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $newTotalStock = syncTotalStockWithColors($pdo, $itemSku);
+            $newTotalStock = syncTotalStockWithColors($itemSku);
 
             if ($newTotalStock !== false) {
                 echo json_encode([
@@ -412,13 +386,7 @@ try {
 
             if (empty($colorName)) {
                 // No color specified, check if item has colors
-                $stmt = $pdo->prepare("
-                    SELECT COUNT(*) as color_count
-                    FROM item_colors 
-                    WHERE item_sku = ? AND is_active = 1
-                ");
-                $stmt->execute([$itemSku]);
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $result = Database::queryOne("SELECT COUNT(*) as color_count FROM item_colors WHERE item_sku = ? AND is_active = 1", [$itemSku]);
 
                 if ($result['color_count'] > 0) {
                     echo json_encode([
@@ -429,9 +397,7 @@ try {
                     ]);
                 } else {
                     // No colors, check main item stock
-                    $stmt = $pdo->prepare("SELECT stockLevel FROM items WHERE sku = ?");
-                    $stmt->execute([$itemSku]);
-                    $item = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $item = Database::queryOne("SELECT stockLevel FROM items WHERE sku = ?", [$itemSku]);
 
                     $available = $item && $item['stockLevel'] >= $quantity;
                     echo json_encode([
@@ -443,13 +409,7 @@ try {
                 }
             } else {
                 // Check specific color availability
-                $stmt = $pdo->prepare("
-                    SELECT stock_level
-                    FROM item_colors 
-                    WHERE item_sku = ? AND color_name = ? AND is_active = 1
-                ");
-                $stmt->execute([$itemSku, $colorName]);
-                $color = $stmt->fetch(PDO::FETCH_ASSOC);
+                $color = Database::queryOne("SELECT stock_level FROM item_colors WHERE item_sku = ? AND color_name = ? AND is_active = 1", [$itemSku, $colorName]);
 
                 if ($color) {
                     $available = $color['stock_level'] >= $quantity;

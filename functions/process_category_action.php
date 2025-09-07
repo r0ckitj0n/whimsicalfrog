@@ -69,8 +69,8 @@ function updateNamingScheme($pdo)
 {
     try {
         // Get all current categories
-        $stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
-        $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $rows = Database::queryAll("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
+        $categories = array_map(function($r){ return array_values($r)[0]; }, $rows);
 
         // Generate updated category mapping
         $categoryMappings = [];
@@ -99,9 +99,7 @@ try {
 
     if ($action === 'delete') {
         // Set category fields to NULL/empty for items
-        $stmt = $pdo->prepare('UPDATE items SET category = NULL WHERE category = ?');
-        $stmt->execute([$category]);
-        $affectedRows = $stmt->rowCount();
+        $affectedRows = Database::execute('UPDATE items SET category = NULL WHERE category = ?', [$category]);
 
         // Update naming scheme after deletion
         $updatedMappings = updateNamingScheme($pdo);
@@ -127,18 +125,15 @@ try {
 
         // Check if new category name already exists (and is different from old name)
         if ($oldCategory !== $newCategoryName) {
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE category = ?');
-            $stmt->execute([$newCategoryName]);
-            if ($stmt->fetchColumn() > 0) {
+            $row = Database::queryOne('SELECT COUNT(*) AS c FROM items WHERE category = ?', [$newCategoryName]);
+            if ((int)($row['c'] ?? 0) > 0) {
                 echo "Category '{$newCategoryName}' already exists";
                 exit;
             }
         }
 
         // Update all items with the old category to use the new category name
-        $stmt = $pdo->prepare('UPDATE items SET category = ? WHERE category = ?');
-        $stmt->execute([$newCategoryName, $oldCategory]);
-        $affectedRows = $stmt->rowCount();
+        $affectedRows = Database::execute('UPDATE items SET category = ? WHERE category = ?', [$newCategoryName, $oldCategory]);
 
         // Update naming scheme after rename
         $updatedMappings = updateNamingScheme($pdo);
@@ -147,17 +142,14 @@ try {
 
     } elseif ($action === 'rename') {
         // Check if new category name already exists
-        $stmt = $pdo->prepare('SELECT COUNT(*) FROM items WHERE category = ?');
-        $stmt->execute([$newCategory]);
-        if ($stmt->fetchColumn() > 0) {
+        $row = Database::queryOne('SELECT COUNT(*) AS c FROM items WHERE category = ?', [$newCategory]);
+        if ((int)($row['c'] ?? 0) > 0) {
             echo "Category '{$newCategory}' already exists";
             exit;
         }
 
         // Update all items with the old category to use the new category name
-        $stmt = $pdo->prepare('UPDATE items SET category = ? WHERE category = ?');
-        $stmt->execute([$newCategory, $category]);
-        $affectedRows = $stmt->rowCount();
+        $affectedRows = Database::execute('UPDATE items SET category = ? WHERE category = ?', [$newCategory, $category]);
 
         // Generate the category code for the new category name
         $newCategoryCode = cat_code($newCategory);

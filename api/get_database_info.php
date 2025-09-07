@@ -12,8 +12,8 @@ try {
     }
 
     // Get all tables
-    $stmt = $pdo->query("SHOW TABLES");
-    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $rows = Database::queryAll("SHOW TABLES");
+    $tables = array_map(function($r){ return array_values($r)[0]; }, $rows);
 
     // Get active tables (exclude backup tables)
     $activeTables = array_filter($tables, function ($table) {
@@ -33,14 +33,11 @@ try {
         $category = 'other'; // default category
 
         // Get table structure for better categorization
-        $structStmt = $pdo->prepare("DESCRIBE `$table`");
-        $structStmt->execute();
-        $structure = $structStmt->fetchAll(PDO::FETCH_ASSOC);
+        $structure = Database::queryAll("DESCRIBE `$table`");
 
         // Get row count
-        $countStmt = $pdo->prepare("SELECT COUNT(*) as count FROM `$table`");
-        $countStmt->execute();
-        $rowCount = $countStmt->fetch(PDO::FETCH_ASSOC)['count'];
+        $countRow = Database::queryOne("SELECT COUNT(*) as count FROM `$table`");
+        $rowCount = (int)($countRow['count'] ?? 0);
 
         // Store table details
         $tableDetails[$table] = [

@@ -425,9 +425,9 @@ class EmailHelper
     public static function createFromBusinessSettings($pdo)
     {
         try {
-            $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'email'");
-            $stmt->execute();
-            $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+            $rows = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'email'");
+            $settings = [];
+            foreach ($rows as $row) { $settings[$row['setting_key']] = $row['setting_value']; }
 
             $config = [
                 'smtp_enabled' => ($settings['smtp_enabled'] ?? 'false') === 'true',
@@ -465,21 +465,18 @@ class EmailHelper
     public static function logEmail($to, $subject, $status = 'sent', $error = null, $orderId = null)
     {
         try {
-            $pdo = Database::getInstance();
-
-            $stmt = $pdo->prepare("
-                INSERT INTO email_logs (to_email, from_email, subject, status, error_message, order_id, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, NOW())
-            ");
-
-            $stmt->execute([
-                $to,
-                self::$config['from_email'],
-                $subject,
-                $status,
-                $error,
-                $orderId
-            ]);
+            Database::getInstance();
+            Database::execute(
+                "INSERT INTO email_logs (to_email, from_email, subject, status, error_message, order_id, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())",
+                [
+                    $to,
+                    self::$config['from_email'],
+                    $subject,
+                    $status,
+                    $error,
+                    $orderId
+                ]
+            );
 
             return true;
         } catch (Exception $e) {

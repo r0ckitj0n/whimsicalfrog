@@ -19,9 +19,7 @@ function getMarketingData($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1");
-    $stmt->execute([$sku]);
-    $data = $stmt->fetch();
+    $data = Database::queryOne("SELECT * FROM marketing_suggestions WHERE sku = ? ORDER BY created_at DESC LIMIT 1", [$sku]);
 
     if ($data) {
         // Decode JSON fields
@@ -102,9 +100,7 @@ function resetToDefaults($pdo)
         ];
 
         // Add dynamic room categories based on current room configuration
-        $roomStmt = $pdo->prepare("SELECT room_number, room_name FROM room_doors ORDER BY room_number");
-        $roomStmt->execute();
-        $rooms = $roomStmt->fetchAll(PDO::FETCH_ASSOC);
+        $rooms = Database::queryAll("SELECT room_number, room_name FROM room_doors ORDER BY room_number");
 
         foreach ($rooms as $room) {
             $defaultSettings[] = [
@@ -116,21 +112,20 @@ function resetToDefaults($pdo)
             ];
         }
 
-        $pdo->beginTransaction();
+        Database::beginTransaction();
 
-        $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
+        // Use Database::execute for updates
         $resetCount = 0;
 
         foreach ($defaultSettings as $setting) {
             $key = $setting[0];
             $value = $setting[2];
 
-            if ($stmt->execute([$value, $key])) {
-                $resetCount++;
-            }
+            $affected = Database::execute("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?", [$value, $key]);
+            if ($affected !== false) { $resetCount++; }
         }
 
-        $pdo->commit();
+        Database::commit();
 
         echo json_encode([
             'success' => true,
@@ -139,7 +134,7 @@ function resetToDefaults($pdo)
         ]);
 
     } catch (Exception $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         echo json_encode(['success' => false, 'message' => 'Failed to reset settings: ' . $e->getMessage()]);
     }
 }

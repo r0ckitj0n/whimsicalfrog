@@ -81,18 +81,14 @@ function updateMarketingField($pdo)
     }
 
     // Check if record exists
-    $stmt = $pdo->prepare("SELECT id FROM marketing_suggestions WHERE sku = ?");
-    $stmt->execute([$sku]);
-    $exists = $stmt->fetch();
+    $exists = Database::queryOne("SELECT id FROM marketing_suggestions WHERE sku = ?", [$sku]);
 
     if ($exists) {
         // Update existing record
-        $stmt = $pdo->prepare("UPDATE marketing_suggestions SET {$field} = ?, updated_at = CURRENT_TIMESTAMP WHERE sku = ?");
-        $stmt->execute([$value, $sku]);
+        Database::execute("UPDATE marketing_suggestions SET {$field} = ?, updated_at = CURRENT_TIMESTAMP WHERE sku = ?", [$value, $sku]);
     } else {
         // Create new record
-        $stmt = $pdo->prepare("INSERT INTO marketing_suggestions (sku, {$field}) VALUES (?, ?)");
-        $stmt->execute([$sku, $value]);
+        Database::execute("INSERT INTO marketing_suggestions (sku, {$field}) VALUES (?, ?)", [$sku, $value]);
     }
 
     echo json_encode(['success' => true, 'message' => 'Field updated successfully.']);
@@ -125,9 +121,7 @@ function addListItem($pdo)
     }
 
     // Get current data
-    $stmt = $pdo->prepare("SELECT {$field} FROM marketing_suggestions WHERE sku = ?");
-    $stmt->execute([$sku]);
-    $result = $stmt->fetch();
+    $result = Database::queryOne("SELECT {$field} FROM marketing_suggestions WHERE sku = ?", [$sku]);
 
     $currentList = [];
     if ($result && !empty($result[$field])) {
@@ -141,11 +135,9 @@ function addListItem($pdo)
 
     // Update database
     if ($result) {
-        $stmt = $pdo->prepare("UPDATE marketing_suggestions SET {$field} = ?, updated_at = CURRENT_TIMESTAMP WHERE sku = ?");
-        $stmt->execute([json_encode($currentList), $sku]);
+        Database::execute("UPDATE marketing_suggestions SET {$field} = ?, updated_at = CURRENT_TIMESTAMP WHERE sku = ?", [json_encode($currentList), $sku]);
     } else {
-        $stmt = $pdo->prepare("INSERT INTO marketing_suggestions (sku, {$field}) VALUES (?, ?)");
-        $stmt->execute([$sku, json_encode($currentList)]);
+        Database::execute("INSERT INTO marketing_suggestions (sku, {$field}) VALUES (?, ?)", [$sku, json_encode($currentList)]);
     }
 
     echo json_encode(['success' => true, 'message' => 'Item added successfully.', 'list' => $currentList]);
@@ -164,9 +156,7 @@ function removeListItem($pdo)
     }
 
     // Get current data
-    $stmt = $pdo->prepare("SELECT {$field} FROM marketing_suggestions WHERE sku = ?");
-    $stmt->execute([$sku]);
-    $result = $stmt->fetch();
+    $result = Database::queryOne("SELECT {$field} FROM marketing_suggestions WHERE sku = ?", [$sku]);
 
     if (!$result) {
         echo json_encode(['success' => false, 'error' => 'Marketing data not found.']);
@@ -181,8 +171,7 @@ function removeListItem($pdo)
     }));
 
     // Update database
-    $stmt = $pdo->prepare("UPDATE marketing_suggestions SET {$field} = ?, updated_at = CURRENT_TIMESTAMP WHERE sku = ?");
-    $stmt->execute([json_encode($currentList), $sku]);
+    Database::execute("UPDATE marketing_suggestions SET {$field} = ?, updated_at = CURRENT_TIMESTAMP WHERE sku = ?", [json_encode($currentList), $sku]);
 
     echo json_encode(['success' => true, 'message' => 'Item removed successfully.', 'list' => $currentList]);
 }
@@ -192,9 +181,7 @@ function getSEOData($pdo)
     $page = $_GET['page'] ?? 'home';
 
     // Get global SEO settings
-    $stmt = $pdo->prepare("SELECT * FROM seo_settings WHERE page_type = ? OR page_type = 'global' ORDER BY page_type DESC");
-    $stmt->execute([$page]);
-    $seoData = $stmt->fetchAll();
+    $seoData = Database::queryAll("SELECT * FROM seo_settings WHERE page_type = ? OR page_type = 'global' ORDER BY page_type DESC", [$page]);
 
     $result = [];
     foreach ($seoData as $row) {
@@ -211,14 +198,9 @@ function updateSEO($pdo)
     $settings = $input['settings'] ?? [];
 
     foreach ($settings as $settingName => $settingValue) {
-        $stmt = $pdo->prepare("
-            INSERT INTO seo_settings (page_type, setting_name, setting_value) 
-            VALUES (?, ?, ?) 
-            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP
-        ");
-        $stmt->execute([$page, $settingName, $settingValue]);
+        Database::execute("\n            INSERT INTO seo_settings (page_type, setting_name, setting_value) \n            VALUES (?, ?, ?) \n            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP\n        ", [$page, $settingName, $settingValue]);
     }
 
     echo json_encode(['success' => true, 'message' => 'SEO settings updated successfully.']);
 }
-?> 
+?>

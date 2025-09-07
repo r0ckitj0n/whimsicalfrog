@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    $pdo = Database::getInstance();
+    Database::getInstance();
 } catch (Exception $e) {
     error_log("Database connection failed: " . $e->getMessage());
     throw $e;
@@ -48,15 +48,13 @@ try {
     }
 
     // Get old value for logging
-    $oldValueStmt = $pdo->prepare("SELECT `$field` FROM items WHERE sku = ?");
-    $oldValueStmt->execute([$sku]);
-    $oldValue = $oldValueStmt->fetchColumn();
+    $row = Database::queryOne("SELECT `$field` as field_value FROM items WHERE sku = ?", [$sku]);
+    $oldValue = $row['field_value'] ?? null;
 
     // Update the field in items table using SKU as primary key
-    $stmt = $pdo->prepare("UPDATE items SET `$field` = ? WHERE sku = ?");
-    $stmt->execute([$value, $sku]);
+    $affected = Database::execute("UPDATE items SET `$field` = ? WHERE sku = ?", [$value, $sku]);
 
-    if ($stmt->rowCount() > 0) {
+    if ($affected > 0) {
         // Log inventory change
         $description = "Field '$field' updated to '$value'";
         DatabaseLogger::logInventoryChange(
@@ -72,9 +70,8 @@ try {
         echo json_encode(['success' => true, 'message' => 'Field updated successfully']);
     } else {
         // Check if item exists
-        $checkStmt = $pdo->prepare("SELECT sku FROM items WHERE sku = ?");
-        $checkStmt->execute([$sku]);
-        if ($checkStmt->fetch()) {
+        $exists = Database::queryOne("SELECT sku FROM items WHERE sku = ?", [$sku]);
+        if ($exists) {
             echo json_encode(['success' => true,'message' => 'No change needed - ' . ucfirst($field) . ' is already set to that value']);
         } else {
             echo json_encode(['success' => false,'error' => 'Item not found with SKU: ' . $sku]);

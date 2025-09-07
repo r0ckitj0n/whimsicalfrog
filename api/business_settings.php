@@ -19,16 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 /**
  * Ensure About Page settings exist with defaults
  */
-function ensureAboutSettings($pdo)
+function ensureAboutSettings()
 {
     try {
-        $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
+        Database::execute("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
             VALUES 
             ('site', 'about_page_title', 'Our Story', 'Title shown at the top of the About page', 'text', 'About Page Title'),
             ('site', 'about_page_content', '<p>Once upon a time in a cozy little workshop, Calvin &amp; Lisa Lemley began crafting whimsical treasures for friends and family. What started as a weekend habit of chasing ideas and laughter soon grew into WhimsicalFrog&mdash;a tiny brand with a big heart.</p><p>Every piece we make is a small celebration of play and everyday magic: things that delight kids, spark curiosity, and make grown‑ups smile. We believe in craftsmanship, kindness, and creating goods that feel like they were made just for you.</p><p>Thank you for visiting our little corner of the pond. We hope our creations bring a splash of joy to your day!</p>', 'Main content of the About page (HTML)', 'html', 'About Page Content (HTML)')
-            ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
-        $stmt->execute();
-
+           ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
         echo json_encode(['success' => true]);
     } catch (Exception $e) {
         http_response_code(500);
@@ -42,7 +40,7 @@ function ensureAboutSettings($pdo)
   function ensureEmailSettings($pdo)
   {
       try {
-          $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name)
+          Database::execute("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name)
               VALUES
               ('email', 'from_email', '', 'Default From email address used for outgoing emails', 'text', 'From Email'),
               ('email', 'from_name', '', 'Default From name used for outgoing emails', 'text', 'From Name'),
@@ -60,7 +58,6 @@ function ensureAboutSettings($pdo)
               ('email', 'smtp_timeout', '30', 'Timeout in seconds for SMTP connections', 'number', 'SMTP Timeout'),
               ('email', 'smtp_debug', 'false', 'Enable verbose SMTP debug logging', 'boolean', 'SMTP Debug')
               ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
-          $stmt->execute();
 
           echo json_encode(['success' => true]);
       } catch (Exception $e) {
@@ -75,7 +72,7 @@ function ensureAboutSettings($pdo)
   function ensureContactSettings($pdo)
   {
       try {
-          $stmt = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
+          Database::execute("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name) 
               VALUES 
               ('site', 'contact_page_title', 'Contact Us', 'Title shown at the top of the Contact page', 'text', 'Contact Page Title'),
               ('site', 'contact_page_intro', '<p>Have a question or special request? Send us a message and we\'ll get back to you soon.</p>', 'Introductory HTML content displayed above the contact form', 'html', 'Contact Page Intro (HTML)'),
@@ -84,7 +81,6 @@ function ensureAboutSettings($pdo)
               ('business_info', 'business_phone', '', 'Primary business phone number (displayed and used for tel: link)', 'text', 'Business Phone'),
               ('business_info', 'business_hours', '', 'Business hours (multi-line text supported)', 'text', 'Business Hours')
               ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
-          $stmt->execute();
 
           echo json_encode(['success' => true]);
       } catch (Exception $e) {
@@ -95,7 +91,7 @@ function ensureAboutSettings($pdo)
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -134,14 +130,11 @@ try {
 
         case 'get_sales_verbiage':
             try {
-                $stmt = $pdo->prepare("
-                    SELECT setting_key, setting_value 
-                    FROM business_settings 
-                    WHERE category = 'sales' 
-                    ORDER BY display_order
-                ");
-                $stmt->execute();
-                $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+                $rows = Database::queryAll(
+                    "SELECT setting_key, setting_value FROM business_settings WHERE category = 'sales' ORDER BY display_order"
+                );
+                $settings = [];
+                foreach ($rows as $r) { $settings[$r['setting_key']] = $r['setting_value']; }
 
                 Response::json([
                     'success' => true,
@@ -180,8 +173,7 @@ try {
 
 function getAllSettings($pdo)
 {
-    $stmt = $pdo->query("SELECT * FROM business_settings ORDER BY category, display_order, setting_key");
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $settings = Database::queryAll("SELECT * FROM business_settings ORDER BY category, display_order, setting_key");
 
     echo json_encode([
         'success' => true,
@@ -199,9 +191,7 @@ function getSetting($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM business_settings WHERE setting_key = ?");
-    $stmt->execute([$key]);
-    $setting = $stmt->fetch(PDO::FETCH_ASSOC);
+    $setting = Database::queryOne("SELECT * FROM business_settings WHERE setting_key = ?", [$key]);
 
     if ($setting) {
         echo json_encode(['success' => true, 'setting' => $setting]);
@@ -220,10 +210,9 @@ function updateSetting($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
-    $result = $stmt->execute([$value, $key]);
+    $result = Database::execute("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?", [$value, $key]);
 
-    if ($result && $stmt->rowCount() > 0) {
+    if ($result > 0) {
         // Clear settings cache so subsequent requests see the latest values
         if (class_exists('BusinessSettings')) {
             BusinessSettings::clearCache();
@@ -249,19 +238,17 @@ function updateMultipleSettings($pdo)
         return;
     }
 
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     try {
-        $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?");
         $updatedCount = 0;
 
         foreach ($settings as $key => $value) {
-            if ($stmt->execute([$value, $key])) {
-                $updatedCount++;
-            }
+            $affected = Database::execute("UPDATE business_settings SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE setting_key = ?", [$value, $key]);
+            if ($affected > 0) { $updatedCount++; }
         }
 
-        $pdo->commit();
+        Database::commit();
 
         // Clear settings cache so subsequent requests see the latest values
         if (class_exists('BusinessSettings')) {
@@ -275,7 +262,7 @@ function updateMultipleSettings($pdo)
         ]);
 
     } catch (Exception $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         echo json_encode(['success' => false, 'message' => 'Failed to update settings: ' . $e->getMessage()]);
     }
 }
@@ -326,7 +313,9 @@ function upsertSettings($pdo)
     $pdo->beginTransaction();
 
     try {
-        $stmt = $pdo->prepare("\n            INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description)\n            VALUES (:category, :key, :value, :type, :display_name, :description)\n            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), setting_type = VALUES(setting_type), updated_at = CURRENT_TIMESTAMP\n        ");
+        $sql = "INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), setting_type = VALUES(setting_type), updated_at = CURRENT_TIMESTAMP";
 
         $saved = 0;
         foreach ($settings as $key => $value) {
@@ -351,19 +340,11 @@ function upsertSettings($pdo)
             $displayName = ucwords(str_replace('_', ' ', (string)$key));
             $description = 'Business setting ' . (string)$key;
 
-            if ($stmt->execute([
-                ':category' => $category,
-                ':key' => (string)$key,
-                ':value' => $value,
-                ':type' => $type,
-                ':display_name' => $displayName,
-                ':description' => $description,
-            ])) {
-                $saved++;
-            }
+            $affected = Database::execute($sql, [$category, (string)$key, $value, $type, $displayName, $description]);
+            if ($affected > 0) { $saved++; }
         }
 
-        $pdo->commit();
+        Database::commit();
 
         // Clear settings cache so subsequent requests see the latest values
         if (class_exists('BusinessSettings')) {
@@ -378,7 +359,7 @@ function upsertSettings($pdo)
         ]);
 
     } catch (Exception $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         echo json_encode(['success' => false, 'message' => 'Failed to upsert settings: ' . $e->getMessage()]);
     }
 }
@@ -393,9 +374,7 @@ function getByCategory($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM business_settings WHERE category = ? ORDER BY display_order, setting_key");
-    $stmt->execute([$category]);
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $settings = Database::queryAll("SELECT * FROM business_settings WHERE category = ? ORDER BY display_order, setting_key", [$category]);
 
     echo json_encode([
         'success' => true,

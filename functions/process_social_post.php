@@ -51,8 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
             $sql = "INSERT INTO social_posts (id, platform, content, image_url, scheduled_date, posted_date, status, created_date) 
                     VALUES (:id, :platform, :content, :image_url, :scheduled_date, :posted_date, :status, NOW())";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
+            Database::execute($sql, [
                 ':id' => $id,
                 ':platform' => $platform,
                 ':content' => $content,
@@ -95,8 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     posted_date = :posted_date, 
                     status = :status 
                     WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
+            Database::execute($sql, [
                 ':id' => $id,
                 ':platform' => $platform,
                 ':content' => $content,
@@ -116,10 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $id = $_POST['id'];
 
             $sql = "DELETE FROM social_posts WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':id' => $id]);
+            $affected = Database::execute($sql, [':id' => $id]);
 
-            if ($stmt->rowCount() > 0) {
+            if ($affected > 0) {
                 $_SESSION['success_message'] = "Social post deleted successfully!";
                 $response = ['success' => true, 'message' => "Social post deleted successfully!"];
             } else {
@@ -137,13 +134,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // For this simulation, we'll just update the status and posted_date
 
             $sql = "UPDATE social_posts SET status = 'posted', posted_date = :posted_date WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
+            $affected = Database::execute($sql, [
                 ':posted_date' => $current_time,
                 ':id' => $id
             ]);
 
-            if ($stmt->rowCount() > 0) {
+            if ($affected > 0) {
                 $_SESSION['success_message'] = "Social post published successfully!";
                 $response = ['success' => true, 'message' => "Social post published successfully!"];
             } else {

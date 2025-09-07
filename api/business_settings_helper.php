@@ -7,27 +7,7 @@ require_once __DIR__ . '/config.php';
 class BusinessSettings
 {
     private static $cache = [];
-    private static $pdo = null;
-
-    private static function getPDO()
-    {
-        if (self::$pdo === null) {
-            require_once __DIR__ . '/config.php';
-
-            try {
-                self::$pdo = Database::getInstance();
-            } catch (Exception $e) {
-                if (class_exists('Logger')) {
-                    Logger::exception('BusinessSettings DB connection failed', $e, [
-                        'source' => 'business_settings_helper',
-                        'stage' => 'db_connect',
-                    ]);
-                }
-                throw $e;
-            }
-        }
-        return self::$pdo;
-    }
+    
 
     /**
      * Get a business setting value
@@ -40,18 +20,16 @@ class BusinessSettings
         }
 
         try {
-            $pdo = self::getPDO();
             // Prefer settings from the 'business_info' category when duplicates exist
             // to align with the single source of truth for company information. If not
             // found there, prefer 'ecommerce' next, then fall back to the most recent row.
-            $stmt = $pdo->prepare(
+            $result = Database::queryOne(
                 "SELECT setting_value, setting_type, category, updated_at
                  FROM business_settings
                  WHERE setting_key = ?
-                 ORDER BY (category = 'business_info') DESC, (category = 'ecommerce') DESC, updated_at DESC"
+                 ORDER BY (category = 'business_info') DESC, (category = 'ecommerce') DESC, updated_at DESC",
+                [$key]
             );
-            $stmt->execute([$key]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$result) {
                 self::$cache[$key] = $default;
@@ -73,12 +51,12 @@ class BusinessSettings
     public static function getByCategory($category)
     {
         try {
-            $pdo = self::getPDO();
             // Order by key then updated_at ASC so the most recent row appears last per key
             // ensuring the final assigned value is the latest
-            $stmt = $pdo->prepare("SELECT setting_key, setting_value, setting_type FROM business_settings WHERE category = ? ORDER BY setting_key ASC, updated_at ASC");
-            $stmt->execute([$category]);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $results = Database::queryAll(
+                "SELECT setting_key, setting_value, setting_type FROM business_settings WHERE category = ? ORDER BY setting_key ASC, updated_at ASC",
+                [$category]
+            );
 
             $settings = [];
             foreach ($results as $result) {
@@ -98,9 +76,7 @@ class BusinessSettings
     public static function getAll()
     {
         try {
-            $pdo = self::getPDO();
-            $stmt = $pdo->query("SELECT * FROM business_settings ORDER BY category, display_order");
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $results = Database::queryAll("SELECT * FROM business_settings ORDER BY category, display_order");
 
             $grouped = [];
             foreach ($results as $result) {

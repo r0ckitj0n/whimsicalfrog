@@ -61,8 +61,8 @@ try {
     }
 
     // Get existing categories for context
-    $stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
-    $existingCategories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $rows = Database::queryAll("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
+    $existingCategories = array_map(function($r){ return array_values($r)[0]; }, $rows);
 
     // Initialize AI providers
     $aiProviders = new AIProviders();
@@ -115,9 +115,8 @@ function generateSkuForCategory($pdo, $category)
     }
 
     // Find next number for this category
-    $stmt = $pdo->prepare("SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1");
-    $stmt->execute(["WF-{$categoryCode}-%"]);
-    $lastSku = $stmt->fetchColumn();
+    $row = Database::queryOne("SELECT sku FROM items WHERE sku LIKE ? ORDER BY sku DESC LIMIT 1", ["WF-{$categoryCode}-%"]);
+    $lastSku = $row ? $row['sku'] : null;
 
     $nextNum = 1;
     if ($lastSku) {

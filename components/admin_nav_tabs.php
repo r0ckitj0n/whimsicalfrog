@@ -30,14 +30,30 @@ $tooltipIds = [
 ];
 ?>
 <div class="admin-tab-navigation mb-1">
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-2 items-center">
         <?php foreach ($tabs as $key => [$label, $cssClass]): ?>
             <?php $tooltipId = $tooltipIds[$key] ?? ''; ?>
-            <a href="/?page=admin<?= $key ? '&section=' . $key : '' ?>"
+            <?php
+                // Route all tabs through the canonical admin router so header/navbar is always rendered.
+                $href = ($key === '') ? '/admin' : ('/admin/admin.php?section=' . urlencode($key));
+            ?>
+            <a href="<?= $href ?>"
                id="<?= $tooltipId ?>"
                class="admin-nav-tab <?= $cssClass ?> <?= ($section === $key || ($key === '' && !$section)) ? 'active' : '' ?>">
                 <?= htmlspecialchars($label) ?>
             </a>
         <?php endforeach; ?>
+
+        <!-- Right-aligned help link to full documentation -->
+        <div class="ml-auto"></div>
+        <a href="/documentation/index.php"
+           id="adminHelpDocsLink"
+           data-help-id="adminHelpDocsLink"
+           class="admin-nav-tab admin-tab-help"
+           target="_blank" rel="noopener noreferrer"
+           aria-label="Open documentation in a new tab"
+           title="Open documentation in a new tab">
+            ?
+        </a>
     </div>
 </div>

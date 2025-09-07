@@ -159,15 +159,12 @@ try {
         LIMIT 20
     ";
 
-    $stmt = $pdo->prepare($sql);
-
-    // Bind search parameters
+    // Convert param keys to include leading colons for Database helper
+    $binds = [];
     foreach ($params as $param => $value) {
-        $stmt->bindValue(":{$param}", $value);
+        $binds[':'.$param] = $value;
     }
-
-    $stmt->execute();
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $results = Database::queryAll($sql, $binds);
 
     // Process results to include image URLs
     foreach ($results as &$item) {

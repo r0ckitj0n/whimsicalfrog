@@ -50,6 +50,12 @@ $pageSlug = preg_replace('/\.php$/i', '', $pageSlug);
 $segments = explode('/', $pageSlug);
 $isAdmin = isset($segments[0]) && $segments[0] === 'admin';
 
+// Route-based admin detection for consistent navbar rendering across all admin URLs
+try {
+    $__req_path_for_admin = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+} catch (\Throwable $e) { $__req_path_for_admin = ''; }
+$__is_admin_route = ($__req_path_for_admin === 'admin') || (strpos($__req_path_for_admin, 'admin/') === 0);
+
 // If we are on /admin with a query param ?section=settings, normalize the slug so
 // admin-settings assets load and the bridge can detect the route consistently
 if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET['section'] !== '') {
@@ -72,15 +78,14 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>WhimsicalFrog</title>
     <?php
-    $___req_path = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
-    $___is_admin_path = ($___req_path === 'admin') || (strpos($___req_path, 'admin/') === 0);
-    if (!$___is_admin_path) {
-        echo vite('js/app.js');
-    }
+    // Always load the main application bundle so global CSS/JS are available on ALL pages,
+    // including admin routes. Previously this was suppressed on admin paths which caused
+    // missing CSS for admin pages other than settings.
+    echo vite('js/app.js');
     // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
     echo vite('js/header-bootstrap.js');
-    // Always ensure admin navbar has a horizontal layout on admin pages (fallback before external CSS)
-    if ($isAdmin) {
+    // Always ensure admin navbar has a horizontal layout on admin ROUTES (fallback before external CSS)
+    if ($__is_admin_route) {
         echo <<<'STYLE'
 <style id="wf-admin-nav-fallback-global">
 :root{--wf-header-height:64px}
@@ -303,11 +308,10 @@ STYLE;
 SCRIPT;
             }
         }
-        // Always emit admin settings entry so the bridge is available; heavy legacy loads lazily inside the entry
-        if (function_exists('vite')) {
-            if (!defined('WF_ADMIN_SETTINGS_ASSETS_EMITTED')) { define('WF_ADMIN_SETTINGS_ASSETS_EMITTED', true); echo vite('js/admin-settings.js'); }
-        }
-        // Early squelch: prevent auto-opening of modals/panels before admin-settings bundle initializes
+        // Admin settings assets are now loaded via app.js per-page imports to prevent double-loading
+        // Early squelch (optional): prevent auto-opening of modals/panels before admin-settings bundle initializes
+        // Disabled by default to avoid potential performance issues. Enable with ?wf_early_squelch=1
+        if (isset($_GET['wf_early_squelch']) && $_GET['wf_early_squelch'] === '1') {
         echo <<<'SCRIPT'
 <script>(function(){
   try {
@@ -377,6 +381,7 @@ SCRIPT;
   } catch(_) {}
 })();</script>
 SCRIPT;
+        }
     }
     ?>
     <!-- Vite manages CSS; fallbacks removed -->
@@ -505,3 +510,31 @@ if ($__wf_is_logged_in) {
 <?php
 // Render the visual header component
 include_once dirname(__DIR__) . '/components/header_template.php';
+
+// Render Admin Nav Tabs consistently on all admin route pages
+// Use robust path-based detection (REQUEST_URI) to avoid reliance on $pageSlug
+try {
+    $___req_path = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+} catch (\Throwable $e) { $___req_path = ''; }
+$__is_admin_route = ($___req_path === 'admin') || (strpos($___req_path, 'admin/') === 0);
+if ($__is_admin_route) {
+    // Derive admin section from REQUEST_URI: '/admin/<section>' -> '<section>'
+    $adminSection = '';
+    try {
+        $parts = explode('/', $___req_path); // e.g., ['admin','customers']
+        if (isset($parts[1]) && $parts[0] === 'admin') {
+            $adminSection = strtolower(trim($parts[1]));
+        }
+    } catch (\Throwable $e) {}
+    // Fallback to ?section=
+    if (isset($_GET['section']) && is_string($_GET['section']) && $_GET['section'] !== '') {
+        $adminSection = strtolower((string)$_GET['section']);
+    }
+    // Expose as $section for the component API
+    $section = $adminSection;
+    include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
+    // Dedupe any accidental duplicate navbars rendered by legacy includes
+    echo <<<'SCRIPT'
+<script>(function(){try{var bars = document.querySelectorAll('.admin-tab-navigation');if(bars&&bars.length>1){for(var i=1;i<bars.length;i++){bars[i].parentNode&&bars[i].parentNode.removeChild(bars[i]);}}}catch(_){}})();</script>
+SCRIPT;
+}

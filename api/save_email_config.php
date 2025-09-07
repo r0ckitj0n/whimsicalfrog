@@ -189,11 +189,6 @@ function handleSaveConfig()
         // Upsert to business_settings without relying on a unique index
         $pdo = Database::getInstance();
         error_log('[save_email_config] obtained PDO instance');
-        $update = $pdo->prepare("UPDATE business_settings
-            SET setting_value = :value, setting_type = :type, display_name = :display_name, description = :description, updated_at = CURRENT_TIMESTAMP
-            WHERE category = :category AND setting_key = :key");
-        $insert = $pdo->prepare("INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description, updated_at)
-            VALUES (:category, :key, :value, :type, :display_name, :description, CURRENT_TIMESTAMP)");
 
         $ops = ['updated' => 0, 'inserted' => 0];
         foreach ($map as $key => $val) {
@@ -211,11 +206,14 @@ function handleSaveConfig()
                 ':description' => 'Email setting ' . $key,
             ];
 
-            $update->execute($params);
-            if ($update->rowCount() > 0) {
+            $affected = Database::execute("UPDATE business_settings
+                SET setting_value = :value, setting_type = :type, display_name = :display_name, description = :description, updated_at = CURRENT_TIMESTAMP
+                WHERE category = :category AND setting_key = :key", $params);
+            if ($affected > 0) {
                 $ops['updated']++;
             } else {
-                $insert->execute($params);
+                Database::execute("INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description, updated_at)
+                    VALUES (:category, :key, :value, :type, :display_name, :description, CURRENT_TIMESTAMP)", $params);
                 $ops['inserted']++;
             }
         }
@@ -226,11 +224,10 @@ function handleSaveConfig()
         }
 
         // Verification: re-query latest value per key and compare with what we attempted to write
-        $verifyStmt = $pdo->prepare("SELECT setting_value, setting_type FROM business_settings WHERE category = :category AND setting_key = :key ORDER BY updated_at DESC, id DESC LIMIT 1");
+        // Verification via Database helper
         $mismatches = [];
         foreach ($map as $key => $expectedVal) {
-            $verifyStmt->execute([':category' => 'email', ':key' => $key]);
-            $row = $verifyStmt->fetch(PDO::FETCH_ASSOC);
+            $row = Database::queryOne("SELECT setting_value, setting_type FROM business_settings WHERE category = :category AND setting_key = :key ORDER BY updated_at DESC, id DESC LIMIT 1", [':category' => 'email', ':key' => $key]);
             if ($row === false) {
                 $mismatches[$key] = ['expected' => (string)$expectedVal, 'actual' => null, 'note' => 'no row found'];
                 continue;

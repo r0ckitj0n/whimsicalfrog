@@ -17,28 +17,21 @@ if (!$isAdmin) {
 }
 
 try {
-    try {
-        $pdo = Database::getInstance();
-    } catch (Exception $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw $e;
-    }
+    try { Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
     switch ($action) {
         case 'get_all':
             // Get all size templates with size counts
-            $stmt = $pdo->prepare("
-                SELECT st.*, COUNT(sti.id) as size_count
-                FROM size_templates st
-                LEFT JOIN size_template_items sti ON st.id = sti.template_id AND sti.is_active = 1
-                WHERE st.is_active = 1
-                GROUP BY st.id
-                ORDER BY st.category, st.template_name
-            ");
-            $stmt->execute();
-            $templates = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $templates = Database::queryAll(
+                "SELECT st.*, COUNT(sti.id) as size_count
+                 FROM size_templates st
+                 LEFT JOIN size_template_items sti ON st.id = sti.template_id AND sti.is_active = 1
+                 WHERE st.is_active = 1
+                 GROUP BY st.id
+                 ORDER BY st.category, st.template_name"
+            );
 
             echo json_encode(['success' => true, 'templates' => $templates]);
             break;
@@ -47,12 +40,7 @@ try {
             // Get specific template with all sizes
             $templateId = $_GET['template_id'] ?? 0;
 
-            $stmt = $pdo->prepare("
-                SELECT * FROM size_templates 
-                WHERE id = ? AND is_active = 1
-            ");
-            $stmt->execute([$templateId]);
-            $template = $stmt->fetch(PDO::FETCH_ASSOC);
+            $template = Database::queryOne("SELECT * FROM size_templates WHERE id = ? AND is_active = 1", [$templateId]);
 
             if (!$template) {
                 echo json_encode(['success' => false, 'message' => 'Template not found']);
@@ -60,13 +48,10 @@ try {
             }
 
             // Get sizes for this template
-            $stmt = $pdo->prepare("
-                SELECT * FROM size_template_items 
-                WHERE template_id = ? AND is_active = 1
-                ORDER BY display_order, size_name
-            ");
-            $stmt->execute([$templateId]);
-            $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $sizes = Database::queryAll(
+                "SELECT * FROM size_template_items WHERE template_id = ? AND is_active = 1 ORDER BY display_order, size_name",
+                [$templateId]
+            );
 
             $template['sizes'] = $sizes;
             echo json_encode(['success' => true, 'template' => $template]);
@@ -74,14 +59,10 @@ try {
 
         case 'get_categories':
             // Get all unique categories
-            $stmt = $pdo->prepare("
-                SELECT DISTINCT category 
-                FROM size_templates 
-                WHERE is_active = 1
-                ORDER BY category
-            ");
-            $stmt->execute();
-            $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $categories = array_column(
+                Database::queryAll("SELECT DISTINCT category FROM size_templates WHERE is_active = 1 ORDER BY category"),
+                'category'
+            );
 
             echo json_encode(['success' => true, 'categories' => $categories]);
             break;
@@ -95,43 +76,29 @@ try {
                 break;
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Insert template
-                $stmt = $pdo->prepare("
-                    INSERT INTO size_templates (template_name, description, category) 
-                    VALUES (?, ?, ?)
-                ");
-                $stmt->execute([
-                    $data['template_name'],
-                    $data['description'] ?? '',
-                    $data['category'] ?? 'General'
-                ]);
+                Database::execute(
+                    "INSERT INTO size_templates (template_name, description, category) VALUES (?, ?, ?)",
+                    [$data['template_name'], $data['description'] ?? '', $data['category'] ?? 'General']
+                );
 
-                $templateId = $pdo->lastInsertId();
+                $templateId = Database::lastInsertId();
 
                 // Insert sizes
-                $sizeStmt = $pdo->prepare("
-                    INSERT INTO size_template_items (template_id, size_name, size_code, price_adjustment, display_order) 
-                    VALUES (?, ?, ?, ?, ?)
-                ");
-
                 foreach ($data['sizes'] as $index => $size) {
-                    $sizeStmt->execute([
-                        $templateId,
-                        $size['size_name'],
-                        $size['size_code'],
-                        $size['price_adjustment'] ?? 0.00,
-                        $index
-                    ]);
+                    Database::execute(
+                        "INSERT INTO size_template_items (template_id, size_name, size_code, price_adjustment, display_order) VALUES (?, ?, ?, ?, ?)",
+                        [$templateId, $size['size_name'], $size['size_code'], $size['price_adjustment'] ?? 0.00, $index]
+                    );
                 }
-
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template created successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -145,49 +112,32 @@ try {
                 break;
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Update template info
-                $stmt = $pdo->prepare("
-                    UPDATE size_templates 
-                    SET template_name = ?, description = ?, category = ?
-                    WHERE id = ?
-                ");
-                $stmt->execute([
-                    $data['template_name'],
-                    $data['description'] ?? '',
-                    $data['category'] ?? 'General',
-                    $data['template_id']
-                ]);
+                Database::execute(
+                    "UPDATE size_templates SET template_name = ?, description = ?, category = ? WHERE id = ?",
+                    [$data['template_name'], $data['description'] ?? '', $data['category'] ?? 'General', $data['template_id']]
+                );
 
                 // Delete existing sizes
-                $stmt = $pdo->prepare("DELETE FROM size_template_items WHERE template_id = ?");
-                $stmt->execute([$data['template_id']]);
+                Database::execute("DELETE FROM size_template_items WHERE template_id = ?", [$data['template_id']]);
 
                 // Insert updated sizes
                 if (isset($data['sizes']) && is_array($data['sizes'])) {
-                    $sizeStmt = $pdo->prepare("
-                        INSERT INTO size_template_items (template_id, size_name, size_code, price_adjustment, display_order) 
-                        VALUES (?, ?, ?, ?, ?)
-                    ");
-
                     foreach ($data['sizes'] as $index => $size) {
-                        $sizeStmt->execute([
-                            $data['template_id'],
-                            $size['size_name'],
-                            $size['size_code'],
-                            $size['price_adjustment'] ?? 0.00,
-                            $index
-                        ]);
+                        Database::execute(
+                            "INSERT INTO size_template_items (template_id, size_name, size_code, price_adjustment, display_order) VALUES (?, ?, ?, ?, ?)",
+                            [$data['template_id'], $size['size_name'], $size['size_code'], $size['price_adjustment'] ?? 0.00, $index]
+                        );
                     }
                 }
-
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'message' => 'Template updated successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -196,12 +146,7 @@ try {
             // Delete size template (soft delete)
             $templateId = $_POST['template_id'] ?? 0;
 
-            $stmt = $pdo->prepare("
-                UPDATE size_templates 
-                SET is_active = 0 
-                WHERE id = ?
-            ");
-            $stmt->execute([$templateId]);
+            Database::execute("UPDATE size_templates SET is_active = 0 WHERE id = ?", [$templateId]);
 
             echo json_encode(['success' => true, 'message' => 'Template deleted successfully']);
             break;
@@ -216,68 +161,47 @@ try {
             }
 
             // Get template sizes
-            $stmt = $pdo->prepare("
-                SELECT * FROM size_template_items 
-                WHERE template_id = ? AND is_active = 1
-                ORDER BY display_order
-            ");
-            $stmt->execute([$data['template_id']]);
-            $templateSizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $templateSizes = Database::queryAll("SELECT * FROM size_template_items WHERE template_id = ? AND is_active = 1 ORDER BY display_order", [$data['template_id']]);
 
             if (empty($templateSizes)) {
                 echo json_encode(['success' => false, 'message' => 'No sizes found in template']);
                 break;
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Clear existing sizes if requested
                 if ($data['replace_existing'] ?? false) {
                     if ($data['apply_mode'] === 'color_specific') {
                         // Clear sizes for specific color
-                        $stmt = $pdo->prepare("DELETE FROM item_sizes WHERE item_sku = ? AND color_id = ?");
-                        $stmt->execute([$data['item_sku'], $data['color_id']]);
+                        Database::execute("DELETE FROM item_sizes WHERE item_sku = ? AND color_id = ?", [$data['item_sku'], $data['color_id']]);
                     } else {
-                        // Clear general sizes
-                        $stmt = $pdo->prepare("DELETE FROM item_sizes WHERE item_sku = ? AND color_id IS NULL");
-                        $stmt->execute([$data['item_sku']]);
+                        Database::execute("DELETE FROM item_sizes WHERE item_sku = ?", [$data['item_sku']]);
                     }
                 }
 
                 // Insert template sizes
-                $insertStmt = $pdo->prepare("
-                    INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE 
-                    price_adjustment = VALUES(price_adjustment),
-                    display_order = VALUES(display_order)
-                ");
-
-                $defaultStock = $data['default_stock'] ?? 0;
-                $colorId = ($data['apply_mode'] === 'color_specific') ? $data['color_id'] : null;
-
-                foreach ($templateSizes as $size) {
-                    $insertStmt->execute([
-                        $data['item_sku'],
-                        $colorId,
-                        $size['size_name'],
-                        $size['size_code'],
-                        $defaultStock,
-                        $size['price_adjustment'],
-                        $size['display_order']
-                    ]);
+                foreach ($templateSizes as $idx => $sz) {
+                    Database::execute(
+                        "INSERT INTO item_sizes (item_sku, color_id, size_name, size_code, stock_level, price_adjustment, display_order, is_active) 
+                         VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+                         ON DUPLICATE KEY UPDATE 
+                            stock_level = VALUES(stock_level),
+                            price_adjustment = VALUES(price_adjustment),
+                            display_order = VALUES(display_order)",
+                        [$data['item_sku'], $data['color_id'] ?? null, $sz['size_name'], $sz['size_code'], $data['default_stock'] ?? 0, $sz['price_adjustment'] ?? 0.00, $idx]
+                    );
                 }
-
-                $pdo->commit();
+                Database::commit();
                 echo json_encode([
                     'success' => true,
                     'message' => 'Template applied successfully',
-                    'sizes_added' => count($templateSizes)
+                    'applied_sizes' => count($templateSizes)
                 ]);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;

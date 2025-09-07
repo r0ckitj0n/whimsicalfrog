@@ -70,44 +70,7 @@ try {
         try {
             // Enhanced cost_suggestions table already exists with proper structure
 
-            $stmt = $pdo->prepare("
-                INSERT INTO cost_suggestions (
-                    sku, suggested_cost, reasoning, confidence, breakdown,
-                    detected_materials, detected_features, size_analysis, complexity_score,
-                    production_time_estimate, skill_level_required, market_positioning, eco_friendly_score,
-                    material_cost_factors, labor_complexity_factors, energy_usage_factors, equipment_requirements,
-                    material_confidence, labor_confidence, energy_confidence, equipment_confidence,
-                    materials_cost_amount, labor_cost_amount, energy_cost_amount, equipment_cost_amount
-                ) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                suggested_cost = VALUES(suggested_cost),
-                reasoning = VALUES(reasoning),
-                confidence = VALUES(confidence),
-                breakdown = VALUES(breakdown),
-                detected_materials = VALUES(detected_materials),
-                detected_features = VALUES(detected_features),
-                size_analysis = VALUES(size_analysis),
-                complexity_score = VALUES(complexity_score),
-                production_time_estimate = VALUES(production_time_estimate),
-                skill_level_required = VALUES(skill_level_required),
-                market_positioning = VALUES(market_positioning),
-                eco_friendly_score = VALUES(eco_friendly_score),
-                material_cost_factors = VALUES(material_cost_factors),
-                labor_complexity_factors = VALUES(labor_complexity_factors),
-                energy_usage_factors = VALUES(energy_usage_factors),
-                equipment_requirements = VALUES(equipment_requirements),
-                material_confidence = VALUES(material_confidence),
-                labor_confidence = VALUES(labor_confidence),
-                energy_confidence = VALUES(energy_confidence),
-                equipment_confidence = VALUES(equipment_confidence),
-                materials_cost_amount = VALUES(materials_cost_amount),
-                labor_cost_amount = VALUES(labor_cost_amount),
-                energy_cost_amount = VALUES(energy_cost_amount),
-                equipment_cost_amount = VALUES(equipment_cost_amount),
-                created_at = CURRENT_TIMESTAMP
-            ");
-            $stmt->execute([
+            Database::execute("\n                INSERT INTO cost_suggestions (\n                    sku, suggested_cost, reasoning, confidence, breakdown,\n                    detected_materials, detected_features, size_analysis, complexity_score,\n                    production_time_estimate, skill_level_required, market_positioning, eco_friendly_score,\n                    material_cost_factors, labor_complexity_factors, energy_usage_factors, equipment_requirements,\n                    material_confidence, labor_confidence, energy_confidence, equipment_confidence,\n                    materials_cost_amount, labor_cost_amount, energy_cost_amount, equipment_cost_amount\n                ) \n                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n                ON DUPLICATE KEY UPDATE \n                suggested_cost = VALUES(suggested_cost),\n                reasoning = VALUES(reasoning),\n                confidence = VALUES(confidence),\n                breakdown = VALUES(breakdown),\n                detected_materials = VALUES(detected_materials),\n                detected_features = VALUES(detected_features),\n                size_analysis = VALUES(size_analysis),\n                complexity_score = VALUES(complexity_score),\n                production_time_estimate = VALUES(production_time_estimate),\n                skill_level_required = VALUES(skill_level_required),\n                market_positioning = VALUES(market_positioning),\n                eco_friendly_score = VALUES(eco_friendly_score),\n                material_cost_factors = VALUES(material_cost_factors),\n                labor_complexity_factors = VALUES(labor_complexity_factors),\n                energy_usage_factors = VALUES(energy_usage_factors),\n                equipment_requirements = VALUES(equipment_requirements),\n                material_confidence = VALUES(material_confidence),\n                labor_confidence = VALUES(labor_confidence),\n                energy_confidence = VALUES(energy_confidence),\n                equipment_confidence = VALUES(equipment_confidence),\n                materials_cost_amount = VALUES(materials_cost_amount),\n                labor_cost_amount = VALUES(labor_cost_amount),\n                energy_cost_amount = VALUES(energy_cost_amount),\n                equipment_cost_amount = VALUES(equipment_cost_amount),\n                created_at = CURRENT_TIMESTAMP\n            ", [
                 $sku,
                 $costData['cost'],
                 $costData['reasoning'],

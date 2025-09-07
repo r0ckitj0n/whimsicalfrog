@@ -14,7 +14,7 @@ require_once __DIR__ . '/config.php';
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -55,24 +55,18 @@ function handleGet($pdo)
     try {
         if ($action === 'get_all') {
             // Get all room settings ordered by display order
-            $stmt = $pdo->prepare("
-                SELECT * FROM room_settings 
-                WHERE is_active = 1 
-                ORDER BY display_order, room_number
-            ");
-            $stmt->execute();
-            $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $rooms = Database::queryAll(
+                "SELECT * FROM room_settings WHERE is_active = 1 ORDER BY display_order, room_number"
+            );
 
             echo json_encode(['success' => true, 'rooms' => $rooms]);
 
         } elseif ($action === 'get_room' && $roomNumber !== null) {
             // Get specific room settings
-            $stmt = $pdo->prepare("
-                SELECT * FROM room_settings 
-                WHERE room_number = ? AND is_active = 1
-            ");
-            $stmt->execute([$roomNumber]);
-            $room = $stmt->fetch(PDO::FETCH_ASSOC);
+            $room = Database::queryOne(
+                "SELECT * FROM room_settings WHERE room_number = ? AND is_active = 1",
+                [$roomNumber]
+            );
 
             if ($room) {
                 echo json_encode(['success' => true, 'room' => $room]);
@@ -82,14 +76,12 @@ function handleGet($pdo)
 
         } elseif ($action === 'get_navigation_rooms') {
             // Get rooms that should appear in navigation (product rooms)
-            $stmt = $pdo->prepare("
-                SELECT room_number, room_name, door_label, description 
-                FROM room_settings 
-                WHERE room_number NOT IN ('A', 'B') AND is_active = 1 
-                ORDER BY display_order, room_number
-            ");
-            $stmt->execute();
-            $rooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $rooms = Database::queryAll(
+                "SELECT room_number, room_name, door_label, description 
+                 FROM room_settings 
+                 WHERE room_number NOT IN ('A', 'B') AND is_active = 1 
+                 ORDER BY display_order, room_number"
+            );
 
             echo json_encode(['success' => true, 'rooms' => $rooms]);
 
@@ -103,19 +95,19 @@ function handleGet($pdo)
     }
 }
 
-function handlePost($pdo, $input)
+function handlePost($input)
 {
     $action = $input['action'] ?? null;
 
     if ($action === 'create_room') {
-        createRoom($pdo, $input);
+        createRoom($input);
     } else {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
     }
 }
 
-function createRoom($pdo, $input)
+function createRoom($input)
 {
     $requiredFields = ['room_number', 'room_name', 'door_label'];
 
@@ -129,29 +121,26 @@ function createRoom($pdo, $input)
 
     try {
         // Check if room number already exists
-        $checkStmt = $pdo->prepare("SELECT id FROM room_settings WHERE room_number = ?");
-        $checkStmt->execute([$input['room_number']]);
+        $exists = Database::queryOne("SELECT id FROM room_settings WHERE room_number = ?", [$input['room_number']]);
 
-        if ($checkStmt->fetch()) {
+        if ($exists) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Room number already exists']);
             return;
         }
 
-        $stmt = $pdo->prepare("
-            INSERT INTO room_settings (room_number, room_name, door_label, description, display_order) 
-            VALUES (?, ?, ?, ?, ?)
-        ");
+        Database::execute(
+            "INSERT INTO room_settings (room_number, room_name, door_label, description, display_order) VALUES (?, ?, ?, ?, ?)",
+            [
+                $input['room_number'],
+                trim($input['room_name']),
+                trim($input['door_label']),
+                $input['description'] ?? '',
+                $input['display_order'] ?? 0
+            ]
+        );
 
-        $stmt->execute([
-            $input['room_number'],
-            trim($input['room_name']),
-            trim($input['door_label']),
-            $input['description'] ?? '',
-            $input['display_order'] ?? 0
-        ]);
-
-        $roomId = $pdo->lastInsertId();
+        $roomId = Database::lastInsertId();
 
         echo json_encode([
             'success' => true,
@@ -165,21 +154,21 @@ function createRoom($pdo, $input)
     }
 }
 
-function handlePut($pdo, $input)
+function handlePut($input)
 {
     $action = $input['action'] ?? null;
 
     if ($action === 'update_room') {
-        updateRoom($pdo, $input);
+        updateRoom($input);
     } elseif ($action === 'update_display_order') {
-        updateDisplayOrder($pdo, $input);
+        updateDisplayOrder($input);
     } else {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
     }
 }
 
-function updateRoom($pdo, $input)
+function updateRoom($input)
 {
     $requiredFields = ['room_number', 'room_name', 'door_label'];
 
@@ -192,22 +181,21 @@ function updateRoom($pdo, $input)
     }
 
     try {
-        $stmt = $pdo->prepare("
-            UPDATE room_settings 
-            SET room_name = ?, door_label = ?, description = ?, display_order = ?, show_search_bar = ?
-            WHERE room_number = ?
-        ");
+        $affected = Database::execute(
+            "UPDATE room_settings 
+             SET room_name = ?, door_label = ?, description = ?, display_order = ?, show_search_bar = ?
+             WHERE room_number = ?",
+            [
+                trim($input['room_name']),
+                trim($input['door_label']),
+                $input['description'] ?? '',
+                $input['display_order'] ?? 0,
+                isset($input['show_search_bar']) ? (bool)$input['show_search_bar'] : true,
+                $input['room_number']
+            ]
+        );
 
-        $result = $stmt->execute([
-            trim($input['room_name']),
-            trim($input['door_label']),
-            $input['description'] ?? '',
-            $input['display_order'] ?? 0,
-            isset($input['show_search_bar']) ? (bool)$input['show_search_bar'] : true,
-            $input['room_number']
-        ]);
-
-        if ($result && $stmt->rowCount() > 0) {
+        if ($affected > 0) {
             echo json_encode(['success' => true, 'message' => 'Room updated successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Room not found or no changes made']);
@@ -228,21 +216,19 @@ function updateDisplayOrder($pdo, $input)
     }
 
     try {
-        $pdo->beginTransaction();
-
-        $stmt = $pdo->prepare("UPDATE room_settings SET display_order = ? WHERE room_number = ?");
+        Database::beginTransaction();
 
         foreach ($input['rooms'] as $room) {
             if (isset($room['room_number']) && isset($room['display_order'])) {
-                $stmt->execute([$room['display_order'], $room['room_number']]);
+                Database::execute("UPDATE room_settings SET display_order = ? WHERE room_number = ?", [$room['display_order'], $room['room_number']]);
             }
         }
 
-        $pdo->commit();
+        Database::commit();
         echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
 
     } catch (PDOException $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
     }
@@ -268,10 +254,9 @@ function handleDelete($pdo, $input)
     }
 
     try {
-        $stmt = $pdo->prepare("UPDATE room_settings SET is_active = 0 WHERE room_number = ?");
-        $result = $stmt->execute([$roomNumber]);
+        $result = Database::execute("UPDATE room_settings SET is_active = 0 WHERE room_number = ?", [$roomNumber]);
 
-        if ($result && $stmt->rowCount() > 0) {
+        if ($result > 0) {
             echo json_encode(['success' => true, 'message' => 'Room deactivated successfully']);
         } else {
             echo json_encode(['success' => false, 'message' => 'Room not found']);

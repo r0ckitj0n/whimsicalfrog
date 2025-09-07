@@ -28,7 +28,7 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
         $catRows = [];
         try {
             // Preferred: use explicit slug and display_order if present
-            $catStmt = $pdo->query(
+            $catRows = Database::queryAll(
                 "SELECT
                      id,
                      COALESCE(slug, LOWER(REPLACE(TRIM(name), ' ', '-'))) AS slug,
@@ -37,14 +37,12 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
                  FROM categories
                  ORDER BY display_order ASC"
             );
-            $catRows = $catStmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Throwable $eCat1) {
             // Fallback: minimal columns, order by name
             try {
-                $catStmt = $pdo->query(
+                $tmp = Database::queryAll(
                     "SELECT id, name FROM categories ORDER BY name ASC"
                 );
-                $tmp = $catStmt->fetchAll(PDO::FETCH_ASSOC);
                 foreach ($tmp as $row) {
                     $row['slug'] = strtolower(str_replace(' ', '-', trim($row['name'])));
                     $catRows[] = $row;
@@ -70,7 +68,7 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
         $products = [];
         try {
             // Attempt category_id join first
-            $prodStmt = $pdo->query(
+            $products = Database::queryAll(
                 "SELECT i.sku,
                         i.name                        AS productName,
                         COALESCE(i.retailPrice, 0)    AS price,
@@ -82,12 +80,11 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
                  FROM items i
                  JOIN categories c ON i.category_id = c.id"
             );
-            $products = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
             error_log('shop_data_loader: products via category_id join = ' . count($products));
         } catch (Throwable $e1) {
             // Fallback: join by legacy items.category name
             try {
-                $prodStmt = $pdo->query(
+                $products = Database::queryAll(
                     "SELECT i.sku,
                             i.name                        AS productName,
                             COALESCE(i.retailPrice, 0)    AS price,
@@ -98,13 +95,12 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
                      FROM items i
                      JOIN categories c ON i.category = c.name"
                 );
-                $products = $prodStmt->fetchAll(PDO::FETCH_ASSOC);
                 error_log('shop_data_loader: products via name join = ' . count($products));
             } catch (Throwable $e2) {
                 // Last-resort fallback: no join. Use items.category to compute slug.
                 error_log('shop_data_loader product query error: ' . $e1->getMessage() . ' | fallback: ' . $e2->getMessage());
                 try {
-                    $stmtItems = $pdo->query(
+                    $rows = Database::queryAll(
                         "SELECT i.sku,
                                 i.name                     AS productName,
                                 COALESCE(i.retailPrice, 0) AS price,
@@ -114,7 +110,6 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
                                 i.category                 AS cat_name
                          FROM items i"
                     );
-                    $rows = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
                     // Normalize slug from cat_name
                     foreach ($rows as $r) {
                         $catName = trim((string)($r['cat_name'] ?? ''));

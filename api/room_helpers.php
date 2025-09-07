@@ -15,8 +15,7 @@ function getActiveProductRooms()
 {
     // Product rooms are numeric >= 1 (exclude 0 main room and any letter-coded pages)
     try {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("
+        $rows = Database::queryAll("
             SELECT room_number
             FROM room_settings
             WHERE is_active = 1
@@ -24,8 +23,7 @@ function getActiveProductRooms()
               AND CAST(room_number AS UNSIGNED) >= 1
             ORDER BY CAST(room_number AS UNSIGNED)
         ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return array_map(function($r){ return array_values($r)[0]; }, $rows);
     } catch (Exception $e) {
         error_log("Error getting active product rooms: " . $e->getMessage());
         return [];
@@ -40,16 +38,14 @@ function getAllValidRooms()
 {
     // Valid navigable room numbers are numeric (including 0 main room). Letter-coded pages are excluded here.
     try {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("
+        $rows = Database::queryAll("
             SELECT room_number
             FROM room_settings
             WHERE is_active = 1
               AND room_number REGEXP '^[0-9]+$'
             ORDER BY CAST(room_number AS UNSIGNED)
         ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return array_map(function($r){ return array_values($r)[0]; }, $rows);
     } catch (Exception $e) {
         error_log("Error getting valid rooms: " . $e->getMessage());
         return [];
@@ -63,15 +59,13 @@ function getAllValidRooms()
 function getCoreRooms()
 {
     try {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("
+        $rows = Database::queryAll("
             SELECT room_number 
             FROM room_settings 
             WHERE is_active = 1 
             ORDER BY display_order, room_number
         ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return array_map(function($r){ return array_values($r)[0]; }, $rows);
     } catch (Exception $e) {
         error_log("Error getting core rooms: " . $e->getMessage());
         return []; // Return empty array on error
@@ -85,8 +79,7 @@ function getCoreRooms()
 function getRoomDoorsData()
 {
     try {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("
+        return Database::queryAll("
             SELECT room_number, room_name, door_label, description, display_order
             FROM room_settings
             WHERE is_active = 1
@@ -94,8 +87,6 @@ function getRoomDoorsData()
               AND CAST(room_number AS UNSIGNED) >= 1
             ORDER BY CAST(room_number AS UNSIGNED)
         ");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         error_log("Error getting room doors data: " . $e->getMessage());
         return [];
@@ -110,19 +101,18 @@ function getRoomTypeMapping()
 {
     // Map numeric rooms: 0 -> room_main, n>=1 -> room{n}
     try {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("
+        $rows = Database::queryAll("
             SELECT room_number
             FROM room_settings
             WHERE is_active = 1
               AND room_number REGEXP '^[0-9]+$'
             ORDER BY CAST(room_number AS UNSIGNED)
         ");
-        $stmt->execute();
         $mapping = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $n = (int)$row['room_number'];
-            $mapping[$row['room_number']] = ($n === 0) ? 'room_main' : ('room' . $n);
+        foreach ($rows as $row) {
+            $num = $row['room_number'];
+            $n = (int)$num;
+            $mapping[$num] = ($n === 0) ? 'room_main' : ('room' . $n);
         }
         return $mapping;
     } catch (Exception $e) {
@@ -178,15 +168,11 @@ function getRoomDataAsJson()
 function getRoomDisplayTypeMapping()
 {
     try {
-        $pdo = Database::getInstance();
-        $stmt = $pdo->prepare(
-            "SELECT room_number, background_display_type
-            FROM room_settings
-            WHERE is_active = 1"
+        $rows = Database::queryAll(
+            "SELECT room_number, background_display_type FROM room_settings WHERE is_active = 1"
         );
-        $stmt->execute();
         $mapping = [];
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        foreach ($rows as $row) {
             $mapping[$row['room_number']] = $row['background_display_type'];
         }
         return $mapping;

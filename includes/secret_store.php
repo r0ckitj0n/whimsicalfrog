@@ -5,7 +5,7 @@
  * - Encrypts values with libsodium (preferred) or OpenSSL using a filesystem key file
  */
 
-require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/../api/config.php';
 
 function secret_db() {
     // Database::getInstance() returns a PDO
@@ -13,7 +13,7 @@ function secret_db() {
 }
 
 function secret_table_ensure($pdo) {
-    $pdo->exec("CREATE TABLE IF NOT EXISTS secrets (
+    Database::execute("CREATE TABLE IF NOT EXISTS secrets (
         id INT AUTO_INCREMENT PRIMARY KEY,
         `key` VARCHAR(191) NOT NULL UNIQUE,
         value_enc LONGBLOB NOT NULL,
@@ -81,9 +81,8 @@ function secret_get($key) {
     try {
         $pdo = secret_db();
         secret_table_ensure($pdo);
-        $stmt = $pdo->prepare('SELECT value_enc FROM secrets WHERE `key` = ?');
-        $stmt->execute([$key]);
-        $enc = $stmt->fetchColumn();
+        $row = Database::queryOne('SELECT value_enc FROM secrets WHERE `key` = ?', [$key]);
+        $enc = $row ? $row['value_enc'] : false;
         if ($enc === false) { return null; }
         return secret_decrypt($enc);
     } catch (Exception $e) {
@@ -97,8 +96,8 @@ function secret_set($key, $value) {
         $pdo = secret_db();
         secret_table_ensure($pdo);
         $enc = secret_encrypt((string)$value);
-        $stmt = $pdo->prepare('INSERT INTO secrets (`key`, value_enc) VALUES (?, ?) ON DUPLICATE KEY UPDATE value_enc = VALUES(value_enc), updated_at = CURRENT_TIMESTAMP');
-        return $stmt->execute([$key, $enc]);
+        $affected = Database::execute('INSERT INTO secrets (`key`, value_enc) VALUES (?, ?) ON DUPLICATE KEY UPDATE value_enc = VALUES(value_enc), updated_at = CURRENT_TIMESTAMP', [$key, $enc]);
+        return $affected !== false;
     } catch (Exception $e) {
         error_log('secret_set error: ' . $e->getMessage());
         return false;
@@ -109,9 +108,8 @@ function secret_has($key) {
     try {
         $pdo = secret_db();
         secret_table_ensure($pdo);
-        $stmt = $pdo->prepare('SELECT 1 FROM secrets WHERE `key` = ?');
-        $stmt->execute([$key]);
-        return (bool)$stmt->fetchColumn();
+        $row = Database::queryOne('SELECT 1 AS c FROM secrets WHERE `key` = ?', [$key]);
+        return $row ? true : false;
     } catch (Exception $e) {
         return false;
     }
@@ -121,8 +119,8 @@ function secret_delete($key) {
     try {
         $pdo = secret_db();
         secret_table_ensure($pdo);
-        $stmt = $pdo->prepare('DELETE FROM secrets WHERE `key` = ?');
-        return $stmt->execute([$key]);
+        $affected = Database::execute('DELETE FROM secrets WHERE `key` = ?', [$key]);
+        return $affected !== false;
     } catch (Exception $e) {
         return false;
     }

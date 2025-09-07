@@ -114,10 +114,10 @@ $emailPrefill = $userData['email'] ?? '';
     </div>
 
     <!-- Square Settings Modal (hidden by default) -->
-    <div id="squareSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="squareSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="squareSettingsTitle">
       <div class="admin-modal">
         <div class="modal-header">
-          <h2 class="admin-card-title">🟩 Square Settings</h2>
+          <h2 id="squareSettingsTitle" class="admin-card-title">🟩 Square Settings</h2>
           <button type="button" class="admin-modal-close" data-action="close-square-settings" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
@@ -210,10 +210,10 @@ $emailPrefill = $userData['email'] ?? '';
     </div>
 
     <!-- CSS Rules Modal (hidden by default) -->
-    <div id="cssRulesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="cssRulesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="cssRulesTitle">
       <div class="admin-modal">
         <div class="modal-header">
-          <h2 class="admin-card-title">🎨 CSS Rules</h2>
+          <h2 id="cssRulesTitle" class="admin-card-title">🎨 CSS Rules</h2>
           <button type="button" class="admin-modal-close" data-action="close-css-rules" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
@@ -371,10 +371,10 @@ $emailPrefill = $userData['email'] ?? '';
     </div>
 
     <!-- Business Information Modal (hidden by default) -->
-    <div id="businessInfoModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="businessInfoModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="businessInfoTitle">
       <div class="admin-modal">
         <div class="modal-header">
-          <h2 class="admin-card-title">🏷️ Business Information</h2>
+          <h2 id="businessInfoTitle" class="admin-card-title">🏷️ Business Information</h2>
           <button type="button" class="admin-modal-close" data-action="close-business-info" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
@@ -465,10 +465,10 @@ $emailPrefill = $userData['email'] ?? '';
     </div>
 
     <!-- AI Provider Modal (hidden by default) -->
-    <div id="aiSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="aiSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="aiSettingsTitle">
       <div class="admin-modal">
         <div class="modal-header">
-          <h2 class="admin-card-title">🤖 AI Provider</h2>
+          <h2 id="aiSettingsTitle" class="admin-card-title">🤖 AI Provider</h2>
           <button type="button" class="admin-modal-close" data-action="close-ai-settings" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
@@ -507,10 +507,10 @@ $emailPrefill = $userData['email'] ?? '';
     </div>
 
     <!-- AI & Automation Tools Modal (hidden by default) -->
-    <div id="aiToolsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="aiToolsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="aiToolsTitle">
       <div class="admin-modal">
         <div class="modal-header">
-          <h2 class="admin-card-title">🛠️ AI & Automation Tools</h2>
+          <h2 id="aiToolsTitle" class="admin-card-title">🛠️ AI & Automation Tools</h2>
           <button type="button" class="admin-modal-close" data-action="close-ai-tools" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
@@ -525,10 +525,10 @@ $emailPrefill = $userData['email'] ?? '';
     </div>
 
     <!-- Email Settings Modal (hidden by default) -->
-    <div id="emailSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="emailSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="emailSettingsTitle">
       <div class="admin-modal">
         <div class="modal-header">
-          <h2 class="admin-card-title">✉️ Email Configuration</h2>
+          <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Configuration</h2>
           <button type="button" class="admin-modal-close" data-action="close-email-settings" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
@@ -673,12 +673,5 @@ $emailPrefill = $userData['email'] ?? '';
 </div>
 
 <?php
-// Emit the admin-settings Vite bundle if helper is available (header should have loaded it)
-if (function_exists('vite')) {
-    echo "<!-- WF: EMITTING admin-settings vite entry -->\n";
-    echo vite('js/admin-settings.js');
-} else {
-    echo "<!-- vite() helper not available; admin-settings bundle not emitted -->";
-}
 ?>
 <!-- WF: SETTINGS WRAPPER END -->

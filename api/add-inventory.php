@@ -47,10 +47,9 @@ try {
         $description = $data['description'] ?? '';
 
         // Insert using items table with sku as primary key
-        $stmt = $pdo->prepare('INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-        $result = $stmt->execute([$sku, $name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description]);
+        $affected = Database::execute('INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [$sku, $name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description]);
 
-        if ($result) {
+        if ($affected !== false) {
             echo json_encode([
                 'success' => true,
                 'message' => 'Item added successfully',
@@ -81,10 +80,9 @@ try {
         $retailPrice = $costPrice * 1.5; // Default markup
 
         // Insert using items table
-        $stmt = $pdo->prepare('INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-        $result = $stmt->execute([$sku, $name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description]);
+        $affected = Database::execute('INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [$sku, $name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description]);
 
-        if ($result) {
+        if ($affected !== false) {
             http_response_code(201);
             echo json_encode([
                 'success' => true,

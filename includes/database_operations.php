@@ -34,17 +34,15 @@ function makeDeleteRequest($url, $data = null)
 }
 
 /**
- * Execute a prepared statement and return results
+ * Execute a prepared SELECT and return all rows
  * @param string $sql
  * @param array $params
- * @return PDOStatement
+ * @return array
  */
 function executeQuery($sql, $params = [])
 {
-    $pdo = Database::getInstance()->getConnection();
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt;
+    Database::getInstance();
+    return Database::queryAll($sql, $params);
 }
 
 /**
@@ -55,6 +53,6 @@ function executeQuery($sql, $params = [])
  */
 function executeUpdate($sql, $params = [])
 {
-    $stmt = executeQuery($sql, $params);
-    return $stmt->rowCount();
+    Database::getInstance();
+    return (int) Database::execute($sql, $params);
 }

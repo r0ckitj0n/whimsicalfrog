@@ -14,12 +14,62 @@ html:has(body[data-page^='admin']) { overflow-x: clip; }
 /* Also ensure the nav container and content never overflow horizontally */
 /* Removed .admin-tab-navigation from global width rule to allow shrink-to-fit */
 body[data-page^='admin'] #admin-section-content { width: 100%; box-sizing: border-box; }
+/* Make the space behind the fixed admin navbar transparent on all admin pages */
+body[data-page^='admin'] .page-content,
+body[data-page^='admin'] #admin-section-content,
+html:has(body[data-page^='admin']) { background: transparent !important; }
+/* Remove any white frame/border from the main admin content wrapper so nothing shows behind the navbar */
+body[data-page^='admin'] #admin-section-content {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+body[data-page^='admin'] .admin-content-container {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
 /* Admin: tighten spacing between settings cards */
 body[data-page^='admin'] .settings-grid { gap: 0.5rem; margin-top: 0.5rem; }
 /* Remove borders on settings cards within admin pages */
 body[data-page^='admin'] .settings-section,
 body[data-page^='admin'] .settings-section-content > div {
     border: none !important;
+}
+
+/* --- Admin filter bar: transparent background and centered layout --- */
+body[data-page^='admin'] .admin-filter-section {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  padding: 0.5rem 0 !important;
+}
+/* Ensure no decorative borders from pseudo-elements */
+body[data-page^='admin'] .admin-filter-section::before,
+body[data-page^='admin'] .admin-filter-section::after {
+  content: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+body[data-page^='admin'] .admin-filters {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: transparent !important;
+}
+body[data-page^='admin'] .admin-filter-form {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  background: transparent !important;
 }
 
 /* Utility Classes *//* Gradient Classes */
@@ -6475,11 +6525,29 @@ body[data-page^='admin'] .settings-section:not([class*="card-theme-"]) .section-
 body[data-page^='admin'] .settings-section .admin-settings-button {
     background: var(--card-accent-bg, linear-gradient(135deg, var(--brand-primary, #87ac3a), #6b8e23));
     color: #ffffff !important;
-    font-family: var(--brand-font, inherit);
+    font-family: var(--font-primary, var(--brand-font, inherit));
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.25;
     border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
 }
 body[data-page^='admin'] .settings-section .admin-settings-button:hover { 
     filter: brightness(0.95); 
+}
+
+/* Ensure link-state consistency for settings buttons */
+body[data-page^='admin'] .settings-section .admin-settings-button:visited {
+    color: #ffffff !important;
+}
+body[data-page^='admin'] .settings-section .admin-settings-button:active {
+    filter: brightness(0.9);
 }
 
 /* Utility card theme classes: apply to .settings-section to give each card a unique color */
@@ -6967,6 +7035,19 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-primary:ho
     filter: brightness(0.95);
 }
 body[data-page^='admin'] .settings-section .admin-settings-button.btn-primary:active {
+    filter: brightness(0.9);
+}
+
+/* Force secondary variant to match card header theme as well */
+body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary {
+    background: var(--card-accent-bg, var(--brand-primary)) !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:hover {
+    filter: brightness(0.95);
+}
+body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:active {
     filter: brightness(0.9);
 }
 .btn-danger {

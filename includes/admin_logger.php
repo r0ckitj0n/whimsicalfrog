@@ -6,7 +6,6 @@
  */
 
 class AdminLogger {
-    private static $pdo = null;
     private static $userId = null;
     private static $sessionId = null;
     private static $ipAddress = null;
@@ -17,7 +16,7 @@ class AdminLogger {
      */
     public static function init() {
         try {
-            self::$pdo = Database::getInstance();
+            Database::getInstance();
             self::$sessionId = session_id();
             self::$ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
             self::$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
@@ -39,8 +38,6 @@ class AdminLogger {
      * Create admin log table if it doesn't exist
      */
     private static function createAdminLogTable() {
-        if (!self::$pdo) return;
-        
         try {
             $sql = "CREATE TABLE IF NOT EXISTS admin_activity_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -62,7 +59,7 @@ class AdminLogger {
                 INDEX idx_created_at (created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
             
-            self::$pdo->exec($sql);
+            Database::execute($sql);
         } catch (Exception $e) {
             error_log("Failed to create admin_activity_logs table: " . $e->getMessage());
         }
@@ -72,30 +69,23 @@ class AdminLogger {
      * Log admin activity
      */
     public static function logActivity($activityType, $category, $description, $entityType = null, $entityId = null, $oldValues = null, $newValues = null) {
-        if (!self::$pdo) return false;
-        
         try {
-            $stmt = self::$pdo->prepare("
-                INSERT INTO admin_activity_logs (
-                    user_id, session_id, activity_type, activity_category, 
-                    activity_description, entity_type, entity_id, 
-                    old_values, new_values, ip_address, user_agent
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
-            
-            $result = $stmt->execute([
-                self::$userId,
-                self::$sessionId,
-                $activityType,
-                $category,
-                $description,
-                $entityType,
-                $entityId,
-                $oldValues ? json_encode($oldValues) : null,
-                $newValues ? json_encode($newValues) : null,
-                self::$ipAddress,
-                self::$userAgent
-            ]);
+            $result = Database::execute(
+                "INSERT INTO admin_activity_logs (\n                    user_id, session_id, activity_type, activity_category, \n                    activity_description, entity_type, entity_id, \n                    old_values, new_values, ip_address, user_agent\n                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [
+                    self::$userId,
+                    self::$sessionId,
+                    $activityType,
+                    $category,
+                    $description,
+                    $entityType,
+                    $entityId,
+                    $oldValues ? json_encode($oldValues) : null,
+                    $newValues ? json_encode($newValues) : null,
+                    self::$ipAddress,
+                    self::$userAgent
+                ]
+            );
             
             // Also log to file for backup
             Logger::info("Admin Activity: $activityType", [
@@ -237,7 +227,6 @@ class AdminLogger {
      * Get admin activity logs with filtering
      */
     public static function getActivityLogs($filters = [], $limit = 100, $offset = 0) {
-        if (!self::$pdo) return [];
         
         try {
             $whereConditions = ['1=1'];
@@ -276,10 +265,7 @@ class AdminLogger {
             $params[] = $limit;
             $params[] = $offset;
             
-            $stmt = self::$pdo->prepare($sql);
-            $stmt->execute($params);
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return Database::queryAll($sql, $params);
         } catch (Exception $e) {
             error_log("Failed to get admin activity logs: " . $e->getMessage());
             return [];

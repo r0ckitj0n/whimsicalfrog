@@ -19,12 +19,11 @@ function write_backup($name, $data) {
 try {
     require_once __DIR__ . '/../../api/config.php';
     $pdo = Database::getInstance();
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
     // Read current state
-    $roomRows = $pdo->query("SELECT * FROM room_settings ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
-    $bgRows = $pdo->query("SELECT * FROM backgrounds ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
-    $mapRows = $pdo->query("SELECT * FROM room_maps ORDER BY id")->fetchAll(PDO::FETCH_ASSOC);
+    $roomRows = Database::queryAll("SELECT * FROM room_settings ORDER BY id");
+    $bgRows = Database::queryAll("SELECT * FROM backgrounds ORDER BY id");
+    $mapRows = Database::queryAll("SELECT * FROM room_maps ORDER BY id");
 
     // Build lookup by room_name for mapping
     $byName = [];
@@ -251,67 +250,67 @@ try {
     }
 
     // APPLY
-    $pdo->beginTransaction();
+    Database::beginTransaction();
     try {
         $b1 = write_backup('room_settings_backup', $roomRows);
         $b2 = write_backup('backgrounds_backup', $bgRows);
         $b3 = write_backup('room_maps_backup', $mapRows);
 
         // Apply landing first (move off 0) to free up '0'
-        if ($landingUpdate) { $pdo->exec($landingUpdate['sql']); }
+        if ($landingUpdate) { Database::execute($landingUpdate['sql']); }
         if (!empty($roomUpdateIds)) {
-            $pdo->exec('UPDATE room_settings SET room_number = room_number + 1000 WHERE id IN (' . implode(',', $roomUpdateIds) . ');');
+            Database::execute('UPDATE room_settings SET room_number = room_number + 1000 WHERE id IN (' . implode(',', $roomUpdateIds) . ');');
         }
-        foreach ($roomUpdates as $u) { $pdo->exec($u['sql']); }
+        foreach ($roomUpdates as $u) { Database::execute($u['sql']); }
         // Global tmp rename to make all names unique during transition
-        $pdo->exec($bgTempRenameSQL);
+        Database::execute($bgTempRenameSQL);
         // Pre-rename duplicates, then deactivate moving actives and pre-deactivate to avoid unique collisions on update
-        foreach ($bgPreRenameSQL as $sql) { $pdo->exec($sql); }
-        foreach ($bgDeactivateMovingActiveSQL as $sql) { $pdo->exec($sql); }
-        foreach ($bgPreDeactivateSQL as $sql) { $pdo->exec($sql); }
+        foreach ($bgPreRenameSQL as $sql) { Database::execute($sql); }
+        foreach ($bgDeactivateMovingActiveSQL as $sql) { Database::execute($sql); }
+        foreach ($bgPreDeactivateSQL as $sql) { Database::execute($sql); }
         if (!empty($targetTypes)) {
             $in = '\'' . implode('\',\'', array_keys($targetTypes)) . '\'';
-            $pdo->exec('UPDATE backgrounds SET is_active = 0 WHERE is_active = 1 AND room_type IN (' . $in . ');');
+            Database::execute('UPDATE backgrounds SET is_active = 0 WHERE is_active = 1 AND room_type IN (' . $in . ');');
         }
-        foreach ($bgUpdates as $u) { $pdo->exec($u['sql']); }
+        foreach ($bgUpdates as $u) { Database::execute($u['sql']); }
         // Reactivate one background per target type (prefer Original)
         foreach (array_keys($targetTypes) as $type) {
-            $stmt = $pdo->query(
-                "SELECT id, background_name FROM backgrounds WHERE room_type = " . $pdo->quote($type) .
-                " ORDER BY (background_name = 'Original') DESC, id ASC LIMIT 1"
+            $row = Database::queryOne(
+                "SELECT id, background_name FROM backgrounds WHERE room_type = ? ORDER BY (background_name = 'Original') DESC, id ASC LIMIT 1",
+                [$type]
             );
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($row && isset($row['id'])) {
-                $pdo->exec('UPDATE backgrounds SET is_active = 1 WHERE id = ' . (int)$row['id'] . ';');
+                Database::execute('UPDATE backgrounds SET is_active = 1 WHERE id = ' . (int)$row['id'] . ';');
             }
         }
         // Normalize names per type for ALL final types: set active to 'Original', others to 'Variant N'
         foreach (array_keys($allTypes) as $type) {
             // Set active to 'Original'
-            $stmt = $pdo->query(
-                "SELECT id FROM backgrounds WHERE room_type = " . $pdo->quote($type) . " AND is_active = 1 LIMIT 1"
+            $row = Database::queryOne(
+                "SELECT id FROM backgrounds WHERE room_type = ? AND is_active = 1 LIMIT 1",
+                [$type]
             );
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($row && isset($row['id'])) {
-                $pdo->exec('UPDATE backgrounds SET background_name = \'Original\' WHERE id = ' . (int)$row['id'] . ';');
+                Database::execute('UPDATE backgrounds SET background_name = \'Original\' WHERE id = ' . (int)$row['id'] . ';');
             }
             // Rename others deterministically
-            $stmt2 = $pdo->query(
-                "SELECT id FROM backgrounds WHERE room_type = " . $pdo->quote($type) . " AND id <> " . ((int)($row['id'] ?? 0)) . " ORDER BY id ASC"
+            $others = Database::queryAll(
+                "SELECT id FROM backgrounds WHERE room_type = ? AND id <> ? ORDER BY id ASC",
+                [$type, (int)($row['id'] ?? 0)]
             );
             $n = 2;
-            while ($r = $stmt2->fetch(PDO::FETCH_ASSOC)) {
+            foreach ($others as $r) {
                 $new = 'Variant ' . $n;
-                $pdo->exec('UPDATE backgrounds SET background_name = ' . $pdo->quote($new) . ' WHERE id = ' . (int)$r['id'] . ';');
+                Database::execute('UPDATE backgrounds SET background_name = ' . $pdo->quote($new) . ' WHERE id = ' . (int)$r['id'] . ';');
                 $n++;
             }
         }
-        foreach ($mapUpdates as $u) { $pdo->exec($u['sql']); }
+        foreach ($mapUpdates as $u) { Database::execute($u['sql']); }
 
-        $pdo->commit();
+        Database::commit();
         echo json_encode(['ok' => true, 'dry_run' => false, 'backups' => [$b1, $b2, $b3], 'applied' => $plan], JSON_PRETTY_PRINT);
     } catch (Throwable $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         http_response_code(500);
         echo json_encode(['ok' => false, 'error' => $e->getMessage(), 'plan' => $plan]);
     }

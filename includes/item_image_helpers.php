@@ -14,18 +14,7 @@ require_once __DIR__ . '/../api/config.php';
 function getAllImagesBySku($sku)
 {
     try {
-        $pdo = getDbConnection();
-        if (!$pdo) {
-            return [];
-        }
-
-        $stmt = $pdo->prepare("
-            SELECT * FROM item_images 
-            WHERE sku = ? 
-            ORDER BY is_primary DESC, sort_order ASC, id ASC
-        ");
-        $stmt->execute([$sku]);
-        $images = $stmt->fetchAll();
+        $images = Database::queryAll("\n            SELECT * FROM item_images \n            WHERE sku = ? \n            ORDER BY is_primary DESC, sort_order ASC, id ASC\n        ", [$sku]);
 
         // Convert boolean values
         foreach ($images as &$image) {
@@ -35,7 +24,7 @@ function getAllImagesBySku($sku)
 
         return $images;
 
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         error_log("Database error in getAllImagesBySku: " . $e->getMessage());
         return [];
     }
@@ -155,40 +144,21 @@ function getFallbackItemImage($sku)
 function getItemImages($sku, $pdo = null)
 {
     if (!$pdo) {
-        $pdo = getDbConnection();
-        if (!$pdo) {
-            // Fallback to file system check
-            $fallbackImage = getFallbackItemImage($sku);
-            return $fallbackImage ? [$fallbackImage] : [];
-        }
+        // Fallback to file system check
+        $fallbackImage = getFallbackItemImage($sku);
+        return $fallbackImage ? [$fallbackImage] : [];
     }
 
     try {
         // Check if item_images table exists
-        $stmt = $pdo->query("SHOW TABLES LIKE 'item_images'");
-        if ($stmt->rowCount() === 0) {
+        $rows = Database::queryAll("SHOW TABLES LIKE 'item_images'");
+        if (count($rows) === 0) {
             // Table doesn't exist, use fallback
             $fallbackImage = getFallbackItemImage($sku);
             return $fallbackImage ? [$fallbackImage] : [];
         }
 
-        $stmt = $pdo->prepare("
-            SELECT 
-                id,
-                sku,
-                image_path,
-                is_primary,
-                sort_order,
-                alt_text,
-                created_at,
-                updated_at
-            FROM item_images 
-            WHERE sku = ? 
-            ORDER BY is_primary DESC, sort_order ASC
-        ");
-
-        $stmt->execute([$sku]);
-        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $images = Database::queryAll("\n            SELECT \n                id,\n                sku,\n                image_path,\n                is_primary,\n                sort_order,\n                alt_text,\n                created_at,\n                updated_at\n            FROM item_images \n            WHERE sku = ? \n            ORDER BY is_primary DESC, sort_order ASC\n        ", [$sku]);
 
         // If no images found in database, try fallback
         if (empty($images)) {
@@ -304,21 +274,15 @@ function renderItemImageDisplay($sku, $options = [])
 
 function getPrimaryImageUrl($sku)
 {
-    global $pdo;
-
     try {
-        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? AND is_primary = 1 LIMIT 1");
-        $stmt->execute([$sku]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = Database::queryOne("SELECT image_path FROM item_images WHERE sku = ? AND is_primary = 1 LIMIT 1", [$sku]);
 
         if ($result) {
             return getImageUrlWithFallback($result['image_path'], $sku);
         }
 
         // Try to get any image for this SKU
-        $stmt = $pdo->prepare("SELECT image_path FROM item_images WHERE sku = ? LIMIT 1");
-        $stmt->execute([$sku]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = Database::queryOne("SELECT image_path FROM item_images WHERE sku = ? LIMIT 1", [$sku]);
 
         if ($result) {
             return getImageUrlWithFallback($result['image_path'], $sku);
@@ -334,12 +298,8 @@ function getPrimaryImageUrl($sku)
 
 function getAllImagesForSku($sku)
 {
-    global $pdo;
-
     try {
-        $stmt = $pdo->prepare("SELECT * FROM item_images WHERE sku = ? ORDER BY is_primary DESC, id ASC");
-        $stmt->execute([$sku]);
-        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $images = Database::queryAll("SELECT * FROM item_images WHERE sku = ? ORDER BY is_primary DESC, id ASC", [$sku]);
 
         // Process each image through the fallback system
         foreach ($images as &$image) {

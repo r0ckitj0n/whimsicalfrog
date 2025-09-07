@@ -5,38 +5,38 @@ header('Content-Type: application/json');
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
 
     // Get items count and categories
-    $stmt = $pdo->query("SELECT COUNT(*) as total_items FROM items");
-    $itemsCount = $stmt->fetch(PDO::FETCH_ASSOC)['total_items'];
+    $row = Database::queryOne("SELECT COUNT(*) as total_items FROM items");
+    $itemsCount = $row ? $row['total_items'] : 0;
 
-    $stmt = $pdo->query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
-    $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $catRows = Database::queryAll("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
+    $categories = array_values(array_filter(array_map(function($r){ return $r['category'] ?? null; }, $catRows), function($v){ return $v !== null; }));
 
     // Get images count
-    $stmt = $pdo->query("SELECT COUNT(*) as total_images FROM item_images");
-    $imagesCount = $stmt->fetch(PDO::FETCH_ASSOC)['total_images'];
+    $row = Database::queryOne("SELECT COUNT(*) as total_images FROM item_images");
+    $imagesCount = $row ? $row['total_images'] : 0;
 
     // Get orders count
-    $stmt = $pdo->query("SELECT COUNT(*) as total_orders FROM orders");
-    $ordersCount = $stmt->fetch(PDO::FETCH_ASSOC)['total_orders'];
+    $row = Database::queryOne("SELECT COUNT(*) as total_orders FROM orders");
+    $ordersCount = $row ? $row['total_orders'] : 0;
 
     // Get order items count
-    $stmt = $pdo->query("SELECT COUNT(*) as total_order_items FROM order_items");
-    $orderItemsCount = $stmt->fetch(PDO::FETCH_ASSOC)['total_order_items'];
+    $row = Database::queryOne("SELECT COUNT(*) as total_order_items FROM order_items");
+    $orderItemsCount = $row ? $row['total_order_items'] : 0;
 
     // Get database table information
-    $stmt = $pdo->query("SHOW TABLES");
-    $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $tRows = Database::queryAll("SHOW TABLES");
+    $tables = array_map(function($r){ return array_values($r)[0]; }, $tRows);
 
     // Get SKU patterns
-    $stmt = $pdo->query("SELECT sku FROM items ORDER BY sku LIMIT 10");
-    $sampleSkus = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $skuRows = Database::queryAll("SELECT sku FROM items ORDER BY sku LIMIT 10");
+    $sampleSkus = array_values(array_map(function($r){ return $r['sku'] ?? null; }, $skuRows));
 
     // Get recent activity - check what date column exists
     $lastOrderDate = null;
@@ -45,18 +45,17 @@ try {
         $possibleDateColumns = ['created_at', 'date_created', 'order_date', 'timestamp'];
         foreach ($possibleDateColumns as $column) {
             try {
-                $stmt = $pdo->query("SELECT $column FROM orders ORDER BY $column DESC LIMIT 1");
-                $lastOrderResult = $stmt->fetch(PDO::FETCH_ASSOC);
-                if ($lastOrderResult && $lastOrderResult[$column]) {
+                $lastOrderResult = Database::queryOne("SELECT $column FROM orders ORDER BY $column DESC LIMIT 1");
+                if ($lastOrderResult && !empty($lastOrderResult[$column])) {
                     $lastOrderDate = $lastOrderResult[$column];
                     break;
                 }
-            } catch (PDOException $e) {
+            } catch (Exception $e) {
                 // Column doesn't exist, try next one
                 continue;
             }
         }
-    } catch (PDOException $e) {
+    } catch (Exception $e) {
         // If all fail, just set to null
         $lastOrderDate = null;
     }
@@ -104,14 +103,19 @@ try {
     }
 
     // Get sample data for ID formats
-    $sampleCustomer = $pdo->query("SELECT id FROM users ORDER BY id DESC LIMIT 1")->fetchColumn();
-    $sampleOrder = $pdo->query("SELECT id FROM orders ORDER BY id DESC LIMIT 1")->fetchColumn();
-    $sampleOrderItem = $pdo->query("SELECT id FROM order_items ORDER BY id DESC LIMIT 1")->fetchColumn();
+    $row = Database::queryOne("SELECT id FROM users ORDER BY id DESC LIMIT 1");
+    $sampleCustomer = $row ? $row['id'] : null;
+    $row = Database::queryOne("SELECT id FROM orders ORDER BY id DESC LIMIT 1");
+    $sampleOrder = $row ? $row['id'] : null;
+    $row = Database::queryOne("SELECT id FROM order_items ORDER BY id DESC LIMIT 1");
+    $sampleOrderItem = $row ? $row['id'] : null;
 
     // Get some real examples
-    $recentCustomers = $pdo->query("SELECT id, username FROM users ORDER BY id DESC LIMIT 3")->fetchAll(PDO::FETCH_ASSOC);
-    $recentOrders = $pdo->query("SELECT id FROM orders ORDER BY id DESC LIMIT 3")->fetchAll(PDO::FETCH_COLUMN);
-    $recentOrderItems = $pdo->query("SELECT id FROM order_items ORDER BY id DESC LIMIT 3")->fetchAll(PDO::FETCH_COLUMN);
+    $recentCustomers = Database::queryAll("SELECT id, username FROM users ORDER BY id DESC LIMIT 3");
+    $rOrders = Database::queryAll("SELECT id FROM orders ORDER BY id DESC LIMIT 3");
+    $recentOrders = array_values(array_map(function($r){ return $r['id'] ?? null; }, $rOrders));
+    $rOrderItems = Database::queryAll("SELECT id FROM order_items ORDER BY id DESC LIMIT 3");
+    $recentOrderItems = array_values(array_map(function($r){ return $r['id'] ?? null; }, $rOrderItems));
 
     // Get category mapping
     $categoryMap = [

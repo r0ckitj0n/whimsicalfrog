@@ -68,13 +68,12 @@ try {
     }
 
     // Insert new inventory item using the correct column names
-    $stmt = $pdo->prepare('INSERT INTO inventory (id, productId, name, description, sku, stockLevel, reorderPoint, imageUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    $result = $stmt->execute([$id, $productId, $name, $description, $sku, $stockLevel, $reorderPoint, $imageUrl]);
+    $result = Database::execute('INSERT INTO inventory (id, productId, name, description, sku, stockLevel, reorderPoint, imageUrl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [$id, $productId, $name, $description, $sku, $stockLevel, $reorderPoint, $imageUrl]);
 
     if ($result) {
         // If category provided, update products table
         if (!empty($category)) {
-            $pdo->prepare('UPDATE products SET productType = ? WHERE id = ?')->execute([$category, $productId]);
+            Database::execute('UPDATE products SET productType = ? WHERE id = ?', [$category, $productId]);
         }
         // Return success response
         http_response_code(201); // Created

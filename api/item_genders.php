@@ -47,7 +47,7 @@ if ($action !== 'get_all' && !$isAdmin && !$isValidToken) {
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -71,23 +71,22 @@ try {
             }
 
             // Check if this gender already exists for this item
-            $checkSql = "SELECT id FROM item_genders WHERE item_sku = ? AND gender = ?";
-            $checkStmt = $pdo->prepare($checkSql);
-            $checkStmt->execute([$itemSku, $gender]);
+            $existing = Database::queryOne("SELECT id FROM item_genders WHERE item_sku = ? AND gender = ?", [$itemSku, $gender]);
 
-            if ($checkStmt->rowCount() > 0) {
+            if ($existing) {
                 throw new Exception('This gender already exists for this item');
             }
 
             // Insert new gender
-            $sql = "INSERT INTO item_genders (item_sku, gender, is_active, created_at) VALUES (?, ?, 1, NOW())";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$itemSku, $gender]);
+            Database::execute(
+                "INSERT INTO item_genders (item_sku, gender, is_active, created_at) VALUES (?, ?, 1, NOW())",
+                [$itemSku, $gender]
+            );
 
             echo json_encode([
                 'success' => true,
                 'message' => 'Gender added successfully',
-                'gender_id' => $pdo->lastInsertId()
+                'gender_id' => Database::lastInsertId()
             ]);
             break;
 
@@ -98,11 +97,7 @@ try {
                 throw new Exception('Item SKU is required');
             }
 
-            $sql = "SELECT * FROM item_genders WHERE item_sku = ? ORDER BY gender";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$itemSku]);
-
-            $genders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $genders = Database::queryAll("SELECT * FROM item_genders WHERE item_sku = ? ORDER BY gender", [$itemSku]);
 
             echo json_encode([
                 'success' => true,
@@ -122,11 +117,9 @@ try {
                 throw new Exception('Gender ID is required');
             }
 
-            $sql = "DELETE FROM item_genders WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$genderId]);
+            $deleted = Database::execute("DELETE FROM item_genders WHERE id = ?", [$genderId]);
 
-            if ($stmt->rowCount() > 0) {
+            if ($deleted > 0) {
                 echo json_encode([
                     'success' => true,
                     'message' => 'Gender deleted successfully'
@@ -151,11 +144,12 @@ try {
                 throw new Exception('Gender ID and gender name are required');
             }
 
-            $sql = "UPDATE item_genders SET gender = ?, is_active = ?, updated_at = NOW() WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$gender, $isActive, $genderId]);
+            $updated = Database::execute(
+                "UPDATE item_genders SET gender = ?, is_active = ?, updated_at = NOW() WHERE id = ?",
+                [$gender, $isActive, $genderId]
+            );
 
-            if ($stmt->rowCount() > 0) {
+            if ($updated > 0) {
                 echo json_encode([
                     'success' => true,
                     'message' => 'Gender updated successfully'

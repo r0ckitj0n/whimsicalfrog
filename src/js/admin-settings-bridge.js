@@ -273,7 +273,15 @@ export function init(){
     );
     if (!isSettings) { try { console.info('[AdminSettingsBridge] skip: not settings route'); } catch(_) {} return; }
     try { console.info('[AdminSettingsBridge] active on settings route'); } catch(_) {}
-    initEmailSection();
+    // Defer email section initialization until the user opens the Email Settings modal
+    let __emailInitDone = false;
+    const initEmailIfNeeded = async () => {
+      if (__emailInitDone) return;
+      try {
+        await initEmailSection();
+      } catch (e) { try { console.warn('[AdminSettingsBridge] initEmailSection failed (deferred)', e); } catch(_) {} }
+      __emailInitDone = true;
+    };
 
     // Do not force 'under-header' positioning; allow overlays to cover full viewport
 
@@ -295,6 +303,88 @@ export function init(){
       try { const st = document.getElementById('wf-early-settings-squelch'); if (st) st.remove(); } catch(_) {}
       try { const st2 = document.querySelector('style[data-wf-squelch-style="1"]'); if (st2) st2.remove(); } catch(_) {}
     };
+    // Track open overlays and last trigger elements
+    const openStack = [];
+    const lastTriggerById = new Map();
+
+    const getFocusable = (root) => {
+      if (!root) return [];
+      const sel = [
+        'a[href]',
+        'area[href]',
+        'button:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        'iframe',
+        '[tabindex]:not([tabindex="-1"])',
+        '[contenteditable="true"]'
+      ].join(',');
+      return Array.from(root.querySelectorAll(sel)).filter(el => el.offsetParent !== null || el === document.activeElement);
+    };
+
+    const focusTrapHandlers = new Map();
+
+    const trapFocus = (overlayEl) => {
+      const handler = (e) => {
+        if (e.key !== 'Tab') return;
+        const modalPanel = overlayEl.querySelector('.admin-modal, .modal, .admin-modal-content');
+        const focusables = getFocusable(modalPanel || overlayEl);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first || !overlayEl.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      };
+      overlayEl.addEventListener('keydown', handler);
+      focusTrapHandlers.set(overlayEl, handler);
+    };
+
+    const releaseFocusTrap = (overlayEl) => {
+      const handler = focusTrapHandlers.get(overlayEl);
+      if (handler) {
+        overlayEl.removeEventListener('keydown', handler);
+        focusTrapHandlers.delete(overlayEl);
+      }
+    };
+
+    const ensureInitialFocus = (overlayEl) => {
+      try {
+        const modalPanel = overlayEl.querySelector('.admin-modal, .modal, .admin-modal-content');
+        const focusables = getFocusable(modalPanel || overlayEl);
+        if (focusables.length) {
+          focusables[0].focus();
+        } else {
+          overlayEl.setAttribute('tabindex', '-1');
+          overlayEl.focus();
+        }
+      } catch (_) {}
+    };
+
+    const onDocKeydown = (e) => {
+      if (e.key === 'Escape' && openStack.length) {
+        const topId = openStack[openStack.length - 1];
+        e.preventDefault();
+        hideModal(topId);
+      }
+    };
+
+    const installEscHandler = () => {
+      try { document.addEventListener('keydown', onDocKeydown); } catch(_) {}
+    };
+    const removeEscHandler = () => {
+      try { document.removeEventListener('keydown', onDocKeydown); } catch(_) {}
+    };
+
     const forceVisible = (el) => {
       try {
         el.classList.remove('hidden');
@@ -310,6 +400,10 @@ export function init(){
           const panel = el.querySelector('.admin-modal, .modal, .admin-modal-content');
           if (panel) panel.classList.add('wf-admin-panel-visible');
         } catch(_) {}
+        // Focus management
+        installEscHandler();
+        ensureInitialFocus(el);
+        trapFocus(el);
         try { console.info('[AdminSettingsBridge] forceVisible ->', el.id); } catch(_) {}
       } catch(_) {}
     };
@@ -365,6 +459,8 @@ export function init(){
           document.body.appendChild(el);
         }
       } catch(_) {}
+      // Push to open stack
+      if (!openStack.includes(id)) openStack.push(id);
       forceVisible(el);
       verifyVisibleSoon(el);
       try { if (typeof window.updateModalScrollLock === 'function') window.updateModalScrollLock(); } catch(_) {}
@@ -377,9 +473,23 @@ export function init(){
       el.classList.add('hidden');
       el.classList.remove('show');
       el.setAttribute('aria-hidden', 'true');
+      // Remove from stack
+      const idx = openStack.lastIndexOf(id);
+      if (idx !== -1) openStack.splice(idx, 1);
+      // Release focus trap
+      releaseFocusTrap(el);
       try { document.documentElement.classList.remove('modal-open'); } catch(_) {}
       try { document.body.classList.remove('modal-open'); } catch(_) {}
       try { if (typeof window.updateModalScrollLock === 'function') window.updateModalScrollLock(); } catch(_) {}
+      // Return focus to last trigger for this modal if available
+      try {
+        const trigger = lastTriggerById.get(id);
+        if (trigger && document.contains(trigger)) {
+          trigger.focus();
+        }
+      } catch(_) {}
+      // Remove ESC handler if no overlays remain
+      if (!openStack.length) removeEscHandler();
       try { console.info('[AdminSettingsBridge] hideModal', id); } catch(_) {}
       return true;
     };
@@ -804,47 +914,48 @@ async function ensureLegacyLoaded() {
       }
 
       // Business Info
-      if (closest('[data-action="open-business-info"]')) { try { console.info('[AdminSettingsBridge] click open-business-info'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('businessInfoModal'); return; }
+      if (closest('[data-action="open-business-info"]')) { try { console.info('[AdminSettingsBridge] click open-business-info'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('businessInfoModal', (t.closest('button, a, [tabindex]')||t)); showModal('businessInfoModal'); return; }
       if (closest('[data-action="close-business-info"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('businessInfoModal'); return; }
 
       // Square Settings
-      if (closest('[data-action="open-square-settings"]')) { try { console.info('[AdminSettingsBridge] click open-square-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('squareSettingsModal'); return; }
+      if (closest('[data-action="open-square-settings"]')) { try { console.info('[AdminSettingsBridge] click open-square-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('squareSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('squareSettingsModal'); return; }
       if (closest('[data-action="close-square-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('squareSettingsModal'); return; }
 
       // Email Settings
-      if (closest('[data-action="open-email-settings"]')) { try { console.info('[AdminSettingsBridge] click open-email-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('emailSettingsModal'); return; }
+      if (closest('[data-action="open-email-settings"]')) { try { console.info('[AdminSettingsBridge] click open-email-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('emailSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('emailSettingsModal'); return; }
       if (closest('[data-action="close-email-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('emailSettingsModal'); return; }
       // Open Email Test: open email modal and focus test input if present
-      if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); if (showModal('emailSettingsModal')) { const test = document.getElementById('testEmailAddress'); if (test) setTimeout(() => test.focus(), 50); } return; }
+      if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('emailSettingsModal', (t.closest('button, a, [tabindex]')||t)); if (showModal('emailSettingsModal')) { const test = document.getElementById('testEmailAddress'); if (test) setTimeout(() => test.focus(), 50); } return; }
 
       // Logging Status
-      if (closest('[data-action="open-logging-status"]')) { try { console.info('[AdminSettingsBridge] click open-logging-status'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('loggingStatusModal'); return; }
+      if (closest('[data-action="open-logging-status"]')) { try { console.info('[AdminSettingsBridge] click open-logging-status'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('loggingStatusModal', (t.closest('button, a, [tabindex]')||t)); showModal('loggingStatusModal'); return; }
       if (closest('[data-action="close-logging-status"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('loggingStatusModal'); return; }
 
       // AI Settings
-      if (closest('[data-action="open-ai-settings"]')) { try { console.info('[AdminSettingsBridge] click open-ai-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('aiSettingsModal'); return; }
+      if (closest('[data-action="open-ai-settings"]')) { try { console.info('[AdminSettingsBridge] click open-ai-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('aiSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('aiSettingsModal'); return; }
       if (closest('[data-action="close-ai-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('aiSettingsModal'); return; }
 
       // AI Tools
-      if (closest('[data-action="open-ai-tools"]')) { try { console.info('[AdminSettingsBridge] click open-ai-tools'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('aiToolsModal'); return; }
+      if (closest('[data-action="open-ai-tools"]')) { try { console.info('[AdminSettingsBridge] click open-ai-tools'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('aiToolsModal', (t.closest('button, a, [tabindex]')||t)); showModal('aiToolsModal'); return; }
       if (closest('[data-action="close-ai-tools"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('aiToolsModal'); return; }
 
       // CSS Rules
-      if (closest('[data-action="open-css-rules"]')) { try { console.info('[AdminSettingsBridge] click open-css-rules'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); if (showModal('cssRulesModal')) { loadCssRulesManager('cssRulesModal'); } return; }
+      if (closest('[data-action="open-css-rules"]')) { try { console.info('[AdminSettingsBridge] click open-css-rules'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('cssRulesModal', (t.closest('button, a, [tabindex]')||t)); if (showModal('cssRulesModal')) { loadCssRulesManager('cssRulesModal'); } return; }
       if (closest('[data-action="close-css-rules"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('cssRulesModal'); return; }
 
       // Background Manager
-      if (closest('[data-action="open-background-manager"]')) { try { console.info('[AdminSettingsBridge] click open-background-manager'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); if (showModal('backgroundManagerModal')) { loadBackgroundManager('backgroundManagerModal'); } return; }
+      if (closest('[data-action="open-background-manager"]')) { try { console.info('[AdminSettingsBridge] click open-background-manager'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('backgroundManagerModal', (t.closest('button, a, [tabindex]')||t)); if (showModal('backgroundManagerModal')) { loadBackgroundManager('backgroundManagerModal'); } return; }
       if (closest('[data-action="close-background-manager"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('backgroundManagerModal'); return; }
 
       // Receipt Settings
-      if (closest('[data-action="open-receipt-settings"]')) { try { console.info('[AdminSettingsBridge] click open-receipt-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('receiptSettingsModal'); return; }
+      if (closest('[data-action="open-receipt-settings"]')) { try { console.info('[AdminSettingsBridge] click open-receipt-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('receiptSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('receiptSettingsModal'); return; }
       if (closest('[data-action="close-receipt-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('receiptSettingsModal'); return; }
 
       // Dashboard Configuration
       if (closest('[data-action="open-dashboard-config"]')) {
         try { console.info('[AdminSettingsBridge] click open-dashboard-config'); } catch(_) {}
         e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        lastTriggerById.set('dashboardConfigModal', (t.closest('button, a, [tabindex]')||t));
         if (showModal('dashboardConfigModal')) {
           // Always populate a responsive, non-freezing fallback UI immediately
           try {
@@ -959,6 +1070,7 @@ async function ensureLegacyLoaded() {
       if (closest('#fileExplorerBtn') || closest('[data-action="open-file-explorer"]')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        lastTriggerById.set('fileExplorerModal', (t.closest('button, a, [tabindex]')||t));
         // Load legacy module to wire up explorer handlers, then open
         ensureLegacyLoaded().then(() => {
           if (typeof window.openFileExplorerModal === 'function') {

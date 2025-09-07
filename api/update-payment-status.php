@@ -112,10 +112,9 @@ try {
     }
 
     // Check if order exists
-    $checkStmt = $pdo->prepare('SELECT id FROM orders WHERE id = ?');
-    $checkStmt->execute([$orderId]);
+    $row = Database::queryOne('SELECT id FROM orders WHERE id = ?', [$orderId]);
 
-    if (!$checkStmt->fetch()) {
+    if (!$row) {
         http_response_code(404);
         echo json_encode(['error' => 'Order not found']);
         exit;
@@ -123,8 +122,7 @@ try {
 
     // Build dynamic update query
     $sql = 'UPDATE orders SET ' . implode(', ', $updateMap) . ' WHERE id = :orderId';
-    $stmt = $pdo->prepare($sql);
-    $result = $stmt->execute($params);
+    $result = Database::execute($sql, $params);
 
     if ($result) {
         echo json_encode(['success' => true,'message' => 'Order updated','orderId' => $orderId]);

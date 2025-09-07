@@ -39,9 +39,7 @@ try {
                 }
 
                 $sql .= " ORDER BY category, template_name";
-                $stmt = $pdo->prepare($sql);
-                $stmt->execute($params);
-                $templates = $stmt->fetchAll();
+                $templates = Database::queryAll($sql, $params);
 
                 // Parse JSON fields
                 foreach ($templates as &$template) {
@@ -55,9 +53,7 @@ try {
 
             } elseif ($action === 'get' && isset($_GET['id'])) {
                 // Get specific template
-                $stmt = $pdo->prepare("SELECT * FROM cost_breakdown_templates WHERE id = ?");
-                $stmt->execute([$_GET['id']]);
-                $template = $stmt->fetch();
+                $template = Database::queryOne("SELECT * FROM cost_breakdown_templates WHERE id = ?", [$_GET['id']]);
 
                 if ($template) {
                     // Parse JSON fields
@@ -83,13 +79,11 @@ try {
 
             if ($action === 'create') {
                 // Create new template
-                $stmt = $pdo->prepare("
+                Database::execute("
                     INSERT INTO cost_breakdown_templates 
                     (template_name, description, category, materials, labor, energy, equipment) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                ");
-
-                $stmt->execute([
+                ", [
                     $input['template_name'],
                     $input['description'] ?? '',
                     $input['category'] ?? '',
@@ -99,7 +93,7 @@ try {
                     json_encode($input['equipment'] ?? [])
                 ]);
 
-                $templateId = $pdo->lastInsertId();
+                $templateId = Database::lastInsertId();
                 echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template created successfully']);
 
             } elseif ($action === 'save_from_breakdown') {
@@ -126,27 +120,21 @@ try {
                 if (!empty($sku)) {
                     // Fetch existing cost breakdown data
                     // Materials table uses 'name' field, others use 'description'
-                    $stmt = $pdo->prepare("SELECT name, cost FROM inventory_materials WHERE sku = ?");
-                    $stmt->execute([$sku]);
-                    $costData['materials'] = $stmt->fetchAll();
+                    $costData['materials'] = Database::queryAll("SELECT name, cost FROM inventory_materials WHERE sku = ?", [$sku]);
 
                     $costTables = ['labor', 'energy', 'equipment'];
                     foreach ($costTables as $table) {
                         $tableName = "inventory_$table";
-                        $stmt = $pdo->prepare("SELECT description as name, cost FROM $tableName WHERE sku = ?");
-                        $stmt->execute([$sku]);
-                        $costData[$table] = $stmt->fetchAll();
+                        $costData[$table] = Database::queryAll("SELECT description as name, cost FROM $tableName WHERE sku = ?", [$sku]);
                     }
                 }
 
                 // Create the template
-                $stmt = $pdo->prepare("
+                Database::execute("
                     INSERT INTO cost_breakdown_templates 
                     (template_name, description, category, materials, labor, energy, equipment) 
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                ");
-
-                $stmt->execute([
+                ", [
                     $templateName,
                     $description,
                     $category,
@@ -156,7 +144,7 @@ try {
                     json_encode($costData['equipment'])
                 ]);
 
-                $templateId = $pdo->lastInsertId();
+                $templateId = Database::lastInsertId();
                 echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template saved successfully']);
 
             } else {
@@ -176,15 +164,13 @@ try {
             }
 
             // Update template
-            $stmt = $pdo->prepare("
+            $affected = Database::execute("
                 UPDATE cost_breakdown_templates 
                 SET template_name = ?, description = ?, category = ?, 
                     materials = ?, labor = ?, energy = ?, equipment = ?,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
-            ");
-
-            $result = $stmt->execute([
+            ", [
                 $input['template_name'],
                 $input['description'] ?? '',
                 $input['category'] ?? '',
@@ -195,7 +181,7 @@ try {
                 $templateId
             ]);
 
-            if ($result) {
+            if ($affected !== false) {
                 echo json_encode(['success' => true, 'message' => 'Template updated successfully']);
             } else {
                 http_response_code(500);
@@ -213,10 +199,8 @@ try {
             }
 
             // Delete template
-            $stmt = $pdo->prepare("DELETE FROM cost_breakdown_templates WHERE id = ?");
-            $result = $stmt->execute([$templateId]);
-
-            if ($result) {
+            $affected = Database::execute("DELETE FROM cost_breakdown_templates WHERE id = ?", [$templateId]);
+            if ($affected !== false) {
                 echo json_encode(['success' => true, 'message' => 'Template deleted successfully']);
             } else {
                 http_response_code(500);

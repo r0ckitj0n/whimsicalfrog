@@ -47,9 +47,7 @@ function handleDelete($pdo, $input)
 
     try {
         // Check if it's an Original background
-        $checkStmt = $pdo->prepare("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?");
-        $checkStmt->execute([$backgroundId]);
-        $background = $checkStmt->fetch(PDO::FETCH_ASSOC);
+        $background = Database::queryOne("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?", [$backgroundId]);
 
         if (!$background) {
             echo json_encode(['success' => false, 'message' => 'Background not found']);
@@ -62,9 +60,9 @@ function handleDelete($pdo, $input)
         }
 
         // Delete the background
-        $deleteStmt = $pdo->prepare("DELETE FROM backgrounds WHERE id = ?");
+        $affected = Database::execute("DELETE FROM backgrounds WHERE id = ?", [$backgroundId]);
 
-        if ($deleteStmt->execute([$backgroundId])) {
+        if ($affected !== false) {
             // Optionally delete the image files (commented out for safety)
             // if (file_exists("../images/" . $background['image_filename'])) {
             //     unlink("../images/" . $background['image_filename']);
@@ -98,13 +96,11 @@ function handlePut($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("
+    Database::execute("
         UPDATE global_css_rules 
         SET css_value = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-    ");
-
-    $stmt->execute([$cssValue, $id]);
+    ", [$cssValue, $id]);
 
     echo json_encode([
         'success' => true,

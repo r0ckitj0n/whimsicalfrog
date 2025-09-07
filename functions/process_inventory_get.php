@@ -55,10 +55,8 @@ try {
     // Add sorting (using correct column name 'name' instead of 'itemName')
     $query .= " ORDER BY name ASC";
 
-    // Prepare and execute query
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Execute query via Database helper
+    $inventory = Database::queryAll($query, $params);
 
     // Output inventory data directly as an array (not wrapped in a success/debug object)
     // This change makes it compatible with the JavaScript frontend code

@@ -42,37 +42,33 @@ try {
             }
 
             // Get item info
-            $itemStmt = $pdo->prepare("SELECT sku, name, category FROM items WHERE sku = ?");
-            $itemStmt->execute([$itemSku]);
-            $item = $itemStmt->fetch(PDO::FETCH_ASSOC);
+            $item = Database::queryOne("SELECT sku, name, category FROM items WHERE sku = ?", [$itemSku]);
 
             if (!$item) {
                 throw new Exception('Item not found');
             }
 
             // Get assigned sizes
-            $sizesStmt = $pdo->prepare("
-                SELECT isa.id as assignment_id, isa.global_size_id, gs.size_name, gs.size_code, gs.category
-                FROM item_size_assignments isa
-                JOIN global_sizes gs ON isa.global_size_id = gs.id
-                WHERE isa.item_sku = ? AND isa.is_active = 1
-                ORDER BY gs.display_order ASC, gs.size_name ASC
-            ");
-            $sizesStmt->execute([$itemSku]);
-            $sizes = $sizesStmt->fetchAll(PDO::FETCH_ASSOC);
+            $sizes = Database::queryAll(
+                "SELECT isa.id as assignment_id, isa.global_size_id, gs.size_name, gs.size_code, gs.category
+                 FROM item_size_assignments isa
+                 JOIN global_sizes gs ON isa.global_size_id = gs.id
+                 WHERE isa.item_sku = ? AND isa.is_active = 1
+                 ORDER BY gs.display_order ASC, gs.size_name ASC",
+                [$itemSku]
+            );
 
             // Get color assignments for each size
             foreach ($sizes as &$size) {
-                $colorsStmt = $pdo->prepare("
-                    SELECT ica.id as assignment_id, ica.global_color_id, ica.stock_level, ica.price_adjustment,
-                           gc.color_name, gc.color_code, gc.category
-                    FROM item_color_assignments ica
-                    JOIN global_colors gc ON ica.global_color_id = gc.id
-                    WHERE ica.item_sku = ? AND ica.global_size_id = ? AND ica.is_active = 1
-                    ORDER BY gc.display_order ASC, gc.color_name ASC
-                ");
-                $colorsStmt->execute([$itemSku, $size['global_size_id']]);
-                $size['colors'] = $colorsStmt->fetchAll(PDO::FETCH_ASSOC);
+                $size['colors'] = Database::queryAll(
+                    "SELECT ica.id as assignment_id, ica.global_color_id, ica.stock_level, ica.price_adjustment,
+                            gc.color_name, gc.color_code, gc.category
+                     FROM item_color_assignments ica
+                     JOIN global_colors gc ON ica.global_color_id = gc.id
+                     WHERE ica.item_sku = ? AND ica.global_size_id = ? AND ica.is_active = 1
+                     ORDER BY gc.display_order ASC, gc.color_name ASC",
+                    [$itemSku, $size['global_size_id']]
+                );
             }
 
             echo json_encode([
@@ -92,14 +88,13 @@ try {
                 $params[] = $category;
             }
 
-            $stmt = $pdo->prepare("
-                SELECT id, size_name, size_code, category, description, display_order
-                FROM global_sizes 
-                WHERE $whereClause 
-                ORDER BY display_order ASC, size_name ASC
-            ");
-            $stmt->execute($params);
-            $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $sizes = Database::queryAll(
+                "SELECT id, size_name, size_code, category, description, display_order
+                 FROM global_sizes 
+                 WHERE $whereClause 
+                 ORDER BY display_order ASC, size_name ASC",
+                $params
+            );
 
             echo json_encode(['success' => true, 'sizes' => $sizes]);
             break;
@@ -114,14 +109,13 @@ try {
                 $params[] = $category;
             }
 
-            $stmt = $pdo->prepare("
-                SELECT id, color_name, color_code, category, description, display_order
-                FROM global_colors 
-                WHERE $whereClause 
-                ORDER BY display_order ASC, color_name ASC
-            ");
-            $stmt->execute($params);
-            $colors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $colors = Database::queryAll(
+                "SELECT id, color_name, color_code, category, description, display_order
+                 FROM global_colors 
+                 WHERE $whereClause 
+                 ORDER BY display_order ASC, color_name ASC",
+                $params
+            );
 
             echo json_encode(['success' => true, 'colors' => $colors]);
             break;
@@ -136,22 +130,13 @@ try {
             }
 
             // Check if assignment already exists
-            $checkStmt = $pdo->prepare("
-                SELECT id FROM item_size_assignments 
-                WHERE item_sku = ? AND global_size_id = ?
-            ");
-            $checkStmt->execute([$itemSku, $sizeId]);
-
-            if ($checkStmt->fetchColumn()) {
+            $exists = Database::queryOne("SELECT id FROM item_size_assignments WHERE item_sku = ? AND global_size_id = ?", [$itemSku, $sizeId]);
+            if ($exists) {
                 throw new Exception('Size already assigned to this item');
             }
 
             // Insert size assignment
-            $insertStmt = $pdo->prepare("
-                INSERT INTO item_size_assignments (item_sku, global_size_id) 
-                VALUES (?, ?)
-            ");
-            $insertStmt->execute([$itemSku, $sizeId]);
+            Database::execute("INSERT INTO item_size_assignments (item_sku, global_size_id) VALUES (?, ?)", [$itemSku, $sizeId]);
 
             echo json_encode(['success' => true, 'message' => 'Size assigned successfully']);
             break;
@@ -165,28 +150,20 @@ try {
                 throw new Exception('Item SKU and size ID are required');
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Remove color assignments for this size
-                $deleteColorsStmt = $pdo->prepare("
-                    DELETE FROM item_color_assignments 
-                    WHERE item_sku = ? AND global_size_id = ?
-                ");
-                $deleteColorsStmt->execute([$itemSku, $sizeId]);
+                Database::execute("DELETE FROM item_color_assignments WHERE item_sku = ? AND global_size_id = ?", [$itemSku, $sizeId]);
 
                 // Remove size assignment
-                $deleteSizeStmt = $pdo->prepare("
-                    DELETE FROM item_size_assignments 
-                    WHERE item_sku = ? AND global_size_id = ?
-                ");
-                $deleteSizeStmt->execute([$itemSku, $sizeId]);
+                Database::execute("DELETE FROM item_size_assignments WHERE item_sku = ? AND global_size_id = ?", [$itemSku, $sizeId]);
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'message' => 'Size and associated colors removed successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -204,22 +181,16 @@ try {
             }
 
             // Check if color assignment already exists
-            $checkStmt = $pdo->prepare("
-                SELECT id FROM item_color_assignments 
-                WHERE item_sku = ? AND global_size_id = ? AND global_color_id = ?
-            ");
-            $checkStmt->execute([$itemSku, $sizeId, $colorId]);
-
-            if ($checkStmt->fetchColumn()) {
+            $exists = Database::queryOne("SELECT id FROM item_color_assignments WHERE item_sku = ? AND global_size_id = ? AND global_color_id = ?", [$itemSku, $sizeId, $colorId]);
+            if ($exists) {
                 throw new Exception('Color already assigned to this item/size combination');
             }
 
             // Insert color assignment
-            $insertStmt = $pdo->prepare("
-                INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) 
-                VALUES (?, ?, ?, ?, ?)
-            ");
-            $insertStmt->execute([$itemSku, $sizeId, $colorId, $stockLevel, $priceAdjustment]);
+            Database::execute(
+                "INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) VALUES (?, ?, ?, ?, ?)",
+                [$itemSku, $sizeId, $colorId, $stockLevel, $priceAdjustment]
+            );
 
             echo json_encode(['success' => true, 'message' => 'Color assigned successfully']);
             break;
@@ -235,11 +206,7 @@ try {
             }
 
             // Remove color assignment
-            $deleteStmt = $pdo->prepare("
-                DELETE FROM item_color_assignments 
-                WHERE item_sku = ? AND global_size_id = ? AND global_color_id = ?
-            ");
-            $deleteStmt->execute([$itemSku, $sizeId, $colorId]);
+            Database::execute("DELETE FROM item_color_assignments WHERE item_sku = ? AND global_size_id = ? AND global_color_id = ?", [$itemSku, $sizeId, $colorId]);
 
             echo json_encode(['success' => true, 'message' => 'Color removed successfully']);
             break;
@@ -255,12 +222,10 @@ try {
             }
 
             // Update color assignment
-            $updateStmt = $pdo->prepare("
-                UPDATE item_color_assignments 
-                SET stock_level = ?, price_adjustment = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ");
-            $updateStmt->execute([$stockLevel, $priceAdjustment, $assignmentId]);
+            Database::execute(
+                "UPDATE item_color_assignments SET stock_level = ?, price_adjustment = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+                [$stockLevel, $priceAdjustment, $assignmentId]
+            );
 
             echo json_encode(['success' => true, 'message' => 'Assignment updated successfully']);
             break;
@@ -277,27 +242,22 @@ try {
                 throw new Exception('Item SKU, size ID, and color IDs are required');
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
-                $insertStmt = $pdo->prepare("
-                    INSERT IGNORE INTO item_color_assignments 
-                    (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) 
-                    VALUES (?, ?, ?, ?, ?)
-                ");
-
                 $assignedCount = 0;
                 foreach ($colorIds as $colorId) {
                     $colorId = (int)$colorId;
                     if ($colorId > 0) {
-                        $insertStmt->execute([$itemSku, $sizeId, $colorId, $defaultStock, $defaultPriceAdjustment]);
-                        if ($insertStmt->rowCount() > 0) {
-                            $assignedCount++;
-                        }
+                        Database::execute(
+                            "INSERT IGNORE INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment) VALUES (?, ?, ?, ?, ?)",
+                            [$itemSku, $sizeId, $colorId, $defaultStock, $defaultPriceAdjustment]
+                        );
+                        $assignedCount++;
                     }
                 }
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode([
                     'success' => true,
                     'message' => "Successfully assigned $assignedCount colors to size",
@@ -305,7 +265,7 @@ try {
                 ]);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -320,45 +280,42 @@ try {
                 throw new Exception('Source and target item SKUs are required');
             }
 
-            $pdo->beginTransaction();
+            Database::beginTransaction();
 
             try {
                 // Clear existing assignments for target item
-                $pdo->prepare("DELETE FROM item_color_assignments WHERE item_sku = ?")->execute([$targetItemSku]);
-                $pdo->prepare("DELETE FROM item_size_assignments WHERE item_sku = ?")->execute([$targetItemSku]);
+                Database::execute("DELETE FROM item_color_assignments WHERE item_sku = ?", [$targetItemSku]);
+                Database::execute("DELETE FROM item_size_assignments WHERE item_sku = ?", [$targetItemSku]);
 
                 // Copy size assignments
-                $copySizesStmt = $pdo->prepare("
-                    INSERT INTO item_size_assignments (item_sku, global_size_id)
-                    SELECT ?, global_size_id
-                    FROM item_size_assignments
-                    WHERE item_sku = ? AND is_active = 1
-                ");
-                $copySizesStmt->execute([$targetItemSku, $sourceItemSku]);
+                Database::execute(
+                    "INSERT INTO item_size_assignments (item_sku, global_size_id)
+                     SELECT ?, global_size_id FROM item_size_assignments WHERE item_sku = ?",
+                    [$targetItemSku, $sourceItemSku]
+                );
 
                 // Copy color assignments
                 if ($copyStock) {
-                    $copyColorsStmt = $pdo->prepare("
-                        INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment)
-                        SELECT ?, global_size_id, global_color_id, stock_level, price_adjustment
-                        FROM item_color_assignments
-                        WHERE item_sku = ? AND is_active = 1
-                    ");
+                    Database::execute(
+                        "INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment)
+                         SELECT ?, global_size_id, global_color_id, stock_level, price_adjustment
+                         FROM item_color_assignments WHERE item_sku = ?",
+                        [$targetItemSku, $sourceItemSku]
+                    );
                 } else {
-                    $copyColorsStmt = $pdo->prepare("
-                        INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment)
-                        SELECT ?, global_size_id, global_color_id, 0, price_adjustment
-                        FROM item_color_assignments
-                        WHERE item_sku = ? AND is_active = 1
-                    ");
+                    Database::execute(
+                        "INSERT INTO item_color_assignments (item_sku, global_size_id, global_color_id, stock_level, price_adjustment)
+                         SELECT ?, global_size_id, global_color_id, 0, price_adjustment
+                         FROM item_color_assignments WHERE item_sku = ?",
+                        [$targetItemSku, $sourceItemSku]
+                    );
                 }
-                $copyColorsStmt->execute([$targetItemSku, $sourceItemSku]);
 
-                $pdo->commit();
+                Database::commit();
                 echo json_encode(['success' => true, 'message' => 'Structure copied successfully']);
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                Database::rollBack();
                 throw $e;
             }
             break;
@@ -370,17 +327,12 @@ try {
             }
 
             // Calculate total stock from all color assignments
-            $stmt = $pdo->prepare("
-                SELECT COALESCE(SUM(stock_level), 0) as total_stock
-                FROM item_color_assignments 
-                WHERE item_sku = ? AND is_active = 1
-            ");
-            $stmt->execute([$itemSku]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $row = Database::queryOne("SELECT COALESCE(SUM(stock_level), 0) as total_stock FROM item_color_assignments WHERE item_sku = ? AND is_active = 1", [$itemSku]);
+            $totalStock = $row ? $row['total_stock'] : 0;
 
             echo json_encode([
                 'success' => true,
-                'total_stock' => (int)$result['total_stock']
+                'total_stock' => (int)$totalStock
             ]);
             break;
 
@@ -393,17 +345,11 @@ try {
             }
 
             // Calculate total stock from all color assignments
-            $stmt = $pdo->prepare("
-                SELECT COALESCE(SUM(stock_level), 0) as total_stock
-                FROM item_color_assignments 
-                WHERE item_sku = ? AND is_active = 1
-            ");
-            $stmt->execute([$itemSku]);
-            $totalStock = $stmt->fetchColumn();
+            $row = Database::queryOne("SELECT COALESCE(SUM(stock_level), 0) as total_stock FROM item_color_assignments WHERE item_sku = ? AND is_active = 1", [$itemSku]);
+            $totalStock = $row ? $row['total_stock'] : 0;
 
             // Update main item stock
-            $updateStmt = $pdo->prepare("UPDATE items SET stockLevel = ? WHERE sku = ?");
-            $updateStmt->execute([$totalStock, $itemSku]);
+            Database::execute("UPDATE items SET stockLevel = ? WHERE sku = ?", [$totalStock, $itemSku]);
 
             echo json_encode([
                 'success' => true,

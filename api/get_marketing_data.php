@@ -22,15 +22,15 @@ $sku = trim($_GET['sku']);
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
 
     // Get basic marketing data for this SKU (public-safe fields only)
-    $stmt = $pdo->prepare("
-        SELECT 
+    $suggestion = Database::queryOne(
+        "SELECT 
             sku,
             suggested_description,
             selling_points,
@@ -44,10 +44,9 @@ try {
         FROM marketing_suggestions 
         WHERE sku = ? 
         ORDER BY created_at DESC 
-        LIMIT 1
-    ");
-    $stmt->execute([$sku]);
-    $suggestion = $stmt->fetch();
+        LIMIT 1",
+        [$sku]
+    );
 
     if ($suggestion) {
         // Decode JSON fields

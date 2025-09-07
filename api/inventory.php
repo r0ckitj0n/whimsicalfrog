@@ -26,7 +26,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 try {
     // Create database connection using config
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -58,10 +58,8 @@ try {
     // Add sorting
     $query .= " ORDER BY name ASC";
 
-    // Prepare and execute query
-    $stmt = $pdo->prepare($query);
-    $stmt->execute($params);
-    $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Execute query
+    $inventory = Database::queryAll($query, $params);
 
     // Map database field names to camelCase for JavaScript compatibility
     $mappedInventory = array_map(function($item) {

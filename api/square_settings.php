@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -79,9 +79,9 @@ function getSquareSettings($pdo)
     ];
 
     // Get settings from database
-    $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'square'");
-    $stmt->execute();
-    $dbSettings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    $rows = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'square'");
+    $dbSettings = [];
+    foreach ($rows as $r) { $dbSettings[$r['setting_key']] = $r['setting_value']; }
 
     // Merge with defaults
     $settings = array_merge($defaults, $dbSettings);
@@ -124,14 +124,12 @@ function saveSquareSettings($pdo)
         'price_sync_enabled', 'inventory_sync_enabled', 'category_mapping'
     ];
 
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     try {
-        $stmt = $pdo->prepare("
-            INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description) 
+        $sql = "INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description) 
             VALUES ('square', ?, ?, ?, ?, ?) 
-            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP
-        ");
+            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP";
 
         $savedCount = 0;
 
@@ -154,12 +152,11 @@ function saveSquareSettings($pdo)
             $displayName = ucwords(str_replace('_', ' ', $key));
             $description = getSettingDescription($key);
 
-            if ($stmt->execute([$key, $value, $type, $displayName, $description])) {
-                $savedCount++;
-            }
+            $affected = Database::execute($sql, [$key, $value, $type, $displayName, $description]);
+            if ($affected > 0) { $savedCount++; }
         }
 
-        $pdo->commit();
+        Database::commit();
 
         echo json_encode([
             'success' => true,
@@ -167,7 +164,7 @@ function saveSquareSettings($pdo)
         ]);
 
     } catch (Exception $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         echo json_encode(['success' => false, 'message' => 'Failed to save settings: ' . $e->getMessage()]);
     }
 }
@@ -221,8 +218,7 @@ function syncItemsToSquare($pdo)
 
     try {
         // Get items from our database
-        $stmt = $pdo->query("SELECT * FROM items WHERE 1=1 ORDER BY sku");
-        $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $items = Database::queryAll("SELECT * FROM items WHERE 1=1 ORDER BY sku");
 
         $baseUrl = $settings['square_environment'] === 'production'
             ? 'https://connect.squareup.com'
@@ -298,18 +294,16 @@ function syncItemsToSquare($pdo)
 
 function getSyncStatus($pdo)
 {
-    $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE category = 'square' AND setting_key = 'last_sync'");
-    $stmt->execute();
-    $lastSync = $stmt->fetchColumn();
+    $row = Database::queryOne("SELECT setting_value FROM business_settings WHERE category = 'square' AND setting_key = 'last_sync'");
+    $lastSync = $row ? $row['setting_value'] : null;
 
-    $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE category = 'square' AND setting_key = 'sync_errors'");
-    $stmt->execute();
-    $syncErrors = $stmt->fetchColumn();
+    $row2 = Database::queryOne("SELECT setting_value FROM business_settings WHERE category = 'square' AND setting_key = 'sync_errors'");
+    $syncErrors = $row2 ? $row2['setting_value'] : null;
     $syncErrors = $syncErrors ? json_decode($syncErrors, true) : [];
 
     // Get item counts
-    $stmt = $pdo->query("SELECT COUNT(*) FROM items");
-    $totalItems = $stmt->fetchColumn();
+    $cRow = Database::queryOne("SELECT COUNT(*) AS c FROM items");
+    $totalItems = $cRow ? (int)$cRow['c'] : 0;
 
     echo json_encode([
         'success' => true,
@@ -348,33 +342,36 @@ function importFromSquare($pdo)
                 $localItem = convertSquareItemToLocalFormat($squareItem);
 
                 // Check if item exists locally
-                $stmt = $pdo->prepare("SELECT sku FROM items WHERE sku = ?");
-                $stmt->execute([$localItem['sku']]);
-                $exists = $stmt->fetchColumn();
+                $existsRow = Database::queryOne("SELECT sku FROM items WHERE sku = ?", [$localItem['sku']]);
+                $exists = $existsRow ? $existsRow['sku'] : false;
 
                 if ($exists) {
                     // Update existing item
-                    $stmt = $pdo->prepare("UPDATE items SET name = ?, description = ?, retailPrice = ?, category = ?, stockLevel = ? WHERE sku = ?");
-                    $stmt->execute([
-                        $localItem['name'],
-                        $localItem['description'],
-                        $localItem['retailPrice'],
-                        $localItem['category'],
-                        $localItem['stockLevel'],
-                        $localItem['sku']
-                    ]);
+                    Database::execute(
+                        "UPDATE items SET name = ?, description = ?, retailPrice = ?, category = ?, stockLevel = ? WHERE sku = ?",
+                        [
+                            $localItem['name'],
+                            $localItem['description'],
+                            $localItem['retailPrice'],
+                            $localItem['category'],
+                            $localItem['stockLevel'],
+                            $localItem['sku']
+                        ]
+                    );
                     $action = 'updated';
                 } else {
                     // Create new item
-                    $stmt = $pdo->prepare("INSERT INTO items (sku, name, description, retailPrice, category, stockLevel) VALUES (?, ?, ?, ?, ?, ?)");
-                    $stmt->execute([
-                        $localItem['sku'],
-                        $localItem['name'],
-                        $localItem['description'],
-                        $localItem['retailPrice'],
-                        $localItem['category'],
-                        $localItem['stockLevel']
-                    ]);
+                    Database::execute(
+                        "INSERT INTO items (sku, name, description, retailPrice, category, stockLevel) VALUES (?, ?, ?, ?, ?, ?)",
+                        [
+                            $localItem['sku'],
+                            $localItem['name'],
+                            $localItem['description'],
+                            $localItem['retailPrice'],
+                            $localItem['category'],
+                            $localItem['stockLevel']
+                        ]
+                    );
                     $action = 'created';
                 }
 
@@ -418,9 +415,9 @@ function importFromSquare($pdo)
 
 function getSquareSettingsArray($pdo)
 {
-    $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM business_settings WHERE category = 'square'");
-    $stmt->execute();
-    $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    $rows = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'square'");
+    $settings = [];
+    foreach ($rows as $r) { $settings[$r['setting_key']] = $r['setting_value']; }
 
     // Convert boolean values
     $boolFields = ['square_enabled', 'auto_sync_enabled', 'price_sync_enabled', 'inventory_sync_enabled'];
@@ -580,12 +577,12 @@ function getAllSquareItems($baseUrl, $accessToken)
 
 function updateLastSyncTime($pdo)
 {
-    $stmt = $pdo->prepare("
-        INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description) 
+    Database::execute(
+        "INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description) 
         VALUES ('square', 'last_sync', ?, 'text', 'Last Sync', 'Last synchronization timestamp') 
-        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP
-    ");
-    $stmt->execute([date('Y-m-d H:i:s')]);
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP",
+        [date('Y-m-d H:i:s')]
+    );
 }
 
 function getSettingDescription($key)

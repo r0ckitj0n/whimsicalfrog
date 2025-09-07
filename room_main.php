@@ -39,12 +39,10 @@ $formattedCartTotal = '$' . number_format($cartTotal, 2);
 // Database-driven search bar visibility for room_main (room_number = 1)
 $showSearchBar = true;
 try {
-    $pdo = Database::getInstance();
-    $stmt = $pdo->prepare("SELECT show_search_bar FROM room_settings WHERE room_number = 1 AND is_active = 1");
-    $stmt->execute();
-    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-    $showSearchBar = $result ? (bool)$result['show_search_bar'] : true;
-} catch (PDOException $e) {
+    Database::getInstance();
+    $row = Database::queryOne("SELECT show_search_bar FROM room_settings WHERE room_number = 1 AND is_active = 1");
+    $showSearchBar = $row ? (bool)$row['show_search_bar'] : true;
+} catch (Throwable $e) {
     $showSearchBar = true; // Default to showing search bar on error
 }
 

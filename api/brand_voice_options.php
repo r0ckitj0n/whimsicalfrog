@@ -16,7 +16,7 @@ $isAdmin = false;
 // Check session authentication first
 require_once __DIR__ . '/../includes/auth.php';
 if (isAdminWithToken()) {
-    $isAdm  = true;
+    $isAdmin = true;
 }
 
 // Admin token fallback for API access
@@ -54,7 +54,7 @@ try {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-    $pdo->exec($createTableSQL);
+    Database::execute($createTableSQL);
 
     // Update item_marketing_preferences table to include brand_voice if not exists
     $alterTableSQL = "
@@ -62,7 +62,7 @@ try {
     ADD COLUMN IF NOT EXISTS brand_voice VARCHAR(50) AFTER sku";
 
     try {
-        $pdo->exec($alterTableSQL);
+        Database::execute($alterTableSQL);
     } catch (PDOException $e) {
         // Column might already exist, ignore error
     }
@@ -110,18 +110,14 @@ try {
 
 function getAllBrandVoiceOptions($pdo)
 {
-    $stmt = $pdo->prepare("SELECT * FROM brand_voice_options ORDER BY display_order, label");
-    $stmt->execute();
-    $options = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $options = Database::queryAll("SELECT * FROM brand_voice_options ORDER BY display_order, label");
 
     echo json_encode(['success' => true, 'options' => $options]);
 }
 
 function getActiveBrandVoiceOptions($pdo)
 {
-    $stmt = $pdo->prepare("SELECT * FROM brand_voice_options WHERE is_active = 1 ORDER BY display_order, label");
-    $stmt->execute();
-    $options = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $options = Database::queryAll("SELECT * FROM brand_voice_options WHERE is_active = 1 ORDER BY display_order, label");
 
     echo json_encode(['success' => true, 'options' => $options]);
 }
@@ -142,8 +138,7 @@ function addBrandVoiceOption($pdo)
     }
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO brand_voice_options (value, label, description, display_order) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$value, $label, $description, $displayOrder]);
+        Database::execute("INSERT INTO brand_voice_options (value, label, description, display_order) VALUES (?, ?, ?, ?)", [$value, $label, $description, $displayOrder]);
 
         echo json_encode(['success' => true, 'message' => 'Brand voice option added successfully']);
     } catch (PDOException $e) {
@@ -173,10 +168,9 @@ function updateBrandVoiceOption($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("UPDATE brand_voice_options SET value = ?, label = ?, description = ?, is_active = ?, display_order = ? WHERE id = ?");
-    $stmt->execute([$value, $label, $description, $isActive, $displayOrder, $id]);
+    $affected = Database::execute("UPDATE brand_voice_options SET value = ?, label = ?, description = ?, is_active = ?, display_order = ? WHERE id = ?", [$value, $label, $description, $isActive, $displayOrder, $id]);
 
-    if ($stmt->rowCount() > 0) {
+    if ($affected > 0) {
         echo json_encode(['success' => true, 'message' => 'Brand voice option updated successfully']);
     } else {
         http_response_code(404);
@@ -194,10 +188,9 @@ function deleteBrandVoiceOption($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("DELETE FROM brand_voice_options WHERE id = ?");
-    $stmt->execute([$id]);
+    $affected = Database::execute("DELETE FROM brand_voice_options WHERE id = ?", [$id]);
 
-    if ($stmt->rowCount() > 0) {
+    if ($affected > 0) {
         echo json_encode(['success' => true, 'message' => 'Brand voice option deleted successfully']);
     } else {
         http_response_code(404);
@@ -216,14 +209,12 @@ function reorderBrandVoiceOptions($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("UPDATE brand_voice_options SET display_order = ? WHERE id = ?");
-
     foreach ($orders as $order) {
         $id = (int)($order['id'] ?? 0);
         $displayOrder = (int)($order['display_order'] ?? 0);
 
         if ($id > 0) {
-            $stmt->execute([$displayOrder, $id]);
+            Database::execute("UPDATE brand_voice_options SET display_order = ? WHERE id = ?", [$displayOrder, $id]);
         }
     }
 
@@ -240,15 +231,13 @@ function getItemMarketingPreferences($pdo)
         return;
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM item_marketing_preferences WHERE sku = ?");
-    $stmt->execute([$sku]);
-    $preferences = $stmt->fetch(PDO::FETCH_ASSOC);
+    $preferences = Database::queryOne("SELECT * FROM item_marketing_preferences WHERE sku = ?", [$sku]);
 
     // If no preferences exist, get global defaults
     if (!$preferences) {
-        $stmt = $pdo->prepare("SELECT setting_value FROM business_settings WHERE category = 'ai' AND setting_key IN ('ai_brand_voice', 'ai_content_tone')");
-        $stmt->execute();
-        $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        $rows = Database::queryAll("SELECT setting_key, setting_value FROM business_settings WHERE category = 'ai' AND setting_key IN ('ai_brand_voice', 'ai_content_tone')");
+        $settings = [];
+        foreach ($rows as $r) { $settings[$r['setting_key']] = $r['setting_value']; }
 
         $preferences = [
             'sku' => $sku,
@@ -278,25 +267,22 @@ function saveItemMarketingPreferences($pdo)
     }
 
     // Check if item exists
-    $stmt = $pdo->prepare("SELECT sku FROM items WHERE sku = ?");
-    $stmt->execute([$sku]);
-    if (!$stmt->fetch()) {
+    $exists = Database::queryOne("SELECT sku FROM items WHERE sku = ?", [$sku]);
+    if (!$exists) {
         http_response_code(404);
         echo json_encode(['error' => 'Item not found']);
         return;
     }
 
     // Insert or update preferences
-    $stmt = $pdo->prepare("
+    Database::execute("
         INSERT INTO item_marketing_preferences (sku, brand_voice, content_tone) 
         VALUES (?, ?, ?) 
         ON DUPLICATE KEY UPDATE 
         brand_voice = VALUES(brand_voice), 
         content_tone = VALUES(content_tone),
         updated_at = CURRENT_TIMESTAMP
-    ");
-
-    $stmt->execute([$sku, $brandVoice, $contentTone]);
+    ", [$sku, $brandVoice, $contentTone]);
 
     echo json_encode(['success' => true, 'message' => 'Marketing preferences saved successfully']);
 }
@@ -324,12 +310,10 @@ function initializeDefaultOptions($pdo)
         ['nurturing_supportive', 'Nurturing & Supportive', 'Caring, helpful, and encouraging', 18]
     ];
 
-    $stmt = $pdo->prepare("INSERT IGNORE INTO brand_voice_options (value, label, description, display_order) VALUES (?, ?, ?, ?)");
-
     $inserted = 0;
     foreach ($defaultOptions as $option) {
-        $result = $stmt->execute($option);
-        if ($stmt->rowCount() > 0) {
+        $result = Database::execute("INSERT IGNORE INTO brand_voice_options (value, label, description, display_order) VALUES (?, ?, ?, ?)", $option);
+        if ($result > 0) {
             $inserted++;
         }
     }

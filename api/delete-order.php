@@ -44,16 +44,15 @@ if (empty($orderId)) {
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
 
     // 1. Check if the order exists
-    $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE id = ?");
-    $stmtCheck->execute([$orderId]);
-    $orderExists = $stmtCheck->fetchColumn();
+    $row = Database::queryOne("SELECT COUNT(*) AS c FROM orders WHERE id = ?", [$orderId]);
+    $orderExists = $row ? (int)$row['c'] : 0;
 
     if ($orderExists == 0) {
         http_response_code(404); // Not Found
@@ -62,32 +61,28 @@ try {
     }
 
     // 2. Delete the order and related items within a transaction
-    $pdo->beginTransaction();
+    Database::beginTransaction();
 
     try {
         // First delete order items (foreign key constraint)
-        $stmtDeleteItems = $pdo->prepare("DELETE FROM order_items WHERE orderId = ?");
-        $stmtDeleteItems->execute([$orderId]);
-        $deletedItems = $stmtDeleteItems->rowCount();
+        $deletedItems = Database::execute("DELETE FROM order_items WHERE orderId = ?", [$orderId]);
 
         // Then delete the order
-        $stmtDeleteOrder = $pdo->prepare("DELETE FROM orders WHERE id = ?");
-        $stmtDeleteOrder->execute([$orderId]);
-        $deletedOrders = $stmtDeleteOrder->rowCount();
+        $deletedOrders = Database::execute("DELETE FROM orders WHERE id = ?", [$orderId]);
 
         if ($deletedOrders > 0) {
-            $pdo->commit();
+            Database::commit();
             echo json_encode([
                 'success' => true,
                 'message' => "Order deleted successfully. Removed {$deletedItems} order items and 1 order."
             ]);
         } else {
-            $pdo->rollBack();
+            Database::rollBack();
             http_response_code(409); // Conflict
             echo json_encode(['success' => false, 'message' => 'Order found but could not be deleted. It might have been deleted by another process.']);
         }
     } catch (Exception $e) {
-        $pdo->rollBack();
+        Database::rollBack();
         error_log("Failed to delete order $orderId in transaction: " . $e->getMessage());
         http_response_code(500); // Internal Server Error
         echo json_encode(['success' => false, 'message' => 'Failed to delete order due to a database error: ' . $e->getMessage()]);

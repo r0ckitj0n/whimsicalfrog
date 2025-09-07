@@ -7,11 +7,15 @@
     "file": "assets/auto-C8LTT2Eg.js",
     "name": "auto"
   },
-  "_main-BatvMh3R.js": {
-    "file": "assets/main-BatvMh3R.js",
+  "_main-B5lbOWig.css": {
+    "file": "assets/main-B5lbOWig.css",
+    "src": "_main-B5lbOWig.css"
+  },
+  "_main-C9yDoBb6.js": {
+    "file": "assets/main-C9yDoBb6.js",
     "name": "main",
     "css": [
-      "assets/main-BuDA5izz.css"
+      "assets/main-B5lbOWig.css"
     ],
     "assets": [
       "assets/background_room_main-CD7UiX_S.webp",
@@ -29,10 +33,6 @@
       "assets/background_room5-YLYEOZt2.webp",
       "assets/background_room5-DsaKXC6J.png"
     ]
-  },
-  "_main-BuDA5izz.css": {
-    "file": "assets/main-BuDA5izz.css",
-    "src": "_main-BuDA5izz.css"
   },
   "_whimsical-frog-core-OfZK0Wtj.js": {
     "file": "assets/whimsical-frog-core-OfZK0Wtj.js",
@@ -97,6 +97,25 @@
     "file": "assets/background_room_main-CD7UiX_S.webp",
     "src": "images/backgrounds/background_room_main.webp"
   },
+  "src/entries/admin-account-settings.js": {
+    "file": "assets/js/admin-account-settings.js-BesPUHF2.js",
+    "name": "js/admin-account-settings.js",
+    "src": "src/entries/admin-account-settings.js",
+    "isEntry": true
+  },
+  "src/entries/admin-cost-breakdown.js": {
+    "file": "assets/js/admin-cost-breakdown.js-DNuP_PbI.js",
+    "name": "js/admin-cost-breakdown.js",
+    "src": "src/entries/admin-cost-breakdown.js",
+    "isEntry": true
+  },
+  "src/entries/admin-customers.js": {
+    "file": "assets/js/admin-customers.js-B3p8-9_9.js",
+    "name": "js/admin-customers.js",
+    "src": "src/entries/admin-customers.js",
+    "isEntry": true,
+    "isDynamicEntry": true
+  },
   "src/entries/admin-dashboard.js": {
     "file": "assets/js/admin-dashboard.js-DwiDNz9L.js",
     "name": "js/admin-dashboard.js",
@@ -113,6 +132,12 @@
       "assets/admin-db-status-CANIx8iA.css"
     ]
   },
+  "src/entries/admin-email-settings.js": {
+    "file": "assets/js/admin-email-settings.js-CEd82Phd.js",
+    "name": "js/admin-email-settings.js",
+    "src": "src/entries/admin-email-settings.js",
+    "isEntry": true
+  },
   "src/entries/admin-inventory.js": {
     "file": "assets/js/admin-inventory.js-BdJTqza9.js",
     "name": "js/admin-inventory.js",
@@ -120,13 +145,32 @@
     "isEntry": true,
     "isDynamicEntry": true
   },
+  "src/entries/admin-orders.js": {
+    "file": "assets/js/admin-orders.js-C77zPn6T.js",
+    "name": "js/admin-orders.js",
+    "src": "src/entries/admin-orders.js",
+    "isEntry": true,
+    "isDynamicEntry": true
+  },
+  "src/entries/admin-pos.js": {
+    "file": "assets/js/admin-pos.js-qsID0oCZ.js",
+    "name": "js/admin-pos.js",
+    "src": "src/entries/admin-pos.js",
+    "isEntry": true,
+    "imports": [
+      "src/js/admin-pos.js"
+    ],
+    "css": [
+      "assets/admin-pos-V864XgnQ.css"
+    ]
+  },
   "src/entries/admin-settings.js": {
-    "file": "assets/js/admin-settings.js-C8bRgME8.js",
+    "file": "assets/js/admin-settings.js-cNUJkYJS.js",
     "name": "js/admin-settings.js",
     "src": "src/entries/admin-settings.js",
     "isEntry": true,
     "imports": [
-      "_main-BatvMh3R.js"
+      "_main-C9yDoBb6.js"
     ],
     "dynamicImports": [
       "src/js/admin-settings-bridge.js",
@@ -135,16 +179,16 @@
       "src/js/admin-settings.js"
     ],
     "css": [
-      "assets/admin-settings-CZ0nUcvH.css"
+      "assets/admin-settings-BQsocXFX.css"
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-C8gvz6Yr.js",
+    "file": "assets/js/app.js-DcLKHY4N.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
     "imports": [
-      "_main-BatvMh3R.js"
+      "_main-C9yDoBb6.js"
     ],
     "dynamicImports": [
       "src/modules/cart-system.js",
@@ -192,9 +236,9 @@
       "src/js/login-modal.js",
       "src/js/header-auth-sync.js",
       "src/entries/admin-dashboard.js",
-      "src/js/admin-customers.js",
+      "src/entries/admin-customers.js",
       "src/entries/admin-inventory.js",
-      "src/js/admin-orders.js",
+      "src/entries/admin-orders.js",
       "src/js/admin-pos.js",
       "src/js/admin-reports.js",
       "src/js/admin-marketing.js",
@@ -209,7 +253,7 @@
     ]
   },
   "src/entries/header-bootstrap.js": {
-    "file": "assets/js/header-bootstrap.js-DT2zPhe4.js",
+    "file": "assets/js/header-bootstrap.js-BaDA55PL.js",
     "name": "js/header-bootstrap.js",
     "src": "src/entries/header-bootstrap.js",
     "isEntry": true,
@@ -233,12 +277,6 @@
     "src": "src/js/admin-cost-breakdown-manager.js",
     "isDynamicEntry": true
   },
-  "src/js/admin-customers.js": {
-    "file": "assets/admin-customers-ZvJP5CJA.js",
-    "name": "admin-customers",
-    "src": "src/js/admin-customers.js",
-    "isDynamicEntry": true
-  },
   "src/js/admin-db-status.js": {
     "file": "assets/admin-db-status-BDg83GDJ.js",
     "name": "admin-db-status",
@@ -259,12 +297,6 @@
     "imports": [
       "_auto-C8LTT2Eg.js"
     ]
-  },
-  "src/js/admin-orders.js": {
-    "file": "assets/admin-orders-DKHFuglB.js",
-    "name": "admin-orders",
-    "src": "src/js/admin-orders.js",
-    "isDynamicEntry": true
   },
   "src/js/admin-pos.js": {
     "file": "assets/admin-pos-B_S9iV3_.js",
@@ -294,12 +326,12 @@
     "isDynamicEntry": true
   },
   "src/js/admin-settings-bridge.js": {
-    "file": "assets/admin-settings-bridge-9CqDZlIv.js",
+    "file": "assets/admin-settings-bridge-Di7Sqrii.js",
     "name": "admin-settings-bridge",
     "src": "src/js/admin-settings-bridge.js",
     "isDynamicEntry": true,
     "imports": [
-      "_main-BatvMh3R.js"
+      "_main-C9yDoBb6.js"
     ],
     "dynamicImports": [
       "src/modules/business-settings-api.js",
@@ -310,7 +342,7 @@
     ]
   },
   "src/js/admin-settings.js": {
-    "file": "assets/admin-settings-DqbLKE1F.js",
+    "file": "assets/admin-settings-DHJL0eT7.js",
     "name": "admin-settings",
     "src": "src/js/admin-settings.js",
     "isDynamicEntry": true
@@ -341,7 +373,7 @@
     ]
   },
   "src/js/cart-modal.js": {
-    "file": "assets/cart-modal-npRHIED4.js",
+    "file": "assets/cart-modal-CGFOm076.js",
     "name": "cart-modal",
     "src": "src/js/cart-modal.js",
     "isDynamicEntry": true,
@@ -365,7 +397,7 @@
     ]
   },
   "src/js/global-item-modal.js": {
-    "file": "assets/global-item-modal-MvAgyWKa.js",
+    "file": "assets/global-item-modal-CKPdz3wh.js",
     "name": "global-item-modal",
     "src": "src/js/global-item-modal.js",
     "isDynamicEntry": true
@@ -401,7 +433,7 @@
     "isDynamicEntry": true
   },
   "src/js/login-modal.js": {
-    "file": "assets/login-modal-Cta8SFiy.js",
+    "file": "assets/login-modal-BLF7ubq0.js",
     "name": "login-modal",
     "src": "src/js/login-modal.js",
     "isDynamicEntry": true
@@ -464,7 +496,7 @@
     "isDynamicEntry": true
   },
   "src/js/payment-modal.js": {
-    "file": "assets/payment-modal-DPjIFUgM.js",
+    "file": "assets/payment-modal-hOQnd7FD.js",
     "name": "payment-modal",
     "src": "src/js/payment-modal.js",
     "isDynamicEntry": true,
@@ -474,7 +506,7 @@
     ]
   },
   "src/js/receipt-modal.js": {
-    "file": "assets/receipt-modal-Cq731TOt.js",
+    "file": "assets/receipt-modal-CIlX_dG_.js",
     "name": "receipt-modal",
     "src": "src/js/receipt-modal.js",
     "isDynamicEntry": true
@@ -524,7 +556,7 @@
     "isDynamicEntry": true
   },
   "src/modules/ai-processing-modal.js": {
-    "file": "assets/ai-processing-modal-BL72sKvf.js",
+    "file": "assets/ai-processing-modal-Qvt-GMcN.js",
     "name": "ai-processing-modal",
     "src": "src/modules/ai-processing-modal.js",
     "isDynamicEntry": true

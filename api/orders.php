@@ -23,13 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    // Create database connection
-    try {
-        $pdo = Database::getInstance();
-    } catch (Exception $e) {
-        error_log("Database connection failed: " . $e->getMessage());
-        throw $e;
-    }
+    // Create database connection (ensures DSN/env is initialized)
+    // Note: Use Database helper methods below for queries
+    Database::getInstance();
 
     // Get filter parameters
     $filterDate = $_GET['filter_date'] ?? '';
@@ -88,22 +84,23 @@ try {
     $whereClause = !empty($whereConditions) ? 'WHERE ' . implode(' AND ', $whereConditions) : '';
 
     // Get orders with user information
-    $stmt = $pdo->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC");
-    $stmt->execute($params);
-    $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $orders = Database::queryAll(
+        "SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
+         FROM orders o JOIN users u ON o.userId = u.id {$whereClause} ORDER BY o.date DESC",
+        $params
+    );
 
     // Add item count to each order
     foreach ($orders as &$order) {
-        $itemCount = $pdo->prepare("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?");
-        $itemCount->execute([$order['id']]);
-        $order['totalItems'] = $itemCount->fetchColumn() ?: 0;
+        $totalItemsRow = Database::queryOne("SELECT SUM(quantity) as total_items FROM order_items WHERE orderId = ?", [$order['id']]);
+        $order['totalItems'] = $totalItemsRow['total_items'] ?? 0;
     }
 
     // Get unique values for filter dropdowns
-    $statusOptions = $pdo->query("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status")->fetchAll(PDO::FETCH_COLUMN);
-    $paymentMethodOptions = $pdo->query("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod")->fetchAll(PDO::FETCH_COLUMN);
-    $shippingMethodOptions = $pdo->query("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod")->fetchAll(PDO::FETCH_COLUMN);
-    $paymentStatusOptions = $pdo->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(PDO::FETCH_COLUMN);
+    $statusOptions = array_column(Database::queryAll("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status"), 'order_status');
+    $paymentMethodOptions = array_column(Database::queryAll("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod"), 'paymentMethod');
+    $shippingMethodOptions = array_column(Database::queryAll("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod"), 'shippingMethod');
+    $paymentStatusOptions = array_column(Database::queryAll("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus"), 'paymentStatus');
 
     // Return structured response
     echo json_encode([

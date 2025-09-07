@@ -98,5 +98,6 @@ $businessUrl    = BusinessSettings::getSiteUrl('');
      <?php echo json_encode($allItems); ?>
  </script>
  
+<?php // Admin POS script is loaded via app.js per-page imports ?>
  
  </div> <!- Close pos-register ->

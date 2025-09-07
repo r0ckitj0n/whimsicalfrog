@@ -42,7 +42,8 @@ try {
     switch ($action) {
         case 'status':
             // Get database status and basic info
-            $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+            $tableRows = Database::queryAll("SHOW TABLES");
+            $tables = array_map(function($r){ return array_values($r)[0]; }, $tableRows);
             $result = [
                 'success' => true,
                 'message' => 'Database connection successful',
@@ -76,8 +77,7 @@ try {
             try {
                 if (in_array($firstWord, ['SELECT', 'SHOW', 'DESCRIBE'])) {
                     // Read operations
-                    $stmt = $pdo->query($sql);
-                    $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    $data = Database::queryAll($sql);
                     $result = [
                         'success' => true,
                         'message' => 'Query executed successfully',
@@ -86,12 +86,11 @@ try {
                     ];
                 } else {
                     // Write operations
-                    $stmt = $pdo->prepare($sql);
-                    $executed = $stmt->execute();
+                    $affected = Database::execute($sql);
                     $result = [
-                        'success' => $executed,
-                        'message' => $executed ? 'Query executed successfully' : 'Query execution failed',
-                        'affected_rows' => $stmt->rowCount()
+                        'success' => $affected !== false,
+                        'message' => ($affected !== false) ? 'Query executed successfully' : 'Query execution failed',
+                        'affected_rows' => ($affected !== false) ? (int)$affected : 0
                     ];
                 }
             } catch (PDOException $e) {
@@ -105,26 +104,19 @@ try {
             $offset = $_POST['offset'] ?? 0;
             $type_filter = $_POST['type_filter'] ?? '';
 
-            $sql = "SELECT * FROM email_logs";
-            $params = [];
-
+            $limit = (int)$limit;
+            $offset = (int)$offset;
+            $emails = [];
             if (!empty($type_filter)) {
-                $sql .= " WHERE email_type = :type";
-                $params[':type'] = $type_filter;
+                $emails = Database::queryAll(
+                    "SELECT * FROM email_logs WHERE email_type = ? ORDER BY sent_at DESC LIMIT $limit OFFSET $offset",
+                    [$type_filter]
+                );
+            } else {
+                $emails = Database::queryAll(
+                    "SELECT * FROM email_logs ORDER BY sent_at DESC LIMIT $limit OFFSET $offset"
+                );
             }
-
-            $sql .= " ORDER BY sent_at DESC LIMIT :limit OFFSET :offset";
-
-            $stmt = $pdo->prepare($sql);
-            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-
-            $stmt->execute();
-            $emails = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $result = [
                 'success' => true,
@@ -202,18 +194,17 @@ try {
                     break;
                 }
 
-                $stmt = $pdo->prepare("
-                    UPDATE email_logs 
-                    SET to_email = 'john.doe@example.com',
-                        subject = 'Order Confirmation #01F14P23 - WhimsicalFrog',
-                        content = :content,
-                        email_type = 'order_confirmation',
-                        order_id = '01F14P23'
-                    WHERE subject LIKE :pattern LIMIT 1
-                ");
-
-                $executed = $stmt->execute([':content' => $sampleEmailContent, ':pattern' => $pattern]);
-                if ($executed && $stmt->rowCount() > 0) {
+                $affected = Database::execute(
+                    "UPDATE email_logs 
+                     SET to_email = 'john.doe@example.com',
+                         subject = 'Order Confirmation #01F14P23 - WhimsicalFrog',
+                         content = ?,
+                         email_type = 'order_confirmation',
+                         order_id = '01F14P23'
+                     WHERE subject LIKE ? LIMIT 1",
+                    [$sampleEmailContent, $pattern]
+                );
+                if ($affected && $affected > 0) {
                     $updated = true;
                     $updateMessage = "Updated email by pattern: $pattern";
                     break;
@@ -222,18 +213,17 @@ try {
 
             // Strategy 2: Update by created_by = 'system'
             if (!$updated) {
-                $stmt = $pdo->prepare("
-                    UPDATE email_logs 
-                    SET to_email = 'john.doe@example.com',
-                        subject = 'Order Confirmation #01F14P23 - WhimsicalFrog',
-                        content = :content,
-                        email_type = 'order_confirmation',
-                        order_id = '01F14P23'
-                    WHERE created_by = 'system' LIMIT 1
-                ");
-
-                $executed = $stmt->execute([':content' => $sampleEmailContent]);
-                if ($executed && $stmt->rowCount() > 0) {
+                $affected = Database::execute(
+                    "UPDATE email_logs 
+                     SET to_email = 'john.doe@example.com',
+                         subject = 'Order Confirmation #01F14P23 - WhimsicalFrog',
+                         content = ?,
+                         email_type = 'order_confirmation',
+                         order_id = '01F14P23'
+                     WHERE created_by = 'system' LIMIT 1",
+                    [$sampleEmailContent]
+                );
+                if ($affected && $affected > 0) {
                     $updated = true;
                     $updateMessage = "Updated email by created_by = 'system'";
                 }
@@ -241,14 +231,12 @@ try {
 
             // Strategy 3: Create new if nothing to update
             if (!$updated) {
-                $stmt = $pdo->prepare("
-                    INSERT INTO email_logs (to_email, from_email, subject, content, email_type, status, sent_at, order_id, created_by) 
-                    VALUES ('john.doe@example.com', 'orders@whimsicalfrog.us', 'Order Confirmation #01F14P23 - WhimsicalFrog', 
-                            :content, 'order_confirmation', 'sent', NOW(), '01F14P23', 'system')
-                ");
-
-                $executed = $stmt->execute([':content' => $sampleEmailContent]);
-                if ($executed) {
+                $affected = Database::execute(
+                    "INSERT INTO email_logs (to_email, from_email, subject, content, email_type, status, sent_at, order_id, created_by) 
+                     VALUES ('john.doe@example.com', 'orders@whimsicalfrog.us', 'Order Confirmation #01F14P23 - WhimsicalFrog', ?, 'order_confirmation', 'sent', NOW(), '01F14P23', 'system')",
+                    [$sampleEmailContent]
+                );
+                if ($affected !== false) {
                     $updated = true;
                     $updateMessage = "Created new sample email";
                 }

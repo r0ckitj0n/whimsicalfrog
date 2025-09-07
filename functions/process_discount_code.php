@@ -57,25 +57,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             // Check if code already exists
-            $stmt_check = $pdo->prepare("SELECT id FROM discount_codes WHERE code = :code");
-            $stmt_check->execute([':code' => $code]);
-            if ($stmt_check->fetch()) {
+            $row = Database::queryOne("SELECT id FROM discount_codes WHERE code = ?", [$code]);
+            if ($row) {
                 throw new Exception("Discount code '{$code}' already exists.");
             }
 
             $sql = "INSERT INTO discount_codes (id, code, type, value, min_order_amount, max_uses, start_date, end_date, status, created_date) 
-                    VALUES (:id, :code, :type, :value, :min_order_amount, :max_uses, :start_date, :end_date, :status, NOW())";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                ':id' => $id,
-                ':code' => $code,
-                ':type' => $type,
-                ':value' => $value,
-                ':min_order_amount' => $min_order_amount,
-                ':max_uses' => $max_uses,
-                ':start_date' => $start_date,
-                ':end_date' => $end_date,
-                ':status' => $status
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+            Database::execute($sql, [
+                $id,
+                $code,
+                $type,
+                $value,
+                $min_order_amount,
+                $max_uses,
+                $start_date,
+                $end_date,
+                $status
             ]);
 
             $_SESSION['success_message'] = "Discount code '{$code}' created successfully!";
@@ -115,33 +113,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             // Check if code already exists for a DIFFERENT ID
-            $stmt_check = $pdo->prepare("SELECT id FROM discount_codes WHERE code = :code AND id != :id");
-            $stmt_check->execute([':code' => $code, ':id' => $id]);
-            if ($stmt_check->fetch()) {
+            $row = Database::queryOne("SELECT id FROM discount_codes WHERE code = ? AND id != ?", [$code, $id]);
+            if ($row) {
                 throw new Exception("Discount code '{$code}' already exists for another discount.");
             }
 
             $sql = "UPDATE discount_codes SET 
-                    code = :code, 
-                    type = :type, 
-                    value = :value, 
-                    min_order_amount = :min_order_amount, 
-                    max_uses = :max_uses, 
-                    start_date = :start_date, 
-                    end_date = :end_date, 
-                    status = :status 
-                    WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                ':id' => $id,
-                ':code' => $code,
-                ':type' => $type,
-                ':value' => $value,
-                ':min_order_amount' => $min_order_amount,
-                ':max_uses' => $max_uses,
-                ':start_date' => $start_date,
-                ':end_date' => $end_date,
-                ':status' => $status
+                    code = ?, 
+                    type = ?, 
+                    value = ?, 
+                    min_order_amount = ?, 
+                    max_uses = ?, 
+                    start_date = ?, 
+                    end_date = ?, 
+                    status = ? 
+                    WHERE id = ?";
+            Database::execute($sql, [
+                $code,
+                $type,
+                $value,
+                $min_order_amount,
+                $max_uses,
+                $start_date,
+                $end_date,
+                $status,
+                $id
             ]);
 
             $_SESSION['success_message'] = "Discount code '{$code}' updated successfully!";
@@ -153,11 +149,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             $id = $_POST['id'];
 
-            $sql = "DELETE FROM discount_codes WHERE id = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':id' => $id]);
+            $sql = "DELETE FROM discount_codes WHERE id = ?";
+            $affected = Database::execute($sql, [$id]);
 
-            if ($stmt->rowCount() > 0) {
+            if ($affected > 0) {
                 $_SESSION['success_message'] = "Discount code deleted successfully!";
                 $response = ['success' => true, 'message' => "Discount code deleted successfully!"];
             } else {

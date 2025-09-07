@@ -23,7 +23,7 @@ require_once 'config.php';
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -37,9 +37,7 @@ try {
     }
 
     // Get the active map for the specified room type
-    $stmt = $pdo->prepare("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE");
-    $stmt->execute([$roomType]);
-    $map = $stmt->fetch();
+    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE", [$roomType]);
 
     if ($map) {
         $coordinates = json_decode($map['coordinates'], true);

@@ -19,7 +19,7 @@ $userData = getCurrentUser();
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -71,13 +71,10 @@ function getConfig($pdo)
     $category = $_GET['category'] ?? '';
 
     if ($category) {
-        $stmt = $pdo->prepare("SELECT * FROM website_config WHERE category = ? AND is_active = 1 ORDER BY setting_key");
-        $stmt->execute([$category]);
+        $configs = Database::queryAll("SELECT * FROM website_config WHERE category = ? AND is_active = 1 ORDER BY setting_key", [$category]);
     } else {
-        $stmt = $pdo->query("SELECT * FROM website_config WHERE is_active = 1 ORDER BY category, setting_key");
+        $configs = Database::queryAll("SELECT * FROM website_config WHERE is_active = 1 ORDER BY category, setting_key");
     }
-
-    $configs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Group by category
     $grouped = [];
@@ -123,18 +120,14 @@ function updateConfig($pdo)
     }
 
     // Check if setting exists
-    $stmt = $pdo->prepare("SELECT id FROM website_config WHERE category = ? AND setting_key = ?");
-    $stmt->execute([$category, $setting_key]);
-    $exists = $stmt->fetch();
+    $exists = Database::queryOne("SELECT id FROM website_config WHERE category = ? AND setting_key = ?", [$category, $setting_key]);
 
     if ($exists) {
         // Update existing setting
-        $stmt = $pdo->prepare("UPDATE website_config SET setting_value = ?, setting_type = ?, updated_at = CURRENT_TIMESTAMP WHERE category = ? AND setting_key = ?");
-        $stmt->execute([$setting_value, $setting_type, $category, $setting_key]);
+        Database::execute("UPDATE website_config SET setting_value = ?, setting_type = ?, updated_at = CURRENT_TIMESTAMP WHERE category = ? AND setting_key = ?", [$setting_value, $setting_type, $category, $setting_key]);
     } else {
         // Create new setting
-        $stmt = $pdo->prepare("INSERT INTO website_config (category, setting_key, setting_value, setting_type) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$category, $setting_key, $setting_value, $setting_type]);
+        Database::execute("INSERT INTO website_config (category, setting_key, setting_value, setting_type) VALUES (?, ?, ?, ?)", [$category, $setting_key, $setting_value, $setting_type]);
     }
 
     echo json_encode(['success' => true, 'message' => 'Configuration updated successfully.']);
@@ -145,13 +138,10 @@ function getCSSVariables($pdo)
     $category = $_GET['category'] ?? '';
 
     if ($category) {
-        $stmt = $pdo->prepare("SELECT * FROM css_variables WHERE category = ? AND is_active = 1 ORDER BY variable_name");
-        $stmt->execute([$category]);
+        $variables = Database::queryAll("SELECT * FROM css_variables WHERE category = ? AND is_active = 1 ORDER BY variable_name", [$category]);
     } else {
-        $stmt = $pdo->query("SELECT * FROM css_variables WHERE is_active = 1 ORDER BY category, variable_name");
+        $variables = Database::queryAll("SELECT * FROM css_variables WHERE is_active = 1 ORDER BY category, variable_name");
     }
-
-    $variables = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Group by category
     $grouped = [];
@@ -181,18 +171,14 @@ function updateCSSVariable($pdo)
     }
 
     // Check if variable exists
-    $stmt = $pdo->prepare("SELECT id FROM css_variables WHERE variable_name = ?");
-    $stmt->execute([$variable_name]);
-    $exists = $stmt->fetch();
+    $exists = Database::queryOne("SELECT id FROM css_variables WHERE variable_name = ?", [$variable_name]);
 
     if ($exists) {
         // Update existing variable
-        $stmt = $pdo->prepare("UPDATE css_variables SET variable_value = ?, category = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE variable_name = ?");
-        $stmt->execute([$variable_value, $category, $description, $variable_name]);
+        Database::execute("UPDATE css_variables SET variable_value = ?, category = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE variable_name = ?", [$variable_value, $category, $description, $variable_name]);
     } else {
         // Create new variable
-        $stmt = $pdo->prepare("INSERT INTO css_variables (variable_name, variable_value, category, description) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$variable_name, $variable_value, $category, $description]);
+        Database::execute("INSERT INTO css_variables (variable_name, variable_value, category, description) VALUES (?, ?, ?, ?)", [$variable_name, $variable_value, $category, $description]);
     }
 
     echo json_encode(['success' => true, 'message' => 'CSS variable updated successfully.']);
@@ -203,9 +189,7 @@ function getUIComponents($pdo)
     $component_name = $_GET['component'] ?? '';
 
     if ($component_name) {
-        $stmt = $pdo->prepare("SELECT * FROM ui_components WHERE component_name = ? AND is_active = 1");
-        $stmt->execute([$component_name]);
-        $component = $stmt->fetch(PDO::FETCH_ASSOC);
+        $component = Database::queryOne("SELECT * FROM ui_components WHERE component_name = ? AND is_active = 1", [$component_name]);
 
         if ($component && $component['component_config']) {
             $component['component_config'] = json_decode($component['component_config'], true);
@@ -213,8 +197,7 @@ function getUIComponents($pdo)
 
         echo json_encode(['success' => true, 'data' => $component]);
     } else {
-        $stmt = $pdo->query("SELECT * FROM ui_components WHERE is_active = 1 ORDER BY component_name");
-        $components = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $components = Database::queryAll("SELECT * FROM ui_components WHERE is_active = 1 ORDER BY component_name");
 
         foreach ($components as &$component) {
             if ($component['component_config']) {
@@ -243,18 +226,14 @@ function updateUIComponent($pdo)
     $config_json = json_encode($component_config);
 
     // Check if component exists
-    $stmt = $pdo->prepare("SELECT id FROM ui_components WHERE component_name = ?");
-    $stmt->execute([$component_name]);
-    $exists = $stmt->fetch();
+    $exists = Database::queryOne("SELECT id FROM ui_components WHERE component_name = ?", [$component_name]);
 
     if ($exists) {
         // Update existing component
-        $stmt = $pdo->prepare("UPDATE ui_components SET component_config = ?, css_classes = ?, custom_css = ?, updated_at = CURRENT_TIMESTAMP WHERE component_name = ?");
-        $stmt->execute([$config_json, $css_classes, $custom_css, $component_name]);
+        Database::execute("UPDATE ui_components SET component_config = ?, css_classes = ?, custom_css = ?, updated_at = CURRENT_TIMESTAMP WHERE component_name = ?", [$config_json, $css_classes, $custom_css, $component_name]);
     } else {
         // Create new component
-        $stmt = $pdo->prepare("INSERT INTO ui_components (component_name, component_config, css_classes, custom_css) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$component_name, $config_json, $css_classes, $custom_css]);
+        Database::execute("INSERT INTO ui_components (component_name, component_config, css_classes, custom_css) VALUES (?, ?, ?, ?)", [$component_name, $config_json, $css_classes, $custom_css]);
     }
 
     echo json_encode(['success' => true, 'message' => 'UI component updated successfully.']);
@@ -263,8 +242,7 @@ function updateUIComponent($pdo)
 function getCSSOutput($pdo)
 {
     // Get all active CSS variables
-    $stmt = $pdo->query("SELECT variable_name, variable_value FROM css_variables WHERE is_active = 1 ORDER BY category, variable_name");
-    $variables = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $variables = Database::queryAll("SELECT variable_name, variable_value FROM css_variables WHERE is_active = 1 ORDER BY category, variable_name");
 
     // Generate CSS output
     $css = ":root {\n";
@@ -274,8 +252,7 @@ function getCSSOutput($pdo)
     $css .= "}\n\n";
 
     // Get custom CSS from components
-    $stmt = $pdo->query("SELECT component_name, custom_css FROM ui_components WHERE is_active = 1 AND custom_css != '' ORDER BY component_name");
-    $components = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $components = Database::queryAll("SELECT component_name, custom_css FROM ui_components WHERE is_active = 1 AND custom_css != '' ORDER BY component_name");
 
     foreach ($components as $component) {
         if (!empty($component['custom_css'])) {
@@ -289,9 +266,7 @@ function getCSSOutput($pdo)
 
 function getMarketingDefaults($pdo)
 {
-    $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM website_config WHERE category = 'marketing' AND is_active = 1");
-    $stmt->execute();
-    $settings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $settings = Database::queryAll("SELECT setting_key, setting_value FROM website_config WHERE category = 'marketing' AND is_active = 1");
 
     $defaults = [];
     foreach ($settings as $setting) {
@@ -321,16 +296,12 @@ function updateMarketingDefaults($pdo)
     ];
 
     foreach ($updates as $key => $value) {
-        $stmt = $pdo->prepare("UPDATE website_config SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE category = 'marketing' AND setting_key = ?");
-        $stmt->execute([$value, $key]);
+        Database::execute("UPDATE website_config SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE category = 'marketing' AND setting_key = ?", [$value, $key]);
     }
 
     // Also update the business_settings table for backward compatibility
-    $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ? WHERE category = 'ai' AND setting_key = 'ai_brand_voice'");
-    $stmt->execute([$brand_voice]);
-
-    $stmt = $pdo->prepare("UPDATE business_settings SET setting_value = ? WHERE category = 'ai' AND setting_key = 'ai_content_tone'");
-    $stmt->execute([$content_tone]);
+    Database::execute("UPDATE business_settings SET setting_value = ? WHERE category = 'ai' AND setting_key = 'ai_brand_voice'", [$brand_voice]);
+    Database::execute("UPDATE business_settings SET setting_value = ? WHERE category = 'ai' AND setting_key = 'ai_content_tone'", [$content_tone]);
 
     echo json_encode(['success' => true, 'message' => 'Marketing defaults updated successfully.']);
 }

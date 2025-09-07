@@ -3,7 +3,7 @@
 // Uses API bootstrap, Database singleton, Response helper, and AuthHelper
 
 require_once __DIR__ . '/api_bootstrap.php';
-require_once __DIR__ . '/../includes/database.php';
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -52,9 +52,7 @@ function handleGet(PDO $pdo): void
     $activeOnly = isset($_GET['active_only']) && ($_GET['active_only'] === '1' || strtolower((string)$_GET['active_only']) === 'true');
 
     if ($id) {
-        $stmt = $pdo->prepare('SELECT * FROM global_css_rules WHERE id = ?');
-        $stmt->execute([$id]);
-        $rule = $stmt->fetch(PDO::FETCH_ASSOC);
+        $rule = Database::queryOne('SELECT * FROM global_css_rules WHERE id = ?', [$id]);
         if (!$rule) {
             Response::notFound('CSS rule not found');
         }
@@ -77,9 +75,7 @@ function handleGet(PDO $pdo): void
     }
     $sql .= ' ORDER BY category, rule_name';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $rules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rules = Database::queryAll($sql, $params);
 
     Response::success(['rules' => $rules]);
 }
@@ -103,10 +99,9 @@ function handlePost(PDO $pdo): void
         Response::validationError($errors);
     }
 
-    $stmt = $pdo->prepare('INSERT INTO global_css_rules (rule_name, css_property, css_value, category, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)');
-    $stmt->execute([$ruleName, $cssProperty, $cssValue, $category, $isActive]);
+    Database::execute('INSERT INTO global_css_rules (rule_name, css_property, css_value, category, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)', [$ruleName, $cssProperty, $cssValue, $category, $isActive]);
 
-    $id = (int)$pdo->lastInsertId();
+    $id = (int)Database::lastInsertId();
     Response::success(['id' => $id], 'CSS rule created');
 }
 
@@ -156,8 +151,7 @@ function handlePut(PDO $pdo): void
     $sql = 'UPDATE global_css_rules SET ' . implode(', ', $fields) . ', updated_at = CURRENT_TIMESTAMP WHERE id = ?';
     $params[] = $id;
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    Database::execute($sql, $params);
 
     Response::success(null, 'CSS rule updated');
 }
@@ -183,12 +177,10 @@ function handleDelete(PDO $pdo): void
     }
 
     if ($hard) {
-        $stmt = $pdo->prepare('DELETE FROM global_css_rules WHERE id = ?');
-        $stmt->execute([$id]);
+        Database::execute('DELETE FROM global_css_rules WHERE id = ?', [$id]);
         Response::success(null, 'CSS rule deleted');
     } else {
-        $stmt = $pdo->prepare('UPDATE global_css_rules SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
-        $stmt->execute([$id]);
+        Database::execute('UPDATE global_css_rules SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [$id]);
         Response::success(null, 'CSS rule soft-deleted');
     }
 }

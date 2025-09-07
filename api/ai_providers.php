@@ -4,7 +4,7 @@
  * Handles multiple AI providers including local algorithms and external APIs
  */
 
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 class AIProviders
 {
@@ -296,14 +296,16 @@ class AIProviders
     public function currentModelSupportsImages()
     {
         try {
-            $pdo = $this->getPDO();
+            Database::getInstance();
             $provider = $this->settings['ai_provider'];
             $modelKey = $provider . '_model';
             $modelId = $this->settings[$modelKey] ?? 'local-basic';
 
-            $stmt = $pdo->prepare("SELECT supports_images FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1");
-            $stmt->execute([$provider, $modelId]);
-            return (bool)$stmt->fetchColumn();
+            $row = Database::queryOne(
+                "SELECT supports_images FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1",
+                [$provider, $modelId]
+            );
+            return (bool)($row['supports_images'] ?? false);
         } catch (Exception $e) {
             error_log("Error checking image support: " . $e->getMessage());
             return false;
@@ -532,7 +534,9 @@ class AIProviders
     {
         // Use existing local AI functions
         require_once 'suggest_marketing.php';
-        return generateMarketingIntelligence($name, $description, $category, $this->pdo, $brandVoice, $contentTone);
+        // Ensure we have an initialized PDO instance from the Database helper
+        $pdo = $this->getPDO();
+        return generateMarketingIntelligence($name, $description, $category, $pdo, $brandVoice, $contentTone);
     }
 
     /**

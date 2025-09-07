@@ -38,7 +38,7 @@ function initializeEmailLogsTable()
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ";
 
-        $pdo->exec($createTableSQL);
+        Database::execute($createTableSQL);
         return true;
     } catch (Exception $e) {
         error_log("Failed to initialize email_logs table: " . $e->getMessage());
@@ -64,8 +64,7 @@ function logEmail($toEmail, $fromEmail, $subject, $content, $emailType, $status 
         $sql = "INSERT INTO email_logs (to_email, from_email, subject, content, email_type, status, error_message, order_id, created_by) 
                 VALUES (:to_email, :from_email, :subject, :content, :email_type, :status, :error_message, :order_id, :created_by)";
 
-        $stmt = $pdo->prepare($sql);
-        $result = $stmt->execute([
+        $result = Database::execute($sql, [
             ':to_email' => $toEmail,
             ':from_email' => $fromEmail,
             ':subject' => $subject,
@@ -78,7 +77,7 @@ function logEmail($toEmail, $fromEmail, $subject, $content, $emailType, $status 
         ]);
 
         if ($result) {
-            return $pdo->lastInsertId();
+            return Database::lastInsertId();
         }
 
         return false;

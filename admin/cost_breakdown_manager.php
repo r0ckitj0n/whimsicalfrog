@@ -14,15 +14,14 @@ $messageType = '';
 // Connect to database
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
 
     // Get all inventory items
-    $stmt = $pdo->query("SELECT id, name, category, costPrice FROM inventory ORDER BY name");
-    $inventoryItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $inventoryItems = Database::queryAll("SELECT id, name, category, costPrice FROM inventory ORDER BY name");
 
 } catch (PDOException $e) {
     $message = "Database error: " . $e->getMessage();
@@ -37,9 +36,7 @@ $selectedItem = null;
 if (!empty($selectedItemId)) {
     try {
         // Get item details
-        $itemStmt = $pdo->prepare("SELECT * FROM inventory WHERE id = ?");
-        $itemStmt->execute([$selectedItemId]);
-        $selectedItem = $itemStmt->fetch(PDO::FETCH_ASSOC);
+        $selectedItem = Database::queryOne("SELECT * FROM inventory WHERE id = ?", [$selectedItemId]);
     } catch (PDOException $e) {
         $message = "Error retrieving item: " . $e->getMessage();
         $messageType = "error";
@@ -368,46 +365,7 @@ if (!empty($selectedItemId)) {
         </div>
     </div>
     
-    <script type="text/plain" data-migrated="vite-admin-cost-breakdown">
-        // Global variables
-        let currentItemId = '<?php echo $selectedItemId; ?>';
-        let costBreakdown = {
-            materials: [],
-            labor: [],
-            energy: [],
-            totals: {
-                materialTotal: 0,
-                laborTotal: 0,
-                energyTotal: 0,
-                suggestedCost: 0
-            }
-        };
-        
-        // DOM Ready
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize event listeners
-            initEventListeners();
-            
-            // Load cost breakdown data if item is selected
-            if (currentItemId) {
-                loadCostBreakdown(currentItemId);
-            }
-        });
-        
-        // Initialize event listeners
-        function initEventListeners() {
-            // Item selection
-            document.getElementById('loadItemBtn').addEventListener('click', function() {
-                const selectedItemId = document.getElementById('itemSelector').value;
-                if (selectedItemId) {
-                    window.location.href = '?item=' + selectedItemId;
-                }
-            });
-            
-            // Add buttons
-            document.getElementById('addMaterialBtn').addEventListener('click', function() {
-                openAddModal('material');
-            });
+    <?php // Admin cost breakdown script is loaded via app.js per-page imports ?>
             
             document.getElementById('addLaborBtn').addEventListener('click', function() {
                 openAddModal('labor');

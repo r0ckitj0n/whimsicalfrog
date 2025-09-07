@@ -20,9 +20,7 @@ try {
 
     if ($userId) {
         // Fetch specific customer
-        $stmt = $pdo->prepare('SELECT id, username, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode FROM users WHERE id = ? AND (role = "Customer" OR roleType = "Customer")');
-        $stmt->execute([$userId]);
-        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+        $customer = Database::queryOne('SELECT id, username, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode FROM users WHERE id = ? AND (role = "Customer" OR roleType = "Customer")', [$userId]);
 
         if (!$customer) {
             http_response_code(404);
@@ -34,8 +32,7 @@ try {
         echo json_encode($customer);
     } else {
         // Fetch all customers
-        $stmt = $pdo->query('SELECT id, username, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode FROM users WHERE role = "Customer" OR roleType = "Customer" ORDER BY lastName, firstName');
-        $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $customers = Database::queryAll('SELECT id, username, email, role, roleType, firstName, lastName, phoneNumber, addressLine1, addressLine2, city, state, zipCode FROM users WHERE role = "Customer" OR roleType = "Customer" ORDER BY lastName, firstName');
 
         // Return customers as JSON
         echo json_encode($customers);

@@ -126,13 +126,10 @@ function renderImageCarousel($itemId, $images = [], $options = [])
 
 function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '')
 {
-    global $pdo;
-
     try {
+        Database::getInstance();
         // Get item images for this SKU
-        $stmt = $pdo->prepare("SELECT * FROM item_images WHERE sku = ? ORDER BY is_primary DESC, id ASC");
-        $stmt->execute([$sku]);
-        $images = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $images = Database::queryAll("SELECT * FROM item_images WHERE sku = ? ORDER BY is_primary DESC, id ASC", [$sku]);
 
         if (empty($images)) {
             // No images found, show elegant CSS-only fallback
@@ -144,7 +141,7 @@ function displayImageCarousel($sku, $showPrimaryBadge = false, $extraClasses = '
         }
 
         // ... existing code ...
-    } catch (PDOException $e) {
+    } catch (Throwable $e) {
         // Handle database connection error
         echo "Database connection error: " . $e->getMessage();
     }

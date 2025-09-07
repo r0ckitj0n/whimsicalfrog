@@ -10,7 +10,7 @@ $userData = getCurrentUser();
 
 try {
     try {
-        $pdo = Database::getInstance();
+        Database::getInstance();
     } catch (Exception $e) {
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
@@ -20,24 +20,21 @@ try {
     if ($_POST['action'] ?? '' === 'make_admin') {
         $username = $_POST['username'] ?? '';
         if (!empty($username)) {
-            $stmt = $pdo->prepare('UPDATE users SET role = ? WHERE username = ?');
-            $result = $stmt->execute(['admin', $username]);
-            $message = $result ? "✅ User '$username' is now an administrator!" : "❌ Failed to update user";
+            $affected = Database::execute('UPDATE users SET role = ? WHERE username = ?', ['admin', $username]);
+            $message = $affected > 0 ? "✅ User '$username' is now an administrator!" : "❌ Failed to update user";
         }
     }
 
     if ($_POST['action'] ?? '' === 'make_customer') {
         $username = $_POST['username'] ?? '';
         if (!empty($username)) {
-            $stmt = $pdo->prepare('UPDATE users SET role = ? WHERE username = ?');
-            $result = $stmt->execute(['customer', $username]);
-            $message = $result ? "✅ User '$username' is now a customer!" : "❌ Failed to update user";
+            $affected = Database::execute('UPDATE users SET role = ? WHERE username = ?', ['customer', $username]);
+            $message = $affected > 0 ? "✅ User '$username' is now a customer!" : "❌ Failed to update user";
         }
     }
 
     // Get all users
-    $stmt = $pdo->query('SELECT * FROM users ORDER BY username');
-    $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $users = Database::queryAll('SELECT * FROM users ORDER BY username');
 
     echo "<h2>🔧 Admin User Manager</h2>";
 

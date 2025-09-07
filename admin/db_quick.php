@@ -31,28 +31,26 @@ function testGlobalCSSRules()
 
     try {
         // Check if table exists
-        $stmt = $pdo->query("SHOW TABLES LIKE 'global_css_rules'");
-        if ($stmt->rowCount() === 0) {
+        $rows = Database::queryAll("SHOW TABLES LIKE 'global_css_rules'");
+        if (count($rows) === 0) {
             echo "❌ global_css_rules table does not exist\n";
             return;
         }
 
         // Count total rules
-        $stmt = $pdo->query("SELECT COUNT(*) as count FROM global_css_rules");
-        $total = $stmt->fetch()['count'];
+        $row = Database::queryOne("SELECT COUNT(*) as count FROM global_css_rules");
+        $total = $row ? $row['count'] : 0;
         echo "📊 Total CSS rules: {$total}\n";
 
         // Count by category
-        $stmt = $pdo->query("SELECT category, COUNT(*) as count FROM global_css_rules GROUP BY category ORDER BY count DESC");
-        $categories = $stmt->fetchAll();
+        $categories = Database::queryAll("SELECT category, COUNT(*) as count FROM global_css_rules GROUP BY category ORDER BY count DESC");
         echo "\n📁 Rules by category:\n";
         foreach ($categories as $cat) {
             echo "  - {$cat['category']}: {$cat['count']} rules\n";
         }
 
         // Check for main_room rules
-        $stmt = $pdo->query("SELECT * FROM global_css_rules WHERE category = 'main_room'");
-        $mainRoomRules = $stmt->fetchAll();
+        $mainRoomRules = Database::queryAll("SELECT * FROM global_css_rules WHERE category = 'main_room'");
         echo "\n🏠 Main room rules: " . count($mainRoomRules) . "\n";
 
         if (count($mainRoomRules) > 0) {
@@ -62,8 +60,7 @@ function testGlobalCSSRules()
         }
 
         // Look for border radius rules
-        $stmt = $pdo->query("SELECT * FROM global_css_rules WHERE rule_name LIKE '%border_radius%'");
-        $borderRules = $stmt->fetchAll();
+        $borderRules = Database::queryAll("SELECT * FROM global_css_rules WHERE rule_name LIKE '%border_radius%'");
         echo "\n🔘 Border radius rules: " . count($borderRules) . "\n";
 
         if (count($borderRules) > 0) {
@@ -89,45 +86,41 @@ function addMainRoomBorderRadius()
 
     try {
         // Check if rule already exists
-        $stmt = $pdo->prepare("SELECT * FROM global_css_rules WHERE rule_name = ? AND category = ?");
-        $stmt->execute(['main_room_section_border_radius', 'main_room']);
+        $existing = Database::queryOne("SELECT * FROM global_css_rules WHERE rule_name = ? AND category = ?", ['main_room_section_border_radius', 'main_room']);
 
-        if ($stmt->rowCount() > 0) {
+        if ($existing) {
             echo "⚠️  Rule already exists\n";
-            $existing = $stmt->fetch();
             echo "Current value: {$existing['css_value']}\n";
             return;
         }
 
         // Add the rule
-        $stmt = $pdo->prepare("
-            INSERT INTO global_css_rules (rule_name, css_value, css_property, category, is_active, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
-        ");
-
-        $stmt->execute([
-            'main_room_section_border_radius',
-            '15px',
-            'border-radius',
-            'main_room',
-            1
-        ]);
+        Database::execute(
+            "INSERT INTO global_css_rules (rule_name, css_value, css_property, category, is_active, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+            [
+                'main_room_section_border_radius',
+                '15px',
+                'border-radius',
+                'main_room',
+                1
+            ]
+        );
 
         echo "✅ Added main_room_section_border_radius rule\n";
 
         // Add overflow rule too
-        $stmt = $pdo->prepare("
-            INSERT INTO global_css_rules (rule_name, css_value, css_property, category, is_active, created_at, updated_at) 
-            VALUES (?, ?, ?, ?, ?, NOW(), NOW())
-        ");
-
-        $stmt->execute([
-            'main_room_section_overflow',
-            'hidden',
-            'overflow',
-            'main_room',
-            1
-        ]);
+        Database::execute(
+            "INSERT INTO global_css_rules (rule_name, css_value, css_property, category, is_active, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+            [
+                'main_room_section_overflow',
+                'hidden',
+                'overflow',
+                'main_room',
+                1
+            ]
+        );
 
         echo "✅ Added main_room_section_overflow rule\n";
 
@@ -147,8 +140,7 @@ function generateCSS()
     }
 
     try {
-        $stmt = $pdo->query("SELECT * FROM global_css_rules WHERE is_active = 1 ORDER BY category, rule_name");
-        $rules = $stmt->fetchAll();
+        $rules = Database::queryAll("SELECT * FROM global_css_rules WHERE is_active = 1 ORDER BY category, rule_name");
 
         $css = "/* Generated CSS from Database */\n\n";
         $currentCategory = '';
@@ -192,10 +184,10 @@ function quickQuery($sql)
     }
 
     try {
-        $stmt = $pdo->query($sql);
-
-        if ($stmt->columnCount() > 0) {
-            $results = $stmt->fetchAll();
+        // Heuristic: treat as read if starts with SELECT/SHOW/DESCRIBE
+        $op = strtoupper(trim(explode(' ', trim($sql))[0]));
+        if (in_array($op, ['SELECT','SHOW','DESCRIBE'])) {
+            $results = Database::queryAll($sql);
 
             if (empty($results)) {
                 echo "No results found.\n";
@@ -213,8 +205,9 @@ function quickQuery($sql)
 
             echo "Total rows: " . count($results) . "\n";
         } else {
+            $affected = Database::execute($sql);
             echo "✅ Query executed successfully.\n";
-            echo "Affected rows: " . $stmt->rowCount() . "\n";
+            echo "Affected rows: " . (int)$affected . "\n";
         }
 
     } catch (Exception $e) {

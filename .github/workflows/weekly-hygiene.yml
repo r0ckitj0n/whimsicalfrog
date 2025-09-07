@@ -1,0 +1,29 @@
+name: Weekly Hygiene Checks
+
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Every Monday at 08:00 UTC
+  workflow_dispatch:
+
+jobs:
+  hygiene:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          npm ci || npm install
+
+      - name: Run duplicate/backup guard
+        run: npm run guard:duplicates
+
+      - name: Run legacy guard (runtime directories)
+        run: npm run guard:legacy

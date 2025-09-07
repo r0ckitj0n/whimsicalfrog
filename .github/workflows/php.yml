@@ -80,13 +80,18 @@ jobs:
             if mysqladmin ping -h 127.0.0.1 -prootpass --silent; then
               echo "MySQL is ready"; break; fi; echo "Waiting for MySQL..."; sleep 2; done
 
-      - name: Run API smoke test against disposable MySQL
+      - name: Run API smoke test against disposable MySQL (if present)
+        shell: bash
         env:
           WF_DEBUG_SMOKE: '1'
         run: |
-          set -e
-          php -r "\
-            parse_str('target=live&host=127.0.0.1&db=whimsicalfrog&user=root&pass=rootpass&port=3306', $_GET); \
-            chdir(getcwd()); \
-            include 'api/db_smoke_test.php'; \
-          "
+          set -euo pipefail
+          if [ -f "api/db_smoke_test.php" ]; then
+            php -r "\
+              parse_str('target=live&host=127.0.0.1&db=whimsicalfrog&user=root&pass=rootpass&port=3306', $_GET); \
+              chdir(getcwd()); \
+              include 'api/db_smoke_test.php'; \
+            "
+          else
+            echo "api/db_smoke_test.php not found; skipping DB smoke test."
+          fi

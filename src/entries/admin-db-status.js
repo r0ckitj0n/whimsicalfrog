@@ -29,6 +29,14 @@ import '../styles/admin-db-status.css';
       '<div class="success">✅ Connection OK</div>';
     container.innerHTML = html;
   }
+  function endpointExists(url){
+    try {
+      return fetch(url, { method: 'HEAD', credentials: 'same-origin' })
+        .then(function(r){ return r.ok; })
+        .catch(function(){ return false; });
+    } catch(e){ return Promise.resolve(false); }
+  }
+
   function runApiSmoke(targetOverride){
     try {
       var wrap = el('apiSmokeTest');
@@ -43,16 +51,23 @@ import '../styles/admin-db-status.css';
         targetSel.value = target;
       }
       var url = '/api/db_smoke_test.php?target=' + encodeURIComponent(target);
-      fetch(url, { credentials: 'same-origin' })
-        .then(function(r){ return r.json().catch(function(){ return { ok:false, error:'Invalid JSON', status:r.status }; }); })
-        .then(function(data){
-          if (raw) raw.textContent = JSON.stringify(data, null, 2);
-          renderParsed(parsed, data);
-        })
-        .catch(function(err){
-          if (raw) raw.textContent = String(err && err.message || err || 'Unknown error');
-          if (parsed) parsed.innerHTML = '<div class="error">❌ ' + h(err && err.message || err || 'Unknown error') + '</div>';
-        });
+      endpointExists('/api/db_smoke_test.php').then(function(exists){
+        if (!exists){
+          if (raw) raw.textContent = 'api/db_smoke_test.php not found; smoke test endpoint is not available.';
+          if (parsed) parsed.innerHTML = '<div class="error">❌ Smoke test endpoint not available</div>';
+          return;
+        }
+        fetch(url, { credentials: 'same-origin' })
+          .then(function(r){ return r.json().catch(function(){ return { ok:false, error:'Invalid JSON', status:r.status }; }); })
+          .then(function(data){
+            if (raw) raw.textContent = JSON.stringify(data, null, 2);
+            renderParsed(parsed, data);
+          })
+          .catch(function(err){
+            if (raw) raw.textContent = String(err && err.message || err || 'Unknown error');
+            if (parsed) parsed.innerHTML = '<div class="error">❌ ' + h(err && err.message || err || 'Unknown error') + '</div>';
+          });
+      });
     } catch(e) {}
   }
   function init(){

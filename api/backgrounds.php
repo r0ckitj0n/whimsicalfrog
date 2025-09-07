@@ -54,6 +54,7 @@ function normalizeRoomTypeFromInput($input)
 function saveBackground($input)
 {
     $roomType = normalizeRoomTypeFromInput($input);
+    $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
     $backgroundName = $input['background_name'] ?? '';
     $imageFilename = $input['image_filename'] ?? '';
     $webpFilename = $input['webp_filename'] ?? null;
@@ -65,18 +66,18 @@ function saveBackground($input)
     }
 
     try {
-        // Check if background name already exists for this room
-        $exists = Database::queryOne("SELECT id FROM backgrounds WHERE room_type = ? AND background_name = ?", [$roomType, $backgroundName]);
+        // Check if background name already exists for this room (prefer room_number)
+        $exists = Database::queryOne("SELECT id FROM backgrounds WHERE (room_number = ? OR room_type = ?) AND background_name = ? LIMIT 1", [$roomNumber, $roomType, $backgroundName]);
 
         if ($exists) {
             echo json_encode(['success' => false, 'message' => 'Background name already exists for this room']);
             return;
         }
 
-        // Insert new background
+        // Insert new background (populate room_number as well during migration)
         $rows = Database::execute(
-            "INSERT INTO backgrounds (room_type, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)",
-            [$roomType, $backgroundName, $imageFilename, $webpFilename]
+            "INSERT INTO backgrounds (room_type, room_number, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, ?, 0)",
+            [$roomType, $roomNumber, $backgroundName, $imageFilename, $webpFilename]
         );
 
         if ($rows > 0) {
@@ -93,6 +94,7 @@ function saveBackground($input)
 function applyBackground($input)
 {
     $roomType = normalizeRoomTypeFromInput($input);
+    $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
     $backgroundId = $input['background_id'] ?? '';
 
     if (empty($roomType) || !preg_match('/^room[1-5]$/', $roomType) || empty($backgroundId)) {
@@ -104,11 +106,11 @@ function applyBackground($input)
     try {
         Database::beginTransaction();
 
-        // Deactivate all backgrounds for this room
-        Database::execute("UPDATE backgrounds SET is_active = 0 WHERE room_type = ?", [$roomType]);
+        // Deactivate all backgrounds for this room (prefer room_number, but include fallback)
+        Database::execute("UPDATE backgrounds SET is_active = 0 WHERE room_number = ? OR room_type = ?", [$roomNumber, $roomType]);
 
-        // Activate the selected background
-        $affected = Database::execute("UPDATE backgrounds SET is_active = 1 WHERE id = ? AND room_type = ?", [$backgroundId, $roomType]);
+        // Activate the selected background (by id is sufficient)
+        $affected = Database::execute("UPDATE backgrounds SET is_active = 1 WHERE id = ?", [$backgroundId]);
 
         if ($affected > 0) {
             Database::commit();
@@ -191,8 +193,10 @@ function wf_handle_backgrounds_get(): void {
         $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
 
         if ($roomType !== null) {
-            $sql = "SELECT * FROM backgrounds WHERE room_type = ?";
-            $params = [$roomType];
+            $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+            // Prefer room_number, fallback to room_type
+            $sql = "SELECT * FROM backgrounds WHERE (room_number = ? OR room_type = ?)";
+            $params = [$roomNumber, $roomType];
             if ($activeOnly) { $sql .= " AND is_active = 1"; }
             $sql .= " ORDER BY background_name = 'Original' DESC, created_at DESC";
             $rows = Database::queryAll($sql, $params);
@@ -202,7 +206,7 @@ function wf_handle_backgrounds_get(): void {
                 Response::success(['backgrounds' => $rows]);
             }
         } else {
-            $summary = Database::queryAll("SELECT room_type, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_type ORDER BY room_type");
+            $summary = Database::queryAll("SELECT COALESCE(room_number, room_type) AS room_key, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_key ORDER BY room_key");
             Response::success(['summary' => $summary]);
         }
     } catch (Throwable $e) {

@@ -41,11 +41,15 @@ try {
         exit;
     }
 
-    // Internal storage still uses 'room_type' column like 'room1'. Map quietly here.
+    // Prefer new room_number column; fallback to legacy room_type
     $internalRoomType = 'room' . $roomNumber;
+    $roomNumberStr = (string)$roomNumber;
 
     // Get the active map for the specified room
-    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE", [$internalRoomType]);
+    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_number = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$roomNumberStr]);
+    if (!$map) {
+        $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$internalRoomType]);
+    }
 
     if ($map) {
         $coordinates = json_decode($map['coordinates'], true);

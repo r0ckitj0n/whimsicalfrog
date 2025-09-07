@@ -81,15 +81,17 @@ async function loadCoordinates(roomNumberOrType) {
 }
 
 export async function initializeRoomCoordinates({
-  roomType,
+  roomType, // legacy: 'roomN'
+  roomNumberStr, // preferred: 'roomN'
   originalImageWidth,
   originalImageHeight
 }) {
-  if (!roomType || !originalImageWidth || !originalImageHeight) return;
+  const resolvedRoom = roomNumberStr || roomType;
+  if (!resolvedRoom || !originalImageWidth || !originalImageHeight) return;
   const wrapper = getWrapper();
   if (!wrapper) return;
 
-  const areas = await loadCoordinates(roomType);
+  const areas = await loadCoordinates(resolvedRoom);
   if (!areas.length) return;
 
   const update = () => scaleAndPositionAreas(wrapper, originalImageWidth, originalImageHeight, areas);
@@ -99,14 +101,14 @@ export async function initializeRoomCoordinates({
     clearTimeout(rt);
     rt = setTimeout(update, 100);
   });
-  console.log(`[coordinateManager] placed ${areas.length} areas for ${roomType}`);
+  console.log(`[coordinateManager] placed ${areas.length} areas for ${resolvedRoom}`);
 }
 
 // Auto-detect globals (used inside legacy room iframes)
 if (window.roomNumber && window.originalImageWidth && window.originalImageHeight) {
   document.addEventListener('DOMContentLoaded', () => {
     initializeRoomCoordinates({
-      roomType: `room${window.roomNumber}`,
+      roomNumberStr: `room${window.roomNumber}`,
       originalImageWidth: window.originalImageWidth,
       originalImageHeight: window.originalImageHeight
     });

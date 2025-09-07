@@ -99,14 +99,24 @@ if ($roomType === '' || !preg_match('/^room[1-5]$/', $roomType)) {
 }
 
 try {
-    // Get active background for the room
+    // Get active background for the room (prefer room_number, fallback to room_type)
+    $rn = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
     $background = Database::queryOne(
         "SELECT background_name, image_filename, webp_filename, created_at 
          FROM backgrounds 
-         WHERE room_type = ? AND is_active = 1 
+         WHERE room_number = ? AND is_active = 1 
          LIMIT 1",
-        [$roomType]
+        [$rn]
     );
+    if (!$background) {
+        $background = Database::queryOne(
+            "SELECT background_name, image_filename, webp_filename, created_at 
+             FROM backgrounds 
+             WHERE room_type = ? AND is_active = 1 
+             LIMIT 1",
+            [$roomType]
+        );
+    }
 
     if ($background) {
         echo json_encode(['success' => true, 'background' => $background]);

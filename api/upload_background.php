@@ -96,6 +96,7 @@ try {
     } else {
         $roomType = $legacyRoomType ?? '';
     }
+    $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
     $backgroundName = $_POST['background_name'] ?? '';
 
     if ($roomType === '' || !preg_match('/^room[1-5]$/', $roomType)) {
@@ -166,14 +167,14 @@ try {
             $backgroundName = ucwords(str_replace('-', ' ', $safeName));
         }
 
-        // Prevent duplicate names for room
-        $row = Database::queryOne('SELECT id FROM backgrounds WHERE room_type = ? AND background_name = ?', [$roomType, $backgroundName]);
+        // Prevent duplicate names for room (prefer room_number)
+        $row = Database::queryOne('SELECT id FROM backgrounds WHERE (room_number = ? OR room_type = ?) AND background_name = ? LIMIT 1', [$roomNumber, $roomType, $backgroundName]);
         if ($row) {
             // Append unique suffix rather than failing
             $backgroundName .= ' ' . date('Ymd-His');
         }
 
-        Database::execute('INSERT INTO backgrounds (room_type, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)', [$roomType, $backgroundName, $destOriginalRel, $destWebpRel]);
+        Database::execute('INSERT INTO backgrounds (room_type, room_number, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, ?, 0)', [$roomType, $roomNumber, $backgroundName, $destOriginalRel, $destWebpRel]);
         $id = Database::lastInsertId();
 
         echo json_encode([

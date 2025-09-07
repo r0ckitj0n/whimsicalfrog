@@ -40,10 +40,12 @@ try {
         case 'POST':
             $action = $input['action'] ?? '';
             if ($action === 'save') {
-                // Save a new room map
+                // Save a new room map (populate room_number for migration compatibility)
+                $rt = normalize_room_type($input['room'] ?? ($input['room_type'] ?? ''));
+                $rn = preg_match('/^room(\w+)$/i', (string)$rt, $m) ? (string)$m[1] : '';
                 $result = Database::execute(
-                    "INSERT INTO room_maps (room_type, map_name, coordinates) VALUES (?, ?, ?)",
-                    [normalize_room_type($input['room'] ?? ($input['room_type'] ?? '')), $input['map_name'], json_encode($input['coordinates'])]
+                    "INSERT INTO room_maps (room_type, room_number, map_name, coordinates) VALUES (?, ?, ?, ?)",
+                    [$rt, $rn, $input['map_name'], json_encode($input['coordinates'])]
                 ) > 0;
 
                 if ($result) {
@@ -57,7 +59,8 @@ try {
                 try {
                     // Deactivate all maps for this room type
                     $rt = normalize_room_type($input['room'] ?? ($input['room_type'] ?? ''));
-                    Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?", [$rt]);
+                    $rn = preg_match('/^room(\w+)$/i', (string)$rt, $m) ? (string)$m[1] : '';
+                    Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_number = ? OR room_type = ?", [$rn, $rt]);
 
                     // Activate the selected map
                     Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$input['map_id']]);
@@ -81,9 +84,11 @@ try {
 
                     // Create a new map with restored data
                     $newMapName = $originalMap['map_name'] . ' (Restored ' . date('Y-m-d H:i') . ')';
+                    $origRt = $originalMap['room_type'] ?? '';
+                    $origRn = $originalMap['room_number'] ?? (preg_match('/^room(\w+)$/i', (string)$origRt, $m) ? (string)$m[1] : '');
                     Database::execute(
-                        "INSERT INTO room_maps (room_type, map_name, coordinates) VALUES (?, ?, ?)",
-                        [$originalMap['room_type'], $newMapName, $originalMap['coordinates']]
+                        "INSERT INTO room_maps (room_type, room_number, map_name, coordinates) VALUES (?, ?, ?, ?)",
+                        [$origRt, $origRn, $newMapName, $originalMap['coordinates']]
                     );
 
                     $newMapId = Database::lastInsertId();
@@ -91,7 +96,7 @@ try {
                     // Optionally apply it immediately if requested
                     if (isset($input['apply_immediately']) && $input['apply_immediately']) {
                         // Deactivate all maps for this room type
-                        Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_type = ?", [$originalMap['room_type']]);
+                        Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_number = ? OR room_type = ?", [$origRn, $originalMap['room_type']]);
 
                         // Activate the restored map
                         Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$newMapId]);
@@ -122,7 +127,11 @@ try {
             if ($roomType !== null) {
                 if (isset($_GET['active_only']) && $_GET['active_only'] === 'true') {
                     // Get active map for a specific room
-                    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE", [$roomType]);
+                    $rn = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+                    $map = Database::queryOne("SELECT * FROM room_maps WHERE room_number = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$rn]);
+                    if (!$map) {
+                        $map = Database::queryOne("SELECT * FROM room_maps WHERE room_type = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$roomType]);
+                    }
 
                     if ($map) {
                         $map['coordinates'] = json_decode($map['coordinates'], true);
@@ -132,7 +141,8 @@ try {
                     }
                 } else {
                     // Get all maps for a specific room
-                    $maps = Database::queryAll("SELECT * FROM room_maps WHERE room_type = ? ORDER BY created_at DESC", [$roomType]);
+                    $rn = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+                    $maps = Database::queryAll("SELECT * FROM room_maps WHERE (room_number = ? OR room_type = ?) ORDER BY created_at DESC", [$rn, $roomType]);
 
                     foreach ($maps as &$map) {
                         $map['coordinates'] = json_decode($map['coordinates'], true);
@@ -142,7 +152,7 @@ try {
                 }
             } else {
                 // Get all room maps
-                $maps = Database::queryAll("SELECT * FROM room_maps ORDER BY room_type, created_at DESC");
+                $maps = Database::queryAll("SELECT * FROM room_maps ORDER BY COALESCE(room_number, room_type), created_at DESC");
 
                 foreach ($maps as &$map) {
                     $map['coordinates'] = json_decode($map['coordinates'], true);

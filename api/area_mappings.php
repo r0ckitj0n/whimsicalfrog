@@ -72,7 +72,11 @@ function handleGet($pdo) {
                     echo json_encode(['success' => false, 'message' => 'room is required']);
                     return;
                 }
-                $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 LIMIT 1", [$roomType]);
+                $rn = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+                $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$rn]);
+                if (!$map) {
+                    $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomType]);
+                }
                 $coords = $map ? json_decode($map['coordinates'], true) : [];
                 echo json_encode(['success' => true, 'coordinates' => is_array($coords) ? $coords : []]);
                 return;
@@ -81,7 +85,8 @@ function handleGet($pdo) {
                     echo json_encode(['success' => false, 'message' => 'room is required']);
                     return;
                 }
-                $rows = Database::queryAll("SELECT id, room_type, area_selector, mapping_type, item_id, category_id, display_order FROM area_mappings WHERE room_type = ? AND is_active = 1 ORDER BY display_order, id", [$roomType]);
+                $rn = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+                $rows = Database::queryAll("SELECT id, room_type, room_number, area_selector, mapping_type, item_id, category_id, display_order FROM area_mappings WHERE (room_number = ? OR room_type = ?) AND is_active = 1 ORDER BY display_order, id", [$rn, $roomType]);
                 echo json_encode(['success' => true, 'mappings' => $rows]);
                 return;
             default:
@@ -116,6 +121,7 @@ function addMapping($pdo, $input)
     $roomType = isset($input['room']) && $input['room'] !== ''
         ? wf_normalize_room_type($input['room'])
         : ($input['room_type'] ?? null);
+    $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
     $areaSelector = $input['area_selector'] ?? null;
     $mappingType = $input['mapping_type'] ?? null;
     $itemId = $input['item_id'] ?? null;
@@ -141,18 +147,18 @@ function addMapping($pdo, $input)
     }
 
     try {
-        // Check if mapping already exists for this area
-        $exists = Database::queryOne("SELECT id FROM area_mappings WHERE room_type = ? AND area_selector = ? AND is_active = 1", [$roomType, $areaSelector]);
+        // Check if mapping already exists for this area (prefer room_number)
+        $exists = Database::queryOne("SELECT id FROM area_mappings WHERE (room_number = ? OR room_type = ?) AND area_selector = ? AND is_active = 1", [$roomNumber, $roomType, $areaSelector]);
 
         if ($exists) {
             echo json_encode(['success' => false, 'message' => 'This area already has a mapping. Use swap or update instead.']);
             return;
         }
 
-        // Add new mapping
+        // Add new mapping (populate room_number during migration)
         $rows = Database::execute(
-            "INSERT INTO area_mappings (room_type, area_selector, mapping_type, item_id, category_id, display_order) VALUES (?, ?, ?, ?, ?, ?)",
-            [$roomType, $areaSelector, $mappingType, $itemId, $categoryId, $displayOrder]
+            "INSERT INTO area_mappings (room_type, room_number, area_selector, mapping_type, item_id, category_id, display_order) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [$roomType, $roomNumber, $areaSelector, $mappingType, $itemId, $categoryId, $displayOrder]
         );
 
         if ($rows > 0) {

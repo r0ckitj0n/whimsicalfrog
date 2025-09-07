@@ -4456,9 +4456,9 @@ function initAdminSettingsDelegatedListeners() {
         try {
             const res = await fetch('/api/get_room_data.php');
             const data = await res.json();
-            const mapping = (data && data.data && (data.data.roomTypeMapping || data.data.validRooms)) || {};
+            const roomNumberMapping = (data && data.data && (data.data.roomTypeMapping || data.data.validRooms)) || {};
             const seen = new Set(Array.from(roomSelect.options).map(o => String(o.value)));
-            const entries = Array.isArray(mapping) ? mapping.map(v => [v, v]) : Object.entries(mapping);
+            const entries = Array.isArray(roomNumberMapping) ? roomNumberMapping.map(v => [v, v]) : Object.entries(roomNumberMapping);
             for (const [value, label] of entries) {
                 const v = String(value);
                 if (seen.has(v)) continue;

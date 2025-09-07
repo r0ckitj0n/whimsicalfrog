@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     console.log('🎯 DOM loaded, checking for room...');
     console.log('🎯 Available window variables:', {
-        roomType: window.roomType,
+        legacyRoom: window.roomType,
         roomNumber: window.roomNumber
     });
     
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             console.log('🎯 Retrying after delay...');
             console.log('🎯 Available window variables after delay:', {
-                roomType: window.roomType,
+                legacyRoom: window.roomType,
                 roomNumber: window.roomNumber
             });
             if (window.ROOM_TYPE) {

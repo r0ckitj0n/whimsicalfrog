@@ -19,7 +19,7 @@ function ensureBgClass(url){
   bgClassCache.set(url, cls);
   return cls;
 }
-export async function loadRoomBackground(roomType) {
+export async function loadRoomBackground(roomNumberStr) {
     
     try {
         // Check if we're coming from main room - if so, use main room background
@@ -32,18 +32,18 @@ export async function loadRoomBackground(roomType) {
             console.log('Coming from main room - using CSS room background with main room body background');
             return;
         }
-        // If no roomType provided, try to auto-detect similar to autoLoadRoomBackground
-        if (!roomType) {
+        // If no room provided, try to auto-detect similar to autoLoadRoomBackground
+        if (!roomNumberStr) {
             const landingPage = document.querySelector('#landingPage');
             if (landingPage) {
-                roomType = 'landing';
+                roomNumberStr = 'landing';
             } else {
                 // Map certain pages explicitly
                 try {
                     const body = document.body;
                     const pageSlug = (body && body.dataset && body.dataset.page) ? body.dataset.page : '';
                     if (pageSlug === 'shop') {
-                        roomType = 'shop';
+                        roomNumberStr = 'shop';
                     }
                 } catch (e) {
                     // non-fatal
@@ -52,7 +52,7 @@ export async function loadRoomBackground(roomType) {
                 // Attempt detection via available room data
                 try {
                     const roomData = await apiGet('/api/get_room_data.php');
-                    const roomTypeMapping = roomData?.data?.roomTypeMapping || {};
+                    const roomNumberMapping = roomData?.data?.roomTypeMapping || {};
                     const roomDoors = roomData?.data?.roomDoors || [];
                     const roomContainer = document.querySelector('[data-room-name]');
                     if (roomContainer) {
@@ -62,13 +62,13 @@ export async function loadRoomBackground(roomType) {
                             room.door_label?.toLowerCase() === roomName?.toLowerCase()
                         );
                         if (matchingRoom) {
-                            roomType = roomTypeMapping[matchingRoom.room_number];
+                            roomNumberStr = roomNumberMapping[matchingRoom.room_number];
                         }
                     }
-                    if (!roomType) {
+                    if (!roomNumberStr) {
                         const currentPage = (new URLSearchParams(window.location.search)).get('page') || '';
-                        if (currentPage && roomTypeMapping[currentPage.replace('room','')]) {
-                            roomType = currentPage;
+                        if (currentPage && roomNumberMapping[currentPage.replace('room','')]) {
+                            roomNumberStr = currentPage;
                         }
                     }
                 } catch(e) {
@@ -76,13 +76,13 @@ export async function loadRoomBackground(roomType) {
                 }
             }
         }
-        if (!roomType) {
-            console.log('No roomType detected; aborting dynamic room background.');
+        if (!roomNumberStr) {
+            console.log('No room detected; aborting dynamic room background.');
             return;
         }
 
         // Normal room background loading via new room param
-        const rn = /^room\d+$/i.test(String(roomType)) ? String(roomType).replace(/^room/i, '') : String(roomType);
+        const rn = /^room\d+$/i.test(String(roomNumberStr)) ? String(roomNumberStr).replace(/^room/i, '') : String(roomNumberStr);
         if (!/^\d+$/.test(rn)) {
             console.log('[DBG] Not a numeric room; skipping background API fetch');
             return;
@@ -116,7 +116,7 @@ export async function loadRoomBackground(roomType) {
                 console.log('Room wrapper not found, using fallback background');
             }
         } else {
-            if (roomType === 'shop') {
+            if (roomNumberStr === 'shop') {
                 console.log('[DBG] No active shop background found; falling back to room_main');
                 return loadRoomBackground('room_main');
             }
@@ -157,14 +157,14 @@ async function autoLoadRoomBackground() {
             return;
         }
         
-        const roomTypeMapping = roomData.data.roomTypeMapping;
+        const roomNumberMapping = roomData.data.roomTypeMapping;
         const roomDoors = roomData.data.roomDoors;
         
         // Try to detect room type from the page element or URL
         const roomContainer = document.querySelector('[data-room-name]');
         if (roomContainer) {
             const roomName = roomContainer.getAttribute('data-room-name');
-            let roomType = '';
+            let roomNumberStr = '';
             
             // Find matching room by name
             const matchingRoom = roomDoors.find(room => 
@@ -173,20 +173,20 @@ async function autoLoadRoomBackground() {
             );
             
             if (matchingRoom) {
-                roomType = roomTypeMapping[matchingRoom.room_number];
+                roomNumberStr = roomNumberMapping[matchingRoom.room_number];
             } else {
                 // Try to detect from URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const currentPage = urlParams.get('page') || '';
                 
                 // Check if currentPage matches any room type
-                if (roomTypeMapping[currentPage.replace('room', '')]) {
-                    roomType = currentPage;
+                if (roomNumberMapping[currentPage.replace('room', '')]) {
+                    roomNumberStr = currentPage;
                 }
             }
             
-            if (roomType) {
-                loadRoomBackground(roomType);
+            if (roomNumberStr) {
+                loadRoomBackground(roomNumberStr);
             }
         }
     } catch (error) {

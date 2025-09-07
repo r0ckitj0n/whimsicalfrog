@@ -118,15 +118,15 @@ const MainApplication = {
         }
     },
 
-    async loadModalBackground(roomType) {
-        if (!roomType) {
+    async loadModalBackground(roomNumber) {
+        if (!roomNumber) {
             this.WF.log('[MainApplication] No room provided for modal background.', 'warn');
             return;
         }
 
         try {
-            // roomType may be 'roomN' or N; normalize to number for new API param
-            const rn = String(roomType).match(/^room(\d+)$/i) ? String(roomType).replace(/^room/i, '') : String(roomType);
+            // roomNumber may be 'roomN' or N; normalize to number for new API param
+            const rn = String(roomNumber).match(/^room(\d+)$/i) ? String(roomNumber).replace(/^room/i, '') : String(roomNumber);
             const data = await this.WF.api.get(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
             if (data && data.success && data.background) {
                 const { webp_path, png_path } = data.background;
@@ -173,7 +173,7 @@ const MainApplication = {
                     this.WF.log('[MainApplication] Modal background container not found.', 'warn');
                 }
             } else {
-                this.WF.log(`[MainApplication] No background found for roomType: ${roomType}`, 'info');
+                this.WF.log(`[MainApplication] No background found for room: ${roomNumber}`, 'info');
             }
         } catch (error) {
             this.WF.log(`[MainApplication] Error loading modal background: ${error}`, 'error');

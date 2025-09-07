@@ -67,14 +67,14 @@ export async function loadDynamicBackground() {
     const params = new URLSearchParams(window.location.search);
     const page = params.get('page') || 'landing';
     const map = await generatePageRoomMap();
-    const roomType = map[page] || 'landing';
+    const roomNumberStr = map[page] || 'landing';
 
     // Only fetch backgrounds via API for real rooms (room1..room5)
-    if (!/^room\d+$/.test(roomType)) {
+    if (!/^room\d+$/.test(roomNumberStr)) {
       return; // non-room pages rely on existing page styling/data-bg-url
     }
 
-    const rn = Number(String(roomType).replace(/^room/i, ''));
+    const rn = Number(String(roomNumberStr).replace(/^room/i, ''));
     const bgRes = await apiGet(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
     if (!bgRes.success || !bgRes.background) return;
 

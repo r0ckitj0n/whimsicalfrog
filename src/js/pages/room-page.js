@@ -16,9 +16,9 @@
     console.log('[RoomPage] Initializing for', page);
 
     const roomNumber = m[1];
-    const roomType = `room${roomNumber}`;
+    const roomNumberStr = `room${roomNumber}`;
 
-    // Expose minimal global for compatibility. Prefer window.ROOM_NUMBER; avoid window.ROOM_TYPE.
+    // Expose minimal global for compatibility (ROOM_NUMBER only).
     window.ROOM_NUMBER = roomNumber;
 
     // Initialize global CSS if available
@@ -33,7 +33,7 @@
 
     // Initialize simple room coordinates if available
     if (typeof window.simpleCoordinateSystem === 'function') {
-      try { window.simpleCoordinateSystem(roomType); } catch (e) { console.warn('[RoomPage] simpleCoordinateSystem failed', e); }
+      try { window.simpleCoordinateSystem(roomNumberStr); } catch (e) { console.warn('[RoomPage] simpleCoordinateSystem failed', e); }
     }
 
     // Helper: parse product data from icon element
@@ -196,7 +196,7 @@
     bindIconInteractions();
     bindClickOutside();
 
-    console.log('[RoomPage] Initialized successfully for', roomType);
+    console.log('[RoomPage] Initialized successfully for', roomNumberStr);
   } catch (e) {
     console.error('[RoomPage] Initialization error', e);
   }

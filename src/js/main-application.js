@@ -120,12 +120,14 @@ const MainApplication = {
 
     async loadModalBackground(roomType) {
         if (!roomType) {
-            this.WF.log('[MainApplication] No roomType provided for modal background.', 'warn');
+            this.WF.log('[MainApplication] No room provided for modal background.', 'warn');
             return;
         }
 
         try {
-            const data = await this.WF.api.get(`/api/get_background.php?room_type=${roomType}`);
+            // roomType may be 'roomN' or N; normalize to number for new API param
+            const rn = String(roomType).match(/^room(\d+)$/i) ? String(roomType).replace(/^room/i, '') : String(roomType);
+            const data = await this.WF.api.get(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
             if (data && data.success && data.background) {
                 const { webp_path, png_path } = data.background;
                 const supportsWebP = document.documentElement.classList.contains('webp');

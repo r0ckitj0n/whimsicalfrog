@@ -103,10 +103,10 @@ export async function initializeRoomCoordinates({
 }
 
 // Auto-detect globals (used inside legacy room iframes)
-if ((window.roomNumber || window.ROOM_TYPE) && window.originalImageWidth && window.originalImageHeight) {
+if (window.roomNumber && window.originalImageWidth && window.originalImageHeight) {
   document.addEventListener('DOMContentLoaded', () => {
     initializeRoomCoordinates({
-      roomType: window.roomNumber ? `room${window.roomNumber}` : window.ROOM_TYPE,
+      roomType: `room${window.roomNumber}`,
       originalImageWidth: window.originalImageWidth,
       originalImageHeight: window.originalImageHeight
     });

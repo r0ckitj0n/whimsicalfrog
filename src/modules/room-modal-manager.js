@@ -315,8 +315,6 @@ class RoomModalManager {
         if (!modalPage) return;
         const rn = modalPage.getAttribute('data-room');
         if (rn) {
-            window.ROOM_TYPE = `room${rn}`;
-            window.roomType = `room${rn}`;
             window.roomNumber = rn;
         }
 

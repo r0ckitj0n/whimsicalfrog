@@ -81,8 +81,13 @@ export async function loadRoomBackground(roomType) {
             return;
         }
 
-        // Normal room background loading
-        const data = await apiGet(`/api/get_background.php?room_type=${roomType}`);
+        // Normal room background loading via new room param
+        const rn = /^room\d+$/i.test(String(roomType)) ? String(roomType).replace(/^room/i, '') : String(roomType);
+        if (!/^\d+$/.test(rn)) {
+            console.log('[DBG] Not a numeric room; skipping background API fetch');
+            return;
+        }
+        const data = await apiGet(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
         
         
         if (data.success && data.background) {

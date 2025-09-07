@@ -121,38 +121,41 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('🎯 Not a room detail page; coordinate manager idle');
         return;
     }
-    console.log('🎯 DOM loaded, checking for room type...');
+    console.log('🎯 DOM loaded, checking for room...');
     console.log('🎯 Available window variables:', {
-        ROOM_TYPE: window.ROOM_TYPE,
         roomType: window.roomType,
         roomNumber: window.roomNumber
     });
     
-    // Check if room type is set
+    // Check if room is set (legacy globals supported)
     if (window.ROOM_TYPE) {
-        console.log(`🎯 Room type found: ${window.ROOM_TYPE}`);
+        console.log('🎯 Room found (legacy global)');
         simpleCoordinateSystem(window.ROOM_TYPE);
     } else if (window.roomType) {
-        console.log(`🎯 Room type found (fallback): ${window.roomType}`);
+        console.log(`🎯 Room found (fallback): ${window.roomType}`);
         simpleCoordinateSystem(window.roomType);
+    } else if (window.roomNumber) {
+        console.log(`🎯 Room number found: ${window.roomNumber}`);
+        simpleCoordinateSystem(`room${window.roomNumber}`);
     } else {
-        console.log('⚠️ No room type found, waiting...');
-        // Try again after delay
+        console.log('❌ No room found. Retrying in 500ms...');
         setTimeout(() => {
             console.log('🎯 Retrying after delay...');
             console.log('🎯 Available window variables after delay:', {
-                ROOM_TYPE: window.ROOM_TYPE,
                 roomType: window.roomType,
                 roomNumber: window.roomNumber
             });
             if (window.ROOM_TYPE) {
-                console.log(`🎯 Room type found after delay: ${window.ROOM_TYPE}`);
+                console.log('🎯 Room found after delay (legacy global)');
                 simpleCoordinateSystem(window.ROOM_TYPE);
             } else if (window.roomType) {
-                console.log(`🎯 Room type found after delay (fallback): ${window.roomType}`);
+                console.log(`🎯 Room found after delay (fallback): ${window.roomType}`);
                 simpleCoordinateSystem(window.roomType);
+            } else if (window.roomNumber) {
+                console.log(`🎯 Room number found after delay: ${window.roomNumber}`);
+                simpleCoordinateSystem(`room${window.roomNumber}`);
             } else {
-                console.error('❌ Still no room type found');
+                console.log('❌ Still no room found.');
             }
         }, 500);
     }

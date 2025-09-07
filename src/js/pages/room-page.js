@@ -18,9 +18,8 @@
     const roomNumber = m[1];
     const roomType = `room${roomNumber}`;
 
-    // Expose for systems that rely on globals (e.g., room-coordinate-manager.js)
+    // Expose minimal global for compatibility. Prefer window.ROOM_NUMBER; avoid window.ROOM_TYPE.
     window.ROOM_NUMBER = roomNumber;
-    window.ROOM_TYPE = roomType;
 
     // Initialize global CSS if available
     if (typeof window.loadGlobalCSS === 'function') {

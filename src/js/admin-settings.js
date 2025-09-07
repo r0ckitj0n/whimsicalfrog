@@ -4474,11 +4474,11 @@ function initAdminSettingsDelegatedListeners() {
     }
     
     async function fetchBackgrounds(room) {
-        const res = await fetch(`/api/backgrounds.php?room_type=${encodeURIComponent(room)}`);
+        const res = await fetch(`/api/backgrounds.php?room=${encodeURIComponent(room)}`);
         return res.json();
     }
     async function fetchActiveBackground(room) {
-        const res = await fetch(`/api/backgrounds.php?room_type=${encodeURIComponent(room)}&active_only=true`);
+        const res = await fetch(`/api/backgrounds.php?room=${encodeURIComponent(room)}&active_only=true`);
         return res.json();
     }
     
@@ -4573,7 +4573,7 @@ function initAdminSettingsDelegatedListeners() {
             const res = await fetch('/api/backgrounds.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'apply', room_type: room, background_id: backgroundId })
+                body: JSON.stringify({ action: 'apply', room: room, background_id: backgroundId })
             });
             const data = await res.json();
             if (data && data.success) {
@@ -4631,7 +4631,7 @@ function initAdminSettingsDelegatedListeners() {
         if (!file) { bgNotify.err('Please choose an image file to upload.'); return; }
         try {
             const fd = new FormData();
-            fd.append('room_type', room);
+            fd.append('room', room);
             fd.append('background_name', name);
             fd.append('background_image', file);
             const res = await fetch('/api/upload_background.php', { method: 'POST', body: fd });

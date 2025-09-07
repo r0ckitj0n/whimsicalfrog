@@ -68,8 +68,12 @@ function scaleAndPositionAreas(wrapper, imageW, imageH, areas) {
   });
 }
 
-async function loadCoordinates(roomType) {
-  const res = await apiGet(`/api/get_room_coordinates.php?room_type=${roomType}`);
+async function loadCoordinates(roomNumberOrType) {
+  let roomParam = roomNumberOrType;
+  if (/^room\d+$/i.test(String(roomNumberOrType))) {
+    roomParam = String(roomNumberOrType).replace(/^room/i, '');
+  }
+  const res = await apiGet(`/api/get_room_coordinates.php?room=${encodeURIComponent(roomParam)}`);
   if (res.success && Array.isArray(res.coordinates) && res.coordinates.length) {
     return res.coordinates;
   }
@@ -99,10 +103,10 @@ export async function initializeRoomCoordinates({
 }
 
 // Auto-detect globals (used inside legacy room iframes)
-if (window.ROOM_TYPE && window.originalImageWidth && window.originalImageHeight) {
+if ((window.roomNumber || window.ROOM_TYPE) && window.originalImageWidth && window.originalImageHeight) {
   document.addEventListener('DOMContentLoaded', () => {
     initializeRoomCoordinates({
-      roomType: window.ROOM_TYPE,
+      roomType: window.roomNumber ? `room${window.roomNumber}` : window.ROOM_TYPE,
       originalImageWidth: window.originalImageWidth,
       originalImageHeight: window.originalImageHeight
     });

@@ -84,13 +84,23 @@ function convertToWebP($srcPath, $destPath, $quality = 90)
 }
 
 try {
-    // Validate inputs
-    $roomType = $_POST['room_type'] ?? '';
+    // Validate inputs: prefer 'room' over legacy 'room_type'
+    $roomParam = $_POST['room'] ?? null;
+    $legacyRoomType = $_POST['room_type'] ?? null;
+    if ($roomParam !== null && $roomParam !== '') {
+        if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
+            $roomType = 'room' . (int)$m[1];
+        } else {
+            $roomType = 'room' . (int)$roomParam;
+        }
+    } else {
+        $roomType = $legacyRoomType ?? '';
+    }
     $backgroundName = $_POST['background_name'] ?? '';
 
-    if (empty($roomType)) {
+    if ($roomType === '' || !preg_match('/^room[1-5]$/', $roomType)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'room_type is required']);
+        echo json_encode(['success' => false, 'message' => 'room is required (use 1..5)']);
         exit;
     }
 

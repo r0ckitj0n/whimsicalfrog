@@ -14,7 +14,18 @@ require_once __DIR__ . '/logger.php';
 
 function handleGet($pdo)
 {
-    $roomType = $_GET['room_type'] ?? null;
+    // Prefer 'room' (1..5), fallback to legacy 'room_type' ('room1'..'room5')
+    $roomType = null;
+    if (isset($_GET['room']) && $_GET['room'] !== '') {
+        $r = $_GET['room'];
+        if (preg_match('/^room(\d+)$/i', (string)$r, $m)) {
+            $roomType = 'room' . (int)$m[1];
+        } else {
+            $roomType = 'room' . (int)$r;
+        }
+    } elseif (isset($_GET['room_type'])) {
+        $roomType = $_GET['room_type'];
+    }
     $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
 
     try {

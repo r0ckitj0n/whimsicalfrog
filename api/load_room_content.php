@@ -258,8 +258,7 @@ function getRoomMetadata($roomNumber, $pdo)
         'room_number' => $roomNumber,
         'room_name'   => $rs['room_name'] ?? '',
         'description' => $rs['description'] ?? '',
-        'category'    => $categoryName,
-        'room_type'   => "room{$roomNumber}"
+        'category'    => $categoryName
     ];
 }
 

@@ -275,7 +275,7 @@ export function init(){
     try { console.info('[AdminSettingsBridge] active on settings route'); } catch(_) {}
     // Defer email section initialization until the user opens the Email Settings modal
     let __emailInitDone = false;
-    const initEmailIfNeeded = async () => {
+    const _initEmailIfNeeded = async () => {
       if (__emailInitDone) return;
       try {
         await initEmailSection();

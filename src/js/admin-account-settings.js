@@ -6,8 +6,8 @@
   const errorEl = document.getElementById('accountErrorMessage');
   const successEl = document.getElementById('accountSuccessMessage');
   if (!form || !payloadEl) return;
-  let payload = {};
-  try { payload = JSON.parse(payloadEl.textContent || '{}'); } catch(_){ payload = {}; }
+  // Reserved for future defaults from embedded JSON (kept for forward compatibility)
+  try { JSON.parse(payloadEl.textContent || '{}'); } catch(_) {}
 
   const show = (el) => { if (el) { el.classList.remove('hidden'); el.setAttribute('aria-hidden', 'false'); } };
   const hide = (el) => { if (el) { el.classList.add('hidden'); el.setAttribute('aria-hidden', 'true'); } };

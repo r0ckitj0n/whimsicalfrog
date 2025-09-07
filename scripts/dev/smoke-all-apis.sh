@@ -36,3 +36,27 @@ say "room data"
 
 say "checkout pricing (zip 30301, USPS)"
 "$(dirname "$0")/curl-checkout-pricing.sh" 30301 USPS || true
+
+say "room categories (room 1)"
+"$(dirname "$0")/curl-room-categories.sh" 1 || true
+
+say "room coordinates (room1)"
+"$(dirname "$0")/curl-room-coordinates.sh" room1 || true
+
+say "ai models (all providers)"
+"$(dirname "$0")/curl-ai-models.sh" all || true
+
+say "backgrounds (room1 active)"
+"$(dirname "$0")/curl-backgrounds.sh" room1 true || true
+
+say "pricing explanation (sample text)"
+"$(dirname "$0")/curl-pricing-explanation.sh" || true
+
+say "ai model capabilities (current)"
+"$(dirname "$0")/curl-ai-capabilities.sh" get_current || true
+
+say "email config (debug=0)"
+"$(dirname "$0")/curl-email-config.sh" 0 || true
+
+say "marketing suggestion (WF-AR-001)"
+"$(dirname "$0")/curl-marketing-suggestion.sh" WF-AR-001 || true

@@ -1,7 +1,11 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json');
+
+// Ensure clean JSON (avoid warnings/notices in output)
+ini_set('display_errors', 0);
+ob_start();
 
 try {
     // Ensure database is initialized via shared helper
@@ -14,6 +18,7 @@ try {
     $reasoningText = $_GET['text'] ?? '';
 
     if (empty($reasoningText)) {
+        if (ob_get_length() !== false) { ob_end_clean(); }
         echo json_encode([
             'success' => false,
             'error' => 'No reasoning text provided'
@@ -57,6 +62,7 @@ try {
 
     // Default to generic AI analysis if no specific match
     if (!$matchedKeyword) {
+        if (ob_get_length() !== false) { ob_end_clean(); }
         echo json_encode([
             'success' => true,
             'title' => 'AI Pricing Analysis',
@@ -69,12 +75,14 @@ try {
     $result = Database::queryOne("SELECT title, explanation FROM pricing_explanations WHERE keyword = ?", [$matchedKeyword]);
 
     if ($result) {
+        if (ob_get_length() !== false) { ob_end_clean(); }
         echo json_encode([
             'success' => true,
             'title' => $result['title'],
             'explanation' => $result['explanation']
         ]);
     } else {
+        if (ob_get_length() !== false) { ob_end_clean(); }
         echo json_encode([
             'success' => true,
             'title' => 'AI Pricing Analysis',
@@ -83,9 +91,10 @@ try {
     }
 
 } catch (Exception $e) {
+    if (ob_get_length() !== false) { ob_end_clean(); }
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
     ]);
 }
-?> 
+?>

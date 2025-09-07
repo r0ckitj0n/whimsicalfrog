@@ -6,10 +6,14 @@
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
-require_once 'ai_providers.php';
+require_once __DIR__ . '/ai_providers.php';
 
 // Set JSON header
 header('Content-Type: application/json');
+
+// Ensure clean JSON
+ini_set('display_errors', 0);
+ob_start();
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -49,6 +53,7 @@ try {
                 'google' => $aiProviders->getAvailableModels('google')
             ];
 
+            if (ob_get_length() !== false) { ob_end_clean(); }
             echo json_encode([
                 'success' => true,
                 'models' => $allModels
@@ -57,6 +62,7 @@ try {
             // Return models for specific provider
             $models = $aiProviders->getAvailableModels($provider);
 
+            if (ob_get_length() !== false) { ob_end_clean(); }
             echo json_encode([
                 'success' => true,
                 'provider' => $provider,
@@ -66,15 +72,17 @@ try {
 
     } else {
         http_response_code(405);
+        if (ob_get_length() !== false) { ob_end_clean(); }
         echo json_encode(['error' => 'Method not allowed']);
     }
 
 } catch (Exception $e) {
     error_log("Get AI Models API Error: " . $e->getMessage());
     http_response_code(500);
+    if (ob_get_length() !== false) { ob_end_clean(); }
     echo json_encode([
         'error' => 'Failed to fetch AI models',
         'message' => $e->getMessage()
     ]);
 }
-?> 
+?>

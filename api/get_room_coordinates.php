@@ -19,7 +19,10 @@ if (
     exit;
 }
 
-require_once 'config.php';
+// Ensure absolute include and clean JSON output
+require_once __DIR__ . '/config.php';
+ini_set('display_errors', 0);
+ob_start();
 
 try {
     try {
@@ -41,6 +44,7 @@ try {
 
     if ($map) {
         $coordinates = json_decode($map['coordinates'], true);
+        if (ob_get_length() !== false) { ob_end_clean(); }
         echo json_encode([
             'success' => true,
             'coordinates' => $coordinates,
@@ -49,6 +53,7 @@ try {
         ]);
     } else {
         // Return empty coordinates if no active map found
+        if (ob_get_length() !== false) { ob_end_clean(); }
         echo json_encode([
             'success' => true,
             'coordinates' => [],
@@ -61,6 +66,7 @@ try {
     error_log("Room coordinates API error: " . $e->getMessage());
 
     // Return error for debugging
+    if (ob_get_length() !== false) { ob_end_clean(); }
     echo json_encode([
         'success' => false,
         'message' => 'Database error: ' . $e->getMessage(),

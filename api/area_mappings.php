@@ -27,6 +27,13 @@ try {
 
 $method = $_SERVER['REQUEST_METHOD'];
 $input = json_decode(file_get_contents('php://input'), true);
+if (!is_array($input)) { $input = []; }
+
+function wf_normalize_room_type($value) {
+    if ($value === null || $value === '') return '';
+    if (preg_match('/^room(\d+)$/i', (string)$value, $m)) return 'room' . (int)$m[1];
+    return 'room' . (int)$value;
+}
 
 switch ($method) {
     case 'GET':
@@ -48,9 +55,67 @@ switch ($method) {
 }
 // handlePost function moved to api_handlers_extended.php for centralization
 
+function handleGet($pdo) {
+    $action = $_GET['action'] ?? '';
+    // Prefer 'room', fallback to 'room_type'
+    $roomType = null;
+    if (isset($_GET['room']) && $_GET['room'] !== '') {
+        $roomType = wf_normalize_room_type($_GET['room']);
+    } elseif (isset($_GET['room_type'])) {
+        $roomType = $_GET['room_type'];
+    }
+
+    try {
+        switch ($action) {
+            case 'get_room_coordinates':
+                if (!$roomType) {
+                    echo json_encode(['success' => false, 'message' => 'room is required']);
+                    return;
+                }
+                $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 LIMIT 1", [$roomType]);
+                $coords = $map ? json_decode($map['coordinates'], true) : [];
+                echo json_encode(['success' => true, 'coordinates' => is_array($coords) ? $coords : []]);
+                return;
+            case 'get_mappings':
+                if (!$roomType) {
+                    echo json_encode(['success' => false, 'message' => 'room is required']);
+                    return;
+                }
+                $rows = Database::queryAll("SELECT id, room_type, area_selector, mapping_type, item_id, category_id, display_order FROM area_mappings WHERE room_type = ? AND is_active = 1 ORDER BY display_order, id", [$roomType]);
+                echo json_encode(['success' => true, 'mappings' => $rows]);
+                return;
+            default:
+                echo json_encode(['success' => false, 'message' => 'Invalid action']);
+                return;
+        }
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
+}
+
+function handlePost($pdo, $input) {
+    $action = $input['action'] ?? '';
+    switch ($action) {
+        case 'add_mapping':
+            addMapping($pdo, $input);
+            return;
+        case 'swap':
+            swapMappings($input);
+            return;
+        default:
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            return;
+    }
+}
+
 function addMapping($pdo, $input)
 {
-    $roomType = $input['room_type'] ?? null;
+    // Prefer 'room' param, fallback to legacy 'room_type'
+    $roomType = isset($input['room']) && $input['room'] !== ''
+        ? wf_normalize_room_type($input['room'])
+        : ($input['room_type'] ?? null);
     $areaSelector = $input['area_selector'] ?? null;
     $mappingType = $input['mapping_type'] ?? null;
     $itemId = $input['item_id'] ?? null;

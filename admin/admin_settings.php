@@ -2860,7 +2860,7 @@ function clearMapperAreas() {
 // New room map management functions
 async function loadSavedMapsForRoom(roomType) {
     try {
-        const response = await fetch(`api/room_maps.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&room_type=${roomType}`);
+        const response = await fetch(`api/room_maps.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}`);
         const data = await response.json();
         const savedMapsSelect = document.getElementById('savedMapsSelect');
         savedMapsSelect.innerHTML = '<option value="">Select saved map...</option>';
@@ -2942,7 +2942,6 @@ async function saveRoomMap() {
             body: JSON.stringify({
                 action: 'save',
                 room: String(roomType).replace(/^room/i,''),
-                room_type: roomType,
                 map_name: mapName,
                 coordinates: coordinates
             })
@@ -3093,7 +3092,6 @@ async function applySavedMap() {
             body: JSON.stringify({
                 action: 'apply',
                 room: String(roomType).replace(/^room/i,''),
-                room_type: roomType,
                 map_id: mapId
             })
         });
@@ -3186,7 +3184,7 @@ This action cannot be undone, and all coordinate data will be lost forever.`;
 
 async function updateMapStatus(roomType) {
     try {
-        const response = await fetch(`api/room_maps.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&room_type=${roomType}&active_only=true`);
+        const response = await fetch(`api/room_maps.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&active_only=true`);
         const data = await response.json();
         
         const statusDiv = document.getElementById('mapStatus');
@@ -3235,7 +3233,7 @@ async function loadRoomHistory() {
     const historyList = document.getElementById('historyList');
     
     try {
-        const response = await fetch(`api/room_maps.php?room_type=${roomType}`);
+        const response = await fetch(`api/room_maps.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}`);
         const data = await response.json();
         
         if (data.success && data.maps && data.maps.length > 0) {
@@ -3342,7 +3340,7 @@ async function restoreMap(mapId, mapName, applyImmediately) {
 async function previewHistoricalMap(mapId, mapName) {
     try {
         const roomType = document.getElementById('roomMapperSelect').value;
-        const response = await fetch(`api/room_maps.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&room_type=${roomType}`);
+        const response = await fetch(`api/room_maps.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}`);
         const data = await response.json();
         
         if (data.success && data.maps) {
@@ -3955,7 +3953,7 @@ function toggleMappingSelectors(type) {
 async function loadAreaMapperRoom(roomType) {
     try {
         // Load room coordinates
-        const coordResponse = await fetch(`api/area_mappings.php?action=get_room_coordinates&room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&room_type=${roomType}`);
+        const coordResponse = await fetch(`api/area_mappings.php?action=get_room_coordinates&room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}`);
         const coordResult = await coordResponse.json();
         
         if (coordResult.success) {
@@ -3965,7 +3963,7 @@ async function loadAreaMapperRoom(roomType) {
         }
         
         // Load existing mappings
-        const mappingsResponse = await fetch(`api/area_mappings.php?action=get_mappings&room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&room_type=${roomType}`);
+        const mappingsResponse = await fetch(`api/area_mappings.php?action=get_mappings&room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}`);
         const mappingsResult = await mappingsResponse.json();
         
         if (mappingsResult.success) {
@@ -4197,7 +4195,6 @@ async function addAreaMapping() {
             body: JSON.stringify({
                 action: 'add_mapping',
                 room: String(roomType).replace(/^room/i,''),
-                room_type: roomType,
                 area_selector: areaSelector,
                 mapping_type: mappingType,
                 item_id: mappingType === 'item' ? itemId : null,
@@ -6011,7 +6008,7 @@ async function populateBackgroundRoomDropdown(selectElement) {
 async function loadBackgroundsForRoom(roomType) {
     try {
         // Load current active background
-        const activeResponse = await fetch(`api/get_background.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&room_type=${roomType}`);
+        const activeResponse = await fetch(`api/get_background.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}`);
         const activeData = await activeResponse.json();
         
         const currentInfo = document.getElementById('currentBackgroundInfo');
@@ -6066,7 +6063,7 @@ async function loadBackgroundsForRoom(roomType) {
         }
         
         // Load all backgrounds for this room
-        const allResponse = await fetch(`api/backgrounds.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}&room_type=${roomType}`);
+        const allResponse = await fetch(`api/backgrounds.php?room=${encodeURIComponent(String(roomType).replace(/^room/i,''))}`);
         const allData = await allResponse.json();
         
         const backgroundsList = document.getElementById('backgroundsList');
@@ -6146,7 +6143,6 @@ async function applyBackground(roomType, backgroundId) {
             body: JSON.stringify({
                 action: 'apply',
                 room: String(roomType).replace(/^room/i,''),
-                room_type: roomType,
                 background_id: backgroundId
             })
         });
@@ -6249,7 +6245,6 @@ async function uploadBackground() {
         // Create FormData for upload
         const formData = new FormData();
         formData.append('room', String(roomType).replace(/^room/i,''));
-        formData.append('room_type', roomType);
         formData.append('background_name', backgroundName);
         formData.append('background_image', file);
         

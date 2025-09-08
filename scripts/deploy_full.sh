@@ -175,16 +175,37 @@ LOCAL_DB_NAME="whimsicalfrog"
 DUMP_FILE="local_db_dump_$(date +%Y-%m-%d_%H-%M-%S).sql"
 DUMP_ERR_FILE="local_db_dump_error.log"
 
-# Ensure mysqldump exists
-if ! command -v mysqldump >/dev/null 2>&1; then
-  echo -e "${RED}❌ mysqldump not found on this system. Install MySQL client tools and retry.${NC}"
-  DB_STATUS="Dump failed (mysqldump missing)"
+# Ensure mysqldump exists (auto-detect common Homebrew paths)
+MYSQLDUMP="$(command -v mysqldump || true)"
+if [ -z "$MYSQLDUMP" ]; then
+  for CAND in \
+    /opt/homebrew/opt/mysql-client/bin/mysqldump \
+    /usr/local/opt/mysql-client/bin/mysqldump \
+    /opt/homebrew/bin/mysqldump \
+    /usr/local/bin/mysqldump; do
+    if [ -x "$CAND" ]; then MYSQLDUMP="$CAND"; break; fi
+  done
+fi
+if [ -z "$MYSQLDUMP" ]; then
+  echo -e "${YELLOW}⚠️  mysqldump not found locally; attempting server-side backup fallback...${NC}"
+  # Attempt server-side backup endpoint as a fallback
+  SERVER_BACKUP_OUT=$(curl -sS -X POST \
+    -F "admin_token=whimsical_admin_2024" \
+    "$BASE_URL/api/database_maintenance.php?action=backup" || true)
+  if echo "$SERVER_BACKUP_OUT" | grep -q '"success":true'; then
+    echo -e "${GREEN}✅ Server-side database backup initiated successfully${NC}"
+    DB_STATUS="Server-side backup triggered"
+  else
+    echo -e "${RED}❌ Server-side backup fallback failed${NC}"
+    echo "$SERVER_BACKUP_OUT" | sed 's/.\{400\}/&\n/g' | head -n 50
+    DB_STATUS="Dump failed (mysqldump missing)"
+  fi
   goto_verify=true
 fi
 
 if [ "${goto_verify:-false}" = true ]; then
   : # skip DB work
-elif [ -S "/tmp/mysql.sock" ] && mysqldump --socket="/tmp/mysql.sock" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+elif [ -S "/tmp/mysql.sock" ] && "$MYSQLDUMP" --socket="/tmp/mysql.sock" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
   --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>"$DUMP_ERR_FILE"; then
   echo -e "${GREEN}✅ Local dump created: $DUMP_FILE${NC}"
 
@@ -242,7 +263,7 @@ else
   # Try common socket paths on macOS and Linux
   for SOCK in /tmp/mysql.sock /var/run/mysqld/mysqld.sock; do
     if [ -S "$SOCK" ]; then
-      if mysqldump --socket="$SOCK" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+      if "$MYSQLDUMP" --socket="$SOCK" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
         --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>>"$DUMP_ERR_FILE"; then
         echo -e "${GREEN}✅ Local dump created via socket: $DUMP_FILE${NC}"
         echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
@@ -294,7 +315,7 @@ EOL
   done
   if [ "${goto_verify:-false}" != true ]; then
     # Try TCP as final fallback
-    if mysqldump -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+    if "$MYSQLDUMP" -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
       --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>>"$DUMP_ERR_FILE"; then
       echo -e "${GREEN}✅ Local dump created via TCP fallback: $DUMP_FILE${NC}"
       echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"

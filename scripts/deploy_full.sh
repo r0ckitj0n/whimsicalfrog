@@ -38,13 +38,17 @@ fi
 
 if [ "$DB_PREFLIGHT_OK" = true ]; then
   echo -e "${GREEN}💾 Backing up database...${NC}"
-  curl -s -X POST https://whimsicalfrog.us/api/backup_database.php || echo -e "${YELLOW}⚠️  Database backup failed, continuing...${NC}"
+  curl -s -X POST \
+    -F "admin_token=whimsical_admin_2024" \
+    https://whimsicalfrog.us/api/backup_database.php || echo -e "${YELLOW}⚠️  Database backup failed, continuing...${NC}"
 else
   echo -e "${YELLOW}⚠️  Skipping database backup due to failed preflight${NC}"
 fi
 
 echo -e "${GREEN}💾 Backing up website...${NC}"
-curl -s -X POST https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing...${NC}"
+curl -s -X POST \
+  -F "admin_token=whimsical_admin_2024" \
+  https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing...${NC}"
 
 # Clean up any stale git lock file
 if [ -f .git/index.lock ]; then
@@ -169,11 +173,19 @@ LOCAL_DB_PASS="Palz2516!"
 LOCAL_DB_NAME="whimsicalfrog"
 
 DUMP_FILE="local_db_dump_$(date +%Y-%m-%d_%H-%M-%S).sql"
+DUMP_ERR_FILE="local_db_dump_error.log"
+
+# Ensure mysqldump exists
+if ! command -v mysqldump >/dev/null 2>&1; then
+  echo -e "${RED}❌ mysqldump not found on this system. Install MySQL client tools and retry.${NC}"
+  DB_STATUS="Dump failed (mysqldump missing)"
+  goto_verify=true
+fi
 
 if [ "${goto_verify:-false}" = true ]; then
   : # skip DB work
-elif mysqldump -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
-  --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>/dev/null; then
+elif [ -S "/tmp/mysql.sock" ] && mysqldump --socket="/tmp/mysql.sock" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+  --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>"$DUMP_ERR_FILE"; then
   echo -e "${GREEN}✅ Local dump created: $DUMP_FILE${NC}"
 
   echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
@@ -224,10 +236,119 @@ EOL
   fi
 
   # Clean up local dump file
-  rm -f "$DUMP_FILE"
+  rm -f "$DUMP_FILE" "$DUMP_ERR_FILE"
 else
-  echo -e "${RED}❌ Failed to create local database dump; skipping DB restore${NC}"
-  DB_STATUS="Dump failed"
+  echo -e "${YELLOW}⚠️  Preferred path failed; attempting alternative connection methods...${NC}"
+  # Try common socket paths on macOS and Linux
+  for SOCK in /tmp/mysql.sock /var/run/mysqld/mysqld.sock; do
+    if [ -S "$SOCK" ]; then
+      if mysqldump --socket="$SOCK" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+        --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>>"$DUMP_ERR_FILE"; then
+        echo -e "${GREEN}✅ Local dump created via socket: $DUMP_FILE${NC}"
+        echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
+        RESTORE_OUT=$(curl -sS -X POST \
+          -F "admin_token=whimsical_admin_2024" \
+          -F "ignore_errors=1" \
+          -F "backup_file=@$DUMP_FILE;type=application/sql" \
+          "https://whimsicalfrog.us/api/database_maintenance.php?action=restore_database" || true)
+        if echo "$RESTORE_OUT" | grep -q '"success":true'; then
+          echo -e "${GREEN}✅ Live database restored from uploaded dump${NC}"
+          DB_STATUS="Restored from uploaded dump"
+        else
+          echo -e "${YELLOW}⚠️  Direct upload restore failed. Falling back to SFTP + server restore...${NC}"
+          cat > upload_dump.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+mkdir backups
+cd backups
+put "$DUMP_FILE"
+bye
+EOL
+          if lftp -f upload_dump.txt 2>/dev/null; then
+            echo -e "${GREEN}✅ Dump uploaded to server backups/$DUMP_FILE${NC}"
+          else
+            echo -e "${RED}❌ Failed to upload dump to server${NC}"
+          fi
+          rm -f upload_dump.txt
+          echo -e "${GREEN}🧩 Triggering server-side restore from backups/$DUMP_FILE...${NC}"
+          RESTORE_OUT=$(curl -sS -X POST \
+            -F "admin_token=whimsical_admin_2024" \
+            -F "ignore_errors=1" \
+            -F "server_backup_path=../backups/$DUMP_FILE" \
+            "https://whimsicalfrog.us/api/database_maintenance.php?action=restore_database" || true)
+          if echo "$RESTORE_OUT" | grep -q '"success":true'; then
+            echo -e "${GREEN}✅ Live database restored from server backup file${NC}"
+            DB_STATUS="Restored from server backup file"
+          else
+            echo -e "${RED}❌ Database restore failed${NC}"
+            echo "$RESTORE_OUT" | sed 's/.\{400\}/&\n/g' | head -n 50
+            DB_STATUS="Restore failed"
+          fi
+        fi
+        rm -f "$DUMP_FILE" "$DUMP_ERR_FILE"
+        goto_verify=true
+        break
+      fi
+    fi
+  done
+  if [ "${goto_verify:-false}" != true ]; then
+    # Try TCP as final fallback
+    if mysqldump -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+      --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>>"$DUMP_ERR_FILE"; then
+      echo -e "${GREEN}✅ Local dump created via TCP fallback: $DUMP_FILE${NC}"
+      echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
+      RESTORE_OUT=$(curl -sS -X POST \
+        -F "admin_token=whimsical_admin_2024" \
+        -F "ignore_errors=1" \
+        -F "backup_file=@$DUMP_FILE;type=application/sql" \
+        "https://whimsicalfrog.us/api/database_maintenance.php?action=restore_database" || true)
+      if echo "$RESTORE_OUT" | grep -q '"success":true'; then
+        echo -e "${GREEN}✅ Live database restored from uploaded dump${NC}"
+        DB_STATUS="Restored from uploaded dump"
+      else
+        echo -e "${YELLOW}⚠️  Direct upload restore failed. Falling back to SFTP + server restore...${NC}"
+        cat > upload_dump.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://$USER:$PASS@$HOST
+mkdir backups
+cd backups
+put "$DUMP_FILE"
+bye
+EOL
+        if lftp -f upload_dump.txt 2>/dev/null; then
+          echo -e "${GREEN}✅ Dump uploaded to server backups/$DUMP_FILE${NC}"
+        else
+          echo -e "${RED}❌ Failed to upload dump to server${NC}"
+        fi
+        rm -f upload_dump.txt
+        echo -e "${GREEN}🧩 Triggering server-side restore from backups/$DUMP_FILE...${NC}"
+        RESTORE_OUT=$(curl -sS -X POST \
+          -F "admin_token=whimsical_admin_2024" \
+          -F "ignore_errors=1" \
+          -F "server_backup_path=../backups/$DUMP_FILE" \
+          "https://whimsicalfrog.us/api/database_maintenance.php?action=restore_database" || true)
+        if echo "$RESTORE_OUT" | grep -q '"success":true'; then
+          echo -e "${GREEN}✅ Live database restored from server backup file${NC}"
+          DB_STATUS="Restored from server backup file"
+        else
+          echo -e "${RED}❌ Database restore failed${NC}"
+          echo "$RESTORE_OUT" | sed 's/.\{400\}/&\n/g' | head -n 50
+          DB_STATUS="Restore failed"
+        fi
+      fi
+      rm -f "$DUMP_FILE" "$DUMP_ERR_FILE"
+      goto_verify=true
+    fi
+
+    echo -e "${RED}❌ Failed to create local database dump; skipping DB restore${NC}"
+    if [ -f "$DUMP_ERR_FILE" ]; then
+      echo -e "${YELLOW}🔎 mysqldump errors:${NC}"
+      sed 's/.\{400\}/&\n/g' "$DUMP_ERR_FILE" | head -n 50
+    fi
+    DB_STATUS="Dump failed"
+  fi
 fi
 
 # Verify deployment over HTTP (avoids dotfile visibility issues)

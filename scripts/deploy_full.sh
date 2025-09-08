@@ -15,6 +15,7 @@ DB_HOST="whimsicalfrog.com"
 DB_USER="jongraves"
 DB_PASS="Palz2516"
 DB_NAME="whimsicalfrog"
+PRECHECK_URL="$BASE_URL/db_connection_test.php"
 
 # Colors for output
 RED='\033[0;31m'
@@ -23,8 +24,25 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}🚀 Starting file deployment...${NC}"
-echo -e "${GREEN}💾 Backing up database...${NC}"
-curl -s -X POST https://whimsicalfrog.us/api/backup_database.php || echo -e "${YELLOW}⚠️  Database backup failed, continuing...${NC}"
+
+# Preflight DB connectivity
+echo -e "${GREEN}🔎 Preflight: testing DB connectivity via ${PRECHECK_URL}${NC}"
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PRECHECK_URL")
+DB_PREFLIGHT_OK=false
+if [ "$HTTP_CODE" = "200" ]; then
+  echo -e "${GREEN}✅ DB preflight responded with HTTP 200${NC}"
+  DB_PREFLIGHT_OK=true
+else
+  echo -e "${YELLOW}⚠️  DB preflight failed (HTTP $HTTP_CODE). Backup/restore will be skipped.${NC}"
+fi
+
+if [ "$DB_PREFLIGHT_OK" = true ]; then
+  echo -e "${GREEN}💾 Backing up database...${NC}"
+  curl -s -X POST https://whimsicalfrog.us/api/backup_database.php || echo -e "${YELLOW}⚠️  Database backup failed, continuing...${NC}"
+else
+  echo -e "${YELLOW}⚠️  Skipping database backup due to failed preflight${NC}"
+fi
+
 echo -e "${GREEN}💾 Backing up website...${NC}"
 curl -s -X POST https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing...${NC}"
 
@@ -136,6 +154,13 @@ rm fix_permissions.txt
 echo -e "${GREEN}🗄️  Creating local database dump and restoring on live...${NC}"
 DB_STATUS="Skipped"
 
+# If preflight failed, skip DB dump/restore entirely
+if [ "$DB_PREFLIGHT_OK" != true ]; then
+  echo -e "${YELLOW}⚠️  Skipping DB dump/restore due to failed preflight${NC}"
+  DB_STATUS="Skipped (preflight failed)"
+  goto_verify=true
+fi
+
 # Local DB connection (matches api/config.php local block)
 LOCAL_DB_HOST="127.0.0.1"
 LOCAL_DB_PORT="3306"
@@ -145,7 +170,9 @@ LOCAL_DB_NAME="whimsicalfrog"
 
 DUMP_FILE="local_db_dump_$(date +%Y-%m-%d_%H-%M-%S).sql"
 
-if mysqldump -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
+if [ "${goto_verify:-false}" = true ]; then
+  : # skip DB work
+elif mysqldump -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
   --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>/dev/null; then
   echo -e "${GREEN}✅ Local dump created: $DUMP_FILE${NC}"
 

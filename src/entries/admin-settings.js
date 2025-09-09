@@ -9,6 +9,202 @@ import '../styles/admin-modals.css';
 import '../styles/components/modal.css';
 import '../styles/admin-settings.css';
 
+// Lightweight, always-on modal helpers for Settings page
+const __wfShowModal = (id) => {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  el.classList.remove('hidden');
+  el.classList.add('show');
+  el.setAttribute('aria-hidden', 'false');
+  return true;
+};
+const __wfHideModal = (id) => {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  el.classList.add('hidden');
+  el.classList.remove('show');
+  el.setAttribute('aria-hidden', 'true');
+  return true;
+};
+
+// Immediately install a minimal delegated click handler so buttons work even before bridge loads
+(function installImmediateSettingsClicks(){
+  const handler = (e) => {
+    try {
+      const t = e.target;
+      const closest = (sel) => (t && t.closest ? t.closest(sel) : null);
+      // Only act on Settings routes. Be generous: detect by DOM hook or URL tokens.
+      const body = document.body;
+      const pathLower = ((body && body.dataset && body.dataset.path) || window.location.pathname + window.location.search || '').toLowerCase();
+      const isSettings = (
+        document.getElementById('adminSettingsRoot') !== null
+        || (body && body.dataset && body.dataset.page === 'admin/settings')
+        || (body && body.dataset && body.dataset.isAdmin === 'true' && (
+            pathLower.includes('/admin/settings')
+            || pathLower.includes('section=settings')
+            || pathLower.includes('admin_settings')
+        ))
+      );
+      if (!isSettings) return;
+
+      // Overlay click-to-close
+      if (t && t.classList && t.classList.contains('admin-modal-overlay')) {
+        const id = t.id; if (!id) return;
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfHideModal(id); return;
+      }
+
+      // Generic close button inside any admin modal
+      if (closest('[data-action="close-admin-modal"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const overlay = closest('.admin-modal-overlay');
+        if (overlay && overlay.id) { __wfHideModal(overlay.id); }
+        return;
+      }
+
+      // Openers (core)
+      if (closest('[data-action="open-business-info"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('businessInfoModal'); return; }
+      if (closest('[data-action="open-square-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('squareSettingsModal'); return; }
+      if (closest('[data-action="open-email-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('emailSettingsModal'); return; }
+      if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); if (__wfShowModal('emailSettingsModal')) { const test = document.getElementById('testEmailAddress')||document.getElementById('testRecipient'); if (test) setTimeout(()=>test.focus(), 50); } return; }
+      if (closest('[data-action="open-logging-status"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('loggingStatusModal'); return; }
+      if (closest('[data-action="open-ai-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('aiSettingsModal'); return; }
+      if (closest('[data-action="open-ai-tools"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('aiToolsModal'); return; }
+      if (closest('[data-action="open-css-rules"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('cssRulesModal'); return; }
+      if (closest('[data-action="open-background-manager"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('backgroundManagerModal'); return; }
+      if (closest('[data-action="open-receipt-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('receiptSettingsModal'); return; }
+      if (closest('[data-action="open-dashboard-config"]')) { e.preventDefault(); if (typeof e.stopPropagation==='function') e.stopPropagation(); __wfShowModal('dashboardConfigModal'); return; }
+      if (closest('[data-action="open-attributes"]')) {
+        e.preventDefault(); if (typeof e.stopPropagation==='function') e.stopPropagation();
+        // Ensure modal exists; if not, create a minimal one
+        try {
+          if (!document.getElementById('attributesModal')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'attributesModal';
+            overlay.className = 'admin-modal-overlay hidden';
+            overlay.setAttribute('aria-hidden','true');
+            overlay.setAttribute('role','dialog');
+            overlay.setAttribute('aria-modal','true');
+            overlay.setAttribute('tabindex','-1');
+            overlay.innerHTML = `
+              <div class="admin-modal">
+                <div class="modal-header">
+                  <h2 id="attributesTitle" class="admin-card-title">🧩 Gender, Size &amp; Color Management</h2>
+                  <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                  <span class="modal-status-chip" aria-live="polite"></span>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-2 text-sm text-gray-600">Manage product attribute values used across inventory.</div>
+                  <iframe id="attributesFrame" title="Attributes Manager" src="about:blank" data-src="/admin/inventory#attributes" class="wf-admin-embed-frame"></iframe>
+                </div>
+              </div>`;
+            document.body.appendChild(overlay);
+          }
+        } catch(_) {}
+        __wfShowModal('attributesModal');
+        // Lazy-load the iframe
+        try {
+          const frame = document.getElementById('attributesFrame');
+          if (frame && frame.getAttribute('src') === 'about:blank') {
+            const ds = frame.getAttribute('data-src');
+            if (ds) frame.setAttribute('src', ds);
+          }
+        } catch(_) {}
+        return;
+      }
+      if (closest('[data-action="open-categories"]')) {
+        try { console.info('[AdminSettings Entry] open-categories clicked'); } catch(_) {}
+        e.preventDefault(); if (typeof e.stopPropagation==='function') e.stopPropagation();
+        // Ensure modal exists; if not, create a minimal one
+        try {
+          if (!document.getElementById('categoriesModal')) {
+            try { console.info('[AdminSettings Entry] injecting categoriesModal'); } catch(_) {}
+            const overlay = document.createElement('div');
+            overlay.id = 'categoriesModal';
+            overlay.className = 'admin-modal-overlay hidden';
+            overlay.setAttribute('aria-hidden','true');
+            overlay.setAttribute('role','dialog');
+            overlay.setAttribute('aria-modal','true');
+            overlay.setAttribute('tabindex','-1');
+            overlay.innerHTML = `
+              <div class="admin-modal">
+                <div class="modal-header">
+                  <h2 id="categoriesModalTitle" class="admin-card-title">📂 Categories</h2>
+                  <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                  <span class="modal-status-chip" aria-live="polite"></span>
+                </div>
+                <div class="modal-body">
+                  <div class="space-y-4">
+                    <form id="catAddForm" class="flex gap-2 items-center" onsubmit="return false;">
+                      <input type="text" id="catNewName" class="text-sm border border-gray-300 rounded px-2 py-1 flex-1" placeholder="New category name" maxlength="64">
+                      <button type="submit" class="btn btn-primary" data-action="cat-add">Add</button>
+                    </form>
+                    <div id="catResult" class="text-sm text-gray-500"></div>
+                    <div class="border border-gray-200 rounded">
+                      <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-gray-700">
+                          <tr>
+                            <th class="text-left p-2">Name</th>
+                            <th class="text-left p-2">Items</th>
+                            <th class="text-left p-2">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody id="catTableBody" class="divide-y divide-gray-200"></tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+            document.body.appendChild(overlay);
+          }
+        } catch(_) {}
+        __wfShowModal('categoriesModal');
+        // Minimal populate fallback
+        try {
+          try { console.info('[AdminSettings Entry] populating categories'); } catch(_) {}
+          const modal = document.getElementById('categoriesModal');
+          if (modal) {
+            const tbody = modal.querySelector('#catTableBody');
+            const result = modal.querySelector('#catResult');
+            if (result) result.textContent = 'Loading…';
+            fetch('/api/categories.php?action=list', { credentials: 'include', headers: { 'X-Requested-With':'XMLHttpRequest' } })
+              .then(r => r.text()).then(t => {
+                try {
+                  const data = t ? JSON.parse(t) : {};
+                  if (!data || data.success !== true) throw new Error((data && data.error) || 'Unexpected response');
+                  const cats = (data.data && data.data.categories) ? data.data.categories : [];
+                  if (tbody) {
+                    tbody.innerHTML = '';
+                    cats.forEach(c => {
+                      const tr = document.createElement('tr');
+                      const esc = (s) => String(s||'').replace(/"/g,'&quot;');
+                      tr.innerHTML = `
+                        <td class="p-2"><span class="cat-name" data-name="${esc(c.name)}">${c.name}</span></td>
+                        <td class="p-2 text-gray-600">${c.item_count ?? 0}</td>
+                        <td class="p-2">
+                          <button class="btn btn-secondary" data-action="cat-rename" data-name="${esc(c.name)}">Rename</button>
+                          <button class="btn btn-secondary text-red-700" data-action="cat-delete" data-name="${esc(c.name)}">Delete</button>
+                        </td>`;
+                      tbody.appendChild(tr);
+                    });
+                  }
+                  if (result) result.textContent = cats.length ? '' : 'No categories found yet.';
+                } catch (err) {
+                  if (result) result.textContent = (err && err.message) || 'Failed to load categories';
+                }
+              }).catch(() => { if (result) result.textContent = 'Failed to load categories'; });
+          }
+        } catch (_) {}
+        return;
+      }
+      if (closest('[data-action="open-secrets-modal"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('secretsModal'); return; }
+    } catch (_) {}
+  };
+  // Register both capture and bubble to be resilient to other listeners
+  document.addEventListener('click', handler, true);
+  document.addEventListener('click', handler);
+})();
+
 // Important: only load the heavy legacy module when explicitly requested.
 // Always load the lightweight bridge.
 // Load bridge dynamically (deferred) to avoid blocking main thread; allow diagnostic skip
@@ -71,6 +267,13 @@ const loadBridge = async () => {
         if (closest('[data-action="close-background-manager"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('backgroundManagerModal'); return; }
         if (closest('[data-action="open-receipt-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); showModal('receiptSettingsModal'); return; }
         if (closest('[data-action="close-receipt-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('receiptSettingsModal'); return; }
+
+        // Dashboard Configuration (fallback)
+        if (closest('[data-action="open-dashboard-config"]')) {
+          e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+          showModal('dashboardConfigModal');
+          return;
+        }
 
         // File Explorer minimal support
         if (closest('#fileExplorerBtn') || closest('[data-action="open-file-explorer"]')) {

@@ -7,6 +7,39 @@ require_once __DIR__ . '/../includes/functions.php';
 try {
     // Get dashboard configuration
     $dashboardConfig = Database::queryAll('SELECT * FROM dashboard_sections WHERE is_active = 1 ORDER BY display_order ASC');
+    // If DB returned no active sections, attempt to hydrate from file-based storage used by the API fallback
+    if (empty($dashboardConfig)) {
+        try {
+            $store = dirname(__DIR__) . '/storage';
+            $file = $store . '/dashboard_sections.json';
+            if (is_file($file) && is_readable($file)) {
+                $json = file_get_contents($file);
+                $saved = json_decode($json, true);
+                if (is_array($saved) && !empty($saved)) {
+                    // Normalize to the shape expected by the renderer and filter to active sections
+                    $rows = array_map(function($s){
+                        return [
+                            'section_key' => $s['section_key'] ?? ($s['key'] ?? ''),
+                            'display_order' => (int)($s['display_order'] ?? 0),
+                            'is_active' => !empty($s['is_active']) ? 1 : 0,
+                            'show_title' => !empty($s['show_title']) ? 1 : 0,
+                            'show_description' => !empty($s['show_description']) ? 1 : 0,
+                            'custom_title' => $s['custom_title'] ?? null,
+                            'custom_description' => $s['custom_description'] ?? null,
+                            'width_class' => $s['width_class'] ?? 'half-width',
+                        ];
+                    }, $saved);
+                    $rows = array_values(array_filter($rows, function($r){ return ($r['section_key'] ?? '') !== '' && (int)($r['is_active'] ?? 0) === 1; }));
+                    usort($rows, function($a, $b){ return ($a['display_order'] ?? 0) <=> ($b['display_order'] ?? 0); });
+                    if (!empty($rows)) {
+                        $dashboardConfig = $rows;
+                    }
+                }
+            }
+        } catch (Throwable $e) {
+            // Non-fatal; fall through to defaults
+        }
+    }
 
     // Fetch core metrics
     $totalItems = (Database::queryOne('SELECT COUNT(*) as count FROM items')['count'] ?? 0);
@@ -93,6 +126,7 @@ if (empty($dashboardConfig)) {
             if (!$sectionInfo) {
                 continue;
             }
+            // Respect configured width_class; default to half-width
             $widthClass = $config['width_class'] ?? 'half-width';
             // Map dashboard section keys to settings card theme classes
             $themeMap = [
@@ -116,12 +150,16 @@ if (empty($dashboardConfig)) {
                 <div class="section-header rounded-lg overflow-hidden">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
+                            <?php if (!isset($config['show_title']) || (int)$config['show_title'] === 1): ?>
                             <h3 class="section-title text-lg font-semibold">
                                 <?= htmlspecialchars(($config['custom_title'] ?? '') ?: $sectionInfo['title']) ?>
                             </h3>
+                            <?php endif; ?>
+                            <?php if (!isset($config['show_description']) || (int)$config['show_description'] === 1): ?>
                             <p class="section-description text-sm">
                                 <?= htmlspecialchars(($config['custom_description'] ?? '') ?: $sectionInfo['description']) ?>
                             </p>
+                            <?php endif; ?>
                         </div>
                         <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100" title="Drag to reorder">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -431,7 +469,7 @@ if (empty($dashboardConfig)) {
                                     
                                     <div class="flex items-end space-x-2">
                                         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors">Filter</button>
-                                        <a href="/?page=admin" class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded transition-colors">Clear</a>
+                                        <a href="/admin" class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded transition-colors">Clear</a>
                                     </div>
                                 </form>
                             </div>
@@ -543,56 +581,10 @@ if (empty($dashboardConfig)) {
 
                         
 
-
-                                    const fieldName = this.dataset.field;
-                                    const newValue = this.value;
-                                    
-                                    const originalStyle = this.style.backgroundColor;
-                                    this.style.backgroundColor = '#fef3c7';
-                                    this.disabled = true;
-                                    
-                                    try {
-                                        const formData = new FormData();
-                                        formData.append('orderId', orderId);
-                                        formData.append('field', fieldName);
-                                        formData.append('value', newValue);
-                                        formData.append('action', 'updateField');
-                                        
-                                        const response = await fetch('/api/fulfill_order.php', {
-                                            method: 'POST',
-                                            body: formData
-                                        });
-                                        
-                                        const result = await response.json();
-                                        
-                                        if (result.success) {
-                                            this.style.backgroundColor = '#dcfce7';
-                                            setTimeout(() => {
-                                                this.style.backgroundColor = originalStyle;
-                                            }, 2000);
-                                        } else {
-                                            this.style.backgroundColor = '#fecaca';
-                                            setTimeout(() => {
-                                                this.style.backgroundColor = originalStyle;
-                                            }, 2000);
-                                        }
-                                    } catch (error) {
-                                        this.style.backgroundColor = '#fecaca';
-                                        setTimeout(() => {
-                                            this.style.backgroundColor = originalStyle;
-                                        }, 2000);
-                                    } finally {
-                                        this.disabled = false;
-                                    }
-                                });
-                            });
-                        });
-                        </script>
-
-                        <!- Order Details Modal - Sunday Layout ->
-                        <div class="modal-overlay order-modal" id="orderDetailsModal" class="hidden">
+                        <!-- Order Details Modal - Sunday Layout -->
+                        <div class="modal-overlay order-modal hidden" id="orderDetailsModal" aria-hidden="true">
                             <div class="modal-content order-modal-content">
-                                <!- Modal Header ->
+                                <!-- Modal Header -->
                                 <div class="modal-header">
                                     <h2 class="modal-title">Order Details: <span id="modal-order-id">#0000</span></h2>
                                     <button data-action="close-order-details" class="modal-close">
@@ -602,7 +594,7 @@ if (empty($dashboardConfig)) {
                                     </button>
                                 </div>
 
-                                <!- Modal Body ->
+                                <!-- Modal Body -->
                                 <div class="modal-body">
                                     <div class="order-form-grid">
                                         <!- Order Details Column ->

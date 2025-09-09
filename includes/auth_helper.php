@@ -24,18 +24,8 @@ class AuthHelper
     {
         // Initialize session for session-based authentication
         if (class_exists('SessionManager')) { SessionManager::init(); }
-        // Parse JSON input for token-based requests
-        $input = json_decode(file_get_contents('php://input'), true) ?? [];
-
-        // Check for admin token in multiple sources
-        $adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
-
-        if ($adminToken === self::ADMIN_TOKEN) {
-            return true;
-        }
-
-        // Check session-based authentication using centralized auth functions
-
+        // Pure session-based authentication using centralized auth functions
+        
         if (isAdmin()) {
             return true;
         }
@@ -51,8 +41,16 @@ class AuthHelper
      */
     public static function requireAdmin(int $httpCode = 403, string $message = 'Admin access required'): void
     {
-        // Initialize session to access user data
-        SessionManager::init();
+        // Initialize session to access user data (guarded for environments without SessionManager)
+        try {
+            if (class_exists('SessionManager')) {
+                SessionManager::init();
+            } elseif (session_status() === PHP_SESSION_NONE) {
+                @session_start();
+            }
+        } catch (\Throwable $____) {
+            // Non-fatal: proceed to auth check
+        }
         if (!self::isAdmin()) {
             if (class_exists('Response')) {
                 // Pass httpCode as third argument to set correct HTTP status code

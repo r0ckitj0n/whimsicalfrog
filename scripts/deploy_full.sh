@@ -203,10 +203,18 @@ if [ -z "$MYSQLDUMP" ]; then
   goto_verify=true
 fi
 
+# Determine auth flags for mysqldump: if ~/.my.cnf exists, omit explicit user/password
+HAS_MY_CNF=false
+if [ -f "$HOME/.my.cnf" ]; then HAS_MY_CNF=true; fi
+if [ "$HAS_MY_CNF" = true ]; then
+  MYSQLDUMP_AUTH_FLAGS=""
+else
+  MYSQLDUMP_AUTH_FLAGS="-u \"$LOCAL_DB_USER\" --password=\"$LOCAL_DB_PASS\""
+fi
+
 if [ "${goto_verify:-false}" = true ]; then
   : # skip DB work
-elif [ -S "/tmp/mysql.sock" ] && "$MYSQLDUMP" --socket="/tmp/mysql.sock" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
-  --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>"$DUMP_ERR_FILE"; then
+elif [ -S "/tmp/mysql.sock" ] && eval "$MYSQLDUMP --socket=\"/tmp/mysql.sock\" $MYSQLDUMP_AUTH_FLAGS --single-transaction --routines --triggers --add-drop-table \"$LOCAL_DB_NAME\" > \"$DUMP_FILE\" 2>\"$DUMP_ERR_FILE\""; then
   echo -e "${GREEN}✅ Local dump created: $DUMP_FILE${NC}"
 
   echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
@@ -263,8 +271,7 @@ else
   # Try common socket paths on macOS and Linux
   for SOCK in /tmp/mysql.sock /var/run/mysqld/mysqld.sock; do
     if [ -S "$SOCK" ]; then
-      if "$MYSQLDUMP" --socket="$SOCK" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
-        --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>>"$DUMP_ERR_FILE"; then
+      if eval "$MYSQLDUMP --socket=\"$SOCK\" $MYSQLDUMP_AUTH_FLAGS --single-transaction --routines --triggers --add-drop-table \"$LOCAL_DB_NAME\" > \"$DUMP_FILE\" 2>>\"$DUMP_ERR_FILE\""; then
         echo -e "${GREEN}✅ Local dump created via socket: $DUMP_FILE${NC}"
         echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
         RESTORE_OUT=$(curl -sS -X POST \
@@ -315,8 +322,7 @@ EOL
   done
   if [ "${goto_verify:-false}" != true ]; then
     # Try TCP as final fallback
-    if "$MYSQLDUMP" -h "$LOCAL_DB_HOST" -P "$LOCAL_DB_PORT" -u "$LOCAL_DB_USER" --password="$LOCAL_DB_PASS" \
-      --single-transaction --routines --triggers --add-drop-table "$LOCAL_DB_NAME" > "$DUMP_FILE" 2>>"$DUMP_ERR_FILE"; then
+    if eval "$MYSQLDUMP -h \"$LOCAL_DB_HOST\" -P \"$LOCAL_DB_PORT\" $MYSQLDUMP_AUTH_FLAGS --single-transaction --routines --triggers --add-drop-table \"$LOCAL_DB_NAME\" > \"$DUMP_FILE\" 2>>\"$DUMP_ERR_FILE\""; then
       echo -e "${GREEN}✅ Local dump created via TCP fallback: $DUMP_FILE${NC}"
       echo -e "${GREEN}☁️  Uploading and restoring via API (direct upload)...${NC}"
       RESTORE_OUT=$(curl -sS -X POST \

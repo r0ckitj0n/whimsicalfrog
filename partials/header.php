@@ -85,6 +85,129 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
     // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
     echo vite('js/header-bootstrap.js');
     // Always ensure admin navbar has a horizontal layout on admin ROUTES (fallback before external CSS)
+    // Global header offset to keep content and modals clear of the fixed header, site-wide
+    echo <<<'STYLE'
+<style id="wf-global-header-offset">
+  :root{--wf-header-height:64px; --wf-overlay-offset: calc(var(--wf-header-height) + 12px)}
+  body{padding-top:var(--wf-header-height)}
+  /* Ensure common overlays/modals are not obscured by the header */
+  .admin-modal-overlay,
+  .modal-overlay,
+  [role="dialog"].overlay,
+  .wf-search-modal,
+  #searchModal,
+  #loggingStatusModal,
+  #databaseTablesModal {
+    padding-top: var(--wf-overlay-offset) !important;
+    align-items: flex-start !important;
+    z-index: 10050 !important; /* above header and nav */
+    display: flex !important;             /* ensure flex context */
+    justify-content: center !important;   /* center horizontally */
+  }
+  /* Some frameworks center with margin; neutralize so padding-top is effective */
+  .admin-modal-overlay .admin-modal,
+  .modal-overlay .modal,
+  [role="dialog"].overlay .modal {
+    margin-top: 0 !important;
+    top: auto !important;                 /* ignore top:50% */
+    transform: none !important;           /* ignore translate(-50%, -50%) */
+    position: relative !important;        /* avoid absolute/fixed recentering */
+  }
+</style>
+STYLE;
+    // Compute header height on all routes and update CSS variable live
+    echo <<<'SCRIPT'
+<script>(function(){
+  function computeHeaderHeight(){
+    try{
+      var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header');
+      if (h && h.getBoundingClientRect){
+        var hh = Math.max(40, Math.round(h.getBoundingClientRect().height));
+        document.documentElement.style.setProperty('--wf-header-height', hh + 'px');
+      }
+      var headerBottom = 0;
+      if (h && h.getBoundingClientRect) headerBottom = Math.round(h.getBoundingClientRect().bottom);
+      var nav = document.querySelector('.admin-tab-navigation');
+      var navBottom = 0;
+      if (nav && nav.getBoundingClientRect) navBottom = Math.round(nav.getBoundingClientRect().bottom);
+      var offset = Math.max(headerBottom, navBottom) + 12;
+      if (offset > 0) document.documentElement.style.setProperty('--wf-overlay-offset', offset + 'px');
+    }catch(_){}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', computeHeaderHeight, {once:true}); else computeHeaderHeight();
+  window.addEventListener('load', computeHeaderHeight, {once:true});
+  window.addEventListener('resize', computeHeaderHeight);
+  if (window.ResizeObserver){ try{ var ro=new ResizeObserver(computeHeaderHeight); var h=document.querySelector('.site-header')||document.querySelector('.universal-page-header'); if(h) ro.observe(h);}catch(_){}}
+})();</script>
+SCRIPT;
+
+    // Global runtime guard: ensure any modal/overlay added is offset below header
+    echo <<<'SCRIPT'
+<script>
+(function(){
+  function headerHeight(){
+    try{
+      var h=document.querySelector('.site-header')||document.querySelector('.universal-page-header');
+      return (h&&h.getBoundingClientRect)?Math.max(40,Math.round(h.getBoundingClientRect().height)):64;
+    }catch(_){return 64;}
+  }
+  function offsetOverlay(el){
+    try{
+      if(!el||el.__wfOffsetApplied) return; // idempotent
+      var hh=headerHeight();
+      el.style.paddingTop = (hh+12)+"px";
+      el.style.alignItems = 'flex-start';
+      el.style.zIndex = '10050';
+      var dlg = el.querySelector('.admin-modal,.modal,[role="document"],[role="dialog"]');
+      if (dlg) { dlg.style.marginTop='0'; }
+      el.__wfOffsetApplied = true;
+    }catch(_){/* noop */}
+  }
+  function sweep(){
+    try {
+      document.querySelectorAll('.admin-modal-overlay,.modal-overlay,[role="dialog"].overlay,#searchModal,#loggingStatusModal,#databaseTablesModal').forEach(offsetOverlay);
+    } catch (_) { /* noop */ }
+  }
+  function wrap(obj, name){
+    try{
+      if(!obj||typeof obj[name]!== 'function' || obj[name].__wfWrapped) return;
+      var orig=obj[name];
+      obj[name]=function(){
+        var res=orig.apply(this, arguments);
+        sweep();
+        return res;
+      };
+      obj[name].__wfWrapped=true;
+    }catch(_){/* noop */}
+  }
+  // Wrap common openers
+  wrap(window,'showModal');
+  wrap(window,'openModal');
+  wrap(window,'__wfShowModal');
+  if (window.WFModals && typeof window.WFModals.open === 'function') wrap(window.WFModals,'open');
+
+  // Observe DOM additions
+  try{
+    var mo=new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        (m.addedNodes||[]).forEach(function(n){
+          if(n && n.nodeType===1){
+            if (/(^|\s)(admin-modal-overlay|modal-overlay)(\s|$)/.test(n.className||'') || /^(searchModal|loggingStatusModal|databaseTablesModal)$/.test(n.id||'') || (n.getAttribute && n.getAttribute('role')==='dialog')) {
+              offsetOverlay(n);
+            }
+          }
+        });
+      });
+    });
+    mo.observe(document.body, {childList:true, subtree:true});
+  }catch(_){/* noop */}
+
+  // Initial sweep
+  sweep();
+})();
+</script>
+SCRIPT;
+
     if ($__is_admin_route) {
         echo <<<'STYLE'
 <style id="wf-admin-nav-fallback-global">

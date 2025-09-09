@@ -12958,16 +12958,22 @@ input[type="checkbox"].color-checkbox {
     line-height: 1;
 }/* Dashboard Content Grid */
 .dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--grid-gap, 2rem);
-}.dashboard-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--grid-gap, 2rem);
+}
+/* Make specific sections span both columns */
+.dashboard-section.full-width {
+  grid-column: 1 / -1;
+}
+.dashboard-column {
     display: flex;
     flex-direction: column;
     gap: var(--grid-gap, 1.5rem);
 }/* Chart Containers */.chart-payment-methods {
     height: 350px;
-}/* Top Products List */
+}
+/* Top Products List */
 .top-products-list {
     padding: var(--spacing-md, 1rem);
 }.product-item {

@@ -1,3 +1,7 @@
+/* Attributes modal: wider layout for 3 side-by-side lists */
+body[data-page^='admin'] #attributesModal .admin-modal {
+  width: min(1200px, 98vw) !important;
+}
 /* Admin settings: provide a safe default header height variable */
 body[data-page='admin/settings'] {
   --header-height: 80px;
@@ -17,6 +21,34 @@ body[data-page='admin/settings'] {
   padding-bottom: 96px; /* ensure last row is fully visible with root scroll */
 }
 
+/* Admin Settings: place close X in top-right of modal header */
+body[data-page^='admin'] .admin-modal .modal-header {
+  position: relative !important;
+  padding-right: 40px; /* make space for X */
+}
+body[data-page^='admin'] .admin-modal .admin-modal-close {
+  position: absolute !important;
+  top: 8px !important;
+  right: 10px !important;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: #6b7280; /* gray-500 */
+  cursor: pointer;
+}
+body[data-page^='admin'] .admin-modal .admin-modal-close:hover {
+  background: #f3f4f6; /* gray-100 */
+  color: #111827; /* gray-900 */
+}
+body[data-page^='admin'] .admin-modal .admin-modal-close:focus {
+  outline: 2px solid #10b981; /* emerald-500 */
+  outline-offset: 2px;
+}
+
 /* Admin pages: disable full-page (root) scrollbar; scroll only content area */
 /* Note: Admin pages use an inner scroller, but allow the Settings page to show scrollbars as expected */
 body[data-page^='admin'] { overflow: hidden !important; }
@@ -24,6 +56,19 @@ html:has(body[data-page^='admin']) { overflow: hidden !important; }
 /* On settings route, allow root scroll now that overlays are suppressed */
 body[data-page='admin/settings'] { overflow: auto !important; pointer-events: auto; }
 html:has(body[data-page='admin/settings']) { overflow: auto !important; }
+/* Explicitly suppress horizontal scrolling on the settings page */
+body[data-page='admin/settings'] { overflow-x: hidden !important; }
+html:has(body[data-page='admin/settings']) { overflow-x: clip !important; }
+
+/* Ensure admin Settings overlays start below the header (site-wide var) */
+body[data-page^='admin'] .admin-modal-overlay {
+  align-items: flex-start !important;
+  padding-top: var(--wf-overlay-offset, calc(var(--wf-header-height, 64px) + 12px)) !important;
+  z-index: 10050 !important;
+}
+body[data-page^='admin'] .admin-modal-overlay .admin-modal {
+  margin-top: 0 !important;
+}
 
 /* Ensure the settings page and its content stack above any backgrounds/overlays */
 body[data-page='admin/settings'] .settings-page,
@@ -121,7 +166,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   padding: 0 !important;
   position: fixed !important;
   inset: 0 !important;
-  z-index: 5000 !important; /* ensure above header/nav */
+  z-index: 10050 !important; /* ensure above header/nav (match legacy) */
   pointer-events: auto !important;
 }
 
@@ -166,7 +211,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   height: 100vh !important;
   overflow: auto !important;
   box-sizing: border-box !important;
-  z-index: 5000 !important; /* above admin content/header stacks; keep predictable */
+  z-index: 10050 !important; /* above admin content/header stacks; align with legacy overlays */
   display: flex !important; /* ensure centering */
   align-items: center !important;
   justify-content: center !important;
@@ -351,6 +396,83 @@ body[data-page^='admin']
   cursor: not-allowed;
   filter: grayscale(15%);
   box-shadow: none !important;
+}
+
+/* Dashboard Configuration modal: make body scroll within viewport */
+body[data-page^='admin'] #dashboardConfigModal .admin-modal {
+  width: min(960px, 96vw) !important;
+  max-height: 92vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+body[data-page^='admin'] #dashboardConfigModal .modal-header {
+  flex: 0 0 auto !important;
+}
+body[data-page^='admin'] #dashboardConfigModal .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important; /* critical for nested flex scroll */
+  overflow-y: auto !important;
+  padding-bottom: 12px !important; /* keep last controls visible */
+}
+
+/* General rule: all admin settings modals use scrollable body within viewport */
+body[data-page^='admin'] .admin-modal-overlay .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 92vh !important;
+  width: min(960px, 96vw) !important;
+}
+body[data-page^='admin'] .admin-modal-overlay .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+/* Attributes modal: make lists scroll independently */
+body[data-page^='admin'] #attributesModal .modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden; /* ensure inner lists get the scroll, not the body */
+}
+body[data-page^='admin'] #attributesModal .grid {
+  flex: 1 1 auto;
+  min-height: 0; /* allow inner scroll areas to size */
+}
+body[data-page^='admin'] #attributesModal .attr-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+body[data-page^='admin'] #attributesModal .attr-list {
+  flex: 1 1 auto;
+  min-height: 220px; /* ensure visible area even with few items */
+  max-height: 40vh; /* keep within viewport comfortably */
+  overflow-y: auto;
+  padding-right: 6px; /* avoid overlaying scrollbar */
+  border: 1px solid #e5e7eb; /* subtle boundary */
+  border-radius: 6px;
+  background: #fff;
+}
+/* Optional: subtle scrollbar styling (WebKit) */
+body[data-page^='admin'] #attributesModal .attr-list::-webkit-scrollbar {
+  width: 8px;
+}
+body[data-page^='admin'] #attributesModal .attr-list::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* gray-300 */
+  border-radius: 4px;
+}
+body[data-page^='admin'] #attributesModal .attr-list:hover::-webkit-scrollbar-thumb {
+  background: #9ca3af; /* gray-400 */
+}
+
+/* Generic embedded admin frame used inside settings modals */
+.wf-admin-embed-frame {
+  width: 100% !important;
+  height: 70vh !important;
+  border: 1px solid #e5e7eb !important; /* gray-200 */
+  border-radius: 8px !important;
+  background: #fff !important;
 }
 
 /* Reduce focus ring intensity when disabled/gated via aria */

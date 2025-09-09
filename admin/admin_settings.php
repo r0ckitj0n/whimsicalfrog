@@ -1,3 +1,4 @@
+<?php /* removed top-level script to avoid early execution */ ?>
 <?php
 // Admin settings page - Authentication is now handled by index.php
 // All CSS moved to button-styles.css for centralized management
@@ -19,23 +20,7 @@ if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
     register_shutdown_function('__wf_admin_settings_footer_shutdown');
 }
 
-// IMPORTANT: Use the canonical settings markup from sections/admin_settings.php to avoid duplicate IDs and conflicting overlays.
-// Including the sections file here ensures a single source of truth for modals and buttons.
-include dirname(__DIR__) . '/sections/admin_settings.php';
- return;
-?>
-       . 'body[data-page^="admin"] .admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}'
-       . 'body[data-page^="admin"] .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;width:auto!important;max-width:none!important;flex:0 0 auto!important;white-space:nowrap;text-decoration:none}'
-       . '</style>';
-    echo '<script>(function(){try{var compute=function(){var h=document.querySelector(".site-header")||document.querySelector(".universal-page-header");if(h&&h.getBoundingClientRect){var hh=Math.max(40,Math.round(h.getBoundingClientRect().height));document.documentElement.style.setProperty("--wf-header-height",hh+"px")}var hc=document.querySelector(".header-content");if(hc&&hc.getBoundingClientRect){var b=Math.round(hc.getBoundingClientRect().bottom+2);document.documentElement.style.setProperty("--wf-admin-nav-top",b+"px")}};if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",compute,{once:true})}else{compute()}window.addEventListener("load",compute,{once:true});window.addEventListener("resize",compute);try{if(window.ResizeObserver){var ro=new ResizeObserver(function(){compute()});var hc=document.querySelector(".header-content");if(hc)ro.observe(hc);var h=document.querySelector(".site-header")||document.querySelector(".universal-page-header");if(h)ro.observe(h)}else{var t=setInterval(compute,500);setTimeout(function(){clearInterval(t)},4000)}}catch(_){}}catch(e){}})();</script>';
-    // Ensure footer closes the document even for standalone direct loads
-    if (!function_exists('__wf_admin_settings_footer_shutdown')) {
-        function __wf_admin_settings_footer_shutdown() {
-            @include __DIR__ . '/../partials/footer.php';
-        }
-    }
-    register_shutdown_function('__wf_admin_settings_footer_shutdown');
-}
+// Continue rendering legacy Admin Settings UI below (do not short-circuit to sections/admin_settings.php)
 // Optional section filter: /admin/settings?wf_section=content|visual|business|communication|technical
 $wf_section = isset($_GET['wf_section']) ? strtolower((string)$_GET['wf_section']) : '';
 // Default to LIGHT render unless explicitly opting into full heavy DOM
@@ -337,42 +322,42 @@ if (!$wf_full && $wf_section === '') {
     </div>
 </div>
       <div class="section-content">
-        <button id="dashboardConfigBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="dashboardConfigBtn"  class="btn btn-primary btn-block admin-settings-button" onclick="try{ if (typeof openDashboardConfigModal === 'function') { openDashboardConfigModal({allow:true}); } else if (window.__wfShowAdminModal) { window.__wfShowAdminModal('dashboardConfigModal'); } }catch(e){} return false;">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
           </svg>
           <span class="button-text">Dashboard Configuration</span>
         </button>
         
-        <button id="categoriesBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="categoriesBtn"  class="btn btn-primary btn-block admin-settings-button" onclick="try{ if (typeof openCategoriesModal === 'function') { openCategoriesModal(); } else if (window.__wfShowAdminModal) { window.__wfShowAdminModal('categoriesModal'); } }catch(e){} return false;">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
           </svg>
           <span class="button-text">Categories</span>
         </button>
         
-        <button id="globalColorSizeBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="globalColorSizeBtn"  class="btn btn-primary btn-block admin-settings-button" onclick="try{ if (typeof openGlobalColorSizeModal === 'function') { openGlobalColorSizeModal(); } else if (window.__wfShowAdminModal) { window.__wfShowAdminModal('globalColorSizeModal'); } }catch(e){} return false;">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4 4 4 0 004-4V5z"></path>
           </svg>
           <span class="button-text">Gender, Size & Color Management</span>
         </button>
         
-        <button id="roomsBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="roomsBtn"  class="btn btn-primary btn-block admin-settings-button" onclick="return window.__wfShowAdminModal && window.__wfShowAdminModal('roomSettingsModal');">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z"></path>
           </svg>
           <span class="button-text">Room Settings</span>
         </button>
         
-        <button id="roomCategoryBtn"  class="btn btn-primary btn-block admin-settings-button">
+        <button id="roomCategoryBtn"  class="btn btn-primary btn-block admin-settings-button" onclick="return window.__wfShowAdminModal && window.__wfShowAdminModal('roomCategoryManagerModal');">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
           <span class="button-text">Room-Category Links</span>
         </button>
         
-        <button id="templateManagerBtn"  class="btn btn-primary btn-block admin-settings-button"
+        <button id="templateManagerBtn"  class="btn btn-primary btn-block admin-settings-button" onclick="return window.__wfShowAdminModal && window.__wfShowAdminModal('templateManagerModal');"
                 title="Manage your templates for colors, sizes, and costs. For people who love spreadsheets so much they want them embedded in their website administration panel.">
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -382,6 +367,569 @@ if (!$wf_full && $wf_section === '') {
       </div>
     </div>
     <?php endif; ?>
+
+    <script>
+    (function(){
+      // Lightweight HTML5 Drag-and-Drop helper for reordering lists/tables (scoped inside IIFE)
+      if (typeof window.makeDragSortable !== 'function') {
+        window.makeDragSortable = function(root, itemSelector) {
+          try {
+            if (!root) return;
+            const items = Array.from(root.querySelectorAll(itemSelector));
+            items.forEach(el => { el.setAttribute('draggable','true'); el.classList.add('draggable-item'); });
+
+            let dragging = null;
+            let dragOverEl = null;
+
+            root.addEventListener('dragstart', (e) => {
+              const target = e.target.closest(itemSelector);
+              if (!target) return;
+              dragging = target;
+              if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = 'move';
+                try { e.dataTransfer.setData('text/plain', 'drag'); } catch(_) {}
+              }
+              requestAnimationFrame(() => target.classList.add('dragging'));
+            });
+
+            root.addEventListener('dragend', () => {
+              if (dragging) dragging.classList.remove('dragging');
+              if (dragOverEl) dragOverEl.classList.remove('drag-over');
+              dragging = null; dragOverEl = null;
+            });
+
+            root.addEventListener('dragover', (e) => {
+              if (!dragging) return;
+              e.preventDefault();
+              const over = e.target.closest(itemSelector);
+              if (!over || over === dragging) return;
+              if (dragOverEl) dragOverEl.classList.remove('drag-over');
+              dragOverEl = over; dragOverEl.classList.add('drag-over');
+              const rect = over.getBoundingClientRect();
+              const before = (e.clientY - rect.top) < rect.height / 2;
+              if (before) root.insertBefore(dragging, over);
+              else root.insertBefore(over, dragging);
+            });
+          } catch (e) { try { console.warn('makeDragSortable failed', e); } catch(_) {} }
+        };
+      }
+      function keepOpen(el){
+        try{
+          var ticks = 0;
+          (function loop(){
+            try{
+              if (!el) return;
+              // Re-assert visible state
+              el.classList.remove('hidden');
+              el.classList.add('show');
+              el.style.display = 'flex';
+              el.style.opacity = '1';
+              el.style.pointerEvents = 'auto';
+              el.style.position = 'fixed';
+              el.style.inset = '0';
+              el.style.background = 'rgba(0,0,0,0.45)';
+              el.style.visibility = 'visible';
+              el.setAttribute('aria-hidden','false');
+              el.removeAttribute('hidden');
+            }catch(_){}
+            if (++ticks < 60) requestAnimationFrame(loop); // ~1s at 60fps
+          })();
+        }catch(_){/* noop */}
+      }
+      // Global helper for hard fallback via onclick attributes
+      window.__wfShowAdminModal = function(modalId){
+        try {
+          console.info('[AdminSettings Inline] opening modal by id', modalId);
+          var el = document.getElementById(modalId);
+          if (!el) { console.warn('[AdminSettings Inline] modal not found', modalId); return false; }
+          // Reparent to body to avoid clipping/overflow/stacking
+          try { if (el.parentNode !== document.body) document.body.appendChild(el); } catch(_) {}
+          el.classList.remove('hidden');
+          el.classList.add('show');
+          el.style.display = 'flex';
+          el.style.opacity = '1';
+          el.style.pointerEvents = 'auto';
+          el.style.position = 'fixed';
+          el.style.inset = '0';
+          el.style.background = 'rgba(0,0,0,0.45)';
+          el.style.visibility = 'visible';
+          try { el.setAttribute('aria-hidden','false'); } catch(_) {}
+          try { el.removeAttribute('hidden'); } catch(_) {}
+          try {
+            var inner = el.querySelector('.admin-modal, .modal, [role="document"], .admin-modal-content') || el.firstElementChild;
+            if (inner){
+              inner.style.display = 'block';
+              inner.style.opacity = '1';
+              inner.style.pointerEvents = 'auto';
+              inner.removeAttribute('hidden');
+              inner.setAttribute('aria-hidden','false');
+              // Move focus into the dialog container to avoid aria-hidden on focused node warnings
+              try { if (typeof inner.focus === 'function') inner.setAttribute('tabindex','-1'); inner.focus(); } catch(_) {}
+            }
+          } catch(_) {}
+          try {
+            var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header');
+            var hh = h && h.getBoundingClientRect ? Math.max(40, Math.round(h.getBoundingClientRect().height)) : 64;
+            el.style.alignItems = 'flex-start';
+            el.style.paddingTop = (hh + 12) + 'px';
+            // Use very high z-index to ensure overlay is above any content
+            el.style.zIndex = '2147483000';
+          } catch(_) {}
+          keepOpen(el);
+          // Invoke inline population after opening, if available
+          try {
+            if (modalId === 'dashboardConfigModal' && typeof window.inlinePopulateDashboard === 'function') {
+              window.inlinePopulateDashboard().then(() => { try { typeof window.inlineEnhanceDashboardUI === 'function' && window.inlineEnhanceDashboardUI(); } catch(_) {} });
+            } else if (modalId === 'categoriesModal' && typeof window.inlinePopulateCategories === 'function') {
+              window.inlinePopulateCategories();
+            } else if (modalId === 'globalColorSizeModal') {
+              // Focus first tab (genders) if helper exists
+              try { typeof window.switchGlobalTab === 'function' && window.switchGlobalTab('genders'); } catch(_) {}
+              try { typeof window.inlinePopulateAttributes === 'function' && window.inlinePopulateAttributes(); } catch(_) {}
+            }
+          } catch(_) {}
+          return true;
+        } catch(e){ console.error('[AdminSettings Inline] open failed', e); return false; }
+      };
+      // Inline population helpers (only define if not already provided by modules)
+      if (typeof window.inlinePopulateDashboard !== 'function') {
+        window.inlinePopulateDashboard = async function() {
+          try {
+            const res = await fetch('/api/dashboard_sections.php?action=get_sections', { credentials:'include' });
+            const text = await res.text();
+            let data; try { data = JSON.parse(text); } catch { console.warn('[Dashboard] Non-JSON:', text); return; }
+            const sections = (data && (data.data && data.data.sections)) || data.sections || [];
+            const currentEl = document.getElementById('currentSectionsList');
+            const availEl   = document.getElementById('availableSectionsList');
+            const countCur  = document.getElementById('currentSectionsCount');
+            const countAvail= document.getElementById('availableSectionsCount');
+            const loading   = document.getElementById('dashboardConfigLoading');
+            if (!currentEl || !availEl) return;
+            if (loading) loading.style.display = 'none';
+            currentEl.innerHTML = ''; availEl.innerHTML = '';
+            const mk = (obj) => {
+              const div = document.createElement('div');
+              div.className = 'dash-item-card';
+              div.style.cssText = 'border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin:6px 0;background:#fff;';
+              const key = (obj.section_key || obj.key || '').trim();
+              const title = obj.display_title || obj.title || key || 'Untitled';
+              div.innerHTML = `<div class=\"font-medium\">${title}<\/div><div class=\"text-xs text-gray-500\">key: ${key || '(none)'}<\/div>`;
+              if (key) div.setAttribute('data-key', key);
+              return div;
+            };
+            const active = sections.filter(s => s && (s.is_active === 1 || s.is_active === true));
+            const activeKeys = new Set(active.map(s => (s.section_key || s.key || '').trim()).filter(Boolean));
+            active.forEach(s => currentEl.appendChild(mk(s)));
+            const fromApiAvail = (data && data.available_sections) ? Object.entries(data.available_sections).map(([k,v]) => ({ key:k, title: (v && v.title) || k })) : [];
+            const defaultAvail = fromApiAvail.length ? fromApiAvail : ['metrics','recent_orders','low_stock','inventory_summary','customer_summary','marketing_tools','order_fulfillment','reports_summary']
+              .map(k => ({ key:k, title:k.replace(/_/g,' ') }));
+            defaultAvail.filter(s => !activeKeys.has(s.key)).forEach(s => availEl.appendChild(mk(s)));
+            if (countCur)   countCur.textContent = `${active.length} sections`;
+            if (countAvail) countAvail.textContent = `${Array.from(availEl.children).length} sections`;
+          } catch (e) { console.error('[Dashboard] inline populate error', e); }
+        };
+      }
+      if (typeof window.inlinePopulateCategories !== 'function') {
+        window.inlinePopulateCategories = async function() {
+{{ ... }}
+          try {
+            const target = document.getElementById('categoriesContent');
+            if (!target) return;
+            target.innerHTML = '<div class="text-sm text-gray-600">Loading categories…<\/div>';
+            const res = await fetch('/api/categories.php?action=list', { credentials:'include' });
+            const text = await res.text();
+            let data; try { data = JSON.parse(text); } catch { target.textContent='Non-JSON categories response.'; return; }
+            const cats = (data && (data.data && data.data.categories)) || data.categories || [];
+            // Controls bar
+            const controls = document.createElement('div');
+            controls.className = 'flex gap-2 items-center mb-2';
+            controls.innerHTML = `
+              <input id="catNewNameInput" class="form-input" placeholder="New category name" style="max-width: 260px;"/>
+              <button id="catAddBtn" class="btn btn-primary">Add</button>
+              <button id="catRefreshBtn" class="btn btn-secondary">Refresh</button>
+              <button id="catSaveOrderBtn" class="btn btn-secondary">Save Order</button>
+            `;
+
+            const table = document.createElement('table');
+            table.className = 'min-w-full text-sm';
+            table.innerHTML = '<thead><tr><th class="p-2 text-left">Name<\/th><th class="p-2 text-left">Items<\/th><th class="p-2 text-left">Actions<\/th><\/tr><\/thead><tbody><\/tbody>';
+            const tbody = table.querySelector('tbody');
+            if (Array.isArray(cats) && cats.length) {
+              cats.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                  <td class=\"p-2\">${(c.name||'(unnamed)')}<\/td>
+                  <td class=\"p-2\">${(c.item_count!=null? c.item_count : '')}<\/td>
+                  <td class=\"p-2\">
+                    <button class=\"btn btn-xs\" data-action=\"cat-rename\" data-name=\"${encodeURIComponent(c.name||'')}\">Rename<\/button>
+                    <button class=\"btn btn-xs btn-danger\" data-action=\"cat-delete\" data-name=\"${encodeURIComponent(c.name||'')}\">Delete<\/button>
+                  <\/td>`;
+                tbody.appendChild(tr);
+              });
+            } else {
+              const tr = document.createElement('tr');
+              tr.innerHTML = '<td class="p-2 text-gray-500 italic" colspan="2">No categories.<\/td>';
+              tbody.appendChild(tr);
+            }
+            target.innerHTML = '';
+            target.appendChild(controls);
+            target.appendChild(table);
+            // Enable drag-and-drop reordering for categories
+            try { window.makeDragSortable(tbody, 'tr'); } catch(_) {}
+            const addBtn = controls.querySelector('#catAddBtn');
+            const refreshBtn = controls.querySelector('#catRefreshBtn');
+            const saveOrderBtn = controls.querySelector('#catSaveOrderBtn');
+            const input = controls.querySelector('#catNewNameInput');
+            addBtn?.addEventListener('click', async () => {
+              const name = (input.value || '').trim();
+              if (!name) return;
+              try {
+                await fetch('/api/categories.php?action=add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+                input.value='';
+                window.inlinePopulateCategories();
+              } catch (e) { console.error(e); }
+            });
+            refreshBtn?.addEventListener('click', () => window.inlinePopulateCategories());
+            tbody.addEventListener('click', async (e) => {
+              const btn = e.target && e.target.closest && e.target.closest('button[data-action]');
+              if (!btn) return;
+              const name = decodeURIComponent(btn.getAttribute('data-name') || '');
+{{ ... }}
+            }
+              const act = btn.getAttribute('data-action');
+              if (act === 'cat-up' || act === 'cat-down') {
+                const row = btn.closest('tr');
+                if (!row) return;
+                if (act === 'cat-up' && row.previousElementSibling) {
+                  row.parentElement.insertBefore(row, row.previousElementSibling);
+                } else if (act === 'cat-down' && row.nextElementSibling) {
+                  row.parentElement.insertBefore(row.nextElementSibling, row);
+                }
+              } else if (act === 'cat-rename') {
+                const newName = prompt('Rename category to:', name);
+                if (newName && newName.trim()) {
+                  await fetch('/api/categories.php?action=rename', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ old_name: name, new_name: newName.trim(), update_items: true }) });
+                  window.inlinePopulateCategories();
+                }
+              } else if (act === 'cat-delete') {
+                let reassign = null;
+                if (confirm('This may be in use. Do you want to reassign items to another category before delete?')) {
+                  reassign = prompt('Reassign items to category (leave blank to cancel):', 'Misc');
+                  if (reassign === null) return;
+                }
+                await fetch('/api/categories.php?action=delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, reassign_to: reassign }) });
+                window.inlinePopulateCategories();
+              }
+            });
+            saveOrderBtn?.addEventListener('click', async () => {
+              const names = Array.from(tbody.querySelectorAll('tr td:first-child')).map(td => td.textContent.trim()).filter(Boolean);
+              try {
+                await fetch('/api/categories.php?action=reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ names }) });
+                alert('Category order saved.');
+              } catch (e) { console.error(e); alert('Failed to save order'); }
+            });
+          } catch (e) { console.error('[Categories] inline populate error', e); }
+        };
+      }
+
+      // Attributes (Gender/Size/Color) population
+      if (typeof window.inlinePopulateAttributes !== 'function') {
+        window.inlinePopulateAttributes = async function() {
+          // Genders
+          try {
+            const gRes = await fetch('/api/global_color_size_management.php?action=get_global_genders', { credentials:'include' });
+            const gText = await gRes.text();
+            let g; try { g = JSON.parse(gText); } catch { g = null; }
+            const list = document.getElementById('globalGendersList');
+            if (list) {
+              list.innerHTML = '';
+              const arr = g && (g.genders || []);
+              if (arr && arr.length) {
+                arr.forEach(row => {
+                  const item = document.createElement('div');
+                  item.className = 'flex justify-between items-center px-2 py-1 border rounded gap-2';
+                  const val = row.gender_name || '';
+                  item.setAttribute('data-value', val);
+                  item.innerHTML = `
+                    <span>${val}<\/span>
+                    <span class=\"flex items-center gap-1\">\n                      <button class=\"btn btn-xs\" data-action=\"gen-up\">▲<\/button>\n                      <button class=\"btn btn-xs\" data-action=\"gen-down\">▼<\/button>\n                      <button class=\"btn btn-xs\" data-action=\"gen-rename\">Rename<\/button>\n                      <button class=\"btn btn-xs btn-danger\" data-action=\"gen-delete\">Delete<\/button>\n                    <\/span>`;
+                  list.appendChild(item);
+                });
+              } else { list.innerHTML = '<div class=\"text-sm text-gray-500\">No genders found.<\/div>'; }
+              // Enable drag-and-drop reordering for genders
+              try { window.makeDragSortable(list, '[data-value]'); } catch(_) {}
+              // List actions
+              list.onclick = async (e) => {
+                const btn = e.target && e.target.closest && e.target.closest('button[data-action]');
+                if (!btn) return;
+                const row = btn.closest('[data-value]');
+                const val = row?.getAttribute('data-value') || '';
+                const act = btn.getAttribute('data-action');
+                if (act === 'gen-up' && row.previousElementSibling) {
+                  row.parentElement.insertBefore(row, row.previousElementSibling);
+                } else if (act === 'gen-down' && row.nextElementSibling) {
+                  row.parentElement.insertBefore(row.nextElementSibling, row);
+                } else if (act === 'gen-rename') {
+                  const nv = prompt('Rename gender:', val);
+                  if (nv && nv.trim()) {
+                    await fetch('/api/attributes.php?action=rename', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'gender', old_value: val, new_value: nv.trim() }) });
+                    window.inlinePopulateAttributes();
+                  }
+                } else if (act === 'gen-delete') {
+                  if (confirm('Delete gender "'+val+'"?')) {
+                    await fetch('/api/attributes.php?action=delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'gender', value: val }) });
+                    window.inlinePopulateAttributes();
+                  }
+                }
+              };
+              // Save/Refresh wiring
+              try {
+                const saveBtn = document.getElementById('gendersSaveOrderBtn');
+                const refreshBtn = document.getElementById('gendersRefreshBtn');
+                saveBtn && (saveBtn.onclick = async () => {
+                  const values = Array.from(list.querySelectorAll('[data-value]')).map(n => n.getAttribute('data-value'));
+                  await fetch('/api/attributes.php?action=reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'gender', values }) });
+                  alert('Genders order saved.');
+                });
+                refreshBtn && (refreshBtn.onclick = () => window.inlinePopulateAttributes());
+              } catch(_) {}
+              // Enable drag-and-drop reordering for sizes
+              try { 
+                window.makeDragSortable(list, '[data-value]');
+                // Add HTML5 drag-and-drop helper
+                list.addEventListener('dragstart', (e) => {
+                  e.dataTransfer.setData('text', e.target.getAttribute('data-value'));
+                });
+                list.addEventListener('dragover', (e) => {
+                  e.preventDefault();
+                });
+                list.addEventListener('drop', async (e) => {
+                  e.preventDefault();
+                  const target = e.target.closest('[data-value]');
+                  if (!target) return;
+                  const sourceValue = e.dataTransfer.getData('text');
+                  const targetValue = target.getAttribute('data-value');
+                  if (sourceValue === targetValue) return;
+                  const values = Array.from(list.querySelectorAll('[data-value]')).map(n => n.getAttribute('data-value'));
+                  const sourceIndex = values.indexOf(sourceValue);
+                  const targetIndex = values.indexOf(targetValue);
+                  if (sourceIndex === -1 || targetIndex === -1) return;
+                  values.splice(targetIndex, 0, values.splice(sourceIndex, 1)[0]);
+                  try {
+                    await fetch('/api/attributes.php?action=reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'gender', values }) });
+                    alert('Genders order saved.');
+                  } catch (e) { console.error(e); }
+                });
+              } catch(_) {}
+              // Wire Save Order button to persist ordering
+              try {
+                const form = document.querySelector('#addGenderForm form[data-action="save-global-gender"]');
+                if (form && !form._wired) {
+                  form._wired = true;
+                  form.addEventListener('submit', async (ev) => {
+                    ev.preventDefault();
+                    const gender_name = (document.getElementById('newGenderName')?.value || '').trim();
+                    const description = (document.getElementById('newGenderDescription')?.value || '').trim();
+                    const display_order = parseInt(document.getElementById('newGenderOrder')?.value || '0', 10) || 0;
+                    if (!gender_name) return;
+                    await fetch('/api/global_color_size_management.php?action=add_global_gender', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ gender_name, description, display_order }) });
+                    window.inlinePopulateAttributes();
+                  });
+                }
+              } catch(_) {}
+            }
+          } catch (e) { console.warn('Genders load failed', e); }
+          // Sizes
+          try {
+            const sRes = await fetch('/api/global_color_size_management.php?action=get_global_sizes', { credentials:'include' });
+            const sText = await sRes.text();
+{{ ... }}
+            }
+          } catch (e) { console.warn('Sizes load failed', e); }
+          // Colors
+          try {
+            const cRes = await fetch('/api/global_color_size_management.php?action=get_global_colors', { credentials:'include' });
+            const cText = await cRes.text();
+            let c; try { c = JSON.parse(cText); } catch { c = null; }
+            const list = document.getElementById('globalColorsList');
+            if (list) {
+              list.innerHTML = '';
+              const arr = c && (c.colors || []);
+              if (arr && arr.length) {
+                arr.forEach(row => {
+                  const item = document.createElement('div');
+                  item.className = 'flex justify-between items-center px-2 py-1 border rounded gap-2';
+                  const val = row.color_name || '';
+                  item.setAttribute('data-value', val);
+                  const sw = row.color_code ? `<span style=\"display:inline-block;width:12px;height:12px;border:1px solid #ccc;vertical-align:-2px;background:${row.color_code}\"><\/span>` : '';
+                  item.innerHTML = `
+                    <span>${val} ${sw}<\/span>
+                    <span class=\"flex items-center gap-1\">\n                      <button class=\"btn btn-xs\" data-action=\"col-up\">▲<\/button>\n                      <button class=\"btn btn-xs\" data-action=\"col-down\">▼<\/button>\n                      <button class=\"btn btn-xs\" data-action=\"col-rename\">Rename<\/button>\n                      <button class=\"btn btn-xs btn-danger\" data-action=\"col-delete\">Delete<\/button>\n                    <\/span>`;
+                  list.appendChild(item);
+                });
+              } else { list.innerHTML = '<div class=\"text-sm text-gray-500\">No colors found.<\/div>'; }
+              // List actions
+              list.onclick = async (e) => {
+                const btn = e.target && e.target.closest && e.target.closest('button[data-action]');
+                if (!btn) return;
+                const row = btn.closest('[data-value]');
+                const val = row?.getAttribute('data-value') || '';
+                const act = btn.getAttribute('data-action');
+                if (act === 'col-up' && row.previousElementSibling) {
+                  row.parentElement.insertBefore(row, row.previousElementSibling);
+                } else if (act === 'col-down' && row.nextElementSibling) {
+                  row.parentElement.insertBefore(row.nextElementSibling, row);
+                } else if (act === 'col-rename') {
+                  const nv = prompt('Rename color:', val);
+                  if (nv && nv.trim()) {
+                    await fetch('/api/attributes.php?action=rename', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'color', old_value: val, new_value: nv.trim() }) });
+                    window.inlinePopulateAttributes();
+                  }
+                } else if (act === 'col-delete') {
+                  if (confirm('Delete color "'+val+'"?')) {
+                    await fetch('/api/attributes.php?action=delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'color', value: val }) });
+                    window.inlinePopulateAttributes();
+                  }
+                }
+              };
+              // Save/Refresh wiring and Add Color form
+              try {
+                const saveBtn = document.getElementById('colorsSaveOrderBtn');
+                const refreshBtn = document.getElementById('colorsRefreshBtn');
+                saveBtn && (saveBtn.onclick = async () => {
+                  const values = Array.from(list.querySelectorAll('[data-value]')).map(n => n.getAttribute('data-value'));
+                  await fetch('/api/attributes.php?action=reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'color', values }) });
+                  alert('Colors order saved.');
+                });
+                refreshBtn && (refreshBtn.onclick = () => window.inlinePopulateAttributes());
+                const colorForm = document.querySelector('#addColorForm form[data-action="save-global-color"]');
+                if (colorForm && !colorForm._wired) {
+                  colorForm._wired = true;
+                  colorForm.addEventListener('submit', async (ev) => {
+                    ev.preventDefault();
+                    const color_name = (document.getElementById('newColorName')?.value || '').trim();
+                    const color_code = (document.getElementById('newColorCode')?.value || '').trim();
+                    const category = (document.getElementById('newColorCategory')?.value || '').trim() || 'General';
+                    const description = (document.getElementById('newColorDescription')?.value || '').trim();
+                    const display_order = parseInt(document.getElementById('newColorOrder')?.value || '0', 10) || 0;
+                    if (!color_name) return;
+                    await fetch('/api/global_color_size_management.php?action=add_global_color', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ color_name, color_code, category, description, display_order }) });
+                    window.inlinePopulateAttributes();
+                  });
+                }
+              } catch(_) {}
+            }
+          } catch (e) { console.warn('Colors load failed', e); }
+        };
+      }
+
+      // Enhance Dashboard UI: toggles and save
+      if (typeof window.inlineEnhanceDashboardUI !== 'function') {
+        window.inlineEnhanceDashboardUI = function() {
+          const currentEl = document.getElementById('currentSectionsList');
+          const availEl = document.getElementById('availableSectionsList');
+          if (!currentEl || !availEl) return;
+          // Add controls bar if missing
+          let bar = document.getElementById('dashboardControlsBar');
+          if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'dashboardControlsBar';
+            bar.className = 'flex justify-end gap-2 mt-3';
+            bar.innerHTML = `
+              <button id="dashResetBtn" class="btn">Reset to Defaults<\/button>
+              <button id="dashRefreshBtn" class="btn btn-secondary">Refresh<\/button>
+              <button id="dashSaveBtn" class="btn btn-primary">Save<\/button>`;
+            const body = document.querySelector('#dashboardConfigModal .modal-body');
+            body && body.appendChild(bar);
+            // Wire
+            bar.querySelector('#dashRefreshBtn')?.addEventListener('click', () => window.inlinePopulateDashboard());
+            bar.querySelector('#dashResetBtn')?.addEventListener('click', async () => { try { await fetch('/api/dashboard_sections.php?action=reset_defaults'); window.inlinePopulateDashboard(); } catch(e){} });
+            bar.querySelector('#dashSaveBtn')?.addEventListener('click', async () => {
+              // Compile sections from two lists
+              const rows = [];
+              const read = (root, active) => {
+                Array.from(root.children).forEach((node, idx) => {
+                  const key = node.getAttribute('data-key') || '';
+                  if (!key) return;
+                  rows.push({ section_key: key, display_order: rows.length+1, is_active: active ? 1 : 0, show_title: 1, show_description: 1, custom_title: null, custom_description: null, width_class: 'half-width' });
+                });
+              };
+              read(currentEl, true);
+              read(availEl, false);
+              try {
+                await fetch('/api/dashboard_sections.php?action=update_sections', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sections: rows }) });
+                alert('Dashboard configuration saved.');
+              } catch (e) { console.error(e); alert('Failed to save.'); }
+            });
+          }
+          // Click to toggle active/inactive by moving between lists
+          const toggleHandler = (e) => {
+            const card = e.target && e.target.closest && e.target.closest('[data-key]');
+            if (!card) return;
+            if (card.parentElement === currentEl) { availEl.appendChild(card); }
+            else { currentEl.appendChild(card); }
+          };
+          currentEl.addEventListener('click', toggleHandler);
+          availEl.addEventListener('click', toggleHandler);
+        };
+      }
+      function showOverlayById(id){
+        try {
+          var el = document.getElementById(id);
+          if (!el) return false;
+          try { if (el.parentNode !== document.body) document.body.appendChild(el); } catch(_) {}
+          el.classList.remove('hidden');
+          el.classList.add('show');
+          el.style.display = 'flex';
+          el.style.opacity = '1';
+          el.style.pointerEvents = 'auto';
+          el.style.position = 'fixed';
+          el.style.inset = '0';
+          el.style.background = 'rgba(0,0,0,0.45)';
+          el.style.visibility = 'visible';
+          try { el.setAttribute('aria-hidden','false'); } catch(_) {}
+          try { el.removeAttribute('hidden'); } catch(_) {}
+          // ensure below-header offset
+          try {
+            var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header');
+            var hh = h && h.getBoundingClientRect ? Math.max(40, Math.round(h.getBoundingClientRect().height)) : 64;
+            el.style.alignItems = 'flex-start';
+            el.style.paddingTop = (hh + 12) + 'px';
+            el.style.zIndex = '2147483000';
+          } catch(_) {}
+          keepOpen(el);
+          return true;
+        } catch(_) { return false; }
+      }
+      function bind(id, modalId){
+        var b = document.getElementById(id);
+        if (!b) return;
+        b.addEventListener('click', function(ev){ ev.preventDefault(); showOverlayById(modalId); });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){
+          bind('roomsBtn','roomSettingsModal');
+          bind('roomCategoryBtn','roomCategoryManagerModal');
+          bind('templateManagerBtn','templateManagerModal');
+        }, { once:true });
+      } else {
+        bind('roomsBtn','roomSettingsModal');
+        bind('roomCategoryBtn','roomCategoryManagerModal');
+        bind('templateManagerBtn','templateManagerModal');
+      }
+      // close handlers (works for all modals on this page)
+      document.addEventListener('click', function(e){
+        var t = e.target;
+        if (t && t.matches('[data-action="close-admin-modal"]')){
+          var ov = t.closest('.admin-modal-overlay');
+          if (ov){ ov.classList.add('hidden'); ov.classList.remove('show'); ov.style.display = 'none'; }
+        }
+        if (t && t.classList && t.classList.contains('admin-modal-overlay')){
+          t.classList.add('hidden'); t.classList.remove('show'); t.style.display = 'none';
+        }
+      }, true);
+    })();
+    </script>
 
     <!-- Visual & Design Section -->
     <?php if (!$wf_section || $wf_section === 'visual'): ?>
@@ -3464,7 +4012,11 @@ Are you sure you want to continue? This action cannot be undone, and you won't b
 // Room-Category Manager Functions
 function openRoomCategoryManagerModal(roomNumber = null) {
     const modal = document.getElementById('roomCategoryManagerModal');
-    modal.classList.remove('hidden');
+    // Ensure CSS guards don't hide it
+    try { modal.classList.remove('hidden'); } catch(_) {}
+    try { modal.classList.add('show'); } catch(_) {}
+    try { modal.removeAttribute('hidden'); } catch(_) {}
+    try { modal.setAttribute('aria-hidden','false'); } catch(_) {}
     modal.style.display = 'flex';
     loadAvailableCategories();
     loadRoomCategorySummary();
@@ -3479,7 +4031,13 @@ function openRoomCategoryManagerModal(roomNumber = null) {
 }
 
 function closeRoomCategoryManagerModal() {
-    document.getElementById('roomCategoryManagerModal').style.display = 'none';
+    const modal = document.getElementById('roomCategoryManagerModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    try { modal.classList.add('hidden'); } catch(_) {}
+    try { modal.classList.remove('show'); } catch(_) {}
+    try { modal.setAttribute('aria-hidden','true'); } catch(_) {}
+    try { modal.setAttribute('hidden',''); } catch(_) {}
 }
 
 async function loadAvailableCategories() {
@@ -4261,9 +4819,56 @@ async function removeAreaMapping(mappingId) {
 
 </script>
 
+<script>
+(function(){
+  // Allow parent window to command opening specific modals when embedded
+  try {
+    window.addEventListener('message', function(ev){
+      try {
+        var data = ev && ev.data ? ev.data : null;
+        if (!data || data.type !== 'open-modal') return;
+        // Mark as user-interacted to satisfy guards
+        try { window.__wfModalUserInteracted = true; } catch(_) {}
+        var name = (data.modal || '').toLowerCase();
+        if (name === 'room-settings' && typeof openRoomSettingsModal === 'function') {
+          openRoomSettingsModal();
+        } else if (name === 'room-category-links') {
+          if (typeof openRoomCategoryManagerModal === 'function') openRoomCategoryManagerModal();
+          else if (typeof openRoomCategoryMapperModal === 'function') openRoomCategoryMapperModal();
+        } else if (name === 'template-manager' && typeof document !== 'undefined') {
+          // Template Manager modal is present in this page markup
+          var el = document.getElementById('templateManagerModal');
+          if (el) { el.classList.remove('hidden'); el.classList.add('show'); el.style.display = 'flex'; }
+        }
+      } catch(_) {}
+    });
+  } catch(_) {}
+  // Also support hash-based routing when this page is loaded in an iframe
+  function openFromHash(){
+    try {
+      var h = (window.location && window.location.hash ? window.location.hash : '').toLowerCase();
+      if (!h) return;
+      // Mark as user-interacted to satisfy guards
+      try { window.__wfModalUserInteracted = true; } catch(_) {}
+      if (h === '#room-settings' && typeof openRoomSettingsModal === 'function') {
+        openRoomSettingsModal();
+      } else if (h === '#room-category-links') {
+        if (typeof openRoomCategoryManagerModal === 'function') openRoomCategoryManagerModal();
+        else if (typeof openRoomCategoryMapperModal === 'function') openRoomCategoryMapperModal();
+      } else if (h === '#template-manager') {
+        var el = document.getElementById('templateManagerModal');
+        if (el) { el.classList.remove('hidden'); el.classList.add('show'); el.style.display = 'flex'; }
+      }
+    } catch(_) {}
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', openFromHash, { once:true }); } else { openFromHash(); }
+  window.addEventListener('hashchange', openFromHash);
+})();
+</script>
+
 <!-- Room-Category Manager Modal -->
 <div id="roomCategoryManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
+    <div class="admin-modal bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠📦 Room-Category Assignments</h2>
             <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -7367,7 +7972,7 @@ function escapeHtml(text) {
 
 <!-- Room Settings Modal -->
 <div id="roomSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto">
+    <div class="admin-modal bg-white shadow-xl w-full max-w-6xl h-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center border-b">
             <h2 class="text-xl font-bold text-gray-800">🏠 Room Settings</h2>
             <button data-action="close-admin-modal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
@@ -7438,13 +8043,22 @@ async function loadRoomData() {
 
 function openRoomSettingsModal() {
     const modal = document.getElementById('roomSettingsModal');
-    modal.classList.remove('hidden');
+    try { modal.classList.remove('hidden'); } catch(_) {}
+    try { modal.classList.add('show'); } catch(_) {}
+    try { modal.removeAttribute('hidden'); } catch(_) {}
+    try { modal.setAttribute('aria-hidden','false'); } catch(_) {}
     modal.style.display = 'flex';
     loadRoomSettings();
 }
 
 function closeRoomSettingsModal() {
-    document.getElementById('roomSettingsModal').style.display = 'none';
+    const modal = document.getElementById('roomSettingsModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    try { modal.classList.add('hidden'); } catch(_) {}
+    try { modal.classList.remove('show'); } catch(_) {}
+    try { modal.setAttribute('aria-hidden','true'); } catch(_) {}
+    try { modal.setAttribute('hidden',''); } catch(_) {}
     currentEditingRoom = null;
 }
 
@@ -16752,7 +17366,10 @@ async function saveCartButtonTexts(texts) {
 <div id="categoriesModal" class="admin-modal-overlay hidden" data-action="overlay-close">
     <div class="admin-modal-content categories-modal">
         <div class="admin-modal-header section-header">
-            <h2 class="modal-title">📂 Category Management</h2>
+            <div>
+                <h2 class="modal-title">📂 Category Management</h2>
+                <p class="modal-description text-sm text-gray-600">Add, rename, or delete categories. Deleting in-use categories allows reassignment.</p>
+            </div>
             <button class="modal-close" data-action="close-admin-modal">&times;</button>
         </div>
         
@@ -16762,6 +17379,109 @@ async function saveCartButtonTexts(texts) {
             </div>
         </div>
     </div>
+</div>
+
+<!-- Global Color & Size Modal (persistently available) -->
+<div id="globalColorSizeModal" class="admin-modal-overlay hidden" data-action="overlay-close" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+    <div class="admin-modal admin-modal-content">
+        <div class="admin-modal-header section-header">
+            <div>
+              <h2 class="modal-title">👥 Gender, Size & Color Management</h2>
+              <p class="modal-description text-sm text-gray-600">Manage global attribute values. Use Move Up/Down and Save Order to change display ordering.</p>
+            </div>
+            <button class="modal-close" data-action="close-admin-modal" data-target="#globalColorSizeModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="tabs-container">
+                <div class="tab-buttons">
+                    <button class="tab-button active" data-action="switch-global-tab" data-tab="genders">👥 Global Genders</button>
+                    <button class="tab-button" data-action="switch-global-tab" data-tab="colors">🎨 Global Colors</button>
+                    <button class="tab-button" data-action="switch-global-tab" data-tab="sizes">📏 Global Sizes</button>
+                </div>
+                <!-- Global Genders Tab -->
+                <div id="globalGendersTab" class="tab-content">
+                    <div class="flex items-center gap-2 mb-2"><button id="gendersSaveOrderBtn" class="btn btn-secondary btn-xs">Save Order</button><button id="gendersRefreshBtn" class="btn btn-secondary btn-xs">Refresh</button></div>
+                    <div id="addGenderForm">
+                        <h4>Add New Gender</h4>
+                        <form data-action="save-global-gender">
+                            <div class="form-group">
+                                <label>Gender Name</label>
+                                <input type="text" id="newGenderName" placeholder="e.g., Unisex, Men, Women" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <input type="text" id="newGenderDescription" placeholder="Optional description">
+                            </div>
+                            <div class="form-group">
+                                <label>Display Order</label>
+                                <input type="number" id="newGenderOrder" min="0" value="0">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Save Gender</button>
+                                <button type="button" data-action="cancel-add-gender" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <button data-action="show-add-gender-form" class="btn btn-primary">➕ Add New Gender</button>
+                    <div id="globalGendersList" class="data-grid"></div>
+                </div>
+                <!-- Global Colors Tab -->
+                <div id="globalColorsTab" class="tab-content hidden">
+                    <div class="flex items-center gap-2 mb-2"><button id="colorsSaveOrderBtn" class="btn btn-secondary btn-xs">Save Order</button><button id="colorsRefreshBtn" class="btn btn-secondary btn-xs">Refresh</button></div>
+                    <div class="action-bar">
+                        <button data-action="show-add-color-form" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Color</button>
+                        <select id="colorCategoryFilter" data-action="filter-color-category" class="form-select">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div id="addColorForm" class="form-section">
+                        <h4>Add New Global Color</h4>
+                        <form data-action="save-global-color">
+                            <div class="form-grid">
+                                <div class="form-group"><label>Color Name *</label><input type="text" id="newColorName" required></div>
+                                <div class="form-group"><label>Color Code</label><input type="color" id="newColorCode"></div>
+                                <div class="form-group"><label>Category</label><input type="text" id="newColorCategory" placeholder="e.g., Basic, Vibrant, Pastel"></div>
+                                <div class="form-group"><label>Description</label><input type="text" id="newColorDescription" placeholder="Optional description"></div>
+                                <div class="form-group"><label>Display Order</label><input type="number" id="newColorOrder" min="0" value="0"></div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Save Color</button>
+                                <button type="button" data-action="cancel-add-color" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="globalColorsList" class="data-grid"></div>
+                </div>
+                <!-- Global Sizes Tab -->
+                <div id="globalSizesTab" class="tab-content hidden">
+                    <div class="flex items-center gap-2 mb-2"><button id="sizesSaveOrderBtn" class="btn btn-secondary btn-xs">Save Order</button><button id="sizesRefreshBtn" class="btn btn-secondary btn-xs">Refresh</button></div>
+                    <div class="action-bar">
+                        <button data-action="show-add-size-form" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Size</button>
+                        <select id="sizeCategoryFilter" data-action="filter-size-category" class="form-select">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div id="addSizeForm" class="form-section hidden">
+                        <h4>Add New Global Size</h4>
+                        <form data-action="save-global-size">
+                            <div class="form-grid">
+                                <div class="form-group"><label>Size Name *</label><input type="text" id="newSizeName" required></div>
+                                <div class="form-group"><label>Abbreviation</label><input type="text" id="newSizeAbbr" placeholder="e.g., S, M, L"></div>
+                                <div class="form-group"><label>Category</label><input type="text" id="newSizeCategory" placeholder="e.g., Adult, Youth"></div>
+                                <div class="form-group"><label>Display Order</label><input type="number" id="newSizeOrder" min="0" value="0"></div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success">Save Size</button>
+                                <button type="button" data-action="cancel-add-size" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="globalSizesList" class="data-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>
 
 <!-- Database Tables Modal -->
@@ -19410,8 +20130,12 @@ function openGlobalColorSizeModal() {
 
     // Use standardized modal system
     const modalElement = document.getElementById('globalColorSizeModal');
-    modalElement.classList.remove('hidden');
-    modalElement.classList.add('show');
+    // Remove hidden states and apply visible/show state
+    try { modalElement.removeAttribute('hidden'); } catch(_) {}
+    try { modalElement.classList.remove('hidden'); } catch(_) {}
+    try { modalElement.classList.add('show'); } catch(_) {}
+    try { modalElement.setAttribute('aria-hidden','false'); } catch(_) {}
+    try { modalElement.style.display = 'flex'; modalElement.style.position='fixed'; modalElement.style.inset='0'; } catch(_) {}
 
     // Ensure genders tab is active by default
     switchGlobalTab('genders');
@@ -19420,8 +20144,8 @@ function openGlobalColorSizeModal() {
 
 function createGlobalColorSizeModal() {
     const modalHtml = `
-        <div id="globalColorSizeModal" class="admin-modal-overlay hidden" data-action="overlay-close">
-            <div class="admin-modal-content">
+        <div id="globalColorSizeModal" class="admin-modal-overlay hidden" data-action="overlay-close" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
+            <div class="admin-modal admin-modal-content">
                 <div class="admin-modal-header section-header">
                     <h2 class="modal-title">👥 Gender, Size & Color Management</h2>
                     <button class="modal-close" data-action="close-modal" data-target="#globalColorSizeModal">&times;</button>

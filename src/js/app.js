@@ -365,6 +365,35 @@ if (__WF_IS_ADMIN) {
                     return;
                 }
             } catch (_) {}
+            // Ensure Settings buttons work immediately, even before the entry loads
+            if (section === 'settings' && !window.__WF_SETTINGS_MINI_INSTALLED) {
+                try {
+                    window.__WF_SETTINGS_MINI_INSTALLED = true;
+                    const quickShow = (id) => { const el = document.getElementById(id); if (!el) return false; el.classList.remove('hidden'); el.classList.add('show'); el.setAttribute('aria-hidden','false'); return true; };
+                    const quickHide = (id) => { const el = document.getElementById(id); if (!el) return false; el.classList.add('hidden'); el.classList.remove('show'); el.setAttribute('aria-hidden','true'); return true; };
+                    document.addEventListener('click', (e) => {
+                        try {
+                            const t = e.target; const closest = (sel) => (t && t.closest ? t.closest(sel) : null);
+                            if (!document.getElementById('adminSettingsRoot')) return; // only act if settings DOM exists
+                            if (t && t.classList && t.classList.contains('admin-modal-overlay')) { const id = t.id; if (!id) return; e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickHide(id); return; }
+                            if (closest('[data-action="close-admin-modal"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); const overlay = closest('.admin-modal-overlay'); if (overlay && overlay.id) quickHide(overlay.id); return; }
+                            if (closest('[data-action="open-business-info"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('businessInfoModal'); return; }
+                            if (closest('[data-action="open-square-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('squareSettingsModal'); return; }
+                            if (closest('[data-action="open-email-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('emailSettingsModal'); return; }
+                            if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); if (quickShow('emailSettingsModal')) { const test = document.getElementById('testEmailAddress')||document.getElementById('testRecipient'); if (test) setTimeout(()=>test.focus(), 50); } return; }
+                            if (closest('[data-action="open-logging-status"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('loggingStatusModal'); return; }
+                            if (closest('[data-action="open-ai-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiSettingsModal'); return; }
+                            if (closest('[data-action="open-ai-tools"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiToolsModal'); return; }
+                            if (closest('[data-action="open-css-rules"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('cssRulesModal'); return; }
+                            if (closest('[data-action="open-background-manager"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('backgroundManagerModal'); return; }
+                            if (closest('[data-action="open-receipt-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('receiptSettingsModal'); return; }
+                            if (closest('[data-action="open-dashboard-config"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('dashboardConfigModal'); return; }
+                            if (closest('[data-action="open-secrets-modal"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('secretsModal'); return; }
+                        } catch(_) {}
+                    });
+                } catch (miniErr) { /* non-fatal */ }
+            }
+
             const doLoad = () => {
                 load()
                     .then(() => console.log(`[App] Admin module loaded for section: ${section}`))

@@ -1,0 +1,15 @@
+/* Admin Dashboard: field update status states (replaces inline styles)
+   Use with inputs/selects having class .order-field-update */
+
+.order-field-update.wf-field-updating {
+  /* amber-100 background */
+  background-color: #fef3c7 !important;
+}
+.order-field-update.wf-field-success {
+  /* green-100 background */
+  background-color: #dcfce7 !important;
+}
+.order-field-update.wf-field-error {
+  /* red-200 background */
+  background-color: #fecaca !important;
+}

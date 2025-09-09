@@ -1,4 +1,5 @@
 import Sortable from 'sortablejs';
+import '../styles/admin-dashboard.css';
 
 // --- Dashboard Widget Reordering ---
 
@@ -33,6 +34,56 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (action === 'close-order-details') {
             closeOrderDetailsModal();
+        }
+    });
+
+    // Delegated handler for inline order field updates in the Order Fulfillment widget
+    document.body.addEventListener('change', async (event) => {
+        const el = event.target.closest('.order-field-update');
+        if (!el) return;
+
+        const orderId = el.dataset.orderId;
+        const fieldName = el.dataset.field;
+        const newValue = el.value;
+
+        // indicate updating via class (no inline styles)
+        el.classList.add('wf-field-updating');
+        el.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('orderId', orderId);
+            formData.append('field', fieldName);
+            formData.append('value', newValue);
+            formData.append('action', 'updateField');
+
+            const response = await fetch('/api/fulfill_order.php', {
+                method: 'POST',
+                body: formData,
+            });
+            const result = await response.json();
+
+            if (result && result.success) {
+                el.classList.remove('wf-field-updating');
+                el.classList.add('wf-field-success');
+                setTimeout(() => {
+                    el.classList.remove('wf-field-success');
+                }, 2000);
+            } else {
+                el.classList.remove('wf-field-updating');
+                el.classList.add('wf-field-error');
+                setTimeout(() => {
+                    el.classList.remove('wf-field-error');
+                }, 2000);
+            }
+        } catch (err) {
+            el.classList.remove('wf-field-updating');
+            el.classList.add('wf-field-error');
+            setTimeout(() => {
+                el.classList.remove('wf-field-error');
+            }, 2000);
+        } finally {
+            el.disabled = false;
         }
     });
 });

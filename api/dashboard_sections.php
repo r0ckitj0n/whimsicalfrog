@@ -68,6 +68,47 @@ try {
             }
             Response::success(['diagnostics' => $result]);
             break;
+
+        case 'reset_defaults':
+            // Reset the dashboard configuration to sane defaults
+            try {
+                $db = Database::getInstance();
+                wf_ensure_dashboard_sections_table($db);
+                // Clear existing
+                $db->beginTransaction();
+                $db->query('DELETE FROM dashboard_sections');
+                // Seed defaults (match dashboard defaults)
+                $stmt = $db->prepare('INSERT INTO dashboard_sections (section_key, display_order, is_active, show_title, show_description, custom_title, custom_description, width_class) VALUES (?, ?, 1, 1, 1, NULL, NULL, ?)');
+                $defaults = [
+                    ['metrics', 1, 'half-width'],
+                    ['recent_orders', 2, 'half-width'],
+                    ['low_stock', 3, 'half-width'],
+                ];
+                foreach ($defaults as $d) { $stmt->execute([$d[0], $d[1], $d[2]]); }
+                $db->commit();
+                // Also reset file fallback if present
+                try {
+                    $store = dirname(__DIR__) . '/storage';
+                    if (!is_dir($store)) { @mkdir($store, 0775, true); }
+                    $file = $store . '/dashboard_sections.json';
+                    $payload = array_map(function($d){ return [
+                        'section_key' => $d[0],
+                        'display_order' => $d[1],
+                        'is_active' => 1,
+                        'show_title' => 1,
+                        'show_description' => 1,
+                        'custom_title' => null,
+                        'custom_description' => null,
+                        'width_class' => $d[2],
+                    ]; }, $defaults);
+                    @file_put_contents($file, json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+                } catch (Throwable $ioErr) { /* ignore */ }
+                Response::success(['message' => 'Defaults restored']);
+            } catch (Throwable $e) {
+                try { $db && $db->rollBack(); } catch (Throwable $____) {}
+                Response::serverError('Failed to reset defaults');
+            }
+            break;
         case 'get_sections':
             // Available section definitions (static map)
             $availableSections = [

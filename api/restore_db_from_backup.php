@@ -53,6 +53,7 @@ $_GET['file'] = $filename; // consumed by db_import_sql.php
 if ($filterTable !== '') {
     $_GET['filter_table'] = $filterTable;
 }
+$_GET['as_json'] = '1';
 
 // If gzip, create a temporary decompressed file path for importer
 $absPath = dirname(__DIR__) . '/' . $filename;
@@ -107,15 +108,21 @@ if (preg_match('/\.gz$/i', $filename)) {
 
 ob_start();
 require_once dirname(__DIR__) . '/db_import_sql.php';
-$output = ob_get_clean();
+$importJson = ob_get_clean();
 
 // Cleanup temp file if created
 if ($decompressed) {
     @unlink(dirname(__DIR__) . '/' . $tempPath);
 }
 
-echo json_encode([
-  'ok' => true,
-  'message' => trim($output) !== '' ? trim($output) : 'Import complete.',
-  'filter_table' => $filterTable,
-], JSON_UNESCAPED_SLASHES);
+// Pass through importer JSON (already encoded) if available, else fallback
+if ($importJson && ($data = json_decode($importJson, true))) {
+  $data['filter_table'] = $filterTable;
+  echo json_encode($data, JSON_UNESCAPED_SLASHES);
+} else {
+  echo json_encode([
+    'ok' => true,
+    'message' => 'Import complete.',
+    'filter_table' => $filterTable,
+  ], JSON_UNESCAPED_SLASHES);
+}

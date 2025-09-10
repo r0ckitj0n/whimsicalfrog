@@ -100,8 +100,16 @@ while (!feof($handle)) {
 fclose($handle);
 $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
 
-// When included from an API endpoint, we may just echo plain text; the wrapper can wrap JSON.
-echo 'Import complete.';
-if ($errors > 0) {
-  echo " Errors: $errors";
+// When included from an API endpoint, optionally output JSON diagnostics
+if (defined('WF_IMPORT_ALLOWED') && ($_GET['as_json'] ?? '') === '1') {
+  header('Content-Type: application/json');
+  echo json_encode([
+    'ok' => true,
+    'executed' => $executed,
+    'errors' => $errors,
+    'error_samples' => $errorSamples,
+  ], JSON_UNESCAPED_SLASHES);
+} else {
+  echo 'Import complete.';
+  if ($errors > 0) { echo " Errors: $errors"; }
 }

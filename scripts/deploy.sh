@@ -87,6 +87,8 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob backups/ \
   --exclude-glob documentation/ \
   --exclude-glob Documentation/ \
+  --include-glob documentation/.htaccess \
+  --include-glob reports/.htaccess \
   --exclude-glob Scripts/ \
   --exclude-glob scripts/ \
   --exclude-glob *.log \

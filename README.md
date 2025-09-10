@@ -15,6 +15,7 @@ Quick links:
 * [Contribution Guide](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#11-contribution-guide)
 * [Local Development Setup](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#4-local-development)
 * [Admin Tooltip System](documentation/includes/tooltip-system.md)
+* [Legacy Scripts Archive](backups/legacy/README.md)
 
 ## Front-end Quick Start (Vite)
 

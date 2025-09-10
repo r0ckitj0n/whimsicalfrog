@@ -8,6 +8,7 @@
   const _qs = (sel) => document.querySelector(sel);
 
   function populateForm(config) {
+    try { console.log('[RoomConfig] populateForm called with config:', config); } catch (_) {}
     Object.keys(config || {}).forEach((key) => {
       const el = document.querySelector(`[name="${key}"]`);
       if (!el) return;
@@ -17,6 +18,26 @@
         el.value = config[key];
       }
     });
+  }
+
+  function renderCurrentConfig() {
+    const tgt = byId('roomConfigContainer');
+    if (!tgt) return;
+    const cfg = currentRoomConfig || {};
+    const rows = Object.keys(cfg).sort().map((k) => {
+      let v = cfg[k];
+      if (typeof v === 'boolean') v = v ? 'true' : 'false';
+      return `<tr><td class="px-3 py-1 text-gray-600">${k}</td><td class="px-3 py-1 font-mono">${v}</td></tr>`;
+    }).join('');
+    tgt.innerHTML = `
+      <div class="border rounded-md overflow-hidden">
+        <div class="px-3 py-2 bg-gray-50 border-b text-sm font-semibold text-gray-700">Current Configuration</div>
+        <div class="overflow-auto">
+          <table class="min-w-full text-sm">
+            <tbody>${rows || '<tr><td class="px-3 py-2 text-gray-500">No configuration loaded.<\/td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>`;
   }
 
   function resetForm() {
@@ -42,22 +63,27 @@
     const roomSelect = byId('roomSelect');
     const container = byId('configFormContainer');
     const roomNumber = roomSelect ? roomSelect.value : '';
+    try { console.log('[RoomConfig] loadRoomConfig room:', roomNumber); } catch (_) {}
     if (!roomNumber) {
       if (container && container.classList) container.classList.add('hidden');
       return;
     }
 
     try {
-      const res = await fetch(`../api/room_config.php?action=get&room=${encodeURIComponent(roomNumber)}`);
+      const res = await fetch(`/api/room_config.php?action=get&room=${encodeURIComponent(roomNumber)}`);
       const data = await res.json();
-      if (data.success) {
+      if (data && data.success) {
         currentRoomConfig = data.config || {};
         populateForm(currentRoomConfig);
         if (container && container.classList) container.classList.remove('hidden');
         const roomNumberEl = byId('roomNumber');
         if (roomNumberEl) roomNumberEl.value = roomNumber;
+        showMessage('Loaded configuration for room ' + roomNumber, 'success');
+        try { console.log('[RoomConfig] load success for room', roomNumber, currentRoomConfig); } catch (_) {}
+        renderCurrentConfig();
       } else {
         showMessage('Error loading room configuration: ' + (data.message || 'Unknown error'), 'error');
+        try { console.warn('[RoomConfig] load failed payload:', data); } catch (_) {}
       }
     } catch (err) {
       console.error('Error loading room config:', err);
@@ -93,7 +119,7 @@
     });
 
     try {
-      const res = await fetch('../api/room_config.php', {
+      const res = await fetch('/api/room_config.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -106,6 +132,7 @@
       if (data.success) {
         showMessage('Room configuration saved successfully!', 'success');
         currentRoomConfig = config;
+        renderCurrentConfig();
       } else {
         showMessage('Error saving configuration: ' + (data.message || 'Unknown error'), 'error');
       }
@@ -136,10 +163,19 @@
 
     document.addEventListener('click', onClick);
     document.addEventListener('change', onChange);
+    // Explicit listener on the room select to ensure change is detected reliably
+    const roomSel = byId('roomSelect');
+    if (roomSel) {
+      roomSel.addEventListener('change', function() {
+        try { console.log('[RoomConfig] #roomSelect change ->', this.value); } catch (_) {}
+        loadRoomConfig();
+      });
+    }
 
     // Initial state
     const sel = byId('roomSelect');
     if (sel && sel.value) {
+      try { console.log('[RoomConfig] initial room value:', sel.value); } catch (_) {}
       loadRoomConfig();
     } else {
       const container = byId('configFormContainer');

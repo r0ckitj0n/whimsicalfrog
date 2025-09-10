@@ -337,8 +337,8 @@ HTML;
     private function getRoomCoordinates()
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1");
-            $stmt->execute([$this->roomType]);
+            $stmt = $this->pdo->prepare("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC, created_at DESC LIMIT 1");
+            $stmt->execute([$this->roomNumber]);
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($result && !empty($result['coordinates'])) {

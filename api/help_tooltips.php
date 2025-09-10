@@ -504,7 +504,7 @@ function initializeComprehensiveTooltips()
             ['globalColorSizeBtn', 'settings', 'Global Colors & Sizes', 'Manage your universal color and size options because consistency is apparently too difficult to maintain manually. Create your master list of colors and sizes so you don\'t have to type "Medium" 47 times.', 'bottom'],
 
             // Room & Visual Tools
-            ['roomMapperBtn', 'settings', 'Room Mapper', 'Tool to create clickable areas on room pictures. Set up spots where customers can click to see products.', 'bottom'],
+            ['roomMapperBtn', 'settings', 'Room Map Editor', 'Draw and edit clickable polygons on room backgrounds. Define areas customers can click to view products.', 'bottom'],
             ['backgroundManagerBtn', 'settings', 'Background Manager', 'Upload and change background pictures for different rooms. Make your virtual store look how you want.', 'bottom'],
             ['areaItemMapperBtn', 'settings', 'Area-Item Mapper', 'Connect specific products to clickable spots in rooms. Make it easy for customers to find and buy products.', 'bottom'],
 

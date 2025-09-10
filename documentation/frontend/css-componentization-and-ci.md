@@ -84,3 +84,35 @@ Note: CI runs the non-write variant only to prevent destructive moves in pull re
 - `getImageTag()` `$style` parameter deprecated and ignored.
 - CI workflow added to run guard and linters on PRs.
 - Legacy `src/styles/search-modal.css` archived to `backups/unused_styles/`.
+
+## New Utility Classes (2025-09)
+
+Use these classes instead of inline styles:
+
+- `wf-admin-embed-frame`
+  - Location: `src/styles/admin-settings.css`
+  - Purpose: Standard styling for iframes embedded in admin Settings modals.
+  - Applies width 100%, height 70vh, subtle border and radius.
+
+- `wf-field-updating`, `wf-field-success`, `wf-field-error`
+  - Location: `src/styles/admin-dashboard.css`
+  - Purpose: Background-color status cues for inline field updates in dashboard widgets.
+  - Attach to inputs/selects with class `.order-field-update` while saving.
+
+- `rme-canvas-wrap`, `rme-canvas`, `rme-svg`
+  - Location: `src/styles/admin-room-map-editor.css`
+  - Purpose: Room Map Editor layout and SVG interaction styles (no inline styles).
+  - Background image is applied via a data attribute (`data-bg-url`) and an injected scoped CSS rule.
+
+### No Inline Styles – Practical Notes
+
+- JavaScript-generated markup must not include `style="..."` attributes.
+- Use semantic classes and add rules in a module stylesheet imported by Vite.
+- Where a dynamic background is needed, prefer:
+  - A stable class for all static properties (size, repeat, positioning), and
+  - A data attribute with an injected scoped CSS rule for the URL.
+- The guard `scripts/disallow-inline-styles.mjs` blocks:
+  - `style="..."` inside string/template literals,
+  - `element.style.foo = ...` assignments,
+  - `element.style.setProperty(...)` calls.
+  - Emails under `templates/email/` are allowed to retain inline styles for client compatibility.

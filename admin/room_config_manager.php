@@ -5,14 +5,26 @@
  * Cleaned up version with centralized CSS and improved structure
  */
 
-// Include centralized functionality
+// Include centralized functionality and auth
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
 
-// Require admin authentication
-Auth::requireAdmin();
+// Require admin authentication (class provided by includes/auth.php)
+if (class_exists('Auth')) {
+    Auth::requireAdmin();
+} elseif (function_exists('requireAdmin')) {
+    requireAdmin();
+}
 
 ?>
-<?php include __DIR__ . '/../partials/header.php'; ?>
+<?php
+// Only include header if the admin root layout hasn't already been bootstrapped
+$__wf_included_layout = false;
+if (!function_exists('__wf_admin_root_footer_shutdown')) {
+    include __DIR__ . '/../partials/header.php';
+    $__wf_included_layout = true;
+}
+?>
 <div class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-lg p-6">
@@ -25,11 +37,11 @@ Auth::requireAdmin();
                 <label for="roomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
                 <select id="roomSelect" class="form-input w-full" data-change-action="loadRoomConfig">
                     <option value="">Choose a room...</option>
-                    <option value="2">Room 2 - T-Shirts</option>
-                    <option value="3">Room 3 - Tumblers</option>
-                    <option value="4">Room 4 - Artwork</option>
-                    <option value="5">Room 5 - Sublimation</option>
-                    <option value="6">Room 6 - Window Wraps</option>
+                    <option value="1">Room 1</option>
+                    <option value="2">Room 2</option>
+                    <option value="3">Room 3</option>
+                    <option value="4">Room 4</option>
+                    <option value="5">Room 5</option>
                 </select>
             </div>
             
@@ -177,4 +189,4 @@ Auth::requireAdmin();
         </div>
     </div>
 </div>
-<?php include __DIR__ . '/../partials/footer.php'; ?>
+<?php if ($__wf_included_layout) { include __DIR__ . '/../partials/footer.php'; } ?>

@@ -49,8 +49,8 @@ try {
         [
             'element_id' => 'room-mapper-btn',
             'page_context' => 'settings',
-            'title' => 'Room Mapper',
-            'content' => 'Visual tool to map clickable areas on room images. Define where customers can click to view products.',
+            'title' => 'Room Map Editor',
+            'content' => 'Draw and edit clickable polygons on room background images. Define the areas where customers can click to view products.',
             'position' => 'bottom'
         ],
         [

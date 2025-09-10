@@ -38,36 +38,30 @@ switch ($method) {
         Response::methodNotAllowed();
 }
 
-function normalizeRoomTypeFromInput($input)
+function normalizeRoomNumberFromInput($input)
 {
-    $roomParam = $input['room'] ?? null;
-    $legacy = $input['room_type'] ?? null;
-    if ($roomParam !== null && $roomParam !== '') {
-        if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
-            return 'room' . (int)$m[1];
-        }
-        return 'room' . (int)$roomParam;
-    }
-    return $legacy ?? '';
+    $roomParam = $input['room'] ?? $input['room_number'] ?? null;
+    if ($roomParam === null || $roomParam === '') return '';
+    if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) return (string)((int)$m[1]);
+    return (string)((int)$roomParam);
 }
 
 function saveBackground($input)
 {
-    $roomType = normalizeRoomTypeFromInput($input);
-    $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+    $roomNumber = normalizeRoomNumberFromInput($input);
     $backgroundName = $input['background_name'] ?? '';
     $imageFilename = $input['image_filename'] ?? '';
     $webpFilename = $input['webp_filename'] ?? null;
 
-    if (empty($roomType) || !preg_match('/^room[1-5]$/', $roomType) || empty($backgroundName) || empty($imageFilename)) {
+    if ($roomNumber === '' || !preg_match('/^[1-5]$/', $roomNumber) || empty($backgroundName) || empty($imageFilename)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Missing or invalid fields']);
         return;
     }
 
     try {
-        // Check if background name already exists for this room (prefer room_number)
-        $exists = Database::queryOne("SELECT id FROM backgrounds WHERE (room_number = ? OR room_type = ?) AND background_name = ? LIMIT 1", [$roomNumber, $roomType, $backgroundName]);
+        // Check if background name already exists for this room
+        $exists = Database::queryOne("SELECT id FROM backgrounds WHERE room_number = ? AND background_name = ? LIMIT 1", [$roomNumber, $backgroundName]);
 
         if ($exists) {
             echo json_encode(['success' => false, 'message' => 'Background name already exists for this room']);
@@ -76,8 +70,8 @@ function saveBackground($input)
 
         // Insert new background (populate room_number as well during migration)
         $rows = Database::execute(
-            "INSERT INTO backgrounds (room_type, room_number, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, ?, 0)",
-            [$roomType, $roomNumber, $backgroundName, $imageFilename, $webpFilename]
+            "INSERT INTO backgrounds (room_number, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, 0)",
+            [$roomNumber, $backgroundName, $imageFilename, $webpFilename]
         );
 
         if ($rows > 0) {
@@ -93,11 +87,10 @@ function saveBackground($input)
 
 function applyBackground($input)
 {
-    $roomType = normalizeRoomTypeFromInput($input);
-    $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+    $roomNumber = normalizeRoomNumberFromInput($input);
     $backgroundId = $input['background_id'] ?? '';
 
-    if (empty($roomType) || !preg_match('/^room[1-5]$/', $roomType) || empty($backgroundId)) {
+    if ($roomNumber === '' || !preg_match('/^[1-5]$/', $roomNumber) || empty($backgroundId)) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Missing or invalid fields']);
         return;
@@ -106,8 +99,8 @@ function applyBackground($input)
     try {
         Database::beginTransaction();
 
-        // Deactivate all backgrounds for this room (prefer room_number, but include fallback)
-        Database::execute("UPDATE backgrounds SET is_active = 0 WHERE room_number = ? OR room_type = ?", [$roomNumber, $roomType]);
+        // Deactivate all backgrounds for this room
+        Database::execute("UPDATE backgrounds SET is_active = 0 WHERE room_number = ?", [$roomNumber]);
 
         // Activate the selected background (by id is sufficient)
         $affected = Database::execute("UPDATE backgrounds SET is_active = 1 WHERE id = ?", [$backgroundId]);
@@ -117,7 +110,7 @@ function applyBackground($input)
             Response::success(null, 'Background applied successfully');
         } else {
             Database::rollBack();
-            Response::error('Background not found or invalid room type');
+            Response::error('Background not found or invalid room');
         }
     } catch (PDOException $e) {
         Database::rollBack();
@@ -180,23 +173,13 @@ function handleUpload($input)
 // Local request handlers using Response helper
 function wf_handle_backgrounds_get(): void {
     try {
-        // Prefer 'room', fallback to legacy 'room_type'
-        $roomParam = $_GET['room'] ?? null;
-        $roomType = $_GET['room_type'] ?? null;
-        if ($roomParam !== null && $roomParam !== '') {
-            if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
-                $roomType = 'room' . (int)$m[1];
-            } else {
-                $roomType = 'room' . (int)$roomParam;
-            }
-        }
+        // Accept 'room' or 'room_number' and normalize to numeric string
+        $roomNumber = normalizeRoomNumberFromInput($_GET);
         $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
 
-        if ($roomType !== null) {
-            $roomNumber = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
-            // Prefer room_number, fallback to room_type
-            $sql = "SELECT * FROM backgrounds WHERE (room_number = ? OR room_type = ?)";
-            $params = [$roomNumber, $roomType];
+        if ($roomNumber !== '') {
+            $sql = "SELECT * FROM backgrounds WHERE room_number = ?";
+            $params = [$roomNumber];
             if ($activeOnly) { $sql .= " AND is_active = 1"; }
             $sql .= " ORDER BY background_name = 'Original' DESC, created_at DESC";
             $rows = Database::queryAll($sql, $params);
@@ -206,7 +189,7 @@ function wf_handle_backgrounds_get(): void {
                 Response::success(['backgrounds' => $rows]);
             }
         } else {
-            $summary = Database::queryAll("SELECT COALESCE(room_number, room_type) AS room_key, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_key ORDER BY room_key");
+            $summary = Database::queryAll("SELECT room_number AS room_key, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_number ORDER BY room_number");
             Response::success(['summary' => $summary]);
         }
     } catch (Throwable $e) {

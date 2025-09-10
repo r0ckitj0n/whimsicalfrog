@@ -46,6 +46,8 @@ sort($files, SORT_NATURAL | SORT_FLAG_CASE);
     .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0b1220; border:1px solid #374151; padding:2px 6px; border-radius:6px; font-size:12px;}
     .empty{color:var(--muted); padding:12px;}
     @media (max-width: 900px){ .layout{grid-template-columns: 1fr;} .sidebar{position:sticky; top:0; z-index:10;} }
+    .hidden{ display:none !important; }
+    .doc-error{ color:#fca5a5; }
   </style>
   <script src="https://unpkg.com/marked@12/marked.min.js" defer></script>
 </head>
@@ -90,7 +92,8 @@ sort($files, SORT_NATURAL | SORT_FLAG_CASE);
         const q = search.value.toLowerCase();
         toc.querySelectorAll('a[data-doc]').forEach(a => {
           const s = a.textContent.toLowerCase();
-          a.style.display = s.includes(q) ? '' : 'none';
+          if (s.includes(q)) { a.classList.remove('hidden'); }
+          else { a.classList.add('hidden'); }
         });
       });
 
@@ -106,7 +109,7 @@ sort($files, SORT_NATURAL | SORT_FLAG_CASE);
           // Scroll to top
           document.querySelector('.content').scrollTo({top:0,behavior:'smooth'});
         } catch (err) {
-          doc.innerHTML = `<div style="color:#fca5a5">Failed to load document: ${rel}. ${err && err.message ? err.message : ''}</div>`;
+          doc.innerHTML = `<div class="doc-error">Failed to load document: ${rel}. ${err && err.message ? err.message : ''}</div>`;
         }
       }
 

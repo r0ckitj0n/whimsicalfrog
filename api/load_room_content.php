@@ -210,9 +210,11 @@ function getDefaultRoomCoordinates($roomType)
 function loadRoomCoordinates($roomType, $pdo)
 {
     try {
+        // Derive room_number from provided roomType like 'room1'
+        $roomNumber = (preg_match('/^room(\d+)$/i', (string)$roomType, $m)) ? (string)((int)$m[1]) : '';
         $row = Database::queryOne(
-            "SELECT coordinates FROM room_maps WHERE room_type = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1",
-            [$roomType]
+            "SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1",
+            [$roomNumber]
         );
         if ($row) {
             $coords = json_decode($row['coordinates'], true);

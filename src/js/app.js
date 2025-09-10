@@ -353,6 +353,10 @@ if (__WF_IS_ADMIN) {
                 'room-config-manager': () => import('./admin-room-config-manager.js'),
                 'cost-breakdown-manager': () => import('./admin-cost-breakdown-manager.js'),
                 'secrets': () => import('./admin-secrets.js'),
+                // New managers
+                'room-map-manager': () => import('./admin-room-map-manager.js'),
+                'area-item-mapper': () => import('./admin-area-item-mapper.js'),
+                'room-map-editor': () => import('./admin-room-map-editor.js'),
             };
 
             const load = loaders[section] || (() => import('./admin-dashboard.js'));

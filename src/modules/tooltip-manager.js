@@ -48,6 +48,7 @@ function createTooltipEl(title, content, position = 'top') {
 
 let __wfTipStyleEl = null;
 let __wfTipRuleCounter = 0;
+const __wfAttachedTooltipTargets = new WeakSet();
 
 function ensureTipStyleEl() {
   if (!__wfTipStyleEl) {
@@ -79,6 +80,8 @@ function computeTooltipPosition(target, tip, position) {
 }
 
 function attachTooltip(target, tipData) {
+  if (!target || __wfAttachedTooltipTargets.has(target)) return;
+  __wfAttachedTooltipTargets.add(target);
   let tip;
   const show = () => {
     if (!isEnabled()) return;
@@ -109,12 +112,8 @@ function attachTooltip(target, tipData) {
   target.addEventListener('mouseleave', hide);
   target.addEventListener('focus', show);
   target.addEventListener('blur', hide);
-  // Optional click to toggle hold
-  target.addEventListener('click', (e) => {
-    if (!tip) { show(); } else { hide(); }
-    e.stopPropagation();
-  });
-  document.addEventListener('click', hide);
+  // Note: intentionally avoid click-based toggle to prevent duplicate tooltips
+  // and to avoid interfering with modal clicks/focus management.
 }
 
 function mapSettingsSelectors(elementId) {

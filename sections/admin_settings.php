@@ -52,7 +52,7 @@ $emailPrefill = $userData['email'] ?? '';
         <div class="section-content">
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/dashboard#css">CSS Rules</a>
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/dashboard#background">Background Manager</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/room_main#mapper">Room Mapper</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/admin.php?section=room-map-editor">Room Map Editor</a>
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/room_main#area-mapper">Area-Item Mapper</a>
         </div>
       </section>
@@ -322,7 +322,12 @@ $emailPrefill = $userData['email'] ?? '';
       (function(){
         try {
           if (!document || !document.addEventListener) return;
-          const log = (...args) => { try { console.info('[SettingsFailsafe]', ...args); } catch(_) {} };
+          var log = function(){
+            try {
+              var args = Array.prototype.slice.call(arguments);
+              console.info.apply(console, ['[SettingsFailsafe]'].concat(args));
+            } catch(_) {}
+          };
 
           const ensureStatus = (modalEl, text) => {
             try {
@@ -351,7 +356,7 @@ $emailPrefill = $userData['email'] ?? '';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                   <td class="p-2"><span class="cat-name" data-name="${c.name.replace(/"/g,'&quot;')}">${c.name}</span></td>
-                  <td class="p-2 text-gray-600">${c.item_count ?? 0}</td>
+                  <td class="p-2 text-gray-600">${(c.item_count != null ? c.item_count : 0)}</td>
                   <td class="p-2">
                     <button class="btn btn-secondary" data-action="cat-rename" data-name="${c.name.replace(/"/g,'&quot;')}">Rename</button>
                     <button class="btn btn-secondary text-red-700" data-action="cat-delete" data-name="${c.name.replace(/"/g,'&quot;')}">Delete</button>
@@ -360,7 +365,7 @@ $emailPrefill = $userData['email'] ?? '';
               });
               if (result) result.textContent = cats.length ? '' : 'No categories found yet.';
             } catch (e) {
-              if (result) result.textContent = e?.message || 'Failed to load categories';
+              if (result) result.textContent = (e && e.message) ? e.message : 'Failed to load categories';
             }
           }
 
@@ -386,7 +391,7 @@ $emailPrefill = $userData['email'] ?? '';
               }
             });
             function getDragAfterElement(container, y) {
-              const els = [...container.querySelectorAll('li:not(.dragging)')];
+              const els = Array.prototype.slice.call(container.querySelectorAll('li:not(.dragging)'));
               return els.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
                 const offset = y - box.top - box.height / 2;
@@ -412,7 +417,8 @@ $emailPrefill = $userData['email'] ?? '';
           function renderAttrList(ul, arr, type){
             if (!ul) return; ul.innerHTML = '';
             const values = Array.isArray(arr) ? arr : [];
-            const header = ul.closest('.attr-col')?.querySelector('h3');
+            const colEl = ul && ul.closest ? ul.closest('.attr-col') : null;
+            const header = colEl ? colEl.querySelector('h3') : null;
             const setCount = (n) => { if (header) header.textContent = `${header.textContent.replace(/\s*\(.*\)$/, '')} (${n})`; };
             if (values.length === 0) {
               const li = document.createElement('li');
@@ -440,8 +446,8 @@ $emailPrefill = $userData['email'] ?? '';
             const res = modal.querySelector('#attributesResult'); if (res) res.textContent='Loading…';
             try{
               const data = await attrApi('/api/attributes.php?action=list');
-              let a = data?.data?.attributes || { gender:[], size:[], color:[] };
-              try { console.info('[Attributes] primary list counts', {g:a.gender?.length||0, s:a.size?.length||0, c:a.color?.length||0}); } catch(_) {}
+              let a = (data && data.data && data.data.attributes) ? data.data.attributes : { gender:[], size:[], color:[] };
+              try { console.info('[Attributes] primary list counts', {g:(a.gender && a.gender.length)||0, s:(a.size && a.size.length)||0, c:(a.color && a.color.length)||0}); } catch(_) {}
 
               // Ensure list containers exist (defensive)
               const ensureListEl = (id, colQuery) => {
@@ -470,15 +476,15 @@ $emailPrefill = $userData['email'] ?? '';
                 };
                 if (!a.gender || a.gender.length===0) {
                   const g = await fetchJson('/api/global_color_size_management.php?action=get_global_genders');
-                  a.gender = Array.isArray(g?.genders) ? g.genders.map(x=>({ value: String(x.gender_name||'').trim() })).filter(x=>x.value!=='') : [];
+                  a.gender = Array.isArray(g && g.genders) ? g.genders.map(x=>({ value: String(x.gender_name||'').trim() })).filter(x=>x.value!=='') : [];
                 }
                 if (!a.size || a.size.length===0) {
                   const s = await fetchJson('/api/global_color_size_management.php?action=get_global_sizes');
-                  a.size = Array.isArray(s?.sizes) ? s.sizes.map(x=>({ value: String((x.size_code||x.size_name||'')).trim() })).filter(x=>x.value!=='') : [];
+                  a.size = Array.isArray(s && s.sizes) ? s.sizes.map(x=>({ value: String((x.size_code||x.size_name||'')).trim() })).filter(x=>x.value!=='') : [];
                 }
                 if (!a.color || a.color.length===0) {
                   const c = await fetchJson('/api/global_color_size_management.php?action=get_global_colors');
-                  a.color = Array.isArray(c?.colors) ? c.colors.map(x=>({ value: String(x.color_name||'').trim() })).filter(x=>x.value!=='') : [];
+                  a.color = Array.isArray(c && c.colors) ? c.colors.map(x=>({ value: String(x.color_name||'').trim() })).filter(x=>x.value!=='') : [];
                 }
               } catch(_) {}
               // Backstop: if all still empty, try one-shot parallel fallback
@@ -491,9 +497,9 @@ $emailPrefill = $userData['email'] ?? '';
                   ]);
                   const [g, s, c] = await Promise.all([gRes.json().catch(()=>({})), sRes.json().catch(()=>({})), cRes.json().catch(()=>({}))]);
                   a = {
-                    gender: Array.isArray(g?.genders) ? g.genders.map(x=>({ value: String(x.gender_name||'').trim() })).filter(x=>x.value!=='') : [],
-                    size: Array.isArray(s?.sizes) ? s.sizes.map(x=>({ value: String((x.size_code||x.size_name||'')).trim() })).filter(x=>x.value!=='') : [],
-                    color: Array.isArray(c?.colors) ? c.colors.map(x=>({ value: String(x.color_name||'').trim() })).filter(x=>x.value!=='') : [],
+                    gender: Array.isArray(g && g.genders) ? g.genders.map(x=>({ value: String(x.gender_name||'').trim() })).filter(x=>x.value!=='') : [],
+                    size: Array.isArray(s && s.sizes) ? s.sizes.map(x=>({ value: String((x.size_code||x.size_name||'')).trim() })).filter(x=>x.value!=='') : [],
+                    color: Array.isArray(c && c.colors) ? c.colors.map(x=>({ value: String(x.color_name||'').trim() })).filter(x=>x.value!=='') : [],
                   };
                   try { console.info('[Attributes] legacy fallback counts', {g:a.gender.length, s:a.size.length, c:a.color.length}); } catch(_) {}
                 } catch(_) {}
@@ -538,7 +544,7 @@ $emailPrefill = $userData['email'] ?? '';
                 });
               } catch(_) {}
               if (res) res.textContent='';
-            } catch(e){ if (res) res.textContent = e?.message || 'Failed to load attributes'; }
+            } catch(e){ if (res) res.textContent = (e && e.message) ? e.message : 'Failed to load attributes'; }
           }
 
           const lazyFrame = (frameId, modalId) => {
@@ -598,7 +604,7 @@ $emailPrefill = $userData['email'] ?? '';
                 const srcUrl = url && typeof url === 'string' ? url : '/admin/inventory#attributes';
                 if (frameId) {
                   const dataOpen = openModalKey ? ` data-open-modal="${openModalKey}"` : '';
-                  bodyHtml = `<iframe id="${frameId}" src="${srcUrl}" data-src="${srcUrl}"${dataOpen} style="width:100%;height:70vh;border:1px solid #e5e7eb;border-radius:8px;"></iframe>`;
+                  bodyHtml = `<iframe id="${frameId}" src="${srcUrl}" data-src="${srcUrl}"${dataOpen} class="wf-admin-embed-frame"></iframe>`;
                 }
                 overlay.innerHTML = `
                   <div class="admin-modal">
@@ -700,8 +706,8 @@ $emailPrefill = $userData['email'] ?? '';
                 if (!type || !val) { if (res) res.textContent='Enter a value.'; return; }
                 if (res) res.textContent='Adding…';
                 attrApi('/api/attributes.php?action=add', { action:'add', type, value: val })
-                  .then(() => { if (input) input.value=''; populateAttributes(); if (res) res.textContent='Added.'; })
-                  .catch(err => { if (res) res.textContent = err?.message || 'Failed to add.'; console.error('[Attributes] add error', err); });
+                  .then(function(){ if (input) input.value=''; populateAttributes(); if (res) res.textContent='Added.'; })
+                  .catch(function(err){ if (res) res.textContent = (err && err.message) ? err.message : 'Failed to add.'; try{ console.error('[Attributes] add error', err); }catch(_){} });
                 return;
               }
 
@@ -715,8 +721,8 @@ $emailPrefill = $userData['email'] ?? '';
                 if (!newVal || newVal.trim()===oldVal) return;
                 if (res) res.textContent='Renaming…';
                 attrApi('/api/attributes.php?action=rename', { action:'rename', type, old_value: oldVal, new_value: newVal.trim() })
-                  .then(() => { populateAttributes(); if (res) res.textContent='Renamed.'; })
-                  .catch(err => { if (res) res.textContent = err?.message || 'Failed to rename.'; console.error('[Attributes] rename error', err); });
+                  .then(function(){ populateAttributes(); if (res) res.textContent='Renamed.'; })
+                  .catch(function(err){ if (res) res.textContent = (err && err.message) ? err.message : 'Failed to rename.'; try{ console.error('[Attributes] rename error', err); }catch(_){} });
                 return;
               }
 
@@ -729,8 +735,8 @@ $emailPrefill = $userData['email'] ?? '';
                 if (!confirm(`Delete ${type} value "${val}"?`)) return;
                 if (res) res.textContent='Deleting…';
                 attrApi('/api/attributes.php?action=delete', { action:'delete', type, value: val })
-                  .then(() => { populateAttributes(); if (res) res.textContent='Deleted.'; })
-                  .catch(err => { if (res) res.textContent = err?.message || 'Failed to delete.'; console.error('[Attributes] delete error', err); });
+                  .then(function(){ populateAttributes(); if (res) res.textContent='Deleted.'; })
+                  .catch(function(err){ if (res) res.textContent = (err && err.message) ? err.message : 'Failed to delete.'; try{ console.error('[Attributes] delete error', err); }catch(_){} });
                 return;
               }
             } catch(_) {}
@@ -818,6 +824,22 @@ $emailPrefill = $userData['email'] ?? '';
                   btn.addEventListener('click', function(ev){
                     try { ev.preventDefault(); ev.stopPropagation(); } catch(_) {}
                     try { __settingsShowModal(id); } catch(_) {}
+                  }, true);
+                });
+              });
+              // Also bind direct handlers for Room Settings, Room-Category Links, and Template Manager
+              const directDefs = [
+                { sel: '[data-action="open-room-settings"]', open: () => tryOpen('roomSettingsModal','roomSettingsFrame','/admin/room_main','') },
+                { sel: '[data-action="open-room-category-links"]', open: () => tryOpen('roomCategoryLinksModal','roomCategoryLinksFrame','/admin/inventory#room-category-links','') },
+                { sel: '[data-action="open-template-manager"]', open: () => tryOpen('templateManagerModal','templateManagerFrame','/admin/inventory#templates','') },
+              ];
+              directDefs.forEach(({ sel, open }) => {
+                const nodes = Array.from(document.querySelectorAll(sel));
+                nodes.forEach(node => {
+                  if (node.__wfBound) return; node.__wfBound = true;
+                  node.addEventListener('click', function(ev){
+                    try { ev.preventDefault(); ev.stopPropagation(); } catch(_) {}
+                    try { open(); } catch(_) {}
                   }, true);
                 });
               });
@@ -917,11 +939,16 @@ $emailPrefill = $userData['email'] ?? '';
           // ---- Dashboard Config: minimal fallback population and save wiring ----
           async function dashApi(path, payload) {
             let url = typeof path === 'string' ? path : '/api/dashboard_sections.php?action=get_sections';
-            const baseHeaders = { 'X-Requested-With': 'XMLHttpRequest' };
-            const opts = payload
-              ? { method: 'POST', headers: { ...baseHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include' }
-              : { method: 'GET', headers: baseHeaders, credentials: 'include' };
-            const res = await fetch(url, opts).catch((e) => { throw new Error(e?.message || 'Network error'); });
+            // Avoid object spread to maintain compatibility in inline script
+            var baseHeaders = { 'X-Requested-With': 'XMLHttpRequest' };
+            var headers = baseHeaders;
+            if (payload) {
+              headers = Object.assign({}, baseHeaders, { 'Content-Type': 'application/json' });
+            }
+            var opts = payload
+              ? { method: 'POST', headers: headers, body: JSON.stringify(payload), credentials: 'include' }
+              : { method: 'GET', headers: headers, credentials: 'include' };
+            const res = await fetch(url, opts).catch(function(e){ throw new Error((e && e.message) ? e.message : 'Network error'); });
             const status = res.status;
             const text = await res.text().catch(() => '');
             if (status < 200 || status >= 300) throw new Error(`HTTP ${status}: ${text.slice(0, 200)}`);
@@ -941,7 +968,7 @@ $emailPrefill = $userData['email'] ?? '';
               const li = document.createElement('li');
               li.dataset.key = (item.section_key || item.key || '').trim();
               li.setAttribute('draggable', isActive ? 'true' : 'false');
-              const title = item.display_title || item.title || item.section_info?.title || li.dataset.key;
+              const title = item.display_title || item.title || (item.section_info && item.section_info.title) || li.dataset.key;
               li.className = 'wf-dash-item flex flex-col gap-1 px-2 py-2 border border-gray-200 rounded bg-white';
               const rowTop = document.createElement('div');
               rowTop.className = 'flex items-center justify-between gap-2';
@@ -1037,10 +1064,10 @@ $emailPrefill = $userData['email'] ?? '';
             try { if (result) result.textContent = 'Loading…'; } catch(_) {}
             try {
               const data = await dashApi('/api/dashboard_sections.php?action=get_sections');
-              const sections = data?.data?.sections || data?.sections || [];
+              const sections = (data && data.data && data.data.sections) ? data.data.sections : (data && data.sections ? data.sections : []);
               const lists = renderDashboardLists(el);
               if (!lists.activeUl) return;
-              let avail = data?.data?.available_sections || data?.available_sections || {};
+              let avail = (data && data.data && data.data.available_sections) ? data.data.available_sections : ((data && data.available_sections) ? data.available_sections : {});
               if (!avail || Object.keys(avail).length === 0) {
                 avail = { metrics:{title:'📊 Quick Metrics'}, recent_orders:{title:'📋 Recent Orders'}, low_stock:{title:'⚠️ Low Stock Alerts'}, inventory_summary:{title:'📦 Inventory Summary'}, customer_summary:{title:'👥 Customer Overview'}, marketing_tools:{title:'📈 Marketing Tools'}, order_fulfillment:{title:'🚚 Order Fulfillment'}, reports_summary:{title:'📊 Reports Summary'} };
               }
@@ -1048,7 +1075,7 @@ $emailPrefill = $userData['email'] ?? '';
               const pushActive = (obj) => {
                 const key = (obj.section_key || obj.key || '').trim(); if (!key || activeKeys.has(key)) return;
                 activeKeys.add(key);
-                const enriched = { ...obj, section_key:key, key, title:(avail[key]?.title)||obj.display_title||obj.title||key, is_active:1 };
+                const enriched = Object.assign({}, obj, { section_key: key, key: key, title: ((avail[key] && avail[key].title) || obj.display_title || obj.title || key), is_active: 1 });
                 lists.activeUl.appendChild(lists.makeLi(enriched, true));
               };
               if (Array.isArray(sections) && sections.length) {
@@ -1062,16 +1089,16 @@ $emailPrefill = $userData['email'] ?? '';
                   }
                 } catch(_) {}
               }
-              Object.keys(avail).forEach((key) => {
+              Object.keys(avail).forEach(function(key){
                 if (activeKeys.has(key)) return;
-                lists.availUl.appendChild(lists.makeLi({ key, title: avail[key]?.title || key }, false));
+                lists.availUl.appendChild(lists.makeLi({ key: key, title: (avail[key] && avail[key].title) || key }, false));
               });
               try { if (result) result.textContent = ''; } catch(_) {}
               // enable drag ordering on active list
               try { enableDragSort(lists.activeUl); } catch(_) {}
             } catch (err) {
               console.error('[SettingsFailsafe] Dashboard populate failed', err);
-              try { if (result) result.textContent = err?.message || 'Failed to load sections.'; } catch(_) {}
+              try { if (result) result.textContent = (err && err.message) ? err.message : 'Failed to load sections.'; } catch(_) {}
             }
           }
 
@@ -1091,7 +1118,7 @@ $emailPrefill = $userData['email'] ?? '';
                 const el = document.getElementById('dashboardConfigModal');
                 const result = el ? el.querySelector('#dashboardConfigResult') : null;
                 if (result) result.textContent = 'Resetting…';
-                dashApi('/api/dashboard_sections.php?action=reset_defaults').then(() => { if (result) result.textContent = 'Defaults restored.'; populateDashboardFallback('dashboardConfigModal'); }).catch((err) => { if (result) result.textContent = err?.message || 'Failed to reset.'; });
+                dashApi('/api/dashboard_sections.php?action=reset_defaults').then(function(){ if (result) result.textContent = 'Defaults restored.'; populateDashboardFallback('dashboardConfigModal'); }).catch(function(err){ if (result) result.textContent = (err && err.message) ? err.message : 'Failed to reset.'; });
                 return;
               }
               if (closest('[data-action="dashboard-config-save"]')) {
@@ -1099,7 +1126,8 @@ $emailPrefill = $userData['email'] ?? '';
                 try {
                   const el = document.getElementById('dashboardConfigModal');
                   const result = el ? el.querySelector('#dashboardConfigResult') : null;
-                  const chip = el ? el.closest('.admin-modal-overlay')?.querySelector('.modal-status-chip') : null;
+                  const overlay = (el && el.closest) ? el.closest('.admin-modal-overlay') : null;
+                  const chip = overlay ? overlay.querySelector('.modal-status-chip') : null;
                   const activeUl = el ? el.querySelector('#dashboardActiveSections') : null;
                   if (!el || !activeUl) return;
                   const seen = new Set();
@@ -1127,7 +1155,7 @@ $emailPrefill = $userData['email'] ?? '';
                       if (chip) chip.textContent = `Saved at ${t}`;
                     } catch(_) {}
                     try { localStorage.setItem('wf.dashboard.sections', JSON.stringify(payload.sections.map(s => ({ key: s.section_key, section_key: s.section_key, title: s.section_key, is_active: 1 })))); } catch(_) {}
-                  }).catch((err) => { if (result) result.textContent = err?.message || 'Failed to save.'; });
+                  }).catch(function(err){ if (result) result.textContent = (err && err.message) ? err.message : 'Failed to save.'; });
                 } catch (err) { console.error('[SettingsFailsafe] Dashboard save failed', err); }
                 return;
               }
@@ -1223,10 +1251,10 @@ $emailPrefill = $userData['email'] ?? '';
                 const name = (input && input.value) ? input.value.trim() : '';
                 if (!name) { if (result) result.textContent = 'Please enter a name.'; return; }
                 if (result) result.textContent = 'Adding…';
-                catApi('/api/categories.php?action=add', { action: 'add', name }).then(() => {
+                catApi('/api/categories.php?action=add', { action: 'add', name }).then(function(){
                   if (input) input.value = '';
                   populateCategories(); if (result) result.textContent = 'Added.';
-                }).catch(err => { if (result) result.textContent = err?.message || 'Failed to add.'; });
+                }).catch(function(err){ if (result) result.textContent = (err && err.message) ? err.message : 'Failed to add.'; });
                 return;
               }
               // Categories: rename
@@ -1238,8 +1266,8 @@ $emailPrefill = $userData['email'] ?? '';
                 const modal = document.getElementById('categoriesModal'); const result = modal ? modal.querySelector('#catResult') : null;
                 if (result) result.textContent = 'Renaming…';
                 catApi('/api/categories.php?action=rename', { action: 'rename', old_name: oldName, new_name: newName.trim(), update_items: true })
-                  .then(() => { populateCategories(); if (result) result.textContent = 'Renamed.'; })
-                  .catch(err => { if (result) result.textContent = err?.message || 'Failed to rename.'; });
+                  .then(function(){ populateCategories(); if (result) result.textContent = 'Renamed.'; })
+                  .catch(function(err){ if (result) result.textContent = (err && err.message) ? err.message : 'Failed to rename.'; });
                 return;
               }
               // Categories: delete
@@ -1253,8 +1281,8 @@ $emailPrefill = $userData['email'] ?? '';
                 const modal = document.getElementById('categoriesModal'); const result = modal ? modal.querySelector('#catResult') : null;
                 if (result) result.textContent = 'Deleting…';
                 catApi('/api/categories.php?action=delete', payload)
-                  .then(() => { populateCategories(); if (result) result.textContent = 'Deleted.'; })
-                  .catch(err => { if (result) result.textContent = err?.message || 'Failed to delete.'; });
+                  .then(function(){ populateCategories(); if (result) result.textContent = 'Deleted.'; })
+                  .catch(function(err){ if (result) result.textContent = (err && err.message) ? err.message : 'Failed to delete.'; });
                 return;
               }
             } catch(_) {}

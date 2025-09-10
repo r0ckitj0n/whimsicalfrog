@@ -58,7 +58,12 @@ try {
     }
 } catch (PDOException $e) {
     // Return dynamic fallback backgrounds if database fails
-    $roomType = $_GET['room_type'] ?? '';
+    $roomParam = $_GET['room'] ?? $_GET['room_number'] ?? '';
+    $roomType = '';
+    if ($roomParam !== '') {
+        if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) { $roomType = 'room' . (int)$m[1]; }
+        else { $roomType = 'room' . (int)$roomParam; }
+    }
     $fallbacks = generateDynamicFallbacks();
 
     if (isset($fallbacks[$roomType])) {
@@ -79,28 +84,27 @@ try {
     exit;
 }
 
-// New contract: use 'room' (1..5). Fallback to legacy 'room_type' (room1..room5) if present.
-$roomParam = $_GET['room'] ?? null;
-$legacyRoomType = $_GET['room_type'] ?? null;
-if ($roomParam !== null && $roomParam !== '') {
-    if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
-        $roomType = 'room' . (int)$m[1];
-    } else {
-        $roomType = 'room' . (int)$roomParam;
-    }
-} else {
-    $roomType = $legacyRoomType ?? '';
-}
-
-if ($roomType === '' || !preg_match('/^room[1-5]$/', $roomType)) {
+// New contract: use 'room' (1..5) or 'room_number'
+$roomParam = $_GET['room'] ?? $_GET['room_number'] ?? '';
+if ($roomParam === '') {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Room is required (use room=1..5)']);
     exit;
 }
+if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
+    $roomNumber = (string)((int)$m[1]);
+} else {
+    $roomNumber = (string)((int)$roomParam);
+}
+if (!preg_match('/^[1-5]$/', $roomNumber)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Invalid room. Expected 1-5.']);
+    exit;
+}
 
 try {
-    // Get active background for the room (prefer room_number, fallback to room_type)
-    $rn = preg_match('/^room(\w+)$/i', (string)$roomType, $m) ? (string)$m[1] : '';
+    // Get active background for the room by room_number
+    $rn = $roomNumber;
     $background = Database::queryOne(
         "SELECT background_name, image_filename, webp_filename, created_at 
          FROM backgrounds 
@@ -108,47 +112,39 @@ try {
          LIMIT 1",
         [$rn]
     );
-    if (!$background) {
-        $background = Database::queryOne(
-            "SELECT background_name, image_filename, webp_filename, created_at 
-             FROM backgrounds 
-             WHERE room_type = ? AND is_active = 1 
-             LIMIT 1",
-            [$roomType]
-        );
-    }
 
     if ($background) {
         echo json_encode(['success' => true, 'background' => $background]);
     } else {
         // Return dynamic fallback if no active background found
         $fallbacks = generateDynamicFallbacks();
-
-        if (isset($fallbacks[$roomType])) {
+        $roomKey = 'room' . $roomNumber;
+        if (isset($fallbacks[$roomKey])) {
             echo json_encode([
                 'success' => true,
                 'background' => [
-                    'image_filename' => $fallbacks[$roomType]['png'],
-                    'webp_filename' => $fallbacks[$roomType]['webp'],
+                    'image_filename' => $fallbacks[$roomKey]['png'],
+                    'webp_filename' => $fallbacks[$roomKey]['webp'],
                     'background_name' => 'Original (Fallback)'
                 ]
             ]);
         } else {
             echo json_encode([
                 'success' => false,
-                'message' => 'No background found for this room type'
+                'message' => 'No background found for this room'
             ]);
         }
     }
 } catch (PDOException $e) {
     // On missing table or DB error, return fallback backgrounds
     $fallbacks = generateDynamicFallbacks();
-    if (isset($fallbacks[$roomType])) {
+    $roomKey = 'room' . $roomNumber;
+    if (isset($fallbacks[$roomKey])) {
         echo json_encode([
             'success'    => true,
             'background' => [
-                'image_filename'    => $fallbacks[$roomType]['png'],
-                'webp_filename'     => $fallbacks[$roomType]['webp'],
+                'image_filename'    => $fallbacks[$roomKey]['png'],
+                'webp_filename'     => $fallbacks[$roomKey]['webp'],
                 'background_name'   => 'Original (Fallback)'
             ]
         ]);

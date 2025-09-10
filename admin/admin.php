@@ -43,6 +43,12 @@ $adminRole = $userData['role'] ?? 'Administrator';
             'customer' => 'customers', 'user' => 'customers', 'users' => 'customers',
             'report' => 'reports',
             'setting' => 'settings', 'admin_settings' => 'settings', 'admin_settings.php' => 'settings',
+            // Room config manager aliases
+            'room_config_manager' => 'room-config-manager', 'room-config-manager' => 'room-config-manager',
+            // New managers
+            'room_map_manager' => 'room-map-manager', 'room-map-manager' => 'room-map-manager',
+            'area_item_mapper' => 'area-item-mapper', 'area-item-mapper' => 'area-item-mapper',
+            'room_map_editor' => 'room-map-editor', 'room-map-editor' => 'room-map-editor',
         ];
         if (isset($aliases[$raw])) { $raw = $aliases[$raw]; }
         $adminSection = $raw;
@@ -76,6 +82,18 @@ $adminRole = $userData['role'] ?? 'Administrator';
                 break;
             case 'settings':
                 include 'admin_settings.php';
+                break;
+            case 'room-config-manager':
+                include 'room_config_manager.php';
+                break;
+            case 'room-map-manager':
+                include 'room_map_manager.php';
+                break;
+            case 'area-item-mapper':
+                include 'area_item_mapper.php';
+                break;
+            case 'room-map-editor':
+                include 'room_map_editor.php';
                 break;
             case 'secrets':
                 include 'admin_secrets.php';

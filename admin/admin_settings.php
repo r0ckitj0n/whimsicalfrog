@@ -30,8 +30,8 @@ $wf_full = isset($_GET['wf_full']) && $_GET['wf_full'] === '1';
 if (!$wf_full && $wf_section === '') {
     // Light mode hint remains, but asset emission is centralized via partials/header.php and app.js
     if (isset($_GET['wf_debug']) && $_GET['wf_debug'] === '1') {
-        echo '<div class="settings-page" style="padding:12px 16px 0">'
-           . '<div class="notice" style="margin:0 0 12px;color:#666;font-size:14px">'
+        echo '<div class="settings-page">'
+           . '<div class="notice notice-muted">'
            . 'Light mode is active. The admin bundle will be loaded via app.js per-page imports as needed.'
            . '</div>'
            . '</div>';
@@ -497,7 +497,7 @@ if (!$wf_full && $wf_section === '') {
           try {
             const res = await fetch('/api/dashboard_sections.php?action=get_sections', { credentials:'include' });
             const text = await res.text();
-            let data; try { data = JSON.parse(text); } catch { console.warn('[Dashboard] Non-JSON:', text); return; }
+            let data; try { data = JSON.parse(text); } catch (e) { console.warn('[Dashboard] Non-JSON:', text); return; }
             const sections = (data && (data.data && data.data.sections)) || data.sections || [];
             const currentEl = document.getElementById('currentSectionsList');
             const availEl   = document.getElementById('availableSectionsList');
@@ -531,20 +531,19 @@ if (!$wf_full && $wf_section === '') {
       }
       if (typeof window.inlinePopulateCategories !== 'function') {
         window.inlinePopulateCategories = async function() {
-{{ ... }}
           try {
             const target = document.getElementById('categoriesContent');
             if (!target) return;
             target.innerHTML = '<div class="text-sm text-gray-600">Loading categories…<\/div>';
             const res = await fetch('/api/categories.php?action=list', { credentials:'include' });
             const text = await res.text();
-            let data; try { data = JSON.parse(text); } catch { target.textContent='Non-JSON categories response.'; return; }
+            let data; try { data = JSON.parse(text); } catch (e) { target.textContent='Non-JSON categories response.'; return; }
             const cats = (data && (data.data && data.data.categories)) || data.categories || [];
             // Controls bar
             const controls = document.createElement('div');
             controls.className = 'flex gap-2 items-center mb-2';
             controls.innerHTML = `
-              <input id="catNewNameInput" class="form-input" placeholder="New category name" style="max-width: 260px;"/>
+              <input id="catNewNameInput" class="form-input cat-name-input" placeholder="New category name" />
               <button id="catAddBtn" class="btn btn-primary">Add</button>
               <button id="catRefreshBtn" class="btn btn-secondary">Refresh</button>
               <button id="catSaveOrderBtn" class="btn btn-secondary">Save Order</button>
@@ -580,7 +579,7 @@ if (!$wf_full && $wf_section === '') {
             const refreshBtn = controls.querySelector('#catRefreshBtn');
             const saveOrderBtn = controls.querySelector('#catSaveOrderBtn');
             const input = controls.querySelector('#catNewNameInput');
-            addBtn?.addEventListener('click', async () => {
+            if (addBtn) addBtn.addEventListener('click', async () => {
               const name = (input.value || '').trim();
               if (!name) return;
               try {
@@ -589,13 +588,12 @@ if (!$wf_full && $wf_section === '') {
                 window.inlinePopulateCategories();
               } catch (e) { console.error(e); }
             });
-            refreshBtn?.addEventListener('click', () => window.inlinePopulateCategories());
+            if (refreshBtn) refreshBtn.addEventListener('click', () => window.inlinePopulateCategories());
             tbody.addEventListener('click', async (e) => {
               const btn = e.target && e.target.closest && e.target.closest('button[data-action]');
               if (!btn) return;
               const name = decodeURIComponent(btn.getAttribute('data-name') || '');
-{{ ... }}
-            }
+              
               const act = btn.getAttribute('data-action');
               if (act === 'cat-up' || act === 'cat-down') {
                 const row = btn.closest('tr');
@@ -621,7 +619,7 @@ if (!$wf_full && $wf_section === '') {
                 window.inlinePopulateCategories();
               }
             });
-            saveOrderBtn?.addEventListener('click', async () => {
+            if (saveOrderBtn) saveOrderBtn.addEventListener('click', async () => {
               const names = Array.from(tbody.querySelectorAll('tr td:first-child')).map(td => td.textContent.trim()).filter(Boolean);
               try {
                 await fetch('/api/categories.php?action=reorder', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ names }) });
@@ -639,7 +637,7 @@ if (!$wf_full && $wf_section === '') {
           try {
             const gRes = await fetch('/api/global_color_size_management.php?action=get_global_genders', { credentials:'include' });
             const gText = await gRes.text();
-            let g; try { g = JSON.parse(gText); } catch { g = null; }
+            let g; try { g = JSON.parse(gText); } catch (e) { g = null; }
             const list = document.getElementById('globalGendersList');
             if (list) {
               list.innerHTML = '';
@@ -663,7 +661,7 @@ if (!$wf_full && $wf_section === '') {
                 const btn = e.target && e.target.closest && e.target.closest('button[data-action]');
                 if (!btn) return;
                 const row = btn.closest('[data-value]');
-                const val = row?.getAttribute('data-value') || '';
+                const val = (row && row.getAttribute) ? row.getAttribute('data-value') : '';
                 const act = btn.getAttribute('data-action');
                 if (act === 'gen-up' && row.previousElementSibling) {
                   row.parentElement.insertBefore(row, row.previousElementSibling);
@@ -728,9 +726,12 @@ if (!$wf_full && $wf_section === '') {
                   form._wired = true;
                   form.addEventListener('submit', async (ev) => {
                     ev.preventDefault();
-                    const gender_name = (document.getElementById('newGenderName')?.value || '').trim();
-                    const description = (document.getElementById('newGenderDescription')?.value || '').trim();
-                    const display_order = parseInt(document.getElementById('newGenderOrder')?.value || '0', 10) || 0;
+                    var _g = document.getElementById('newGenderName');
+                    var _gd = document.getElementById('newGenderDescription');
+                    var _go = document.getElementById('newGenderOrder');
+                    const gender_name = ((_g && _g.value) || '').trim();
+                    const description = ((_gd && _gd.value) || '').trim();
+                    const display_order = parseInt(((_go && _go.value) || '0'), 10) || 0;
                     if (!gender_name) return;
                     await fetch('/api/global_color_size_management.php?action=add_global_gender', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ gender_name, description, display_order }) });
                     window.inlinePopulateAttributes();
@@ -743,14 +744,38 @@ if (!$wf_full && $wf_section === '') {
           try {
             const sRes = await fetch('/api/global_color_size_management.php?action=get_global_sizes', { credentials:'include' });
             const sText = await sRes.text();
-{{ ... }}
+            let s; try { s = JSON.parse(sText); } catch (e) { s = null; }
+            const list = document.getElementById('globalSizesList');
+            if (list) {
+              list.innerHTML = '';
+              const arr = s && (s.sizes || []);
+              if (arr && arr.length) {
+                arr.forEach(row => {
+                  const item = document.createElement('div');
+                  item.className = 'flex justify-between items-center px-2 py-1 border rounded gap-2';
+                  const val = row.size_name || '';
+                  item.setAttribute('data-value', val);
+                  item.innerHTML = `
+                    <span class="font-mono">${val}<\/span>
+                    <span class="flex gap-1">
+                      <button class="btn btn-xs" data-action="size-up">↑<\/button>
+                      <button class="btn btn-xs" data-action="size-down">↓<\/button>
+                      <button class="btn btn-xs" data-action="size-rename">Rename<\/button>
+                      <button class="btn btn-xs btn-danger" data-action="size-delete">Delete<\/button>
+                    <\/span>`;
+                  list.appendChild(item);
+                });
+              } else {
+                list.innerHTML = '<div class="text-sm text-gray-500">No sizes found.<\/div>';
+              }
+              try { window.makeDragSortable(list, '[data-value]'); } catch(_) {}
             }
           } catch (e) { console.warn('Sizes load failed', e); }
           // Colors
           try {
             const cRes = await fetch('/api/global_color_size_management.php?action=get_global_colors', { credentials:'include' });
             const cText = await cRes.text();
-            let c; try { c = JSON.parse(cText); } catch { c = null; }
+            let c; try { c = JSON.parse(cText); } catch (e) { c = null; }
             const list = document.getElementById('globalColorsList');
             if (list) {
               list.innerHTML = '';
@@ -773,7 +798,7 @@ if (!$wf_full && $wf_section === '') {
                 const btn = e.target && e.target.closest && e.target.closest('button[data-action]');
                 if (!btn) return;
                 const row = btn.closest('[data-value]');
-                const val = row?.getAttribute('data-value') || '';
+                const val = (row && row.getAttribute) ? row.getAttribute('data-value') : '';
                 const act = btn.getAttribute('data-action');
                 if (act === 'col-up' && row.previousElementSibling) {
                   row.parentElement.insertBefore(row, row.previousElementSibling);
@@ -807,11 +832,16 @@ if (!$wf_full && $wf_section === '') {
                   colorForm._wired = true;
                   colorForm.addEventListener('submit', async (ev) => {
                     ev.preventDefault();
-                    const color_name = (document.getElementById('newColorName')?.value || '').trim();
-                    const color_code = (document.getElementById('newColorCode')?.value || '').trim();
-                    const category = (document.getElementById('newColorCategory')?.value || '').trim() || 'General';
-                    const description = (document.getElementById('newColorDescription')?.value || '').trim();
-                    const display_order = parseInt(document.getElementById('newColorOrder')?.value || '0', 10) || 0;
+                    var _cn = document.getElementById('newColorName');
+                    var _cc = document.getElementById('newColorCode');
+                    var _cat = document.getElementById('newColorCategory');
+                    var _cd = document.getElementById('newColorDescription');
+                    var _co = document.getElementById('newColorOrder');
+                    const color_name = ((_cn && _cn.value) || '').trim();
+                    const color_code = ((_cc && _cc.value) || '').trim();
+                    const category = (((_cat && _cat.value) || '').trim()) || 'General';
+                    const description = ((_cd && _cd.value) || '').trim();
+                    const display_order = parseInt(((_co && _co.value) || '0'), 10) || 0;
                     if (!color_name) return;
                     await fetch('/api/global_color_size_management.php?action=add_global_color', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ color_name, color_code, category, description, display_order }) });
                     window.inlinePopulateAttributes();
@@ -842,9 +872,12 @@ if (!$wf_full && $wf_section === '') {
             const body = document.querySelector('#dashboardConfigModal .modal-body');
             body && body.appendChild(bar);
             // Wire
-            bar.querySelector('#dashRefreshBtn')?.addEventListener('click', () => window.inlinePopulateDashboard());
-            bar.querySelector('#dashResetBtn')?.addEventListener('click', async () => { try { await fetch('/api/dashboard_sections.php?action=reset_defaults'); window.inlinePopulateDashboard(); } catch(e){} });
-            bar.querySelector('#dashSaveBtn')?.addEventListener('click', async () => {
+            var _refreshBtn = bar.querySelector('#dashRefreshBtn');
+            if (_refreshBtn) _refreshBtn.addEventListener('click', function(){ window.inlinePopulateDashboard(); });
+            var _resetBtn = bar.querySelector('#dashResetBtn');
+            if (_resetBtn) _resetBtn.addEventListener('click', async function(){ try { await fetch('/api/dashboard_sections.php?action=reset_defaults'); window.inlinePopulateDashboard(); } catch(e){} });
+            var _saveBtn = bar.querySelector('#dashSaveBtn');
+            if (_saveBtn) _saveBtn.addEventListener('click', async () => {
               // Compile sections from two lists
               const rows = [];
               const read = (root, active) => {
@@ -896,6 +929,13 @@ if (!$wf_full && $wf_section === '') {
             el.style.alignItems = 'flex-start';
             el.style.paddingTop = (hh + 12) + 'px';
             el.style.zIndex = '2147483000';
+            // Also elevate inner modal container to ensure it sits above any content cards
+            var inner = el.querySelector('.admin-modal, .modal, [role="document"], .admin-modal-content') || el.firstElementChild;
+            if (inner) {
+              inner.style.position = 'relative';
+              inner.style.zIndex = '2147483640';
+              inner.style.pointerEvents = 'auto';
+            }
           } catch(_) {}
           keepOpen(el);
           return true;
@@ -906,16 +946,57 @@ if (!$wf_full && $wf_section === '') {
         if (!b) return;
         b.addEventListener('click', function(ev){ ev.preventDefault(); showOverlayById(modalId); });
       }
+      function bindNav(id, url){
+        var b = document.getElementById(id);
+        if (!b) return;
+        b.addEventListener('click', function(ev){ try { ev.preventDefault(); } catch(_) {} window.location.href = url; });
+      }
+      function normalizeDuplicateModals(id){
+        try {
+          var nodes = document.querySelectorAll('#'+id);
+          if (!nodes || nodes.length <= 1) {
+            // Still ensure the single modal is attached to body to avoid clipping
+            var el = document.getElementById(id);
+            if (el && el.parentNode !== document.body) { try { document.body.appendChild(el); } catch(_) {} }
+            return;
+          }
+          // Keep the first, remove the rest
+          var keep = nodes[0];
+          for (var i=1;i<nodes.length;i++) {
+            var n = nodes[i];
+            if (n && n.parentNode) { try { n.parentNode.removeChild(n); } catch(_) {} }
+          }
+          if (keep && keep.parentNode !== document.body) { try { document.body.appendChild(keep); } catch(_) {} }
+        } catch(_) {}
+      }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function(){
           bind('roomsBtn','roomSettingsModal');
           bind('roomCategoryBtn','roomCategoryManagerModal');
           bind('templateManagerBtn','templateManagerModal');
+          // Visual & Design direct binds (CSS Rules / Background Manager open modals if present)
+          bind('cssRulesBtn','cssRulesModal');
+          bind('backgroundManagerBtn','backgroundManagerModal');
+          // Mapper buttons navigate to dedicated manager pages
+          bindNav('roomMapperBtn','/admin/admin.php?section=room-map-editor');
+          bindNav('areaItemMapperBtn','/admin/admin.php?section=area-item-mapper');
+          // Normalize duplicate modals to avoid flicker/stacking conflicts
+          normalizeDuplicateModals('cssRulesModal');
+          normalizeDuplicateModals('backgroundManagerModal');
         }, { once:true });
       } else {
         bind('roomsBtn','roomSettingsModal');
         bind('roomCategoryBtn','roomCategoryManagerModal');
         bind('templateManagerBtn','templateManagerModal');
+        // Visual & Design direct binds (CSS Rules / Background Manager open modals if present)
+        bind('cssRulesBtn','cssRulesModal');
+        bind('backgroundManagerBtn','backgroundManagerModal');
+        // Mapper buttons navigate to dedicated manager pages
+        bindNav('roomMapperBtn','/admin/admin.php?section=room-map-editor');
+        bindNav('areaItemMapperBtn','/admin/admin.php?section=area-item-mapper');
+        // Normalize duplicate modals to avoid flicker/stacking conflicts
+        normalizeDuplicateModals('cssRulesModal');
+        normalizeDuplicateModals('backgroundManagerModal');
       }
       // close handlers (works for all modals on this page)
       document.addEventListener('click', function(e){
@@ -957,7 +1038,7 @@ if (!$wf_full && $wf_section === '') {
           <svg class="button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
           </svg>
-          <span class="button-text">Room Mapper</span>
+          <span class="button-text">Room Map Editor</span>
         </button>
         
         <button id="areaItemMapperBtn"  class="btn btn-primary btn-block admin-settings-button">
@@ -1166,11 +1247,11 @@ if (!$wf_full && $wf_section === '') {
 
 
 
-<!-- Room Mapper Modal -->
+<!-- Room Map Editor Modal -->
 <div id="roomMapperModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
     <div class="bg-white shadow-xl w-full h-full overflow-y-auto">
         <div class="flex justify-between items-center border-b">
-            <h2 class="text-xl font-bold text-gray-800">Room Mapper - Clickable Area Helper</h2>
+            <h2 class="text-xl font-bold text-gray-800">Room Map Editor - Clickable Area Helper</h2>
             <button class="text-gray-500 hover:text-gray-700 text-2xl" data-action="close-admin-modal">&times;</button>
         </div>
         
@@ -3260,7 +3341,7 @@ async function populateRoomMapperDropdown() {
             });
         }
     } catch (error) {
-        console.error('Error populating room mapper dropdown:', error);
+        console.error('Error populating room map editor dropdown:', error);
         // Continue with existing options if API fails
     }
 }
@@ -11146,7 +11227,7 @@ function renderTypographyTab(contentDiv) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     `;
     
-    [...typographyRules, ...roomHeaderRules].forEach(rule => {
+    (typographyRules.concat(roomHeaderRules)).forEach(rule => {
         const friendlyName = getFriendlyTypographyName(rule.rule_name);
         html += createTypographyControl(rule, friendlyName);
     });
@@ -11215,7 +11296,7 @@ function renderComponentsTab(contentDiv) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     `;
     
-    [...modalRules, ...formRules].forEach(rule => {
+    (modalRules.concat(formRules)).forEach(rule => {
         const friendlyName = getFriendlyComponentName(rule.rule_name);
         html += createComponentControl(rule, friendlyName);
     });
@@ -11245,7 +11326,7 @@ function renderAdvancedTab(contentDiv) {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     `;
     
-    [...adminRules, ...navigationRules].forEach(rule => {
+    (adminRules.concat(navigationRules)).forEach(rule => {
         const friendlyName = getFriendlyAdvancedName(rule.rule_name);
         html += createAdvancedControl(rule, friendlyName);
     });
@@ -12965,7 +13046,13 @@ function loadColorTemplateCategories(templates) {
     const categorySelect = document.getElementById('colorTemplateCategoryFilter');
     if (!categorySelect) return;
     
-    const categories = [...new Set(templates.map(t => t.category))].sort();
+    var categories = [];
+    var _seenCat = {};
+    (templates || []).forEach(function(t){
+        var c = t && t.category;
+        if (c != null && !_seenCat[c]) { _seenCat[c] = true; categories.push(c); }
+    });
+    categories.sort();
     
     categorySelect.innerHTML = '<option value="">All Categories</option>';
     categories.forEach(category => {
@@ -13134,7 +13221,13 @@ function loadSizeTemplateCategories(templates) {
     const categorySelect = document.getElementById('sizeTemplateCategoryFilter');
     if (!categorySelect) return;
     
-    const categories = [...new Set(templates.map(t => t.category))].sort();
+    var categories = [];
+    var _seenCat = {};
+    (templates || []).forEach(function(t){
+        var c = t && t.category;
+        if (c != null && !_seenCat[c]) { _seenCat[c] = true; categories.push(c); }
+    });
+    categories.sort();
     
     categorySelect.innerHTML = '<option value="">All Categories</option>';
     categories.forEach(category => {
@@ -18793,7 +18886,13 @@ function renderHelpHintsTable() {
 // Populate page filter dropdown
 function populatePageFilter() {
     const select = document.getElementById('pageContextFilter');
-    const pages = [...new Set(helpHintsData.map(hint => hint.page_context))].sort();
+    var pages = [];
+    var _seenPages = {};
+    (helpHintsData || []).forEach(function(hint){
+        var p = hint && hint.page_context;
+        if (p != null && !_seenPages[p]) { _seenPages[p] = true; pages.push(p); }
+    });
+    pages.sort();
     
     select.innerHTML = '<option value="">All Pages</option>';
     pages.forEach(page => {
@@ -22809,7 +22908,7 @@ async function reorderSection(sectionKey, direction) {
             throw new Error('Failed to get current configuration');
         }
         
-        const sections = [...data.data.sections];
+        const sections = (data && data.data && data.data.sections) ? data.data.sections.slice() : [];
         const currentIndex = sections.findIndex(s => s.section_key === sectionKey);
         
         if (currentIndex === -1) return;
@@ -22817,8 +22916,10 @@ async function reorderSection(sectionKey, direction) {
         const newIndex = currentIndex + direction;
         if (newIndex < 0 || newIndex >= sections.length) return;
         
-        // Swap sections
-        [sections[currentIndex], sections[newIndex]] = [sections[newIndex], sections[currentIndex]];
+        // Swap sections (ES5)
+        var __tmp = sections[currentIndex];
+        sections[currentIndex] = sections[newIndex];
+        sections[newIndex] = __tmp;
         
         // Update display orders
         sections.forEach((section, index) => {

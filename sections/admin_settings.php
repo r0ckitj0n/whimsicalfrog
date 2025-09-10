@@ -97,6 +97,7 @@ $emailPrefill = $userData['email'] ?? '';
           <a class="admin-settings-button btn-secondary btn-full-width" href="/admin/secrets">Open Secrets Page (fallback)</a>
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/cost_breakdown_manager">Cost Breakdown Manager</a>
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/customers">User Manager</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/reports_browser.php">Reports &amp; Documentation Browser</a>
         </div>
       </section>
 

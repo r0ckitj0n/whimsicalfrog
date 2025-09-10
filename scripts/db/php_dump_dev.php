@@ -35,14 +35,28 @@ fwrite($fh, "-- Database: " . $dbName . "\n\n");
 fwrite($fh, "SET FOREIGN_KEY_CHECKS=0;\n\n");
 
 // Gather tables
-$tables = [];
-$stmt = $pdo->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'");
+$entries = [];
+$stmt = $pdo->query("SHOW FULL TABLES");
 while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-  $tables[] = $row[0];
+  // Row format: [0] => table/view name, [1] => 'BASE TABLE' or 'VIEW'
+  $entries[] = [ 'name' => $row[0], 'type' => strtoupper($row[1] ?? 'BASE TABLE') ];
 }
 
-foreach ($tables as $table) {
-  // DROP + CREATE
+foreach ($entries as $ent) {
+  $table = $ent['name'];
+  $type = $ent['type'];
+  if ($type === 'VIEW') {
+    // Dump VIEW definition only
+    fwrite($fh, "--\n-- View structure for view " . q($table) . "\n--\n\n");
+    fwrite($fh, "DROP VIEW IF EXISTS " . q($table) . ";\n");
+    $create = $pdo->query("SHOW CREATE VIEW " . q($table))->fetch(PDO::FETCH_ASSOC);
+    $createSql = $create['Create View'] ?? '';
+    // Ensure it ends with semicolon
+    if ($createSql !== '') { fwrite($fh, $createSql . ";\n\n"); }
+    continue;
+  }
+
+  // BASE TABLE: structure + data
   fwrite($fh, "--\n-- Table structure for table " . q($table) . "\n--\n\n");
   fwrite($fh, "DROP TABLE IF EXISTS " . q($table) . ";\n");
   $create = $pdo->query("SHOW CREATE TABLE " . q($table))->fetch(PDO::FETCH_ASSOC);

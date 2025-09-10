@@ -53,8 +53,7 @@ RewriteRule ^\.(?!well-known/) - [R=403,L]
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
-# Map stale app.js-* requests to the current bundle directly (internal rewrite, no redirect)
-RewriteRule ^dist/assets/js/app\.js-[A-Za-z0-9_\-]+\.js$ router.php [L,QSA]
+# Removed old special-case rewrite for app.js-*; general /dist assets rules below handle fallbacks safely
 
 # Ensure correct MIME types and strong caching for built assets
 <IfModule mod_mime.c>

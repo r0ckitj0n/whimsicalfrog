@@ -19,8 +19,16 @@ try {
     $meta = $pdo->query("SELECT DATABASE() AS dbname, VERSION() AS version")->fetch(PDO::FETCH_ASSOC) ?: [];
     $out['db'] = $meta;
 
+    // List tables in current schema
+    try {
+        $tbls = $pdo->query("SELECT TABLE_NAME AS t FROM information_schema.tables WHERE table_schema = DATABASE() ORDER BY t ASC")->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $out['tables'] = array_map(function($r){ return $r['t']; }, $tbls);
+    } catch (Throwable $e) {
+        $out['tables_error'] = $e->getMessage();
+    }
+
     // Counts
-    $tables = ['categories','items','item_images','room_settings','backgrounds'];
+    $tables = ['categories','items','products','item_images','room_settings','backgrounds'];
     foreach ($tables as $t) {
         try {
             $row = $pdo->query("SELECT COUNT(*) AS c FROM `{$t}`")->fetch(PDO::FETCH_ASSOC) ?: ['c'=>null];
@@ -39,12 +47,20 @@ try {
         $out['sample']['categories_error'] = $e->getMessage();
     }
 
-    // Sample items with category linkage by category_id if present
+    // Sample items/products
+    // Items
     try {
         $rows = $pdo->query("SELECT i.sku, i.name, i.category_id FROM items i LIMIT 10")->fetchAll(PDO::FETCH_ASSOC) ?: [];
         $out['sample']['items'] = $rows;
     } catch (Throwable $e) {
         $out['sample']['items_error'] = $e->getMessage();
+    }
+    // Products
+    try {
+        $rows = $pdo->query("SELECT p.sku, p.name, p.category_id, p.price FROM products p LIMIT 10")->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $out['sample']['products'] = $rows;
+    } catch (Throwable $e) {
+        $out['sample']['products_error'] = $e->getMessage();
     }
 
     // Backgrounds under room_number 0

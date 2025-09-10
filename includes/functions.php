@@ -334,9 +334,28 @@ function get_active_background($roomType)
 {
     try {
         $pdo = Database::getInstance();
-        $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_type = ? AND is_active = 1 LIMIT 1");
-        $stmt->execute([$roomType]);
-        $background = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Try legacy schema once for backward compatibility; if the column
+        // no longer exists, fall back to a generic active background.
+        $background = null;
+        try {
+            $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_type = ? AND is_active = 1 LIMIT 1");
+            $stmt->execute([$roomType]);
+            $background = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $eLegacy) {
+            // MySQL: 42S22 = Column not found (e.g., room_type removed)
+            if ((string)($eLegacy->getCode()) === '42S22' || str_contains(strtolower($eLegacy->getMessage() ?? ''), 'unknown column')) {
+                // Fall back to latest active background
+                try {
+                    $stmt = $pdo->query("SELECT image_filename, webp_filename FROM backgrounds WHERE is_active = 1 ORDER BY id DESC LIMIT 1");
+                    $background = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : null;
+                } catch (Throwable $eFallback) {
+                    // swallow and let outer catch handle logging
+                }
+            } else {
+                // Re-throw unexpected errors to be handled by outer catch
+                throw $eLegacy;
+            }
+        }
 
         if ($background) {
                         // Prefer WebP, otherwise fallback to original extension

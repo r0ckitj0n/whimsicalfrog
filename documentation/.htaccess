@@ -1,0 +1,9 @@
+# Block direct public access to documentation/ (Apache 2.4+)
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+
+# Fallback for older Apache versions
+<IfModule !mod_authz_core.c>
+  Deny from all
+</IfModule>

@@ -25,6 +25,10 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}🚀 Starting file deployment...${NC}"
 
+# Quarantine duplicate/backup files before upload
+echo -e "${GREEN}🧹 Quarantining duplicate/backup files...${NC}"
+bash scripts/dev/quarantine_duplicates.sh || true
+
 # Preflight DB connectivity
 echo -e "${GREEN}🔎 Preflight: testing DB connectivity via ${PRECHECK_URL}${NC}"
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$PRECHECK_URL")

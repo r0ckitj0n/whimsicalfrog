@@ -23,6 +23,10 @@ echo -e "${GREEN}💾 Backing up website...${NC}"
 curl -s -X POST https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing deployment...${NC}"
 echo -e "${YELLOW}⏭️  Skipping database updates in fast deploy (use deploy_full.sh for DB restore)${NC}"
 
+# Quarantine duplicate/backup files before build/upload
+echo -e "${GREEN}🧹 Quarantining duplicate/backup files...${NC}"
+bash scripts/dev/quarantine_duplicates.sh || true
+
 # Clean up any stale git lock file
 if [ -f .git/index.lock ]; then
   echo -e "${YELLOW}⚠️  Removing stale .git/index.lock file...${NC}"

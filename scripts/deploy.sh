@@ -82,7 +82,6 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
-  # Upload only SQL dumps from any subdirectory of backups/; ignore all other backups/* files
   --include-glob backups/**/*.sql \
   --include-glob backups/**/*.sql.gz \
   --exclude-glob backups/** \

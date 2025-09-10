@@ -26,6 +26,8 @@ Options -Indexes
 # Use early 403 to avoid falling through to router.php
 RewriteRule ^backups/ - [R=403,L]
 RewriteRule ^scripts/ - [R=403,L]
+RewriteRule ^documentation/ - [R=403,L]
+RewriteRule ^reports/ - [R=403,L]
 RewriteRule ^\.git/ - [R=403,L]
 RewriteRule ^\.github/ - [R=403,L]
 RewriteRule ^vendor/ - [R=403,L]

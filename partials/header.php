@@ -539,6 +539,18 @@ if ($pageSlug === 'landing') {
         $bodyClasses[] = 'room-bg-landing';
     }
 }
+// Attach background for Main Room page (prefer DB-configured room 0 "room_main" asset)
+if ($pageSlug === 'room_main') {
+    if (function_exists('get_active_background')) {
+        $mainBg = get_active_background('room_main');
+        if (!$mainBg) { $mainBg = '/images/backgrounds/background_room_main.webp'; }
+        if ($mainBg && $mainBg[0] !== '/') { $mainBg = '/' . ltrim($mainBg, '/'); }
+        if ($mainBg) {
+            $bodyBgUrl = $mainBg;
+            $bodyClasses[] = 'room-bg-main';
+        }
+    }
+}
 // Attach room_main background for About and Contact pages
 if ($pageSlug === 'about' || $pageSlug === 'contact') {
     if (function_exists('get_active_background')) {

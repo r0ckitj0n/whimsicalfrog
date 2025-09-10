@@ -63,27 +63,25 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
 
         /* ------------------------------------------------------------------
          * 2) Fetch products and attach to their category bucket
-         *    Prefer items.category_id join; fallback to items.category by name.
+         *    Prefer items.* if table exists; fallback to products.* if present;
+         *    otherwise degrade gracefully.
          * ----------------------------------------------------------------*/
         $products = [];
+
+        // Detect available product table(s)
+        $tables = [];
         try {
-            // Attempt category_id join first
-            $products = Database::queryAll(
-                "SELECT i.sku,
-                        i.name                        AS productName,
-                        COALESCE(i.retailPrice, 0)    AS price,
-                        COALESCE(i.stockLevel, 0)     AS stock,
-                        i.description,
-                        i.imageUrl,
-                        /* Compute slug if NULL */
-                        COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-'))) AS slug
-                 FROM items i
-                 JOIN categories c ON i.category_id = c.id"
-            );
-            error_log('shop_data_loader: products via category_id join = ' . count($products));
-        } catch (Throwable $e1) {
-            // Fallback: join by legacy items.category name
+            $rows = Database::queryAll("SELECT TABLE_NAME AS t FROM information_schema.tables WHERE table_schema = DATABASE()");
+            foreach ($rows as $r) { $tables[strtolower($r['t'])] = true; }
+        } catch (Throwable $eTbl) {
+            // non-fatal; proceed with optimistic attempts
+        }
+        $hasItems = isset($tables['items']);
+        $hasProducts = isset($tables['products']);
+
+        if ($hasItems) {
             try {
+                // Attempt category_id join first
                 $products = Database::queryAll(
                     "SELECT i.sku,
                             i.name                        AS productName,
@@ -93,41 +91,123 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
                             i.imageUrl,
                             COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-'))) AS slug
                      FROM items i
-                     JOIN categories c ON i.category = c.name"
+                     JOIN categories c ON i.category_id = c.id"
                 );
-                error_log('shop_data_loader: products via name join = ' . count($products));
-            } catch (Throwable $e2) {
-                // Last-resort fallback: no join. Use items.category to compute slug.
-                error_log('shop_data_loader product query error: ' . $e1->getMessage() . ' | fallback: ' . $e2->getMessage());
+                error_log('shop_data_loader: products via items.category_id join = ' . count($products));
+            } catch (Throwable $e1) {
+                // Fallback: join by legacy items.category name
                 try {
-                    $rows = Database::queryAll(
+                    $products = Database::queryAll(
                         "SELECT i.sku,
-                                i.name                     AS productName,
-                                COALESCE(i.retailPrice, 0) AS price,
-                                COALESCE(i.stockLevel, 0)  AS stock,
+                                i.name                        AS productName,
+                                COALESCE(i.retailPrice, 0)    AS price,
+                                COALESCE(i.stockLevel, 0)     AS stock,
                                 i.description,
                                 i.imageUrl,
-                                i.category                 AS cat_name
-                         FROM items i"
+                                COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-'))) AS slug
+                         FROM items i
+                         JOIN categories c ON i.category = c.name"
                     );
-                    // Normalize slug from cat_name
-                    foreach ($rows as $r) {
-                        $catName = trim((string)($r['cat_name'] ?? ''));
-                        $slug = $catName !== ''
-                            ? strtolower(preg_replace('/[^a-z0-9]+/i', '-', str_replace('&', 'and', $catName)))
-                            : 'uncategorized';
-                        $slug = trim($slug, '-');
-                        $rOut = $r;
-                        unset($rOut['cat_name']);
-                        $rOut['slug'] = $slug;
-                        $products[] = $rOut;
+                    error_log('shop_data_loader: products via items.category name join = ' . count($products));
+                } catch (Throwable $e2) {
+                    // Last-resort fallback: no join. Use items.category to compute slug.
+                    error_log('shop_data_loader product query error (items): ' . $e1->getMessage() . ' | fallback: ' . $e2->getMessage());
+                    try {
+                        $rows = Database::queryAll(
+                            "SELECT i.sku,
+                                    i.name                     AS productName,
+                                    COALESCE(i.retailPrice, 0) AS price,
+                                    COALESCE(i.stockLevel, 0)  AS stock,
+                                    i.description,
+                                    i.imageUrl,
+                                    i.category                 AS cat_name
+                             FROM items i"
+                        );
+                        foreach ($rows as $r) {
+                            $catName = trim((string)($r['cat_name'] ?? ''));
+                            $slug = $catName !== ''
+                                ? strtolower(preg_replace('/[^a-z0-9]+/i', '-', str_replace('&', 'and', $catName)))
+                                : 'uncategorized';
+                            $slug = trim($slug, '-');
+                            $rOut = $r;
+                            unset($rOut['cat_name']);
+                            $rOut['slug'] = $slug;
+                            $products[] = $rOut;
+                        }
+                        error_log('shop_data_loader: products via items-only fallback = ' . count($products));
+                    } catch (Throwable $e3) {
+                        error_log('shop_data_loader items-only fallback error: ' . $e3->getMessage());
+                        $products = [];
                     }
-                    error_log('shop_data_loader: products via items-only fallback = ' . count($products));
-                } catch (Throwable $e3) {
-                    error_log('shop_data_loader items-only fallback error: ' . $e3->getMessage());
-                    $products = [];
                 }
             }
+        } elseif ($hasProducts) {
+            // Fallback to products table with flexible column mapping
+            try {
+                // Try category_id join if exists
+                $products = Database::queryAll(
+                    "SELECT p.sku,
+                            p.name AS productName,
+                            COALESCE(p.retailPrice, p.price, p.sale_price, 0) AS price,
+                            COALESCE(p.stockLevel, p.stock, p.quantity, 0) AS stock,
+                            COALESCE(p.description, p.details, '') AS description,
+                            COALESCE(p.imageUrl, p.primary_image, p.image, '') AS imageUrl,
+                            COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-'))) AS slug
+                     FROM products p
+                     JOIN categories c ON p.category_id = c.id"
+                );
+                error_log('shop_data_loader: products via products.category_id join = ' . count($products));
+            } catch (Throwable $ep1) {
+                try {
+                    // Join by name if possible
+                    $products = Database::queryAll(
+                        "SELECT p.sku,
+                                p.name AS productName,
+                                COALESCE(p.retailPrice, p.price, p.sale_price, 0) AS price,
+                                COALESCE(p.stockLevel, p.stock, p.quantity, 0) AS stock,
+                                COALESCE(p.description, p.details, '') AS description,
+                                COALESCE(p.imageUrl, p.primary_image, p.image, '') AS imageUrl,
+                                COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-'))) AS slug
+                         FROM products p
+                         JOIN categories c ON p.category = c.name"
+                    );
+                    error_log('shop_data_loader: products via products.category name join = ' . count($products));
+                } catch (Throwable $ep2) {
+                    // No join: map to slug using products.category
+                    error_log('shop_data_loader products-table query error: ' . $ep1->getMessage() . ' | fallback: ' . $ep2->getMessage());
+                    try {
+                        $rows = Database::queryAll(
+                            "SELECT p.sku,
+                                    p.name AS productName,
+                                    COALESCE(p.retailPrice, p.price, p.sale_price, 0) AS price,
+                                    COALESCE(p.stockLevel, p.stock, p.quantity, 0) AS stock,
+                                    COALESCE(p.description, p.details, '') AS description,
+                                    COALESCE(p.imageUrl, p.primary_image, p.image, '') AS imageUrl,
+                                    p.category AS cat_name
+                             FROM products p"
+                        );
+                        foreach ($rows as $r) {
+                            $catName = trim((string)($r['cat_name'] ?? ''));
+                            $slug = $catName !== ''
+                                ? strtolower(preg_replace('/[^a-z0-9]+/i', '-', str_replace('&', 'and', $catName)))
+                                : 'uncategorized';
+                            $slug = trim($slug, '-');
+                            $rOut = $r;
+                            unset($rOut['cat_name']);
+                            $rOut['slug'] = $slug;
+                            $products[] = $rOut;
+                        }
+                        error_log('shop_data_loader: products via products-only fallback = ' . count($products));
+                    } catch (Throwable $ep3) {
+                        error_log('shop_data_loader products-only fallback error: ' . $ep3->getMessage());
+                        $products = [];
+                    }
+                }
+            }
+        } else {
+            // Neither items nor products — leave products empty; categories will render empty message
+            error_log('shop_data_loader: no items/products table found in schema');
+            $products = [];
         }
 
         // Build canonical keys set from categories loaded above

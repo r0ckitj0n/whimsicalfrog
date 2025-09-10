@@ -50,6 +50,9 @@ if ($filterTable !== '') {
 // Allow importer and set target file
 define('WF_IMPORT_ALLOWED', true);
 $_GET['file'] = $filename; // consumed by db_import_sql.php
+if ($filterTable !== '') {
+    $_GET['filter_table'] = $filterTable;
+}
 
 // If gzip, create a temporary decompressed file path for importer
 $absPath = dirname(__DIR__) . '/' . $filename;
@@ -102,43 +105,9 @@ if (preg_match('/\.gz$/i', $filename)) {
     $tempPath = $tempRel;
 }
 
-$executed = 0;
-$errors = 0;
-$errorSamples = [];
-
 ob_start();
 require_once dirname(__DIR__) . '/db_import_sql.php';
 $output = ob_get_clean();
-
-// Stream and execute the SQL file
-$pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD);
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-
-$buffer = '';
-while ($line = fgets(STDIN)) {
-    $buffer .= $line;
-    if (substr($buffer, -1) === ';') {
-        $stmt = substr($buffer, 0, -1);
-        // Apply optional table filter: execute only when statement references the table
-        if ($filterNeedle !== '' && stripos($stmt, $filterNeedle) === false) {
-            $buffer = '';
-            continue;
-        }
-        try {
-            $pdo->exec($stmt);
-            $executed++;
-        } catch (Exception $e) {
-            $errors++;
-            if (count($errorSamples) < 5) {
-                $preview = substr($stmt, 0, 240);
-                $errorSamples[] = [ 'error' => $e->getMessage(), 'stmt_preview' => $preview ];
-            }
-            // Continue importing remaining statements
-        }
-        $buffer = '';
-    }
-}
 
 // Cleanup temp file if created
 if ($decompressed) {
@@ -146,10 +115,7 @@ if ($decompressed) {
 }
 
 echo json_encode([
-    'ok' => true,
-    'message' => "Import complete. Errors: $errors",
-    'executed' => $executed,
-    'errors' => $errors,
-    'error_samples' => $errorSamples,
-    'filter_table' => $filterTable,
+  'ok' => true,
+  'message' => trim($output) !== '' ? trim($output) : 'Import complete.',
+  'filter_table' => $filterTable,
 ], JSON_UNESCAPED_SLASHES);

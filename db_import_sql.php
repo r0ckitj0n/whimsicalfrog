@@ -24,6 +24,12 @@ try {
 }
 
 $filename = $_GET['file'] ?? 'whimsicalfrog_sync.sql';
+// Optional filter: only execute statements that reference a specific table (by backticked name)
+$filterTable = isset($_GET['filter_table']) ? trim($_GET['filter_table']) : '';
+$filterNeedle = '';
+if ($filterTable !== '') {
+  $filterNeedle = '`' . str_replace('`','``',$filterTable) . '`';
+}
 $path = __DIR__ . DIRECTORY_SEPARATOR . $filename;
 if (!is_file($path) || !is_readable($path)) {
   http_response_code(404);
@@ -43,6 +49,7 @@ $pdo->exec('SET FOREIGN_KEY_CHECKS=0');
 $buffer = '';
 $executed = 0;
 $errors = 0;
+$errorSamples = [];
 
 function shouldExecute($sql) {
   $trim = trim($sql);
@@ -68,11 +75,22 @@ while (!feof($handle)) {
     if (substr($stmt, -1) === ';') {
       $stmt = substr($stmt, 0, -1);
     }
+    // Apply optional table filter
+    if ($filterNeedle !== '' && stripos($stmt, $filterNeedle) === false) {
+      $buffer = '';
+      continue;
+    }
     try {
       $pdo->exec($stmt);
       $executed++;
     } catch (Exception $e) {
       $errors++;
+      if (count($errorSamples) < 5) {
+        $errorSamples[] = [
+          'error' => $e->getMessage(),
+          'stmt_preview' => substr($stmt, 0, 240),
+        ];
+      }
       // For safety, continue importing remaining statements
     }
     $buffer = '';
@@ -82,6 +100,7 @@ while (!feof($handle)) {
 fclose($handle);
 $pdo->exec('SET FOREIGN_KEY_CHECKS=1');
 
+// When included from an API endpoint, we may just echo plain text; the wrapper can wrap JSON.
 echo 'Import complete.';
 if ($errors > 0) {
   echo " Errors: $errors";

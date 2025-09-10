@@ -40,6 +40,7 @@ $needleCreate = "CREATE TABLE `" . str_replace('`','``',$table) . "` (";
 $needleInsert = "INSERT INTO `" . str_replace('`','``',$table) . "`";
 
 $inCreate = false;
+$inInsert = false;
 
 $open = null;
 if (preg_match('/\.gz$/i', $dump)) {
@@ -68,14 +69,26 @@ while (!feof($open)) {
   }
   if ($inCreate) {
     $write($line);
-    // End of CREATE TABLE block (common mysqldump: line starting with ") ENGINE") or a lone ");"
-    if (preg_match('/^\) ENGINE/i', $trim) || preg_match('/^\);\s*$/', $trim)) {
+    // End of CREATE TABLE block: line starting with ") ENGINE" OR a ");" terminator
+    if (preg_match('/^\) ENGINE/i', $trim) || preg_match('/^\);\s*$/', $trim) || str_ends_with(trim($line), ');')) {
       $inCreate = false;
     }
     continue;
   }
-  // INSERTs
-  if (strpos($line, $needleInsert) === 0) { $write($line); continue; }
+  // INSERTs: capture the entire multi-line statement until semicolon
+  if (!$inInsert && strpos($line, $needleInsert) === 0) {
+    $inInsert = true;
+    $write($line);
+    if (str_ends_with(trim($line), ';')) { // single-line INSERT
+      $inInsert = false;
+    }
+    continue;
+  }
+  if ($inInsert) {
+    $write($line);
+    if (str_ends_with(trim($line), ';')) { $inInsert = false; }
+    continue;
+  }
 }
 $close();
 $write("\nSET FOREIGN_KEY_CHECKS=1;\n");

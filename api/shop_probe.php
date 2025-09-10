@@ -28,7 +28,7 @@ try {
     }
 
     // Counts
-    $tables = ['categories','items','products','item_images','room_settings','backgrounds'];
+    $tables = ['categories','items','products','sale_items','item_images','room_settings','backgrounds'];
     foreach ($tables as $t) {
         try {
             $row = $pdo->query("SELECT COUNT(*) AS c FROM `{$t}`")->fetch(PDO::FETCH_ASSOC) ?: ['c'=>null];
@@ -47,7 +47,7 @@ try {
         $out['sample']['categories_error'] = $e->getMessage();
     }
 
-    // Sample items/products
+    // Sample items/products/sale_items
     // Items
     try {
         $rows = $pdo->query("SELECT i.sku, i.name, i.category_id FROM items i LIMIT 10")->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -61,6 +61,22 @@ try {
         $out['sample']['products'] = $rows;
     } catch (Throwable $e) {
         $out['sample']['products_error'] = $e->getMessage();
+    }
+
+    // Sale Items (legacy / fallback)
+    try {
+        $rows = $pdo->query(
+            "SELECT 
+                s.sku,
+                COALESCE(s.name, s.item_name) AS name,
+                COALESCE(s.category_id, NULL) AS category_id,
+                COALESCE(s.category, NULL) AS category,
+                COALESCE(s.retailPrice, s.price, s.sale_price, 0) AS price
+             FROM sale_items s LIMIT 10"
+        )->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $out['sample']['sale_items'] = $rows;
+    } catch (Throwable $e) {
+        $out['sample']['sale_items_error'] = $e->getMessage();
     }
 
     // Backgrounds under room_number 0

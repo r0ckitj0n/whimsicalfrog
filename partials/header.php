@@ -14,6 +14,8 @@ if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
 require_once dirname(__DIR__) . '/includes/vite_helper.php';
 // Ensure core helpers are available (get_active_background, etc)
 require_once dirname(__DIR__) . '/includes/functions.php';
+// Background helpers (provides get_landing_background_path fallback)
+require_once dirname(__DIR__) . '/includes/background_helpers.php';
 
 // Ensure dynamic HTML is not cached so stale pages don't reference outdated hashed assets
 if (!headers_sent()) {
@@ -516,12 +518,25 @@ SCRIPT;
 
 // Attach background for landing page
 if ($pageSlug === 'landing') {
+    $landingBg = '';
     if (function_exists('get_active_background')) {
         $landingBg = get_active_background('landing');
-        if ($landingBg) {
-            $bodyBgUrl = $landingBg;
-            $bodyClasses[] = 'room-bg-landing';
-        }
+    }
+    // Fallback to helper default if DB has no active landing background
+    if (!$landingBg && function_exists('get_landing_background_path')) {
+        $landingBg = get_landing_background_path();
+    }
+    // Final hard fallback to known asset
+    if (!$landingBg) {
+        $landingBg = '/images/backgrounds/background_home.webp';
+    }
+    // Normalize to absolute path for consistent loading on any route
+    if ($landingBg && $landingBg[0] !== '/') {
+        $landingBg = '/' . ltrim($landingBg, '/');
+    }
+    if ($landingBg) {
+        $bodyBgUrl = $landingBg;
+        $bodyClasses[] = 'room-bg-landing';
     }
 }
 // Attach room_main background for About and Contact pages

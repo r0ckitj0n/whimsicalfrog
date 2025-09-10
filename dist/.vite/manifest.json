@@ -7,15 +7,15 @@
     "file": "assets/auto-C8LTT2Eg.js",
     "name": "auto"
   },
-  "_main-C1BEjrQA.css": {
-    "file": "assets/main-C1BEjrQA.css",
-    "src": "_main-C1BEjrQA.css"
+  "_main-BH5aOYEC.css": {
+    "file": "assets/main-BH5aOYEC.css",
+    "src": "_main-BH5aOYEC.css"
   },
-  "_main-cFN6ZKu3.js": {
-    "file": "assets/main-cFN6ZKu3.js",
+  "_main-DLhbUTv8.js": {
+    "file": "assets/main-DLhbUTv8.js",
     "name": "main",
     "css": [
-      "assets/main-C1BEjrQA.css"
+      "assets/main-BH5aOYEC.css"
     ],
     "assets": [
       "assets/background_room_main-CD7UiX_S.webp",
@@ -117,11 +117,14 @@
     "isDynamicEntry": true
   },
   "src/entries/admin-dashboard.js": {
-    "file": "assets/js/admin-dashboard.js-DwiDNz9L.js",
+    "file": "assets/js/admin-dashboard.js-Bg8PB5TJ.js",
     "name": "js/admin-dashboard.js",
     "src": "src/entries/admin-dashboard.js",
     "isEntry": true,
-    "isDynamicEntry": true
+    "isDynamicEntry": true,
+    "css": [
+      "assets/admin-dashboard-Dq861YRb.css"
+    ]
   },
   "src/entries/admin-db-status.js": {
     "file": "assets/js/admin-db-status.js-vx6w6WEh.js",
@@ -165,13 +168,13 @@
     ]
   },
   "src/entries/admin-settings.js": {
-    "file": "assets/js/admin-settings.js-CZiVP8oR.js",
+    "file": "assets/js/admin-settings.js-CwDhsv5X.js",
     "name": "js/admin-settings.js",
     "src": "src/entries/admin-settings.js",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_main-cFN6ZKu3.js"
+      "_main-DLhbUTv8.js"
     ],
     "dynamicImports": [
       "src/js/admin-settings-bridge.js",
@@ -180,16 +183,16 @@
       "src/js/admin-settings.js"
     ],
     "css": [
-      "assets/admin-settings-BItydq7W.css"
+      "assets/admin-settings-fbEjEP1H.css"
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-DavJ60Ar.js",
+    "file": "assets/js/app.js-BKRj6YZR.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
     "imports": [
-      "_main-cFN6ZKu3.js"
+      "_main-DLhbUTv8.js"
     ],
     "dynamicImports": [
       "src/modules/cart-system.js",
@@ -251,6 +254,9 @@
       "src/js/admin-room-config-manager.js",
       "src/js/admin-cost-breakdown-manager.js",
       "src/js/admin-secrets.js",
+      "src/js/admin-room-map-manager.js",
+      "src/js/admin-area-item-mapper.js",
+      "src/js/admin-room-map-editor.js",
       "src/entries/admin-dashboard.js"
     ]
   },
@@ -266,6 +272,12 @@
     "css": [
       "assets/header-bootstrap-CaqpKgzs.css"
     ]
+  },
+  "src/js/admin-area-item-mapper.js": {
+    "file": "assets/admin-area-item-mapper-xRxWtX5q.js",
+    "name": "admin-area-item-mapper",
+    "src": "src/js/admin-area-item-mapper.js",
+    "isDynamicEntry": true
   },
   "src/js/admin-categories.js": {
     "file": "assets/admin-categories-DctmXD4Z.js",
@@ -316,9 +328,24 @@
     ]
   },
   "src/js/admin-room-config-manager.js": {
-    "file": "assets/admin-room-config-manager-CD_y9dNV.js",
+    "file": "assets/admin-room-config-manager-BsP3Ixqu.js",
     "name": "admin-room-config-manager",
     "src": "src/js/admin-room-config-manager.js",
+    "isDynamicEntry": true
+  },
+  "src/js/admin-room-map-editor.js": {
+    "file": "assets/admin-room-map-editor-BII1hAl4.js",
+    "name": "admin-room-map-editor",
+    "src": "src/js/admin-room-map-editor.js",
+    "isDynamicEntry": true,
+    "css": [
+      "assets/admin-room-map-editor-D7BVYVjz.css"
+    ]
+  },
+  "src/js/admin-room-map-manager.js": {
+    "file": "assets/admin-room-map-manager-Bt9KeDDL.js",
+    "name": "admin-room-map-manager",
+    "src": "src/js/admin-room-map-manager.js",
     "isDynamicEntry": true
   },
   "src/js/admin-secrets.js": {
@@ -328,12 +355,12 @@
     "isDynamicEntry": true
   },
   "src/js/admin-settings-bridge.js": {
-    "file": "assets/admin-settings-bridge-C6NUKQZt.js",
+    "file": "assets/admin-settings-bridge-DBN-iI7j.js",
     "name": "admin-settings-bridge",
     "src": "src/js/admin-settings-bridge.js",
     "isDynamicEntry": true,
     "imports": [
-      "_main-cFN6ZKu3.js"
+      "_main-DLhbUTv8.js"
     ],
     "dynamicImports": [
       "src/modules/background-manager.js",
@@ -397,7 +424,7 @@
     ]
   },
   "src/js/global-item-modal.js": {
-    "file": "assets/global-item-modal-CKPdz3wh.js",
+    "file": "assets/global-item-modal-nn-h9jDp.js",
     "name": "global-item-modal",
     "src": "src/js/global-item-modal.js",
     "isDynamicEntry": true
@@ -625,7 +652,7 @@
     "isDynamicEntry": true
   },
   "src/modules/tooltip-manager.js": {
-    "file": "assets/tooltip-manager-DKsMvW-u.js",
+    "file": "assets/tooltip-manager-DV8xxoAP.js",
     "name": "tooltip-manager",
     "src": "src/modules/tooltip-manager.js",
     "isDynamicEntry": true
@@ -637,7 +664,7 @@
     "isDynamicEntry": true
   },
   "src/ui/globalPopup.js": {
-    "file": "assets/globalPopup-BY1Poh2A.js",
+    "file": "assets/globalPopup-CILmgZ9F.js",
     "name": "globalPopup",
     "src": "src/ui/globalPopup.js",
     "isDynamicEntry": true

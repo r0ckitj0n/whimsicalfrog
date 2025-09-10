@@ -27,6 +27,33 @@ try {
         $out['tables_error'] = $e->getMessage();
     }
 
+    // Items existence and SHOW CREATE TABLE (summary)
+    try {
+        $row = $pdo->query("SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'items'")->fetch(PDO::FETCH_ASSOC) ?: ['c'=>0];
+        $out['diagnostics']['items_exists'] = ((int)$row['c'] > 0);
+        if (!empty($out['diagnostics']['items_exists'])) {
+            try {
+                $cr = $pdo->query("SHOW CREATE TABLE `items`")->fetch(PDO::FETCH_ASSOC) ?: [];
+                $create = $cr['Create Table'] ?? '';
+                $out['diagnostics']['items_show_create_prefix'] = substr($create, 0, 140);
+            } catch (Throwable $e2) {
+                $out['diagnostics']['items_show_create_error'] = $e2->getMessage();
+            }
+        }
+    } catch (Throwable $e) {
+        $out['diagnostics']['items_exists_error'] = $e->getMessage();
+    }
+
+    // CREATE privilege test (non-destructive)
+    try {
+        $pdo->exec("CREATE TABLE IF NOT EXISTS wf_probe_tmp (id INT) ENGINE=InnoDB");
+        $pdo->exec("DROP TABLE IF EXISTS wf_probe_tmp");
+        $out['diagnostics']['create_privilege'] = true;
+    } catch (Throwable $e) {
+        $out['diagnostics']['create_privilege'] = false;
+        $out['diagnostics']['create_privilege_error'] = $e->getMessage();
+    }
+
     // Counts
     $tables = ['categories','items','products','sale_items','item_images','room_settings','backgrounds'];
     foreach ($tables as $t) {

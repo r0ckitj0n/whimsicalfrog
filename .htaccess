@@ -84,12 +84,7 @@ RewriteCond %{REQUEST_URI} ^/dist/ [NC]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# Route missing hashed JS/CSS chunks under /dist/assets to router.php for graceful fallback
-RewriteCond %{REQUEST_URI} ^/dist/assets/ [NC]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ router.php [L,QSA]
-
-# For other missing /dist/* files, return 404 to avoid HTML fallthrough
+# For any missing /dist/* files (including /dist/assets/*), return 404 to avoid HTML fallthrough
 RewriteCond %{REQUEST_URI} ^/dist/ [NC]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule . - [R=404,L]

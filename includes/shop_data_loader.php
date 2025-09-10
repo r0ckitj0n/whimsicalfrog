@@ -78,6 +78,7 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
         }
         $hasItems = isset($tables['items']);
         $hasProducts = isset($tables['products']);
+        $hasSaleItems = isset($tables['sale_items']);
 
         if ($hasItems) {
             try {
@@ -204,9 +205,72 @@ if (!isset($categories) || !is_array($categories) || empty($categories)) {
                     }
                 }
             }
+        } elseif ($hasSaleItems) {
+            // Fallback to sale_items table (legacy) with flexible column mapping
+            try {
+                // Prefer category_id join if present
+                $products = Database::queryAll(
+                    "SELECT s.sku,
+                            COALESCE(s.name, s.item_name) AS productName,
+                            COALESCE(s.retailPrice, s.price, s.sale_price, 0) AS price,
+                            COALESCE(s.stockLevel, s.stock, s.quantity, 0) AS stock,
+                            COALESCE(s.description, s.details, '') AS description,
+                            COALESCE(s.imageUrl, s.primary_image, s.image, '') AS imageUrl,
+                            COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-'))) AS slug
+                     FROM sale_items s
+                     JOIN categories c ON s.category_id = c.id"
+                );
+                error_log('shop_data_loader: products via sale_items.category_id join = ' . count($products));
+            } catch (Throwable $es1) {
+                try {
+                    // Join by category name field if available
+                    $products = Database::queryAll(
+                        "SELECT s.sku,
+                                COALESCE(s.name, s.item_name) AS productName,
+                                COALESCE(s.retailPrice, s.price, s.sale_price, 0) AS price,
+                                COALESCE(s.stockLevel, s.stock, s.quantity, 0) AS stock,
+                                COALESCE(s.description, s.details, '') AS description,
+                                COALESCE(s.imageUrl, s.primary_image, s.image, '') AS imageUrl,
+                                COALESCE(c.slug, LOWER(REPLACE(TRIM(c.name), ' ', '-'))) AS slug
+                         FROM sale_items s
+                         JOIN categories c ON s.category = c.name"
+                    );
+                    error_log('shop_data_loader: products via sale_items.category name join = ' . count($products));
+                } catch (Throwable $es2) {
+                    // Compute slug from sale_items.category text
+                    error_log('shop_data_loader sale_items-table query error: ' . $es1->getMessage() . ' | fallback: ' . $es2->getMessage());
+                    try {
+                        $rows = Database::queryAll(
+                            "SELECT s.sku,
+                                    COALESCE(s.name, s.item_name) AS productName,
+                                    COALESCE(s.retailPrice, s.price, s.sale_price, 0) AS price,
+                                    COALESCE(s.stockLevel, s.stock, s.quantity, 0) AS stock,
+                                    COALESCE(s.description, s.details, '') AS description,
+                                    COALESCE(s.imageUrl, s.primary_image, s.image, '') AS imageUrl,
+                                    s.category AS cat_name
+                             FROM sale_items s"
+                        );
+                        foreach ($rows as $r) {
+                            $catName = trim((string)($r['cat_name'] ?? ''));
+                            $slug = $catName !== ''
+                                ? strtolower(preg_replace('/[^a-z0-9]+/i', '-', str_replace('&', 'and', $catName)))
+                                : 'uncategorized';
+                            $slug = trim($slug, '-');
+                            $rOut = $r;
+                            unset($rOut['cat_name']);
+                            $rOut['slug'] = $slug;
+                            $products[] = $rOut;
+                        }
+                        error_log('shop_data_loader: products via sale_items-only fallback = ' . count($products));
+                    } catch (Throwable $es3) {
+                        error_log('shop_data_loader sale_items-only fallback error: ' . $es3->getMessage());
+                        $products = [];
+                    }
+                }
+            }
         } else {
-            // Neither items nor products — leave products empty; categories will render empty message
-            error_log('shop_data_loader: no items/products table found in schema');
+            // No known product tables — leave products empty; categories will render empty message
+            error_log('shop_data_loader: no items/products/sale_items table found in schema');
             $products = [];
         }
 

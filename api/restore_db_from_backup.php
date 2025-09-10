@@ -39,6 +39,14 @@ if (strpos($filename, 'backups/sql/') !== 0) {
     exit;
 }
 
+// Optional: filter statements to a specific table (diagnostics)
+$filterTable = isset($_GET['filter_table']) ? trim($_GET['filter_table']) : '';
+$filterNeedle = '';
+if ($filterTable !== '') {
+    // Match backticked table references like `items`
+    $filterNeedle = '`' . str_replace('`', '``', $filterTable) . '`';
+}
+
 // Allow importer and set target file
 define('WF_IMPORT_ALLOWED', true);
 $_GET['file'] = $filename; // consumed by db_import_sql.php
@@ -94,13 +102,54 @@ if (preg_match('/\.gz$/i', $filename)) {
     $tempPath = $tempRel;
 }
 
+$executed = 0;
+$errors = 0;
+$errorSamples = [];
+
 ob_start();
 require_once dirname(__DIR__) . '/db_import_sql.php';
 $output = ob_get_clean();
+
+// Stream and execute the SQL file
+$pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME, DB_USER, DB_PASSWORD);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+
+$buffer = '';
+while ($line = fgets(STDIN)) {
+    $buffer .= $line;
+    if (substr($buffer, -1) === ';') {
+        $stmt = substr($buffer, 0, -1);
+        // Apply optional table filter: execute only when statement references the table
+        if ($filterNeedle !== '' && stripos($stmt, $filterNeedle) === false) {
+            $buffer = '';
+            continue;
+        }
+        try {
+            $pdo->exec($stmt);
+            $executed++;
+        } catch (Exception $e) {
+            $errors++;
+            if (count($errorSamples) < 5) {
+                $preview = substr($stmt, 0, 240);
+                $errorSamples[] = [ 'error' => $e->getMessage(), 'stmt_preview' => $preview ];
+            }
+            // Continue importing remaining statements
+        }
+        $buffer = '';
+    }
+}
 
 // Cleanup temp file if created
 if ($decompressed) {
     @unlink(dirname(__DIR__) . '/' . $tempPath);
 }
 
-echo json_encode(['ok' => true, 'message' => trim($output)], JSON_UNESCAPED_SLASHES);
+echo json_encode([
+    'ok' => true,
+    'message' => "Import complete. Errors: $errors",
+    'executed' => $executed,
+    'errors' => $errors,
+    'error_samples' => $errorSamples,
+    'filter_table' => $filterTable,
+], JSON_UNESCAPED_SLASHES);

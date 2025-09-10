@@ -1,6 +1,0 @@
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
-chmod 755 images/
-chmod 755 images/items/
-bye

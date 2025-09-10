@@ -70,6 +70,28 @@ if (is_file($filePath)) {
     return false; // Serve the requested file as-is.
 }
 
+// If a request targets bare /assets/*.js or /assets/*.css (missing /dist prefix), avoid HTML fallthrough
+if (preg_match('#^/assets/(.+)\.(js|css)$#i', $requestedPath, $m)) {
+    $stem = $m[1];
+    $ext = strtolower($m[2]);
+    // Try to serve from /dist/assets if present
+    $candidate = __DIR__ . '/dist/assets/' . $stem . '.' . $ext;
+    if (is_file($candidate)) {
+        if ($ext === 'css') {
+            header('Content-Type: text/css; charset=utf-8');
+        } else {
+            header('Content-Type: application/javascript; charset=utf-8');
+        }
+        readfile($candidate);
+        exit;
+    }
+    // Not found: return 404 plain text to prevent HTML being treated as JS module
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Not Found\n";
+    exit;
+}
+
 // If a request targets the built assets directory but the file does not exist,
 // provide a graceful fallback for the app entry bundle, and 404 for others.
 if (strpos($requestedPath, '/dist/') === 0) {

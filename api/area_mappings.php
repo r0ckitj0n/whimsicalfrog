@@ -25,7 +25,7 @@ try {
     exit;
 }
 
-// Ensure table exists with expected schema (room_number only)
+// Ensure table exists with expected schema (room_number preferred)
 try {
     Database::execute("CREATE TABLE IF NOT EXISTS area_mappings (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,17 +33,26 @@ try {
         area_selector VARCHAR(255) NOT NULL,
         mapping_type ENUM('item','category') NOT NULL,
         item_id INT NULL,
+        item_sku VARCHAR(64) NULL,
         category_id INT NULL,
         display_order INT DEFAULT 0,
         is_active TINYINT(1) DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX idx_room_number (room_number),
+        INDEX idx_item_sku (item_sku),
         INDEX idx_active (is_active)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     // Backfill room_number for legacy installs and ensure index exists
     try { Database::execute("ALTER TABLE area_mappings ADD COLUMN room_number VARCHAR(50) NOT NULL"); } catch (Exception $e) {}
     try { Database::execute("CREATE INDEX idx_room_number ON area_mappings (room_number)"); } catch (Exception $e) {}
+    try { Database::execute("ALTER TABLE area_mappings ADD COLUMN item_sku VARCHAR(64) NULL"); } catch (Exception $e) {}
+    try { Database::execute("CREATE INDEX idx_item_sku ON area_mappings (item_sku)"); } catch (Exception $e) {}
+    // If legacy column room_type exists, migrate values into room_number where missing
+    try {
+        // This UPDATE will fail harmlessly if room_type doesn't exist
+        Database::execute("UPDATE area_mappings SET room_number = SUBSTRING(room_type, 5) WHERE (room_number IS NULL OR room_number = '') AND room_type REGEXP '^room[0-9]+$'");
+    } catch (Exception $e) { /* ignore */ }
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Failed to ensure schema: ' . $e->getMessage()]);
@@ -80,6 +89,18 @@ switch ($method) {
 }
 // handlePost function moved to api_handlers_extended.php for centralization
 
+/**
+ * Check if a given table has a specific column.
+ */
+function wf_has_column($table, $column) {
+    try {
+        $row = Database::queryOne("SELECT COUNT(*) AS c FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?", [$table, $column]);
+        return $row && (int)$row['c'] > 0;
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
 function handleGet() {
     $action = $_GET['action'] ?? '';
     // Accept 'room' or 'room_number', normalize to numeric string
@@ -97,7 +118,17 @@ function handleGet() {
                     echo json_encode(['success' => false, 'message' => 'room is required']);
                     return;
                 }
-                $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
+                // Prefer room_number; fallback to legacy room_type if present
+                $map = null;
+                try {
+                    $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
+                } catch (Exception $e) { /* ignore */ }
+                if (!$map) {
+                    try {
+                        // Will error if room_type doesn't exist; ignore
+                        $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_type = CONCAT('room', ?) AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
+                    } catch (Exception $e) { /* ignore */ }
+                }
                 $coords = $map ? json_decode($map['coordinates'], true) : [];
                 echo json_encode(['success' => true, 'coordinates' => is_array($coords) ? $coords : []]);
                 return;
@@ -106,16 +137,147 @@ function handleGet() {
                     echo json_encode(['success' => false, 'message' => 'room is required']);
                     return;
                 }
-                $rows = Database::queryAll("SELECT id, room_number, area_selector, mapping_type, item_id, category_id, display_order FROM area_mappings WHERE room_number = ? AND is_active = 1 ORDER BY display_order, id", [$roomNumber]);
+                // Query by room_number; if legacy room_type exists, include it as fallback
+                $sql = "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order FROM area_mappings WHERE is_active = 1 AND room_number = ? ORDER BY display_order, id";
+                $params = [$roomNumber];
+                if (wf_has_column('area_mappings', 'room_type')) {
+                    $sql = "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order FROM area_mappings WHERE is_active = 1 AND (room_number = ? OR room_type = CONCAT('room', ?)) ORDER BY display_order, id";
+                    $params = [$roomNumber, $roomNumber];
+                }
+                $rows = Database::queryAll($sql, $params);
                 echo json_encode(['success' => true, 'mappings' => $rows]);
+                return;
+            case 'get_live_view':
+                if (!$roomNumber) {
+                    echo json_encode(['success' => false, 'message' => 'room is required']);
+                    return;
+                }
+                try {
+                    // 1) Load active coordinates for this room from room_maps (prefer room_number)
+                    $coordsRow = null;
+                    try {
+                        $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
+                    } catch (Exception $e) { /* ignore */ }
+                    if (!$coordsRow && wf_has_column('room_maps', 'room_type')) {
+                        try {
+                            $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_type = CONCAT('room', ?) AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
+                        } catch (Exception $e) { /* ignore */ }
+                    }
+                    $coords = [];
+                    if ($coordsRow) {
+                        $decoded = json_decode($coordsRow['coordinates'] ?? '[]', true);
+                        if (is_array($decoded)) { $coords = array_values($decoded); }
+                    }
+
+                    // 2) Resolve the room's primary category name via room_category_assignments -> categories
+                    $catRow = Database::queryOne(
+                        "SELECT c.id AS category_id, c.name AS category_name
+                         FROM room_category_assignments rca
+                         JOIN categories c ON rca.category_id = c.id
+                         WHERE rca.room_number = ? AND rca.is_primary = 1
+                         LIMIT 1",
+                        [$roomNumber]
+                    );
+                    $categoryId = $catRow['category_id'] ?? null;
+                    $categoryName = $catRow['category_name'] ?? '';
+
+                    // 3) Load items for that category (robust fallbacks)
+                    $items = [];
+                    // Prefer category_id match when available
+                    if ($categoryId) {
+                        try {
+                            $items = Database::queryAll(
+                                "SELECT i.sku, i.name, i.category
+                                 FROM items i
+                                 WHERE i.category_id = ?
+                                 ORDER BY i.sku ASC",
+                                [$categoryId]
+                            );
+                        } catch (Exception $e) { /* ignore, fallback below */ }
+                    }
+                    // Fallback to legacy name-based matching
+                    if (empty($items) && $categoryName !== '') {
+                        try {
+                            $items = Database::queryAll(
+                                "SELECT i.sku, i.name, i.category
+                                 FROM items i
+                                 WHERE i.category = ?
+                                 ORDER BY i.sku ASC",
+                                [$categoryName]
+                            );
+                        } catch (Exception $e) { /* as a last resort items stays empty */ }
+                    }
+                    // Fallback using slug-style normalization join with categories (handles minor name diffs)
+                    if (empty($items) && $categoryName !== '') {
+                        try {
+                            $items = Database::queryAll(
+                                "SELECT i.sku, i.name, i.category
+                                 FROM items i
+                                 JOIN categories c ON LOWER(REPLACE(REPLACE(TRIM(i.category), '&', 'and'), ' ', '-')) = LOWER(REPLACE(REPLACE(TRIM(c.name), '&', 'and'), ' ', '-'))
+                                 WHERE c.name = ?
+                                 ORDER BY i.sku ASC",
+                                [$categoryName]
+                            );
+                        } catch (Exception $e) { /* ignore */ }
+                    }
+                    // Very defensive partial LIKE match (last resort, avoids empty UI)
+                    if (empty($items) && $categoryName !== '') {
+                        try {
+                            $items = Database::queryAll(
+                                "SELECT i.sku, i.name, i.category
+                                 FROM items i
+                                 WHERE i.category LIKE ?
+                                 ORDER BY i.sku ASC",
+                                ['%' . $categoryName . '%']
+                            );
+                        } catch (Exception $e) { /* ignore */ }
+                    }
+
+                    // 4) Pair coordinates with items in order
+                    $countCoords = count($coords);
+                    $derived = [];
+                    foreach ($items as $i => $it) {
+                        $idx = $i + 1; // 1-based index for .area-N
+                        $derived[] = [
+                            'id' => null,
+                            'room_number' => $roomNumber,
+                            'area_selector' => ".area-{$idx}",
+                            'mapping_type' => 'item',
+                            'item_id' => null,
+                            'sku' => $it['sku'] ?? null,
+                            'category_id' => null,
+                            'display_order' => $idx,
+                            'derived' => true
+                        ];
+                    }
+
+                    $out = [
+                        'success' => true,
+                        'mappings' => $derived,
+                        'category' => $categoryName,
+                        'coordinates_count' => $countCoords
+                    ];
+                    if (empty($derived)) {
+                        // Help diagnose empty sets without exposing schema details
+                        $out['debug'] = [
+                            'category_id' => $categoryId,
+                            'room' => $roomNumber,
+                            'hint' => 'No items matched; tried category_id, exact name, normalized join, and LIKE.'
+                        ];
+                    }
+                    echo json_encode($out);
+                } catch (Exception $e) {
+                    http_response_code(200);
+                    echo json_encode(['success' => false, 'message' => 'get_live_view failed: '.$e->getMessage()]);
+                }
                 return;
             default:
                 echo json_encode(['success' => false, 'message' => 'Invalid action']);
                 return;
         }
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    } catch (Throwable $e) {
+        http_response_code(200);
+        echo json_encode(['success' => false, 'message' => 'Unhandled error: ' . $e->getMessage()]);
     }
 }
 
@@ -144,6 +306,7 @@ function addMapping($input)
     $areaSelector = $input['area_selector'] ?? null;
     $mappingType = $input['mapping_type'] ?? null;
     $itemId = $input['item_id'] ?? null;
+    $itemSku = $input['item_sku'] ?? null;
     $categoryId = $input['category_id'] ?? null;
     $displayOrder = $input['display_order'] ?? 0;
 
@@ -153,9 +316,9 @@ function addMapping($input)
         return;
     }
 
-    if ($mappingType === 'item' && !$itemId) {
+    if ($mappingType === 'item' && !$itemId && !$itemSku) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Item ID is required for item mapping']);
+        echo json_encode(['success' => false, 'message' => 'Item ID or SKU is required for item mapping']);
         return;
     }
 
@@ -175,8 +338,8 @@ function addMapping($input)
         }
 
         // Insert mapping
-        $result = Database::execute("INSERT INTO area_mappings (room_number, area_selector, mapping_type, item_id, category_id, display_order, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)", [
-            $roomNumber, $areaSelector, $mappingType, $itemId, $categoryId, $displayOrder
+        $result = Database::execute("INSERT INTO area_mappings (room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)", [
+            $roomNumber, $areaSelector, $mappingType, $itemId, $itemSku, $categoryId, $displayOrder
         ]);
 
         if ($result > 0) {
@@ -245,8 +408,10 @@ function handlePut($input)
     $mappingId = $input['id'] ?? null;
     $mappingType = $input['mapping_type'] ?? null;
     $itemId = $input['item_id'] ?? null;
+    $itemSku = $input['item_sku'] ?? null;
     $categoryId = $input['category_id'] ?? null;
     $displayOrder = $input['display_order'] ?? null;
+    $areaSelector = $input['area_selector'] ?? null;
 
     if (!$mappingId) {
         http_response_code(400);
@@ -262,9 +427,17 @@ function handlePut($input)
             $updateFields[] = 'mapping_type = ?';
             $updateValues[] = $mappingType;
         }
+        if ($areaSelector !== null) {
+            $updateFields[] = 'area_selector = ?';
+            $updateValues[] = $areaSelector;
+        }
         if ($itemId !== null) {
             $updateFields[] = 'item_id = ?';
             $updateValues[] = $itemId;
+        }
+        if ($itemSku !== null) {
+            $updateFields[] = 'item_sku = ?';
+            $updateValues[] = $itemSku;
         }
         if ($categoryId !== null) {
             $updateFields[] = 'category_id = ?';

@@ -177,12 +177,36 @@
         qsa('[data-action="closeDetailedModal"]', modal).forEach(btn => {
             btn.addEventListener('click', (e) => { e.preventDefault(); try { closeGlobalItemModal(); } catch(_) {} });
         });
+        // Bubble-phase handler: clicks that reach the overlay
         modal.addEventListener('click', (e) => {
             const clickedOutside = !e.target.closest('.detailed-item-modal-container');
-            const isOverlay = e.target === modal || e.target?.dataset?.action === 'closeDetailedModalOnOverlay' || clickedOutside;
+            const isOverlay = (e.target === modal) || clickedOutside || (e.target?.dataset?.action === 'closeDetailedModalOnOverlay');
             if (!isOverlay) return;
             try { closeGlobalItemModal(); } catch (_) {}
         });
+        // Capture-phase safeguard: some inner handlers may stopPropagation; capture ensures we still detect overlay clicks
+        const captureClose = (e) => {
+            // Only act if the initial target is the overlay itself (background), not clicks originating inside container
+            if (e.target === modal) {
+                try { closeGlobalItemModal(); } catch (_) {}
+            }
+        };
+        modal.addEventListener('mousedown', captureClose, true);
+        modal.addEventListener('click', captureClose, true);
+        // Document-level outside click fallback while modal is open
+        const docClickHandler = (ev) => {
+            const container = modal.querySelector('.detailed-item-modal-container');
+            if (!container) return;
+            const withinContainer = !!ev.target.closest?.('.detailed-item-modal-container');
+            const withinModal = modal.contains(ev.target);
+            if (withinModal && !withinContainer) {
+                // Click was somewhere on the overlay, outside the container
+                try { closeGlobalItemModal(); } catch (_) {}
+            }
+        };
+        document.addEventListener('click', docClickHandler, true);
+        // Ensure cleanup on close by stashing a remover on the modal element
+        modal._wfDocClickRemover = () => { document.removeEventListener('click', docClickHandler, true); modal.removeEventListener('mousedown', captureClose, true); modal.removeEventListener('click', captureClose, true); };
         function onKeyDown(ev) { if (ev.key === 'Escape') { try { closeGlobalItemModal(); } catch(_) {} document.removeEventListener('keydown', onKeyDown); } }
         document.addEventListener('keydown', onKeyDown);
     }
@@ -440,6 +464,7 @@
             try { modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
             modal.remove(); // Use remove() for simplicity
             console.log('[GlobalModal] close:removed');
+            try { typeof modal._wfDocClickRemover === 'function' && modal._wfDocClickRemover(); } catch (_) {}
         } else {
             console.log('[GlobalModal] close:no-modal-found');
         }

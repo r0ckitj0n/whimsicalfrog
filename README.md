@@ -100,3 +100,16 @@ $livePdo = Database::createConnection(
 ```
 
 Environment variables are supported (optionally via a `.env` file). See `.env.example` for the `WF_DB_LOCAL_*` and `WF_DB_LIVE_*` keys.
+
+## Security Hardening
+
+The repository includes defense-in-depth measures to prevent accidental exposure of sensitive files when developing locally or running under Apache:
+
+- Sensitive file extensions are denied via root `.htaccess` using `<FilesMatch>`: `.sql`, `.sqlite`, `.db`, `.env`, `.ini`, `.log`, `.bak`, `.old`, archives (`.zip/.tar/.gz/.7z/.rar`), and `.map`.
+- Directory listings are disabled globally with `Options -Indexes`.
+- Sensitive directories are blocked early with 403 responses in `.htaccess`: `backups/`, `scripts/`, `.git/`, `.github/`, and `vendor/`. Hidden dotfiles (e.g., `.env`, `.htaccess`) are also blocked except `/.well-known/`.
+- Safe security headers are set via `mod_headers`: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`.
+- The PHP dev router `router.php` mirrors these protections because the built-in PHP server ignores `.htaccess`. Requests for sensitive extensions, dotfiles (excluding `/.well-known/`), and protected directories return `403 Forbidden`.
+- Database dumps were moved to `backups/sql/` and both `backups/` and `backups/sql/` contain a deny-all `.htaccess`.
+
+Recommendation: Keep SQL dumps and logs outside the web root whenever possible. Root-level `/*.sql` files are git-ignored by default; SQL files under `scripts/` remain allowed for tooling.

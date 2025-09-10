@@ -28,7 +28,9 @@
     "tooltips:audit": "node scripts/dev/audit-tooltips.mjs",
     "tooltips:seed:dry": "node scripts/dev/seed-admin-tooltips.mjs --dry-run",
     "tooltips:seed": "node scripts/dev/seed-admin-tooltips.mjs --apply",
-    "smoke:apis": "bash scripts/dev/smoke-all-apis.sh"
+    "smoke:apis": "bash scripts/dev/smoke-all-apis.sh",
+    "db:dump": "bash scripts/db/dump_local_db.sh",
+    "db:dump:gzip": "bash scripts/db/dump_local_db.sh --gzip"
   },
   "devDependencies": {
     "@babel/parser": "^7.28.0",

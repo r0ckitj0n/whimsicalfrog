@@ -78,6 +78,8 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
+  --include-glob backups/sql/*.sql \
+  --include-glob backups/sql/*.gz \
   --exclude-glob backups/ \
   --exclude-glob documentation/ \
   --exclude-glob Documentation/ \

@@ -90,6 +90,8 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
+  --include-glob backups/sql/*.sql \
+  --include-glob backups/sql/*.gz \
   --exclude-glob backups/ \
   --exclude-glob documentation/ \
   --exclude-glob Documentation/ \
@@ -157,6 +159,8 @@ rm fix_permissions.txt
 # Overwrite live database from local dump (Option A)
 echo -e "${GREEN}🗄️  Creating local database dump and restoring on live...${NC}"
 DB_STATUS="Skipped"
+# Ensure control flag is initialized (used to skip DB work when preflight fails)
+goto_verify=false
 
 # If preflight failed, skip DB dump/restore entirely
 if [ "$DB_PREFLIGHT_OK" != true ]; then

@@ -38,6 +38,32 @@ if (file_exists($hotPath) && !$disableDevByFlag && !$disableDevByEnv) {
 // Construct the full path to the requested file in the public directory
 $filePath = __DIR__ . $requestedPath;
 
+// Security: deny access to sensitive files and directories in dev (PHP built-in server ignores .htaccess)
+// Block file extensions like .sql, .env, .log, archives, and source maps
+if (preg_match('#\.(sql|sqlite|db|env|ini|log|bak|old|zip|tar|gz|7z|rar|bk|bkp|map)$#i', $requestedPath)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Forbidden\n";
+    exit;
+}
+// Block hidden dotfiles except the ACME/.well-known path
+if (preg_match('#^/\.(?!well-known/)#', $requestedPath)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Forbidden\n";
+    exit;
+}
+// Block sensitive directories from being served directly
+$denyPrefixes = ['/backups/', '/scripts/', '/.git/', '/.github/', '/vendor/'];
+foreach ($denyPrefixes as $prefix) {
+    if (strpos($requestedPath, $prefix) === 0) {
+        http_response_code(403);
+        header('Content-Type: text/plain; charset=utf-8');
+        echo "Forbidden\n";
+        exit;
+    }
+}
+
 // If the requested path is a file and it exists, serve it directly.
 // This handles assets like images, CSS, and JavaScript files.
 if (is_file($filePath)) {

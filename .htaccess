@@ -7,6 +7,50 @@ Options -MultiViews
 RewriteEngine On
 RewriteBase /
 
+# Security: Block direct access to sensitive files (SQL dumps, env, logs, archives)
+# Applies before "serve existing files" rule below
+<FilesMatch "\.(sql|sqlite|db|env|ini|log|bak|old|zip|tar|gz|7z|rar|bk|bkp)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Disable directory listings globally (defense-in-depth)
+Options -Indexes
+
+# Deny access to sensitive directories that should never be web-served
+# Use early 403 to avoid falling through to router.php
+RewriteRule ^backups/ - [R=403,L]
+RewriteRule ^scripts/ - [R=403,L]
+RewriteRule ^\.git/ - [R=403,L]
+RewriteRule ^\.github/ - [R=403,L]
+RewriteRule ^vendor/ - [R=403,L]
+
+# Deny hidden dotfiles except .well-known/ (e.g., .env, .htaccess, .gitignore)
+RewriteRule ^\.(?!well-known/) - [R=403,L]
+
+# Deny source maps in production (reduce source disclosure)
+<FilesMatch "\.(map)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Safe security headers (do not block content)
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
 # Map stale app.js-* requests to the current bundle directly (internal rewrite, no redirect)
 RewriteRule ^dist/assets/js/app\.js-[A-Za-z0-9_\-]+\.js$ router.php [L,QSA]
 

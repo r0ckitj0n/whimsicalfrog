@@ -59,27 +59,82 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     // fetch category name from room_settings
     $meta = getRoomMetadata($roomNumber, $pdo);
     $categoryName = $meta['category'];
-    // fetch category info by name
-
-    // fetch category info by name
-    $catInfo = Database::queryOne("SELECT id, description FROM categories WHERE name = ? LIMIT 1", [$categoryName]) ?: [];
-    $catId = $catInfo['id'] ?? null;
-    
+    // Attempt to resolve a category_id from metadata or by name
+    $categoryId = $meta['category_id'] ?? null;
+    if (!$categoryId && $categoryName !== '') {
+        $catInfo = Database::queryOne("SELECT id, description FROM categories WHERE name = ? LIMIT 1", [$categoryName]) ?: [];
+        $categoryId = $catInfo['id'] ?? null;
+    }
 
     $items = [];
-    if ($catId) {
-        $items = Database::queryAll(
-            "SELECT i.*,
-                    i.stockLevel,
-                    i.retailPrice,
-                    COALESCE(img.image_path, i.imageUrl) as image_path,
-                    img.is_primary,
-                    img.alt_text
-             FROM items i
-             LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
-             WHERE i.category = ? ORDER BY i.sku ASC",
-            [$meta['category']]
-        );
+    // 1) Prefer FK-based lookup by category_id when available
+    if ($categoryId) {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 WHERE i.category_id = ? ORDER BY i.sku ASC",
+                [$categoryId]
+            );
+        } catch (Exception $e) { /* fall back below */ }
+    }
+    // 2) Fallback to legacy name-based match
+    if (empty($items) && $categoryName !== '') {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 WHERE i.category = ? ORDER BY i.sku ASC",
+                [$categoryName]
+            );
+        } catch (Exception $e) { /* fall back below */ }
+    }
+    // 3) Slug-normalized join fallback (handles small naming differences)
+    if (empty($items) && $categoryName !== '') {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 JOIN categories c ON LOWER(REPLACE(REPLACE(TRIM(i.category), '&', 'and'), ' ', '-')) = LOWER(REPLACE(REPLACE(TRIM(c.name), '&', 'and'), ' ', '-'))
+                 WHERE c.name = ? ORDER BY i.sku ASC",
+                [$categoryName]
+            );
+        } catch (Exception $e) { /* fall back below */ }
+    }
+    // 4) Very defensive partial LIKE match to avoid empty UI entirely
+    if (empty($items) && $categoryName !== '') {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 WHERE i.category LIKE ? ORDER BY i.sku ASC",
+                ['%' . $categoryName . '%']
+            );
+        } catch (Exception $e) { /* keep empty */ }
     }
 
     // fetch room settings
@@ -247,7 +302,7 @@ function getRoomMetadata($roomNumber, $pdo)
 
     // Get primary category for this room
     $categoryData = Database::queryOne(
-        "SELECT c.name as category_name
+        "SELECT c.id AS category_id, c.name AS category_name
         FROM room_category_assignments rca
         JOIN categories c ON rca.category_id = c.id
         WHERE rca.room_number = ? AND rca.is_primary = 1
@@ -255,12 +310,14 @@ function getRoomMetadata($roomNumber, $pdo)
         [$roomNumber]
     );
     $categoryName = $categoryData ? $categoryData['category_name'] : '';
+    $categoryId = $categoryData ? ($categoryData['category_id'] ?? null) : null;
 
     return [
         'room_number' => $roomNumber,
         'room_name'   => $rs['room_name'] ?? '',
         'description' => $rs['description'] ?? '',
-        'category'    => $categoryName
+        'category'    => $categoryName,
+        'category_id' => $categoryId
     ];
 }
 

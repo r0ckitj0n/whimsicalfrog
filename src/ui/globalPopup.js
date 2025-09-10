@@ -147,7 +147,7 @@ class UnifiedPopupSystem {
   }
   static _ensureRule(cls, t, l) {
     if (UnifiedPopupSystem._POS.rules.has(cls)) return;
-    const css = `.item-popup.${cls}{position:absolute;top:${Math.round(t)}px !important;left:${Math.round(l)}px !important;}`;
+    const css = `.item-popup.${cls}{position:fixed;top:${Math.round(t)}px !important;left:${Math.round(l)}px !important;z-index:100200 !important;}`;
     UnifiedPopupSystem._ensureStyleEl().appendChild(document.createTextNode(css));
     UnifiedPopupSystem._POS.rules.add(cls);
   }

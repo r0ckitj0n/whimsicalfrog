@@ -1,4 +1,8 @@
 <?php
+// WF_GUARD_TEMPLATES_CSS_IGNORE
+// This helper intentionally generates <link rel="stylesheet"> tags for Vite-managed CSS in both
+// development and production modes. The templates CSS guard operates on static templates and should
+// not flag this dynamic emission helper.
 
 // A helper function to handle loading Vite assets in both development and production.
 function vite(string $entry): string

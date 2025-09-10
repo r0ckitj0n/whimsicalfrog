@@ -278,7 +278,8 @@
     overflow-x: hidden !important;
     overflow-y: auto !important;
     box-sizing: border-box !important;
-    z-index: 100002 !important;
+    /* Must be above hover popup (100200) */
+    z-index: 100300 !important;
 }
 
 /* Hide horizontal scrollbar but keep vertical */

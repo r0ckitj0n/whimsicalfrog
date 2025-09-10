@@ -56,8 +56,8 @@ body.room-modal-open #detailedItemModal {
 
 /* Allow item popup to work within room modal - it has its own z-index management */
 body.modal-open #itemPopup.in-room-modal {
-    /* Only elevate layering; do not force visibility here. */
-    z-index: var(--z-index-god-mode, 99999);
+    /* Elevate popup above room modal and its header */
+    z-index: 100200 !important;
 }
 
 /* ==============================================

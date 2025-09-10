@@ -8,20 +8,13 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
     exit;
 }
 require_once __DIR__ . '/api_bootstrap.php';
-
+require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/room_helpers.php';
 
 // Get active background for a room
 
-// Database connection globals for Database class
-global $host, $db, $user, $pass, $port, $socket;
-$host = 'localhost';
-$db = 'whimsicalfrog';
-$user = 'root';
-$pass = 'Palz2516';
-$port = 3306;
-$socket = '';
+// Use centralized configuration (api/config.php) for Database::getInstance()
 
 /**
  * Generate dynamic fallback backgrounds based on room data

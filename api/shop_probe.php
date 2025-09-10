@@ -65,15 +65,8 @@ try {
 
     // Sale Items (legacy / fallback)
     try {
-        $rows = $pdo->query(
-            "SELECT 
-                s.sku,
-                COALESCE(s.name, s.item_name) AS name,
-                COALESCE(s.category_id, NULL) AS category_id,
-                COALESCE(s.category, NULL) AS category,
-                COALESCE(s.retailPrice, s.price, s.sale_price, 0) AS price
-             FROM sale_items s LIMIT 10"
-        )->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        // Unknown schema on live: fetch all columns but limit rows to avoid error on missing specific column names
+        $rows = $pdo->query("SELECT * FROM sale_items LIMIT 10")->fetchAll(PDO::FETCH_ASSOC) ?: [];
         $out['sample']['sale_items'] = $rows;
     } catch (Throwable $e) {
         $out['sample']['sale_items_error'] = $e->getMessage();

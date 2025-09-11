@@ -150,6 +150,8 @@ try {
         // Also set a signed WF_AUTH cookie to reconstruct auth if PHP session engine flakes
         try {
             wf_auth_set_cookie($user['id'], $cookieDomain, $isHttps);
+            // And a client-visible hint for immediate header UI sync (non-HttpOnly)
+            wf_auth_set_client_hint($user['id'], $user['role'] ?? null, $cookieDomain, $isHttps);
         } catch (\Throwable $e) {}
         // Ensure session is flushed to storage and cookie is sent
         try { @session_write_close(); } catch (\Throwable $e) {}

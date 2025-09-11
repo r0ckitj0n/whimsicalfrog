@@ -21,7 +21,12 @@ if (count($parts) >= 2) {
     $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
 }
 $cookieDomain = '.' . $baseDomain; // works for apex and www
-$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+$isHttps = (
+    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+    (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+    (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+    (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+);
 session_init([
     'name' => 'PHPSESSID',
     'lifetime' => 0,
@@ -29,7 +34,7 @@ session_init([
     'domain' => $cookieDomain,
     'secure' => $isHttps,
     'httponly' => true,
-    'samesite' => 'Lax',
+    'samesite' => 'None',
 ]);
 // Mark that other scripts are included from index for security checks
 if (!defined('INCLUDED_FROM_INDEX')) {

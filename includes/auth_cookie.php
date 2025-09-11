@@ -58,3 +58,29 @@ function wf_auth_clear_cookie(string $domain, bool $secure): void {
         'samesite' => 'None',
     ]);
 }
+
+// Non-HttpOnly client hint for UI sync: WF_AUTH_V carries minimal data
+function wf_auth_client_cookie_name(): string { return 'WF_AUTH_V'; }
+
+function wf_auth_set_client_hint($userId, ?string $role, string $domain, bool $secure): void {
+    $payload = json_encode([ 'uid' => (string)$userId, 'role' => $role ? (string)$role : null ]);
+    @setcookie(wf_auth_client_cookie_name(), base64_encode($payload), [
+        'expires' => time() + 60*60*24*7,
+        'path' => '/',
+        'domain' => $domain,
+        'secure' => $secure,
+        'httponly' => false,
+        'samesite' => 'None',
+    ]);
+}
+
+function wf_auth_clear_client_hint(string $domain, bool $secure): void {
+    @setcookie(wf_auth_client_cookie_name(), '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'domain' => $domain,
+        'secure' => $secure,
+        'httponly' => false,
+        'samesite' => 'None',
+    ]);
+}

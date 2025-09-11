@@ -10,7 +10,12 @@
 // Unify session bootstrap with centralized manager so save_path and cookie are identical to readers
 require_once __DIR__ . '/../includes/session.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+    $isHttps = (
+        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+        (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+        (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+        (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+    );
     $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
     $parts = explode('.', $host);
@@ -131,7 +136,12 @@ try {
                 $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
             }
             $cookieDomain = '.' . $baseDomain;
-            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+            $isHttps = (
+                (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+                (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+                (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+            );
             // Clear any host-only variant
             @setcookie(session_name(), '', [ 'expires' => time()-3600, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
             // Set canonical

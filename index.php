@@ -1,6 +1,17 @@
 <?php
 // Centralized session initialization with consistent cookie params across apex and www
 require_once __DIR__ . '/includes/session.php';
+// Enforce canonical host to avoid cookie splits between apex and www
+try {
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    if ($host && stripos($host, 'www.whimsicalfrog.us') === 0) {
+        $scheme = 'https';
+        $uri = $_SERVER['REQUEST_URI'] ?? '/';
+        $target = $scheme . '://whimsicalfrog.us' . $uri;
+        header('Location: ' . $target, true, 301);
+        exit;
+    }
+} catch (\Throwable $e) { /* non-fatal */ }
 // Derive base domain like whimsicalfrog.us from host (www.whimsicalfrog.us -> whimsicalfrog.us)
 $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
 if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
@@ -32,6 +43,8 @@ require_once __DIR__ . '/includes/functions.php';
 error_log('DEBUG: index.php - after functions.php');
 require_once __DIR__ . '/includes/auth.php';
 error_log('DEBUG: index.php - after auth.php');
+// Reconstruct session from WF_AUTH (if present) before rendering anything
+try { ensureSessionStarted(); } catch (\Throwable $e) {}
 require_once __DIR__ . '/includes/vite_helper.php';
 error_log('DEBUG: index.php - after vite_helper.php');
 

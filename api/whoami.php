@@ -5,6 +5,7 @@
 // Standardize session initialization to prevent host-only cookie conflicts
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
+require_once __DIR__ . '/../includes/auth.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
@@ -22,9 +23,12 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         'domain' => $cookieDomain,
         'secure' => $isHttps,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => 'None',
     ]);
 }
+
+// Important: reconstruct session from WF_AUTH if needed
+try { ensureSessionStarted(); } catch (\Throwable $e) { /* non-fatal */ }
 
 // CORS: reflect origin and allow credentials so cookies are included cross-origin in dev
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';

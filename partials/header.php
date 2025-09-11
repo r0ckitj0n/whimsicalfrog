@@ -3,6 +3,9 @@
 
 // Ensure session is started with consistent cookie params (apex + www)
 require_once dirname(__DIR__) . '/includes/session.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
+// Reconstruct from WF_AUTH if needed before rendering login state
+try { ensureSessionStarted(); } catch (\Throwable $e) {}
 if (session_status() !== PHP_SESSION_ACTIVE) {
     $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }

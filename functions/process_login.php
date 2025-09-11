@@ -7,15 +7,31 @@
  * with proper password hashing and session management.
  */
 
-// Start session first before any headers
+// Configure cookie params BEFORE session_start
 if (session_status() === PHP_SESSION_NONE) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+    // Strip port if present
+    if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+    $domain = $host; // use exact host for maximum compatibility
+    $params = [
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => $domain,
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ];
+    if (PHP_VERSION_ID >= 70300) {
+        session_set_cookie_params($params);
+    } else {
+        session_set_cookie_params($params['lifetime'], $params['path'].'; samesite='.$params['samesite'], $params['domain'], $params['secure'], $params['httponly']);
+    }
     session_start();
 }
 
-// Start output buffering to capture any unexpected output from includes
-if (!ob_get_level()) {
-    ob_start();
-}
+// Start output buffering to capture any unexpected output from includes (optional)
+if (!ob_get_level()) { ob_start(); }
 
 
 // Include the configuration and auth files
@@ -40,15 +56,13 @@ header('Content-Type: application/json');
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    // Discard any buffered output to keep response body empty for preflight
-    if (ob_get_length()) { ob_end_clean(); }
+    while (ob_get_level() > 0) { ob_end_clean(); }
     exit;
 }
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
-    if (ob_get_length()) { ob_clean(); }
     echo json_encode(['error' => 'Method not allowed']);
     exit;
 }
@@ -60,7 +74,6 @@ try {
     // Validate required fields
     if (!isset($data['username']) || !isset($data['password'])) {
         http_response_code(400);
-        if (ob_get_length()) { ob_clean(); }
         echo json_encode(['error' => 'Username and password are required']);
         exit;
     }
@@ -103,8 +116,12 @@ try {
             $user['id']
         );
 
+        // Regenerate session id to prevent fixation and ensure new cookie is sent
+        try { @session_regenerate_id(true); } catch (\Throwable $e) {}
+        // Ensure session is flushed to storage and cookie is sent
+        try { @session_write_close(); } catch (\Throwable $e) {}
+
         // User authenticated successfully
-        if (ob_get_length()) { ob_clean(); }
         echo json_encode([
             'userId' => $user['id'],
             'username' => $user['username'],
@@ -115,6 +132,7 @@ try {
             'lastName' => $user['lastName'] ?? null,
             'redirectUrl' => $redirectUrl // Include redirect URL in response
         ]);
+        exit;
     } else {
         // Log failed login attempt
         if (class_exists('DatabaseLogger')) {
@@ -128,15 +146,14 @@ try {
         }
 
         http_response_code(401);
-        if (ob_get_length()) { ob_clean(); }
         echo json_encode(['error' => 'Invalid username or password']);
+        exit;
     }
 
 } catch (PDOException $e) {
     // Handle database errors
     error_log("Database error in login: " . $e->getMessage());
     http_response_code(500);
-    if (ob_get_length()) { ob_clean(); }
     echo json_encode([
         'error' => 'Database connection failed',
         'details' => 'Please try again later'
@@ -146,7 +163,6 @@ try {
     // Handle general errors
     error_log("Login error: " . $e->getMessage());
     http_response_code(500);
-    if (ob_get_length()) { ob_clean(); }
     echo json_encode([
         'error' => 'An unexpected error occurred',
         'details' => 'Please try again later'

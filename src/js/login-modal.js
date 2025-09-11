@@ -130,12 +130,15 @@
         if (document && document.body) {
           document.body.setAttribute('data-is-logged-in', 'true');
           // Also expose user id so payment-modal can operate without full page reload
-          const n = Number(resolvedUserId);
-          if (Number.isFinite(n) && n > 0) {
-            document.body.setAttribute('data-user-id', String(n));
-            resolvedUserId = n;
-          } else {
-            resolvedUserId = undefined;
+          if (resolvedUserId != null) {
+            const raw = String(resolvedUserId);
+            document.body.setAttribute('data-user-id', raw);
+            document.body.setAttribute('data-user-id-raw', raw);
+            const n = Number(resolvedUserId);
+            if (Number.isFinite(n) && n > 0) {
+              document.body.setAttribute('data-user-id-norm', String(n));
+              resolvedUserId = n;
+            }
           }
         }
       } catch (_) {}

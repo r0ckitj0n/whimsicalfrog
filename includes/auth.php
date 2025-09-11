@@ -8,6 +8,8 @@
 
 // Include database functions
 require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/session.php';
+require_once __DIR__ . '/auth_cookie.php';
 
 /**
  * Ensure PHP session is started before accessing $_SESSION
@@ -15,14 +17,11 @@ require_once __DIR__ . '/database.php';
 function ensureSessionStarted()
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
-        require_once __DIR__ . '/session.php';
         $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
         if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
         $parts = explode('.', $host);
         $baseDomain = $host;
-        if (count($parts) >= 2) {
-            $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
-        }
+        if (count($parts) >= 2) { $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1]; }
         $cookieDomain = '.' . $baseDomain;
         $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
         session_init([
@@ -32,9 +31,37 @@ function ensureSessionStarted()
             'domain' => $cookieDomain,
             'secure' => $isHttps,
             'httponly' => true,
-            'samesite' => 'Lax',
+            'samesite' => 'None',
         ]);
     }
+    // Reconstruct session from WF_AUTH cookie if needed (stateless fallback)
+    try {
+        if (empty($_SESSION['user'])) {
+            $cookieVal = $_COOKIE[wf_auth_cookie_name()] ?? null;
+            $parsed = wf_auth_parse_cookie($cookieVal ?? '');
+            if (is_array($parsed) && !empty($parsed['userId'])) {
+                $uid = $parsed['userId'];
+                // Fetch user
+                $row = Database::queryOne('SELECT id, username, email, role, firstName, lastName FROM users WHERE id = ?', [$uid]);
+                if ($row && !empty($row['id'])) {
+                    $_SESSION['user'] = [
+                        'userId' => $row['id'],
+                        'username' => $row['username'] ?? null,
+                        'email' => $row['email'] ?? null,
+                        'role' => $row['role'] ?? 'user',
+                        'firstName' => $row['firstName'] ?? null,
+                        'lastName' => $row['lastName'] ?? null,
+                    ];
+                    // Refresh cookie TTL
+                    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+                    if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+                    $p = explode('.', $host); $bd = $host; if (count($p) >= 2) { $bd = $p[count($p)-2] . '.' . $p[count($p)-1]; }
+                    $dom = '.' . $bd; $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+                    wf_auth_set_cookie($row['id'], $dom, $sec);
+                }
+            }
+        }
+    } catch (\Throwable $e) { /* non-fatal */ }
 }
 
 

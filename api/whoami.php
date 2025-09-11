@@ -4,6 +4,7 @@
 
 // Standardize session initialization to prevent host-only cookie conflicts
 require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . '/../includes/auth_cookie.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
@@ -74,6 +75,15 @@ if (!is_null($userId)) {
     }
 }
 
+// Bump a heartbeat counter to verify session persistence across requests
+try {
+    $_SESSION['__wf_heartbeat'] = (int)($_SESSION['__wf_heartbeat'] ?? 0) + 1;
+} catch (\Throwable $e) { /* noop */ }
+
+// Check WF_AUTH fallback cookie
+$wfAuthRaw = $_COOKIE[wf_auth_cookie_name()] ?? null;
+$wfAuthParsed = wf_auth_parse_cookie($wfAuthRaw ?? '');
+
 // Standard success payload with temporary diagnostics (safe)
 $payload = [
     'success' => true,
@@ -81,6 +91,10 @@ $payload = [
     'sid' => session_id(),
     'sessionActive' => session_status() === PHP_SESSION_ACTIVE,
     'hasUserSession' => !empty($_SESSION['user']),
+    'heartbeat' => $_SESSION['__wf_heartbeat'] ?? null,
+    'savePath' => ini_get('session.save_path'),
+    'wfAuthPresent' => $wfAuthRaw !== null,
+    'wfAuthParsedUserId' => is_array($wfAuthParsed) ? ($wfAuthParsed['userId'] ?? null) : null,
 ];
 if ($userIdRaw !== null && $userIdRaw !== '') { $payload['userIdRaw'] = $userIdRaw; }
 if ($username !== null) { $payload['username'] = (string)$username; }

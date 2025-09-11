@@ -31,16 +31,37 @@ class SessionManager
         // Merge custom config
         self::$config = array_merge(self::$config, $config);
 
+        // Ensure a writable session storage path within the project (avoids host-level misconfig)
+        try {
+            $sessDir = dirname(__DIR__) . '/sessions';
+            if (!is_dir($sessDir)) {
+                @mkdir($sessDir, 0700, true);
+            }
+            if (is_dir($sessDir) && is_writable($sessDir)) {
+                ini_set('session.save_path', $sessDir);
+            }
+        } catch (\Throwable $e) { /* non-fatal */ }
+
+        // Robust HTTPS detection (behind proxies)
+        $isHttps = (
+            (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+            (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+            (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+            (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+        );
+
         // Set session configuration
         ini_set('session.name', self::$config['name']);
         ini_set('session.gc_maxlifetime', self::$config['lifetime']);
         ini_set('session.cookie_lifetime', self::$config['lifetime']);
         ini_set('session.cookie_path', self::$config['path']);
         ini_set('session.cookie_domain', self::$config['domain']);
-        ini_set('session.cookie_secure', self::$config['secure']);
+        ini_set('session.cookie_secure', $isHttps ? 1 : 0);
         ini_set('session.cookie_httponly', self::$config['httponly']);
         ini_set('session.cookie_samesite', self::$config['samesite']);
         ini_set('session.use_strict_mode', 1);
+        ini_set('session.use_cookies', 1);
+        ini_set('session.use_only_cookies', 1);
 
         // Start session
         if (session_status() === PHP_SESSION_NONE) {
@@ -55,7 +76,12 @@ class SessionManager
                     $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
                 }
                 $cookieDomain = '.' . $baseDomain;
-                $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+                $isHttps = (
+                    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                    (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+                    (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+                    (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+                );
                 // 1) Clear any host-only cookie by setting expired cookie without Domain
                 @setcookie(session_name(), '', [
                     'expires' => time() - 3600,

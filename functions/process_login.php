@@ -7,35 +7,27 @@
  * with proper password hashing and session management.
  */
 
-// Configure cookie params BEFORE session_start
-if (session_status() === PHP_SESSION_NONE) {
+// Unify session bootstrap with centralized manager so save_path and cookie are identical to readers
+require_once __DIR__ . '/../includes/session.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
     $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
     $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
-    // Strip port if present
     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
-    // Derive base domain so cookie works on apex and www
-    // e.g., www.whimsicalfrog.us => whimsicalfrog.us, set cookie Domain=.whimsicalfrog.us
     $parts = explode('.', $host);
     $baseDomain = $host;
     if (count($parts) >= 2) {
         $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
     }
-    // If already apex (no subdomain), baseDomain equals host; prefix with dot for broad scope
     $domain = '.' . $baseDomain;
-    $params = [
-        'lifetime' => 0,
-        'path' => '/',
-        'domain' => $domain,
-        'secure' => $isHttps,
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ];
-    if (PHP_VERSION_ID >= 70300) {
-        session_set_cookie_params($params);
-    } else {
-        session_set_cookie_params($params['lifetime'], $params['path'].'; samesite='.$params['samesite'], $params['domain'], $params['secure'], $params['httponly']);
-    }
-    session_start();
+    session_init([
+        'name'    => 'PHPSESSID',
+        'lifetime'=> 0,
+        'path'    => '/',
+        'domain'  => $domain,
+        'secure'  => $isHttps,
+        'httponly'=> true,
+        'samesite'=> 'None',
+    ]);
 }
 
 // Start output buffering to capture any unexpected output from includes (optional)
@@ -46,6 +38,7 @@ if (!ob_get_level()) { ob_start(); }
 require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/database_logger.php';
+require_once __DIR__ . '/../includes/auth_cookie.php';
 
 // Set CORS headers only when Origin is present (dev cross-origin). For same-origin, omit CORS to avoid cookie issues.
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -143,6 +136,10 @@ try {
             @setcookie(session_name(), '', [ 'expires' => time()-3600, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
             // Set canonical
             @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $cookieDomain, 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
+        } catch (\Throwable $e) {}
+        // Also set a signed WF_AUTH cookie to reconstruct auth if PHP session engine flakes
+        try {
+            wf_auth_set_cookie($user['id'], $cookieDomain, $isHttps);
         } catch (\Throwable $e) {}
         // Ensure session is flushed to storage and cookie is sent
         try { @session_write_close(); } catch (\Throwable $e) {}

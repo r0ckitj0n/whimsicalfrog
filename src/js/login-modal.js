@@ -219,7 +219,8 @@
     e.stopPropagation();
     try { if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); } catch(_) {}
     const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
-    openModal(desiredReturn);
+    // Suppress redirect by default when invoked from header to avoid session loss during navigation on live
+    openModal(desiredReturn, { suppressRedirect: true });
   }, true);
 
   // Intercept native /login page form if present for consistent UX

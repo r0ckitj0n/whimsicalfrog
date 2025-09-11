@@ -15,7 +15,7 @@ function ensureBgClass(url){
   if (bgClassCache.has(url)) return bgClassCache.get(url);
   const idx = bgClassCache.size + 1;
   const cls = `roombg-${idx}`;
-  getBgStyleEl().appendChild(document.createTextNode(`.${cls}{--dynamic-bg-url:url('${url}');background-image:url('${url}');}`));
+  getBgStyleEl().appendChild(document.createTextNode(`.${cls}{--dynamic-bg-url:url('${url}');background-image:url('${url}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
   bgClassCache.set(url, cls);
   return cls;
 }
@@ -106,7 +106,16 @@ export async function loadRoomBackground(roomNumberStr) {
                 roomWrapper.classList.add('dynamic-room-bg-loaded');
                 console.log(`Dynamic room background loaded: ${background.background_name} (${imageUrl})`);
             } else {
-                console.log('Room wrapper not found, using fallback background');
+                // Fallback: apply to body
+                const bgCls = ensureBgClass(imageUrl);
+                if (bgCls){
+                    document.body.classList.add(bgCls);
+                    document.body.dataset.bgClass = bgCls;
+                    document.body.classList.add('dynamic-room-bg-loaded');
+                    console.log(`Dynamic room background applied to body (${imageUrl})`);
+                } else {
+                    console.log('Room wrapper not found, and failed to generate bg class');
+                }
             }
         } else {
             if (roomNumberStr === 'shop') {
@@ -187,5 +196,57 @@ async function autoLoadRoomBackground() {
     }
 }
 
+// Watch for modal-based room content appearing after initial load
+function setupModalObserver() {
+    try {
+        const runDetection = async () => {
+            try {
+                // If a modal wrapper exists, attempt the same detection used in autoLoad
+                const modalHost = document.getElementById('modalRoomPage') || document.querySelector('.room-overlay-wrapper') || document.querySelector('.room-modal-body') || document.querySelector('.room-modal-iframe-container');
+                if (!modalHost) return;
+                const roomData = await apiGet('/api/get_room_data.php').catch(() => null);
+                const roomNumberMapping = roomData?.data?.roomTypeMapping || {};
+                const roomDoors = roomData?.data?.roomDoors || [];
+                const roomContainer = document.querySelector('[data-room-name]');
+                if (roomContainer) {
+                    const roomName = roomContainer.getAttribute('data-room-name');
+                    const matchingRoom = roomDoors.find(room =>
+                        room.room_name?.toLowerCase() === roomName?.toLowerCase() ||
+                        room.door_label?.toLowerCase() === roomName?.toLowerCase()
+                    );
+                    if (matchingRoom) {
+                        const roomNumberStr = roomNumberMapping[matchingRoom.room_number];
+                        if (roomNumberStr) {
+                            loadRoomBackground(roomNumberStr);
+                        }
+                    }
+                }
+            } catch (_) { /* non-fatal */ }
+        };
+        // Initial attempt in case modal already present
+        runDetection();
+        const obs = new MutationObserver((muts) => {
+            for (const m of muts) {
+                if (m.type === 'childList') {
+                    const added = Array.from(m.addedNodes || []);
+                    if (added.some(n => (n.nodeType === 1) && (
+                        n.id === 'modalRoomPage' ||
+                        n.classList?.contains('room-overlay-wrapper') ||
+                        n.classList?.contains('room-modal-body') ||
+                        n.classList?.contains('room-modal-iframe-container')
+                    ))) {
+                        runDetection();
+                        break;
+                    }
+                }
+            }
+        });
+        obs.observe(document.body || document.documentElement, { childList: true, subtree: true });
+    } catch (_) { /* non-fatal */ }
+}
+
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', autoLoadRoomBackground);
+document.addEventListener('DOMContentLoaded', () => {
+    autoLoadRoomBackground();
+    setupModalObserver();
+});

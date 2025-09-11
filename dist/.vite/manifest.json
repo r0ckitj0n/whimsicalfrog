@@ -172,7 +172,7 @@
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-CxI3MGxs.js",
+    "file": "assets/js/app.js-DAp85pOB.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -400,7 +400,7 @@
     "isDynamicEntry": true
   },
   "src/js/dynamic-background-loader.js": {
-    "file": "assets/dynamic-background-loader-bLPtRFh6.js",
+    "file": "assets/dynamic-background-loader-DFTX6rIx.js",
     "name": "dynamic-background-loader",
     "src": "src/js/dynamic-background-loader.js",
     "isDynamicEntry": true,

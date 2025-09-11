@@ -24,7 +24,7 @@ function ensureRoomBgClass(imageUrl) {
     const idx = roomBgClassMap.size + 1;
     const cls = `room-bg-${idx}`;
     const styleEl = getRoomModalStyleEl();
-    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}');}`));
+    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
     roomBgClassMap.set(imageUrl, cls);
     return cls;
 }
@@ -331,7 +331,7 @@ class RoomModalManager {
                     const supportsWebP = document.documentElement.classList.contains('webp');
                     let filename = supportsWebP && bg.webp_filename ? bg.webp_filename : bg.image_filename;
                     if (!filename.startsWith('backgrounds/')) filename = `backgrounds/${filename}`;
-                    const imageUrl = `/images/${filename}`;
+                    const imageUrl = `/images/${filename}?v=${Date.now()}`;
                     const bgCls = ensureRoomBgClass(imageUrl);
                     if (roomWrapper.dataset.roomBgClass && roomWrapper.dataset.roomBgClass !== bgCls) roomWrapper.classList.remove(roomWrapper.dataset.roomBgClass);
                     if (bgCls) { roomWrapper.classList.add(bgCls); roomWrapper.dataset.roomBgClass = bgCls; }

@@ -128,6 +128,22 @@ try {
 
         // Regenerate session id to prevent fixation and ensure new cookie is sent
         try { @session_regenerate_id(true); } catch (\Throwable $e) {}
+        // Explicitly set canonical cookie for apex+www to avoid host-only duplicates
+        try {
+            $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+            if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+            $parts = explode('.', $host);
+            $baseDomain = $host;
+            if (count($parts) >= 2) {
+                $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
+            }
+            $cookieDomain = '.' . $baseDomain;
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+            // Clear any host-only variant
+            @setcookie(session_name(), '', [ 'expires' => time()-3600, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
+            // Set canonical
+            @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $cookieDomain, 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
+        } catch (\Throwable $e) {}
         // Ensure session is flushed to storage and cookie is sent
         try { @session_write_close(); } catch (\Throwable $e) {}
 

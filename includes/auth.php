@@ -15,7 +15,25 @@ require_once __DIR__ . '/database.php';
 function ensureSessionStarted()
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
+        require_once __DIR__ . '/session.php';
+        $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+        if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+        $parts = explode('.', $host);
+        $baseDomain = $host;
+        if (count($parts) >= 2) {
+            $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
+        }
+        $cookieDomain = '.' . $baseDomain;
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+        session_init([
+            'name' => 'PHPSESSID',
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => $cookieDomain,
+            'secure' => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
     }
 }
 

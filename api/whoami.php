@@ -74,10 +74,13 @@ if (!is_null($userId)) {
     }
 }
 
-// Standard success payload without sensitive data
+// Standard success payload with temporary diagnostics (safe)
 $payload = [
     'success' => true,
     'userId' => $userId,
+    'sid' => session_id(),
+    'sessionActive' => session_status() === PHP_SESSION_ACTIVE,
+    'hasUserSession' => !empty($_SESSION['user']),
 ];
 if ($userIdRaw !== null && $userIdRaw !== '') { $payload['userIdRaw'] = $userIdRaw; }
 if ($username !== null) { $payload['username'] = (string)$username; }

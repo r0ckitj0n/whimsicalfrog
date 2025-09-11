@@ -16,7 +16,7 @@ class SessionManager
         'domain' => '',
         'secure' => false, // Set to true for HTTPS
         'httponly' => true,
-        'samesite' => 'Lax'
+        'samesite' => 'None'
     ];
 
     /**
@@ -45,6 +45,36 @@ class SessionManager
         // Start session
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
+            // Normalize cookie to base domain to avoid duplicate host-only vs domain cookies
+            try {
+                $host = $_SERVER['HTTP_HOST'] ?? '';
+                if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+                $parts = $host !== '' ? explode('.', $host) : [];
+                $baseDomain = $host;
+                if (count($parts) >= 2) {
+                    $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
+                }
+                $cookieDomain = '.' . $baseDomain;
+                $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+                // 1) Clear any host-only cookie by setting expired cookie without Domain
+                @setcookie(session_name(), '', [
+                    'expires' => time() - 3600,
+                    'path' => self::$config['path'],
+                    // No domain: targets host-only cookie on current host only
+                    'secure' => $isHttps,
+                    'httponly' => self::$config['httponly'],
+                    'samesite' => self::$config['samesite'],
+                ]);
+                // 2) Set the canonical domain-scoped cookie
+                @setcookie(session_name(), session_id(), [
+                    'expires' => 0,
+                    'path' => self::$config['path'],
+                    'domain' => $cookieDomain,
+                    'secure' => $isHttps,
+                    'httponly' => self::$config['httponly'],
+                    'samesite' => self::$config['samesite'],
+                ]);
+            } catch (\Throwable $e) { /* non-fatal */ }
         }
 
         // Initialize session security

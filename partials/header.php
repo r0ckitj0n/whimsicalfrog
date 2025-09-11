@@ -643,18 +643,32 @@ if ($__wf_is_logged_in) {
 <?php
   // Build inline background style so pages like About/Contact fully cover viewport
   $bodyStyle = '';
+  $bodyBgUrlOut = $bodyBgUrl;
   if ($bodyBgUrl) {
-      $safeBg = htmlspecialchars($bodyBgUrl, ENT_QUOTES, 'UTF-8');
+      // Add cache-busting based on file modification time so replacing the same filename updates immediately
+      try {
+          $bgPath = parse_url($bodyBgUrl, PHP_URL_PATH);
+          if ($bgPath) {
+              $fsPath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? dirname(__DIR__), '/') . $bgPath;
+              if (is_file($fsPath)) {
+                  $mt = @filemtime($fsPath);
+                  if ($mt) {
+                      $bodyBgUrlOut = $bodyBgUrl . (strpos($bodyBgUrl, '?') !== false ? '&' : '?') . 'v=' . $mt;
+                  }
+              }
+          }
+      } catch (\Throwable $e) { /* non-fatal */ }
+      $safeBg = htmlspecialchars($bodyBgUrlOut, ENT_QUOTES, 'UTF-8');
       // Inline styles are disallowed by CI guard. We'll set background via JS using data-bg-url.
   }
 ?>
 <?php
     // (CSS/JS for admin/settings was handled in <head>)
 ?>
-<body class="<?php echo implode(' ', $bodyClasses); ?>" <?php echo $bodyBgUrl ? 'data-bg-url="' . htmlspecialchars($bodyBgUrl) . '"' : ''; ?> data-page="<?php echo htmlspecialchars($pageSlug); ?>" data-path="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/'); ?>" data-is-admin="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-is-logged-in="<?php echo $__wf_is_logged_in ? 'true' : 'false'; ?>"
+<body class="<?php echo implode(' ', $bodyClasses); ?>" <?php echo $bodyBgUrlOut ? 'data-bg-url="' . htmlspecialchars($bodyBgUrlOut) . '"' : ''; ?> data-page="<?php echo htmlspecialchars($pageSlug); ?>" data-path="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/'); ?>" data-is-admin="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-is-logged-in="<?php echo $__wf_is_logged_in ? 'true' : 'false'; ?>"
   <?php echo ($__wf_user_id !== null) ? 'data-user-id="' . htmlspecialchars($__wf_user_id) . '"' : ''; ?>
   <?php echo ($__wf_user_id_raw !== null && $__wf_user_id_raw !== '') ? 'data-user-id-raw="' . htmlspecialchars($__wf_user_id_raw) . '"' : ''; ?>
-  <?php echo ($__wf_user_id !== null) ? 'data-user-id-norm="' . htmlspecialchars($__wf_user_id) . '"' : ''; ?>
+  <?php echo ($__wf_user_id_norm !== null) ? 'data-user-id-norm="' . htmlspecialchars($__wf_user_id_norm) . '"' : ''; ?>
 >
 <script>(function(){try{var b=document.body;var url=b&&b.getAttribute('data-bg-url');if(url){b.style.backgroundImage='url('+url+')';b.style.backgroundSize='cover';b.style.backgroundPosition='center';b.style.backgroundRepeat='no-repeat';b.style.minHeight='100vh';}}catch(e){}})();</script>
 <?php

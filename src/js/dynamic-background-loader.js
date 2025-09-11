@@ -22,16 +22,9 @@ function ensureBgClass(url){
 export async function loadRoomBackground(roomNumberStr) {
     
     try {
-        // Check if we're coming from main room - if so, use main room background
-        const urlParams = new URLSearchParams(window.location.search);
-        const fromMain = urlParams.get('from') === 'main';
-        
-        if (fromMain) {
-            // When coming from main room, let CSS handle room-specific content 
-            // and let main site background system handle the main room background
-            console.log('Coming from main room - using CSS room background with main room body background');
-            return;
-        }
+        // Previously, we skipped dynamic background when coming from main (?from=main),
+        // which caused stale cached images (CSS-based backgrounds) to persist.
+        // Always proceed with dynamic fetch/apply so we attach a cache-busted URL.
         // If no room provided, try to auto-detect similar to autoLoadRoomBackground
         if (!roomNumberStr) {
             const landingPage = document.querySelector('#landingPage');

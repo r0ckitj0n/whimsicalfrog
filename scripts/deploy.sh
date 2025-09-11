@@ -117,6 +117,26 @@ EOL
 echo -e "${GREEN}🌐 Deploying files to server...${NC}"
 if lftp -f deploy_commands.txt; then
   echo -e "${GREEN}✅ Files deployed successfully${NC}"
+  # Perform a second, targeted mirror for images/backgrounds WITHOUT --ignore-time
+  # Rationale: when replacing background files with the same size but different content,
+  # the size-only comparison (from --ignore-time) may skip the upload. This pass uses
+  # mtime to ensure changed files are uploaded.
+  echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based)...${NC}"
+  cat > deploy_backgrounds.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+mirror --reverse --delete --verbose --only-newer --no-perms \
+  images/backgrounds images/backgrounds
+bye
+EOL
+  if lftp -f deploy_backgrounds.txt; then
+    echo -e "${GREEN}✅ Background images synced (mtime-based)${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Background image sync failed; continuing${NC}"
+  fi
+  rm -f deploy_backgrounds.txt
 else
   echo -e "${RED}❌ File deployment failed${NC}"
   rm deploy_commands.txt

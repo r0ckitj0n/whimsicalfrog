@@ -7,32 +7,29 @@
     "file": "assets/auto-C8LTT2Eg.js",
     "name": "auto"
   },
-  "_main-BH5aOYEC.css": {
-    "file": "assets/main-BH5aOYEC.css",
-    "src": "_main-BH5aOYEC.css"
-  },
-  "_main-DLhbUTv8.js": {
-    "file": "assets/main-DLhbUTv8.js",
+  "_main-D7QqVeOp.js": {
+    "file": "assets/main-D7QqVeOp.js",
     "name": "main",
     "css": [
-      "assets/main-BH5aOYEC.css"
+      "assets/main-DaLZOs6Y.css"
     ],
     "assets": [
       "assets/background_room_main-CD7UiX_S.webp",
       "assets/background_room_main-Cjg0PIo1.png",
       "assets/background_home-ygUgfduk.webp",
       "assets/background_home-BN2Fr02e.png",
-      "assets/background_room1-wpDwXBWB.webp",
-      "assets/background_room1-BRAgtr92.png",
-      "assets/background_room2-BXdXijdr.webp",
-      "assets/background_room2-bZd0-sYF.png",
+      "assets/background_room1-CT8DYvO-.webp",
+      "assets/background_room2-A4VIfU7Q.webp",
       "assets/background_room3-BdYbvP-I.webp",
       "assets/background_room3-BI57Zz5G.png",
-      "assets/background_room4-DT1MHV1f.webp",
-      "assets/background_room4-B8BMTk5G.png",
+      "assets/background_room4-DFhE4hiJ.webp",
       "assets/background_room5-YLYEOZt2.webp",
       "assets/background_room5-DsaKXC6J.png"
     ]
+  },
+  "_main-DaLZOs6Y.css": {
+    "file": "assets/main-DaLZOs6Y.css",
+    "src": "_main-DaLZOs6Y.css"
   },
   "_whimsical-frog-core-OfZK0Wtj.js": {
     "file": "assets/whimsical-frog-core-OfZK0Wtj.js",
@@ -49,20 +46,12 @@
     "file": "assets/background_home-ygUgfduk.webp",
     "src": "images/backgrounds/background_home.webp"
   },
-  "images/backgrounds/background_room1.png": {
-    "file": "assets/background_room1-BRAgtr92.png",
-    "src": "images/backgrounds/background_room1.png"
-  },
   "images/backgrounds/background_room1.webp": {
-    "file": "assets/background_room1-wpDwXBWB.webp",
+    "file": "assets/background_room1-CT8DYvO-.webp",
     "src": "images/backgrounds/background_room1.webp"
   },
-  "images/backgrounds/background_room2.png": {
-    "file": "assets/background_room2-bZd0-sYF.png",
-    "src": "images/backgrounds/background_room2.png"
-  },
   "images/backgrounds/background_room2.webp": {
-    "file": "assets/background_room2-BXdXijdr.webp",
+    "file": "assets/background_room2-A4VIfU7Q.webp",
     "src": "images/backgrounds/background_room2.webp"
   },
   "images/backgrounds/background_room3.png": {
@@ -73,12 +62,8 @@
     "file": "assets/background_room3-BdYbvP-I.webp",
     "src": "images/backgrounds/background_room3.webp"
   },
-  "images/backgrounds/background_room4.png": {
-    "file": "assets/background_room4-B8BMTk5G.png",
-    "src": "images/backgrounds/background_room4.png"
-  },
   "images/backgrounds/background_room4.webp": {
-    "file": "assets/background_room4-DT1MHV1f.webp",
+    "file": "assets/background_room4-DFhE4hiJ.webp",
     "src": "images/backgrounds/background_room4.webp"
   },
   "images/backgrounds/background_room5.png": {
@@ -168,13 +153,13 @@
     ]
   },
   "src/entries/admin-settings.js": {
-    "file": "assets/js/admin-settings.js-CwDhsv5X.js",
+    "file": "assets/js/admin-settings.js-Bbe_L8xr.js",
     "name": "js/admin-settings.js",
     "src": "src/entries/admin-settings.js",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_main-DLhbUTv8.js"
+      "_main-D7QqVeOp.js"
     ],
     "dynamicImports": [
       "src/js/admin-settings-bridge.js",
@@ -187,12 +172,12 @@
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-Criwo4-B.js",
+    "file": "assets/js/app.js-CxI3MGxs.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
     "imports": [
-      "_main-DLhbUTv8.js"
+      "_main-D7QqVeOp.js"
     ],
     "dynamicImports": [
       "src/modules/cart-system.js",
@@ -355,12 +340,12 @@
     "isDynamicEntry": true
   },
   "src/js/admin-settings-bridge.js": {
-    "file": "assets/admin-settings-bridge-DBN-iI7j.js",
+    "file": "assets/admin-settings-bridge-CMrIusv2.js",
     "name": "admin-settings-bridge",
     "src": "src/js/admin-settings-bridge.js",
     "isDynamicEntry": true,
     "imports": [
-      "_main-DLhbUTv8.js"
+      "_main-D7QqVeOp.js"
     ],
     "dynamicImports": [
       "src/modules/background-manager.js",

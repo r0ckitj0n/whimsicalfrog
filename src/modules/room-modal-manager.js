@@ -328,8 +328,8 @@ class RoomModalManager {
                 const data = await response.json();
                 if (data.success && data.background) {
                     const bg = data.background;
-                    const supportsWebP = document.documentElement.classList.contains('webp');
-                    let filename = supportsWebP && bg.webp_filename ? bg.webp_filename : bg.image_filename;
+                    // Prefer WebP if API provides it; fall back to PNG if WebP is missing
+                    let filename = bg.webp_filename || bg.image_filename;
                     if (!filename.startsWith('backgrounds/')) filename = `backgrounds/${filename}`;
                     const imageUrl = `/images/${filename}?v=${Date.now()}`;
                     const bgCls = ensureRoomBgClass(imageUrl);

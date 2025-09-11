@@ -37,6 +37,15 @@ function checkAuth()
 try {
     try { Database::getInstance(); } catch (Exception $e) { error_log("Database connection failed: " . $e->getMessage()); throw $e; }
 
+    // Detect sale_items SKU column name: prefer 'sku', fallback to 'item_sku'
+    $saleItemsSkuCol = 'sku';
+    try {
+        $row = Database::queryOne("SHOW COLUMNS FROM sale_items LIKE 'sku'");
+        if (!$row) { $saleItemsSkuCol = 'item_sku'; }
+    } catch (Throwable $eCol) {
+        // If table missing or error, default stays 'sku'
+    }
+
     // Get action from query params, form data, or JSON body
     $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -53,7 +62,7 @@ try {
 
             $sales = Database::queryAll(
                 "SELECT s.*, 
-                       COUNT(si.item_sku) as item_count,
+                       COUNT(si.`$saleItemsSkuCol`) as item_count,
                        CASE 
                            WHEN s.is_active = 1 AND NOW() BETWEEN s.start_date AND s.end_date THEN 'active'
                            WHEN s.is_active = 1 AND NOW() < s.start_date THEN 'scheduled'
@@ -88,9 +97,9 @@ try {
 
             // Get sale items
             $saleItems = Database::queryAll(
-                "SELECT si.item_sku, i.name as item_name, i.retailPrice as original_price
+                "SELECT si.`$saleItemsSkuCol` AS item_sku, i.name as item_name, i.retailPrice as original_price
                  FROM sale_items si
-                 JOIN items i ON si.item_sku = i.sku
+                 JOIN items i ON si.`$saleItemsSkuCol` = i.sku
                  WHERE si.sale_id = ?",
                 [$saleId]
             );
@@ -131,7 +140,7 @@ try {
                 // Add sale items
                 if (!empty($items)) {
                     foreach ($items as $itemSku) {
-                        Database::execute("INSERT INTO sale_items (sale_id, item_sku) VALUES (?, ?)", [$saleId, $itemSku]);
+                        Database::execute("INSERT INTO sale_items (sale_id, `$saleItemsSkuCol`) VALUES (?, ?)", [$saleId, $itemSku]);
                     }
                 }
 
@@ -222,10 +231,10 @@ try {
             }
 
             $activeSale = Database::queryOne(
-                "SELECT s.*, si.item_sku
+                "SELECT s.*, si.`$saleItemsSkuCol` AS item_sku
                  FROM sales s
                  JOIN sale_items si ON s.id = si.sale_id
-                 WHERE si.item_sku = ? 
+                 WHERE si.`$saleItemsSkuCol` = ? 
                  AND s.is_active = 1
                  AND NOW() BETWEEN s.start_date AND s.end_date
                  ORDER BY s.discount_percentage DESC

@@ -54,6 +54,19 @@ try {
         $out['diagnostics']['create_privilege_error'] = $e->getMessage();
     }
 
+    // Foreign keys on sale_items referencing items (for troubleshooting)
+    try {
+        $rows = $pdo->query(
+            "SELECT CONSTRAINT_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME\n"
+          . "FROM information_schema.KEY_COLUMN_USAGE\n"
+          . "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sale_items' AND REFERENCED_TABLE_NAME = 'items'\n"
+          . "ORDER BY CONSTRAINT_NAME, ORDINAL_POSITION"
+        )->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $out['diagnostics']['sale_items_item_fks'] = $rows;
+    } catch (Throwable $e) {
+        $out['diagnostics']['sale_items_item_fks_error'] = $e->getMessage();
+    }
+
     // Counts
     $tables = ['categories','items','products','sale_items','item_images','room_settings','backgrounds'];
     foreach ($tables as $t) {

@@ -26,6 +26,7 @@ try {
 $filename = $_GET['file'] ?? 'whimsicalfrog_sync.sql';
 // Optional filter: only execute statements that reference a specific table (by backticked name)
 $filterTable = isset($_GET['filter_table']) ? trim($_GET['filter_table']) : '';
+$filterMode = isset($_GET['filter_mode']) ? trim($_GET['filter_mode']) : 'any'; // 'any' or 'own'
 $filterNeedle = '';
 if ($filterTable !== '') {
   $filterNeedle = '`' . str_replace('`','``',$filterTable) . '`';
@@ -76,9 +77,17 @@ while (!feof($handle)) {
       $stmt = substr($stmt, 0, -1);
     }
     // Apply optional table filter
-    if ($filterNeedle !== '' && stripos($stmt, $filterNeedle) === false) {
-      $buffer = '';
-      continue;
+    if ($filterNeedle !== '') {
+      if ($filterMode === 'own') {
+        $startsOwn = false;
+        $trimStmt = ltrim($stmt);
+        if (preg_match('/^DROP\s+TABLE\s+IF\s+EXISTS\s+`' . preg_quote($filterTable, '/') . '`/i', $trimStmt)) $startsOwn = true;
+        if (preg_match('/^CREATE\s+TABLE\s+`' . preg_quote($filterTable, '/') . '`\s*\(/i', $trimStmt)) $startsOwn = true;
+        if (preg_match('/^INSERT\s+INTO\s+`' . preg_quote($filterTable, '/') . '`/i', $trimStmt)) $startsOwn = true;
+        if (!$startsOwn) { $buffer = ''; continue; }
+      } else {
+        if (stripos($stmt, $filterNeedle) === false) { $buffer = ''; continue; }
+      }
     }
     try {
       $pdo->exec($stmt);

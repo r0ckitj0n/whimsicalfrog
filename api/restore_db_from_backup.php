@@ -41,6 +41,7 @@ if (strpos($filename, 'backups/sql/') !== 0) {
 
 // Optional: filter statements to a specific table (diagnostics)
 $filterTable = isset($_GET['filter_table']) ? trim($_GET['filter_table']) : '';
+$filterMode = isset($_GET['filter_mode']) ? trim($_GET['filter_mode']) : '';
 $filterNeedle = '';
 if ($filterTable !== '') {
     // Match backticked table references like `items`
@@ -52,6 +53,9 @@ define('WF_IMPORT_ALLOWED', true);
 $_GET['file'] = $filename; // consumed by db_import_sql.php
 if ($filterTable !== '') {
     $_GET['filter_table'] = $filterTable;
+}
+if ($filterMode !== '') {
+    $_GET['filter_mode'] = $filterMode;
 }
 $_GET['as_json'] = '1';
 

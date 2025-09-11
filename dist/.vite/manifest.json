@@ -187,7 +187,7 @@
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-BKRj6YZR.js",
+    "file": "assets/js/app.js-h0xez9-q.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -523,7 +523,7 @@
     "isDynamicEntry": true
   },
   "src/js/payment-modal.js": {
-    "file": "assets/payment-modal-hOQnd7FD.js",
+    "file": "assets/payment-modal-BcrwwgFF.js",
     "name": "payment-modal",
     "src": "src/js/payment-modal.js",
     "isDynamicEntry": true,

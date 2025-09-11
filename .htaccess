@@ -53,6 +53,16 @@ RewriteRule ^\.(?!well-known/) - [R=403,L]
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
+# Enforce strict no-store caching on dynamic HTML/PHP to avoid stale pages referencing old hashed assets
+# Does NOT apply to /dist/assets/* which are cache-busted and immutable
+<IfModule mod_headers.c>
+  <FilesMatch "\.(php|html?)$">
+    Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header always set Pragma "no-cache"
+    Header always set Expires "0"
+  </FilesMatch>
+</IfModule>
+
 # Removed old special-case rewrite for app.js-*; general /dist assets rules below handle fallbacks safely
 
 # Ensure correct MIME types and strong caching for built assets

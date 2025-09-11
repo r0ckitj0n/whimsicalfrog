@@ -31,12 +31,13 @@ class SessionManager
         // Merge custom config
         self::$config = array_merge(self::$config, $config);
 
-        // Ensure a writable session storage path within the project (avoids host-level misconfig)
+        // Always use a project-local sessions directory to avoid live host save_path issues
         try {
             $sessDir = dirname(__DIR__) . '/sessions';
             if (!is_dir($sessDir)) {
-                @mkdir($sessDir, 0700, true);
+                @mkdir($sessDir, 0777, true);
             }
+            @chmod($sessDir, 0777);
             if (is_dir($sessDir) && is_writable($sessDir)) {
                 ini_set('session.save_path', $sessDir);
             }

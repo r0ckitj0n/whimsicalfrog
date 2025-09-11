@@ -3,6 +3,8 @@
 
 // Ensure session is started with consistent cookie params (apex + www)
 require_once dirname(__DIR__) . '/includes/session.php';
+// Ensure DB + env are initialized before attempting auth reconstruction
+require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 // Reconstruct from WF_AUTH if needed before rendering login state
 try { ensureSessionStarted(); } catch (\Throwable $e) {}
@@ -23,7 +25,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         'domain' => $cookieDomain,
         'secure' => $isHttps,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => 'None',
     ]);
 }
 
@@ -107,6 +109,24 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
     echo vite('js/app.js');
     // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
     echo vite('js/header-bootstrap.js');
+    // Client bootstrap: sync header auth via whoami on every page load as a safety net
+    echo <<<'SCRIPT'
+<script>
+(function(){
+  try{
+    var origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
+    var url = origin.replace(/\/$/,'') + '/api/whoami.php';
+    fetch(url, {credentials:'include'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+      if (!j) return;
+      if (j && j.userId != null) {
+        try { document.body.setAttribute('data-is-logged-in','true'); document.body.setAttribute('data-user-id', String(j.userId)); } catch(_){}
+        try { window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: j.userId, username: j.username || null, role: j.role || null } })); } catch(_){}
+      }
+    }).catch(function(){/* noop */});
+  }catch(_){/* noop */}
+})();
+</script>
+SCRIPT;
     // Always ensure admin navbar has a horizontal layout on admin ROUTES (fallback before external CSS)
     // Global header offset to keep content and modals clear of the fixed header, site-wide
     echo <<<'STYLE'

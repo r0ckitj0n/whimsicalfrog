@@ -155,6 +155,19 @@ try {
         try { @session_write_close(); } catch (\Throwable $e) {}
 
         // User authenticated successfully
+        try {
+            $dbg = [
+                'event' => 'login_success',
+                'sid' => session_id(),
+                'userId' => $user['id'],
+                'cookieDomain' => $cookieDomain ?? null,
+                'https' => $isHttps ?? null,
+                'set_cookies' => [ 'PHPSESSID' => true, 'WF_AUTH' => true ],
+                'origin' => $_SERVER['HTTP_ORIGIN'] ?? null,
+                'host' => $_SERVER['HTTP_HOST'] ?? null,
+            ];
+            error_log('[AUTH-TRACE] ' . json_encode($dbg));
+        } catch (\Throwable $e) { /* noop */ }
         echo json_encode([
             'userId' => $user['id'],
             'username' => $user['username'],

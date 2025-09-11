@@ -6,8 +6,8 @@
  * Generated: 2025-07-01 23:15:56
  */
 
-// Include database functions
-require_once __DIR__ . '/database.php';
+// Bootstrap environment and Database singleton via api/config.php (not includes/database.php)
+require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/auth_cookie.php';
 
@@ -42,7 +42,8 @@ function ensureSessionStarted()
             if (is_array($parsed) && !empty($parsed['userId'])) {
                 $uid = $parsed['userId'];
                 // Fetch user
-                $row = Database::queryOne('SELECT id, username, email, role, firstName, lastName FROM users WHERE id = ?', [$uid]);
+                $row = null;
+                try { $row = Database::queryOne('SELECT id, username, email, role, firstName, lastName FROM users WHERE id = ?', [$uid]); } catch (\Throwable $e) { $row = null; }
                 if ($row && !empty($row['id'])) {
                     $_SESSION['user'] = [
                         'userId' => $row['id'],
@@ -58,6 +59,9 @@ function ensureSessionStarted()
                     $p = explode('.', $host); $bd = $host; if (count($p) >= 2) { $bd = $p[count($p)-2] . '.' . $p[count($p)-1]; }
                     $dom = '.' . $bd; $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
                     wf_auth_set_cookie($row['id'], $dom, $sec);
+                } else {
+                    // Minimal reconstruction when DB is unavailable: set only userId
+                    $_SESSION['user'] = [ 'userId' => $uid ];
                 }
             }
         }
@@ -72,7 +76,18 @@ function ensureSessionStarted()
 function isLoggedIn()
 {
     ensureSessionStarted();
-    return isset($_SESSION['user']) && !empty($_SESSION['user']);
+    if (isset($_SESSION['user']) && !empty($_SESSION['user'])) {
+        return true;
+    }
+    // Fallback: accept signed WF_AUTH cookie as authenticated indicator
+    try {
+        $cookieVal = $_COOKIE[wf_auth_cookie_name()] ?? null;
+        $parsed = wf_auth_parse_cookie($cookieVal ?? '');
+        if (is_array($parsed) && !empty($parsed['userId'])) {
+            return true;
+        }
+    } catch (\Throwable $e) { /* noop */ }
+    return false;
 }
 
 
@@ -144,7 +159,16 @@ function getUserRole()
 function getUserId()
 {
     $user = getCurrentUser();
-    return $user['userId'] ?? null;
+    if ($user && isset($user['userId'])) return $user['userId'];
+    // Fallback to WF_AUTH if session user missing
+    try {
+        $cookieVal = $_COOKIE[wf_auth_cookie_name()] ?? null;
+        $parsed = wf_auth_parse_cookie($cookieVal ?? '');
+        if (is_array($parsed) && !empty($parsed['userId'])) {
+            return $parsed['userId'];
+        }
+    } catch (\Throwable $e) { /* noop */ }
+    return null;
 }
 
 
@@ -307,4 +331,13 @@ function logoutUser()
     // Clear all session data and destroy session
     session_unset();
     session_destroy();
+    // Clear stateless WF_AUTH cookie as well
+    try {
+        require_once __DIR__ . '/auth_cookie.php';
+        $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+        if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+        $p = explode('.', $host); $bd = $host; if (count($p) >= 2) { $bd = $p[count($p)-2] . '.' . $p[count($p)-1]; }
+        $dom = '.' . $bd; $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+        wf_auth_clear_cookie($dom, $sec);
+    } catch (\Throwable $e) { /* noop */ }
 }

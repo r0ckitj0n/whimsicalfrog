@@ -87,6 +87,13 @@ try {
 // Check WF_AUTH fallback cookie
 $wfAuthRaw = $_COOKIE[wf_auth_cookie_name()] ?? null;
 $wfAuthParsed = wf_auth_parse_cookie($wfAuthRaw ?? '');
+// Presence of PHPSESSID cookie
+$sessCookiePresent = isset($_COOKIE[session_name()]);
+// Env hints
+$envHost = $_SERVER['HTTP_HOST'] ?? null;
+$envXfp  = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null;
+$envHttps= $_SERVER['HTTPS'] ?? null;
+$cookieHdrLen = isset($_SERVER['HTTP_COOKIE']) ? strlen((string)$_SERVER['HTTP_COOKIE']) : null;
 
 // Standard success payload with temporary diagnostics (safe)
 $payload = [
@@ -99,9 +106,37 @@ $payload = [
     'savePath' => ini_get('session.save_path'),
     'wfAuthPresent' => $wfAuthRaw !== null,
     'wfAuthParsedUserId' => is_array($wfAuthParsed) ? ($wfAuthParsed['userId'] ?? null) : null,
+    'phpSessCookiePresent' => $sessCookiePresent,
+    'httpHost' => $envHost,
+    'xForwardedProto' => $envXfp,
+    'httpsFlag' => $envHttps,
+    'cookieHeaderLen' => $cookieHdrLen,
 ];
 if ($userIdRaw !== null && $userIdRaw !== '') { $payload['userIdRaw'] = $userIdRaw; }
 if ($username !== null) { $payload['username'] = (string)$username; }
 if ($role !== null) { $payload['role'] = (string)$role; }
 
 echo json_encode($payload);
+
+// Optional: verbose diagnostics when explicitly requested
+try {
+    if (isset($_GET['wf_auth_debug']) && $_GET['wf_auth_debug'] === '1') {
+        $log = '[WHOAMI-DEBUG] ' . json_encode([
+            'time' => date('c'),
+            'sid' => $payload['sid'],
+            'userId' => $payload['userId'],
+            'sessionActive' => $payload['sessionActive'],
+            'hasUserSession' => $payload['hasUserSession'],
+            'wfAuthPresent' => $payload['wfAuthPresent'],
+            'wfAuthParsedUserId' => $payload['wfAuthParsedUserId'],
+            'phpSessCookiePresent' => $payload['phpSessCookiePresent'],
+            'httpHost' => $payload['httpHost'],
+            'xForwardedProto' => $payload['xForwardedProto'],
+            'httpsFlag' => $payload['httpsFlag'],
+            'cookieHeaderLen' => $payload['cookieHeaderLen'],
+            'cookieHeader' => isset($_SERVER['HTTP_COOKIE']) ? substr($_SERVER['HTTP_COOKIE'], 0, 500) : null,
+            'savePath' => $payload['savePath'],
+        ]);
+        error_log($log);
+    }
+} catch (\Throwable $e) { /* noop */ }

@@ -85,11 +85,10 @@ class SessionManager
      */
     private static function generateFingerprint()
     {
+        // Use only User-Agent for fingerprint to prevent false invalidations across request types
+        // (e.g., differences in Accept-Language/Encoding between fetch and navigation)
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        $acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
-        $acceptEncoding = $_SERVER['HTTP_ACCEPT_ENCODING'] ?? '';
-
-        return hash('sha256', $userAgent . $acceptLanguage . $acceptEncoding);
+        return hash('sha256', $userAgent);
     }
 
     /**

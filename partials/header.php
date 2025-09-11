@@ -1,9 +1,27 @@
 <?php
 // Proxy header partial now outputs full HTML document start, head, and header component
 
-// Ensure session is started before reading $_SESSION for auth/user id
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Ensure session is started with consistent cookie params (apex + www)
+require_once dirname(__DIR__) . '/includes/session.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+    if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+    $parts = explode('.', $host);
+    $baseDomain = $host;
+    if (count($parts) >= 2) {
+        $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
+    }
+    $cookieDomain = '.' . $baseDomain;
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+    session_init([
+        'name' => 'PHPSESSID',
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => $cookieDomain,
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
 }
 
 // Mark that the global layout has been bootstrapped

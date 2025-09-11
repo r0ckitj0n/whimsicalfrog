@@ -2,9 +2,27 @@
 // Minimal whoami endpoint: returns current authenticated user info from session
 // Response shape: { success: true, userId: <int|null>, userIdRaw?: string, username?: string, role?: string }
 
-// Start session early
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Standardize session initialization to prevent host-only cookie conflicts
+require_once __DIR__ . '/../includes/session.php';
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+    if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+    $parts = explode('.', $host);
+    $baseDomain = $host;
+    if (count($parts) >= 2) {
+        $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
+    }
+    $cookieDomain = '.' . $baseDomain;
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+    session_init([
+        'name' => 'PHPSESSID',
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => $cookieDomain,
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
 }
 
 // CORS: reflect origin and allow credentials so cookies are included cross-origin in dev

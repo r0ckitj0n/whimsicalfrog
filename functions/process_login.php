@@ -47,19 +47,21 @@ require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/database_logger.php';
 
-// Set CORS headers for cross-origin credentialed requests from Vite dev server
+// Set CORS headers only when Origin is present (dev cross-origin). For same-origin, omit CORS to avoid cookie issues.
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if ($origin) {
+    // Remove any wildcard CORS header potentially set upstream to avoid credentials rejection
+    if (function_exists('header_remove')) {
+        @header_remove('Access-Control-Allow-Origin');
+    }
     header('Access-Control-Allow-Origin: ' . $origin);
     header('Vary: Origin');
-} else {
-    // Fallback for same-origin or missing Origin header
-    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type');
 }
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 // Handle preflight OPTIONS request
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

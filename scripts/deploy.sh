@@ -65,23 +65,6 @@ else
   echo -e "${GREEN}✅ Found dist/manifest.json${NC}"
 fi
 
-# TEMP compatibility shim: duplicate current app.js bundle to legacy filename to avoid 404s from cached HTML
-echo -e "${YELLOW}🔧 Creating temporary legacy alias for app.js to avoid stale-hash 404s...${NC}"
-MANI=""
-if [ -f dist/.vite/manifest.json ]; then MANI="dist/.vite/manifest.json"; fi
-if [ -z "$MANI" ] && [ -f dist/manifest.json ]; then MANI="dist/manifest.json"; fi
-if [ -n "$MANI" ]; then
-  APP_REL=$(grep -Eo '"file"\s*:\s*"assets/js/app\.js-[^"]+\.js"' "$MANI" | head -n1 | sed -E 's/.*"file"\s*:\s*"([^"]+)".*/\1/')
-  if [ -n "$APP_REL" ] && [ -f "dist/$APP_REL" ]; then
-    mkdir -p dist/assets/js
-    cp -f "dist/$APP_REL" "dist/assets/js/app.js-BKRj6YZR.js" && echo -e "${GREEN}✅ Legacy alias created: dist/assets/js/app.js-BKRj6YZR.js${NC}" || echo -e "${YELLOW}⚠️ Failed to create legacy alias file${NC}"
-  else
-    echo -e "${YELLOW}⚠️ Could not resolve current app.js bundle from manifest; skipping legacy alias${NC}"
-  fi
-else
-  echo -e "${YELLOW}⚠️ No manifest found to determine current app.js; skipping legacy alias${NC}"
-fi
-
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
 cat > deploy_commands.txt << EOL

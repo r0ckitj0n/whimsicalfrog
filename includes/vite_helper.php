@@ -229,7 +229,11 @@ function vite(string $entry): string
         'WF_PUBLIC_BASE' => $publicBase,
         'dist_base' => $distBase,
     ]);
-    $html = $bootScript . "<script type=\"module\" src=\"{$distBase}{$asset['file']}\"></script>";
+    // Emit a small boot loader that injects the module script with an onerror handler.
+    // If the module fails to load (e.g., stale hash referenced by a proxy/tab), force a 1-time nocache reload.
+    $entrySrc = $distBase . $asset['file'];
+    $bootJs = "(function(){try{var s=document.createElement('script');s.type='module';s.crossOrigin='anonymous';s.src='" . addslashes($entrySrc) . "';s.onerror=function(){try{var u=new URL(window.location.href);if(!u.searchParams.has('nocache')){u.searchParams.set('nocache', Date.now().toString()); window.location.replace(u.toString());}}catch(_){} };var ref=document.currentScript; if(ref&&ref.parentNode){ref.parentNode.insertBefore(s, ref.nextSibling);}else{document.head.appendChild(s);} }catch(_) { /* swallow */ }})();";
+    $html = $bootScript . "<script>" . $bootJs . "</script>";
 
     // Collect CSS from entry and all imported chunks to ensure complete styles in production
     $visited = [];

@@ -168,7 +168,9 @@
       } catch (_) {}
 
       // Optionally suppress redirect to keep user on current page (e.g., continue checkout flow in-place)
-      const suppress = !!(lastOpenOptions && lastOpenOptions.suppressRedirect === true);
+      // Also allow URL param ?wf_debug_login=1 to force in-place flow for debugging
+      const params = new URLSearchParams(window.location.search || '');
+      const suppress = !!(lastOpenOptions && lastOpenOptions.suppressRedirect === true) || params.get('wf_debug_login') === '1';
       if (suppress) {
         if (window.showSuccess) window.showSuccess('Login successful.');
         closeModal();
@@ -203,17 +205,19 @@
     }
   }
 
-  // Delegated listener for header login links
+  // Delegated listener for header login links (capture phase)
   document.addEventListener('click', (e) => {
-    const link = e.target.closest('[data-action="open-login-modal"]');
+    const link = e.target && e.target.closest ? e.target.closest('[data-action="open-login-modal"]') : null;
     if (!link) return;
     // Only intercept left click without modifier keys
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     try { console.log('[LoginModal] intercept click on login link'); } catch(_) {}
     e.preventDefault();
+    e.stopPropagation();
+    try { if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); } catch(_) {}
     const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
     openModal(desiredReturn);
-  });
+  }, true);
 
   // Intercept native /login page form if present for consistent UX
   function hookInlineLoginPage() {
@@ -311,6 +315,19 @@
   } else {
     hookInlineLoginPage();
   }
+
+  // Auto-open modal when ?wf_debug_login=1 is present (to simplify debugging/testing)
+  try {
+    const __params = new URLSearchParams(window.location.search || '');
+    if (__params.get('wf_debug_login') === '1') {
+      const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => openModal(desiredReturn), { once: true });
+      } else {
+        openModal(desiredReturn);
+      }
+    }
+  } catch (_) {}
 
   // Expose for manual triggers
   window.openLoginModal = openModal;

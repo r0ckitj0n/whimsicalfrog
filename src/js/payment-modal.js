@@ -345,27 +345,51 @@ import apiClient from './api-client.js';
             
           }
           if (!userId) {
-            // Final fallback: ask server session who we are if client thinks we're logged in
-            if (isClientLoggedIn()) {
-              try {
-                const who = await apiClient.get('/api/whoami.php');
-                const sidRaw = who?.userIdRaw || who?.userId;
-                if (sidRaw != null && String(sidRaw) !== '') {
-                  userId = String(sidRaw);
-                  try {
-                    if (document && document.body) {
-                      document.body.setAttribute('data-user-id', String(who?.userId ?? ''));
-                      document.body.setAttribute('data-user-id-raw', userId);
-                    }
-                  } catch(_) {}
-                }
-              } catch (e) {
-                console.warn('[PaymentModal] loadAddresses: session fallback failed', e);
+            // Final fallback: ask server session who we are
+            try {
+              const who = await apiClient.get('/api/whoami.php');
+              const sidRaw = who?.userIdRaw || who?.userId;
+              if (sidRaw != null && String(sidRaw) !== '') {
+                userId = String(sidRaw);
+                try {
+                  if (document && document.body) {
+                    document.body.setAttribute('data-user-id', String(who?.userId ?? ''));
+                    document.body.setAttribute('data-user-id-raw', userId);
+                    document.body.setAttribute('data-is-logged-in', 'true');
+                  }
+                } catch(_) {}
               }
+            } catch (e) {
+              console.warn('[PaymentModal] loadAddresses: session fallback failed', e);
             }
             if (!userId) {
               console.warn('[PaymentModal] loadAddresses: missing userId. body.dataset=', document.body?.dataset || {});
               if (addressListEl) addressListEl.innerHTML = '<div class="hint">Sign in to manage shipping addresses.</div>';
+              // Proactively prompt login if available, then retry
+              try {
+                if (typeof window.openLoginModal === 'function') {
+                  const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
+                  window.openLoginModal(desiredReturn, {
+                    suppressRedirect: true,
+                    onSuccess: async (_info) => {
+                      try { if (document && document.body) document.body.setAttribute('data-is-logged-in','true'); } catch(_) {}
+                      try {
+                        const who2 = await apiClient.get('/api/whoami.php');
+                        const sid2 = who2?.userIdRaw || who2?.userId;
+                        if (sid2 != null && String(sid2) !== '') {
+                          userId = String(sid2);
+                          try { document.body?.setAttribute('data-user-id', String(who2?.userId ?? '')); document.body?.setAttribute('data-user-id-raw', userId); } catch(_) {}
+                          await loadAddresses();
+                          await updatePricing();
+                          return;
+                        }
+                      } catch(_) {}
+                      // As a fallback, just retry loading
+                      await loadAddresses();
+                    }
+                  });
+                }
+              } catch(_) {}
               return;
             }
           }

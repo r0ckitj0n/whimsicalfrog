@@ -31,16 +31,23 @@ class SessionManager
         // Merge custom config
         self::$config = array_merge(self::$config, $config);
 
-        // Always use a project-local sessions directory to avoid live host save_path issues
+        // Prefer project-local sessions directory; fallback to system temp if not writable
         try {
+            $chosen = null;
             $sessDir = dirname(__DIR__) . '/sessions';
-            if (!is_dir($sessDir)) {
-                @mkdir($sessDir, 0777, true);
-            }
+            if (!is_dir($sessDir)) { @mkdir($sessDir, 0777, true); }
             @chmod($sessDir, 0777);
-            if (is_dir($sessDir) && is_writable($sessDir)) {
-                ini_set('session.save_path', $sessDir);
+            if (is_dir($sessDir) && is_writable($sessDir)) { $chosen = $sessDir; }
+            if ($chosen === null) {
+                $tmp = rtrim((string)@sys_get_temp_dir(), '/');
+                if ($tmp) {
+                    $alt = $tmp . '/wf_sessions';
+                    if (!is_dir($alt)) { @mkdir($alt, 0777, true); }
+                    @chmod($alt, 0777);
+                    if (is_dir($alt) && is_writable($alt)) { $chosen = $alt; }
+                }
             }
+            if ($chosen) { ini_set('session.save_path', $chosen); }
         } catch (\Throwable $e) { /* non-fatal */ }
 
         // Robust HTTPS detection (behind proxies)

@@ -123,6 +123,23 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
         try { window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: j.userId, username: j.username || null, role: j.role || null } })); } catch(_){}
       }
     }).catch(function(){/* noop */});
+    // Fallback: if whoami did not yield, try WF_AUTH_V cookie to drive UI immediately
+    try {
+      var cookies = (document.cookie||'').split(';').map(function(s){return s.trim();});
+      var kv = {};
+      for (var i=0;i<cookies.length;i++){ var p=cookies[i].split('='); if(p.length>=2){ kv[decodeURIComponent(p[0])] = p.slice(1).join('='); } }
+      if (kv['WF_AUTH_V']) {
+        try {
+          var raw = atob(kv['WF_AUTH_V']);
+          var obj = JSON.parse(raw);
+          if (obj && obj.uid) {
+            document.body.setAttribute('data-is-logged-in','true');
+            document.body.setAttribute('data-user-id', String(obj.uid));
+            window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: obj.uid, username: null, role: obj.role || null } }));
+          }
+        } catch(_){}
+      }
+    } catch(_){}
   }catch(_){/* noop */}
 })();
 </script>

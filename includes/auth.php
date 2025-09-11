@@ -23,7 +23,12 @@ function ensureSessionStarted()
         $baseDomain = $host;
         if (count($parts) >= 2) { $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1]; }
         $cookieDomain = '.' . $baseDomain;
-        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+        $isHttps = (
+            (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+            (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+            (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+            (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+        );
         session_init([
             'name' => 'PHPSESSID',
             'lifetime' => 0,
@@ -57,7 +62,12 @@ function ensureSessionStarted()
                     $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
                     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
                     $p = explode('.', $host); $bd = $host; if (count($p) >= 2) { $bd = $p[count($p)-2] . '.' . $p[count($p)-1]; }
-                    $dom = '.' . $bd; $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+                    $dom = '.' . $bd; $sec = (
+                        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                        (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+                        (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+                        (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+                    );
                     wf_auth_set_cookie($row['id'], $dom, $sec);
                 } else {
                     // Minimal reconstruction when DB is unavailable: set only userId
@@ -85,6 +95,13 @@ function isLoggedIn()
         $parsed = wf_auth_parse_cookie($cookieVal ?? '');
         if (is_array($parsed) && !empty($parsed['userId'])) {
             return true;
+        }
+        // Last-resort: trust minimal client hint WF_AUTH_V for UI-only state
+        $vis = $_COOKIE[wf_auth_client_cookie_name()] ?? null;
+        if ($vis) {
+            $raw = base64_decode($vis, true);
+            $obj = $raw ? json_decode($raw, true) : null;
+            if (is_array($obj) && !empty($obj['uid'])) { return true; }
         }
     } catch (\Throwable $e) { /* noop */ }
     return false;
@@ -166,6 +183,13 @@ function getUserId()
         $parsed = wf_auth_parse_cookie($cookieVal ?? '');
         if (is_array($parsed) && !empty($parsed['userId'])) {
             return $parsed['userId'];
+        }
+        // Last-resort: extract uid from WF_AUTH_V
+        $vis = $_COOKIE[wf_auth_client_cookie_name()] ?? null;
+        if ($vis) {
+            $raw = base64_decode($vis, true);
+            $obj = $raw ? json_decode($raw, true) : null;
+            if (is_array($obj) && !empty($obj['uid'])) { return $obj['uid']; }
         }
     } catch (\Throwable $e) { /* noop */ }
     return null;

@@ -94,10 +94,11 @@ RewriteCond %{REQUEST_URI} ^/dist/ [NC]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# For any missing /dist/* files (including /dist/assets/*), return 404 to avoid HTML fallthrough
+# For missing /dist/* files (including /dist/assets/*), delegate to router.php
+# It contains graceful fallbacks to serve the latest hashed bundle from the manifest
 RewriteCond %{REQUEST_URI} ^/dist/ [NC]
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule . - [R=404,L]
+RewriteRule ^ router.php [L,QSA]
 
 # Only allow direct access to existing files. Route other requests (including
 # missing files under existing directories) through router.php so it can

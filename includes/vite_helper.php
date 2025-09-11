@@ -25,15 +25,20 @@ function vite(string $entry): string
         error_log('[VITE ' . strtoupper($level) . '] ' . $payload);
     };
 
-    // Vite puts manifest at dist/.vite/manifest.json by default (Vite v7)
-    // Some setups may use dist/manifest.json. Try both for compatibility.
-    $manifestCandidates = [
-        __DIR__ . '/../dist/.vite/manifest.json',
-        __DIR__ . '/../dist/manifest.json',
-    ];
+    // Vite manifest location: prefer the freshest file between dist/.vite/manifest.json and dist/manifest.json
+    $candA = __DIR__ . '/../dist/.vite/manifest.json';
+    $candB = __DIR__ . '/../dist/manifest.json';
+    $hasA = is_file($candA);
+    $hasB = is_file($candB);
     $manifestPath = null;
-    foreach ($manifestCandidates as $candidate) {
-        if (file_exists($candidate)) { $manifestPath = $candidate; break; }
+    if ($hasA && $hasB) {
+        $mtimeA = @filemtime($candA) ?: 0;
+        $mtimeB = @filemtime($candB) ?: 0;
+        $manifestPath = ($mtimeB >= $mtimeA) ? $candB : $candA;
+    } elseif ($hasB) {
+        $manifestPath = $candB;
+    } elseif ($hasA) {
+        $manifestPath = $candA;
     }
     $hotPath = __DIR__ . '/../hot';
     $forceDev = (getenv('WF_VITE_DEV') === '1') || (defined('VITE_FORCE_DEV') && VITE_FORCE_DEV === true);

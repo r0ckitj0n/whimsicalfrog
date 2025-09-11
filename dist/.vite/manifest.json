@@ -172,7 +172,7 @@
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-Bk3w87bu.js",
+    "file": "assets/js/app.js-B4g8uTRN.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -613,7 +613,7 @@
     "isDynamicEntry": true
   },
   "src/modules/room-modal-manager.js": {
-    "file": "assets/room-modal-manager-DYp9ic_K.js",
+    "file": "assets/room-modal-manager-CqhNRZDi.js",
     "name": "room-modal-manager",
     "src": "src/modules/room-modal-manager.js",
     "isDynamicEntry": true

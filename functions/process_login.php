@@ -13,7 +13,15 @@ if (session_status() === PHP_SESSION_NONE) {
     $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
     // Strip port if present
     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
-    $domain = $host; // use exact host for maximum compatibility
+    // Derive base domain so cookie works on apex and www
+    // e.g., www.whimsicalfrog.us => whimsicalfrog.us, set cookie Domain=.whimsicalfrog.us
+    $parts = explode('.', $host);
+    $baseDomain = $host;
+    if (count($parts) >= 2) {
+        $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
+    }
+    // If already apex (no subdomain), baseDomain equals host; prefix with dot for broad scope
+    $domain = '.' . $baseDomain;
     $params = [
         'lifetime' => 0,
         'path' => '/',

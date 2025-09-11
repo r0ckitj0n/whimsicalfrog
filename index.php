@@ -1,5 +1,25 @@
 <?php
-session_start();
+// Centralized session initialization with consistent cookie params across apex and www
+require_once __DIR__ . '/includes/session.php';
+// Derive base domain like whimsicalfrog.us from host (www.whimsicalfrog.us -> whimsicalfrog.us)
+$host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+$parts = explode('.', $host);
+$baseDomain = $host;
+if (count($parts) >= 2) {
+    $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
+}
+$cookieDomain = '.' . $baseDomain; // works for apex and www
+$isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+session_init([
+    'name' => 'PHPSESSID',
+    'lifetime' => 0,
+    'path' => '/',
+    'domain' => $cookieDomain,
+    'secure' => $isHttps,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 // Mark that other scripts are included from index for security checks
 if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);

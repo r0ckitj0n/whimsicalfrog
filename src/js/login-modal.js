@@ -143,11 +143,7 @@
         }
       } catch (_) {}
 
-      // Persist auth cookies via server (ensures WF_AUTH/PHPSession cookies are set from a same-origin response)
-      try {
-        const persistUrl = new URL('/api/persist_auth.php', backendOrigin).toString();
-        await fetch(persistUrl, { method: 'POST', credentials: 'include' });
-      } catch (_) {}
+      // Removed: Persist auth via XHR; we now rely on server-side sealing redirect for reliability on live.
 
       // Also set a client-visible WF_AUTH_V mirror for UI stability across navigation
       try {
@@ -241,8 +237,8 @@
     e.stopPropagation();
     try { if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); } catch(_) {}
     const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
-    // Suppress redirect by default when invoked from header to avoid session loss during navigation on live
-    openModal(desiredReturn, { suppressRedirect: true });
+    // Allow redirect sealing so cookies are persisted reliably on live
+    openModal(desiredReturn, { suppressRedirect: false });
   }, true);
 
   // Intercept native /login page form if present for consistent UX

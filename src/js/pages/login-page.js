@@ -86,7 +86,15 @@
 
         // Redirect back to prior page if provided, otherwise /payment if coming from checkout, else home
         const redirectUrl = data?.redirectUrl || (document.referrer?.includes('/payment') ? '/payment' : null) || await resolveRedirect('/');
-        window.location.assign(redirectUrl);
+        // Seal cookies via server-side endpoint for reliable persistence
+        try {
+          const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : window.location.origin;
+          const seal = new URL('/api/seal_login.php', backendOrigin);
+          seal.searchParams.set('to', redirectUrl || '/');
+          window.location.assign(seal.toString());
+        } catch (_) {
+          window.location.assign(redirectUrl);
+        }
       } catch (err) {
         console.error('[LoginPage] Login error', err);
         showError('An unexpected error occurred. Please try again.');

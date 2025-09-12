@@ -64,6 +64,48 @@ foreach ($denyPrefixes as $prefix) {
     }
 }
 
+// Special handling: always serve the latest app.js hashed bundle regardless of requested hash
+if (preg_match('#^/dist/assets/js/app\.js-[A-Za-z0-9_\-]+\.js$#', $requestedPath)) {
+    // Resolve via manifest first
+    $manifestPaths = [ __DIR__ . '/dist/.vite/manifest.json', __DIR__ . '/dist/manifest.json' ];
+    $manifest = null;
+    foreach ($manifestPaths as $mp) {
+        if (is_file($mp)) {
+            $json = @file_get_contents($mp);
+            $data = $json ? json_decode($json, true) : null;
+            if (is_array($data)) { $manifest = $data; break; }
+        }
+    }
+    $served = false;
+    if (is_array($manifest)) {
+        $resolved = null;
+        if (isset($manifest['js/app.js'])) { $resolved = $manifest['js/app.js']; }
+        if (!$resolved && isset($manifest['src/entries/app.js'])) { $resolved = $manifest['src/entries/app.js']; }
+        if (is_array($resolved) && !empty($resolved['file'])) {
+            $targetFs = __DIR__ . '/dist/' . ltrim($resolved['file'], '/');
+            if (is_file($targetFs)) {
+                header('Content-Type: application/javascript; charset=utf-8');
+                header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+                readfile($targetFs);
+                exit;
+            }
+        }
+    }
+    // Fallback: pick most recent app.js-*.js by mtime
+    $globPaths = glob(__DIR__ . '/dist/assets/js/app.js-*.js');
+    if (!empty($globPaths)) {
+        usort($globPaths, function($a, $b) { return filemtime($b) <=> filemtime($a); });
+        $latestFs = $globPaths[0];
+        if (is_file($latestFs)) {
+            header('Content-Type: application/javascript; charset=utf-8');
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            readfile($latestFs);
+            exit;
+        }
+    }
+    // If we couldn't resolve, fall through to default behavior
+}
+
 // If the requested path is a file and it exists, serve it directly.
 // This handles assets like images, CSS, and JavaScript files.
 if (is_file($filePath)) {

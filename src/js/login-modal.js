@@ -191,13 +191,13 @@
       } else {
         if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
         closeModal();
-        // Seal cookies via server endpoint to maximize persistence
+        // Force a hard reload with nocache to avoid stale HTML/JS from proxies
         try {
-          const seal = new URL('/api/seal_login.php', backendOrigin);
-          seal.searchParams.set('to', target || '/');
-          setTimeout(() => { window.location.assign(seal.toString()); }, 500);
+          const u = new URL(target || '/', window.location.origin);
+          u.searchParams.set('nocache', String(Date.now()));
+          setTimeout(() => { window.location.assign(u.toString()); }, 500);
         } catch (_) {
-          setTimeout(() => { window.location.assign(target); }, 700);
+          setTimeout(() => { window.location.reload(true); }, 700);
         }
       }
     } catch (err) {

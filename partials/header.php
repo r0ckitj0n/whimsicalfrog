@@ -103,6 +103,11 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>WhimsicalFrog</title>
     <?php
+    // Debug breadcrumb: emit a one-time header version marker and currently attached <script> srcs
+    $header_ts = date('c');
+    echo "<script>(function(){try{console.log('[WF-Header] version ', '" . addslashes($header_ts) . "'); var ss=[].map.call(document.getElementsByTagName('script'), function(s){return s && s.src || ''}).filter(Boolean); if (ss && ss.length) console.log('[WF-Header] existing scripts:', ss);}catch(_){}})();</script>\n";
+    ?>
+    <?php
     // Always load the main application bundle so global CSS/JS are available on ALL pages,
     // including admin routes. Previously this was suppressed on admin paths which caused
     // missing CSS for admin pages other than settings.

@@ -219,7 +219,10 @@ function vite(string $entry): string
     // Emit a small boot loader that injects the module script with an onerror handler.
     // If the module fails to load (e.g., stale hash referenced by a proxy/tab), force a 1-time nocache reload.
     $entrySrc = $distBase . $asset['file'];
-    $bootJs = "(function(){try{var s=document.createElement('script');s.type='module';s.crossOrigin='anonymous';s.src='" . addslashes($entrySrc) . "';s.onerror=function(){try{var u=new URL(window.location.href);if(!u.searchParams.has('nocache')){u.searchParams.set('nocache', Date.now().toString()); window.location.replace(u.toString());}}catch(_){} };var ref=document.currentScript; if(ref&&ref.parentNode){ref.parentNode.insertBefore(s, ref.nextSibling);}else{document.head.appendChild(s);} }catch(_) { /* swallow */ }})();";
+    $ver = '';
+    try { $ver = (string) @filemtime(__DIR__ . '/../dist/' . $asset['file']); } catch (Throwable $e) { $ver = (string) time(); }
+    if ($ver !== '') { $entrySrc .= (strpos($entrySrc, '?') === false ? '?v=' . $ver : '&v=' . $ver); }
+    $bootJs = "(function(){try{var src='" . addslashes($entrySrc) . "';try{console.log('[ViteBoot] Emitting entry', src);}catch(_){} var s=document.createElement('script');s.type='module';s.crossOrigin='anonymous';s.src=src;s.onerror=function(){try{var u=new URL(window.location.href);if(!u.searchParams.has('nocache')){u.searchParams.set('nocache', Date.now().toString()); window.location.replace(u.toString());}}catch(_){} };var ref=document.currentScript; if(ref&&ref.parentNode){ref.parentNode.insertBefore(s, ref.nextSibling);}else{document.head.appendChild(s);} }catch(_) { /* swallow */ }})();";
     $html = $bootScript . "<script>" . $bootJs . "</script>";
 
     // Collect CSS from entry and all imported chunks to ensure complete styles in production

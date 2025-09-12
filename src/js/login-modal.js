@@ -143,6 +143,21 @@
         }
       } catch (_) {}
 
+      // Persist auth cookies via server (ensures WF_AUTH/PHPSession cookies are set from a same-origin response)
+      try {
+        const persistUrl = new URL('/api/persist_auth.php', backendOrigin).toString();
+        await fetch(persistUrl, { method: 'POST', credentials: 'include' });
+      } catch (_) {}
+
+      // Also set a client-visible WF_AUTH_V mirror for UI stability across navigation
+      try {
+        const roleVal = (data && data.role) ? String(data.role) : '';
+        const uidVal = (resolvedUserId != null) ? String(resolvedUserId) : '';
+        const payload = btoa(JSON.stringify({ uid: uidVal, role: roleVal || null }));
+        const domain = '.whimsicalfrog.us';
+        document.cookie = 'WF_AUTH_V=' + payload + '; Path=/; Domain=' + domain + '; SameSite=None; Secure';
+      } catch (_) {}
+
       // Notify listeners about successful login
       try {
         window.dispatchEvent(new CustomEvent('wf:login-success', {

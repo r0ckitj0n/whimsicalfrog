@@ -34,6 +34,23 @@ require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 try { ensureSessionStarted(); } catch (\Throwable $e) {}
 
+// Server-first safety: if WF_AUTH present, prefer showing logged-in header immediately
+try {
+    $wfAuthPresent = isset($_COOKIE[wf_auth_cookie_name()]);
+    if (!$is_logged_in && $wfAuthPresent) {
+        $is_logged_in = true;
+        // Attempt to read non-HttpOnly hint for role to show Settings if admin
+        $vis = $_COOKIE['WF_AUTH_V'] ?? null;
+        if ($vis) {
+            $raw = base64_decode($vis, true);
+            $obj = $raw ? json_decode($raw, true) : null;
+            if (is_array($obj) && !empty($obj['role'])) {
+                $is_admin = (strtolower((string)$obj['role']) === 'admin');
+            }
+        }
+    }
+} catch (\Throwable $e) { /* noop */ }
+
 // Default configuration
 $default_config = [
     'show_search' => true,

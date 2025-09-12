@@ -25,21 +25,8 @@ function vite(string $entry): string
         error_log('[VITE ' . strtoupper($level) . '] ' . $payload);
     };
 
-    // Vite manifest location: prefer the freshest file between dist/.vite/manifest.json and dist/manifest.json
-    $candA = __DIR__ . '/../dist/.vite/manifest.json';
-    $candB = __DIR__ . '/../dist/manifest.json';
-    $hasA = is_file($candA);
-    $hasB = is_file($candB);
-    $manifestPath = null;
-    if ($hasA && $hasB) {
-        $mtimeA = @filemtime($candA) ?: 0;
-        $mtimeB = @filemtime($candB) ?: 0;
-        $manifestPath = ($mtimeB >= $mtimeA) ? $candB : $candA;
-    } elseif ($hasB) {
-        $manifestPath = $candB;
-    } elseif ($hasA) {
-        $manifestPath = $candA;
-    }
+    // Vite manifest location: use dist/.vite/manifest.json exclusively to avoid stale dist/manifest.json
+    $manifestPath = __DIR__ . '/../dist/.vite/manifest.json';
     $hotPath = __DIR__ . '/../hot';
     $forceDev = (getenv('WF_VITE_DEV') === '1') || (defined('VITE_FORCE_DEV') && VITE_FORCE_DEV === true);
 

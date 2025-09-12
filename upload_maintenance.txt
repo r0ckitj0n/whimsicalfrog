@@ -1,9 +1,0 @@
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-set cmd:fail-exit yes
-open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
-mkdir -p scripts/maintenance
-cd scripts/maintenance
-put scripts/maintenance/prune_sessions.sh -o prune_sessions.sh
-chmod 755 prune_sessions.sh
-bye

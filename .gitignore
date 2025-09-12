@@ -11,6 +11,9 @@ dist/
 logs/
 *.log
 
+# PHP sessions (environment-specific, do not track)
+sessions/
+
 # Vite/Dev server
 hot
 

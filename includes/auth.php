@@ -364,10 +364,20 @@ function logoutUser()
         (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
     );
 
-    // Clear session array and destroy
+    // Clear session array and destroy; also unlink the session file explicitly to avoid stale reuse
+    $sid = session_id();
+    $savePath = ini_get('session.save_path');
     $_SESSION = [];
     try { @session_unset(); } catch (\Throwable $e) {}
     try { @session_destroy(); } catch (\Throwable $e) {}
+    // Best-effort: remove the backing session file
+    try {
+        if (!empty($sid) && !empty($savePath)) {
+            $base = rtrim((string)$savePath, '/');
+            $sessFile = $base . '/sess_' . $sid;
+            if (is_file($sessFile)) { @unlink($sessFile); }
+        }
+    } catch (\Throwable $e) { /* noop */ }
 
     // Clear PHPSESSID both domain-scoped and host-only
     try {
@@ -386,6 +396,7 @@ function logoutUser()
         @setcookie(wf_auth_client_cookie_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => false, 'samesite' => 'None' ]);
     } catch (\Throwable $e) { /* noop */ }
 
-    // Finalize
+    // Finalize: rotate session id to avoid resurrecting old file
+    try { @session_regenerate_id(true); } catch (\Throwable $e) {}
     try { @session_write_close(); } catch (\Throwable $e) {}
 }

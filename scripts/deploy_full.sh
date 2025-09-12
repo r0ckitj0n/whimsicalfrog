@@ -94,6 +94,7 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob vendor/ \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
+  --exclude-glob sessions/** \
   # Upload only SQL dumps from any subdirectory of backups/; ignore all other backups/* files
   --include-glob backups/**/*.sql \
   --include-glob backups/**/*.sql.gz \
@@ -119,6 +120,25 @@ EOL
 echo -e "${GREEN}🌐 Deploying files to server...${NC}"
 if lftp -f deploy_commands.txt; then
   echo -e "${GREEN}✅ Files deployed successfully${NC}"
+  # Upload maintenance utilities (scripts/ are excluded from the main mirror)
+  echo -e "${GREEN}🧰 Uploading maintenance utilities (prune_sessions.sh)...${NC}"
+  cat > upload_maintenance.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+mkdir -p scripts/maintenance
+cd scripts/maintenance
+put scripts/maintenance/prune_sessions.sh -o prune_sessions.sh
+chmod 755 prune_sessions.sh
+bye
+EOL
+  if lftp -f upload_maintenance.txt; then
+    echo -e "${GREEN}✅ Maintenance script uploaded to /scripts/maintenance/prune_sessions.sh${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Failed to upload maintenance script (non-fatal)${NC}"
+  fi
+  rm -f upload_maintenance.txt
 else
   echo -e "${RED}❌ File deployment failed${NC}"
   rm deploy_commands.txt

@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$userId = null;
+$userId = null; // normalized (string) id for client consumption
 $userIdRaw = null;
 $username = null;
 $role = null;
@@ -58,25 +58,19 @@ if (!empty($_SESSION['user'])) {
     $user = $_SESSION['user'];
     // Prefer explicit userId, fallback to id
     if (isset($user['userId'])) {
-        $userId = $user['userId'];
         $userIdRaw = is_scalar($user['userId']) ? (string)$user['userId'] : null;
     } elseif (isset($user['id'])) {
-        $userId = $user['id'];
         $userIdRaw = is_scalar($user['id']) ? (string)$user['id'] : null;
     }
     $username = $user['username'] ?? null;
     $role = $user['role'] ?? null;
 } elseif (isset($_SESSION['user_id'])) {
-    $userId = $_SESSION['user_id'];
     $userIdRaw = is_scalar($_SESSION['user_id']) ? (string)$_SESSION['user_id'] : null;
 }
 
-// Normalize: only accept positive integer IDs; otherwise treat as unauthenticated
-if (!is_null($userId)) {
-    $userId = (int)$userId;
-    if ($userId <= 0) {
-        $userId = null;
-    }
+// Normalize: preserve string IDs (do not coerce to int)
+if ($userIdRaw !== null && $userIdRaw !== '') {
+    $userId = $userIdRaw;
 }
 
 // Bump a heartbeat counter to verify session persistence across requests

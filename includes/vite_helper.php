@@ -25,10 +25,8 @@ function vite(string $entry): string
         error_log('[VITE ' . strtoupper($level) . '] ' . $payload);
     };
 
-    // Vite manifest location: prefer dist/manifest.json (uploaded by deploy), fall back to dist/.vite/manifest.json
-    $candPrimary = __DIR__ . '/../dist/manifest.json';
-    $candFallback = __DIR__ . '/../dist/.vite/manifest.json';
-    $manifestPath = file_exists($candPrimary) ? $candPrimary : $candFallback;
+    // Vite manifest location: use dist/.vite/manifest.json (authoritative in production for us)
+    $manifestPath = __DIR__ . '/../dist/.vite/manifest.json';
     $hotPath = __DIR__ . '/../hot';
     $forceDev = (getenv('WF_VITE_DEV') === '1') || (defined('VITE_FORCE_DEV') && VITE_FORCE_DEV === true);
 
@@ -210,6 +208,22 @@ function vite(string $entry): string
     }
 
     $asset = $manifest[$resolvedKey];
+    // Guard: if the resolved asset is app.js or header-bootstrap.js and the output filename appears stale,
+    // replace with the newest file on disk by mtime. This defeats stale manifest edge cases.
+    $maybeStem = '';
+    if ($entry === 'js/app.js' || $resolvedKey === 'src/entries/app.js') { $maybeStem = 'assets/js/app.js'; }
+    if ($entry === 'js/header-bootstrap.js' || $resolvedKey === 'src/entries/header-bootstrap.js') { $maybeStem = 'assets/js/header-bootstrap.js'; }
+    if ($maybeStem !== '' && (!isset($asset['file']) || strpos($asset['file'], $maybeStem . '-') !== 0)) {
+        $glob = glob(__DIR__ . '/../dist/' . $maybeStem . '-*.js');
+        if (!empty($glob)) {
+            usort($glob, function($a, $b){ return filemtime($b) <=> filemtime($a); });
+            $latest = $glob[0];
+            if (is_file($latest)) {
+                $rel = 'assets/' . ltrim(str_replace(__DIR__ . '/../dist/assets/', '', $latest), '/');
+                $asset['file'] = $rel;
+            }
+        }
+    }
     // Public base path for live environments served from a subdirectory, e.g., "/wf".
     // Configure via env WF_PUBLIC_BASE (empty or "/subdir"). Defaults to empty.
     $publicBase = rtrim((string) getenv('WF_PUBLIC_BASE') ?: '', '/');

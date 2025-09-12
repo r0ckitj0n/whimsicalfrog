@@ -15,6 +15,38 @@ if (!hash_equals($expected, (string)$token)) {
 }
 
 try {
+    // Optional: run a redirect-follow simulation using cookie jar
+    $mode = $_GET['mode'] ?? '';
+    if ($mode === 'redirect_follow') {
+        $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $base = $scheme . '://' . $host;
+        $redirUrl = $base . '/api/auth_redirect_probe.php?token=' . urlencode($expected) . '&next=whoami';
+        $jar = tempnam(sys_get_temp_dir(), 'wfjar_');
+        $ch = curl_init($redirUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $jar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $jar);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        $body = curl_exec($ch);
+        $err = curl_error($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        $cookies = @file_get_contents($jar);
+        @unlink($jar);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'ok' => true,
+            'mode' => 'redirect_follow',
+            'request' => $redirUrl,
+            'http_code' => $code,
+            'error' => $err ?: null,
+            'final_body' => $body ? json_decode($body, true) : null,
+            'cookie_jar' => $cookies,
+        ]);
+        exit;
+    }
     // Find an admin; fall back to any user
     $user = Database::queryOne("SELECT id, username, role FROM users WHERE role='admin' ORDER BY id ASC LIMIT 1", []);
     if (!$user) {

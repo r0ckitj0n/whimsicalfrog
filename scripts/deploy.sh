@@ -65,6 +65,33 @@ else
   echo -e "${GREEN}✅ Found dist/manifest.json${NC}"
 fi
 
+# Prune old hashed JS bundles locally so remote stale files are removed via --delete
+echo -e "${GREEN}🧹 Pruning old hashed bundles in local dist...${NC}"
+prune_stems=(
+  "assets/js/app.js"
+  "assets/js/header-bootstrap.js"
+  "assets/login-modal"
+  "assets/login-page"
+)
+for stem in "${prune_stems[@]}"; do
+  dir="dist/$(dirname "$stem")"
+  base="$(basename "$stem")"
+  if [ -d "$dir" ]; then
+    matches=("$dir/${base}-"*.js)
+    # If glob doesn't match, it returns the pattern itself; guard that
+    if [ -e "${matches[0]}" ]; then
+      # Sort by mtime descending, keep first (newest)
+      newest=$(ls -t $dir/${base}-*.js 2>/dev/null | head -n 1)
+      for f in $dir/${base}-*.js; do
+        if [ "$f" != "$newest" ]; then
+          echo "Removing old bundle: $f"
+          rm -f "$f"
+        fi
+      done
+    fi
+  fi
+done
+
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
 cat > deploy_commands.txt << EOL

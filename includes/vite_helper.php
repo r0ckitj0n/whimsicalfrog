@@ -25,8 +25,10 @@ function vite(string $entry): string
         error_log('[VITE ' . strtoupper($level) . '] ' . $payload);
     };
 
-    // Vite manifest location: use dist/.vite/manifest.json exclusively to avoid stale dist/manifest.json
-    $manifestPath = __DIR__ . '/../dist/.vite/manifest.json';
+    // Vite manifest location: prefer dist/manifest.json (uploaded by deploy), fall back to dist/.vite/manifest.json
+    $candPrimary = __DIR__ . '/../dist/manifest.json';
+    $candFallback = __DIR__ . '/../dist/.vite/manifest.json';
+    $manifestPath = file_exists($candPrimary) ? $candPrimary : $candFallback;
     $hotPath = __DIR__ . '/../hot';
     $forceDev = (getenv('WF_VITE_DEV') === '1') || (defined('VITE_FORCE_DEV') && VITE_FORCE_DEV === true);
 

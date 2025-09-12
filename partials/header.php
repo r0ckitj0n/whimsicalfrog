@@ -149,6 +149,28 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
 })();
 </script>
 SCRIPT;
+    // One-time safety: if any module dispatches wf:login-success, force a sealing redirect
+    // This ensures cookies persist even if an older login-modal bundle is cached
+    echo <<<'SCRIPT'
+<script>
+(function(){
+  try{
+    if (window.__wf_seal_listener_installed) return; window.__wf_seal_listener_installed = true;
+    window.addEventListener('wf:login-success', function(ev){
+      try {
+        if (window.__wf_seal_redirected) return; // guard
+        var backend = (typeof window.__WF_BACKEND_ORIGIN === 'string' && window.__WF_BACKEND_ORIGIN) ? window.__WF_BACKEND_ORIGIN : window.location.origin;
+        var target = (window.__wf_desired_return_url && typeof window.__wf_desired_return_url === 'string') ? window.__wf_desired_return_url : (window.location.pathname + window.location.search + window.location.hash);
+        var url = new URL('/api/seal_login.php', backend);
+        url.searchParams.set('to', target || '/');
+        window.__wf_seal_redirected = true;
+        setTimeout(function(){ window.location.assign(url.toString()); }, 200);
+      } catch(_){ /* noop */ }
+    });
+  }catch(_){/* noop */}
+})();
+</script>
+SCRIPT;
     // Always ensure admin navbar has a horizontal layout on admin ROUTES (fallback before external CSS)
     // Global header offset to keep content and modals clear of the fixed header, site-wide
     echo <<<'STYLE'

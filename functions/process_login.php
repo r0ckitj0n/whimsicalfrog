@@ -219,6 +219,8 @@ try {
                 'set_cookies' => [ 'PHPSESSID' => true, 'WF_AUTH' => true ],
                 'origin' => $_SERVER['HTTP_ORIGIN'] ?? null,
                 'host' => $_SERVER['HTTP_HOST'] ?? null,
+                'cookie_header_in' => isset($_SERVER['HTTP_COOKIE']) ? substr((string)$_SERVER['HTTP_COOKIE'], 0, 300) : null,
+                'save_path' => ini_get('session.save_path'),
             ];
             error_log('[AUTH-TRACE] ' . json_encode($dbg));
         } catch (\Throwable $e) { /* noop */ }

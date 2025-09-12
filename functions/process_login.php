@@ -76,28 +76,76 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    // Get POST data
-    $data = json_decode(file_get_contents('php://input'), true);
+    // Get POST data with robust fallbacks and safe tracing
+    $raw = file_get_contents('php://input');
+    $data = null;
+    $parsedFrom = 'none';
+    if (is_string($raw) && strlen(trim($raw)) > 0) {
+        $tmp = json_decode($raw, true);
+        if (is_array($tmp)) { $data = $tmp; $parsedFrom = 'json'; }
+    }
+    if (!$data) {
+        // Fallback to form-encoded
+        if (!empty($_POST) && (isset($_POST['username']) || isset($_POST['password']))) {
+            $data = [ 'username' => $_POST['username'] ?? null, 'password' => $_POST['password'] ?? null ];
+            $parsedFrom = 'form';
+        }
+    }
+    if (!$data) {
+        // Last resort: parse query string (debug/degraded clients)
+        parse_str($_SERVER['QUERY_STRING'] ?? '', $qs);
+        if (!empty($qs) && (isset($qs['username']) || isset($qs['password']))) {
+            $data = [ 'username' => $qs['username'] ?? null, 'password' => $qs['password'] ?? null ];
+            $parsedFrom = 'query';
+        }
+    }
 
     // Validate required fields
-    if (!isset($data['username']) || !isset($data['password'])) {
+    if (!is_array($data) || !isset($data['username']) || !isset($data['password'])) {
+        try {
+            error_log('[AUTH-TRACE] {"event":"login_input_missing","ct":"' . ((string)($_SERVER['CONTENT_TYPE'] ?? '')) . '","origin":"' . ((string)($_SERVER['HTTP_ORIGIN'] ?? '')) . '","parsedFrom":"' . $parsedFrom . '"}');
+        } catch (\Throwable $e) {}
         http_response_code(400);
-        echo json_encode(['error' => 'Username and password are required']);
+        echo json_encode(['error' => 'Username and password are required', 'code' => 'INPUT_MISSING']);
         exit;
     }
 
-    $username = $data['username'];
-    $password = $data['password'];
+    $username = (string)$data['username'];
+    $password = (string)$data['password'];
 
     // Create database connection using centralized Database class
     $pdo = Database::getInstance();
 
-    // Query for user (only get username, not password in WHERE clause)
-    $user = Database::queryOne('SELECT * FROM users WHERE username = ?', [$username]);
+    // Query for user by username OR email (email match is case-insensitive)
+    $user = null;
+    try {
+        $user = Database::queryOne('SELECT * FROM users WHERE username = ? LIMIT 1', [$username]);
+        if (!$user) {
+            // Attempt email match
+            $user = Database::queryOne('SELECT * FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1', [$username]);
+        }
+    } catch (\Throwable $e) { $user = null; }
+
+    // Safe trace: user lookup result (no secrets)
+    try {
+        $found = $user ? 'yes' : 'no';
+        error_log('[AUTH-TRACE] ' . json_encode([
+            'event' => 'login_user_lookup',
+            'parsedFrom' => $parsedFrom,
+            'origin' => $_SERVER['HTTP_ORIGIN'] ?? null,
+            'host' => $_SERVER['HTTP_HOST'] ?? null,
+            'ct' => $_SERVER['CONTENT_TYPE'] ?? null,
+            'username_len' => strlen($username),
+            'user_found' => $found,
+        ]));
+    } catch (\Throwable $e) { /* noop */ }
 
     // Verify user exists and password is correct using password_verify
     if ($user && password_verify($password, $user['password'])) {
         // Password is correct, log the user in
+        // SAFETY: ensure session is active and regenerate ID WITHOUT destroying old data to avoid host handler quirks
+        try { if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); } } catch (\Throwable $e) {}
+        try { @session_regenerate_id(false); } catch (\Throwable $e) {}
         $userData = [
             'userId' => $user['id'],
             'username' => $user['username'],
@@ -112,8 +160,8 @@ try {
         $redirectUrl = $_SESSION['redirect_after_login'] ?? null;
         unset($_SESSION['redirect_after_login']); // Clear it
 
-        // Use centralized login function
-        loginUser($user);
+        // Hydrate via centralized login function too (keeps structure consistent)
+        try { loginUser($user); } catch (\Throwable $e) {}
 
         // Log successful login
         DatabaseLogger::logUserActivity(
@@ -124,8 +172,7 @@ try {
             $user['id']
         );
 
-        // Regenerate session id to prevent fixation and ensure new cookie is sent
-        try { @session_regenerate_id(true); } catch (\Throwable $e) {}
+        // Explicitly send session cookie with current id (canonical domain)
         // Explicitly set canonical cookie for apex+www to avoid host-only duplicates
         try {
             $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
@@ -144,12 +191,17 @@ try {
             );
             // Clear any host-only variant
             @setcookie(session_name(), '', [ 'expires' => time()-3600, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
-            // Set canonical
+            // Set canonical (domain-scoped)
             @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $cookieDomain, 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
+            // Also emit a host-only session cookie for compatibility
+            @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
         } catch (\Throwable $e) {}
         // Also set a signed WF_AUTH cookie to reconstruct auth if PHP session engine flakes
         try {
             wf_auth_set_cookie($user['id'], $cookieDomain, $isHttps);
+            // And host-only duplicate for edge-case client compatibility
+            [$valTmp, $expTmp] = wf_auth_make_cookie($user['id']);
+            @setcookie(wf_auth_cookie_name(), $valTmp, [ 'expires' => $expTmp, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
             // And a client-visible hint for immediate header UI sync (non-HttpOnly)
             wf_auth_set_client_hint($user['id'], $user['role'] ?? null, $cookieDomain, $isHttps);
         } catch (\Throwable $e) {}
@@ -193,8 +245,19 @@ try {
             );
         }
 
+        // Safe trace for failure reason
+        try {
+            error_log('[AUTH-TRACE] ' . json_encode([
+                'event' => 'login_failed',
+                'user_found' => (bool)$user,
+                'password_verified' => ($user ? password_verify($password, $user['password']) : false),
+                'host' => $_SERVER['HTTP_HOST'] ?? null,
+                'origin' => $_SERVER['HTTP_ORIGIN'] ?? null,
+            ]));
+        } catch (\Throwable $e) { /* noop */ }
+
         http_response_code(401);
-        echo json_encode(['error' => 'Invalid username or password']);
+        echo json_encode(['error' => 'Invalid username or password', 'code' => ($user ? 'BAD_PASSWORD' : 'NO_USER')]);
         exit;
     }
 

@@ -34,22 +34,7 @@ require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 try { ensureSessionStarted(); } catch (\Throwable $e) {}
 
-// Server-first safety: if WF_AUTH present, prefer showing logged-in header immediately
-try {
-    $wfAuthPresent = isset($_COOKIE[wf_auth_cookie_name()]);
-    if (!$is_logged_in && $wfAuthPresent) {
-        $is_logged_in = true;
-        // Attempt to read non-HttpOnly hint for role to show Settings if admin
-        $vis = $_COOKIE['WF_AUTH_V'] ?? null;
-        if ($vis) {
-            $raw = base64_decode($vis, true);
-            $obj = $raw ? json_decode($raw, true) : null;
-            if (is_array($obj) && !empty($obj['role'])) {
-                $is_admin = (strtolower((string)$obj['role']) === 'admin');
-            }
-        }
-    }
-} catch (\Throwable $e) { /* noop */ }
+// Note: delay safety override until after $is_logged_in / $is_admin are computed below
 
 // Default configuration
 $default_config = [
@@ -104,6 +89,22 @@ if (function_exists('isLoggedIn') && function_exists('getUsername')) {
     $is_admin = isset($_SESSION['user']) && is_array($_SESSION['user']) &&
                 isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
 }
+
+// Server-first override: if WF_AUTH cookie is present, render header as logged-in
+try {
+    if (!$is_logged_in && isset($_COOKIE[wf_auth_cookie_name()])) {
+        $is_logged_in = true;
+        // Optionally infer admin role from visible hint
+        $vis = $_COOKIE['WF_AUTH_V'] ?? null;
+        if ($vis) {
+            $raw = base64_decode($vis, true);
+            $obj = $raw ? json_decode($raw, true) : null;
+            if (is_array($obj) && !empty($obj['role'])) {
+                $is_admin = (strtolower((string)$obj['role']) === 'admin');
+            }
+        }
+    }
+} catch (\Throwable $e) { /* noop */ }
 ?>
 
 <header class="site-header universal-page-header" role="banner">

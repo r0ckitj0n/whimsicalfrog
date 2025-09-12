@@ -352,16 +352,40 @@ function logoutUser()
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }
-    // Clear all session data and destroy session
-    session_unset();
-    session_destroy();
-    // Clear stateless WF_AUTH cookie as well
+    // Derive cookie context (proxy-aware) once
+    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+    if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
+    $p = explode('.', $host); $bd = $host; if (count($p) >= 2) { $bd = $p[count($p)-2] . '.' . $p[count($p)-1]; }
+    $dom = '.' . $bd;
+    $sec = (
+        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+        (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+        (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+        (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+    );
+
+    // Clear session array and destroy
+    $_SESSION = [];
+    try { @session_unset(); } catch (\Throwable $e) {}
+    try { @session_destroy(); } catch (\Throwable $e) {}
+
+    // Clear PHPSESSID both domain-scoped and host-only
+    try {
+        @setcookie(session_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
+        @setcookie(session_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
+    } catch (\Throwable $e) { /* noop */ }
+
+    // Clear WF_AUTH (HttpOnly) and WF_AUTH_V (non-HttpOnly), both domain and host-only
     try {
         require_once __DIR__ . '/auth_cookie.php';
-        $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
-        if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
-        $p = explode('.', $host); $bd = $host; if (count($p) >= 2) { $bd = $p[count($p)-2] . '.' . $p[count($p)-1]; }
-        $dom = '.' . $bd; $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+        // Domain-scoped clears
         wf_auth_clear_cookie($dom, $sec);
+        wf_auth_clear_client_hint($dom, $sec);
+        // Host-only clears
+        @setcookie(wf_auth_cookie_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
+        @setcookie(wf_auth_client_cookie_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => false, 'samesite' => 'None' ]);
     } catch (\Throwable $e) { /* noop */ }
+
+    // Finalize
+    try { @session_write_close(); } catch (\Throwable $e) {}
 }

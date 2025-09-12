@@ -10,15 +10,56 @@ header('Content-Type: application/json');
 
 $root = dirname(__DIR__);
 require_once $root . '/api/config.php';
+require_once $root . '/includes/secret_store.php';
 
-$adminToken = $_REQUEST['admin_token'] ?? '';
-if ($adminToken !== 'whimsical_admin_2024') {
-    http_response_code(403);
-    echo json_encode([
-        'success' => false,
-        'error' => 'Forbidden',
-    ]);
-    exit;
+// Token handling via Secret Store (rotatable)
+function maintenance_generate_token(): string {
+    return bin2hex(random_bytes(24)); // 48 hex chars
+}
+
+function maintenance_get_token(): string {
+    $key = 'maintenance_admin_token';
+    $tok = secret_get($key);
+    if (!$tok) {
+        $tok = maintenance_generate_token();
+        secret_set($key, $tok);
+    }
+    return $tok;
+}
+
+function maintenance_log_file(): string {
+    return dirname(__DIR__) . '/logs/maintenance.log';
+}
+
+function maintenance_log($event, array $data = []): void {
+    $logDir = dirname(maintenance_log_file());
+    if (!is_dir($logDir)) { @mkdir($logDir, 0755, true); }
+    $entry = [
+        'ts' => date('c'),
+        'event' => (string)$event,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        'ua' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+        'data' => $data,
+    ];
+    @file_put_contents(maintenance_log_file(), json_encode($entry, JSON_UNESCAPED_SLASHES) . PHP_EOL, FILE_APPEND | LOCK_EX);
+}
+
+$provided = $_REQUEST['admin_token'] ?? '';
+$expected = maintenance_get_token();
+$legacy = 'whimsical_admin_2024'; // temporary backward-compatibility
+if (!hash_equals($expected, (string)$provided)) {
+    if ($provided !== '' && hash_equals($legacy, (string)$provided)) {
+        header('X-Legacy-Token-Used: 1');
+        maintenance_log('auth.legacy_token_used');
+        // allow but encourage rotation; log handled above
+    } else {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'error' => 'Forbidden',
+        ]);
+        exit;
+    }
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -75,7 +116,7 @@ switch ($action) {
         }
         closedir($dir);
 
-        // Log a summary for auditing
+        // Log a summary for auditing (Logger + file)
         if (class_exists('Logger')) {
             Logger::info('maintenance.prune_sessions', [
                 'deleted' => $deleted,
@@ -83,6 +124,11 @@ switch ($action) {
                 'session_dir' => $sessionDirReal,
             ]);
         }
+        maintenance_log('prune_sessions', [
+            'deleted' => $deleted,
+            'days' => $days,
+            'session_dir' => $sessionDirReal,
+        ]);
 
         json_ok(['action' => 'prune_sessions', 'deleted' => $deleted, 'days' => $days]);
         break;

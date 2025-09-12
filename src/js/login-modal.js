@@ -195,7 +195,14 @@
       } else {
         if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
         closeModal();
-        setTimeout(() => { window.location.assign(target); }, 700);
+        // Seal cookies via server endpoint to maximize persistence
+        try {
+          const seal = new URL('/api/seal_login.php', backendOrigin);
+          seal.searchParams.set('to', target || '/');
+          setTimeout(() => { window.location.assign(seal.toString()); }, 500);
+        } catch (_) {
+          setTimeout(() => { window.location.assign(target); }, 700);
+        }
       }
     } catch (err) {
       if (window.showError) window.showError(err.message || 'Login failed.');

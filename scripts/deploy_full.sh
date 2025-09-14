@@ -88,6 +88,7 @@ open sftp://$USER:$PASS@$HOST
 # - only-newer: don't overwrite if remote is same/newer
 # - ignore-time: ignore mtime differences; compare by size only to skip identical files
 # - no-perms: don't try to sync permissions (reduces needless diffs)
+# Note: INCLUDE rules for SQL must be contiguous with mirror options (no inline comments between continued lines)
 mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob .git/ \
   --exclude-glob node_modules/ \
@@ -95,7 +96,6 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
   --exclude-glob sessions/** \
-  # Upload only SQL dumps from any subdirectory of backups/; ignore all other backups/* files
   --include-glob backups/**/*.sql \
   --include-glob backups/**/*.sql.gz \
   --exclude-glob backups/** \

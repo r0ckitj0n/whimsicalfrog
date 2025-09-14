@@ -71,6 +71,16 @@ try {
     }
 
     if ($user && !empty($user['userId'])) {
+        try {
+            error_log('[AUTH-SEAL] ' . json_encode([
+                'time' => date('c'),
+                'event' => 'seal_start',
+                'userId' => $user['userId'],
+                'domain' => $dom,
+                'secure' => $sec,
+                'cookie_header_in' => isset($_SERVER['HTTP_COOKIE']) ? substr((string)$_SERVER['HTTP_COOKIE'], 0, 300) : null,
+            ]));
+        } catch (Throwable $e) {}
         // Refresh both cookies (domain-scoped and host-only)
         try {
             wf_auth_set_cookie($user['userId'], $dom, $sec);
@@ -82,6 +92,16 @@ try {
             if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
             @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
             @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
+        } catch (Throwable $e) {}
+        try {
+            error_log('[AUTH-SEAL] ' . json_encode([
+                'time' => date('c'),
+                'event' => 'seal_set',
+                'sid' => session_id(),
+                'userId' => $user['userId'],
+                'domain' => $dom,
+                'secure' => $sec,
+            ]));
         } catch (Throwable $e) {}
     }
 

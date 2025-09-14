@@ -190,14 +190,19 @@
         closeModal();
       } else {
         if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
+        // Emit a login-success event so the header safety listener can also trigger sealing
+        try {
+          window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: result.userId || null, username: result.username || null, role: result.role || null } }));
+        } catch(_){ /* noop */ }
         closeModal();
         // Redirect through sealing endpoint so cookies are set on a full-page response
         try {
-          const seal = new URL('/api/seal_login.php', backendOrigin);
+          const origin = (typeof window.__WF_BACKEND_ORIGIN === 'string' && window.__WF_BACKEND_ORIGIN) ? window.__WF_BACKEND_ORIGIN : window.location.origin;
+          const seal = new URL('/api/seal_login.php', origin);
           seal.searchParams.set('to', target || '/');
-          setTimeout(() => { window.location.assign(seal.toString()); }, 500);
+          setTimeout(() => { window.location.assign(seal.toString()); }, 300);
         } catch (_) {
-          setTimeout(() => { window.location.assign(target || '/'); }, 700);
+          setTimeout(() => { window.location.assign(target || '/'); }, 500);
         }
       }
     } catch (err) {

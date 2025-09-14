@@ -5,12 +5,35 @@
  * All JavaScript logic has been moved to js/landing-page.js.
  */
 
-// Fetch coordinates from the database
+// Fetch coordinates from the database (room_maps now uses room_number, not room_type)
 try {
-    $stmt = Database::getInstance()->prepare("SELECT coordinates FROM room_maps WHERE room_type = 'landing' AND is_active = 1 ORDER BY created_at DESC LIMIT 1");
-    $stmt->execute();
-    $map = $stmt->fetch(PDO::FETCH_ASSOC);
-    $landingCoordsJson = $map ? $map['coordinates'] : '[]';
+    $pdo = Database::getInstance();
+    $landingCoordsJson = '[]';
+    $candidates = ['A', 'landing', '0']; // Prefer 'A' if present, then 'landing', then fallback to room 0
+
+    // 1) Try active maps in priority order
+    foreach ($candidates as $rn) {
+        $stmt = $pdo->prepare("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1");
+        $stmt->execute([$rn]);
+        $map = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($map && isset($map['coordinates']) && $map['coordinates'] !== '' && $map['coordinates'] !== null) {
+            $landingCoordsJson = $map['coordinates'];
+            break;
+        }
+    }
+
+    // 2) If none active, fallback to the most recent for those room_numbers
+    if ($landingCoordsJson === '[]') {
+        foreach ($candidates as $rn) {
+            $stmt = $pdo->prepare("SELECT coordinates FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC, created_at DESC LIMIT 1");
+            $stmt->execute([$rn]);
+            $map = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($map && isset($map['coordinates']) && $map['coordinates'] !== '' && $map['coordinates'] !== null) {
+                $landingCoordsJson = $map['coordinates'];
+                break;
+            }
+        }
+    }
 } catch (Exception $e) {
     error_log('Error fetching landing page coordinates: ' . $e->getMessage());
     $landingCoordsJson = '[]';

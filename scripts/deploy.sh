@@ -152,14 +152,14 @@ set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-mkdir -p scripts/maintenance
-cd scripts/maintenance
+mkdir -p api/maintenance
+cd api/maintenance
 put scripts/maintenance/prune_sessions.sh -o prune_sessions.sh
 chmod 755 prune_sessions.sh
 bye
 EOL
   if lftp -f upload_maintenance.txt; then
-    echo -e "${GREEN}✅ Maintenance script uploaded to /scripts/maintenance/prune_sessions.sh${NC}"
+    echo -e "${GREEN}✅ Maintenance script uploaded to /api/maintenance/prune_sessions.sh${NC}"
   else
     echo -e "${YELLOW}⚠️  Failed to upload maintenance script (non-fatal)${NC}"
   fi

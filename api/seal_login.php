@@ -105,6 +105,8 @@ try {
         } catch (Throwable $e) {}
     }
 
+    // Ensure session is written before redirect to avoid losing user state
+    try { @session_write_close(); } catch (Throwable $e) {}
     header('Location: ' . $target, true, 302);
     exit;
 } catch (Throwable $e) {

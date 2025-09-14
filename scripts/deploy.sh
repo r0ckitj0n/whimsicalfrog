@@ -145,9 +145,10 @@ EOL
 echo -e "${GREEN}🌐 Deploying files to server...${NC}"
 if lftp -f deploy_commands.txt; then
   echo -e "${GREEN}✅ Files deployed successfully${NC}"
-  # Upload maintenance utilities (scripts/ are excluded from the main mirror)
-  echo -e "${GREEN}🧰 Uploading maintenance utilities (prune_sessions.sh)...${NC}"
-  cat > upload_maintenance.txt << EOL
+  # Optional: Upload maintenance utility (disabled by default to avoid mkdir errors on some hosts)
+  if [ "${WF_UPLOAD_MAINTENANCE:-0}" = "1" ]; then
+    echo -e "${GREEN}🧰 Uploading maintenance utilities (prune_sessions.sh)...${NC}"
+    cat > upload_maintenance.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
@@ -158,12 +159,15 @@ put scripts/maintenance/prune_sessions.sh -o prune_sessions.sh
 chmod 755 prune_sessions.sh
 bye
 EOL
-  if lftp -f upload_maintenance.txt; then
-    echo -e "${GREEN}✅ Maintenance script uploaded to /api/maintenance/prune_sessions.sh${NC}"
+    if lftp -f upload_maintenance.txt; then
+      echo -e "${GREEN}✅ Maintenance script uploaded to /api/maintenance/prune_sessions.sh${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Skipping maintenance upload (remote may not allow creating api/maintenance)${NC}"
+    fi
+    rm -f upload_maintenance.txt
   else
-    echo -e "${YELLOW}⚠️  Failed to upload maintenance script (non-fatal)${NC}"
+    echo -e "${YELLOW}⏭️  Skipping maintenance upload (set WF_UPLOAD_MAINTENANCE=1 to enable)${NC}"
   fi
-  rm -f upload_maintenance.txt
   # Perform a second, targeted mirror for images/backgrounds WITHOUT --ignore-time
   # Rationale: when replacing background files with the same size but different content,
   # the size-only comparison (from --ignore-time) may skip the upload. This pass uses

@@ -81,17 +81,16 @@ try {
                 'cookie_header_in' => isset($_SERVER['HTTP_COOKIE']) ? substr((string)$_SERVER['HTTP_COOKIE'], 0, 300) : null,
             ]));
         } catch (Throwable $e) {}
-        // Refresh both cookies (domain-scoped and host-only)
+        // Refresh cookies (domain-scoped only); set WF_AUTH first, then PHPSESSID
         try {
+            // WF_AUTH (HttpOnly) + visible client hint
             wf_auth_set_cookie($user['userId'], $dom, $sec);
-            [$valTmp, $expTmp] = wf_auth_make_cookie($user['userId']);
-            @setcookie(wf_auth_cookie_name(), $valTmp, [ 'expires' => $expTmp, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
             wf_auth_set_client_hint($user['userId'], $user['role'] ?? null, $dom, $sec);
         } catch (Throwable $e) {}
         try {
             if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
+            // Single canonical PHPSESSID (domain-scoped)
             @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
-            @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
         } catch (Throwable $e) {}
         try {
             error_log('[AUTH-SEAL] ' . json_encode([

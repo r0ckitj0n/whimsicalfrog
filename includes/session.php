@@ -60,8 +60,13 @@ class SessionManager
 
         // Set session configuration
         ini_set('session.name', self::$config['name']);
-        ini_set('session.gc_maxlifetime', self::$config['lifetime']);
-        ini_set('session.cookie_lifetime', self::$config['lifetime']);
+        // If lifetime is 0, we still want a sane GC window so data persists across requests.
+        // Use 24h for GC when lifetime<=0, but keep cookie_lifetime=0 (session cookie) for the browser.
+        $cfgLifetime = (int) self::$config['lifetime'];
+        $gcLifetime = ($cfgLifetime > 0) ? $cfgLifetime : 86400; // 24h default GC if not specified
+        $cookieLifetime = $cfgLifetime; // 0 means session cookie in browser
+        ini_set('session.gc_maxlifetime', $gcLifetime);
+        ini_set('session.cookie_lifetime', $cookieLifetime);
         ini_set('session.cookie_path', self::$config['path']);
         ini_set('session.cookie_domain', self::$config['domain']);
         ini_set('session.cookie_secure', $isHttps ? 1 : 0);

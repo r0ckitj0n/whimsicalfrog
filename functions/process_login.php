@@ -172,39 +172,23 @@ try {
             $user['id']
         );
 
-        // Explicitly send session cookie with current id (canonical domain)
-        // Explicitly set canonical cookie for apex+www to avoid host-only duplicates
+        // Compute cookie context once
         try {
             $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
             if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
             $parts = explode('.', $host);
             $baseDomain = $host;
-            if (count($parts) >= 2) {
-                $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
-            }
+            if (count($parts) >= 2) { $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1]; }
             $cookieDomain = '.' . $baseDomain;
-            $isHttps = (
-                (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-                (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
-                (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
-                (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
-            );
-            // Clear any host-only variant
-            @setcookie(session_name(), '', [ 'expires' => time()-3600, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
-            // Set canonical (domain-scoped)
+            $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443) || (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') || (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+            // 1) Set WF_AUTH first (domain-scoped only) and a client hint
+            try {
+                wf_auth_set_cookie($user['id'], $cookieDomain, $isHttps);
+                wf_auth_set_client_hint($user['id'], $user['role'] ?? null, $cookieDomain, $isHttps);
+            } catch (\Throwable $e) { /* non-fatal */ }
+            // 2) Emit a single, canonical domain-scoped PHPSESSID cookie
             @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $cookieDomain, 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
-            // Also emit a host-only session cookie for compatibility
-            @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
-        } catch (\Throwable $e) {}
-        // Also set a signed WF_AUTH cookie to reconstruct auth if PHP session engine flakes
-        try {
-            wf_auth_set_cookie($user['id'], $cookieDomain, $isHttps);
-            // And host-only duplicate for edge-case client compatibility
-            [$valTmp, $expTmp] = wf_auth_make_cookie($user['id']);
-            @setcookie(wf_auth_cookie_name(), $valTmp, [ 'expires' => $expTmp, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
-            // And a client-visible hint for immediate header UI sync (non-HttpOnly)
-            wf_auth_set_client_hint($user['id'], $user['role'] ?? null, $cookieDomain, $isHttps);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) { /* noop */ }
         // Ensure session is flushed to storage and cookie is sent
         try { @session_write_close(); } catch (\Throwable $e) {}
 

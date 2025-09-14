@@ -9,34 +9,50 @@
 try {
     $pdo = Database::getInstance();
     $landingCoordsJson = '[]';
-    $candidates = ['A', 'landing', '0']; // Prefer 'A' if present, then 'landing', then fallback to room 0
+    $candidates = ['A', 'landing']; // Landing should only source from these, not main room '0'
 
+    $rawJson = null;
     // 1) Try active maps in priority order
     foreach ($candidates as $rn) {
         $stmt = $pdo->prepare("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1");
         $stmt->execute([$rn]);
         $map = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($map && isset($map['coordinates']) && $map['coordinates'] !== '' && $map['coordinates'] !== null) {
-            $landingCoordsJson = $map['coordinates'];
-            break;
-        }
+        if ($map && !empty($map['coordinates'])) { $rawJson = $map['coordinates']; break; }
     }
 
     // 2) If none active, fallback to the most recent for those room_numbers
-    if ($landingCoordsJson === '[]') {
+    if ($rawJson === null) {
         foreach ($candidates as $rn) {
             $stmt = $pdo->prepare("SELECT coordinates FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC, created_at DESC LIMIT 1");
             $stmt->execute([$rn]);
             $map = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($map && isset($map['coordinates']) && $map['coordinates'] !== '' && $map['coordinates'] !== null) {
-                $landingCoordsJson = $map['coordinates'];
-                break;
+            if ($map && !empty($map['coordinates'])) { $rawJson = $map['coordinates']; break; }
+        }
+    }
+
+    // 3) Parse and filter to only .area-1 for landing (ignore other areas if present)
+    if ($rawJson !== null) {
+        $arr = json_decode($rawJson, true);
+        if (is_array($arr)) {
+            $filtered = array_values(array_filter($arr, function($a){
+                if (!is_array($a) || !isset($a['selector'])) return false;
+                $sel = (string)$a['selector'];
+                return $sel === '.area-1' || $sel === 'area-1';
+            }));
+            if (!empty($filtered)) {
+                $landingCoordsJson = json_encode($filtered, JSON_UNESCAPED_SLASHES);
             }
         }
     }
+
+    // 4) If still empty, provide the known-good fallback
+    if ($landingCoordsJson === '[]') {
+        $fallback = [[ 'selector' => '.area-1', 'top' => 411, 'left' => 601, 'width' => 125, 'height' => 77 ]];
+        $landingCoordsJson = json_encode($fallback, JSON_UNESCAPED_SLASHES);
+    }
 } catch (Exception $e) {
     error_log('Error fetching landing page coordinates: ' . $e->getMessage());
-    $landingCoordsJson = '[]';
+    $landingCoordsJson = json_encode([[ 'selector' => '.area-1', 'top' => 411, 'left' => 601, 'width' => 125, 'height' => 77 ]], JSON_UNESCAPED_SLASHES);
 }
 ?>
 

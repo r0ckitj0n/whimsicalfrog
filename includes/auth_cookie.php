@@ -38,25 +38,29 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array {
 
 function wf_auth_set_cookie($userId, string $domain, bool $secure): void {
     [$val, $exp] = wf_auth_make_cookie($userId);
-    @setcookie(wf_auth_cookie_name(), $val, [
+    $sameSite = $secure ? 'None' : 'Lax';
+    $opts = [
         'expires' => $exp,
         'path' => '/',
-        'domain' => $domain,
         'secure' => $secure,
         'httponly' => true,
-        'samesite' => 'None',
-    ]);
+        'samesite' => $sameSite,
+    ];
+    if (!empty($domain)) { $opts['domain'] = $domain; }
+    @setcookie(wf_auth_cookie_name(), $val, $opts);
 }
 
 function wf_auth_clear_cookie(string $domain, bool $secure): void {
-    @setcookie(wf_auth_cookie_name(), '', [
+    $sameSite = $secure ? 'None' : 'Lax';
+    $opts = [
         'expires' => time() - 3600,
         'path' => '/',
-        'domain' => $domain,
         'secure' => $secure,
         'httponly' => true,
-        'samesite' => 'None',
-    ]);
+        'samesite' => $sameSite,
+    ];
+    if (!empty($domain)) { $opts['domain'] = $domain; }
+    @setcookie(wf_auth_cookie_name(), '', $opts);
 }
 
 // Non-HttpOnly client hint for UI sync: WF_AUTH_V carries minimal data
@@ -64,23 +68,27 @@ function wf_auth_client_cookie_name(): string { return 'WF_AUTH_V'; }
 
 function wf_auth_set_client_hint($userId, ?string $role, string $domain, bool $secure): void {
     $payload = json_encode([ 'uid' => (string)$userId, 'role' => $role ? (string)$role : null ]);
-    @setcookie(wf_auth_client_cookie_name(), base64_encode($payload), [
+    $sameSite = $secure ? 'None' : 'Lax';
+    $opts = [
         'expires' => time() + 60*60*24*7,
         'path' => '/',
-        'domain' => $domain,
         'secure' => $secure,
         'httponly' => false,
-        'samesite' => 'None',
-    ]);
+        'samesite' => $sameSite,
+    ];
+    if (!empty($domain)) { $opts['domain'] = $domain; }
+    @setcookie(wf_auth_client_cookie_name(), base64_encode($payload), $opts);
 }
 
 function wf_auth_clear_client_hint(string $domain, bool $secure): void {
-    @setcookie(wf_auth_client_cookie_name(), '', [
+    $sameSite = $secure ? 'None' : 'Lax';
+    $opts = [
         'expires' => time() - 3600,
         'path' => '/',
-        'domain' => $domain,
         'secure' => $secure,
         'httponly' => false,
-        'samesite' => 'None',
-    ]);
+        'samesite' => $sameSite,
+    ];
+    if (!empty($domain)) { $opts['domain'] = $domain; }
+    @setcookie(wf_auth_client_cookie_name(), '', $opts);
 }

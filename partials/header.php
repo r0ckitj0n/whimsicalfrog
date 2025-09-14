@@ -125,7 +125,7 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
       if (!j) return;
       if (j && j.userId != null) {
         try { document.body.setAttribute('data-is-logged-in','true'); document.body.setAttribute('data-user-id', String(j.userId)); } catch(_){}
-        try { window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: j.userId, username: j.username || null, role: j.role || null } })); } catch(_){}
+        // Do NOT dispatch wf:login-success from passive whoami; avoid triggering seal redirects on every page load
       }
     }).catch(function(){/* noop */});
     // Fallback: if whoami did not yield, try WF_AUTH_V cookie to drive UI immediately
@@ -140,7 +140,7 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
           if (obj && obj.uid) {
             document.body.setAttribute('data-is-logged-in','true');
             document.body.setAttribute('data-user-id', String(obj.uid));
-            window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: obj.uid, username: null, role: obj.role || null } }));
+            // Do NOT dispatch wf:login-success from client hint; avoid seal redirect loops
           }
         } catch(_){}
       }

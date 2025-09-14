@@ -59,7 +59,8 @@ try { wf_auth_set_client_hint($user['userId'], $user['role'] ?? null, $dom, $sec
 // Ensure session cookie is canonical
 try {
     @session_regenerate_id(true);
-    @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
+    $sameSite = $sec ? 'None' : 'Lax';
+    @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => $sameSite ]);
 } catch (Throwable $e) {}
 
 try { @session_write_close(); } catch (Throwable $e) {}

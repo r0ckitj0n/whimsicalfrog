@@ -179,15 +179,20 @@ try {
             $parts = explode('.', $host);
             $baseDomain = $host;
             if (count($parts) >= 2) { $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1]; }
-            $cookieDomain = '.' . $baseDomain;
+            $isIp = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $host);
+            $isLocalhost = ($host === 'localhost' || $host === '127.0.0.1' || $isIp);
+            $cookieDomain = $isLocalhost ? '' : ('.' . $baseDomain);
             $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443) || (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') || (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on');
+            $sameSite = $isHttps ? 'None' : 'Lax';
             // 1) Set WF_AUTH first (domain-scoped only) and a client hint
             try {
                 wf_auth_set_cookie($user['id'], $cookieDomain, $isHttps);
                 wf_auth_set_client_hint($user['id'], $user['role'] ?? null, $cookieDomain, $isHttps);
             } catch (\Throwable $e) { /* non-fatal */ }
-            // 2) Emit a single, canonical domain-scoped PHPSESSID cookie
-            @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $cookieDomain, 'secure' => $isHttps, 'httponly' => true, 'samesite' => 'None' ]);
+            // 2) Emit a single, canonical PHPSESSID cookie (omit Domain on localhost/IP)
+            $opts = [ 'expires' => 0, 'path' => '/', 'secure' => $isHttps, 'httponly' => true, 'samesite' => $sameSite ];
+            if (!empty($cookieDomain)) { $opts['domain'] = $cookieDomain; }
+            @setcookie(session_name(), session_id(), $opts);
         } catch (\Throwable $e) { /* noop */ }
         // Ensure session is flushed to storage and cookie is sent
         try { @session_write_close(); } catch (\Throwable $e) {}

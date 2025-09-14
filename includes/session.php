@@ -16,7 +16,8 @@ class SessionManager
         'domain' => '',
         'secure' => false, // Set to true for HTTPS
         'httponly' => true,
-        'samesite' => 'None'
+        // Default to Lax; will be dynamically elevated to None on HTTPS below
+        'samesite' => 'Lax'
     ];
 
     /**
@@ -58,6 +59,17 @@ class SessionManager
             (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
         );
 
+        // For localhost and IP addresses, avoid setting a Domain attribute at all
+        try {
+            $hostCheck = $_SERVER['HTTP_HOST'] ?? '';
+            if (strpos($hostCheck, ':') !== false) { $hostCheck = explode(':', $hostCheck)[0]; }
+            $isIpHost = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $hostCheck);
+            $isLocalHost = ($hostCheck === 'localhost' || $hostCheck === '127.0.0.1' || $isIpHost);
+            if ($isLocalHost) {
+                self::$config['domain'] = '';
+            }
+        } catch (\Throwable $e) { /* noop */ }
+
         // Set session configuration
         ini_set('session.name', self::$config['name']);
         // If lifetime is 0, we still want a sane GC window so data persists across requests.
@@ -71,7 +83,9 @@ class SessionManager
         ini_set('session.cookie_domain', self::$config['domain']);
         ini_set('session.cookie_secure', $isHttps ? 1 : 0);
         ini_set('session.cookie_httponly', self::$config['httponly']);
-        ini_set('session.cookie_samesite', self::$config['samesite']);
+        // Use SameSite=None only when secure over HTTPS; otherwise Lax to ensure cookies are accepted on localhost/dev
+        $sameSite = $isHttps ? 'None' : 'Lax';
+        ini_set('session.cookie_samesite', $sameSite);
         ini_set('session.use_strict_mode', 1);
         ini_set('session.use_cookies', 1);
         ini_set('session.use_only_cookies', 1);
@@ -88,31 +102,36 @@ class SessionManager
                 if (count($parts) >= 2) {
                     $baseDomain = $parts[count($parts)-2] . '.' . $parts[count($parts)-1];
                 }
-                $cookieDomain = '.' . $baseDomain;
+                // Determine if host is local (localhost or IPv4)
+                $isIp = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $host);
+                $isLocalhost = ($host === 'localhost' || $host === '127.0.0.1' || $isIp);
+                $cookieDomain = $isLocalhost ? '' : ('.' . $baseDomain);
                 $isHttps = (
                     (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
                     (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
                     (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
                     (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
                 );
+                $sameSite = $isHttps ? 'None' : 'Lax';
                 // 1) Clear any host-only cookie by setting expired cookie without Domain
-                @setcookie(session_name(), '', [
+                $optsClear = [
                     'expires' => time() - 3600,
                     'path' => self::$config['path'],
-                    // No domain: targets host-only cookie on current host only
                     'secure' => $isHttps,
                     'httponly' => self::$config['httponly'],
-                    'samesite' => self::$config['samesite'],
-                ]);
-                // 2) Set the canonical domain-scoped cookie
-                @setcookie(session_name(), session_id(), [
+                    'samesite' => $sameSite,
+                ];
+                @setcookie(session_name(), '', $optsClear);
+                // 2) Set the canonical cookie (domain-scoped only when not local)
+                $optsSet = [
                     'expires' => 0,
                     'path' => self::$config['path'],
-                    'domain' => $cookieDomain,
                     'secure' => $isHttps,
                     'httponly' => self::$config['httponly'],
-                    'samesite' => self::$config['samesite'],
-                ]);
+                    'samesite' => $sameSite,
+                ];
+                if (!empty($cookieDomain)) { $optsSet['domain'] = $cookieDomain; }
+                @setcookie(session_name(), session_id(), $optsSet);
             } catch (\Throwable $e) { /* non-fatal */ }
         }
 

@@ -381,8 +381,9 @@ function logoutUser()
 
     // Clear PHPSESSID both domain-scoped and host-only
     try {
-        @setcookie(session_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
-        @setcookie(session_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
+        $sameSite = $sec ? 'None' : 'Lax';
+        @setcookie(session_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => $sameSite ]);
+        @setcookie(session_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => $sameSite ]);
     } catch (\Throwable $e) { /* noop */ }
 
     // Clear WF_AUTH (HttpOnly) and WF_AUTH_V (non-HttpOnly), both domain and host-only
@@ -392,8 +393,9 @@ function logoutUser()
         wf_auth_clear_cookie($dom, $sec);
         wf_auth_clear_client_hint($dom, $sec);
         // Host-only clears
-        @setcookie(wf_auth_cookie_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
-        @setcookie(wf_auth_client_cookie_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => false, 'samesite' => 'None' ]);
+        $sameSite = $sec ? 'None' : 'Lax';
+        @setcookie(wf_auth_cookie_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => $sameSite ]);
+        @setcookie(wf_auth_client_cookie_name(), '', [ 'expires' => time() - 3600, 'path' => '/', 'secure' => $sec, 'httponly' => false, 'samesite' => $sameSite ]);
     } catch (\Throwable $e) { /* noop */ }
 
     // Finalize: rotate session id to avoid resurrecting old file

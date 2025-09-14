@@ -27,37 +27,32 @@ try {
         exit;
     }
     $uid = $row['id'];
-    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+    $hostFull = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us'; // may include port
+    $host = $hostFull;
     if (strpos($host, ':') !== false) { $host = explode(':', $host)[0]; }
     $p = explode('.', $host); $bd = $host; if (count($p) >= 2) { $bd = $p[count($p)-2] . '.' . $p[count($p)-1]; }
-    $dom = '.' . $bd; $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+    $isIp = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $host);
+    $isLocal = ($host === 'localhost' || $host === '127.0.0.1' || $isIp);
+    $dom = $isLocal ? '' : ('.' . $bd);
+    $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
 
     // Set WF_AUTH cookie to client
     [$val, $exp] = wf_auth_make_cookie($uid);
-    @setcookie(wf_auth_cookie_name(), $val, [
-        'expires' => $exp,
-        'path' => '/',
-        'domain' => $dom,
-        'secure' => $sec,
-        'httponly' => true,
-        'samesite' => 'None',
-    ]);
+    $sameSite = $sec ? 'None' : 'Lax';
+    $opts1 = [ 'expires' => $exp, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => $sameSite ];
+    if (!empty($dom)) { $opts1['domain'] = $dom; }
+    @setcookie(wf_auth_cookie_name(), $val, $opts1);
     // Also a visible hint for quick UI checks
-    @setcookie('WF_AUTH_V', base64_encode(json_encode(['uid' => (string)$uid, 'role' => $row['role'] ?? null])), [
-        'expires' => $exp,
-        'path' => '/',
-        'domain' => $dom,
-        'secure' => $sec,
-        'httponly' => false,
-        'samesite' => 'None',
-    ]);
+    $opts2 = [ 'expires' => $exp, 'path' => '/', 'secure' => $sec, 'httponly' => false, 'samesite' => $sameSite ];
+    if (!empty($dom)) { $opts2['domain'] = $dom; }
+    @setcookie('WF_AUTH_V', base64_encode(json_encode(['uid' => (string)$uid, 'role' => $row['role'] ?? null])), $opts2);
 
     // Build redirect target
     $scheme = $sec ? 'https' : 'http';
     if ($next === 'shop') {
-        $target = $scheme . '://' . $host . '/shop';
+        $target = $scheme . '://' . $hostFull . '/shop';
     } else {
-        $target = $scheme . '://' . $host . '/api/whoami.php?wf_auth_debug=1';
+        $target = $scheme . '://' . $hostFull . '/api/whoami.php?wf_auth_debug=1';
     }
 
     header('Location: ' . $target, true, 302);

@@ -90,7 +90,8 @@ try {
         try {
             if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
             // Single canonical PHPSESSID (domain-scoped)
-            @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => 'None' ]);
+            $sameSite = $sec ? 'None' : 'Lax';
+            @setcookie(session_name(), session_id(), [ 'expires' => 0, 'path' => '/', 'domain' => $dom, 'secure' => $sec, 'httponly' => true, 'samesite' => $sameSite ]);
         } catch (Throwable $e) {}
         try {
             error_log('[AUTH-SEAL] ' . json_encode([

@@ -37,7 +37,7 @@ html, body { background: transparent !important; }
 <div id="admin-section-content">
 <?php
 // Render the categories UI (no redirect thanks to INCLUDED_FROM_INDEX)
-include dirname(__DIR__, 2) . '/admin/admin_categories.php';
+include dirname(__DIR__, 2) . '/sections/admin_categories.php';
 ?>
 </div>
 <script>

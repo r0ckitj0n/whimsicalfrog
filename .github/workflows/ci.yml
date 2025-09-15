@@ -36,6 +36,9 @@ jobs:
       - name: Run duplicate/backup guard
         run: npm run guard:duplicates
 
+      - name: Guard admin router
+        run: npm run guard:admin-router
+
       - name: Run ESLint
         run: npm run lint
 

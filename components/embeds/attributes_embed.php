@@ -25,7 +25,7 @@ html, body { background: transparent !important; }
 <div id="admin-section-content">
 <?php
 // Render the Inventory Admin page; the hash will focus the attributes section
-include dirname(__DIR__, 2) . '/admin/admin_inventory.php';
+include dirname(__DIR__, 2) . '/sections/admin_inventory.php';
 ?>
 </div>
 <script>

@@ -227,7 +227,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
         <?php endif; ?>
 
         <div class="actions">
-            <a href="/admin/db_web_manager.php" class="btn">🔧 Web Manager</a>
+            <a href="/admin/?section=db-web-manager" class="btn">🔧 Web Manager</a>
             <a href="?refresh=1" class="btn">🔄 Refresh Status</a>
             <a href="#" data-action="runCommand" data-params='{"command":"test-css"}' class="btn">🧪 Test CSS</a>
             <a href="#" data-action="runCommand" data-params='{"command":"generate-css"}' class="btn">🎨 Generate CSS</a>

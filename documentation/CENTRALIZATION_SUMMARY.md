@@ -45,7 +45,7 @@ We have successfully centralized the room functionality across WhimsicalFrog to 
 - **Visual Settings**: Animations, themes, button styles
 
 ### 4. Admin Configuration Interface
-**File: `admin/room_config_manager.php`**
+**Route: `/admin/?section=room-config-manager`**
 - Web-based configuration management
 - Real-time form population from database
 - Visual configuration preview
@@ -172,7 +172,7 @@ Default Config → Database Config → Room-Specific Overrides → Applied Setti
 3. **Remove Duplicates**: Delete old popup/modal code from room files
 
 ### For Administrators
-1. **Access**: Visit `/admin/room_config_manager.php`
+1. **Access**: Visit `/admin/?section=room-config-manager`
 2. **Configure**: Select room and adjust settings via web interface
 3. **Apply**: Changes take effect immediately for new page loads
 4. **Monitor**: Check room behavior across different configurations

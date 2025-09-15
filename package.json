@@ -16,6 +16,7 @@
     "lint:css": "stylelint \"src/styles/**/*.css\"",
     "lint:css:fix": "stylelint \"src/styles/**/*.css\" --fix",
     "guard:styles": "node scripts/disallow-inline-styles.mjs",
+    "guard:admin-router": "node scripts/dev/guard-admin-router.mjs",
     "guard:templates:css": "node scripts/guard-templates-css.mjs",
     "guard:duplicates": "node scripts/dev/guard-duplicates.mjs",
     "guard:legacy": "node scripts/dev/legacy-scan.mjs",

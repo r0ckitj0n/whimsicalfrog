@@ -42,9 +42,9 @@
           loginLink.parentNode.insertBefore(acc, loginLink);
         }
         // Admin Settings link
-        if (role && role.toLowerCase() === 'admin' && rightNav && !rightNav.querySelector('a[href="/admin/admin.php?section=settings"]')) {
+        if (role && role.toLowerCase() === 'admin' && rightNav && !rightNav.querySelector('a[href="/admin/?section=settings"]')) {
           const settings = document.createElement('a');
-          settings.href = '/admin/admin.php?section=settings';
+          settings.href = '/admin/?section=settings';
           settings.className = 'nav-link';
           settings.textContent = 'Settings';
           loginLink.parentNode.insertBefore(settings, loginLink);

@@ -8,13 +8,13 @@ This document defines the canonical routing for admin pages and how section UIs 
 - Backward-compatible with legacy URLs
 
 ## Canonical Entry
-- Router: `admin/admin.php`
-- Route by query: `admin/admin.php?section=<name>`
+- Router: `/admin/` (rewritten to `sections/admin_router.php`)
+- Route by query: `/admin/?section=<name>`
 
 Examples
-- Inventory: `/admin/admin.php?section=inventory`
-- Settings: `/admin/admin.php?section=settings`
-- Reports: `/admin/admin.php?section=reports`
+- Inventory: `/admin/?section=inventory`
+- Settings: `/admin/?section=settings`
+- Reports: `/admin/?section=reports`
 
 ## Sections Directory
 - All admin section UIs are included by the router from `sections/`.
@@ -39,15 +39,15 @@ Special tool routes (kept under `admin/` for now)
 - `room-map-editor`
 
 ## Legacy Entry Points Removed
-All legacy standalone admin entry files under `admin/admin_*.php` have been removed. The canonical source of truth is the router (`admin/admin.php`) loading from `sections/`.
+All legacy standalone admin entry files under `admin/admin_*.php` have been removed. The canonical source of truth is the router (`/admin/`) loading from `sections/`.
 
 If you have any old bookmarks or links pointing to `admin/admin_<name>.php`, update them to the canonical form:
 
-- `href="/admin/admin.php?section=<name>"`
+- `href="/admin/?section=<name>"`
 
 ## Link Guidance
 - Use route URLs in all templates and scripts:
-  - `href="/admin/admin.php?section=<name>"`
+  - `href="/admin/?section=<name>"`
 - Avoid direct links to legacy `admin/admin_<name>.php` (they no longer exist)
 
 ## Header/Layout Integration

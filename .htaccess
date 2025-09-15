@@ -7,6 +7,15 @@ Options -MultiViews
 RewriteEngine On
 RewriteBase /
 
+# Clean Admin Route: /admin/ -> sections/admin_router.php
+# Serve existing files first; only rewrite the bare /admin/ path
+RewriteCond %{REQUEST_URI} ^/admin/?$ [NC]
+RewriteRule ^ sections/admin_router.php [L,QSA]
+
+# Redirect legacy admin router to clean route
+RewriteCond %{REQUEST_URI} ^/admin/admin\.php$ [NC]
+RewriteRule ^ /admin/ [R=301,L,QSA]
+
 # Security: Block direct access to sensitive files (SQL dumps, env, logs, archives)
 # Applies before "serve existing files" rule below
 <FilesMatch "\.(sql|sqlite|db|env|ini|log|bak|old|zip|tar|gz|7z|rar|bk|bkp)$">

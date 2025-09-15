@@ -134,7 +134,7 @@ if ($page === 'admin') {
             $adminSection = $q;
         }
     }
-    $page_path = __DIR__ . '/admin/admin.php';
+    $page_path = __DIR__ . '/sections/admin_router.php';
 } else {
     $page_path = __DIR__ . '/' . $page . '.php';
 }

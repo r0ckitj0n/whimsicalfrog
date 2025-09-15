@@ -186,7 +186,7 @@ try {
                             <a href="/account_settings" class="nav-link"><?php echo htmlspecialchars($username); ?></a>
                         </span>
                         <?php if (!empty($is_admin)): ?>
-                            <a href="/admin/admin.php?section=settings" class="nav-link">Settings</a>
+                            <a href="/admin/?section=settings" class="nav-link">Settings</a>
                         <?php endif; ?>
                         <a href="/logout.php" class="nav-link">Logout</a>
                     <?php else: ?>
@@ -239,7 +239,7 @@ try {
                     <div class="mobile-auth-section">
                         <?php if ($is_logged_in): ?>
                             <?php if (!empty($is_admin)): ?>
-                                <a href="/admin/admin.php?section=settings" class="mobile-nav-link">Settings</a>
+                                <a href="/admin/?section=settings" class="mobile-nav-link">Settings</a>
                             <?php endif; ?>
                             <a href="/profile" class="mobile-nav-link">Profile</a>
                             <a href="/logout.php" class="mobile-nav-link">Logout</a>

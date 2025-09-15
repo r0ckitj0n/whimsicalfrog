@@ -35,7 +35,7 @@ $tooltipIds = [
             <?php $tooltipId = $tooltipIds[$key] ?? ''; ?>
             <?php
                 // Route all tabs through the canonical admin router so header/navbar is always rendered.
-                $href = ($key === '') ? '/admin' : ('/admin/admin.php?section=' . urlencode($key));
+                $href = ($key === '') ? '/admin' : ('/admin/?section=' . urlencode($key));
             ?>
             <a href="<?= $href ?>"
                id="<?= $tooltipId ?>"

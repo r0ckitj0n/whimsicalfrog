@@ -166,7 +166,7 @@ try {
     }
 
     echo "\nNormalization complete." . ($dryRun ? " (dry-run)" : "") . "\n";
-    echo "\nTip: Re-test /admin/admin.php?section=orders after this operation.";
+    echo "\nTip: Re-test /admin/?section=orders after this operation.";
 } catch (Throwable $e) {
     http_response_code(500);
     echo "Error: " . $e->getMessage() . "\n";

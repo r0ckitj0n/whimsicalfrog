@@ -1,7 +1,6 @@
 <?php
-// Admin Dashboard - Main administrative interface
+// Admin Router - Central administrative interface (migrated from admin/admin.php)
 require_once __DIR__ . '/../includes/functions.php';
-// Seed DB connection globals ($host,$db,$user,$pass,...) for section files that use Database::getInstance()
 require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -29,9 +28,6 @@ $adminRole = $userData['role'] ?? 'Administrator';
 ?>
 
 <div class="admin-dashboard page-content">
-
-
-
     <?php
     // Derive admin section from query when loading this router directly
     if (!isset($adminSection) || $adminSection === '' || $adminSection === null) {
@@ -43,9 +39,8 @@ $adminRole = $userData['role'] ?? 'Administrator';
             'customer' => 'customers', 'user' => 'customers', 'users' => 'customers',
             'report' => 'reports',
             'setting' => 'settings', 'admin_settings' => 'settings', 'admin_settings.php' => 'settings',
-            // Room config manager aliases
+            // Tool aliases
             'room_config_manager' => 'room-config-manager', 'room-config-manager' => 'room-config-manager',
-            // New managers
             'room_map_manager' => 'room-map-manager', 'room-map-manager' => 'room-map-manager',
             'area_item_mapper' => 'area-item-mapper', 'area-item-mapper' => 'area-item-mapper',
             'room_map_editor' => 'room-map-editor', 'room-map-editor' => 'room-map-editor',
@@ -57,7 +52,6 @@ $adminRole = $userData['role'] ?? 'Administrator';
     $currentSection = $adminSection ?: 'dashboard';
     ?>
 
-    <!-- Dynamic Section Content -->
     <div id="admin-section-content">
         <?php
         switch ($currentSection) {
@@ -146,6 +140,6 @@ $adminRole = $userData['role'] ?? 'Administrator';
                 include dirname(__DIR__) . '/sections/admin_dashboard.php';
                 break;
         }
-?>
+        ?>
     </div>
 </div>

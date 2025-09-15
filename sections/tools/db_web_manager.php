@@ -140,4 +140,65 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
   <button data-action="describeTable">Describe Table</button>
   <div id="structureResults" class="results"></div>
 </div>
+<div class="panel">
+  <h2>🧭 DB Tools (Introspection)</h2>
+  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px; align-items: end;">
+    <div>
+      <label for="wfDbToolsEnv" class="block text-sm">Environment</label>
+      <select id="wfDbToolsEnv" class="form-input">
+        <option value="local">local</option>
+        <option value="live">live</option>
+      </select>
+    </div>
+    <div>
+      <label for="wfDbToolsTable" class="block text-sm">Table (for Describe)</label>
+      <input id="wfDbToolsTable" type="text" class="form-input" placeholder="e.g., items">
+    </div>
+  </div>
+  <div class="actions" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+    <button class="btn" data-wf-dbtools="version">🛠 Version</button>
+    <button class="btn" data-wf-dbtools="table_counts">📊 Table Count</button>
+    <button class="btn" data-wf-dbtools="db_size">💾 DB Size</button>
+    <button class="btn" data-wf-dbtools="list_tables">📃 List Tables</button>
+    <button class="btn" data-wf-dbtools="describe">📐 Describe Table</button>
+  </div>
+  <pre id="wfDbToolsOut" class="json-output" style="margin-top:12px; min-height: 120px;">(run a command to see output)</pre>
+</div>
+<script>
+(function(){
+  const envSel = document.getElementById('wfDbToolsEnv');
+  const tableInput = document.getElementById('wfDbToolsTable');
+  const out = document.getElementById('wfDbToolsOut');
+  function qsFor(action){
+    const p = new URLSearchParams();
+    p.set('action', action);
+    const env = envSel ? envSel.value : 'local';
+    if (env) p.set('env', env);
+    const tbl = tableInput ? (tableInput.value||'').trim() : '';
+    if (tbl) p.set('table', tbl);
+    return p.toString();
+  }
+  async function call(action, needsCsrf){
+    try {
+      let res = await fetch('/api/db_tools.php?' + qsFor(action), { credentials: 'include' });
+      if (res.status === 428 && needsCsrf) {
+        const tRes = await fetch('/api/db_tools.php?action=csrf_token', { credentials: 'include' });
+        const token = tRes.headers.get('X-CSRF-Token');
+        if (token) {
+          res = await fetch('/api/db_tools.php?' + qsFor(action), { credentials: 'include', headers: { 'X-CSRF-Token': token } });
+        }
+      }
+      const data = await res.json();
+      if (out) out.textContent = JSON.stringify(data.data || data, null, 2);
+    } catch (e) { if (out) out.textContent = 'Error: ' + (e?.message || String(e)); }
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-wf-dbtools]');
+    if (!b) return;
+    e.preventDefault();
+    const action = b.getAttribute('data-wf-dbtools');
+    call(action, action === 'generate-css');
+  });
+})();
+</script>
 <?php if ($__wf_included_layout) { include dirname(__DIR__, 2) . '/partials/footer.php'; } ?>

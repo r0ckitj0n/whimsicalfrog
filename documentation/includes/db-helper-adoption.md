@@ -44,15 +44,15 @@ Some scripts require features that are cleaner with direct PDO or must target mu
   - Reads from current and live DBs; uses `Database::createConnection(...)` for live.
   - Aggregate status queries via that PDO connection are fine.
 
-- Admin Secrets (`/admin/admin.php?section=secrets`)
+- Admin Secrets (`/admin/?section=secrets`)
   - Uses a separate `secret_db()` store and helpers; intentional separation from primary DB helper.
 
 ## Already Migrated (examples)
 
 - API endpoints like `api/login.php`, `api/inventory.php`, `api/run_image_analysis.php`, `api/checkout_pricing.php`, `api/update-inventory-field.php`, `api/get_marketing_data.php`, `api/get_room_coordinates.php`, `api/next-order-item-id.php`, `api/upload_background.php` now use `Database::*` helpers exclusively.
-- Admin pages like Customers (`/admin/admin.php?section=customers`) and User Manager (Customers) leverage `Database::*` for local DB reads; parts of `admin/db_api.php` were updated accordingly.
+- Admin pages like Customers (`/admin/?section=customers`) and User Manager (Customers) leverage `Database::*` for local DB reads; parts of `admin/db_api.php` were updated accordingly.
 
-> Note: Legacy admin entrypoints under `admin/admin_*.php` were removed. Use the canonical router: `/admin/admin.php?section=<name>`.
+> Note: Legacy admin entrypoints under `admin/admin_*.php` were removed. Use the canonical router: `/admin/?section=<name>`.
 
 ## What Not To Change (for now)
 

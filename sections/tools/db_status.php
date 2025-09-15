@@ -257,5 +257,30 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                 <pre id="apiRaw" class="json-output">(no data)</pre>
             </details>
         </div>
+
+        <div class="status-card mt-12">
+            <h3>🧭 DB Tools (Introspection)</h3>
+            <div class="stat-row">
+                <span>Environment</span>
+                <span class="stat-value">
+                    <select id="toolsEnvSelect">
+                        <option value="local">local</option>
+                        <option value="live">live</option>
+                    </select>
+                </span>
+            </div>
+            <div class="stat-row">
+                <span>Table (for Describe)</span>
+                <span class="stat-value"><input id="toolsTableInput" type="text" class="form-input" placeholder="e.g., items"></span>
+            </div>
+            <div class="actions mt-3">
+                <button class="btn" data-action="runCommand" data-params='{"command":"version"}'>🛠 Version</button>
+                <button class="btn" data-action="runCommand" data-params='{"command":"table_counts"}'>📊 Table Count</button>
+                <button class="btn" data-action="runCommand" data-params='{"command":"db_size"}'>💾 DB Size</button>
+                <button class="btn" data-action="runCommand" data-params='{"command":"list_tables"}'>📃 List Tables</button>
+                <button class="btn" data-action="runCommand" data-params='{"command":"describe"}'>📐 Describe Table</button>
+            </div>
+            <pre id="dbToolsOutput" class="json-output mt-4">(run a command to see output)</pre>
+        </div>
     </div>
     <?php if ($__wf_included_layout) { include dirname(__DIR__, 2) . '/partials/footer.php'; } ?>

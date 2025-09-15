@@ -326,7 +326,7 @@ if (__WF_IS_ADMIN) {
             };
             if (aliases[section]) section = aliases[section];
 
-            // If navigating via admin router e.g. /admin/admin.php?section=settings, prefer the query param
+            // If navigating via admin router e.g. /admin/?section=settings, prefer the query param
             try {
                 const params = new URLSearchParams(window.location.search || '');
                 const qSection = (params.get('section') || '').toLowerCase();

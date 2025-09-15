@@ -52,7 +52,7 @@ $emailPrefill = $userData['email'] ?? '';
         <div class="section-content">
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/dashboard#css">CSS Rules</a>
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/dashboard#background">Background Manager</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/admin.php?section=room-map-editor">Room Map Editor</a>
+          <a class="admin-settings-button btn-primary btn-full-width" href="/admin/?section=room-map-editor">Room Map Editor</a>
           <a class="admin-settings-button btn-primary btn-full-width" href="/admin/room_main#area-mapper">Area-Item Mapper</a>
         </div>
       </section>

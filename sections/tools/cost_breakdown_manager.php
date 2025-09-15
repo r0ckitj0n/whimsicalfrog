@@ -55,7 +55,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
     <div class="">
         <div class="flex justify-between items-center">
             <h1 class="text-brand-primary">Cost Breakdown Manager</h1>
-            <a href="/admin/admin.php?section=inventory" class="btn-brand">
+            <a href="/admin/?section=inventory" class="btn-brand">
                 Back to Inventory
             </a>
         </div>

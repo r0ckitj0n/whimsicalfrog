@@ -1,5 +1,7 @@
 # WhimsicalFrog Documentation
 
+<sub><sup>Last updated: 2025-09-14</sup></sub>
+
 This README serves as a consolidated entry point for project documentation. It reflects the current configuration after admin tooling and routing cleanup.
 
 ## Table of Contents

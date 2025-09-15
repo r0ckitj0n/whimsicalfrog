@@ -1,5 +1,7 @@
 # WhimsicalFrog Admin Guide (Current Configuration)
 
+<sub><sup>Last updated: 2025-09-14</sup></sub>
+
 This guide consolidates the current admin architecture, routes, tools, build setup, and conventions. It supersedes older documents that referenced legacy admin entrypoints.
 
 ## Table of Contents

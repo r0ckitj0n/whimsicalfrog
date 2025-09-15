@@ -39,6 +39,9 @@ jobs:
       - name: Guard admin router
         run: npm run guard:admin-router
 
+      - name: Guard docs structure
+        run: npm run guard:docs
+
       - name: Run ESLint
         run: npm run lint
 

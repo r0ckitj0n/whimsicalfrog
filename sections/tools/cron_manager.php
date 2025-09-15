@@ -29,7 +29,7 @@ $baseUrl = (defined('WF_PUBLIC_BASE') && WF_PUBLIC_BASE) ? ('https://whimsicalfr
 $webCronUrl = $baseUrl . '/api/maintenance.php?action=prune_sessions&days=2&admin_token=' . urlencode($currentToken);
 ?>
 <div class="page-content admin-container">
-  <div class="settings-section technical-section card-theme-red" style="max-width: 1000px; margin: 0 auto;">
+  <div class="settings-section technical-section card-theme-red section--narrow-max">
     <div class="section-header">
       <h2 class="section-title">Cron & Scheduled Tasks</h2>
       <p class="section-description">Configure and verify scheduled maintenance tasks (e.g., pruning old PHP sessions).</p>
@@ -37,10 +37,10 @@ $webCronUrl = $baseUrl . '/api/maintenance.php?action=prune_sessions&days=2&admi
 
     <div class="section-content">
       <?php if (!empty($rotateSuccess)): ?>
-        <div class="notice notice-success" style="margin-bottom:12px;">✅ <?php echo htmlspecialchars($rotateSuccess, ENT_QUOTES, 'UTF-8'); ?></div>
+        <div class="notice notice-success notice--spaced">✅ <?php echo htmlspecialchars($rotateSuccess, ENT_QUOTES, 'UTF-8'); ?></div>
       <?php endif; ?>
       <?php if (!empty($rotateError)): ?>
-        <div class="notice notice-error" style="margin-bottom:12px;">⚠️ <?php echo htmlspecialchars($rotateError, ENT_QUOTES, 'UTF-8'); ?></div>
+        <div class="notice notice-error notice--spaced">⚠️ <?php echo htmlspecialchars($rotateError, ENT_QUOTES, 'UTF-8'); ?></div>
       <?php endif; ?>
 
       <div class="admin-card">
@@ -50,14 +50,14 @@ $webCronUrl = $baseUrl . '/api/maintenance.php?action=prune_sessions&days=2&admi
         <form method="post" class="mt-2">
           <input type="hidden" name="action" value="rotate_token" />
           <button type="submit" class="btn btn-secondary">Rotate Token</button>
-          <small class="text-gray-600" style="margin-left:8px;">After rotation, update your hosting scheduler with the new URL below.</small>
+          <small class="text-gray-600 helper--ml-8">After rotation, update your hosting scheduler with the new URL below.</small>
         </form>
       </div>
 
       <div class="admin-card">
         <h3 class="admin-card-title">Web Cron (URL Trigger)</h3>
         <p>Most shared hosts provide a "web cron" or "URL cron" scheduler. Use the following URL to schedule daily session pruning:</p>
-        <pre style="white-space: nowrap; overflow-x: auto;"><code><?php echo htmlspecialchars($webCronUrl, ENT_QUOTES, 'UTF-8'); ?></code></pre>
+        <pre class="pre--nowrap-scroll"><code><?php echo htmlspecialchars($webCronUrl, ENT_QUOTES, 'UTF-8'); ?></code></pre>
         <ul class="admin-list">
           <li>Schedule: Daily at 3:10 AM (or your preferred time)</li>
           <li>Action: HTTP GET to the URL above</li>

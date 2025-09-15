@@ -66,3 +66,34 @@
 .btn--db-schema-browser { background-color: #0891b2; color: #fff; }
 .btn--db-show-schema:hover { background-color: #0e7490; }
 .btn--db-schema-browser:hover { background-color: #0e7490; }
+
+/* --- Inline-style replacements (semantic utilities) --- */
+/* Narrow centered panel used on auth/login prompts */
+.panel--narrow { max-width: 640px; margin: 48px auto; }
+
+/* Narrow input sizing (e.g., password field) */
+.form-input--narrow { max-width: 320px; }
+
+/* Two-column tight grid for small form rows */
+.grid--two-col-tight { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
+
+/* Compact action row with wrap */
+.actions--tight { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* JSON output pre block with minimum height and top spacing */
+.json-output--min { margin-top: 12px; min-height: 120px; }
+
+/* Section wrapper with max width centered */
+.section--narrow-max { max-width: 1000px; margin: 0 auto; }
+
+/* Notices with consistent spacing beneath */
+.notice--spaced { margin-bottom: 12px; }
+
+/* Preformatted block that keeps content on one line with horizontal scroll */
+.pre--nowrap-scroll { white-space: nowrap; overflow-x: auto; }
+
+/* Small left margin helper */
+.helper--ml-8 { margin-left: 8px; }
+
+/* Access denied message styling for admin embeds */
+.wf-access-denied { padding: 16px; color: #b91c1c; font-family: sans-serif; }

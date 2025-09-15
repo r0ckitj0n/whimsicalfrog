@@ -26,6 +26,8 @@ let violations = [];
 function walk(dir) {
   for (const ent of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, ent.name);
+    // Skip hidden files like .DS_Store anywhere under documentation
+    if (ent.name.startsWith('.')) continue;
     if (dir === DOCS) {
       // root-level rules
       if (ent.isFile()) {

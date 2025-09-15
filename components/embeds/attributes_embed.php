@@ -8,7 +8,7 @@ require_once dirname(__DIR__, 2) . '/includes/functions.php';
 require_once dirname(__DIR__, 2) . '/includes/auth.php';
 if (!function_exists('isAdminWithToken') || !isAdminWithToken()) {
     http_response_code(403);
-    echo '<div style="padding:16px;color:#b91c1c;font-family:sans-serif">Access denied.</div>';
+    echo '<div class="wf-access-denied">Access denied.</div>';
     exit;
 }
 $page = 'admin';

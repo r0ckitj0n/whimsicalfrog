@@ -23,12 +23,12 @@ if (!$authenticated) {
     }
     ?>
     <div class="page-content">
-      <div class="panel" style="max-width:640px;margin:48px auto;">
+      <div class="panel panel--narrow">
         <h2>🐸 Database Manager</h2>
         <p>Enter password to access database management tools:</p>
         <?php if (isset($error)) { echo "<div class='error'>" . htmlspecialchars($error) . "</div>"; } ?>
         <form method="post">
-          <input type="password" name="password" placeholder="Password" required class="form-input" style="max-width:320px;">
+          <input type="password" name="password" placeholder="Password" required class="form-input form-input--narrow">
           <button type="submit" class="btn btn-primary">Login</button>
         </form>
       </div>
@@ -142,7 +142,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
 </div>
 <div class="panel">
   <h2>🧭 DB Tools (Introspection)</h2>
-  <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px; align-items: end;">
+  <div class="grid grid--two-col-tight">
     <div>
       <label for="wfDbToolsEnv" class="block text-sm">Environment</label>
       <select id="wfDbToolsEnv" class="form-input">
@@ -155,14 +155,14 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
       <input id="wfDbToolsTable" type="text" class="form-input" placeholder="e.g., items">
     </div>
   </div>
-  <div class="actions" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+  <div class="actions actions--tight">
     <button class="btn" data-wf-dbtools="version">🛠 Version</button>
     <button class="btn" data-wf-dbtools="table_counts">📊 Table Count</button>
     <button class="btn" data-wf-dbtools="db_size">💾 DB Size</button>
     <button class="btn" data-wf-dbtools="list_tables">📃 List Tables</button>
     <button class="btn" data-wf-dbtools="describe">📐 Describe Table</button>
   </div>
-  <pre id="wfDbToolsOut" class="json-output" style="margin-top:12px; min-height: 120px;">(run a command to see output)</pre>
+  <pre id="wfDbToolsOut" class="json-output json-output--min">(run a command to see output)</pre>
 </div>
 <script>
 (function(){

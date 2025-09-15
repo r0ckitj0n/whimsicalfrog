@@ -4,7 +4,7 @@ import { join } from 'path';
 
 const ROOT = process.cwd();
 const EXCLUDES = new Set([
-  'node_modules', '.git', '.cache', 'vendor', 'dist', '.husky', '.github',
+  'node_modules', '.git', '.cache', 'vendor', 'dist', '.husky', '.github', 'logs', 'documentation',
 ]);
 
 const LEGACY_RE = /\/admin\/admin\.php(\?|$)/; // match /admin/admin.php and with query

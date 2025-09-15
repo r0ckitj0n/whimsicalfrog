@@ -270,16 +270,27 @@
     max-height: calc(95vh - var(--wf-header-offset, 0) - 50px) !important;
 }
 
-/* NUCLEAR FIX: Completely eliminate horizontal scrollbar at container level */
+/* Overlay must span the full viewport so background clicks reach it */
 .detailed-item-modal {
+    /* Let Tailwind's fixed inset-0 provide full-viewport hit area */
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: auto; /* actual height is controlled by .show rules above */
+    margin: 0 !important;
+    /* Provide a subtle backdrop so users can see the clickable overlay */
+    background: rgba(0, 0, 0, 0.35);
+    /* Must be above hover popup (100200) */
+    z-index: 100300 !important;
+}
+
+/* Constrain only the inner modal container, not the overlay */
+.detailed-item-modal .detailed-item-modal-container {
     max-width: 75vw !important;
     width: 75vw !important;
     margin: 0 auto !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
     box-sizing: border-box !important;
-    /* Must be above hover popup (100200) */
-    z-index: 100300 !important;
 }
 
 /* Hide horizontal scrollbar but keep vertical */

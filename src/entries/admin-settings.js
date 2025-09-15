@@ -13,6 +13,7 @@ import '../styles/admin-settings.css';
 const __wfShowModal = (id) => {
   const el = document.getElementById(id);
   if (!el) return false;
+  try { el.removeAttribute('hidden'); } catch(_) {}
   el.classList.remove('hidden');
   el.classList.add('show');
   el.setAttribute('aria-hidden', 'false');
@@ -21,6 +22,7 @@ const __wfShowModal = (id) => {
 const __wfHideModal = (id) => {
   const el = document.getElementById(id);
   if (!el) return false;
+  try { el.setAttribute('hidden', ''); } catch(_) {}
   el.classList.add('hidden');
   el.classList.remove('show');
   el.setAttribute('aria-hidden', 'true');
@@ -63,7 +65,12 @@ const __wfHideModal = (id) => {
       }
 
       // Openers (core)
-      if (closest('[data-action="open-business-info"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('businessInfoModal'); return; }
+      if (closest('[data-action="open-dashboard-config"]')) {
+        // If bridge is active, let it handle preload + open
+        if (window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) return;
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('dashboardConfigModal'); return;
+      }
       if (closest('[data-action="open-square-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('squareSettingsModal'); return; }
       if (closest('[data-action="open-email-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('emailSettingsModal'); return; }
       if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); if (__wfShowModal('emailSettingsModal')) { const test = document.getElementById('testEmailAddress')||document.getElementById('testRecipient'); if (test) setTimeout(()=>test.focus(), 50); } return; }
@@ -73,8 +80,8 @@ const __wfHideModal = (id) => {
       if (closest('[data-action="open-css-rules"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('cssRulesModal'); return; }
       if (closest('[data-action="open-background-manager"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('backgroundManagerModal'); return; }
       if (closest('[data-action="open-receipt-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); __wfShowModal('receiptSettingsModal'); return; }
-      if (closest('[data-action="open-dashboard-config"]')) { e.preventDefault(); if (typeof e.stopPropagation==='function') e.stopPropagation(); __wfShowModal('dashboardConfigModal'); return; }
       if (closest('[data-action="open-attributes"]')) {
+        if (window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) return;
         e.preventDefault(); if (typeof e.stopPropagation==='function') e.stopPropagation();
         // Ensure modal exists; if not, create a minimal one
         try {
@@ -113,6 +120,7 @@ const __wfHideModal = (id) => {
         return;
       }
       if (closest('[data-action="open-categories"]')) {
+        if (window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) return;
         try { console.info('[AdminSettings Entry] open-categories clicked'); } catch(_) {}
         e.preventDefault(); if (typeof e.stopPropagation==='function') e.stopPropagation();
         // Ensure modal exists; if not, create a minimal one

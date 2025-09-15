@@ -10,6 +10,8 @@
 
 /* Room main (consolidated) */
 @import url('./components/room-main.css');
+/* Room page layout helpers (background scaling, overlay positioning) */
+@import url('./room-page.css');
 
 /* Comprehensive quantity button fix to eliminate horizontal scrollbar */
 @import url('./components/qty-button.css');

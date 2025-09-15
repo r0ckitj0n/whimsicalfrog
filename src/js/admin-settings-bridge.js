@@ -8,6 +8,102 @@
 // the entire Settings page from wiring up its UI.
 
 function byId(id){ return document.getElementById(id); }
+
+// ------------------------------
+// Categories helpers
+// ------------------------------
+async function catApi(path, payload) {
+  const url = typeof path === 'string' ? path : '/api/categories.php?action=list';
+  const opts = payload
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, body: JSON.stringify(payload), credentials: 'include' }
+    : { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'include' };
+  const res = await fetch(url, opts);
+  const status = res.status; const text = await res.text();
+  if (status < 200 || status >= 300) throw new Error(`HTTP ${status}: ${text.slice(0,200)}`);
+  const data = text ? JSON.parse(text) : {};
+  if (!data || data.success !== true) throw new Error((data && data.error) || 'Unexpected response');
+  return data;
+}
+async function populateCategories() {
+  const modal = document.getElementById('categoriesModal'); if (!modal) return;
+  const tbody = modal.querySelector('#catTableBody'); const result = modal.querySelector('#catResult');
+  if (result) result.textContent = 'Loading…';
+  try {
+    const data = await catApi('/api/categories.php?action=list');
+    const cats = (data && data.data && Array.isArray(data.data.categories)) ? data.data.categories : [];
+    if (tbody) tbody.innerHTML = '';
+    cats.forEach((c) => {
+      const tr = document.createElement('tr');
+      const name = String(c.name || '').replace(/"/g, '&quot;');
+      tr.innerHTML = `
+        <td class="p-2"><span class="cat-name" data-name="${name}">${name}</span></td>
+        <td class="p-2 text-gray-600">${(c.item_count != null ? c.item_count : 0)}</td>
+        <td class="p-2">
+          <button class="btn btn-secondary" data-action="cat-rename" data-name="${name}">Rename</button>
+          <button class="btn btn-secondary text-red-700" data-action="cat-delete" data-name="${name}">Delete</button>
+        </td>`;
+      if (tbody) tbody.appendChild(tr);
+    });
+    if (result) result.textContent = cats.length ? '' : 'No categories found yet.';
+  } catch (e) {
+    if (result) result.textContent = e?.message || 'Failed to load categories';
+  }
+}
+
+// ------------------------------
+// Attributes helpers
+// ------------------------------
+async function attrApi(path, payload) {
+  const url = typeof path === 'string' ? path : '/api/attributes.php?action=list';
+  const opts = payload
+    ? { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With':'XMLHttpRequest' }, body: JSON.stringify(payload), credentials: 'include' }
+    : { method: 'GET', headers: { 'X-Requested-With':'XMLHttpRequest' }, credentials: 'include' };
+  const res = await fetch(url, opts);
+  const status = res.status; const text = await res.text();
+  if (status < 200 || status >= 300) throw new Error(`HTTP ${status}: ${text.slice(0,200)}`);
+  const data = text ? JSON.parse(text) : {};
+  if (!data || data.success !== true) throw new Error((data && data.error) || 'Unexpected response');
+  return data;
+}
+function renderAttrList(ul, arr, type){
+  if (!ul) return; ul.innerHTML = '';
+  const values = Array.isArray(arr) ? arr : [];
+  const colEl = ul && ul.closest ? ul.closest('.attr-col') : null;
+  const header = colEl ? colEl.querySelector('h3') : null;
+  const setCount = (n) => { if (header) header.textContent = `${header.textContent.replace(/\s*\(.*\)$/, '')} (${n})`; };
+  if (values.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'text-sm text-gray-500 italic px-2 py-1';
+    li.textContent = 'No values yet';
+    ul.appendChild(li);
+    setCount(0);
+    return;
+  }
+  values.forEach(({value}) => {
+    const li = document.createElement('li');
+    li.className = 'flex items-center justify-between gap-2 px-2 py-1 border border-gray-200 rounded bg-white';
+    li.setAttribute('draggable','true');
+    const label = document.createElement('span'); label.className = 'text-sm'; label.textContent = value; label.setAttribute('data-value', value);
+    const right = document.createElement('span'); right.className = 'flex items-center gap-2';
+    const renameBtn = document.createElement('button'); renameBtn.type='button'; renameBtn.className='btn btn-secondary'; renameBtn.textContent='Rename'; renameBtn.setAttribute('data-action','attr-rename'); renameBtn.setAttribute('data-type', type); renameBtn.setAttribute('data-value', value);
+    const delBtn = document.createElement('button'); delBtn.type='button'; delBtn.className='btn btn-secondary text-red-700'; delBtn.textContent='Delete'; delBtn.setAttribute('data-action','attr-delete'); delBtn.setAttribute('data-type', type); delBtn.setAttribute('data-value', value);
+    right.appendChild(renameBtn); right.appendChild(delBtn);
+    li.appendChild(label); li.appendChild(right); ul.appendChild(li);
+  });
+  setCount(values.length);
+}
+async function populateAttributes(){
+  const modal = document.getElementById('attributesModal'); if (!modal) return;
+  const res = modal.querySelector('#attributesResult'); if (res) res.textContent='Loading…';
+  try{
+    const data = await attrApi('/api/attributes.php?action=list');
+    const a = (data && data.data && data.data.attributes) ? data.data.attributes : { gender:[], size:[], color:[] };
+    renderAttrList(document.getElementById('attrListGender'), a.gender, 'gender');
+    renderAttrList(document.getElementById('attrListSize'), a.size, 'size');
+    renderAttrList(document.getElementById('attrListColor'), a.color, 'color');
+    if (res) res.textContent='';
+  } catch(e){ if (res) res.textContent = (e && e.message) ? e.message : 'Failed to load attributes'; }
+}
 function setVal(id, v){ const el = byId(id); if (el) el.value = v ?? ''; }
 function setChecked(id, v){ const el = byId(id); if (el) el.checked = !!v; }
 
@@ -267,11 +363,12 @@ export function init(){
       body?.dataset?.page === 'admin/settings'
       || (body?.dataset?.isAdmin === 'true' && (
         path.includes('/admin/settings')
-        || path.includes('/admin') && (new URLSearchParams(window.location.search).get('section') === 'settings')
+        || (path.includes('/admin') && (new URLSearchParams(window.location.search).get('section') === 'settings'))
       ))
     );
     if (!isSettings) { try { console.info('[AdminSettingsBridge] skip: not settings route'); } catch(_) {} return; }
     try { console.info('[AdminSettingsBridge] active on settings route'); } catch(_) {}
+    // No dedupe/failsafe: allow errors to surface if duplicates exist
     // Defer email section initialization until the user opens the Email Settings modal
     let __emailInitDone = false;
     const _initEmailIfNeeded = async () => {
@@ -281,6 +378,37 @@ export function init(){
       } catch (e) { try { console.warn('[AdminSettingsBridge] initEmailSection failed (deferred)', e); } catch(_) {} }
       __emailInitDone = true;
     };
+    // Ensure styles are present immediately
+    ensureModalStyles();
+
+    // Inject once: styles that polish Categories & Attributes modals
+    function ensureModalStyles() {
+      if (document.getElementById('wf-settings-modal-inject')) return;
+      const css = `
+        /* Categories modal polish */
+        #categoriesModal table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        #categoriesModal thead th { font-weight: 600; padding: 8px 10px; background: #f3f4f6; color: #111827; }
+        #categoriesModal thead th:nth-child(2) { text-align: right; }
+        #categoriesModal tbody td { padding: 8px 10px; }
+        #categoriesModal tbody td:nth-child(2) { text-align: right; }
+        #categoriesModal tbody tr:nth-child(odd) { background: #ffffff; }
+        #categoriesModal tbody tr:nth-child(even) { background: #f9fafb; }
+        #categoriesModal .btn { white-space: nowrap; }
+        /* Attributes modal layout */
+        #attributesModal .admin-modal, #attributesModal .admin-modal-content { max-width: 1100px; width: 92vw; }
+        #attributesModal .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+        #attributesModal .attr-col { padding: 6px; }
+        #attributesModal .attr-list { max-height: 360px; overflow-y: auto; }
+        @media (max-width: 640px) {
+          #attributesModal .grid { grid-template-columns: 1fr; }
+        }
+      `;
+      const style = document.createElement('style');
+      style.id = 'wf-settings-modal-inject';
+      style.type = 'text/css';
+      style.appendChild(document.createTextNode(css));
+      document.head.appendChild(style);
+    }
 
     // Do not force 'under-header' positioning; allow overlays to cover full viewport
 
@@ -390,6 +518,8 @@ export function init(){
 
     const forceVisible = (el) => {
       try {
+        // Fully un-hide: remove hidden attribute and hidden class; add show and aria-hidden=false
+        try { el.removeAttribute('hidden'); } catch(_) {}
         el.classList.remove('hidden');
         el.classList.add('show');
         el.setAttribute('aria-hidden', 'false');
@@ -424,6 +554,18 @@ export function init(){
     const showModal = (id) => {
       let el = getModalEl(id);
       if (!el) {
+        // Special case: Avoid auto-creating a fallback for Dashboard Config to prevent duplicate overlays
+        if (id === 'dashboardConfigModal') {
+          try { console.info('[AdminSettingsBridge] waiting for dashboardConfigModal markup…'); } catch(_) {}
+          // Try a microtask/RAF re-query in case markup is injected later in DOM
+          try {
+            requestAnimationFrame(() => {
+              const later = getModalEl(id);
+              if (later) { forceVisible(later); verifyVisibleSoon(later); }
+            });
+          } catch(_) {}
+          return false;
+        }
         // Create a minimal fallback overlay so the button still works even if markup wasn't included
         try {
           const overlay = document.createElement('div');
@@ -438,12 +580,10 @@ export function init(){
           header.className = 'modal-header';
           const h2 = document.createElement('h2');
           h2.className = 'admin-card-title';
-          h2.textContent = id === 'dashboardConfigModal' ? '📊 Dashboard Configuration' : 'Settings';
+          h2.textContent = 'Settings';
           const x = document.createElement('button');
           x.type = 'button'; x.className = 'admin-modal-close'; x.setAttribute('aria-label','Close');
-          // Match the wired handler for dashboard config; otherwise use generic close-admin-modal
-          if (id === 'dashboardConfigModal') x.setAttribute('data-action', 'close-dashboard-config');
-          else x.setAttribute('data-action', 'close-admin-modal');
+          x.setAttribute('data-action', 'close-admin-modal');
           x.textContent = '×';
           header.appendChild(h2); header.appendChild(x);
           const body = document.createElement('div');
@@ -473,6 +613,8 @@ export function init(){
     const hideModal = (id) => {
       const el = getModalEl(id);
       if (!el) return false;
+      // Fully hide: add hidden attribute and hidden class; remove show and set aria-hidden=true
+      try { el.setAttribute('hidden', ''); } catch(_) {}
       el.classList.add('hidden');
       el.classList.remove('show');
       el.setAttribute('aria-hidden', 'true');
@@ -519,6 +661,7 @@ export function init(){
       managed.forEach((id) => {
         const el = getModalEl(id);
         if (el) {
+          try { el.setAttribute('hidden', ''); } catch(_) {}
           el.classList.add('hidden');
           el.classList.remove('show');
           el.setAttribute('aria-hidden', 'true');
@@ -526,25 +669,87 @@ export function init(){
       });
     } catch(_) {}
 
+    // If the browser restored focus into a hidden overlay, blur it to avoid aria-hidden focus error
+    try {
+      const active = document.activeElement;
+      if (active && active !== document.body) {
+        const hiddenOverlay = active.closest && active.closest('.admin-modal-overlay.hidden[aria-hidden="true"]');
+        if (hiddenOverlay) {
+          active.blur();
+        }
+      }
+    } catch(_) {}
+
+    // ------------------------------
+    // Categories & Attributes (open + CRUD)
+    // ------------------------------
+    document.addEventListener('click', async (e) => {
+      const t = e.target;
+      const closest = (sel) => (t && t.closest ? t.closest(sel) : null);
+      // Open Categories (preload then show)
+      if (closest('[data-action="open-categories"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        lastTriggerById.set('categoriesModal', (t.closest('button, a, [tabindex]')||t));
+        try { await populateCategories(); } catch(err) { console.error('[AdminSettingsBridge] populateCategories failed', err); }
+        showModal('categoriesModal');
+        // Ensure polish styles are present
+        ensureModalStyles();
+        return;
+      }
+      // Open Attributes (preload then show)
+      if (closest('[data-action="open-attributes"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        lastTriggerById.set('attributesModal', (t.closest('button, a, [tabindex]')||t));
+        try { await populateAttributes(); } catch(err) { console.error('[AdminSettingsBridge] populateAttributes failed', err); }
+        showModal('attributesModal');
+        // Ensure polish styles are present
+        ensureModalStyles();
+        return;
+      }
+      // Categories CRUD inside modal
+      if (closest('#categoriesModal [data-action="cat-add"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const modal = document.getElementById('categoriesModal'); if (!modal) return;
+        const input = modal.querySelector('#catNewName'); const result = modal.querySelector('#catResult');
+        const name = (input && input.value) ? input.value.trim() : '';
+        if (!name) { if (result) result.textContent = 'Please enter a name.'; return; }
+        if (result) result.textContent = 'Adding…';
+        try { await catApi('/api/categories.php?action=add', { action: 'add', name }); if (input) input.value = ''; await populateCategories(); if (result) result.textContent = 'Added.'; }
+        catch (err) { if (result) result.textContent = err?.message || 'Failed to add.'; }
+        return;
+      }
+      if (closest('#categoriesModal [data-action="cat-rename"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const btn = closest('[data-action="cat-rename"]'); const oldName = btn?.getAttribute('data-name')||'';
+        const newName = prompt('Rename category', oldName) || '';
+        if (!newName || newName.trim() === '' || newName === oldName) return;
+        const modal = document.getElementById('categoriesModal'); const result = modal ? modal.querySelector('#catResult') : null;
+        if (result) result.textContent = 'Renaming…';
+        try { await catApi('/api/categories.php?action=rename', { action: 'rename', old_name: oldName, new_name: newName.trim(), update_items: true }); await populateCategories(); if (result) result.textContent = 'Renamed.'; }
+        catch (err) { if (result) result.textContent = err?.message || 'Failed to rename.'; }
+        return;
+      }
+      if (closest('#categoriesModal [data-action="cat-delete"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const btn = closest('[data-action="cat-delete"]'); const name = btn?.getAttribute('data-name')||'';
+        const reassign = prompt(`Delete "${name}". Optionally enter a category to reassign items to (leave blank to cancel if in use).`, '');
+        if (reassign === null) return; // cancelled
+        const payload = { action: 'delete', name };
+        if (typeof reassign === 'string' && reassign.trim() !== '') payload.reassign_to = reassign.trim();
+        const modal = document.getElementById('categoriesModal'); const result = modal ? modal.querySelector('#catResult') : null;
+        if (result) result.textContent = 'Deleting…';
+        try { await catApi('/api/categories.php?action=delete', payload); await populateCategories(); if (result) result.textContent = 'Deleted.'; }
+        catch (err) { if (result) result.textContent = err?.message || 'Failed to delete.'; }
+        return;
+      }
+    }, true);
+
     // ------------------------------
     // Dashboard Config Fallback (Lightweight)
     // ------------------------------
     async function dashApi(path, payload) {
-      let url = typeof path === 'string' ? path : '/api/dashboard_sections.php?action=get_sections';
+      const url = typeof path === 'string' ? path : '/api/dashboard_sections.php?action=get_sections';
       const baseHeaders = { 'X-Requested-With': 'XMLHttpRequest' };
-      // Dev fallback: include admin token if session-based admin is not detected
-      const devAdminToken = 'whimsical_admin_2024';
-      try {
-        // Only append for our dashboard_sections endpoint
-        if (/\/api\/dashboard_sections\.php/.test(url)) {
-          if (payload && typeof payload === 'object' && !payload.admin_token) {
-            payload.admin_token = devAdminToken;
-          }
-          if (!payload && url.indexOf('admin_token=') === -1) {
-            url += (url.indexOf('?') === -1 ? '?' : '&') + 'admin_token=' + encodeURIComponent(devAdminToken);
-          }
-        }
-      } catch(_) {}
       const opts = payload
         ? { method: 'POST', headers: { ...baseHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include' }
         : { method: 'GET', headers: baseHeaders, credentials: 'include' };
@@ -608,25 +813,12 @@ export function init(){
       try {
         body.classList.add('is-busy');
         const data = await dashApi('/api/dashboard_sections.php?action=get_sections');
-        const sections = data?.data?.sections || data?.sections || [];
-        try { console.info('[DashboardConfigFallback] get_sections result', data); } catch(_) {}
+        const sections = Array.isArray(data?.data?.sections) ? data.data.sections : (Array.isArray(data?.sections) ? data.sections : []);
+        try { console.info('[DashboardConfigFallback] get_sections result', { count: sections.length, keys: Object.keys(data?.data?.available_sections || data?.available_sections || {}) }); } catch(_) {}
         const lists = renderDashboardLists(el);
         if (!lists.activeUl) return;
-        // Available from API (if present) or infer from section_info
-        let avail = data?.data?.available_sections || data?.available_sections || {};
-        if (!avail || Object.keys(avail).length === 0) {
-          // Seed with known defaults to ensure the UI is usable even if API omits them
-          avail = {
-            metrics: { title: '📊 Quick Metrics' },
-            recent_orders: { title: '📋 Recent Orders' },
-            low_stock: { title: '⚠️ Low Stock Alerts' },
-            inventory_summary: { title: '📦 Inventory Summary' },
-            customer_summary: { title: '👥 Customer Overview' },
-            marketing_tools: { title: '📈 Marketing Tools' },
-            order_fulfillment: { title: '🚚 Order Fulfillment' },
-            reports_summary: { title: '📊 Reports Summary' },
-          };
-        }
+        // Available strictly from API (no defaults; surface issues visibly)
+        const avail = data?.data?.available_sections || data?.available_sections || {};
         // Active sections first, enriched by avail map for consistent titles
         const activeKeys = new Set();
         const pushActive = (obj) => {
@@ -662,18 +854,21 @@ export function init(){
             }
           } catch(_) {}
         }
-        Object.keys(avail).forEach((key) => {
+        const availKeys = Object.keys(avail || {});
+        availKeys.forEach((key) => {
           // Skip items already active (including hydrated ones)
           if (activeKeys.has(key)) return;
           const item = { key, title: avail[key]?.title || key };
           lists.availUl.appendChild(lists.makeLi(item, false));
         });
-        // Empty-state hint if both lists are empty
+        // Empty-state hint if nothing returned
         if (!lists.activeUl.children.length && !lists.availUl.children.length) {
           const hint = document.createElement('div');
           hint.className = 'text-sm text-gray-500 mt-2';
-          hint.textContent = 'No dashboard sections available yet.';
+          hint.textContent = 'No sections returned from the API.';
           body.appendChild(hint);
+          const status = el.querySelector('#dashboardConfigResult');
+          if (status) status.textContent = 'No sections available.';
         }
         // Small diagnostics
         try { console.info('[DashboardConfigFallback] populated', { active: lists.activeUl.children.length, avail: lists.availUl.children.length }); } catch(_) {}
@@ -959,71 +1154,24 @@ async function ensureLegacyLoaded() {
         try { console.info('[AdminSettingsBridge] click open-dashboard-config'); } catch(_) {}
         e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
         lastTriggerById.set('dashboardConfigModal', (t.closest('button, a, [tabindex]')||t));
-        if (showModal('dashboardConfigModal')) {
-          // Always populate a responsive, non-freezing fallback UI immediately
-          try {
-            const el = document.getElementById('dashboardConfigModal');
-            if (el) {
-              const body = el.querySelector('.modal-body');
-              if (body) {
-                body.innerHTML = '';
-                const msg = document.createElement('div');
-                msg.className = 'text-gray-700';
-                msg.innerHTML = '<p>Basic Dashboard Configuration is active. Click "Load Advanced Configurator" to enable drag-and-drop if available.</p>';
-                const actions = document.createElement('div');
-                actions.className = 'mt-3 flex gap-2 justify-end';
-                const loadBtn = document.createElement('button');
-                loadBtn.type = 'button';
-                loadBtn.className = 'btn';
-                loadBtn.textContent = 'Load Advanced Configurator';
-                loadBtn.addEventListener('click', () => {
-                  try { console.info('[AdminSettingsBridge] loading legacy dashboard configurator'); } catch(_) {}
-                  ensureLegacyLoaded().then(() => {
-                    try {
-                      if (typeof window.openDashboardConfigModal === 'function') {
-                        window.openDashboardConfigModal({ modalId: 'dashboardConfigModal' });
-                      } else {
-                        alert('Advanced configurator not available.');
-                      }
-                    } catch (err) {
-                      console.error('[AdminSettingsBridge] legacy configurator init failed', err);
-                      alert('Failed to initialize advanced configurator.');
-                    }
-                  });
-                });
-                const closeBtn = document.createElement('button');
-                closeBtn.type = 'button';
-                closeBtn.className = 'btn btn-secondary';
-                closeBtn.textContent = 'Close';
-                closeBtn.setAttribute('data-action','close-dashboard-config');
-                actions.appendChild(loadBtn);
-                actions.appendChild(closeBtn);
-                body.appendChild(msg);
-                body.appendChild(actions);
-                // Populate the lightweight lists immediately
-                const listsWrap = document.createElement('div');
-                listsWrap.className = 'mt-4';
-                listsWrap.innerHTML = `
-                  <div class="flex gap-4">
-                    <div class="flex-1">
-                      <h3 class="text-base font-semibold mb-2">Active Sections</h3>
-                      <ul id="dashboardActiveSections" class="list-disc pl-5 text-sm text-gray-800"></ul>
-                    </div>
-                    <div class="flex-1">
-                      <h3 class="text-base font-semibold mb-2">Available Sections</h3>
-                      <ul id="dashboardAvailableSections" class="list-disc pl-5 text-sm text-gray-800"></ul>
-                    </div>
-                  </div>
-                  <div class="mt-3 flex justify-between items-center">
-                    <div id="dashboardConfigResult" class="text-sm text-gray-500"></div>
-                    <button type="button" class="btn btn-primary" data-action="dashboard-config-save">Save</button>
-                  </div>
-                `;
-                body.appendChild(listsWrap);
-                populateDashboardFallback('dashboardConfigModal');
-              }
-            }
-          } catch(_) {}
+        try {
+          const el = document.getElementById('dashboardConfigModal');
+          if (!el) return; // require markup to exist
+          const body = el.querySelector('.modal-body');
+          if (body) {
+            const status = body.querySelector('#dashboardConfigResult') || document.createElement('div');
+            if (!status.id) { status.id = 'dashboardConfigResult'; body.prepend(status); }
+            status.textContent = 'Loading…';
+          }
+          // Show immediately, then populate (gives immediate visual feedback while loading)
+          showModal('dashboardConfigModal');
+          console.info('[AdminSettingsBridge] calling populateDashboardFallback');
+          populateDashboardFallback('dashboardConfigModal')
+            .then(() => { console.info('[DashboardConfigFallback] populated OK'); })
+            .catch((err) => { console.error('[AdminSettingsBridge] dashboard populate failed', err); });
+        } catch (err) {
+          console.error('[AdminSettingsBridge] dashboard open failed', err);
+          showModal('dashboardConfigModal');
         }
         return;
       }

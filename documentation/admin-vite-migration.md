@@ -4,32 +4,32 @@ This document explains the admin-side Vite migration, where bundles are emitted,
 
 ## Overview
 
+> Note: All legacy admin entrypoints under `admin/admin_*.php` have been removed. The canonical routing is via `admin/admin.php?section=<name>` and implementations live under `sections/` as `sections/admin_<name>.php`. Any references below to `admin/admin_<name>.php` are historical context only and should be mapped to the canonical router/sections.
+
 - All admin JS/CSS is being migrated to Vite-managed, source-level modules per best practices.
 - Admin thin-delegators forward to canonical `sections/*` when available (avoids duplication/conflicts).
 - Inline scripts are replaced by Vite modules; inline styles become classes in `src/styles/`.
 - Modals follow `WFModalUtils` and `WFModals` conventions for show/hide, `aria-hidden`, and scroll lock.
 
-## Affected Pages and Emits
+## Affected Pages and Emits (canonical)
 
-- `admin/admin_marketing.php` → delegates to `sections/admin_marketing.php`
-- `admin/admin_reports.php` → delegates to `sections/admin_reports.php`
-- `admin/admin_settings.php` → thin delegator to `sections/admin_settings.php` (pruned)
-- `admin/admin_customers.php`
+Canonical routes and their section files:
+- Customers: `/admin/admin.php?section=customers` → `sections/admin_customers.php`
   - Emits: `vite('js/admin-customers.js')`
   - Page data: `#customer-page-data`
-- `admin/admin_email_settings.php`
+- Email Settings: `/admin/admin.php?section=settings` → `sections/admin_settings.php`
   - Emits: `vite('js/admin-email-settings.js')`
   - Inline toast script removed
-- `admin/account_settings.php`
+- Account Settings: `/admin/admin.php?section=settings` → `sections/admin_settings.php`
   - Emits: `vite('js/admin-account-settings.js')`
   - Page data: `#account-settings-data`
-- `admin/admin_pos.php`
+- POS: `/admin/admin.php?section=pos` → `sections/admin_pos.php`
   - Emits: `vite('js/admin-pos.js')`
   - Page data: `#pos-data`
-- `admin/admin_orders.php`
+- Orders: `/admin/admin.php?section=orders` → `sections/admin_orders.php`
   - Emits: `vite('js/admin-orders.js')`
   - Page data: `#order-page-data`
-- `admin/cost_breakdown_manager.php`
+- Cost Breakdown Manager: `/admin/admin.php?section=inventory` (tooling) → `sections/admin_inventory.php`
   - Emits: `vite('js/admin-cost-breakdown.js')`
   - Placeholder `<script type="text/plain">` removed
 
@@ -81,7 +81,7 @@ Follow `documentation/Modal_Conventions_and_Upgrade_Guide.md`:
 5. Replace any inline `<script>` with the new module logic.
 6. Move inline styles to `src/styles/` and toggle classes in JS.
 
-## Verification Checklist
+## Verification Checklist (canonical routes)
 
 Run through the following for each page after changes.
 
@@ -89,36 +89,35 @@ Run through the following for each page after changes.
   - Page loads with no PHP errors (check logs) and no console errors
   - Vite bundle is requested/loaded (network tab) and executed (console logs if enabled)
 
-- **Admin Customers (`admin/admin_customers.php`)**
+- **Admin Customers (`/admin/admin.php?section=customers`)**
   - `vite('js/admin-customers.js')` present in the HTML
   - JSON `#customer-page-data` contains expected keys
   - UI behaviors (view/edit modal, actions) work; no inline script required
 
-- **Admin Email Settings (`admin/admin_email_settings.php`)**
+- **Admin Email Settings (`/admin/admin.php?section=settings`)**
   - Inline toast script is absent
   - Notifications show via `src/js/admin-email-settings.js` when `$message` is present
 
-- **Account Settings (`admin/account_settings.php`)**
+- **Account Settings (`/admin/admin.php?section=settings`)**
   - `vite('js/admin-account-settings.js')` present
   - Submit updates via `/functions/process_account_update.php`; success/error messages surface in the DOM
 
-- **POS (`admin/admin_pos.php`)**
+- **POS (`/admin/admin.php?section=pos`)**
   - `vite('js/admin-pos.js')` present
   - `#pos-data` JSON loads; search/cart interactions function
 
-- **Orders (`admin/admin_orders.php`)**
+- **Orders (`/admin/admin.php?section=orders`)**
   - `vite('js/admin-orders.js')` present
   - Order JSON payload present; inline helpers replaced by module logic
   - Modals and notifications operate via module
 
-- **Cost Breakdown Manager (`admin/cost_breakdown_manager.php`)**
+- **Cost Breakdown Manager (Inventory tooling)**
   - `vite('js/admin-cost-breakdown.js')` present
   - Placeholder `<script type="text/plain">` removed
   - Interactions (load item, add lines, update totals) run via module
 
 - **Delegators**
-  - `admin/admin_marketing.php`, `admin/admin_reports.php`, `admin/admin_settings.php` are thin delegators
-  - `admin/admin_settings.php` includes `sections/admin_settings.php` and returns (verified lint OK)
+  - Legacy delegators have been removed. All routes resolve via `admin/admin.php?section=<name>` to `sections/admin_<name>.php`.
 
 ## Notes / Rollback
 

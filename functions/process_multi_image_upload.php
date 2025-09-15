@@ -9,7 +9,7 @@
  * - Support for multiple formats
  */
 
-require_once __DIR__ . '/api/config.php';
+require_once dirname(__DIR__) . '/api/config.php';
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

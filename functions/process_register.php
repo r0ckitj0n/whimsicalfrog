@@ -1,8 +1,8 @@
 <?php
 
-// Include centralized systems
-require_once 'api/config.php';
-require_once 'includes/functions.php';
+// Include centralized systems (absolute paths)
+require_once dirname(__DIR__) . '/api/config.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');

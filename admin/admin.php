@@ -62,71 +62,88 @@ $adminRole = $userData['role'] ?? 'Administrator';
         <?php
         switch ($currentSection) {
             case 'customers':
-                include 'admin_customers.php';
+                include dirname(__DIR__) . '/sections/admin_customers.php';
                 break;
             case 'inventory':
             case 'admin_inventory':
-                include 'admin_inventory.php';
+                include dirname(__DIR__) . '/sections/admin_inventory.php';
                 break;
             case 'orders':
-                include 'admin_orders.php';
+                include dirname(__DIR__) . '/sections/admin_orders.php';
                 break;
             case 'pos':
-                include 'admin_pos.php';
+                include dirname(__DIR__) . '/sections/admin_pos.php';
                 break;
             case 'reports':
-                include 'admin_reports.php';
+                include dirname(__DIR__) . '/sections/admin_reports.php';
                 break;
             case 'marketing':
-                include 'admin_marketing.php';
+                include dirname(__DIR__) . '/sections/admin_marketing.php';
                 break;
             case 'settings':
-                include 'admin_settings.php';
+                include dirname(__DIR__) . '/sections/admin_settings.php';
                 break;
             case 'room-config-manager':
-                include 'room_config_manager.php';
+                include dirname(__DIR__) . '/sections/tools/room_config_manager.php';
                 break;
             case 'room-map-manager':
-                include 'room_map_manager.php';
+                include dirname(__DIR__) . '/sections/tools/room_map_manager.php';
                 break;
             case 'area-item-mapper':
-                include 'area_item_mapper.php';
+                include dirname(__DIR__) . '/sections/tools/area_item_mapper.php';
                 break;
             case 'room-map-editor':
-                include 'room_map_editor.php';
+                include dirname(__DIR__) . '/sections/tools/room_map_editor.php';
+                break;
+            case 'cost-breakdown-manager':
+            case 'cost_breakdown_manager':
+                include dirname(__DIR__) . '/sections/tools/cost_breakdown_manager.php';
+                break;
+            case 'db-status':
+            case 'db_status':
+                include dirname(__DIR__) . '/sections/tools/db_status.php';
+                break;
+            case 'reports-browser':
+            case 'reports_browser':
+                include dirname(__DIR__) . '/sections/tools/reports_browser.php';
+                break;
+            case 'db-web-manager':
+            case 'db_web_manager':
+                include dirname(__DIR__) . '/sections/tools/db_web_manager.php';
+                break;
+            case 'db-manager':
+            case 'db_manager':
+                include dirname(__DIR__) . '/sections/tools/db_manager.php';
+                break;
+            case 'db-quick':
+            case 'db_quick':
+                include dirname(__DIR__) . '/sections/tools/db_quick.php';
+                break;
+            case 'cron-manager':
+            case 'cron_manager':
+                include dirname(__DIR__) . '/sections/tools/cron_manager.php';
+                break;
+            case 'attributes-embed':
+            case 'attributes_embed':
+                include dirname(__DIR__) . '/components/embeds/attributes_embed.php';
+                break;
+            case 'categories-embed':
+            case 'categories_embed':
+                include dirname(__DIR__) . '/components/embeds/categories_embed.php';
                 break;
             case 'secrets':
-                include 'admin_secrets.php';
+                include dirname(__DIR__) . '/sections/admin_secrets.php';
                 break;
             case 'categories':
-                include 'admin_categories.php';
+                include dirname(__DIR__) . '/sections/admin_categories.php';
+                break;
+            case 'account-settings':
+            case 'account_settings':
+                include dirname(__DIR__) . '/sections/account_settings.php';
                 break;
             case 'dashboard':
             default:
-                // Load heavy data only for the dashboard
-                $inventoryData = [];
-                $ordersData = [];
-                $customersData = [];
-                try {
-                    $inventoryData = Database::queryAll('SELECT * FROM items ORDER BY sku');
-                    $ordersData = Database::queryAll('SELECT * FROM orders ORDER BY date DESC');
-                    foreach ($ordersData as &$order) {
-                        $order['items'] = Database::queryAll('SELECT * FROM order_items WHERE orderId = ?', [$order['id']]);
-                        if (isset($order['shippingAddress']) && is_string($order['shippingAddress'])) {
-                            $order['shippingAddress'] = json_decode($order['shippingAddress'], true);
-                        }
-                    }
-                    $customersData = Database::queryAll('SELECT * FROM users ORDER BY firstName, lastName');
-                } catch (Exception $e) {
-                    Logger::error('Admin dashboard data loading failed', ['error' => $e->getMessage()]);
-                }
-                // Calculate dashboard metrics
-                $totalProducts = count($inventoryData);
-                $totalOrders = count($ordersData);
-                $totalCustomers = count($customersData);
-                $totalRevenue = array_sum(array_column($ordersData, 'total'));
-                $formattedRevenue = '$' . number_format($totalRevenue, 2);
-                include 'admin_dashboard.php';
+                include dirname(__DIR__) . '/sections/admin_dashboard.php';
                 break;
         }
 ?>

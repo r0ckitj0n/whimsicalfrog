@@ -1,7 +1,7 @@
 <?php
 
 // Handle AJAX requests for category create/delete/update
-require_once __DIR__ . '/api/config.php';
+require_once dirname(__DIR__) . '/api/config.php';
 
 header('Content-Type: text/plain');
 

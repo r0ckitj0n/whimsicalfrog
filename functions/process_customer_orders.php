@@ -1,9 +1,9 @@
 <?php
-// Include the configuration file
-require_once 'api/config.php';
+// Include the configuration file (absolute path)
+require_once dirname(__DIR__) . '/api/config.php';
 
 // Require admin authentication for order management
-require_once 'includes/auth_helper.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 AuthHelper::requireAdmin();
 
 // Set appropriate headers

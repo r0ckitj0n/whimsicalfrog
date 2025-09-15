@@ -7,9 +7,9 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 
-require_once __DIR__ . '/../api/config.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once dirname(__DIR__, 2) . '/api/config.php';
+require_once dirname(__DIR__, 2) . '/includes/functions.php';
+require_once dirname(__DIR__, 2) . '/includes/auth.php';
 
 // Basic access guard (reuse token-based admin detection if available)
 if (!function_exists('isAdminWithToken') || !isAdminWithToken()) {
@@ -20,7 +20,7 @@ if (!function_exists('isAdminWithToken') || !isAdminWithToken()) {
 
 // Bootstrap layout so Vite-managed CSS/JS load, but hide header/nav inside the iframe for a clean embed
 $page = 'admin';
-include dirname(__DIR__) . '/partials/header.php';
+include dirname(__DIR__, 2) . '/partials/header.php';
 ?>
 <style>
 /* Hide global header and admin tabs inside the iframe */
@@ -37,7 +37,7 @@ html, body { background: transparent !important; }
 <div id="admin-section-content">
 <?php
 // Render the categories UI (no redirect thanks to INCLUDED_FROM_INDEX)
-include __DIR__ . '/admin_categories.php';
+include dirname(__DIR__, 2) . '/admin/admin_categories.php';
 ?>
 </div>
 <script>
@@ -227,4 +227,4 @@ include __DIR__ . '/admin_categories.php';
   refresh();
 })();
 </script>
-<?php include dirname(__DIR__) . '/partials/footer.php'; ?>
+<?php include dirname(__DIR__, 2) . '/partials/footer.php'; ?>

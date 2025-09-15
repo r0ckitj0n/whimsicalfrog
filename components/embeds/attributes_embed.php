@@ -3,16 +3,16 @@
 if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
-require_once __DIR__ . '/../api/config.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once dirname(__DIR__, 2) . '/api/config.php';
+require_once dirname(__DIR__, 2) . '/includes/functions.php';
+require_once dirname(__DIR__, 2) . '/includes/auth.php';
 if (!function_exists('isAdminWithToken') || !isAdminWithToken()) {
     http_response_code(403);
     echo '<div style="padding:16px;color:#b91c1c;font-family:sans-serif">Access denied.</div>';
     exit;
 }
 $page = 'admin';
-include dirname(__DIR__) . '/partials/header.php';
+include dirname(__DIR__, 2) . '/partials/header.php';
 ?>
 <style>
 /* Hide global header and admin tabs inside the iframe */
@@ -25,7 +25,7 @@ html, body { background: transparent !important; }
 <div id="admin-section-content">
 <?php
 // Render the Inventory Admin page; the hash will focus the attributes section
-include __DIR__ . '/admin_inventory.php';
+include dirname(__DIR__, 2) . '/admin/admin_inventory.php';
 ?>
 </div>
 <script>
@@ -37,4 +37,4 @@ include __DIR__ . '/admin_inventory.php';
   } catch(_) {}
 })();
 </script>
-<?php include dirname(__DIR__) . '/partials/footer.php'; ?>
+<?php include dirname(__DIR__, 2) . '/partials/footer.php'; ?>

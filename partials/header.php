@@ -311,7 +311,10 @@ SCRIPT;
 .admin-tab-navigation .container,.admin-tab-navigation .wrapper,.admin-tab-navigation .flex,.admin-tab-navigation > div,.admin-tab-navigation .u-display-flex{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}
 .admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}
 .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
+/* Apply the computed extra pad ONLY once to the primary content wrapper */
 body[data-page^=admin] #admin-section-content{padding-top:var(--wf-admin-content-pad,12px)!important}
+/* Standalone Settings template (no #admin-section-content wrapper): apply to direct child only */
+body[data-page='admin/settings'] > .settings-page{padding-top:var(--wf-admin-content-pad,12px)!important}
 @media (min-width:0px){.admin-tab-navigation .flex,.admin-tab-navigation>div,.admin-tab-navigation ul{flex-direction:row!important;align-items:center!important}}
 </style>
 STYLE;
@@ -333,8 +336,18 @@ STYLE;
       }
       var nav = document.querySelector('.admin-tab-navigation');
       if (nav && nav.getBoundingClientRect) {
-        var nh = Math.round(nav.getBoundingClientRect().height + 12);
-        document.documentElement.style.setProperty("--wf-admin-content-pad", nh + "px");
+        // Compute both total (header + navbar) and extra (beyond header) pads
+        var hb = h && h.getBoundingClientRect ? h.getBoundingClientRect().bottom : 0;
+        var nb = nav.getBoundingClientRect().bottom;
+        var total = Math.max(0, Math.round(nb + 12));
+        var extra = Math.max(0, Math.round((nb - hb) + 12));
+        document.documentElement.style.setProperty("--wf-admin-total-pad", total + "px");
+        document.documentElement.style.setProperty("--wf-admin-content-pad", extra + "px");
+      } else if (h && h.getBoundingClientRect) {
+        // Fallbacks when navbar not present
+        var headerBottom = Math.max(0, Math.round(h.getBoundingClientRect().bottom + 12));
+        document.documentElement.style.setProperty("--wf-admin-total-pad", headerBottom + "px");
+        document.documentElement.style.setProperty("--wf-admin-content-pad", Math.max(0, 12) + "px");
       }
     };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", computeLayout, {once:true}); else computeLayout();
@@ -379,6 +392,8 @@ SCRIPT;
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
 .admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}
+/* Standalone Settings template (light mode): apply to direct child only */
+body[data-page='admin/settings'] > .settings-page{padding-top:var(--wf-admin-content-pad,12px)!important}
 </style>
 STYLE;
             // Optional: Prevent hash-driven modal auto-opens and suppress overlays unless user triggered
@@ -752,8 +767,6 @@ if ($__wf_is_logged_in) {
 ?>
 <body class="<?php echo implode(' ', $bodyClasses); ?>" <?php echo $bodyBgUrlOut ? 'data-bg-url="' . htmlspecialchars($bodyBgUrlOut) . '"' : ''; ?> data-page="<?php echo htmlspecialchars($pageSlug); ?>" data-path="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/'); ?>" data-is-admin="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-is-logged-in="<?php echo $__wf_is_logged_in ? 'true' : 'false'; ?>"
   <?php echo ($__wf_user_id !== null) ? 'data-user-id="' . htmlspecialchars($__wf_user_id) . '"' : ''; ?>
-  <?php echo ($__wf_user_id_raw !== null && $__wf_user_id_raw !== '') ? 'data-user-id-raw="' . htmlspecialchars($__wf_user_id_raw) . '"' : ''; ?>
-  <?php echo ($__wf_user_id_norm !== null) ? 'data-user-id-norm="' . htmlspecialchars($__wf_user_id_norm) . '"' : ''; ?>
 >
 <script>(function(){try{var b=document.body;var url=b&&b.getAttribute('data-bg-url');if(url){b.style.backgroundImage='url('+url+')';b.style.backgroundSize='cover';b.style.backgroundPosition='center';b.style.backgroundRepeat='no-repeat';b.style.minHeight='100vh';}}catch(e){}})();</script>
 <?php

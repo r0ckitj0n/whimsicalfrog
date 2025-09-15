@@ -267,8 +267,7 @@ export function init(){
       body?.dataset?.page === 'admin/settings'
       || (body?.dataset?.isAdmin === 'true' && (
         path.includes('/admin/settings')
-        || path.includes('/admin/admin_settings')
-        || path.endsWith('admin_settings.php')
+        || path.includes('/admin') && (new URLSearchParams(window.location.search).get('section') === 'settings')
       ))
     );
     if (!isSettings) { try { console.info('[AdminSettingsBridge] skip: not settings route'); } catch(_) {} return; }

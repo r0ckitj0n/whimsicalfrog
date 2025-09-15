@@ -125,7 +125,7 @@ ready(() => {
   const fZip = document.getElementById('addr_zip');
   const fDefault = document.getElementById('addr_default');
 
-  let userId = body.dataset.userIdRaw || body.dataset.userId || null;
+  let userId = body.dataset.userId || null;
   if (!userId) {
     console.warn('[PaymentPage] No userId yet; awaiting login-success before loading addresses.');
   }
@@ -157,12 +157,11 @@ ready(() => {
     try {
       if (userId) return userId;
       const res = await apiClient.get('/api/whoami.php');
-      const sidRaw = res?.userIdRaw || res?.userId;
-      if (sidRaw != null && String(sidRaw) !== '') {
-        userId = String(sidRaw);
+      const sid = res?.userId;
+      if (sid != null && String(sid) !== '') {
+        userId = String(sid);
         try {
-          document.body?.setAttribute('data-user-id', String(res?.userId ?? ''));
-          document.body?.setAttribute('data-user-id-raw', userId);
+          document.body?.setAttribute('data-user-id', userId);
         } catch (_) {}
         console.debug('[PaymentPage] userId resolved via whoami', { reason, userId });
         return userId;
@@ -664,7 +663,7 @@ ready(() => {
   window.addEventListener('wf:login-success', async (e) => {
     console.debug('[PaymentPage] wf:login-success received', e?.detail);
     try {
-      const newId = e?.detail?.userId || document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+      const newId = e?.detail?.userId || document.body?.dataset?.userId;
       if (newId) userId = String(newId);
     } catch (_) {}
     // Fallback: proactively resolve if still missing
@@ -693,12 +692,12 @@ ready(() => {
     const observer = new MutationObserver(async (mutations) => {
       let changed = false;
       for (const m of mutations) {
-        if (m.type === 'attributes' && (m.attributeName === 'data-user-id' || m.attributeName === 'data-user-id-raw' || m.attributeName === 'data-is-logged-in')) {
+        if (m.type === 'attributes' && (m.attributeName === 'data-user-id' || m.attributeName === 'data-is-logged-in')) {
           changed = true;
         }
       }
       if (!changed) return;
-      const uid = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+      const uid = document.body?.dataset?.userId;
       if (uid && String(uid) !== String(userId)) {
         userId = String(uid);
         console.debug('[PaymentPage] userId changed via body attribute', userId);

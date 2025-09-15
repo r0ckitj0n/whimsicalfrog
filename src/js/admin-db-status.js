@@ -15,7 +15,7 @@
   }
 
   function runCommand(cmd) {
-    fetch(`db_api.php?action=${encodeURIComponent(cmd)}`)
+    fetch(`/api/db_tools.php?action=${encodeURIComponent(cmd)}`)
       .then((res) => res.json())
       .then((data) => {
         alert(data.message || 'Command executed');

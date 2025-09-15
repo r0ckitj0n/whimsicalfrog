@@ -8,16 +8,16 @@ ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 error_reporting(E_ALL);
 
-// Require admin authentication for inventory management
-require_once 'includes/auth_helper.php';
+// Require admin authentication for inventory management (absolute path)
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 AuthHelper::requireAdmin();
 
 // Set up error logging to file instead of displaying
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/inventory_errors.log');
 
-// Include database configuration
-require_once __DIR__ . '/api/config.php';
+// Include database configuration (absolute path)
+require_once dirname(__DIR__) . '/api/config.php';
 
 // Function to return JSON success response
 function returnSuccess($message, $data = null)

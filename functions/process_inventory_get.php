@@ -17,8 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Include database configuration
-require_once __DIR__ . '/api/config.php';
+// Include database configuration (absolute path)
+require_once dirname(__DIR__) . '/api/config.php';
 
 try {
     // Create database connection

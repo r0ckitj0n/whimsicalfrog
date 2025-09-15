@@ -7,9 +7,9 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Include database configuration
-require_once 'api/config.php'; // Corrected path for root directory file
-require_once 'includes/auth_helper.php';
+// Include database configuration (absolute paths)
+require_once dirname(__DIR__) . '/api/config.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 
 // Require admin authentication for discount code management
 AuthHelper::requireAdmin();

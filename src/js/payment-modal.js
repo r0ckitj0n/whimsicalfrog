@@ -164,7 +164,7 @@ import apiClient from './api-client.js';
       const cartApi = window.WF_Cart || window.cart || null;
       let userId = (() => {
         try {
-          const v = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+          const v = document.body?.dataset?.userId;
           return v ? String(v) : null;
         } catch (_) { return null; }
       })();
@@ -329,7 +329,7 @@ import apiClient from './api-client.js';
         try {
           // Refresh userId from body in case it was set after login
           try {
-            const v = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+            const v = document.body?.dataset?.userId;
             if (v) userId = String(v);
           } catch (_) {}
           // If we appear logged-in but userId not yet populated, retry briefly
@@ -348,13 +348,12 @@ import apiClient from './api-client.js';
             // Final fallback: ask server session who we are
             try {
               const who = await apiClient.get('/api/whoami.php');
-              const sidRaw = who?.userIdRaw || who?.userId;
-              if (sidRaw != null && String(sidRaw) !== '') {
-                userId = String(sidRaw);
+              const sid = who?.userId;
+              if (sid != null && String(sid) !== '') {
+                userId = String(sid);
                 try {
                   if (document && document.body) {
-                    document.body.setAttribute('data-user-id', String(who?.userId ?? ''));
-                    document.body.setAttribute('data-user-id-raw', userId);
+                    document.body.setAttribute('data-user-id', userId);
                     document.body.setAttribute('data-is-logged-in', 'true');
                   }
                 } catch(_) {}
@@ -375,15 +374,15 @@ import apiClient from './api-client.js';
                       try { if (document && document.body) document.body.setAttribute('data-is-logged-in','true'); } catch(_) {}
                       try {
                         const who2 = await apiClient.get('/api/whoami.php');
-                        const sid2 = who2?.userIdRaw || who2?.userId;
-                        if (sid2 != null && String(sid2) !== '') {
-                          userId = String(sid2);
-                          try { document.body?.setAttribute('data-user-id', String(who2?.userId ?? '')); document.body?.setAttribute('data-user-id-raw', userId); } catch(_) {}
-                          await loadAddresses();
-                          await updatePricing();
-                          return;
-                        }
-                      } catch(_) {}
+                        const sid2 = who2?.userId;
+                if (sid2 != null && String(sid2) !== '') {
+                  userId = String(sid2);
+                  try { document.body?.setAttribute('data-user-id', userId); } catch(_) {}
+                  await loadAddresses();
+                  await updatePricing();
+                  return;
+                }
+              } catch(_) {}
                       // As a fallback, just retry loading
                       await loadAddresses();
                     }
@@ -411,7 +410,7 @@ import apiClient from './api-client.js';
       // Resolve userId robustly: check dataset, brief retry, then server session
       async function resolveUserIdWithFallback() {
         try {
-          const v = document.body?.dataset?.userIdRaw || document.body?.dataset?.userId;
+          const v = document.body?.dataset?.userId;
           if (v) userId = String(v);
         } catch(_) {}
         if (userId) return userId;
@@ -426,13 +425,12 @@ import apiClient from './api-client.js';
           if (!userId) {
             try {
               const who = await apiClient.get('/api/whoami.php');
-              const sidRaw = who?.userIdRaw || who?.userId;
-              if (sidRaw != null && String(sidRaw) !== '') {
-                userId = String(sidRaw);
+              const sid = who?.userId;
+              if (sid != null && String(sid) !== '') {
+                userId = String(sid);
                 try {
                   if (document && document.body) {
-                    document.body.setAttribute('data-user-id', String(who?.userId ?? ''));
-                    document.body.setAttribute('data-user-id-raw', userId);
+                    document.body.setAttribute('data-user-id', userId);
                   }
                 } catch(_) {}
               }

@@ -1,11 +1,11 @@
 <?php
 
-// Include centralized systems
-require_once 'api/config.php';
-require_once 'includes/functions.php';
+// Include centralized systems (absolute paths)
+require_once dirname(__DIR__) . '/api/config.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
 
 // Require admin authentication for inventory management
-require_once 'includes/auth_helper.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 AuthHelper::requireAdmin();
 
 // Set CORS headers

@@ -59,7 +59,6 @@
   "lint-staged": {
     "**/*.{js,mjs,cjs}": [
       "node scripts/disallow-inline-styles.mjs",
-      "node scripts/auto-prefix-unused.mjs --run-eslint --write",
       "eslint --no-warn-ignored --max-warnings=0 --cache --cache-location .cache/eslint/ --format json"
     ],
     "src/styles/**/*.css": [

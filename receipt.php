@@ -3,7 +3,7 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     // allow standalone access as fallback
     define('INCLUDED_FROM_INDEX', true);
 }
-require_once 'api/config.php';
+require_once __DIR__ . '/api/config.php';
 require_once __DIR__ . '/api/business_settings_helper.php';
 
 $orderId = $_GET['orderId'] ?? '';

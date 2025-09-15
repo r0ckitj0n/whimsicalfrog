@@ -15,6 +15,11 @@ class AdminInventoryModule {
         this.itemToDeleteSku = null;
 
         this.loadData();
+
+        // Wire up item details modal openers for View/Edit actions
+        this.registerItemDetailsHandlers();
+        // Auto-open if URL contains ?view= or ?edit=
+        this.autoOpenItemFromQuery();
         this.bindEvents();
         this.init();
 
@@ -22,6 +27,117 @@ class AdminInventoryModule {
         try {
             window.buildComparisonInterface = (aiData, currentMarketingData) => this.buildComparisonInterface(aiData, currentMarketingData);
         } catch (_) {}
+    }
+
+    /**
+     * Attach delegated handlers to open the Detailed Item Modal when clicking
+     * the View (👁️) or Edit (✏️) actions in the inventory table.
+     */
+    registerItemDetailsHandlers() {
+        document.addEventListener('click', async (e) => {
+            const a = e.target.closest('a[href]');
+            if (!a) return;
+            try {
+                const url = new URL(a.getAttribute('href'), window.location.origin);
+                if (url.pathname === '/admin/inventory' && (url.searchParams.get('view') || url.searchParams.get('edit'))) {
+                    e.preventDefault();
+                    const sku = url.searchParams.get('view') || url.searchParams.get('edit');
+                    if (sku) {
+                        await this.openDetailedItemModal(sku);
+                        // Update address bar without full reload for back-button UX
+                        window.history.pushState({}, '', url.toString());
+                    }
+                }
+            } catch (_) {
+                // ignore URL parse issues
+            }
+        }, true);
+    }
+
+    /**
+     * On page load, if the current URL already has ?view= or ?edit=, open the modal.
+     */
+    async autoOpenItemFromQuery() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const sku = params.get('view') || params.get('edit');
+            if (sku) {
+                await this.openDetailedItemModal(sku);
+            }
+        } catch (_) {
+            // no-op
+        }
+    }
+
+    /**
+     * Fetches rendered HTML for the detailed item modal and shows it.
+     * Uses /api/render_detailed_modal.php with the item and its images.
+     */
+    async openDetailedItemModal(sku) {
+        try {
+            // Fetch item details and images from existing APIs
+            const [itemRes, imagesRes] = await Promise.all([
+                fetch(`/api/get_item_details.php?sku=${encodeURIComponent(sku)}`),
+                fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`)
+            ]);
+            const itemJson = await itemRes.json();
+            const imagesJson = await imagesRes.json();
+
+            const item = itemJson?.item || itemJson || {};
+            const images = imagesJson?.images || imagesJson || [];
+
+            // Render server-side modal HTML to keep parity with shop modal
+            const modalHtmlRes = await fetch('/api/render_detailed_modal.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item, images })
+            });
+            const modalHtml = await modalHtmlRes.text();
+
+            // Remove existing instance if present to avoid duplicates
+            const existing = document.getElementById('detailedItemModal');
+            if (existing && existing.parentElement) existing.parentElement.removeChild(existing);
+
+            // Inject into body and show
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            const modalEl = document.getElementById('detailedItemModal');
+            if (!modalEl) return;
+            // Ensure correct visibility classes
+            modalEl.classList.remove('hidden');
+            modalEl.classList.add('show');
+            // Positioning and z-index are defined in CSS (see detailed-item-modal.css)
+
+            // Attach close handlers if not already wired by global script
+            modalEl.addEventListener('click', (evt) => {
+                if (evt.target === modalEl || evt.target?.dataset?.action === 'closeDetailedModal' || evt.target?.dataset?.action === 'closeDetailedModalOnOverlay') {
+                    this.closeDetailedItemModal();
+                }
+            });
+            document.addEventListener('keydown', this.__detailedEscHandler = (evt) => {
+                if (evt.key === 'Escape') this.closeDetailedItemModal();
+            });
+            // Lock scroll while open
+            document.documentElement.classList.add('modal-open');
+            document.body.classList.add('modal-open');
+        } catch (err) {
+            console.warn('Failed to open detailed item modal', err);
+        }
+    }
+
+    closeDetailedItemModal() {
+        const modalEl = document.getElementById('detailedItemModal');
+        if (modalEl) {
+            modalEl.classList.add('hidden');
+            modalEl.classList.remove('show');
+            if (modalEl.parentElement) modalEl.parentElement.removeChild(modalEl);
+        }
+        if (this.__detailedEscHandler) {
+            document.removeEventListener('keydown', this.__detailedEscHandler);
+            this.__detailedEscHandler = null;
+        }
+        // Release scroll lock when no other modals are open
+        document.documentElement.classList.remove('modal-open');
+        document.body.classList.remove('modal-open');
     }
 
     handleDelegatedKeydown(event) {

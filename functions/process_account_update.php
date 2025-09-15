@@ -1,7 +1,7 @@
 <?php
 
-// Include the configuration file
-require_once 'api/config.php';
+// Include the configuration file (absolute path)
+require_once dirname(__DIR__) . '/api/config.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');

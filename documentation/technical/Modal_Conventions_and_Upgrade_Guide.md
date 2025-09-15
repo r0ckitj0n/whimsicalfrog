@@ -1,3 +1,5 @@
+> Note: Technical Reference — Historical/Deep Technical context. For current behavior and routes, see documentation/ADMIN_GUIDE.md.
+
 # Modal Conventions and Upgrade Guide
 
 This document captures the standardized patterns used across all modals in the WhimsicalFrog codebase. Follow these conventions for any new or migrated modals to ensure consistent behavior, accessibility, and styling.

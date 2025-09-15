@@ -1,3 +1,5 @@
+> Note: Technical Reference — Historical/Deep Technical context. For current behavior and routes, see documentation/ADMIN_GUIDE.md.
+
 # WhimsicalFrog Footer CSS Admin System
 
 ## Overview

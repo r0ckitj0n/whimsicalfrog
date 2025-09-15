@@ -1,3 +1,5 @@
+> Note: Technical Reference — Historical/Deep Technical context. For current behavior and routes, see documentation/ADMIN_GUIDE.md.
+
 # WhimsicalFrog Full Documentation
 
 This is the central index for the WhimsicalFrog documentation. It aggregates links to subsystem guides and high‑level overviews.

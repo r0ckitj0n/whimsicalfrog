@@ -1,3 +1,5 @@
+> Note: Technical Reference — Historical/Deep Technical context. For current behavior and routes, see documentation/ADMIN_GUIDE.md.
+
 # SEO Implementation Guide: Database-Driven Room System
 
 ## Overview

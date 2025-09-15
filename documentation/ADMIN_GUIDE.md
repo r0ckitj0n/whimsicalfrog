@@ -14,6 +14,26 @@ This guide consolidates the current admin architecture, routes, tools, build set
 
 ---
 
+## Room System Overview
+The room pages share a centralized implementation to eliminate duplication and improve maintainability.
+
+Key components:
+- `includes/room_helper.php` — server-side rendering and helpers.
+- `src/styles/components/room-modal.css`, `room-main.css` — consolidated styles.
+- `src/js/room-page.js` (example) — centralized interactions and modal management.
+
+Highlights:
+- Database-driven configuration for room content and coordinates.
+- Reusable modal and popup logic with consistent z-index and visibility rules.
+- Clean template usage for new rooms (see `sections/room_template_clean.php`).
+
+Usage checklist:
+- Create `sections/roomN.php` from the clean template and register in navigation.
+- Configure room settings and coordinates via admin tools.
+- Keep any per-room styling/extensions in dedicated CSS modules under `src/styles/`.
+
+---
+
 ## Routing Overview
 - Canonical Admin URL: `/admin/`
   - Internally rewritten to `sections/admin_router.php`.

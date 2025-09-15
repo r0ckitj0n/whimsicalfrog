@@ -1,3 +1,5 @@
+> Note: Technical Reference — Historical/Deep Technical context. For current behavior and routes, see documentation/ADMIN_GUIDE.md.
+
 # WhimsicalFrog Website Customization Guide
 
 **Version**: v2024.3.0 (Post-Cleanup)  

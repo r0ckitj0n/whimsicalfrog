@@ -1,6 +1,6 @@
 # WhimsicalFrog Documentation
 
-<sub><sup>Last updated: 2025-09-16</sup></sub>
+<sub><sup>Last updated: 2025-09-17</sup></sub>
 
 This README serves as a consolidated entry point for project documentation. It reflects the current configuration after admin tooling and routing cleanup.
 
@@ -9,16 +9,10 @@ This README serves as a consolidated entry point for project documentation. It r
 ### Current Docs
 - [Admin Guide](./ADMIN_GUIDE.md) — [Current]
 - [Modal Conventions & Upgrade Guide](./technical/MODAL_CONVENTIONS_AND_UPGRADE_GUIDE.md) — [Current]
-- [Database Helper Adoption Guide](./includes/db-helper-adoption.md) — [Current]
+- [Database Helper Adoption Guide](./includes/DB_HELPER_ADOPTION.md) — [Current]
 
 ### Historical & Deep Technical (Archived or Context)
-- backups/documentation/admin-vite-migration.md — [Historical]
-- backups/documentation/admin_routing.md — [Historical]
-- backups/documentation/CENTRALIZATION_SUMMARY.md — [Historical]
-- backups/documentation/migrations/2025-08-static-css-migration.md — [Historical]
-- backups/documentation/frontend/css-reorg-plan.md — [Historical]
-- backups/documentation/modal_fix_summary.md — [Historical]
-- backups/documentation/TEST_INLINE_EDITING.md — [Historical]
+- No archived items currently listed. Refer to Git history if needed.
 
 Other deep technical docs may remain under `documentation/` for reference; prefer the Admin Guide for current behavior and routes.
 

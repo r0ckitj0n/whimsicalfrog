@@ -38,6 +38,16 @@ try {
             $result = cleanupOldLogs($pdo);
             echo json_encode(['success' => true, 'cleanup_result' => $result]);
             break;
+        case 'distinct_email_types':
+            try {
+                $rows = Database::queryAll("SELECT DISTINCT email_type FROM email_logs WHERE email_type IS NOT NULL AND email_type != '' ORDER BY email_type ASC");
+                $types = [];
+                foreach ($rows as $r) { if (!empty($r['email_type'])) $types[] = $r['email_type']; }
+                echo json_encode(['success' => true, 'types' => $types]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'types' => []]);
+            }
+            break;
         default:
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid action']);
@@ -360,12 +370,57 @@ function getDatabaseLogContent($pdo, $type, $page, $limit, $offset)
     $fields = $config['fields'];
 
     try {
-        // Get total count
-        $countRow = Database::queryOne("SELECT COUNT(*) as total FROM $table");
+        // Optional filters (email_logs only)
+        $whereSql = '';
+        $params = [];
+        if ($type === 'email_logs') {
+            $from = $_GET['from'] ?? '';
+            $to = $_GET['to'] ?? '';
+            $status = $_GET['status'] ?? '';
+            $emailType = $_GET['email_type'] ?? '';
+            $where = [];
+            if (!empty($from)) {
+                // Normalize date-only input to start of day
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) { $from .= ' 00:00:00'; }
+                $where[] = "$timestampField >= ?";
+                $params[] = $from;
+            }
+            if (!empty($to)) {
+                // Normalize date-only input to end of day
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) { $to .= ' 23:59:59'; }
+                $where[] = "$timestampField <= ?";
+                $params[] = $to;
+            }
+            if (!empty($status)) {
+                $where[] = "status = ?";
+                $params[] = $status;
+            }
+            if (!empty($emailType)) {
+                $where[] = "email_type = ?";
+                $params[] = $emailType;
+            }
+            if (!empty($where)) { $whereSql = ' WHERE ' . implode(' AND ', $where); }
+        }
+
+        // Get total count (respect filters)
+        $countRow = Database::queryOne("SELECT COUNT(*) as total FROM $table$whereSql", $params);
         $totalCount = $countRow ? (int)$countRow['total'] : 0;
 
-        // Get log entries
-        $entries = Database::queryAll("\n            SELECT $fields \n            FROM $table \n            ORDER BY $timestampField DESC \n            LIMIT ? OFFSET ?\n        ", [$limit, $offset]);
+        // Determine ORDER BY (support sort for email_logs)
+        $orderSql = "$timestampField DESC";
+        if ($type === 'email_logs') {
+            $sort = $_GET['sort'] ?? 'sent_at_desc';
+            switch ($sort) {
+                case 'sent_at_asc': $orderSql = "$timestampField ASC"; break;
+                case 'subject_asc': $orderSql = "email_subject ASC, $timestampField DESC"; break;
+                case 'subject_desc': $orderSql = "email_subject DESC, $timestampField DESC"; break;
+                default: $orderSql = "$timestampField DESC"; break; // sent_at_desc
+            }
+        }
+
+        // Get log entries (respect filters and sort)
+        $entries = Database::queryAll(
+            "\n            SELECT $fields \n            FROM $table$whereSql \n            ORDER BY $orderSql \n            LIMIT ? OFFSET ?\n        ", array_merge($params, [$limit, $offset]));
 
         echo json_encode([
             'success' => true,
@@ -417,12 +472,39 @@ function searchDatabaseLogs($pdo, $query, $type = '')
 
     foreach ($searchTables as $table => $fields) {
         try {
-            $whereConditions = [];
+            $whereOr = [];
             $params = [];
 
             foreach ($fields as $field) {
-                $whereConditions[] = "$field LIKE ?";
+                $whereOr[] = "$field LIKE ?";
                 $params[] = "%$query%";
+            }
+
+            // Additional filters only for email_logs
+            $extraAnd = [];
+            if ($table === 'email_logs') {
+                $from = $_GET['from'] ?? '';
+                $to = $_GET['to'] ?? '';
+                $status = $_GET['status'] ?? '';
+                $emailType = $_GET['email_type'] ?? '';
+                if (!empty($from)) {
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) { $from .= ' 00:00:00'; }
+                    $extraAnd[] = "sent_at >= ?";
+                    $params[] = $from;
+                }
+                if (!empty($to)) {
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) { $to .= ' 23:59:59'; }
+                    $extraAnd[] = "sent_at <= ?";
+                    $params[] = $to;
+                }
+                if (!empty($status)) {
+                    $extraAnd[] = "status = ?";
+                    $params[] = $status;
+                }
+                if (!empty($emailType)) {
+                    $extraAnd[] = "email_type = ?";
+                    $params[] = $emailType;
+                }
             }
 
             // Get timestamp field for ordering
@@ -430,7 +512,21 @@ function searchDatabaseLogs($pdo, $query, $type = '')
                              (($table === 'order_logs' || $table === 'email_logs') ?
                               ($table === 'email_logs' ? 'sent_at' : 'created_at') : 'timestamp');
 
-            $sql = "SELECT *, '$table' as source_table FROM $table WHERE " . implode(' OR ', $whereConditions) . " ORDER BY $timestampField DESC LIMIT 20";
+            $sql = "SELECT *, '$table' as source_table FROM $table WHERE (" . implode(' OR ', $whereOr) . ")";
+            if (!empty($extraAnd)) { $sql .= ' AND ' . implode(' AND ', $extraAnd); }
+            // Sorting support for email_logs
+            if ($table === 'email_logs') {
+                $sort = $_GET['sort'] ?? 'sent_at_desc';
+                switch ($sort) {
+                    case 'sent_at_asc': $sql .= " ORDER BY sent_at ASC"; break;
+                    case 'subject_asc': $sql .= " ORDER BY email_subject ASC, sent_at DESC"; break;
+                    case 'subject_desc': $sql .= " ORDER BY email_subject DESC, sent_at DESC"; break;
+                    default: $sql .= " ORDER BY sent_at DESC"; break;
+                }
+            } else {
+                $sql .= " ORDER BY $timestampField DESC";
+            }
+            $sql .= " LIMIT 50";
 
             $tableResults = Database::queryAll($sql, $params);
 
@@ -510,7 +606,37 @@ function downloadDatabaseLog($pdo, $type)
     }
 
     try {
-        $entries = Database::queryAll("SELECT * FROM $type ORDER BY id DESC");
+        // Optional filters for email logs
+        $whereSql = '';
+        $params = [];
+        if ($type === 'email_logs') {
+            $from = $_GET['from'] ?? '';
+            $to = $_GET['to'] ?? '';
+            $status = $_GET['status'] ?? '';
+            $emailType = $_GET['email_type'] ?? '';
+            $where = [];
+            if (!empty($from)) {
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) { $from .= ' 00:00:00'; }
+                $where[] = "sent_at >= ?";
+                $params[] = $from;
+            }
+            if (!empty($to)) {
+                if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) { $to .= ' 23:59:59'; }
+                $where[] = "sent_at <= ?";
+                $params[] = $to;
+            }
+            if (!empty($status)) {
+                $where[] = "status = ?";
+                $params[] = $status;
+            }
+            if (!empty($emailType)) {
+                $where[] = "email_type = ?";
+                $params[] = $emailType;
+            }
+            if (!empty($where)) { $whereSql = ' WHERE ' . implode(' AND ', $where); }
+        }
+
+        $entries = Database::queryAll("SELECT * FROM $type$whereSql ORDER BY id DESC", $params);
 
         // Set headers for file download
         header('Content-Type: text/csv');

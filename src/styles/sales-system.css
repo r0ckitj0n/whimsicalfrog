@@ -17,7 +17,7 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   padding: 15px;
   max-width: 300px;
-  z-index: 1000;
+  z-index: var(--z-inline-popup, 1000);
   font-size: 14px;
   display: none;
 }

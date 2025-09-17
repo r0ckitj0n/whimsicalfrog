@@ -1,0 +1,108 @@
+/* Combined bubble: position '?' and the slider inside one circle */
+.admin-tab-navigation .admin-help-combo {
+  width: 44px; /* slightly wider to fit both elements cleanly */
+  height: 44px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 0 6px;
+}
+.admin-tab-navigation .admin-help-combo .help-q {
+  font-size: 18px;
+  line-height: 1;
+  font-weight: 700;
+  display: inline-block;
+  transform: translateY(-1px); /* optical centering */
+}
+.admin-tab-navigation .admin-help-combo .wf-toggle {
+  width: 20px; height: 10px;
+}
+.admin-tab-navigation .admin-help-combo .wf-knob {
+  width: 8px; height: 8px;
+}
+.admin-tab-navigation .admin-help-combo[aria-pressed="true"] .wf-knob { left: 10px; }
+/* Admin Help Bubble and Hints Toggle (Vite-managed)
+   - Styles the right-hand admin help bubble as green circular buttons.
+   - Styles a compact slider toggle inside the same circular bubble.
+*/
+
+/* Base green circular bubble used by both the '?' button and the toggle */
+.admin-tab-navigation .admin-tab-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background-color: #22c55e; /* green-500 */
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+  line-height: 1;
+  padding: 0; /* override nav padding */
+}
+
+.admin-tab-navigation .admin-tab-help:hover {
+  background-color: #16a34a; /* green-600 */
+}
+
+.admin-tab-navigation .admin-tab-help:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35); /* green-500 ring */
+}
+
+/* Slider toggle embedded inside the bubble */
+.admin-tab-navigation .admin-tab-toggle .wf-toggle,
+.admin-tab-navigation .admin-help-combo .wf-toggle {
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 12px;
+  background: #065f46; /* emerald-800 */
+  border-radius: 9999px;
+  transition: background-color 120ms ease;
+}
+
+.admin-tab-navigation .admin-tab-toggle .wf-knob,
+.admin-tab-navigation .admin-help-combo .wf-knob {
+  position: absolute;
+  top: 50%;
+  left: 1px;
+  width: 10px;
+  height: 10px;
+  transform: translate(0, -50%);
+  background: #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  transition: left 120ms ease;
+}
+
+/* Keep track dark green whether ON or OFF */
+.admin-tab-navigation .admin-tab-toggle[aria-pressed="true"] .wf-toggle,
+.admin-tab-navigation .admin-help-combo[aria-pressed="true"] .wf-toggle {
+  background: #065f46; /* emerald-800 */
+}
+.admin-tab-navigation .admin-tab-toggle[aria-pressed="true"] .wf-knob,
+.admin-tab-navigation .admin-help-combo[aria-pressed="true"] .wf-knob {
+  left: 11px;
+}
+
+/* OFF state (aria-pressed="false") is the default above */
+
+/* Specificity override so combined bubble keeps its larger size over base .admin-tab-help */
+.admin-tab-navigation .admin-tab-help.admin-help-combo {
+  width: 44px;
+  height: 44px;
+}
+
+/* Knob color by state: use brand secondary when OFF; white when ON */
+.admin-tab-navigation .admin-tab-toggle[aria-pressed="false"] .wf-knob,
+.admin-tab-navigation .admin-help-combo[aria-pressed="false"] .wf-knob {
+  background: var(--brand-secondary, #6366f1);
+}
+.admin-tab-navigation .admin-tab-toggle[aria-pressed="true"] .wf-knob,
+.admin-tab-navigation .admin-help-combo[aria-pressed="true"] .wf-knob {
+  background: #ffffff;
+}

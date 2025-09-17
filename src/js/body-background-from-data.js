@@ -33,7 +33,9 @@
       const data = res ? await res.json().catch(()=>null) : null;
       const bg = data && data.background ? (data.background.webp_filename || data.background.image_filename) : null;
       if (!bg) return null;
-      const fname = bg.startsWith('background_') ? bg : `background_${bg}`;
+      let fname = String(bg);
+      if (fname.startsWith('background_')) fname = fname.replace(/^background_/, 'background-');
+      if (!fname.startsWith('background-')) fname = `background-${fname}`;
       const url = `${window.location.origin}/images/backgrounds/${fname}?v=${Date.now()}`;
       body.setAttribute('data-bg-url', url);
       return url;

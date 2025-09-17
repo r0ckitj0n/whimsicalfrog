@@ -50,7 +50,7 @@ try {
 // This file only provides the room_main specific data
 
 // Compute main room background URL via PHP
-$backgroundMain = get_active_background('room_main') ?: '/images/backgrounds/background_room_main.webp';
+$backgroundMain = get_active_background('room_main') ?: '/images/backgrounds/background-room-main.webp';
 
 ?>
 
@@ -87,8 +87,8 @@ try {
     <!-- <?php echo $roomName; ?> Door -->
         <div class="door-area area-<?php echo $roomNumber; ?>" data-url="/room/<?php echo $roomNumber; ?>" data-category="<?php echo $doorLabel; ?>" data-room="<?php echo $roomNumber; ?>">
         <picture class="door-picture">
-            <source srcset="images/signs/sign_door_room<?php echo $roomNumber; ?>.webp" type="image/webp">
-            <img src="images/signs/sign_door_room<?php echo $roomNumber; ?>.png" alt="<?php echo $doorLabel; ?>" class="door-sign">
+            <source srcset="images/signs/sign-door-room<?php echo $roomNumber; ?>.webp" type="image/webp">
+            <img src="images/signs/sign-door-room<?php echo $roomNumber; ?>.png" alt="<?php echo $doorLabel; ?>" class="door-sign">
         </picture>
         <div class="door-label"><?php echo $doorLabel; ?></div>
     </div>

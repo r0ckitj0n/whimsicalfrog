@@ -208,55 +208,18 @@
 /* Header gradient is now defined canonically in `.site-header.universal-page-header` via --gradient-header. */
 
 /* Remove text shadow from page header text and increase z-index */
-.room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: 100 !important;  position: relative !important;
-}
+.room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: var(--z-index-page-header, 100) !important;  position: relative !important; }
 
 /* Ensure header text and links are above the gradient */
-.site-header * {
-    z-index: 200 !important; /* Even higher than page header text */
-    position: relative !important;
-}
-.header-container * {
-    z-index: 200 !important; /* Even higher than page header text */
-    position: relative !important;
-}
-.header-content {
-    z-index: 200 !important; /* Even higher than page header text */
-    position: relative !important;
-}
-.header-content * {
-    z-index: 200 !important; /* Even higher than page header text */
-    position: relative !important;
-}
+.site-header * { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
+.header-container * { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
+.header-content { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
+.header-content * { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
 
 /* Additional specificity for navigation links */
-.nav-links {
-    z-index: 300 !important;
-    position: relative !important;
-    text-shadow: none !important;
-}
-.nav-links * {
-    z-index: 300 !important;
-    position: relative !important;
-    text-shadow: none !important;
-}
-.nav-link {
-    z-index: 300 !important;
-    position: relative !important;
-    text-shadow: none !important;
-}
-.logo-link {
-    z-index: 300 !important;
-    position: relative !important;
-    text-shadow: none !important;
-}
-.logo-text {
-    z-index: 300 !important;
-    position: relative !important;
-    text-shadow: none !important;
-}
-.cart-link {
-    z-index: 300 !important;
-    position: relative !important;
-    text-shadow: none !important;
-}
+.nav-links { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
+.nav-links * { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
+.nav-link { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
+.logo-link { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
+.logo-text { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
+.cart-link { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }

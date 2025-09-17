@@ -1340,7 +1340,7 @@ body[data-page^='admin'] .admin-filter-form {
 }/* ==============================================
    COMMON Z-INDEX CLASSES
    ============================================== */.z-index-1000 {
-    z-index: 1000;
+    z-index: var(--z-inline-popup, 1000);
 }.z-index-modal {
     z-index: var(--z-index-modal, 2000);
 }/* ==============================================
@@ -1445,14 +1445,8 @@ body[data-page^='admin'] .admin-filter-form {
 
 /* ==============================================
    ROOM BACKGROUND CLASSES - Centralized with WebP/PNG Fallbacks
-   ============================================== */.room-bg-room6 {
-    --bg-webp: url('/images/backgrounds/background_room6.webp');
-    --bg-png: url('/images/backgrounds/background_room6.png');
-    background-image: var(--bg-webp);
-    background-size: contain;
-    background-position: center;
-    background-repeat: no-repeat;
-}/* ==============================================
+   ============================================== */
+/* ==============================================
    MODAL ROOM STYLES - Maintain Exact Aspect Ratio
    ============================================== */
 
@@ -3091,7 +3085,7 @@ body { /* Allow content overflow */
 .z-index-9999 {
     z-index: var(--z-index-toast);
 }.z-index-1100 {
-    z-index: 1100;
+    z-index: var(--z-inline-popup-high, 1100);
 }/* Common Opacity Classes */
 .opacity-09 {
     opacity: 0.9;
@@ -4967,7 +4961,7 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     border-color: #3b82f6;
 }.draggable-section-item.dragging {
-    z-index: 1000;
+    z-index: var(--z-inline-popup, 1000);
     opacity: 0.5;
     transform: rotate(2deg);
     cursor: grabbing;
@@ -8275,7 +8269,7 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
 
 /* Notification Container */
 .wf-notification-container {
-    z-index: 2147483647;
+    z-index: var(--z-global-popup, 2147483647);
     position: fixed;
     top: 24px;
     right: 24px;
@@ -9167,29 +9161,33 @@ input[type="submit"]:hover,
 /* Clickable popup content styling *//* Popup Image - Dynamic Height *//* Popup Details Container *//* Popup Text Elements */.popup-category {
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-size: var(--popup-category-size);
-    color: var(--popup-category-color);
-    margin-bottom: 1px;
-    font-weight: 600;
 }/* Badge styling */.popup-sale-badge {
-    z-index: 10;
-    position: absolute;
-    top: 8px;
-    pointer-events: none;
-    left: 8px;
+z-index: var(--z-badge, 10);
+position: absolute;
+top: 8px;
+pointer-events: none;
+left: 8px;
 }.popup-stock-badge {
-    z-index: 10;
-    position: absolute;
-    top: 8px;
-    pointer-events: none;
-    right: 8px;
-}.popup-marketing-badge { /* Position below stock badge */ font-size: 9px; padding: 3px 8px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2d3748; z-index: 10; position: absolute; pointer-events: none; right: 8px; top: 35px; ;
-}/* Override positioning for image overlay badges */
+z-index: var(--z-badge, 10);
+position: absolute;
+top: 8px;
+pointer-events: none;
+right: 8px;
+}.popup-marketing-badge { /* Position below stock badge */ font-size: 9px; padding: 3px 8px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2d3748; z-index: var(--z-badge, 10); position: absolute; pointer-events: none; right: 8px; top: 35px; ;
+}
+/* Override positioning for image overlay badges */
 .popup-image-container .popup-marketing-badge {
-    top: 6px;
-    right: 6px;
+top: 6px;
+right: 6px;
 }.stock-badge {
-    background: #f97316;
+background: #f97316;
+color: white;
+padding: 4px 8px;
+border-radius: 12px;
+font-size: 10px;
+font-weight: bold;
+display: inline-block;
+z-index: var(--z-badge, 10);
     color: white;
     padding: 4px 8px;
     border-radius: 12px;
@@ -9326,7 +9324,7 @@ input[type="submit"]:hover,
     margin: 2px;
     color: white;
     background: #666;
-    z-index: 10;
+    z-index: var(--z-badge, 10);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -9503,7 +9501,7 @@ input[type="submit"]:hover,
     height: 100%;
     background: currentcolor;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    z-index: 1;
+    z-index: var(--z-index-base, 1);
     bottom: 100%;
     border-bottom: 12px solid #22c55e;
 }.modal-badge.shape-hexagon::after {
@@ -9839,7 +9837,7 @@ div #confirmAddToCart {
     opacity: 0.9;
     filter: grayscale(10%);
 }.out-of-stock-badge {
-    z-index: 10;
+    z-index: var(--z-badge, 10);
     position: absolute;
     top: 5px;
     right: 5px;
@@ -11234,7 +11232,7 @@ div #confirmAddToCart {
     font-size: var(--table-header-font-size, 0.875rem);
     position: sticky;
     top: 0;
-    z-index: var(--z-content);
+    z-index: var(--z-index-base, 1);
     border-bottom: 2px solid var(--table-header-border, #6b8e23);
 }.orders-table th:first-child {
     border-top-left-radius: var(--table-border-radius, 0.5rem);
@@ -12183,7 +12181,7 @@ body.image-viewer-open #imageViewerModal {
     background: #fff;
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: var(--z-index-base, 1);
 }
 .receipt-modal-header .title {
     margin: 0;
@@ -13542,7 +13540,7 @@ input[type="checkbox"].color-checkbox {
     border: 1px solid #9ca3af;
 }/* Order Modal System - Sunday Layout Restored */
 .order-modal {
-    z-index: 50;
+    z-index: var(--wf-overlay-z, 10050);
     position: fixed;
     inset: 0;
     background-color: rgb(0 0 0 / 60%);
@@ -13561,6 +13559,8 @@ input[type="checkbox"].color-checkbox {
     max-height: calc(100vh - 4rem);
     display: flex;
     flex-direction: column;
+    position: relative;
+    z-index: var(--wf-overlay-content-z, 10051);
 }/* ==============================================
    POS (POINT OF SALE) SYSTEM STYLES
    ============================================== */
@@ -14379,50 +14379,50 @@ img {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background_room_main.webp');
-    --bg-png: url('/images/backgrounds/background_room_main.png');
+    --bg-webp: url('/images/backgrounds/background-room-main.webp');
+    --bg-png: url('/images/backgrounds/background-room-main.png');
     background-image: var(--bg-webp);
 }.room-bg-landing {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background_home.webp');
-    --bg-png: url('/images/backgrounds/background_home.png');
+    --bg-webp: url('/images/backgrounds/background-home.webp');
+    --bg-png: url('/images/backgrounds/background-home.png');
     background-image: var(--bg-webp);
 }.room-bg-room1 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background_room1.webp');
-    --bg-png: url('/images/backgrounds/background_room1.png');
+    --bg-webp: url('/images/backgrounds/background-room1.webp');
+    --bg-png: url('/images/backgrounds/background-room1.png');
     background-image: var(--bg-webp);
 }.room-bg-room2 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background_room2.webp');
-    --bg-png: url('/images/backgrounds/background_room2.png');
+    --bg-webp: url('/images/backgrounds/background-room2.webp');
+    --bg-png: url('/images/backgrounds/background-room2.png');
     background-image: var(--bg-webp);
 }.room-bg-room3 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background_room3.webp');
-    --bg-png: url('/images/backgrounds/background_room3.png');
+    --bg-webp: url('/images/backgrounds/background-room3.webp');
+    --bg-png: url('/images/backgrounds/background-room3.png');
     background-image: var(--bg-webp);
 }.room-bg-room4 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background_room4.webp');
-    --bg-png: url('/images/backgrounds/background_room4.png');
+    --bg-webp: url('/images/backgrounds/background-room4.webp');
+    --bg-png: url('/images/backgrounds/background-room4.png');
     background-image: var(--bg-webp);
 }.room-bg-room5 {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background_room5.webp');
-    --bg-png: url('/images/backgrounds/background_room5.png');
+    --bg-webp: url('/images/backgrounds/background-room5.webp');
+    --bg-png: url('/images/backgrounds/background-room5.png');
     background-image: var(--bg-webp);
 }/* 
   Fallback to PNG images for browsers that do not support WebP.

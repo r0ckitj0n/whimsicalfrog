@@ -1,0 +1,24 @@
+@import url('./variables.css');
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-secondary);
+}
+
+.site-header.universal-page-header {
+  background: linear-gradient(90deg, #1e293b, #0f172a);
+  color: white;
+  padding: 1rem 2rem;
+}
+
+.brand { color: white; text-decoration: none; font-family: var(--font-primary); font-size: 1.25rem; }
+
+button.btn--primary {
+  background: var(--button-bg-primary);
+  color: var(--button-text-primary);
+  border: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+button.btn--primary:hover { background: var(--button-bg-primary-hover); }

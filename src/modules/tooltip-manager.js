@@ -7,6 +7,7 @@
 
 const API_URL = '/api/help_tooltips.php';
 const LS_KEY_ENABLED = 'wf_tooltips_enabled';
+const SS_KEY_SESSION_ENABLE = 'wf_tooltips_session_enabled';
 
 function getPageContext() {
   try {
@@ -27,6 +28,11 @@ function getPageContext() {
 }
 
 function isEnabled() {
+  try {
+    // Session override: if explicitly enabled for this session, honor it
+    const sessionOverride = sessionStorage.getItem(SS_KEY_SESSION_ENABLE);
+    if (sessionOverride === 'true') return true;
+  } catch {}
   try { return localStorage.getItem(LS_KEY_ENABLED) !== 'false'; } catch { return true; }
 }
 function setEnabled(v) {
@@ -83,7 +89,8 @@ function attachTooltip(target, tipData) {
   if (!target || __wfAttachedTooltipTargets.has(target)) return;
   __wfAttachedTooltipTargets.add(target);
   let tip;
-  const show = () => {
+  let showTimer = null;
+  const doShow = () => {
     if (!isEnabled()) return;
     hide();
     tip = createTooltipEl(tipData.title, tipData.content, tipData.position || 'top');
@@ -107,11 +114,17 @@ function attachTooltip(target, tipData) {
   const hide = () => {
     if (tip && tip.parentNode) tip.parentNode.removeChild(tip);
     tip = null;
+    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
   };
-  target.addEventListener('mouseenter', show);
-  target.addEventListener('mouseleave', hide);
-  target.addEventListener('focus', show);
-  target.addEventListener('blur', hide);
+  const scheduleShow = () => {
+    if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+    showTimer = setTimeout(() => { doShow(); }, 1000);
+  };
+  const cancelShow = () => { if (showTimer) { clearTimeout(showTimer); showTimer = null; } };
+  target.addEventListener('mouseenter', scheduleShow);
+  target.addEventListener('mouseleave', () => { cancelShow(); hide(); });
+  target.addEventListener('focus', scheduleShow);
+  target.addEventListener('blur', () => { cancelShow(); hide(); });
   // Note: intentionally avoid click-based toggle to prevent duplicate tooltips
   // and to avoid interfering with modal clicks/focus management.
 }

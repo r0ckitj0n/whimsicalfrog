@@ -608,7 +608,7 @@ ready(() => {
         }
       }
 
-      const res = await apiClient.post('/api/add-order.php', payload);
+      const res = await apiClient.post('/api/add_order.php', payload);
       console.debug('[PaymentPage] Order response', res);
       if (res && res.debug) {
         console.info('[PaymentPage] order debug ->', res.debug);

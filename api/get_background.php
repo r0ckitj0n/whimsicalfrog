@@ -50,30 +50,9 @@ try {
         throw $e;
     }
 } catch (PDOException $e) {
-    // Return dynamic fallback backgrounds if database fails
-    $roomParam = $_GET['room'] ?? $_GET['room_number'] ?? '';
-    $roomType = '';
-    if ($roomParam !== '') {
-        if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) { $roomType = 'room' . (int)$m[1]; }
-        else { $roomType = 'room' . (int)$roomParam; }
-    }
-    $fallbacks = generateDynamicFallbacks();
-
-    if (isset($fallbacks[$roomType])) {
-        echo json_encode([
-            'success' => true,
-            'background' => [
-                'image_filename' => $fallbacks[$roomType]['png'],
-                'webp_filename' => $fallbacks[$roomType]['webp'],
-                'background_name' => 'Original (Fallback)'
-            ]
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Room type not found and database unavailable'
-        ]);
-    }
+    // Fail fast: no fallback backgrounds on DB error
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database unavailable: ' . $e->getMessage()]);
     exit;
 }
 
@@ -109,41 +88,13 @@ try {
     if ($background) {
         echo json_encode(['success' => true, 'background' => $background]);
     } else {
-        // Return dynamic fallback if no active background found
-        $fallbacks = generateDynamicFallbacks();
-        $roomKey = 'room' . $roomNumber;
-        if (isset($fallbacks[$roomKey])) {
-            echo json_encode([
-                'success' => true,
-                'background' => [
-                    'image_filename' => $fallbacks[$roomKey]['png'],
-                    'webp_filename' => $fallbacks[$roomKey]['webp'],
-                    'background_name' => 'Original (Fallback)'
-                ]
-            ]);
-        } else {
-            echo json_encode([
-                'success' => false,
-                'message' => 'No background found for this room'
-            ]);
-        }
+        // Strict: no background configured for this room
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'No active background found for room ' . $roomNumber]);
     }
 } catch (PDOException $e) {
-    // On missing table or DB error, return fallback backgrounds
-    $fallbacks = generateDynamicFallbacks();
-    $roomKey = 'room' . $roomNumber;
-    if (isset($fallbacks[$roomKey])) {
-        echo json_encode([
-            'success'    => true,
-            'background' => [
-                'image_filename'    => $fallbacks[$roomKey]['png'],
-                'webp_filename'     => $fallbacks[$roomKey]['webp'],
-                'background_name'   => 'Original (Fallback)'
-            ]
-        ]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
-    }
+    // Strict: surface DB errors to caller
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
 ?> 

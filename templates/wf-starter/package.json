@@ -1,0 +1,19 @@
+{
+  "name": "wf-starter",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . && stylelint \"src/**/*.css\"",
+    "guard:templates:css": "node scripts/guard-templates-css.mjs",
+    "check:css:orphans": "node scripts/check-orphaned-css.mjs"
+  },
+  "devDependencies": {
+    "eslint": "^9.9.0",
+    "globby": "^14.0.0",
+    "stylelint": "^16.8.0",
+    "vite": "^5.3.0"
+  }
+}

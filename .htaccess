@@ -109,6 +109,28 @@ RewriteCond %{REQUEST_URI} ^/dist/ [NC]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^ router.php [L,QSA]
 
+# Back-compat: map legacy underscore image names to new dash-based names
+<IfModule mod_rewrite.c>
+  # backgrounds: background_* -> background-*
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^images/backgrounds/background_(.+)\.(webp|png)$ images/backgrounds/background-$1.$2 [R=301,L]
+
+  # signs: sign_door_roomN -> sign-door-roomN
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^images/signs/sign_door_room([0-9]+)\.(webp|png)$ images/signs/sign-door-room$1.$2 [R=301,L]
+  # common sign names
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^images/signs/sign_welcome\.(webp|png)$ images/signs/sign-welcome.$1 [R=301,L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^images/signs/sign_main\.(webp|png)$ images/signs/sign-main.$1 [R=301,L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^images/signs/sign_whimsicalfrog\.(webp|png)$ images/signs/sign-whimsicalfrog.$1 [R=301,L]
+
+  # logos: logo_whimsicalfrog -> logo-whimsicalfrog
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^images/logos/logo_whimsicalfrog\.(webp|png)$ images/logos/logo-whimsicalfrog.$1 [R=301,L]
+</IfModule>
+
 # Only allow direct access to existing files. Route other requests (including
 # missing files under existing directories) through router.php so it can
 # implement graceful fallbacks for built assets.

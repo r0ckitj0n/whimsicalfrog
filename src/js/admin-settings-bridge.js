@@ -10,6 +10,149 @@
 function byId(id){ return document.getElementById(id); }
 
 // ------------------------------
+// Health & Diagnostics
+// ------------------------------
+async function fetchBackgroundHealth(){
+  const res = await fetch('/api/health_backgrounds.php', { credentials: 'include', headers: { 'X-Requested-With':'XMLHttpRequest' } });
+  if (!res.ok) throw new Error('Backgrounds health request failed');
+  const j = await res.json().catch(() => null); if (!j || j.success !== true) throw new Error(j?.error || 'Unexpected backgrounds response');
+  return j.data || {};
+}
+async function fetchItemsHealth(){
+  const res = await fetch('/api/health_items.php', { credentials: 'include', headers: { 'X-Requested-With':'XMLHttpRequest' } });
+  if (!res.ok) throw new Error('Items health request failed');
+  const j = await res.json().catch(() => null); if (!j || j.success !== true) throw new Error(j?.error || 'Unexpected items response');
+  return j.data || {};
+}
+function renderHealth(bg, items){
+  try {
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v ?? '0'); };
+    const fillList = (id, arr, renderFn) => {
+      const ul = document.getElementById(id); if (!ul) return; ul.innerHTML='';
+      (arr || []).forEach((row) => { const li = document.createElement('li'); li.innerHTML = renderFn(row); ul.appendChild(li); });
+    };
+    const missingActive = Array.isArray(bg?.missingActive) ? bg.missingActive : [];
+    const missingFiles = Array.isArray(bg?.missingFiles) ? bg.missingFiles : [];
+    setText('bgMissingActiveCount', missingActive.length);
+    setText('bgMissingFilesCount', missingFiles.length);
+    const linkBgMgr = (room) => `<a class="text-blue-600 hover:underline" href="/admin/dashboard?wf_hint=background&room=${encodeURIComponent(String(room))}#background" target="_blank" rel="noopener">Background Manager</a>`;
+    const linkRoomCfg = (room) => `<a class="text-blue-600 hover:underline" href="/admin/?section=room-config-manager&room=${encodeURIComponent(String(room))}" target="_blank" rel="noopener">Room Settings</a>`;
+    const fixBtn = (room) => `<button type="button" class="btn btn-secondary ml-2" data-action="bg-fix-room" data-room="${String(room)}" title="Open Background Manager">Fix</button>`;
+    fillList('bgMissingActiveList', missingActive, (room) => `Room <code>${String(room)}</code> · ${linkBgMgr(room)} · ${linkRoomCfg(room)} ${fixBtn(room)}`);
+    fillList('bgMissingFilesList', missingFiles, (room) => `Room <code>${String(room)}</code> · ${linkBgMgr(room)} · ${linkRoomCfg(room)} ${fixBtn(room)}`);
+
+    const noPrimary = Array.isArray(items?.noPrimary) ? items.noPrimary : [];
+    const missItemFiles = Array.isArray(items?.missingFiles) ? items.missingFiles : [];
+    setText('itemsNoPrimaryCount', noPrimary.length);
+    setText('itemsMissingFilesCount', missItemFiles.length);
+    const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const itemLinks = (sku) => `
+      <a class="text-blue-600 hover:underline" href="/admin/inventory?view=${encodeURIComponent(String(sku||''))}" target="_blank" rel="noopener">View</a>
+      <span class="text-gray-400">|</span>
+      <a class="text-blue-600 hover:underline" href="/admin/inventory?edit=${encodeURIComponent(String(sku||''))}" target="_blank" rel="noopener">Edit</a>
+      <button type="button" class="btn btn-secondary ml-2" data-action="item-fix" data-sku="${esc(sku||'')}">Fix</button>`;
+    fillList('itemsNoPrimaryList', noPrimary, (r) => `${esc(r.sku||'')} — ${esc(r.name||'')} <span class="ml-2">${itemLinks(r.sku)}</span>`);
+    fillList('itemsMissingFilesList', missItemFiles, (r) => `${esc(r.sku||'')} — ${esc(r.name||'')} <span class="text-gray-500">(${esc(r.image_path||'')})</span> <span class="ml-2">${itemLinks(r.sku)}</span>`);
+  } catch (e) { /* noop */ }
+}
+async function loadHealthIntoModal(){
+  const status = document.getElementById('healthStatus'); if (status) status.textContent = 'Loading…';
+  try {
+    const [bg, items] = await Promise.all([fetchBackgroundHealth(), fetchItemsHealth()]);
+    renderHealth(bg, items);
+    if (status) status.textContent = 'Up to date';
+  } catch (e) {
+    if (status) status.textContent = e?.message || 'Failed to load health data';
+  }
+  if (fixItemBtn) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    const sku = fixItemBtn.getAttribute('data-sku') || '';
+    const url = `/admin/inventory?edit=${encodeURIComponent(sku)}`;
+    try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
+    return;
+  }
+}
+
+// Delegated handlers for health modal
+document.addEventListener('click', async (e) => {
+  const t = e.target;
+  const openBtn = t && t.closest ? t.closest('[data-action="open-health-diagnostics"]') : null;
+  const refreshBtn = t && t.closest ? t.closest('[data-action="health-refresh"]') : null;
+  const fixRoomBtn = t && t.closest ? t.closest('[data-action="bg-fix-room"]') : null;
+  const fixItemBtn = t && t.closest ? t.closest('[data-action="item-fix"]') : null;
+  if (openBtn) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    try { if (typeof __wfShowModal === 'function') __wfShowModal('healthModal'); else { const el = document.getElementById('healthModal'); if (el) { el.classList.remove('hidden'); el.classList.add('show'); el.setAttribute('aria-hidden','false'); } } } catch(_) {}
+    await loadHealthIntoModal();
+    return;
+  }
+  if (refreshBtn) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    await loadHealthIntoModal();
+    return;
+  }
+  if (fixRoomBtn) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    const room = fixRoomBtn.getAttribute('data-room') || '0';
+    const url = `/admin/dashboard?wf_hint=background&room=${encodeURIComponent(room)}#background`;
+    try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
+    return;
+  }
+});
+
+// ------------------------------
+// Help & Hints controls (Settings)
+// ------------------------------
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  const enableSess = t && t.closest ? t.closest('[data-action="hints-enable-session"]') : null;
+  const enablePersist = t && t.closest ? t.closest('[data-action="hints-enable-persist"]') : null;
+  const disableTips = t && t.closest ? t.closest('[data-action="hints-disable"]') : null;
+  const restoreSess = t && t.closest ? t.closest('[data-action="hints-restore-banners-session"]') : null;
+  const restorePersist = t && t.closest ? t.closest('[data-action="hints-restore-banners-persist"]') : null;
+
+  if (enableSess) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('wf_tooltips_session_enabled', 'true'); } catch(_) {}
+    try { if (typeof window.showNotification === 'function') window.showNotification('Tooltips enabled for this session.', 'success', { title: 'Help & Hints' }); } catch(_) {}
+    return;
+  }
+  if (enablePersist) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('wf_tooltips_enabled', 'true'); } catch(_) {}
+    // Optionally also set session to avoid refresh requirement
+    try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('wf_tooltips_session_enabled', 'true'); } catch(_) {}
+    try { if (typeof window.showNotification === 'function') window.showNotification('Tooltips enabled (persistent).', 'success', { title: 'Help & Hints' }); } catch(_) {}
+    return;
+  }
+  if (disableTips) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    try { if (typeof localStorage !== 'undefined') localStorage.setItem('wf_tooltips_enabled', 'false'); } catch(_) {}
+    try { if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem('wf_tooltips_session_enabled'); } catch(_) {}
+    try { if (typeof document !== 'undefined') document.querySelectorAll('.wf-tooltip').forEach((el) => el.remove()); } catch(_) {}
+    try { if (typeof window.showNotification === 'function') window.showNotification('Tooltips disabled.', 'info', { title: 'Help & Hints' }); } catch(_) {}
+    return;
+  }
+  if (restoreSess || restorePersist) {
+    e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+    const clearPrefix = (store) => {
+      try { Object.keys(store).forEach((k) => { if (k && k.startsWith('wf_bg_hint_dismissed')) { store.removeItem(k); } }); } catch(_) {}
+    };
+    if (restorePersist) {
+      try { if (typeof localStorage !== 'undefined') clearPrefix(localStorage); } catch(_) {}
+      try { if (typeof sessionStorage !== 'undefined') clearPrefix(sessionStorage); } catch(_) {}
+    } else {
+      try { if (typeof sessionStorage !== 'undefined') clearPrefix(sessionStorage); } catch(_) {}
+    }
+    try { if (typeof window.showNotification === 'function') window.showNotification('Dismissed banners restored' + (restorePersist ? ' (persistent)' : ' (this session)'), 'success', { title: 'Help & Hints' }); } catch(_) {}
+    return;
+  }
+});
+
+// Bind attribute handlers once at module load
+try { wireAttributeHandlers(); } catch(_) {}
+
+// ------------------------------
 // Categories helpers
 // ------------------------------
 async function catApi(path, payload) {
@@ -102,7 +245,113 @@ async function populateAttributes(){
     renderAttrList(document.getElementById('attrListSize'), a.size, 'size');
     renderAttrList(document.getElementById('attrListColor'), a.color, 'color');
     if (res) res.textContent='';
+    // enable drag-and-drop ordering after render
+    try { enableAttrDnD(); } catch(_) {}
   } catch(e){ if (res) res.textContent = (e && e.message) ? e.message : 'Failed to load attributes'; }
+}
+
+// ------------------------------
+// Attributes wiring (delegated)
+// ------------------------------
+function listIdToType(id){ if (!id) return null; if (/Gender$/i.test(id)) return 'gender'; if (/Size$/i.test(id)) return 'size'; if (/Color$/i.test(id)) return 'color'; return null; }
+function getListValues(ul){
+  const vals = [];
+  if (!ul) return vals;
+  ul.querySelectorAll('span[data-value]').forEach((el) => { vals.push(el.getAttribute('data-value') || ''); });
+  return vals;
+}
+function enableAttrDnD(){
+  const uls = document.querySelectorAll('#attrListGender, #attrListSize, #attrListColor');
+  uls.forEach((ul) => {
+    if (!ul || ul.__wfDndBound) return; ul.__wfDndBound = true;
+    let dragEl = null;
+    ul.addEventListener('dragstart', (e) => {
+      const li = e.target.closest('li'); if (!li) return;
+      dragEl = li; li.classList.add('dragging');
+      try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ''); } catch(_) {}
+    });
+    ul.addEventListener('dragend', () => { if (dragEl) dragEl.classList.remove('dragging'); dragEl = null; });
+    ul.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const after = (() => {
+        const items = [...ul.querySelectorAll('li:not(.dragging)')];
+        return items.find((li) => {
+          const rect = li.getBoundingClientRect();
+          return e.clientY < rect.top + rect.height / 2;
+        });
+      })();
+      const dragging = ul.querySelector('li.dragging');
+      if (!dragging) return;
+      if (after) ul.insertBefore(dragging, after); else ul.appendChild(dragging);
+    });
+  });
+}
+
+function wireAttributeHandlers(){
+  if (window.__WF_ATTR_HANDLERS_BOUND) return; window.__WF_ATTR_HANDLERS_BOUND = true;
+  // Submit handler for add-forms
+  document.addEventListener('submit', async (e) => {
+    const form = e.target && e.target.closest ? e.target.closest('form[data-action="attr-add-form"]') : null;
+    if (!form) return;
+    e.preventDefault(); e.stopPropagation();
+    const type = (form.getAttribute('data-type') || '').toLowerCase();
+    const input = form.querySelector('input[type="text"], .attr-input');
+    const value = (input && input.value || '').trim();
+    if (!type || !value) { showToast('validation', 'Value Required', 'Please enter a value.'); return; }
+    try {
+      await attrApi('/api/attributes.php?action=add', { type, value });
+      if (input) input.value = '';
+      await populateAttributes();
+      showToast('success', 'Added', `Added ${type}: ${value}`);
+    } catch (err) {
+      showToast('error', 'Add failed', err?.message || 'Unable to add attribute');
+    }
+  }, true);
+
+  // Clicks for rename/delete/save order
+  document.addEventListener('click', async (e) => {
+    const t = e.target;
+    const renameBtn = t && t.closest ? t.closest('[data-action="attr-rename"]') : null;
+    const delBtn = t && t.closest ? t.closest('[data-action="attr-delete"]') : null;
+    const saveOrder = t && t.closest ? t.closest('[data-action="attr-save-order"]') : null;
+
+    if (renameBtn) {
+      e.preventDefault(); e.stopPropagation();
+      const type = (renameBtn.getAttribute('data-type') || '').toLowerCase();
+      const oldVal = renameBtn.getAttribute('data-value') || (renameBtn.closest('li')?.querySelector('span[data-value]')?.getAttribute('data-value')) || '';
+      const next = window.prompt(`Rename ${type}`, oldVal);
+      if (!next || next.trim() === oldVal) return;
+      try { await attrApi('/api/attributes.php?action=rename', { type, old_value: oldVal, new_value: next.trim() }); await populateAttributes(); showToast('success', 'Renamed', `${oldVal} → ${next}`); } catch(err){ showToast('error','Rename failed', err?.message || ''); }
+      return;
+    }
+    if (delBtn) {
+      e.preventDefault(); e.stopPropagation();
+      const type = (delBtn.getAttribute('data-type') || '').toLowerCase();
+      const val = delBtn.getAttribute('data-value') || (delBtn.closest('li')?.querySelector('span[data-value]')?.getAttribute('data-value')) || '';
+      if (!window.confirm(`Delete ${type}: ${val}?`)) return;
+      try { await attrApi('/api/attributes.php?action=delete', { type, value: val }); await populateAttributes(); showToast('success', 'Deleted', `${val}`); } catch(err){ showToast('error','Delete failed', err?.message || ''); }
+      return;
+    }
+    if (saveOrder) {
+      e.preventDefault(); e.stopPropagation();
+      const lists = [
+        document.getElementById('attrListGender'),
+        document.getElementById('attrListSize'),
+        document.getElementById('attrListColor'),
+      ];
+      try {
+        for (const ul of lists) {
+          if (!ul) continue; const type = listIdToType(ul.id); if (!type) continue;
+          const values = getListValues(ul);
+          await attrApi('/api/attributes.php?action=reorder', { type, values });
+        }
+        showToast('success', 'Order Saved', 'Attribute order updated.');
+      } catch (err) {
+        showToast('error', 'Save order failed', err?.message || '');
+      }
+      return;
+    }
+  });
 }
 function setVal(id, v){ const el = byId(id); if (el) el.value = v ?? ''; }
 function setChecked(id, v){ const el = byId(id); if (el) el.checked = !!v; }
@@ -319,6 +568,370 @@ function wireSaveHandler(){
         return;
       }
     }
+
+    // ------------------------------
+    // Business Info helpers
+    // ------------------------------
+    function collectBusinessInfo(){
+      const get = (id) => { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+      return {
+        business_name: get('bizName'),
+        business_email: get('bizEmail'),
+        business_phone: get('bizPhone'),
+        business_hours: get('bizHours'),
+        business_address: get('bizAddress'),
+        business_address2: get('bizAddress2'),
+        business_city: get('bizCity'),
+        business_state: get('bizState'),
+        business_postal: get('bizPostal'),
+        business_country: get('bizCountry'),
+        business_website: get('bizWebsite'),
+        business_logo_url: get('bizLogoUrl'),
+        business_tagline: get('bizTagline'),
+        business_description: get('bizDescription'),
+        business_support_email: get('bizSupportEmail'),
+        business_support_phone: get('bizSupportPhone'),
+        business_facebook: get('bizFacebook'),
+        business_instagram: get('bizInstagram'),
+        business_twitter: get('bizTwitter'),
+        business_tiktok: get('bizTikTok'),
+        business_youtube: get('bizYouTube'),
+        business_linkedin: get('bizLinkedIn'),
+        business_terms_url: get('bizTermsUrl'),
+        business_privacy_url: get('bizPrivacyUrl'),
+        business_tax_id: get('bizTaxId'),
+        business_timezone: get('bizTimezone'),
+        business_currency: get('bizCurrency'),
+        business_locale: get('bizLocale'),
+        // Branding
+        business_brand_primary: get('brandPrimary'),
+        business_brand_secondary: get('brandSecondary'),
+        business_brand_accent: get('brandAccent'),
+        business_brand_background: get('brandBackground'),
+        business_brand_text: get('brandText'),
+        // Footer
+        business_footer_note: get('footerNote'),
+        business_footer_html: get('footerHtml'),
+        // Policies
+        business_policy_return: get('returnPolicy'),
+        business_policy_shipping: get('shippingPolicy'),
+        business_policy_warranty: get('warrantyPolicy'),
+        business_policy_url: get('policyUrl'),
+        // Brand Fonts
+        business_brand_font_primary: get('brandFontPrimary'),
+        business_brand_font_secondary: get('brandFontSecondary'),
+        // Custom CSS variables (raw text)
+        business_css_vars: get('customCssVars'),
+      };
+    }
+    function applyBusinessInfo(map){
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+      const s = map || {};
+      set('bizName', s.business_name || s.name || '');
+      set('bizEmail', s.business_email || s.email || '');
+      set('bizPhone', s.business_phone || s.phone || '');
+      set('bizHours', s.business_hours || s.hours || '');
+      set('bizAddress', s.business_address || s.address || '');
+      set('bizAddress2', s.business_address2 || '');
+      set('bizCity', s.business_city || '');
+      set('bizState', s.business_state || '');
+      set('bizPostal', s.business_postal || '');
+      set('bizCountry', s.business_country || '');
+      set('bizWebsite', s.business_website || s.website || '');
+      set('bizLogoUrl', s.business_logo_url || s.logo_url || '');
+      set('bizTagline', s.business_tagline || s.tagline || '');
+      set('bizDescription', s.business_description || s.description || '');
+      set('bizSupportEmail', s.business_support_email || '');
+      set('bizSupportPhone', s.business_support_phone || '');
+      set('bizFacebook', s.business_facebook || '');
+      set('bizInstagram', s.business_instagram || '');
+      set('bizTwitter', s.business_twitter || '');
+      set('bizTikTok', s.business_tiktok || '');
+      set('bizYouTube', s.business_youtube || '');
+      set('bizLinkedIn', s.business_linkedin || '');
+      set('bizTermsUrl', s.business_terms_url || '');
+      set('bizPrivacyUrl', s.business_privacy_url || '');
+      set('bizTaxId', s.business_tax_id || '');
+      set('bizTimezone', s.business_timezone || '');
+      set('bizCurrency', s.business_currency || '');
+      set('bizLocale', s.business_locale || '');
+      // Branding
+      set('brandPrimary', s.business_brand_primary || '#0ea5e9');
+      set('brandSecondary', s.business_brand_secondary || '#6366f1');
+      set('brandAccent', s.business_brand_accent || '#22c55e');
+      set('brandBackground', s.business_brand_background || '#ffffff');
+      set('brandText', s.business_brand_text || '#111827');
+      // Footer
+      set('footerNote', s.business_footer_note || '');
+      set('footerHtml', s.business_footer_html || '');
+      // Policies
+      set('returnPolicy', s.business_policy_return || '');
+      set('shippingPolicy', s.business_policy_shipping || '');
+      set('warrantyPolicy', s.business_policy_warranty || '');
+      set('policyUrl', s.business_policy_url || '');
+      // Brand Fonts
+      set('brandFontPrimary', s.business_brand_font_primary || '');
+      set('brandFontSecondary', s.business_brand_font_secondary || '');
+      // Custom CSS variables
+      set('customCssVars', s.business_css_vars || '');
+    }
+
+    // Apply branding CSS variables live to :root
+    function applyBusinessCssToRoot(map){
+      try {
+        const s = map || {};
+        const root = document.documentElement;
+        const setVar = (k, v) => { if (typeof v === 'string' && v !== '') root.style.setProperty(k, v); };
+        // Colors
+        setVar('--brand-primary', s.business_brand_primary || '');
+        setVar('--brand-secondary', s.business_brand_secondary || '');
+        setVar('--brand-accent', s.business_brand_accent || '');
+        setVar('--brand-bg', s.business_brand_background || '');
+        setVar('--brand-text', s.business_brand_text || '');
+        // Fonts
+        setVar('--brand-font-primary', s.business_brand_font_primary || '');
+        setVar('--brand-font-secondary', s.business_brand_font_secondary || '');
+        // Custom CSS vars (one per line, format: --key: value;)
+        const raw = s.business_css_vars || '';
+        if (raw) {
+          raw.split(/\r?\n/).forEach((line) => {
+            const t = String(line || '').trim();
+            if (!t || t.startsWith('//') || t.startsWith('#')) return;
+            const m = t.match(/^--[A-Za-z0-9_-]+\s*:\s*[^;]+;?$/);
+            if (m) {
+              const idx = t.indexOf(':');
+              const key = t.slice(0, idx).trim();
+              const val = t.slice(idx + 1).replace(/;\s*$/, '').trim();
+              if (key && val) root.style.setProperty(key, val);
+            }
+          });
+        }
+      } catch (_) { /* noop */ }
+    }
+    
+    // Live branding preview from inputs (without saving)
+    function collectBrandingInputs(){
+      const get = (id) => { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+      return {
+        business_brand_primary: get('brandPrimary'),
+        business_brand_secondary: get('brandSecondary'),
+        business_brand_accent: get('brandAccent'),
+        business_brand_background: get('brandBackground'),
+        business_brand_text: get('brandText'),
+        business_brand_font_primary: get('brandFontPrimary'),
+        business_brand_font_secondary: get('brandFontSecondary'),
+        business_css_vars: get('customCssVars'),
+      };
+    }
+    function wireBrandingLivePreview(){
+      const ids = ['brandPrimary','brandSecondary','brandAccent','brandBackground','brandText','brandFontPrimary','brandFontSecondary','customCssVars'];
+      const onChange = () => { try { applyBusinessCssToRoot(collectBrandingInputs()); } catch(_) {} };
+      ids.forEach((id) => { const el = document.getElementById(id); if (el && !el.__wfLiveBound) { el.addEventListener('input', onChange); el.addEventListener('change', onChange); el.__wfLiveBound = true; } });
+      // Initial apply
+      onChange();
+    }
+    function loadBusinessInfo(){
+      try {
+        return import('../modules/business-settings-api.js').then((mod) => {
+          const API = mod?.default || mod?.BusinessSettingsAPI;
+          if (!API || typeof API.getByCategory !== 'function') return;
+          return API.getByCategory('business').then((data) => {
+            const raw = data && (data.settings ?? data.data ?? data);
+            let map = {};
+            if (Array.isArray(raw)) {
+              const m = {}; raw.forEach((row) => { if (row && row.setting_key != null) m[row.setting_key] = row.setting_value; }); map = m;
+            } else if (raw && typeof raw === 'object') { map = raw; }
+            applyBusinessInfo(map || {});
+            applyBusinessCssToRoot(map || {});
+          }).catch(()=>{});
+        }).catch(()=>{});
+      } catch(_) { /* no-op */ }
+    }
+    function saveBusinessInfo(){
+      const status = document.getElementById('businessInfoStatus'); if (status) status.textContent = 'Saving…';
+      const payload = collectBusinessInfo();
+      // Basic validation
+      const errs = [];
+      const isHex = (s) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s);
+      const isUrl = (s) => /^(https?:)\/\//i.test(s);
+      const isEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
+      // Colors
+      ['business_brand_primary','business_brand_secondary','business_brand_accent','business_brand_background','business_brand_text'].forEach((k) => { const v = payload[k]; if (v && !isHex(v)) errs.push(`${k} must be a hex color like #1a2b3c`); });
+      // URLs
+      ['business_website','business_logo_url','business_terms_url','business_privacy_url','business_policy_url','business_facebook','business_instagram','business_twitter','business_tiktok','business_youtube','business_linkedin'].forEach((k) => { const v = payload[k]; if (v && !isUrl(v)) errs.push(`${k} must start with http:// or https://`); });
+      // Emails
+      ['business_email','business_support_email'].forEach((k) => { const v = payload[k]; if (v && !isEmail(v)) errs.push(`${k} looks invalid`); });
+      if (errs.length) { if (status) status.textContent = `Please fix: ${errs.join('; ')}`; return; }
+      try {
+        import('../modules/business-settings-api.js').then((mod) => {
+          const API = mod?.default || mod?.BusinessSettingsAPI;
+          if (!API || typeof API.upsert !== 'function') { if (status) status.textContent = 'Save failed: API unavailable'; return; }
+          API.upsert('business', payload).then(() => {
+            if (status) status.textContent = 'Saved.';
+            applyBusinessCssToRoot(payload);
+          }).catch((err) => {
+            if (status) status.textContent = err?.message || 'Save failed';
+          });
+        }).catch(() => { if (status) status.textContent = 'Save failed: module error'; });
+      } catch(_) { if (status) status.textContent = 'Save failed'; }
+    }
+
+    // ------------------------------
+    // Email History (dedicated UI)
+    // ------------------------------
+    const emailHistoryState = { page: 1, limit: 20, totalPages: 1, mode: 'list', query: '', from: '', to: '', status: '', type: '', sort: 'sent_at_desc', lastEntries: [], drawerOpen: false, drawerIndex: null, drawerRow: null, drawerJsonPretty: true };
+    let emailDrawerEscHandler = null;
+    const getEmailTestEndpoint = () => { try { return localStorage.getItem('wf_email_test_endpoint') || ''; } catch(_) { return ''; } };
+    const setEmailTestEndpoint = (url) => { try { localStorage.setItem('wf_email_test_endpoint', String(url||'')); } catch(_) {} };
+    function setEmailHistoryStatus(msg){ const el = document.getElementById('emailHistoryStatus'); if (el) el.textContent = msg || ''; }
+    function setEmailHistoryPageLabel(){ const p = document.getElementById('emailHistoryPage'); if (p) p.textContent = `Page ${emailHistoryState.page}`; }
+    function renderEmailHistoryRows(entries){
+      const list = document.getElementById('emailHistoryList'); if (!list) return;
+      list.innerHTML = '';
+      const fmt = (s) => { try { return new Date(s).toLocaleString(); } catch(_) { return s; } };
+      emailHistoryState.lastEntries = Array.isArray(entries) ? entries : [];
+      (entries || []).forEach((row, idx) => {
+        const container = document.createElement('div');
+        container.className = 'p-2 text-sm';
+        const to = row.to_email || row.to || '';
+        const sub = row.email_subject || row.subject || '';
+        const type = row.email_type || '';
+        const status = row.status || '';
+        const ts = row.sent_at || row.created_at || row.timestamp || '';
+        const err = row.error_message || '';
+        const from = row.from_email || '';
+        container.innerHTML = `<div class="flex items-start justify-between gap-2">
+          <div>
+            <div class="font-medium">${sub || '(no subject)'} <span class="text-xs text-gray-500">${type}</span></div>
+            <div class="text-xs text-gray-600">to: ${to}</div>
+          </div>
+          <div class="text-xs text-gray-500 whitespace-nowrap">${fmt(ts)} • ${status}</div>
+        </div>
+        <div class="mt-1 flex items-center gap-3">
+          <button type="button" data-action="email-history-toggle" data-index="${idx}" class="text-xs text-blue-600 hover:underline">View details</button>
+          <button type="button" data-action="email-history-toggle-raw" data-index="${idx}" class="text-xs text-blue-600 hover:underline">View raw JSON</button>
+          <button type="button" data-action="email-history-copy-raw" data-index="${idx}" class="text-xs text-blue-600 hover:underline">Copy JSON</button>
+          <button type="button" data-action="email-history-open-drawer" data-index="${idx}" class="text-xs text-blue-600 hover:underline">Open drawer</button>
+        </div>
+        <div class="email-history-details hidden mt-2 text-xs text-gray-700">
+          <div>From: <span class="font-mono">${from}</span></div>
+          <div>To: <span class="font-mono">${to}</span></div>
+          <div>Subject: <span class="font-mono">${sub}</span></div>
+          <div>Type: <span class="font-mono">${type}</span></div>
+          <div>Status: <span class="font-mono">${status}</span></div>
+          <div>Sent At: <span class="font-mono">${fmt(ts)}</span></div>
+          ${err ? `<div class="text-red-600">Error: <span class="font-mono">${err}</span></div>` : ''}
+        </div>`;
+        // Append raw JSON block safely
+        const pre = document.createElement('pre');
+        pre.className = 'email-history-raw hidden mt-2 text-xs bg-gray-50 p-2 rounded overflow-auto';
+        try { pre.textContent = JSON.stringify(row, null, 2); } catch(_) { pre.textContent = String(row); }
+        container.appendChild(pre);
+        list.appendChild(container);
+      });
+      // If a drawer is open, attempt to repopulate with the current row data
+      try { if (emailHistoryState.drawerOpen) { const idx = emailHistoryState.drawerIndex; let row = null; if (Array.isArray(emailHistoryState.lastEntries) && idx != null) { row = emailHistoryState.lastEntries[idx]; } row = row || emailHistoryState.drawerRow; if (row) openEmailDrawer(row, { animate: false, index: idx }); } } catch(_) {}
+    }
+    function openEmailDrawer(row, opts){
+      const drawer = document.getElementById('emailHistoryDrawer'); const content = document.getElementById('emailHistoryDrawerContent'); const overlay = document.getElementById('emailHistoryDrawerOverlay'); if (!drawer || !content) return;
+      const fmt = (s) => { try { return new Date(s).toLocaleString(); } catch(_) { return s; } };
+      const sub = row.email_subject || row.subject || '';
+      const to  = row.to_email || row.to || '';
+      const type= row.email_type || '';
+      const status = row.status || '';
+      const ts = row.sent_at || row.created_at || row.timestamp || '';
+      const err = row.error_message || '';
+      const from = row.from_email || '';
+      // Fill meta
+      const ms = document.getElementById('ehdSubject'); if (ms) ms.textContent = sub || '';
+      const mt = document.getElementById('ehdTo'); if (mt) mt.textContent = to || '';
+      const mty= document.getElementById('ehdType'); if (mty) mty.textContent = type || '';
+      // Build details + raw
+      const detailsHtml = `
+        <div class="email-history-details mt-1 text-xs text-gray-700">
+          <div>From: <span class="font-mono">${from}</span></div>
+          <div>To: <span class="font-mono">${to}</span></div>
+          <div>Subject: <span class="font-mono">${sub}</span></div>
+          <div>Type: <span class="font-mono">${type}</span></div>
+          <div>Status: <span class="font-mono">${status}</span></div>
+          <div>Sent At: <span class="font-mono">${fmt(ts)}</span></div>
+          ${err ? `<div class="text-red-600">Error: <span class="font-mono">${err}</span></div>` : ''}
+        </div>`;
+      emailHistoryState.drawerJsonPretty = true;
+      let rawText = ''; try { rawText = JSON.stringify(row, null, 2); } catch(_) { rawText = String(row); }
+      content.innerHTML = detailsHtml + `<pre id="ehdJson" class="mt-2 text-xs bg-gray-50 p-2 rounded overflow-auto">${rawText}</pre>`;
+      // Prefill endpoint
+      try { const ep = document.getElementById('ehdEndpoint'); if (ep) { const saved = getEmailTestEndpoint(); if (saved) ep.value = saved; } } catch(_) {}
+      // Open using CSS classes
+      drawer.classList.remove('hidden');
+      drawer.classList.add('is-open');
+      drawer.setAttribute('aria-hidden','false');
+      if (overlay) { overlay.classList.remove('hidden'); overlay.classList.add('is-open'); overlay.setAttribute('aria-hidden','false'); }
+      emailHistoryState.drawerOpen = true;
+      if (opts && typeof opts.index === 'number') emailHistoryState.drawerIndex = opts.index; else emailHistoryState.drawerIndex = null;
+      emailHistoryState.drawerRow = row;
+      // ESC to close
+      try {
+        if (!emailDrawerEscHandler) {
+          emailDrawerEscHandler = function(ev){ if ((ev && (ev.key === 'Escape' || ev.key === 'Esc'))) { try { ev.preventDefault(); } catch(_){} closeEmailDrawer(); } };
+          document.addEventListener('keydown', emailDrawerEscHandler, true);
+        }
+      } catch(_) {}
+    }
+    function closeEmailDrawer(){
+      const drawer = document.getElementById('emailHistoryDrawer'); const overlay = document.getElementById('emailHistoryDrawerOverlay'); if (!drawer) return;
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden','true');
+      setTimeout(() => { drawer.classList.add('hidden'); }, 160);
+      if (overlay) { overlay.classList.remove('is-open'); overlay.setAttribute('aria-hidden','true'); setTimeout(() => { overlay.classList.add('hidden'); }, 160); }
+      emailHistoryState.drawerOpen = false; emailHistoryState.drawerIndex = null; // keep drawerRow for potential reopen if needed
+      // remove ESC handler
+      try { if (emailDrawerEscHandler) { document.removeEventListener('keydown', emailDrawerEscHandler, true); emailDrawerEscHandler = null; } } catch(_) {}
+    }
+    function loadEmailHistory(page){
+      const p = Math.max(1, page || emailHistoryState.page);
+      emailHistoryState.page = p;
+      setEmailHistoryStatus('Loading…');
+      const qp = new URLSearchParams({ action: 'get_log', type: 'email_logs', page: String(p), limit: String(emailHistoryState.limit) });
+      if (emailHistoryState.from) qp.set('from', emailHistoryState.from);
+      if (emailHistoryState.to) qp.set('to', emailHistoryState.to);
+      if (emailHistoryState.status) qp.set('status', emailHistoryState.status);
+      if (emailHistoryState.type) qp.set('email_type', emailHistoryState.type);
+      if (emailHistoryState.sort) qp.set('sort', emailHistoryState.sort);
+      fetch(`/api/website_logs.php?${qp.toString()}`)
+        .then(r => r.json().catch(()=>({})))
+        .then(j => {
+          if (!j?.success) { setEmailHistoryStatus(j?.error || 'Failed to load'); return; }
+          renderEmailHistoryRows(j.entries || []);
+          emailHistoryState.totalPages = Math.max(1, j.total_pages || 1);
+          setEmailHistoryPageLabel();
+          setEmailHistoryStatus('');
+        })
+        .catch(err => { setEmailHistoryStatus(err?.message || 'Failed to load'); });
+    }
+    function searchEmailHistory(query){
+      emailHistoryState.mode = 'search';
+      emailHistoryState.query = query || '';
+      setEmailHistoryStatus('Searching…');
+      {
+        const qp = new URLSearchParams({ action: 'search_logs', type: 'email_logs', query: emailHistoryState.query });
+        if (emailHistoryState.from) qp.set('from', emailHistoryState.from);
+        if (emailHistoryState.to) qp.set('to', emailHistoryState.to);
+        if (emailHistoryState.status) qp.set('status', emailHistoryState.status);
+        if (emailHistoryState.type) qp.set('email_type', emailHistoryState.type);
+        if (emailHistoryState.sort) qp.set('sort', emailHistoryState.sort);
+        fetch(`/api/website_logs.php?${qp.toString()}`)
+        .then(r => r.json().catch(()=>({})))
+        .then(j => {
+          if (!j?.success) { setEmailHistoryStatus(j?.error || 'Search failed'); return; }
+          renderEmailHistoryRows(j.results || []);
+          document.getElementById('emailHistoryPage')?.classList.add('opacity-50');
+          setEmailHistoryStatus('');
+        })
+        .catch(err => { setEmailHistoryStatus(err?.message || 'Search failed'); });
+      }
+    }
+    function resetEmailHistory(){ emailHistoryState.mode = 'list'; emailHistoryState.page = 1; emailHistoryState.query = ''; document.getElementById('emailHistoryPage')?.classList.remove('opacity-50'); loadEmailHistory(1); }
 
     try {
       // Lazy-load API module to avoid blocking bridge if its transform fails in dev
@@ -657,6 +1270,12 @@ export function init(){
         'dashboardConfigModal',
         // File Explorer (new)
         'fileExplorerModal',
+        // New iframe-embedded tools
+        'roomSettingsModal',
+        'roomCategoryLinksModal',
+        'templateManagerModal',
+        'emailHistoryModal',
+        'accountSettingsModal',
       ];
       managed.forEach((id) => {
         const el = getModalEl(id);
@@ -698,12 +1317,72 @@ export function init(){
       }
       // Open Attributes (preload then show)
       if (closest('[data-action="open-attributes"]')) {
+        if (window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) return;
+        e.preventDefault(); if (typeof e.stopPropagation==='function') e.stopPropagation();
+        // Ensure modal exists; if not, create a minimal one
+        try {
+          if (!document.getElementById('attributesModal')) {
+            const overlay = document.createElement('div');
+            overlay.id = 'attributesModal';
+            overlay.className = 'admin-modal-overlay hidden';
+            overlay.setAttribute('role', 'dialog');
+            overlay.setAttribute('aria-modal', 'true');
+            overlay.setAttribute('aria-hidden', 'true');
+            const panel = document.createElement('div');
+            panel.className = 'admin-modal';
+            const header = document.createElement('div');
+            header.className = 'modal-header';
+            const h2 = document.createElement('h2');
+            h2.className = 'admin-card-title';
+            h2.textContent = 'Attributes';
+            const x = document.createElement('button');
+            x.type = 'button'; x.className = 'admin-modal-close'; x.setAttribute('aria-label','Close');
+            x.setAttribute('data-action', 'close-admin-modal');
+            x.textContent = '×';
+            header.appendChild(h2); header.appendChild(x);
+            const body = document.createElement('div');
+            body.className = 'modal-body';
+            body.textContent = 'Loading…';
+            panel.appendChild(header); panel.appendChild(body);
+            overlay.appendChild(panel);
+            document.body.appendChild(overlay);
+          }
+        } catch(_) {}
+        __wfShowModal('attributesModal');
+        // Populate attribute lists when opening
+        try { if (typeof populateAttributes === 'function') { populateAttributes(); } } catch(_) {}
+        // Lazy-load the iframe
+        try {
+          const frame = document.getElementById('attributesFrame');
+          if (frame && frame.getAttribute('src') === 'about:blank') {
+            const ds = frame.getAttribute('data-src');
+            if (ds) frame.setAttribute('src', ds);
+          }
+        } catch(_) {}
+        return;
+      }
+      // Open Room Settings (iframe)
+      if (closest('[data-action="open-room-settings"]')) {
         e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
-        lastTriggerById.set('attributesModal', (t.closest('button, a, [tabindex]')||t));
-        try { await populateAttributes(); } catch(err) { console.error('[AdminSettingsBridge] populateAttributes failed', err); }
-        showModal('attributesModal');
-        // Ensure polish styles are present
-        ensureModalStyles();
+        lastTriggerById.set('roomSettingsModal', (t.closest('button, a, [tabindex]')||t));
+        showModal('roomSettingsModal');
+        try { const f = document.getElementById('roomSettingsFrame'); if (f && f.getAttribute('src') === 'about:blank') { const ds = f.getAttribute('data-src'); if (ds) f.setAttribute('src', ds); } } catch(_) {}
+        return;
+      }
+      // Open Room-Category Links (iframe)
+      if (closest('[data-action="open-room-category-links"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        lastTriggerById.set('roomCategoryLinksModal', (t.closest('button, a, [tabindex]')||t));
+        showModal('roomCategoryLinksModal');
+        try { const f = document.getElementById('roomCategoryLinksFrame'); if (f && f.getAttribute('src') === 'about:blank') { const ds = f.getAttribute('data-src'); if (ds) f.setAttribute('src', ds); } } catch(_) {}
+        return;
+      }
+      // Open Template Manager (iframe)
+      if (closest('[data-action="open-template-manager"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        lastTriggerById.set('templateManagerModal', (t.closest('button, a, [tabindex]')||t));
+        showModal('templateManagerModal');
+        try { const f = document.getElementById('templateManagerFrame'); if (f && f.getAttribute('src') === 'about:blank') { const ds = f.getAttribute('data-src'); if (ds) f.setAttribute('src', ds); } } catch(_) {}
         return;
       }
       // Categories CRUD inside modal
@@ -1072,6 +1751,11 @@ async function ensureLegacyLoaded() {
         'dbMaintenanceModal',
         'dashboardConfigModal',
         'fileExplorerModal',
+        'roomSettingsModal',
+        'roomCategoryLinksModal',
+        'templateManagerModal',
+        'emailHistoryModal',
+        'accountSettingsModal',
       ]);
 
       // Overlay click closes only when the actual overlay backdrop is clicked (not inner content)
@@ -1112,30 +1796,142 @@ async function ensureLegacyLoaded() {
       }
 
       // Business Info
-      if (closest('[data-action="open-business-info"]')) { try { console.info('[AdminSettingsBridge] click open-business-info'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('businessInfoModal', (t.closest('button, a, [tabindex]')||t)); showModal('businessInfoModal'); return; }
+      if (closest('[data-action="open-business-info"]')) { try { console.info('[AdminSettingsBridge] click open-business-info'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('businessInfoModal', (t.closest('button, a, [tabindex]')||t)); loadBusinessInfo(); showModal('businessInfoModal'); setTimeout(()=>{ try { wireBrandingLivePreview(); } catch(_) {} }, 0); return; }
       if (closest('[data-action="close-business-info"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('businessInfoModal'); return; }
+      if (closest('#businessInfoModal [data-action="business-save"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); saveBusinessInfo(); return; }
+      // Brand Vars tooltip
+      if (closest('#businessInfoModal [data-action="open-brand-vars-help"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const el = document.getElementById('brandVarsHelp'); if (el) { el.classList.remove('hidden'); const btn = closest('[data-action="open-brand-vars-help"]'); if (btn) btn.setAttribute('aria-expanded','true'); } return; }
+      if (closest('#businessInfoModal [data-action="close-brand-vars-help"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const el = document.getElementById('brandVarsHelp'); if (el) { el.classList.add('hidden'); const btn = document.querySelector('#businessInfoModal [data-action="open-brand-vars-help"]'); if (btn) btn.setAttribute('aria-expanded','false'); } return; }
+      if (closest('#businessInfoModal [data-action="business-reset-branding"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        // Reset inputs to sensible defaults
+        try {
+          const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+          set('brandPrimary', '#0ea5e9');
+          set('brandSecondary', '#6366f1');
+          set('brandAccent', '#22c55e');
+          set('brandBackground', '#ffffff');
+          set('brandText', '#111827');
+          set('brandFontPrimary', '');
+          set('brandFontSecondary', '');
+          set('customCssVars', '');
+          // Apply immediately
+          applyBusinessCssToRoot({
+            business_brand_primary: '#0ea5e9',
+            business_brand_secondary: '#6366f1',
+            business_brand_accent: '#22c55e',
+            business_brand_background: '#ffffff',
+            business_brand_text: '#111827',
+            business_brand_font_primary: '',
+            business_brand_font_secondary: '',
+            business_css_vars: ''
+          });
+          const status = document.getElementById('businessInfoStatus'); if (status) { status.textContent = 'Branding reset (not yet saved)'; setTimeout(()=>{ if (status.textContent==='Branding reset (not yet saved)') status.textContent=''; }, 2000); }
+        } catch(_) {}
+        return;
+      }
 
       // Square Settings
       if (closest('[data-action="open-square-settings"]')) { try { console.info('[AdminSettingsBridge] click open-square-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('squareSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('squareSettingsModal'); return; }
       if (closest('[data-action="close-square-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('squareSettingsModal'); return; }
 
       // Email Settings
-      if (closest('[data-action="open-email-settings"]')) { try { console.info('[AdminSettingsBridge] click open-email-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('emailSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('emailSettingsModal'); return; }
+      if (closest('[data-action="open-email-settings"]')) { try { console.info('[AdminSettingsBridge] click open-email-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('emailSettingsModal', (t.closest('button, a, [tabindex]')||t)); try { initEmailSection().catch(()=>{}); } catch(_) {} showModal('emailSettingsModal'); return; }
       if (closest('[data-action="close-email-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('emailSettingsModal'); return; }
       // Open Email Test: open email modal and focus test input if present
-      if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('emailSettingsModal', (t.closest('button, a, [tabindex]')||t)); if (showModal('emailSettingsModal')) { const test = document.getElementById('testEmailAddress'); if (test) setTimeout(() => test.focus(), 50); } return; }
+      if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('emailSettingsModal', (t.closest('button, a, [tabindex]')||t)); try { initEmailSection().catch(()=>{}); } catch(_) {} if (showModal('emailSettingsModal')) { const test = document.getElementById('testEmailAddress') || document.getElementById('testRecipient'); if (test) setTimeout(() => test.focus(), 50); } return; }
+      // Secrets
+      if (closest('[data-action="open-secrets-modal"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('secretsModal', (t.closest('button, a, [tabindex]')||t)); showModal('secretsModal'); return; }
+      if (closest('#secretsModal [data-action="secrets-save"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const result = document.getElementById('secretsResult'); if (result) result.textContent = 'Saving…';
+        const csrfEl = document.getElementById('secretsCsrf'); const csrf = csrfEl ? csrfEl.value : '';
+        const payload = (document.getElementById('secretsPayload')?.value || '').trim();
+        const url = '/api/secrets.php?action=save_batch&csrf=' + encodeURIComponent(csrf);
+        fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload }) })
+          .then(r => r.json().catch(()=>({})))
+          .then(j => { if (result) result.textContent = j?.success ? (`Saved ${j.saved||0}, deleted ${j.deleted||0}`) : (j?.error || 'Save failed'); })
+          .catch(err => { if (result) result.textContent = err?.message || 'Save failed'; });
+        return;
+      }
+      if (closest('#secretsModal [data-action="secrets-rotate"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const result = document.getElementById('secretsResult'); if (result) result.textContent = 'Rotating keys…';
+        const csrfEl = document.getElementById('secretsCsrf'); const csrf = csrfEl ? csrfEl.value : '';
+        const url = '/api/secrets.php?action=rotate_keys&csrf=' + encodeURIComponent(csrf);
+        fetch(url, { method: 'POST' })
+          .then(r => r.json().catch(()=>({})))
+          .then(j => { if (result) result.textContent = j?.success ? (`Re-encrypted ${j.re_encrypted||0}, failed ${j.failed||0}`) : (j?.error || 'Rotate failed'); })
+          .catch(err => { if (result) result.textContent = err?.message || 'Rotate failed'; });
+        return;
+      }
+      if (closest('#secretsModal [data-action="secrets-export"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const result = document.getElementById('secretsResult'); if (result) result.textContent = 'Exporting…';
+        fetch('/api/secrets.php?action=export')
+          .then(r => r.json().catch(()=>({})))
+          .then(j => { if (result) result.textContent = j?.success ? (`Keys: ${Array.isArray(j.keys)? j.keys.join(', ') : ''}`) : (j?.error || 'Export failed'); })
+          .catch(err => { if (result) result.textContent = err?.message || 'Export failed'; });
+        return;
+      }
+      // Email History (dedicated UI)
+      if (closest('[data-action="open-email-history"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('emailHistoryModal', (t.closest('button, a, [tabindex]')||t)); showModal('emailHistoryModal'); resetEmailHistory(); loadEmailTypeOptions(); return; }
 
       // Logging Status
       if (closest('[data-action="open-logging-status"]')) { try { console.info('[AdminSettingsBridge] click open-logging-status'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('loggingStatusModal', (t.closest('button, a, [tabindex]')||t)); showModal('loggingStatusModal'); return; }
       if (closest('[data-action="close-logging-status"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('loggingStatusModal'); return; }
 
+      // Email History controls
+      if (closest('#emailHistoryModal [data-action="email-history-refresh"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); if (emailHistoryState.mode === 'search') { searchEmailHistory(emailHistoryState.query); } else { loadEmailHistory(emailHistoryState.page); } return; }
+      if (closest('#emailHistoryModal [data-action="email-history-search"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const q = (document.getElementById('emailHistorySearch')?.value || '').trim(); if (q) { searchEmailHistory(q); } else { resetEmailHistory(); } return; }
+      if (closest('#emailHistoryModal [data-action="email-history-prev"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); if (emailHistoryState.mode !== 'search') { if (emailHistoryState.page > 1) { loadEmailHistory(emailHistoryState.page - 1); } } return; }
+      if (closest('#emailHistoryModal [data-action="email-history-next"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); if (emailHistoryState.mode !== 'search') { loadEmailHistory(emailHistoryState.page + 1); } return; }
+      if (closest('#emailHistoryModal [data-action="email-history-download"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); try { const qp = new URLSearchParams({ action: 'download_log', type: 'email_logs' }); if (emailHistoryState.from) qp.set('from', emailHistoryState.from); if (emailHistoryState.to) qp.set('to', emailHistoryState.to); if (emailHistoryState.status) qp.set('status', emailHistoryState.status); if (emailHistoryState.type) qp.set('email_type', emailHistoryState.type); if (emailHistoryState.sort) qp.set('sort', emailHistoryState.sort); window.open(`/api/website_logs.php?${qp.toString()}`, '_blank'); } catch(_) {} return; }
+      if (closest('#emailHistoryModal [data-action="email-history-apply-filters"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); emailHistoryState.from = (document.getElementById('emailHistoryFrom')?.value || '').trim(); emailHistoryState.to = (document.getElementById('emailHistoryTo')?.value || '').trim(); emailHistoryState.status = (document.getElementById('emailHistoryStatusFilter')?.value || '').trim(); emailHistoryState.type = (document.getElementById('emailHistoryType')?.value || '').trim(); emailHistoryState.sort = (document.getElementById('emailHistorySort')?.value || 'sent_at_desc'); emailHistoryState.mode = 'list'; emailHistoryState.page = 1; loadEmailHistory(1); return; }
+      if (closest('#emailHistoryModal [data-action="email-history-clear-filters"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const f = document.getElementById('emailHistoryFrom'); if (f) f.value=''; const t2 = document.getElementById('emailHistoryTo'); if (t2) t2.value=''; const st = document.getElementById('emailHistoryStatusFilter'); if (st) st.value=''; const et = document.getElementById('emailHistoryType'); if (et) et.value=''; const so = document.getElementById('emailHistorySort'); if (so) so.value='sent_at_desc'; emailHistoryState.from = ''; emailHistoryState.to = ''; emailHistoryState.status = ''; emailHistoryState.type = ''; emailHistoryState.sort = 'sent_at_desc'; resetEmailHistory(); return; }
+      // (apply-filters handled above)
+      if (closest('#emailHistoryModal [data-action="email-history-toggle-raw"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const btn = closest('[data-action="email-history-toggle-raw"]'); const container = btn && btn.closest('div'); const root = btn && btn.closest('.p-2.text-sm') || btn && btn.closest('.p-2'); const raw = root && root.querySelector('.email-history-raw'); if (raw && raw.classList) { raw.classList.toggle('hidden'); btn.textContent = raw.classList.contains('hidden') ? 'View raw JSON' : 'Hide raw JSON'; } return; }
+      if (closest('#emailHistoryModal [data-action="email-history-open-drawer"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const btn = closest('[data-action="email-history-open-drawer"]'); const root = btn && (btn.closest('.p-2.text-sm') || btn.closest('.p-2')); if (root) { try { const idx = Number(btn.getAttribute('data-index')||''); const row = (Array.isArray(emailHistoryState.lastEntries) && !isNaN(idx)) ? emailHistoryState.lastEntries[idx] : null; if (row) openEmailDrawer(row, { index: idx, animate: true }); } catch(_) {} } return; }
+      if (closest('#emailHistoryModal [data-action="email-history-close-drawer"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); closeEmailDrawer(); return; }
+      // Overlay click to close
+      if (t && t.id === 'emailHistoryDrawerOverlay') { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); closeEmailDrawer(); return; }
+      // Copy cURL (POST) of selected row
+      if (closest('#emailHistoryModal [data-action="email-history-copy-curl"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); try { const row = emailHistoryState.drawerRow || null; if (!row) return; let jsonText = ''; try { jsonText = JSON.stringify(row, null, 2); } catch(_) { jsonText = String(row); } const endpoint = getEmailTestEndpoint() || 'https://your-endpoint.example/ingest'; const escaped = jsonText.replace(/'/g, "'\\''"); const cmd = "curl -sS -X POST '" + endpoint + "' -H 'Content-Type: application/json' --data '" + escaped + "'"; const status = document.getElementById('emailHistoryStatus'); if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(cmd).then(()=>{ if (status) status.textContent = 'Copied cURL'; setTimeout(()=>{ if (status && status.textContent==='Copied cURL') status.textContent=''; }, 1200); }); } else { const ta=document.createElement('textarea'); ta.value=cmd; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (status) status.textContent='Copied cURL'; setTimeout(()=>{ if (status && status.textContent==='Copied cURL') status.textContent=''; }, 1200); } } catch(_) {} return; }
+      // Save endpoint
+      if (closest('#emailHistoryModal [data-action="email-history-save-endpoint"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); const input = document.getElementById('ehdEndpoint'); const status = document.getElementById('emailHistoryStatus'); try { const v = (input && input.value ? input.value.trim() : ''); if (!/^https?:\/\//i.test(v)) { if (status) status.textContent = 'Enter a valid http(s) URL'; if (input) input.focus(); return; } setEmailTestEndpoint(v); if (status) status.textContent = 'Endpoint saved'; setTimeout(()=>{ if (status && status.textContent==='Endpoint saved') status.textContent=''; }, 1200); } catch(_) {} return; }
+      // Open endpoint in new tab
+      if (closest('#emailHistoryModal [data-action="email-history-open-test"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); const status = document.getElementById('emailHistoryStatus'); const input = document.getElementById('ehdEndpoint'); try { const url = getEmailTestEndpoint(); if (url) { window.open(url, '_blank'); if (status) status.textContent = 'Opened endpoint in new tab'; setTimeout(()=>{ if (status && status.textContent==='Opened endpoint in new tab') status.textContent=''; }, 1200); } else { if (status) status.textContent = 'Set the endpoint first'; if (input) input.focus(); setTimeout(()=>{ if (status && status.textContent==='Set the endpoint first') status.textContent=''; }, 1500); } } catch(_) {} return; }
+      // Toggle Pretty/Minify JSON
+      if (closest('#emailHistoryModal [data-action="email-history-toggle-json"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); try { const row = emailHistoryState.drawerRow || null; const pre = document.getElementById('ehdJson'); const btn = closest('[data-action="email-history-toggle-json"]'); if (!row || !pre || !btn) return; const pretty = !emailHistoryState.drawerJsonPretty; let txt = ''; try { txt = JSON.stringify(row, pretty ? null : undefined, pretty ? 2 : undefined); } catch(_) { txt = String(row); } pre.textContent = txt; emailHistoryState.drawerJsonPretty = pretty; btn.textContent = pretty ? 'Minify JSON' : 'Pretty JSON'; } catch(_) {} return; }
+      // Copy Headers (Subject, To, From, Type, Status, Sent)
+      if (closest('#emailHistoryModal [data-action="email-history-copy-headers"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation(); try { const row = emailHistoryState.drawerRow || null; if (!row) return; const fmt = (s) => { try { return new Date(s).toLocaleString(); } catch(_) { return s; } }; const lines = [];
+        const from = row.from_email || ''; const to = row.to_email || row.to || ''; const sub = row.email_subject || row.subject || ''; const type = row.email_type || ''; const status = row.status || ''; const ts = row.sent_at || row.created_at || row.timestamp || '';
+        if (from) lines.push('From: ' + from);
+        if (to) lines.push('To: ' + to);
+        if (sub) lines.push('Subject: ' + sub);
+        if (type) lines.push('Type: ' + type);
+        if (status) lines.push('Status: ' + status);
+        if (ts) lines.push('Sent-At: ' + fmt(ts));
+        const headers = lines.join('\n'); const statusEl = document.getElementById('emailHistoryStatus');
+        if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(headers).then(()=>{ if (statusEl) statusEl.textContent='Copied headers'; setTimeout(()=>{ if (statusEl && statusEl.textContent==='Copied headers') statusEl.textContent=''; }, 1200); }); }
+        else { const ta=document.createElement('textarea'); ta.value=headers; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (statusEl) statusEl.textContent='Copied headers'; setTimeout(()=>{ if (statusEl && statusEl.textContent==='Copied headers') statusEl.textContent=''; }, 1200); }
+      } catch(_) {} return; }
+      if (closest('#emailHistoryModal [data-action="email-history-copy-subject"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const v = document.getElementById('ehdSubject')?.textContent || ''; const status = document.getElementById('emailHistoryStatus'); try { if (v) { (navigator.clipboard?.writeText ? navigator.clipboard.writeText(v) : Promise.reject()).then(()=>{ if (status) status.textContent = 'Copied subject'; setTimeout(()=>{ if (status && status.textContent==='Copied subject') status.textContent=''; }, 1200); }).catch(()=>{ const ta=document.createElement('textarea'); ta.value=v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (status) status.textContent='Copied subject'; setTimeout(()=>{ if (status && status.textContent==='Copied subject') status.textContent=''; }, 1200); }); } } catch(_) {} return; }
+      if (closest('#emailHistoryModal [data-action="email-history-copy-to"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const v = document.getElementById('ehdTo')?.textContent || ''; const status = document.getElementById('emailHistoryStatus'); try { if (v) { (navigator.clipboard?.writeText ? navigator.clipboard.writeText(v) : Promise.reject()).then(()=>{ if (status) status.textContent = 'Copied to'; setTimeout(()=>{ if (status && status.textContent==='Copied to') status.textContent=''; }, 1200); }).catch(()=>{ const ta=document.createElement('textarea'); ta.value=v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (status) status.textContent='Copied to'; setTimeout(()=>{ if (status && status.textContent==='Copied to') status.textContent=''; }, 1200); }); } } catch(_) {} return; }
+      if (closest('#emailHistoryModal [data-action="email-history-copy-type"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const v = document.getElementById('ehdType')?.textContent || ''; const status = document.getElementById('emailHistoryStatus'); try { if (v) { (navigator.clipboard?.writeText ? navigator.clipboard.writeText(v) : Promise.reject()).then(()=>{ if (status) status.textContent = 'Copied type'; setTimeout(()=>{ if (status && status.textContent==='Copied type') status.textContent=''; }, 1200); }).catch(()=>{ const ta=document.createElement('textarea'); ta.value=v; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (status) status.textContent='Copied type'; setTimeout(()=>{ if (status && status.textContent==='Copied type') status.textContent=''; }, 1200); }); } } catch(_) {} return; }
+      if (closest('#emailHistoryModal [data-action="email-history-copy-raw"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const btn = closest('[data-action="email-history-copy-raw"]'); const root = btn && (btn.closest('.p-2.text-sm') || btn.closest('.p-2')); const raw = root && root.querySelector('.email-history-raw'); const status = document.getElementById('emailHistoryStatus'); try { const txt = raw ? raw.textContent : ''; if (txt) { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(()=>{ if (status) status.textContent = 'Copied JSON to clipboard'; setTimeout(()=>{ if (status && status.textContent==='Copied JSON to clipboard') status.textContent=''; }, 1500); }); } else { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); if (status) status.textContent = 'Copied JSON to clipboard'; setTimeout(()=>{ if (status && status.textContent==='Copied JSON to clipboard') status.textContent=''; }, 1500); } } } catch(_) {} return; }
+      if (closest('#emailHistoryModal [data-action="email-history-toggle"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); const btn = closest('[data-action="email-history-toggle"]'); const details = btn && btn.closest('div') && btn.closest('div').nextElementSibling; if (details && details.classList) { details.classList.toggle('hidden'); btn.textContent = details.classList.contains('hidden') ? 'View details' : 'Hide details'; } return; }
+
       // AI Settings
-      if (closest('[data-action="open-ai-settings"]')) { try { console.info('[AdminSettingsBridge] click open-ai-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('aiSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('aiSettingsModal'); return; }
+      if (closest('[data-action="open-ai-settings"]')) { try { console.info('[AdminSettingsBridge] click open-ai-settings'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('aiSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('aiSettingsModal'); try { const f = document.getElementById('aiSettingsFrame'); if (f && f.getAttribute('src') === 'about:blank') { const ds = f.getAttribute('data-src'); if (ds) f.setAttribute('src', ds); } } catch(_) {} return; }
       if (closest('[data-action="close-ai-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('aiSettingsModal'); return; }
 
       // AI Tools
-      if (closest('[data-action="open-ai-tools"]')) { try { console.info('[AdminSettingsBridge] click open-ai-tools'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('aiToolsModal', (t.closest('button, a, [tabindex]')||t)); showModal('aiToolsModal'); return; }
+      if (closest('[data-action="open-ai-tools"]')) { try { console.info('[AdminSettingsBridge] click open-ai-tools'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('aiToolsModal', (t.closest('button, a, [tabindex]')||t)); showModal('aiToolsModal'); try { const f = document.getElementById('aiToolsFrame'); if (f && f.getAttribute('src') === 'about:blank') { const ds = f.getAttribute('data-src'); if (ds) f.setAttribute('src', ds); } } catch(_) {} return; }
       if (closest('[data-action="close-ai-tools"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); hideModal('aiToolsModal'); return; }
+
+      // Account Settings (iframe)
+      if (closest('[data-action="open-account-settings"]')) { e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('accountSettingsModal', (t.closest('button, a, [tabindex]')||t)); showModal('accountSettingsModal'); try { const f = document.getElementById('accountSettingsFrame'); if (f && f.getAttribute('src') === 'about:blank') { const ds = f.getAttribute('data-src'); if (ds) f.setAttribute('src', ds); } } catch(_) {} return; }
 
       // CSS Rules
       if (closest('[data-action="open-css-rules"]')) { try { console.info('[AdminSettingsBridge] click open-css-rules'); } catch(_) {} e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation(); lastTriggerById.set('cssRulesModal', (t.closest('button, a, [tabindex]')||t)); if (showModal('cssRulesModal')) { loadCssRulesManager('cssRulesModal'); } return; }
@@ -1197,19 +1993,6 @@ async function ensureLegacyLoaded() {
       if (closest('[data-action="dashboard-remove-section"]')) {
         e.preventDefault(); if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
         const btn = closest('[data-action="dashboard-remove-section"]');
-        const li = btn && btn.closest('li');
-        const modal = document.getElementById('dashboardConfigModal');
-        const availUl = modal && modal.querySelector('#dashboardAvailableSections');
-        if (li && availUl) {
-          const key = li.dataset.key || '';
-          // If an item with this key already exists in Available, remove duplicate before appending
-          const existing = availUl.querySelector(`li[data-key="${CSS && CSS.escape ? CSS.escape(key) : key}"]`);
-          if (existing) existing.remove();
-          availUl.appendChild(li);
-          btn.textContent = 'Add';
-          btn.setAttribute('data-action', 'dashboard-add-section');
-        }
-        return;
       }
 
       // Database Maintenance

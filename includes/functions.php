@@ -60,7 +60,8 @@ try {
 function getImageTag($imagePath, $altText = '', $class = '', $style = '')
 {
     if (empty($imagePath)) {
-        $imagePath = 'images/items/placeholder.webp'; // Default placeholder if path is empty
+        // Strict: do not inject placeholders
+        return '';
     }
 
     $pathInfo = pathinfo($imagePath);
@@ -87,10 +88,8 @@ function getImageTag($imagePath, $altText = '', $class = '', $style = '')
               . '</picture>';
     }
 
-    // Fallback: try WebP first, then swap to original on error via data-fallback-src handled by JS
-    $webpPath = $pathInfo['dirname'] . '/' . $pathInfo['filename'] . '.webp';
-    return '<img src="' . htmlspecialchars($webpPath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr
-          . ' data-fallback-src="' . htmlspecialchars($imagePath) . '">';
+    // Strict: if no WebP available, return the original image only
+    return '<img src="' . htmlspecialchars($imagePath) . '" alt="' . htmlspecialchars($altText) . '"' . $classAttr . $styleAttr . '>';
 }
 // sanitizeInput function moved to security_validator.php for centralization
 
@@ -334,114 +333,33 @@ function get_active_background($roomType)
 {
     try {
         $pdo = Database::getInstance();
-        // Normalize and handle modern schema first
         $roomTypeStr = strtolower((string)$roomType);
-        $background = null;
-
-        // If request is for non-room pages (landing, room_main, shop, about, contact),
-        // do not guess from DB. Let caller fallback to helper/static assets.
-        $nonRoomPages = ['about','contact'];
-        if (in_array($roomTypeStr, $nonRoomPages, true)) {
-            $background = null; // cause caller fallback in header.php
+        // Strict: only support modern schema by room_number mapping; do not infer for non-room pages
+        $roomNumber = null;
+        if (preg_match('/^room(\d+)$/', $roomTypeStr, $m)) {
+            $roomNumber = (int)$m[1];
+        } elseif (ctype_digit($roomTypeStr)) {
+            $roomNumber = (int)$roomTypeStr;
+        } elseif ($roomTypeStr === 'landing' || $roomTypeStr === 'room_main' || $roomTypeStr === 'shop') {
+            $roomNumber = 0;
         } else {
-            // If matches roomN or numeric N, use room_number-based lookup
-            $roomNumber = null;
-            // Map symbolic contexts to canonical room numbers
-            if ($roomTypeStr === 'room_main' || $roomTypeStr === 'shop' || $roomTypeStr === 'landing') {
-                $roomNumber = 0; // main room stored as 0 in current schema
-            }
-            if (preg_match('/^room(\d+)$/', $roomTypeStr, $m)) {
-                $roomNumber = (int)$m[1];
-            } elseif (ctype_digit($roomTypeStr)) {
-                $roomNumber = (int)$roomTypeStr;
-            }
-
-            if (!is_null($roomNumber)) {
-                // Modern schema: backgrounds.room_number
-                try {
-                    if ($roomNumber === 0) {
-                        // Special handling: two logical contexts share room_number=0
-                        if ($roomTypeStr === 'landing') {
-                            // Prefer filenames indicating home
-                            $stmt = $pdo->prepare(
-                                "SELECT image_filename, webp_filename FROM backgrounds 
-                                 WHERE room_number = 0 AND is_active = 1 
-                                 ORDER BY (image_filename LIKE '%home%' OR webp_filename LIKE '%home%') DESC, id DESC LIMIT 1"
-                            );
-                            $stmt->execute();
-                            $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-                        } else {
-                            // room_main or shop: prefer room_main assets
-                            $stmt = $pdo->prepare(
-                                "SELECT image_filename, webp_filename FROM backgrounds 
-                                 WHERE room_number = 0 AND is_active = 1 
-                                 ORDER BY (image_filename LIKE '%room_main%' OR webp_filename LIKE '%room_main%') DESC, id DESC LIMIT 1"
-                            );
-                            $stmt->execute();
-                            $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-                        }
-                        // If still null, fallback to any active under room 0
-                        if ($background === null) {
-                            $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = 0 AND is_active = 1 ORDER BY id DESC LIMIT 1");
-                            $stmt->execute();
-                            $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-                        }
-                    } else if ($roomNumber > 0) {
-                        $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
-                        $stmt->execute([$roomNumber]);
-                        $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-                    }
-                } catch (Throwable $eModern) {
-                    // fall through to legacy attempt below
-                }
-            }
-
-            // Legacy compatibility: try room_type column if background is still null
-            if ($background === null) {
-                try {
-                    $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_type = ? AND is_active = 1 LIMIT 1");
-                    $stmt->execute([$roomType]);
-                    $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-                } catch (Throwable $eLegacy) {
-                    // If room_type no longer exists, do NOT select a generic background here for non-numeric contexts
-                    // to avoid wrong images on landing/room_main. Just leave $background as null.
-                    if (!((string)($eLegacy->getCode()) === '42S22' || str_contains(strtolower($eLegacy->getMessage() ?? ''), 'unknown column'))) {
-                        // Re-throw unexpected errors to be handled by outer catch
-                        throw $eLegacy;
-                    }
-                }
-            }
+            return '';
         }
 
+        $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
+        $stmt->execute([$roomNumber]);
+        $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         if ($background) {
-                        // Prefer WebP, otherwise fallback to original extension
             $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
-
-            // Build a list of candidate paths to try, keeping the original name first
-            $candidates = [];
-            $candidates[] = '/images/backgrounds/' . $imageFile;
-            $candidates[] = '/images/' . $imageFile;
-
-            // If not already prefixed, also try with the legacy "background_" prefix
-            if (strpos($imageFile, 'background_') !== 0) {
-                $prefixed = 'background_' . $imageFile;
-                $candidates[] = '/images/backgrounds/' . $prefixed;
-                $candidates[] = '/images/' . $prefixed;
+            $abs = __DIR__ . '/..' . '/images/backgrounds/' . ltrim($imageFile, '/');
+            if (is_file($abs)) {
+                return '/images/backgrounds/' . ltrim($imageFile, '/');
             }
-
-            // Return the first candidate that actually exists on disk
-            foreach ($candidates as $relPath) {
-                if (file_exists(__DIR__ . '/..' . $relPath)) {
-                    return $relPath;
-                }
-            }
-
-            // If nothing is found, fall back to first candidate (may 404 but avoids crash)
-            return $candidates[0];
+            // File missing on disk; surface by returning empty
+            return '';
         }
     } catch (Exception $e) {
         error_log('Error fetching active background: ' . $e->getMessage());
     }
-
-    return ''; // Return empty string on failure or if no background is set
+    return '';
 }

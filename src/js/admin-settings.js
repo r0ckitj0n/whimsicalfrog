@@ -1528,8 +1528,8 @@ function generateSystemConfigHTML(data) {
                             <p>• <code>/api/next_sku.php</code> - Generate new SKUs</p>
                             <p>• <code>/api/get_items.php</code> - Retrieve items by SKU</p>
                             <p>• <code>/api/get_item_images.php</code> - Item images</p>
-                            <p>• <code>/api/add-order.php</code> - Create orders (fixed)</p>
-                            <p>• <code>/api/update-inventory-field.php</code> - SKU updates</p>
+                            <p>• <code>/api/add_order.php</code> - Create orders (fixed)</p>
+                            <p>• <code>/api/update_inventory_field.php</code> - SKU updates</p>
                         </div>
                     </div>
                     

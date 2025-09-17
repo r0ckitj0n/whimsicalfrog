@@ -14,7 +14,12 @@
   align-items: center;
   justify-content: center;
   background: rgba(0,0,0,0.5);
-  z-index: 50; /* play nice with src/styles/z-index.css */
+  z-index: var(--wf-admin-overlay-z, 10050); /* above header & admin nav; consistent with global overlay offset */
+}
+
+/* When explicitly marked topmost by JS, guarantee a higher stacking context */
+.admin-modal-overlay.topmost {
+  z-index: 200000 !important;
 }
 
 /* Modal panel defaults. Utilities can augment on top. */
@@ -34,7 +39,7 @@
   display: block !important;
   background: #fff !important;
   position: relative !important;
-  z-index: 1 !important;
+  z-index: var(--z-index-base, 1) !important;
   pointer-events: auto !important;
   max-width: 960px;
   width: 96vw;
@@ -111,4 +116,11 @@ body.wf-no-scroll { overflow: hidden !important; }
 /* Tighter padding variant when used in dense headers */
 .admin-modal-close--tight {
   padding: 6px;
+}
+
+/* Admin help docs iframe (replaces inline width/height/border) */
+.admin-help-iframe {
+  width: 100%;
+  height: 70vh;
+  border: 0;
 }

@@ -24,7 +24,7 @@ $footerData = [
     'company' => [
         'name' => 'Whimsical Frog',
         'tagline' => 'Custom Crafts & Creative Designs',
-        'logo' => '/images/WhimsicalFrog_Logo.webp',
+        'logo' => '/images/logos/logo-whimsicalfrog.webp',
         'description' => 'Creating unique, personalized items that bring joy and whimsy to your world.'
     ],
     'contact' => [

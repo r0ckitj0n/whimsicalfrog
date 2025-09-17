@@ -107,7 +107,7 @@ if [ "$DO_PUSH" = true ]; then
     echo "No local changes to commit"
   fi
 
-  SYNC_CMD=("scripts/sync-to-github.sh")
+  SYNC_CMD=("scripts/sync_to_github.sh")
   if [ -n "$REPO" ]; then SYNC_CMD+=("--repo" "$REPO"); fi
   SYNC_CMD+=("--branch" "$BRANCH" "--remote" "$REMOTE")
 

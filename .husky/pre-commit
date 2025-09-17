@@ -21,4 +21,7 @@ printf "%s" "$STAGED" | tr '\0' '\n' | while IFS= read -r path; do
   fi
 done
 
+npm run guard:images || exit 1
+npm run audit:images:code || exit 1
+
 npx lint-staged --concurrent=true

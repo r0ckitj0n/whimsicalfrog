@@ -59,9 +59,9 @@ try {
 <section id="landingPage" class="relative" data-coords='<?php echo htmlspecialchars($landingCoordsJson, ENT_NOQUOTES, 'UTF-8'); ?>'>
     <a href="/room_main" class="clickable-area area-1" title="Enter the Main Room">
         <picture>
-            <source srcset="images/signs/sign_welcome.webp" type="image/webp">
-            <source srcset="images/signs/sign_welcome.png" type="image/png">
-            <img src="images/signs/sign_welcome.png" alt="Welcome - Click to Enter">
+            <source srcset="images/signs/sign-welcome.webp" type="image/webp">
+            <source srcset="images/signs/sign-welcome.png" type="image/png">
+            <img src="images/signs/sign-welcome.png" alt="Welcome - Click to Enter">
         </picture>
     </a>
 </section>

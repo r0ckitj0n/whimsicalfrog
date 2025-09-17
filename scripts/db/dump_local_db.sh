@@ -12,12 +12,17 @@ set -euo pipefail
 # Resolve repo root (two levels up from this script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+ENV_FILE_LOCAL="${ROOT_DIR}/.env.local"
 ENV_FILE="${ROOT_DIR}/.env"
 OUT_DIR="${ROOT_DIR}/backups/sql"
 
-# Load .env if present
-if [[ -f "${ENV_FILE}" ]]; then
-  # Export all variables defined in .env
+# Load .env.local if present, else .env
+if [[ -f "${ENV_FILE_LOCAL}" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "${ENV_FILE_LOCAL}"
+  set +a
+elif [[ -f "${ENV_FILE}" ]]; then
   set -a
   # shellcheck disable=SC1090
   . "${ENV_FILE}"
@@ -44,8 +49,18 @@ for arg in "$@"; do
   esac
 done
 
-# Check prerequisites
-if ! command -v mysqldump >/dev/null 2>&1; then
+# Check prerequisites: find mysqldump in PATH or common Homebrew locations
+MYSQLDUMP_BIN="$(command -v mysqldump || true)"
+if [[ -z "${MYSQLDUMP_BIN}" ]]; then
+  for CAND in \
+    /opt/homebrew/opt/mysql-client/bin/mysqldump \
+    /usr/local/opt/mysql-client/bin/mysqldump \
+    /opt/homebrew/bin/mysqldump \
+    /usr/local/bin/mysqldump; do
+    if [[ -x "${CAND}" ]]; then MYSQLDUMP_BIN="${CAND}"; break; fi
+  done
+fi
+if [[ -z "${MYSQLDUMP_BIN}" ]]; then
   echo "Error: mysqldump is not installed or not in PATH" >&2
   exit 1
 fi
@@ -87,7 +102,7 @@ else
 fi
 
 echo "Creating database dump for '${DB}' -> ${OUT_PATH}"
-mysqldump "${MYSQLDUMP_ARGS[@]}" > "${OUT_PATH}"
+"${MYSQLDUMP_BIN}" "${MYSQLDUMP_ARGS[@]}" > "${OUT_PATH}"
 
 if [[ ${GZIP_OUTPUT} -eq 1 ]]; then
   echo "Compressing dump (gzip)"

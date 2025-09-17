@@ -5,7 +5,7 @@
  */
 
 import '../styles/sales-system.css';
-import { apiGet } from '../core/apiClient.js';
+import { apiGet } from '../core/api-client.js';
 
 // Runtime-injected classes for popup positioning (no inline styles)
 const SALES_PP_STYLE_ID = 'sales-popup-position-classes';

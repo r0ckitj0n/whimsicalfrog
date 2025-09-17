@@ -1,7 +1,7 @@
 // Business Settings API helpers
 // Uses ApiClient to interact with /api/business_settings.php
 
-import { ApiClient } from '../core/apiClient.js';
+import { ApiClient } from '../core/api-client.js';
 
 function toQuery(params) {
   const usp = new URLSearchParams();

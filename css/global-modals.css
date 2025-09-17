@@ -18,6 +18,7 @@
     transition: all 0.3s ease;
     padding: 20px;
     box-sizing: border-box;
+    z-index: var(--wf-overlay-z, 10050);
 }
 
 .modal-overlay.hidden {
@@ -45,6 +46,7 @@
     opacity: 1;
     visibility: visible;
     transition: all 0.3s ease;
+    z-index: var(--wf-admin-overlay-z, var(--wf-overlay-z, 10050));
 }
 
 .admin-modal-overlay.hidden {
@@ -71,6 +73,7 @@
     opacity: 1;
     visibility: visible;
     transition: all 0.3s ease;
+    z-index: var(--wf-overlay-z, 10050);
 }
 
 .fullscreen-modal-overlay.hidden {
@@ -95,6 +98,8 @@
     padding: 24px;
     transform: scale(1);
     transition: transform 0.3s ease;
+    position: relative;
+    z-index: var(--wf-overlay-content-z, 10051);
 }
 
 /* Cart page specific override - remove modal scrolling behavior */
@@ -427,6 +432,7 @@ body:has(#cartPage) {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
+    z-index: var(--wf-overlay-z, 10050);
 }
 
 .confirmation-modal-overlay.show {
@@ -2893,7 +2899,7 @@ input[type="checkbox"].color-checkbox:checked {
     font-size: var(--table-header-font-size, 0.875rem);
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: var(--z-index-base, 1);
     border-bottom: 2px solid var(--table-header-border, #6b8e23);
 }
 
@@ -3030,13 +3036,13 @@ input[type="checkbox"].color-checkbox:checked {
 
 /* Order Modal System - Sunday Layout Restored */
 .order-modal {
+    z-index: var(--wf-overlay-z, 10050);
     position: fixed;
     inset: 0;
     background-color: rgb(0 0 0 / 60%);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    z-index: 50;
     padding: 1rem;
     overflow-y: auto;
 }
@@ -3045,11 +3051,12 @@ input[type="checkbox"].color-checkbox:checked {
     background-color: white;
     border-radius: var(--modal-border-radius, 0.75rem);
     box-shadow: var(--modal-shadow, 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%));
-    width: 95%;
-    max-width: 80rem;
-    margin: 2rem auto;
-    max-height: calc(100vh - 4rem);
+    width: 100%;
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    position: relative;
+    z-index: var(--wf-overlay-content-z, 10051);
     display: flex;
     flex-direction: column;
 }
-
+ 

@@ -279,8 +279,8 @@
     margin: 0 !important;
     /* Provide a subtle backdrop so users can see the clickable overlay */
     background: rgba(0, 0, 0, 0.35);
-    /* Must be above hover popup (100200) */
-    z-index: 100300 !important;
+    /* Must be above hover popup and room overlay */
+    z-index: var(--z-detailed-item-modal, 100300) !important;
 }
 
 /* Constrain only the inner modal container, not the overlay */

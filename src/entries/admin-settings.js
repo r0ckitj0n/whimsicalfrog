@@ -8,6 +8,7 @@ import '../styles/components/admin-nav.css';
 import '../styles/admin-modals.css';
 import '../styles/components/modal.css';
 import '../styles/admin-settings.css';
+import '../styles/admin-settings-extras.css';
 
 // Lightweight, always-on modal helpers for Settings page
 const __wfShowModal = (id) => {

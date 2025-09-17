@@ -1,0 +1,44 @@
+/* Admin navigation row layout: center tabs, help bubble at far right */
+.admin-tab-navigation { width: 100%; position: relative !important; }
+
+/* Override legacy fallback that forces flex & max-width on direct children */
+.admin-tab-navigation > .wf-admin-nav-row {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr; /* left spacer, centered tabs, right spacer */
+  grid-template-areas: 'left center right';
+  align-items: center !important;
+  gap: 8px;
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  justify-content: stretch !important;
+  position: relative !important; /* anchor for absolute right cell */
+}
+.admin-tab-navigation .wf-nav-left {
+  grid-area: left;
+  min-width: 1px; /* keep column present */
+}
+.admin-tab-navigation .wf-nav-center {
+  grid-area: center;
+  display: flex;
+  flex-wrap: nowrap; /* keep in a single row when possible */
+  gap: 8px;
+  justify-content: center; /* center on page */
+  padding-right: 60px; /* reserve space for right help bubble */
+}
+/* Allow wrapping on very narrow screens while maintaining centering */
+@media (max-width: 640px) {
+  .admin-tab-navigation .wf-nav-center { flex-wrap: wrap; }
+}
+.admin-tab-navigation .wf-nav-right {
+  grid-area: right;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  justify-self: end; /* grid cell aligns to far right */
+  position: absolute !important; /* pin to nav's right edge */
+  right: 16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}

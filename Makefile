@@ -2,4 +2,4 @@
 
 .PHONY: smoke-apis
 smoke-apis:
-	bash scripts/dev/smoke-all-apis.sh
+	bash scripts/dev/smoke_all_apis.sh

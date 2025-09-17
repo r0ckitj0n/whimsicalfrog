@@ -1,5 +1,5 @@
 // Dynamic Background Loading for Room Pages
-import { apiGet } from '../core/apiClient.js';
+import { apiGet } from '../core/api-client.js';
 console.log('🚪 [DBG] dynamic-background-loader.js loaded');
 
 // Runtime-injected background classes
@@ -86,9 +86,9 @@ export async function loadRoomBackground(roomNumberStr) {
         if (data.success && data.background) {
             const background = data.background;
             // Select the appropriate wrapper for modal or main page
-                const filename = (background.webp_filename || background.image_filename);
-                const prefixedFilename = filename.startsWith('background_') ? filename : `background_${filename}`;
-                const imageUrl = window.location.origin + `/images/backgrounds/${prefixedFilename}?v=${Date.now()}`;
+                const raw = (background.webp_filename || background.image_filename) || '';
+                const fname = raw;
+                const imageUrl = window.location.origin + `/images/backgrounds/${fname}?v=${Date.now()}`;
                 const roomWrapper = document.getElementById('modalRoomPage')
     ? (document.querySelector('.room-overlay-wrapper') || document.querySelector('.room-modal-body') || document.querySelector('.room-modal-iframe-container'))
     : document.getElementById('mainRoomPage') || document.getElementById('landingPage') || document.getElementById('shopPage');
@@ -106,27 +106,13 @@ export async function loadRoomBackground(roomNumberStr) {
                 roomWrapper.classList.add('dynamic-room-bg-loaded');
                 console.log(`Dynamic room background loaded: ${background.background_name} (${imageUrl})`);
             } else {
-                // Fallback: apply to body
-                const bgCls = ensureBgClass(imageUrl);
-                if (bgCls){
-                    document.body.classList.add(bgCls);
-                    document.body.dataset.bgClass = bgCls;
-                    document.body.classList.add('dynamic-room-bg-loaded');
-                    console.log(`Dynamic room background applied to body (${imageUrl})`);
-                } else {
-                    console.log('Room wrapper not found, and failed to generate bg class');
-                }
+                console.error('[DynamicBG] Room wrapper not found; background will not be applied', { imageUrl });
             }
         } else {
-            if (roomNumberStr === 'shop') {
-                console.log('[DBG] No active shop background found; falling back to room_main');
-                return loadRoomBackground('room_main');
-            }
-            console.log('Using fallback room background - no dynamic background found');
+            console.error('[DynamicBG] No active background returned for room', { room: roomNumberStr, response: data });
         }
     } catch (error) {
-        console.error('Error loading dynamic room background:', error);
-        console.log('Using fallback room background due to error');
+        console.error('Error loading dynamic room background (strict, no fallback):', error);
     }
 }
 

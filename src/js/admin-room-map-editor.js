@@ -56,7 +56,7 @@ import '../styles/admin-room-map-editor.css';
 
   async function setBgForRoom(room){
     if(!room) return;
-    const base = `/images/backgrounds/background_room${room}`;
+    const base = `/images/backgrounds/background-room${room}`;
     const webp = `${base}.webp`;
     const png = `${base}.png`;
     try {
@@ -246,7 +246,7 @@ import '../styles/admin-room-map-editor.css';
       state.room = evt.target.value;
       // If user hasn't entered a custom background, auto-select standard naming
       const current = (byId('rmeBgUrl').value||'').trim();
-      const expectedPrefix = `/images/backgrounds/background_room${state.room}`;
+      const expectedPrefix = `/images/backgrounds/background-room${state.room}`;
       if (!current || !current.startsWith(expectedPrefix)) {
         setBgForRoom(state.room);
       }

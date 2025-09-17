@@ -114,6 +114,12 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
     echo vite('js/app.js');
     // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
     echo vite('js/header-bootstrap.js');
+    // Expose strict fail-fast flag to client (default true unless explicitly disabled)
+    try {
+        $strictRaw = getenv('WF_STRICT_FAILFAST');
+        $strictOn = !($strictRaw === '0' || strtolower((string)$strictRaw) === 'false');
+        echo '<script>window.WF_STRICT_FAILFAST=' . ($strictOn ? 'true' : 'false') . ';try{document.documentElement.setAttribute("data-strict",' . ($strictOn ? "'1'" : "'0'") . ');}catch(_){}</script>' . "\n";
+    } catch (\Throwable $e) { /* noop */ }
     // Client bootstrap: sync header auth via whoami on every page load as a safety net
     echo <<<'SCRIPT'
 <script>
@@ -202,6 +208,36 @@ SCRIPT;
   }
 </style>
 STYLE;
+    // Server-side branding CSS variables from Business Settings (applies without JS)
+    try {
+        require_once dirname(__DIR__) . '/api/business_settings_helper.php';
+        $biz = BusinessSettings::getByCategory('business');
+        $vars = [];
+        $sanitize = function($v){ return trim((string)$v); };
+        if (!empty($biz['business_brand_primary']))   $vars[] = "--brand-primary: "   . $sanitize($biz['business_brand_primary'])   . ';';
+        if (!empty($biz['business_brand_secondary'])) $vars[] = "--brand-secondary: " . $sanitize($biz['business_brand_secondary']) . ';';
+        if (!empty($biz['business_brand_accent']))    $vars[] = "--brand-accent: "    . $sanitize($biz['business_brand_accent'])    . ';';
+        if (!empty($biz['business_brand_background']))$vars[] = "--brand-bg: "        . $sanitize($biz['business_brand_background']). ';';
+        if (!empty($biz['business_brand_text']))      $vars[] = "--brand-text: "      . $sanitize($biz['business_brand_text'])      . ';';
+        if (!empty($biz['business_brand_font_primary']))   $vars[] = "--brand-font-primary: "   . $sanitize($biz['business_brand_font_primary'])   . ';';
+        if (!empty($biz['business_brand_font_secondary'])) $vars[] = "--brand-font-secondary: " . $sanitize($biz['business_brand_font_secondary']) . ';';
+        $custom = isset($biz['business_css_vars']) ? (string)$biz['business_css_vars'] : '';
+        $customLines = [];
+        if ($custom !== '') {
+            foreach (preg_split('/\r?\n/', $custom) as $line) {
+                $t = trim($line);
+                if ($t === '' || strpos($t, '#') === 0 || strpos($t, '//') === 0) continue;
+                if (preg_match('/^--[A-Za-z0-9_-]+\s*:\s*[^;]+;?$/', $t)) {
+                    // Ensure it ends with semicolon
+                    if (substr($t, -1) !== ';') $t .= ';';
+                    $customLines[] = $t;
+                }
+            }
+        }
+        if (!empty($vars) || !empty($customLines)) {
+            echo "<style id=\"wf-branding-vars\">:root{\n" . implode("\n", $vars) . (empty($customLines) ? '' : ("\n" . implode("\n", $customLines))) . "\n}</style>\n";
+        }
+    } catch (\Throwable $___e) { /* noop */ }
     // Compute header height on all routes and update CSS variable live
     echo <<<'SCRIPT'
 <script>(function(){
@@ -622,32 +658,25 @@ if ($pageSlug === 'landing') {
     if (function_exists('get_active_background')) {
         $landingBg = get_active_background('landing');
     }
-    // Fallback to helper default if DB has no active landing background
-    if (!$landingBg && function_exists('get_landing_background_path')) {
-        $landingBg = get_landing_background_path();
-    }
-    // Final hard fallback to known asset
-    if (!$landingBg) {
-        $landingBg = '/images/backgrounds/background_home.webp';
-    }
-    // Normalize to absolute path for consistent loading on any route
-    if ($landingBg && $landingBg[0] !== '/') {
-        $landingBg = '/' . ltrim($landingBg, '/');
-    }
+    // Strict: no fallbacks; if not configured, log and do not set a background
     if ($landingBg) {
+        if ($landingBg[0] !== '/') { $landingBg = '/' . ltrim($landingBg, '/'); }
         $bodyBgUrl = $landingBg;
         $bodyClasses[] = 'room-bg-landing';
+    } else {
+        echo "<script>console.error('[Header] No active landing background configured; none will be applied');</script>\n";
     }
 }
 // Attach background for Main Room page (prefer DB-configured room 0 "room_main" asset)
 if ($pageSlug === 'room_main') {
     if (function_exists('get_active_background')) {
         $mainBg = get_active_background('room_main');
-        if (!$mainBg) { $mainBg = '/images/backgrounds/background_room_main.webp'; }
-        if ($mainBg && $mainBg[0] !== '/') { $mainBg = '/' . ltrim($mainBg, '/'); }
         if ($mainBg) {
+            if ($mainBg[0] !== '/') { $mainBg = '/' . ltrim($mainBg, '/'); }
             $bodyBgUrl = $mainBg;
             $bodyClasses[] = 'room-bg-main';
+        } else {
+            echo "<script>console.error('[Header] No active main room background configured; none will be applied');</script>\n";
         }
     }
 }
@@ -655,42 +684,37 @@ if ($pageSlug === 'room_main') {
 if ($pageSlug === 'about' || $pageSlug === 'contact') {
     if (function_exists('get_active_background')) {
         $roomBg = get_active_background('room_main');
-        if (!$roomBg) {
-            $roomBg = '/images/backgrounds/background_room_main.webp';
-        }
         if ($roomBg) {
             $bodyBgUrl = $roomBg;
             $bodyClasses[] = 'room-bg-main';
+        } else {
+            echo "<script>console.error('[Header] No active background configured for about/contact pages (expects room_main)');</script>\n";
         }
     }
 }
 
-// Attach database-configurable background for Shop page (fallback to room_main)
+// Attach database-configurable background for Shop page (strict: no fallback)
 if ($pageSlug === 'shop') {
     if (function_exists('get_active_background')) {
         $shopBg = get_active_background('shop');
-        if (!$shopBg) {
-            $shopBg = get_active_background('room_main');
-        }
-        if (!$shopBg) {
-            $shopBg = '/images/backgrounds/background_room_main.webp';
-        }
         if ($shopBg) {
             $bodyBgUrl = $shopBg;
             $bodyClasses[] = 'room-bg-main';
+        } else {
+            echo "<script>console.error('[Header] No active background configured for shop page');</script>\n";
         }
     }
 }
 // Attach STATIC background for ALL Admin pages (avoid DB on admin routes)
 if ($pageSlug === 'admin' || strpos($pageSlug, 'admin/') === 0) {
     $adminBg = '';
-    $defaultPngAbs = dirname(__DIR__) . '/images/backgrounds/background_settings.png';
-    $defaultWebpRel = '/images/backgrounds/background_settings.webp';
+    $defaultPngAbs = dirname(__DIR__) . '/images/backgrounds/background-settings.png';
+    $defaultWebpRel = '/images/backgrounds/background-settings.webp';
     $defaultWebpAbs = dirname(__DIR__) . $defaultWebpRel;
     if (file_exists($defaultWebpAbs)) {
         $adminBg = $defaultWebpRel;
     } elseif (file_exists($defaultPngAbs)) {
-        $adminBg = '/images/backgrounds/background_settings.png';
+        $adminBg = '/images/backgrounds/background-settings.png';
     }
     if ($adminBg) {
         $bodyBgUrl = $adminBg;

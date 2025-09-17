@@ -9,10 +9,15 @@
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    z-index: 2147483600 !important;
+    z-index: var(--z-global-popup, 2147483600) !important;
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;
+}
+
+/* Ensure standard overlays sit above header/admin nav */
+.modal-overlay {
+    z-index: var(--wf-overlay-z, 10050);
 }
 
 /* Fix for Why You'll Love This section */

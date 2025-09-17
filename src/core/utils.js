@@ -1,7 +1,7 @@
 // src/core/utils.js - ES module replacement for legacy js/utils.js
 // Provides DOM helper utilities and re-exports ApiClient so legacy code can reference window.Utils.ApiClient.
 
-import { apiGet, apiPost, apiPut, apiDelete, uploadFile } from './apiClient.js';
+import { apiGet, apiPost, apiPut, apiDelete, uploadFile } from './api-client.js';
 
 /**
  * DOM utility helpers used across the frontend.

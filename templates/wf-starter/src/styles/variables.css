@@ -1,0 +1,7 @@
+:root {
+  --font-primary: 'Merienda', cursive;
+  --font-secondary: 'Nunito', sans-serif;
+  --button-bg-primary: #0e7a57;
+  --button-bg-primary-hover: #0a5b40;
+  --button-text-primary: #ffffff;
+}

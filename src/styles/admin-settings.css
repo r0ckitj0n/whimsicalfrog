@@ -2,6 +2,65 @@
 body[data-page^='admin'] #attributesModal .admin-modal {
   width: min(1200px, 98vw) !important;
 }
+
+/* Email History Drawer (CSS-managed animation + overlay) */
+body[data-page='admin/settings'] .email-drawer {
+  position: absolute;
+  top: 72px;
+  right: 16px;
+  width: 420px;
+  max-width: calc(100% - 32px);
+  height: 60vh;
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  z-index: 2; /* above overlay */
+  transition: opacity .15s ease, transform .15s ease;
+  opacity: 0;
+  transform: translateY(6px);
+}
+body[data-page='admin/settings'] .email-drawer.is-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+body[data-page='admin/settings'] .email-drawer .drawer-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 5;
+}
+body[data-page='admin/settings'] .email-drawer .drawer-meta {
+  position: sticky;
+  top: 40px; /* approximate header height */
+  background: #fff;
+  z-index: 4;
+}
+body[data-page='admin/settings'] .email-drawer-overlay {
+  z-index: 1;
+  position: absolute;
+  inset: 0 0 auto 0; /* cover list area by default; will be placed before drawer */
+  top: 72px; /* match drawer top */
+  right: 16px; /* align with drawer right */
+  bottom: auto;
+  left: 0;
+  height: 60vh; /* match drawer height */
+  background: rgba(0,0,0,.08);
+  transition: opacity .15s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+body[data-page='admin/settings'] .email-drawer-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Ensure the Email History modal body is the positioning context */
+body[data-page='admin/settings'] #emailHistoryModal .modal-body {
+  position: relative;
+}
 /* Admin settings: provide a safe default header height variable */
 body[data-page='admin/settings'] {
   --header-height: 80px;
@@ -64,7 +123,7 @@ html:has(body[data-page='admin/settings']) { overflow-x: clip !important; }
 body[data-page^='admin'] .admin-modal-overlay {
   align-items: flex-start !important;
   padding-top: var(--wf-overlay-offset, calc(var(--wf-header-height, 64px) + 12px)) !important;
-  z-index: 10050 !important;
+  z-index: var(--wf-admin-overlay-z, 10050) !important;
 }
 body[data-page^='admin'] .admin-modal-overlay .admin-modal {
   margin-top: 0 !important;
@@ -76,7 +135,7 @@ body[data-page='admin/settings'] #adminSettingsRoot,
 body[data-page='admin/settings'] .settings-grid,
 body[data-page='admin/settings'] .settings-section {
   position: relative;
-  z-index: 2;
+  z-index: var(--z-content-2, 2);
   overflow: visible !important;
 }
 
@@ -97,12 +156,12 @@ body[data-page='admin/settings'] .footer-container {
 /* Elevate settings cards above footer just in case */
 body[data-page='admin/settings'] .settings-section {
   position: relative;
-  z-index: 3;
+  z-index: var(--z-content-3, 3);
 }
 
 /* Suppress bottom gradient overlay on admin routes (causes a 50-60px band) */
 body[data-page^='admin'] .overlay-gradient-bottom { display: none !important; }
-body[data-page^='admin'] .bg-container.mode-fullscreen { z-index: 0 !important; }
+body[data-page^='admin'] .bg-container.mode-fullscreen { z-index: var(--z-index-flat, 0) !important; }
 
 /* Ensure admin navbar (tabs) starts below the fixed page header */
 body[data-page^='admin'] .admin-tab-navigation {
@@ -153,6 +212,28 @@ body[data-page^='admin'] .room-modal-overlay.show {
   visibility: visible !important;
   pointer-events: auto !important;
 }
+/* Explicit helpers for inventory detailed modal and orders modal on admin routes */
+body[data-page^='admin'] #detailedItemModal:not(.hidden),
+body[data-page^='admin'] .detailed-item-modal.show {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: var(--z-detailed-item-modal, 100300) !important;
+}
+
+body[data-page^='admin'] #orderModal:not(.hidden),
+body[data-page^='admin'] #orderModal.show {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: var(--wf-admin-overlay-z, 10100) !important;
+}
 /* Ensure Square modal keeps flex centering when shown */
 body[data-page^='admin'] #squareSettingsModal.show { display: flex !important; }
 
@@ -166,7 +247,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   padding: 0 !important;
   position: fixed !important;
   inset: 0 !important;
-  z-index: 10050 !important; /* ensure above header/nav (match legacy) */
+  z-index: var(--wf-admin-overlay-z, 10050) !important; /* ensure above header/nav (match legacy) */
   pointer-events: auto !important;
 }
 
@@ -211,7 +292,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   height: 100vh !important;
   overflow: auto !important;
   box-sizing: border-box !important;
-  z-index: 10050 !important; /* above admin content/header stacks; align with legacy overlays */
+  z-index: var(--wf-admin-overlay-z, 10050) !important; /* above admin content/header stacks; align with legacy overlays */
   display: flex !important; /* ensure centering */
   align-items: center !important;
   justify-content: center !important;
@@ -255,7 +336,7 @@ body[data-page^='admin'] :is(.admin-modal-overlay, .modal-overlay, .room-modal-o
   opacity: 1 !important; /* ensure panel is fully visible */
   background: #fff !important; /* enforce solid panel background */
   position: relative !important;
-  z-index: 1 !important; /* ensure panel content sits above overlay tint */
+  z-index: var(--z-index-base, 1) !important; /* ensure panel content sits above overlay tint */
   transform: none !important; /* neutralize legacy scale/translate animations */
 }
 

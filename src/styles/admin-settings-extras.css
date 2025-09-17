@@ -1,0 +1,32 @@
+/* Admin Settings extras: move inline styles into Vite-managed CSS */
+
+/* Shared embed frame styling */
+.wf-admin-embed-frame {
+  width: 100%;
+  height: 70vh;
+  border: 0;
+}
+
+/* Brand preview card uses CSS variables for live preview */
+#brandPreviewCard {
+  background: var(--brand-bg, #ffffff);
+  color: var(--brand-text, #111827);
+}
+#brandPreviewTitle {
+  font-family: var(--brand-font-primary, inherit);
+  color: var(--brand-primary, #0ea5e9);
+}
+#brandPreviewText {
+  font-family: var(--brand-font-secondary, inherit);
+}
+#brandPreviewSwatches > div {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+#brandPreviewSwatches > div:nth-child(1) { background: var(--brand-primary, #0ea5e9); }
+#brandPreviewSwatches > div:nth-child(2) { background: var(--brand-secondary, #6366f1); }
+#brandPreviewSwatches > div:nth-child(3) { background: var(--brand-accent, #22c55e); }
+
+/* Email history test endpoint input size */
+#ehdEndpoint { min-width: 260px; }

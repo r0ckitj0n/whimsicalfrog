@@ -11,7 +11,7 @@ if (!function_exists('get_landing_background_path')) {
      */
     function get_landing_background_path(): string
     {
-        $default = 'images/backgrounds/background_home.webp';
+        $default = 'images/backgrounds/background-home.webp';
 
         // If the core helper is not available, just return default.
         if (!function_exists('get_active_background')) {

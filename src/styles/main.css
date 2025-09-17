@@ -43,7 +43,7 @@
 body[data-page='payment'] #paymentPage,
 body[data-page='payment'] #checkoutRoot {
   position: relative; /* establish stacking context */
-  z-index: 2600; /* above room modal overlay (~2400), below topmost UI */
+  z-index: var(--z-index-checkout-overlay, 2600); /* above room modal overlay (~2400), below topmost UI */
 }
 
 /* Center title and intro text inside the green contact card */
@@ -264,7 +264,7 @@ body[data-page='about'] .page-content .prose {
 body[data-page='about'] .page-content { max-width: none !important; padding-left: 0; padding-right: 0; display: flex; justify-content: center; overflow: visible; }
 body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: auto !important; margin-right: auto !important; }
 .wf-cloud-card { position: relative; display: block; width: auto; max-width: min(2000px, 90vw); margin: clamp(8px, 1.5vh, 16px) auto 0 auto; padding: clamp(44px, 7.5vw, 168px) clamp(48px, 8.5vw, 188px); min-height: clamp(620px, 62vh, 1100px); background: none; box-shadow: none;  overflow: visible; overflow-wrap: anywhere; }
-.wf-cloud-card .content { overflow-wrap: anywhere; position: relative; z-index: 1; max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
+.wf-cloud-card .content { overflow-wrap: anywhere; position: relative; z-index: var(--z-index-base, 1); max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
 .wf-cloud-card .content p { margin: 0.35em 0; line-height: 1.4; }
 .wf-cloud-card .content > p:first-of-type {
   /* Increase space between the title and the first paragraph (story) by ~50px more */
@@ -374,7 +374,7 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
 body[data-page='contact'] .content { color: #fff !important; }
 
 /* --- Reveal Company Info Modal (modal styles) --- */
-.wf-revealco-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:2147482000}
+.wf-revealco-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index: var(--z-global-popup, 2147482000)}
 .wf-revealco-overlay.show{opacity:1;pointer-events:auto}
 .wf-revealco-modal{width:100%;max-width:520px;margin:12px;padding:0}
 .wf-revealco-card{background:#fff;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.18);padding:18px 16px 16px;position:relative}

@@ -12,8 +12,8 @@
 }
 
 /* Ensure main page header stays above the overlay */
-.site-header.universal-page-header { z-index: 3000 !important; }
-.room-page-header { position: relative !important; z-index: 3000 !important; }
+.site-header.universal-page-header { z-index: var(--z-header-over-room-modal, 3000) !important; }
+.room-page-header { position: relative !important; z-index: var(--z-header-over-room-modal, 3000) !important; }
 
 /* Header width rules are now defined canonically in components/components-base.css */
 
@@ -57,7 +57,7 @@ body.room-modal-open #detailedItemModal {
 /* Allow item popup to work within room modal - it has its own z-index management */
 body.modal-open #itemPopup.in-room-modal {
     /* Elevate popup above room modal and its header */
-    z-index: 100200 !important;
+    z-index: var(--z-global-popup, 100200) !important;
 }
 
 /* ==============================================
@@ -359,7 +359,7 @@ body.modal-open #itemPopup.in-room-modal {
     width: var(--icon-width, 80px);
     height: var(--icon-height, 80px);
     cursor: pointer;
-    z-index: 10;
+    z-index: var(--z-badge, 10);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     border-radius: 8px;
     overflow: hidden;
@@ -372,7 +372,7 @@ body.modal-open #itemPopup.in-room-modal {
     --original-width: var(--icon-width, 80px);
     --original-height: var(--icon-height, 80px);
 }
-.room-overlay-wrapper .room-product-icon:hover { transform: scale(1.1); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); z-index: 15; }
+.room-overlay-wrapper .room-product-icon:hover { transform: scale(1.1); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); z-index: var(--z-badge-high, 15); }
 .room-overlay-wrapper .room-product-icon-img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
 
 /* Room Overlay Wrapper Background */

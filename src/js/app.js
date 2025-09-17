@@ -5,7 +5,8 @@
 
 // Import CSS to be processed by Vite
 import '../styles/main.css';
-import '../core/actionRegistry.js';
+import '../styles/admin-hints.css';
+import '../core/action-registry.js';
 import './body-background-from-data.js';
 
 // TEMP: detect duplicate module evaluations during dev or unexpected reloads
@@ -71,7 +72,7 @@ async function initializeCoreSystemsApp() {
         import('./global-item-modal.js'),
         import('./global-modals.js'),
         import('./cart-modal.js'),
-        import('../ui/globalPopup.js'),
+        import('../ui/global-popup.js'),
         import('./global-notifications.js'),
         import('./room-main.js'),
         import('./analytics.js'),
@@ -87,7 +88,6 @@ async function initializeCoreSystemsApp() {
         import('../modules/image-carousel.js'),
         import('../modules/footer-newsletter.js'),
         import('../modules/ai-processing-modal.js'),
-        import('../modules/image-fallback.js'),
     ]).catch(err => console.warn('[App] Non-fatal: some side-effect modules failed to import', err));
 
     // Initialize cart system
@@ -283,8 +283,73 @@ if (__WF_IS_ADMIN) {
             // Ensure auth-related handlers are active on admin pages too
             try { import('./login-modal.js').catch(() => {}); } catch (_) {}
             try { import('./header-auth-sync.js').catch(() => {}); } catch (_) {}
+            // Admin health checks (toasts for missing backgrounds/item images)
+            try { import('./admin-health-checks.js').catch(() => {}); } catch (_) {}
             // Enable dynamic admin tooltips (DB-driven)
             try { import('../modules/tooltip-manager.js').catch(() => {}); } catch (_) {}
+            // Ensure notification system exists for toasts on admin
+            try { import('./global-notifications.js').catch(() => {}); } catch (_) {}
+
+            // Optional hint handling (arrivals from Health modal or elsewhere)
+            try {
+              const params = new URLSearchParams(window.location.search || '');
+              const hint = params.get('wf_hint');
+              if (hint === 'background') {
+                const room = params.get('room');
+                const msg = room ? `Configure a background for room ${room}.` : 'Configure a background for the target room.';
+                if (typeof window.showNotification === 'function') {
+                  window.showNotification(msg, 'info', { title: 'Background Configuration' });
+                }
+                // If a #background section exists, scroll into view
+                try {
+                  const hashEl = document.getElementById('background') || document.querySelector('[data-section="background"], [id*="background"]');
+                  if (hashEl && typeof hashEl.scrollIntoView === 'function') {
+                    setTimeout(() => { try { hashEl.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch(_) {} }, 100);
+                  }
+                } catch (_) {}
+
+                // Inject a dismissible banner near the background section
+                try {
+                  const marker = document.getElementById('background') || document.querySelector('[data-section="background"]');
+                  const r = room ? String(room) : '';
+                  const dismissKey = r ? `wf_bg_hint_dismissed_${r}` : 'wf_bg_hint_dismissed';
+                  try {
+                    const dismissedSession = (typeof sessionStorage !== 'undefined') && sessionStorage.getItem(dismissKey) === '1';
+                    const dismissedPersistent = (typeof localStorage !== 'undefined') && localStorage.getItem(dismissKey) === '1';
+                    if (dismissedSession || dismissedPersistent) {
+                      // User already dismissed banner; persist across sessions
+                      return;
+                    }
+                  } catch (_) { /* continue */ }
+                  if (marker && !document.getElementById('wfBackgroundHintBanner')) {
+                    const encRoom = encodeURIComponent(r);
+                    const banner = document.createElement('div');
+                    banner.id = 'wfBackgroundHintBanner';
+                    banner.className = 'wf-admin-hint-banner';
+                    banner.innerHTML = `
+                      <div class="wf-banner-icon">ℹ️</div>
+                      <div class="wf-banner-content">
+                        <div class="wf-banner-title">Background Configuration</div>
+                        <div class="wf-banner-text">${room ? `You're setting up a background for room <strong>${r}</strong>.` : 'Select or configure a background for the desired room.'}</div>
+                        <div class="wf-banner-actions mt-2">
+                          <a href="/admin/dashboard?wf_hint=background${r ? `&room=${encRoom}` : ''}#background" class="btn btn-secondary">Open Background Manager</a>
+                          <a href="/admin/?section=room-config-manager${r ? `&room=${encRoom}` : ''}" class="btn">Room Settings</a>
+                          <a href="/api/admin_file_proxy.php?path=documentation/technical/CUSTOMIZATION_GUIDE.md" class="btn" target="_blank" rel="noopener">Learn more</a>
+                        </div>
+                      </div>
+                      <button type="button" class="wf-banner-close" aria-label="Dismiss" title="Dismiss">×</button>
+                    `;
+                    const closer = () => {
+                      try { if (sessionStorage) sessionStorage.setItem(dismissKey, '1'); } catch(_) {}
+                      try { if (localStorage) localStorage.setItem(dismissKey, '1'); } catch(_) {}
+                      try { banner.remove(); } catch(_) { banner.style.display = 'none'; }
+                    };
+                    banner.addEventListener('click', (ev) => { const x = ev.target.closest && ev.target.closest('.wf-banner-close'); if (x) { ev.preventDefault(); closer(); } });
+                    marker.parentNode.insertBefore(banner, marker.nextSibling);
+                  }
+                } catch (_) {}
+              }
+            } catch (_) {}
 
             const fullPath = (ds && ds.path) || window.location.pathname || '';
             const cleanPath = fullPath.split('?')[0].split('#')[0];

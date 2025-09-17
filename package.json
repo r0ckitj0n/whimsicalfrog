@@ -13,15 +13,20 @@
     "preview": "vite preview",
     "lint": "eslint . --cache --cache-location .cache/eslint/",
     "lint:fix": "eslint . --fix --cache --cache-location .cache/eslint/",
-    "lint:css": "stylelint \"src/styles/**/*.css\"",
-    "lint:css:fix": "stylelint \"src/styles/**/*.css\" --fix",
+    "lint:css": "stylelint \"src/styles/**/*.css\" \"css/**/*.css\"",
+    "lint:css:fix": "stylelint \"src/styles/**/*.css\" \"css/**/*.css\" --fix",
+    "lint:all": "npm run lint && npm run lint:css",
     "guard:styles": "node scripts/disallow-inline-styles.mjs",
     "guard:admin-router": "node scripts/dev/guard-admin-router.mjs",
     "guard:docs": "node scripts/dev/guard-docs-structure.mjs",
+    "guard:images": "node scripts/guard-images.mjs",
     "guard:templates:css": "node scripts/guard-templates-css.mjs",
+    "guard:z-index": "node scripts/guard-z-index.mjs",
     "guard:duplicates": "node scripts/dev/guard-duplicates.mjs",
     "guard:legacy": "node scripts/dev/legacy-scan.mjs",
     "guard:legacy:write": "node scripts/dev/legacy-scan.mjs --write",
+    "audit:images:code": "node scripts/dev/audit-code-image-refs.mjs",
+    "audit:images:db": "node scripts/dev/audit-db-images.mjs",
     "check:css:orphans": "node scripts/check-orphaned-css.mjs",
     "check:css:orphans:write": "node scripts/check-orphaned-css.mjs --write",
     "check:css:inventory": "node scripts/css-inventory.mjs",
@@ -32,7 +37,7 @@
     "tooltips:audit": "node scripts/dev/audit-tooltips.mjs",
     "tooltips:seed:dry": "node scripts/dev/seed-admin-tooltips.mjs --dry-run",
     "tooltips:seed": "node scripts/dev/seed-admin-tooltips.mjs --apply",
-    "smoke:apis": "bash scripts/dev/smoke-all-apis.sh",
+    "smoke:apis": "bash scripts/dev/smoke_all_apis.sh",
     "db:dump": "bash scripts/db/dump_local_db.sh",
     "db:dump:gzip": "bash scripts/db/dump_local_db.sh --gzip"
   },
@@ -65,6 +70,12 @@
     ],
     "src/styles/**/*.css": [
       "stylelint --fix"
+    ],
+    "css/**/*.css": [
+      "stylelint --fix"
+    ],
+    "**/*.css": [
+      "node scripts/guard-z-index.mjs"
     ]
   }
 }

@@ -3,9 +3,11 @@
  * Template: admin_notification
  * Variables: $order (array), $customer (array), $items (array)
  */
-$brandPrimary = function_exists('BusinessSettings::getPrimaryColor') ? BusinessSettings::getPrimaryColor() : '#0ea5e9';
+require_once dirname(__DIR__, 2) . '/includes/email_branding.php';
+require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
 $orderId = htmlspecialchars($order['id'] ?? 'N/A');
 $customerEmail = htmlspecialchars($customer['email'] ?? '');
+$businessName = BusinessSettings::getBusinessName();
 ?>
 <!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
@@ -13,17 +15,11 @@ $customerEmail = htmlspecialchars($customer['email'] ?? '');
 <head>
   <meta charset="UTF-8">
   <title>New Order #<?= $orderId ?></title>
-  <style>
-    body { margin:0; padding:0; background:#ffffff; color:#333; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; line-height:1.5; }
-    .wrapper { max-width:600px; margin:0 auto; padding:16px; }
-    .header { background: <?= $brandPrimary ?>; color:#fff; padding:16px; text-align:center; }
-    .h1 { margin:0; font-size:20px; }
-    .items li { margin:4px 0; }
-  </style>
+  <?= $EMAIL_BRANDING_STYLE ?>
 </head>
 <body>
   <div class="header">
-    <h1 class="h1">Whimsical Frog</h1>
+    <h1 class="h1"><?= htmlspecialchars($businessName) ?></h1>
     <p>Admin Notification</p>
   </div>
   <div class="wrapper">

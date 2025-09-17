@@ -5,6 +5,8 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 }
 require_once __DIR__ . '/api/config.php';
 require_once __DIR__ . '/api/business_settings_helper.php';
+// Ensure brand CSS variables/classes are available even if header partial isn't rendered
+require_once __DIR__ . '/includes/brand_web_fallback.php';
 
 $orderId = $_GET['orderId'] ?? '';
 if ($orderId === '') {
@@ -204,8 +206,8 @@ $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & P
     <!-- Company Header -->
     <div class="text-center">
         <div class="flex justify-center items-center">
-            <img src="images/logos/logo_whimsicalfrog.webp" alt="<?php echo htmlspecialchars($businessName); ?> Logo" class="header-logo" 
-                 data-fallback-src="/images/logos/logo_whimsicalfrog.png">
+            <img src="images/logos/logo-whimsicalfrog.webp" alt="<?php echo htmlspecialchars($businessName); ?> Logo" class="header-logo" 
+                 data-fallback-src="/images/logos/logo-whimsicalfrog.png">
             <div>
                 <h1 class="text-brand-primary wf-brand-font"><?php echo htmlspecialchars($businessName); ?></h1>
                 <p class="text-brand-secondary wf-brand-font"><?php echo htmlspecialchars($businessTagline); ?></p>

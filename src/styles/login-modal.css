@@ -1,5 +1,5 @@
 /* Compact Login Modal Styles (Vite-managed) */
-.wf-login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:2147483000}
+.wf-login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:var(--z-global-popup, 2147483000)}
 .wf-login-overlay.show{opacity:1;pointer-events:auto}
 .wf-login-modal{width:100%;max-width:360px;margin:12px;padding:0}
 .wf-login-card{background:#fff;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.18);padding:18px 16px 16px;position:relative}

@@ -4,7 +4,7 @@
  */
 'use strict';
 
-import { ApiClient } from '../core/apiClient.js';
+import { ApiClient } from '../core/api-client.js';
 
 const API_BASE = '/api/';
 

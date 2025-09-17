@@ -7,8 +7,8 @@
 }
 
 .room-bg-room1 {
-    --bg-webp: url('../images/background_room1.webp');
-    --bg-png: url('../images/background_room1.png');
+    --bg-webp: url('../images/background-room1.webp');
+    --bg-png: url('../images/background-room1.png');
     background-image: var(--bg-webp);
     background-size: contain;
     background-position: center;
@@ -19,8 +19,8 @@
 }
 
 .room-bg-room2 {
-    --bg-webp: url('../images/background_room2.webp');
-    --bg-png: url('../images/background_room2.png');
+    --bg-webp: url('../images/background-room2.webp');
+    --bg-png: url('../images/background-room2.png');
     background-image: var(--bg-webp);
     background-size: contain;
     background-position: center;
@@ -35,8 +35,8 @@
 }
 
 .room-bg-room3 {
-    --bg-webp: url('../images/background_room3.webp');
-    --bg-png: url('../images/background_room3.png');
+    --bg-webp: url('../images/background-room3.webp');
+    --bg-png: url('../images/background-room3.png');
     background-image: var(--bg-webp);
     background-size: contain;
     background-position: center;
@@ -48,8 +48,8 @@
 }
 
 .room-bg-room4 {
-    --bg-webp: url('../images/background_room4.webp');
-    --bg-png: url('../images/background_room4.png');
+    --bg-webp: url('../images/background-room4.webp');
+    --bg-png: url('../images/background-room4.png');
     background-image: var(--bg-webp);
     background-size: contain;
     background-position: center;

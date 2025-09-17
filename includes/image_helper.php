@@ -126,19 +126,7 @@ function getImageUrlWithFallback($imagePath, $sku = null)
         return $imagePath;
     }
 
-    // If we have a SKU, try alternative formats
-    if ($sku) {
-        $formats = ['webp', 'png', 'jpg', 'jpeg'];
-        foreach ($formats as $format) {
-            $altPath = "/images/items/{$sku}A.{$format}";
-            $altFullPath = __DIR__ . '/../' . ltrim($altPath, '/');
-            if (file_exists($altFullPath)) {
-                return $altPath;
-            }
-        }
-    }
-
-    // Return null - let CSS handle the fallback
+    // Strict: do not attempt to guess alternative files; surface missing asset
     return null;
 }
 
@@ -148,33 +136,31 @@ function getImageUrlWithFallback($imagePath, $sku = null)
  */
 function getItemImages($sku, $pdo = null)
 {
-    if (!$pdo) {
-        $pdo = getDbConnection();
-        if (!$pdo) {
-            // Fallback to file system check
-            $fallbackImage = getFallbackItemImage($sku);
-            return $fallbackImage ? [$fallbackImage] : [];
-        }
-    }
+    if (!$pdo) { $pdo = getDbConnection(); }
+    if (!$pdo) { return []; }
 
     try {
         // Check if item_images table exists
         $tables = Database::queryAll("SHOW TABLES LIKE 'item_images'");
-        if (count($tables) === 0) {
-            // Table doesn't exist, use fallback
-            $fallbackImage = getFallbackItemImage($sku);
-            return $fallbackImage ? [$fallbackImage] : [];
-        }
+        if (count($tables) === 0) { return []; }
 
-        $images = Database::queryAll("\n            SELECT \n                id,\n                sku,\n                image_path,\n                is_primary,\n                sort_order,\n                alt_text,\n                created_at,\n                updated_at\n            FROM item_images \n            WHERE sku = ? \n            ORDER BY is_primary DESC, sort_order ASC\n        ", [$sku]);
+        $images = Database::queryAll(
+            "
+            SELECT 
+                id,
+                sku,
+                image_path,
+                is_primary,
+                sort_order,
+                alt_text,
+                created_at,
+                updated_at
+            FROM item_images 
+            WHERE sku = ? 
+            ORDER BY is_primary DESC, sort_order ASC
+        ", [$sku]);
 
-        // If no images found in database, try fallback
-        if (empty($images)) {
-            $fallbackImage = getFallbackItemImage($sku);
-            if ($fallbackImage) {
-                return [$fallbackImage];
-            }
-        }
+        // Strict: if no images in database, return empty
 
         // Convert boolean values
         foreach ($images as &$image) {
@@ -190,9 +176,8 @@ function getItemImages($sku, $pdo = null)
 
     } catch (PDOException $e) {
         error_log("Database error in getItemImages: " . $e->getMessage());
-        // Fallback to file system check
-        $fallbackImage = getFallbackItemImage($sku);
-        return $fallbackImage ? [$fallbackImage] : [];
+        // Strict: surface by returning empty
+        return [];
     }
 }
 
@@ -244,24 +229,22 @@ function renderItemImageDisplay($sku, $options = [])
     $opts = array_merge($defaults, $options);
 
     if (empty($images)) {
-        // Show elegant CSS-only fallback instead of placeholder image
-        return '<div class="item-image-placeholder" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">
-            <div class="placeholder-icon">📷</div>
-            <div class="placeholder-text">No Image Available</div>
-        </div>';
+        // Strict: do not inject placeholders. Emit a hidden marker div for admin diagnostics.
+        error_log('[Images] No images found for SKU ' . $sku . '; rendering empty output');
+        return '<div class="wf-missing-item-image" hidden></div>';
     }
 
     if (count($images) === 1 || !$opts['showCarousel']) {
         // Single image display
         $image = $images[0];
-        return '<div class="item-single-image ' . $opts['className'] . '" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">\n            <img src="' . htmlspecialchars($image['image_path']) . '" \n                 alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" \n                 data-fallback="placeholder">\n        </div>';
+        return '<div class="item-single-image ' . $opts['className'] . '" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">\n            <img src="' . htmlspecialchars($image['image_path']) . '" \n                 alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '">\n        </div>';
     }
 
     // Multiple images - use simple carousel (simplified implementation)
     $carouselHtml = '<div class="item-image-carousel" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">';
     foreach ($images as $index => $image) {
         $activeClass = $index === 0 ? ' active' : '';
-        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" \n                             alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" \n                             class="' . $activeClass . '"\n                             data-fallback="placeholder">';
+        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" \n                             alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" \n                             class="' . $activeClass . '">';
     }
     $carouselHtml .= '</div>';
     return $carouselHtml;

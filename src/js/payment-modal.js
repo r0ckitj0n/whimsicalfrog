@@ -674,7 +674,7 @@ import apiClient from './api-client.js';
               throw tokErr;
             }
           }
-          const res = await apiClient.post('/api/add-order.php', payload);
+          const res = await apiClient.post('/api/add_order.php', payload);
           console.debug('[PaymentModal] order request ->', payload, 'response ->', res);
           if (res && res.debug) {
             console.info('[PaymentModal] order debug ->', res.debug);

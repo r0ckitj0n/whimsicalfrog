@@ -174,6 +174,17 @@ $messageType = $_GET['type'] ?? '';
         </table>
     </div>
 
+<?php
+// Option A: Server-rendered Admin Item Editor
+// Treat both view and edit modes as editor render to avoid client modal and header redirects after output.
+if ($modalMode === 'view' || $modalMode === 'edit' || $modalMode === 'add') {
+    require_once dirname(__DIR__) . '/components/admin_item_editor.php';
+    // Render the editor UI (adapted from archived implementation)
+    $effectiveMode = $modalMode === 'view' ? 'edit' : $modalMode;
+    renderAdminItemEditor($effectiveMode, $editItem, $categories, $field_errors ?? []);
+}
+?>
+
     <?php if ($totalPages > 1): ?>
         <div class="pagination flex justify-center mt-4 space-x-2">
             <?php for ($p = 1; $p <= $totalPages; $p++): ?>

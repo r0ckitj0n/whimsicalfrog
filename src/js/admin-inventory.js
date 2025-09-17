@@ -23,6 +23,34 @@ class AdminInventoryModule {
         this.bindEvents();
         this.init();
 
+        // Diagnostics and resilience for modal visibility
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const el = document.getElementById('detailedItemModal');
+                console.log('[AdminInventory] has#detailedItemModal at load =', !!el);
+            } catch(_) {}
+            try {
+                const mo = new MutationObserver(() => {
+                    const el = document.getElementById('detailedItemModal');
+                    if (el && !el.classList.contains('show')) {
+                        this.__ensureModalVisible(el);
+                        console.log('[AdminInventory] Observed #detailedItemModal insertion; applied show');
+                    }
+                });
+                mo.observe(document.body, { childList: true, subtree: true });
+                this.__inventoryMo = mo;
+            } catch(_) {}
+            // If server-rendered admin editor overlay exists, ensure scroll lock and topmost stacking
+            try {
+                const overlay = document.getElementById('inventoryModalOuter');
+                if (overlay) {
+                    overlay.classList.add('topmost');
+                    document.documentElement.classList.add('modal-open');
+                    document.body.classList.add('modal-open');
+                }
+            } catch(_) {}
+        });
+
         // Legacy shim: allow older inline code to call into the module if present
         try {
             window.buildComparisonInterface = (aiData, currentMarketingData) => this.buildComparisonInterface(aiData, currentMarketingData);
@@ -34,39 +62,38 @@ class AdminInventoryModule {
      * the View (👁️) or Edit (✏️) actions in the inventory table.
      */
     registerItemDetailsHandlers() {
-        document.addEventListener('click', async (e) => {
-            const a = e.target.closest('a[href]');
+        // Option A (server-rendered admin editor): allow normal navigation.
+        // Add a defensive fallback: if some other script prevents default on these links,
+        // force navigation programmatically so the server editor renders.
+        document.addEventListener('click', (e) => {
+            const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
             if (!a) return;
+            const href = a.getAttribute('href');
+            if (!href) return;
             try {
-                const url = new URL(a.getAttribute('href'), window.location.origin);
+                const url = new URL(href, window.location.origin);
                 if (url.pathname === '/admin/inventory' && (url.searchParams.get('view') || url.searchParams.get('edit'))) {
-                    e.preventDefault();
-                    const sku = url.searchParams.get('view') || url.searchParams.get('edit');
-                    if (sku) {
-                        await this.openDetailedItemModal(sku);
-                        // Update address bar without full reload for back-button UX
-                        window.history.pushState({}, '', url.toString());
+                    // If primary click without modifiers, ensure navigation occurs
+                    const isPrimary = (e.button === 0);
+                    const hasMods = !!(e.metaKey || e.ctrlKey || e.shiftKey || e.altKey);
+                    const target = (a.getAttribute('target') || '').toLowerCase();
+                    const sameWindow = (target === '' || target === '_self');
+                    if (isPrimary && !hasMods && sameWindow) {
+                        // Force navigation to be resilient against other preventDefault() calls
+                        try { window.location.assign(url.toString()); } catch (_) { window.location.href = url.toString(); }
                     }
                 }
-            } catch (_) {
-                // ignore URL parse issues
-            }
-        }, true);
+            } catch (_) { /* ignore URL parse issues */ }
+        }, true); // capture to run even if other bubbling listeners stop propagation
     }
 
     /**
      * On page load, if the current URL already has ?view= or ?edit=, open the modal.
      */
     async autoOpenItemFromQuery() {
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const sku = params.get('view') || params.get('edit');
-            if (sku) {
-                await this.openDetailedItemModal(sku);
-            }
-        } catch (_) {
-            // no-op
-        }
+        // Option A (server-rendered admin editor): do not auto-open client modal
+        // The server template will render the editor when appropriate.
+        return;
     }
 
     /**
@@ -75,11 +102,13 @@ class AdminInventoryModule {
      */
     async openDetailedItemModal(sku) {
         try {
+            console.log('[AdminInventory] openDetailedItemModal start', { sku });
             // Fetch item details and images from existing APIs
             const [itemRes, imagesRes] = await Promise.all([
                 fetch(`/api/get_item_details.php?sku=${encodeURIComponent(sku)}`),
                 fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`)
             ]);
+            console.log('[AdminInventory] fetch statuses', { item: itemRes.status, images: imagesRes.status });
             const itemJson = await itemRes.json();
             const imagesJson = await imagesRes.json();
 
@@ -92,7 +121,11 @@ class AdminInventoryModule {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item, images })
             });
+            console.log('[AdminInventory] render_detailed_modal.php status', modalHtmlRes.status);
             const modalHtml = await modalHtmlRes.text();
+            if (!modalHtml || !modalHtml.includes('id="detailedItemModal"')) {
+                console.warn('[AdminInventory] Modal HTML missing #detailedItemModal');
+            }
 
             // Remove existing instance if present to avoid duplicates
             const existing = document.getElementById('detailedItemModal');
@@ -103,9 +136,9 @@ class AdminInventoryModule {
             const modalEl = document.getElementById('detailedItemModal');
             if (!modalEl) return;
             // Ensure correct visibility classes
-            modalEl.classList.remove('hidden');
-            modalEl.classList.add('show');
+            this.__ensureModalVisible(modalEl);
             // Positioning and z-index are defined in CSS (see detailed-item-modal.css)
+            console.log('[AdminInventory] detailedItemModal appended and shown');
 
             // Attach close handlers if not already wired by global script
             modalEl.addEventListener('click', (evt) => {
@@ -124,6 +157,12 @@ class AdminInventoryModule {
         }
     }
 
+    __ensureModalVisible(el) {
+        try { el.classList.remove('hidden'); } catch(_) {}
+        try { el.classList.add('show'); } catch(_) {}
+        try { el.style.pointerEvents = 'auto'; } catch(_) {}
+    }
+
     closeDetailedItemModal() {
         const modalEl = document.getElementById('detailedItemModal');
         if (modalEl) {
@@ -138,6 +177,32 @@ class AdminInventoryModule {
         // Release scroll lock when no other modals are open
         document.documentElement.classList.remove('modal-open');
         document.body.classList.remove('modal-open');
+    }
+
+    closeAdminEditor() {
+        try {
+            const overlay = document.getElementById('inventoryModalOuter');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                if (overlay.parentElement) overlay.parentElement.removeChild(overlay);
+            }
+        } catch (_) {}
+        try {
+            document.documentElement.classList.remove('modal-open');
+            document.body.classList.remove('modal-open');
+        } catch (_) {}
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('view');
+            url.searchParams.delete('edit');
+            url.searchParams.delete('add');
+            if (url.pathname !== '/admin/inventory') {
+                url.pathname = '/admin/inventory';
+            }
+            window.location.assign(url.toString());
+        } catch (_) {
+            window.location.assign('/admin/inventory');
+        }
     }
 
     handleDelegatedKeydown(event) {
@@ -1180,6 +1245,17 @@ class AdminInventoryModule {
                 break;
             case 'close-structure-view-modal':
                 if (typeof window.closeStructureViewModal === 'function') window.closeStructureViewModal();
+                break;
+            case 'close-admin-editor':
+                try { event.preventDefault(); } catch (_) {}
+                this.closeAdminEditor();
+                break;
+            case 'close-admin-editor-on-overlay':
+                // Only close if the actual click target is the overlay itself (backdrop)
+                if (target && target.id === 'inventoryModalOuter' && event && event.target === target) {
+                    try { event.preventDefault(); } catch (_) {}
+                    this.closeAdminEditor();
+                }
                 break;
         }
     }

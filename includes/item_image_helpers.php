@@ -75,19 +75,7 @@ function getImageUrlWithFallback($imagePath, $sku = null)
         return $imagePath;
     }
 
-    // If we have a SKU, try alternative formats
-    if ($sku) {
-        $formats = ['webp', 'png', 'jpg', 'jpeg'];
-        foreach ($formats as $format) {
-            $altPath = "/images/items/{$sku}A.{$format}";
-            $altFullPath = __DIR__ . '/../' . ltrim($altPath, '/');
-            if (file_exists($altFullPath)) {
-                return $altPath;
-            }
-        }
-    }
-
-    // Return null - let CSS handle the fallback
+    // Strict: do not attempt to guess alternative files; surface missing asset
     return null;
 }
 // getImageWithFallback function moved to image_helper.php for centralization
@@ -96,77 +84,24 @@ function getImageUrlWithFallback($imagePath, $sku = null)
 /**
  * Get fallback image from old system
  */
-function getFallbackItemImage($sku)
-{
-    // Try common image patterns based on SKU
-    $possibleImages = [
-        "images/items/{$sku}A.webp",
-        "images/items/{$sku}A.png",
-        "images/items/{$sku}.webp",
-        "images/items/{$sku}.png"
-    ];
-
-    // Also try old Product ID patterns for backward compatibility
-    // Extract potential Product ID from SKU (if it follows WF-XX-### pattern, try P### format)
-    if (preg_match('/^WF-[A-Z]{2}-(\d{3})$/', $sku, $matches)) {
-        $productId = 'P' . $matches[1];
-        $possibleImages = array_merge($possibleImages, [
-            "images/items/{$productId}A.webp",
-            "images/items/{$productId}A.png",
-            "images/items/{$productId}.webp",
-            "images/items/{$productId}.png"
-        ]);
-    }
-
-    foreach ($possibleImages as $imagePath) {
-        $fullPath = __DIR__ . '/../' . $imagePath;
-        if (file_exists($fullPath)) {
-            return [
-                'id' => null,
-                'sku' => $sku,
-                'image_path' => $imagePath,
-                'is_primary' => true,
-                'sort_order' => 0,
-                'alt_text' => "Item image for {$sku}",
-                'file_exists' => true,
-                'created_at' => null,
-                'updated_at' => null
-            ];
-        }
-    }
-
-    return null;
-}
+// Strict: deprecated; do not synthesize images from filesystem
+function getFallbackItemImage($sku) { return null; }
 
 /**
  * Get all images for an item
  */
 function getItemImages($sku, $pdo = null)
 {
-    if (!$pdo) {
-        // Fallback to file system check
-        $fallbackImage = getFallbackItemImage($sku);
-        return $fallbackImage ? [$fallbackImage] : [];
-    }
+    if (!$pdo) { return []; }
 
     try {
         // Check if item_images table exists
         $rows = Database::queryAll("SHOW TABLES LIKE 'item_images'");
-        if (count($rows) === 0) {
-            // Table doesn't exist, use fallback
-            $fallbackImage = getFallbackItemImage($sku);
-            return $fallbackImage ? [$fallbackImage] : [];
-        }
+        if (count($rows) === 0) { return []; }
 
         $images = Database::queryAll("\n            SELECT \n                id,\n                sku,\n                image_path,\n                is_primary,\n                sort_order,\n                alt_text,\n                created_at,\n                updated_at\n            FROM item_images \n            WHERE sku = ? \n            ORDER BY is_primary DESC, sort_order ASC\n        ", [$sku]);
 
-        // If no images found in database, try fallback
-        if (empty($images)) {
-            $fallbackImage = getFallbackItemImage($sku);
-            if ($fallbackImage) {
-                return [$fallbackImage];
-            }
-        }
+        // Strict: if none, return empty
 
         // Convert boolean values
         foreach ($images as &$image) {
@@ -182,9 +117,8 @@ function getItemImages($sku, $pdo = null)
 
     } catch (PDOException $e) {
         error_log("Database error in getItemImages: " . $e->getMessage());
-        // Fallback to file system check
-        $fallbackImage = getFallbackItemImage($sku);
-        return $fallbackImage ? [$fallbackImage] : [];
+        // Strict: surface by returning empty
+        return [];
     }
 }
 
@@ -247,18 +181,16 @@ function renderItemImageDisplay($sku, $options = [])
     $opts = array_merge($defaults, $options);
 
     if (empty($images)) {
-        // Show elegant CSS-only fallback instead of placeholder image
-        return '<div class="item-image-placeholder" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">
-<div class="placeholder-icon">📷</div>
-<div class="placeholder-text">No Image Available</div>
-</div>';
+        // Strict: do not inject placeholders; return empty
+        error_log('[ItemImages] No images for SKU ' . $sku . '; rendering empty');
+        return '';
     }
 
     if (count($images) === 1 || !$opts['showCarousel']) {
         // Single image display
         $image = $images[0];
         return '<div class="item-single-image ' . $opts['className'] . '" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">' .
-               '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" data-fallback="placeholder">' .
+               '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '">' .
                '</div>';
     }
 
@@ -266,7 +198,7 @@ function renderItemImageDisplay($sku, $options = [])
     $carouselHtml = '<div class="item-image-carousel" data-height="' . htmlspecialchars($opts['height'], ENT_QUOTES) . '">';
     foreach ($images as $index => $image) {
         $activeClass = $index === 0 ? ' active' : '';
-        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" class="' . $activeClass . '" data-fallback="placeholder">';
+        $carouselHtml .= '<img src="' . htmlspecialchars($image['image_path']) . '" alt="' . htmlspecialchars($image['alt_text'] ?: 'Item image') . '" class="' . $activeClass . '">';
     }
     $carouselHtml .= '</div>';
     return $carouselHtml;

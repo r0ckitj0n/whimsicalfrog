@@ -119,6 +119,14 @@ if (empty($dashboardConfig)) {
 ?>
 
 <div class="dashboard-container">
+    <!-- Marker for Background Manager deep-links -->
+    <div id="background" data-section="background" aria-hidden="true"></div>
+    <div class="flex justify-end mb-3">
+      <button type="button" class="btn btn-secondary flex items-center gap-2" data-action="restore-help-hints" title="Restore contextual help banners and tooltips">
+        <span>Restore help hints</span>
+        <span id="helpHintsBadge" class="wf-badge hidden" aria-label="Dismissed help hints count">0</span>
+      </button>
+    </div>
     <!-- Dashboard Sections -->
     <div id="dashboardGrid" class="dashboard-grid space-y-6">
         <?php foreach ($dashboardConfig as $config): ?>

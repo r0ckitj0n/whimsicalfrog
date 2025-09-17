@@ -440,7 +440,7 @@ fi
 
 # Test image accessibility (use a stable, non-legacy asset)
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/images/logos/logo_whimsicalfrog.webp")
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/images/logos/logo-whimsicalfrog.webp")
 if [ "$HTTP_CODE" = "200" ]; then
   echo -e "${GREEN}✅ Logo image is accessible online!${NC}"
 elif [ "$HTTP_CODE" = "404" ]; then

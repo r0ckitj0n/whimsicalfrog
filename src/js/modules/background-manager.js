@@ -27,7 +27,7 @@ async function fetchBackgrounds() {
   } catch (_) {
     // Fallback: show a couple of known assets from /images/backgrounds
     return [
-      { id: 'background_home', name: 'Home', url: '/images/backgrounds/background_home.webp', previewUrl: '/images/backgrounds/background_home.webp' },
+      { id: 'background-home', name: 'Home', url: '/images/backgrounds/background-home.webp', previewUrl: '/images/backgrounds/background-home.webp' },
     ];
   }
 }

@@ -313,7 +313,11 @@ function getPaymentStatusBadgeClass($status)
     $stmt->execute([$orderId]);
     $orderData = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($orderData):
+    // Precompute navigation and items when order exists (used below)
+    $orderItems = [];
+    $prevOrderId = null;
+    $nextOrderId = null;
+    if ($orderData) {
         $stmt = $db->prepare("SELECT oi.*, COALESCE(i.name, oi.sku) as item_name, i.retailPrice 
                           FROM order_items oi 
                           LEFT JOIN items i ON oi.sku = i.sku 
@@ -321,14 +325,14 @@ function getPaymentStatusBadgeClass($status)
         $stmt->execute([$orderId]);
         $orderItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Get all orders for navigation
         $allOrderIds = $db->query("SELECT id FROM orders ORDER BY date DESC")->fetchAll(PDO::FETCH_COLUMN);
         $currentIndex = array_search($orderId, $allOrderIds);
         $prevOrderId = $currentIndex > 0 ? $allOrderIds[$currentIndex - 1] : null;
         $nextOrderId = $currentIndex < count($allOrderIds) - 1 ? $allOrderIds[$currentIndex + 1] : null;
-        ?>
+    }
+?>
 
-<div class="modal-overlay order-modal hidden" id="orderModal">
+<div class="modal-overlay order-modal show" id="orderModal">
     <!-- Navigation Arrows -->
     <?php if ($prevOrderId): ?>
     <a href="/admin/orders?<?= $modalState['mode'] ?>=<?= $prevOrderId ?>" 
@@ -339,7 +343,7 @@ function getPaymentStatusBadgeClass($status)
     </a>
     <?php endif; ?>
     
-    <?php if ($nextOrderId): ?>
+    <?php if ($orderData && $nextOrderId): ?>
     <a href="/admin/orders?<?= $modalState['mode'] ?>=<?= $nextOrderId ?>" 
        class="nav-arrow nav-arrow-right">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -363,6 +367,7 @@ function getPaymentStatusBadgeClass($status)
 
         <!-- Modal Body -->
         <div class="modal-body">
+            <?php if ($orderData): ?>
             <form id="orderForm" class="order-form-grid">
                 <!-- Order Details Column -->
                 <div class="order-details-column">
@@ -542,10 +547,19 @@ function getPaymentStatusBadgeClass($status)
                     </div>
                 </div>
             </form>
+            <?php else: ?>
+            <div class="p-4">
+                <div class="text-red-600 font-semibold text-lg">Order not found</div>
+                <div class="text-gray-600 text-sm mt-1">The requested order (ID: <?= htmlspecialchars($orderId ?? 'N/A') ?>) could not be located.</div>
+                <div class="mt-3">
+                    <a href="/admin/orders" class="btn btn-secondary">Back to Orders</a>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
 
         <!-- Modal Footer -->
-        <?php if ($modalState['mode'] === 'edit'): ?>
+        <?php if ($orderData && $modalState['mode'] === 'edit'): ?>
         <div class="modal-footer">
             <a href="?page=admin&section=orders" class="btn btn-secondary">
                 Cancel
@@ -557,7 +571,6 @@ function getPaymentStatusBadgeClass($status)
         <?php endif; ?>
     </div>
 </div>
-<?php endif; ?>
 <?php endif; ?>
 
 <!-- Delete Confirmation Modal -->

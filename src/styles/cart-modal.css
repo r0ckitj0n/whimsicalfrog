@@ -1,6 +1,6 @@
 /* Cart Modal specific tweaks */
 #cartModalOverlay {
-  z-index: 100010; /* ensure above room modal and other overlays */
+  z-index: var(--wf-overlay-z, 10050); /* ensure above header/nav and other overlays */
 }
 #cartModalOverlay .confirmation-modal {
   width: 100%;
@@ -57,7 +57,7 @@
     position: sticky;
     top: 0;
     background: #fff;
-    z-index: 2;
+    z-index: var(--z-index-modal-content, 420);
   }
   #cartModalOverlay #cartModalItems {
     -webkit-overflow-scrolling: touch;

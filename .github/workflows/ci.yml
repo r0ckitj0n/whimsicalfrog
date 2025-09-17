@@ -33,6 +33,9 @@ jobs:
       - name: Run template CSS guard
         run: npm run guard:templates:css
 
+      - name: Guard z-index usage
+        run: npm run guard:z-index
+
       - name: Run duplicate/backup guard
         run: npm run guard:duplicates
 
@@ -41,6 +44,12 @@ jobs:
 
       - name: Guard docs structure
         run: npm run guard:docs
+
+      - name: Guard images naming and pairs
+        run: npm run guard:images
+
+      - name: Audit code image references
+        run: npm run audit:images:code
 
       - name: Run ESLint
         run: npm run lint

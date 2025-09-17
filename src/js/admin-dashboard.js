@@ -1,10 +1,33 @@
 import Sortable from 'sortablejs';
 import '../styles/admin-dashboard.css';
 
+// Compute count of dismissed hint keys across storages and update badge
+function updateHintsBadge() {
+    try {
+        const countKeys = (store) => {
+            try {
+                return Object.keys(store).filter(k => k && k.startsWith('wf_bg_hint_dismissed')).length;
+            } catch (_) { return 0; }
+        };
+        const total = (typeof localStorage !== 'undefined' ? countKeys(localStorage) : 0)
+                   + (typeof sessionStorage !== 'undefined' ? countKeys(sessionStorage) : 0);
+        const badge = document.getElementById('helpHintsBadge');
+        if (!badge) return;
+        badge.textContent = String(total);
+        if (total > 0) {
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    } catch (_) { /* noop */ }
+}
+
 // --- Dashboard Widget Reordering ---
 
 document.addEventListener('DOMContentLoaded', () => {
     const dashboardGrid = document.getElementById('dashboardGrid');
+    // Initialize dismissed hints badge
+    try { updateHintsBadge(); } catch (_) {}
     if (dashboardGrid) {
         new Sortable(dashboardGrid, {
             animation: 150,
@@ -34,6 +57,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (action === 'close-order-details') {
             closeOrderDetailsModal();
+        }
+        if (action === 'restore-help-hints') {
+            event.preventDefault();
+            try {
+                // Clear dismissal keys for both session and persistent storage
+                const clearPrefix = (store) => {
+                    try {
+                        const keys = Object.keys(store);
+                        keys.forEach((k) => { if (k && k.startsWith('wf_bg_hint_dismissed')) { store.removeItem(k); } });
+                    } catch (_) {}
+                };
+                if (typeof localStorage !== 'undefined') clearPrefix(localStorage);
+                if (typeof sessionStorage !== 'undefined') clearPrefix(sessionStorage);
+                // Re-enable tooltips for session and persistently
+                try { if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('wf_tooltips_session_enabled', 'true'); } catch(_) {}
+                try { if (typeof localStorage !== 'undefined') localStorage.setItem('wf_tooltips_enabled', 'true'); } catch(_) {}
+                // Toast feedback
+                if (typeof window.showNotification === 'function') {
+                    window.showNotification('Help hints and tooltips restored.', 'success', { title: 'Hints Restored' });
+                }
+                // Refresh badge
+                try { updateHintsBadge(); } catch (_) {}
+            } catch (err) {
+                console.warn('[Dashboard] Failed to restore help hints', err);
+            }
         }
     });
 

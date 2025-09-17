@@ -30,7 +30,11 @@ $tooltipIds = [
 ];
 ?>
 <div class="admin-tab-navigation mb-1">
-    <div class="flex flex-wrap gap-2 items-center">
+    <div class="wf-admin-nav-row">
+        <div class="wf-nav-left"></div>
+
+        <!-- Centered tabs -->
+        <div class="wf-nav-center">
         <?php foreach ($tabs as $key => [$label, $cssClass]): ?>
             <?php $tooltipId = $tooltipIds[$key] ?? ''; ?>
             <?php
@@ -43,17 +47,38 @@ $tooltipIds = [
                 <?= htmlspecialchars($label) ?>
             </a>
         <?php endforeach; ?>
+        </div>
 
-        <!-- Right-aligned help link to full documentation -->
-        <div class="ml-auto"></div>
-        <a href="/documentation/index.php"
-           id="adminHelpDocsLink"
-           data-help-id="adminHelpDocsLink"
-           class="admin-nav-tab admin-tab-help"
-           target="_blank" rel="noopener noreferrer"
-           aria-label="Open documentation in a new tab"
-           title="Open documentation in a new tab">
-            ?
-        </a>
+        <!-- Right-aligned help bubble: single green circle containing '?' and slider toggle -->
+        <div class="wf-nav-right">
+            <button type="button"
+                    id="adminHelpCombo"
+                    class="admin-nav-tab admin-tab-help admin-help-combo"
+                    data-help-toggle-root="1"
+                    aria-pressed="false"
+                    aria-label="Open documentation or toggle Help &amp; Hints"
+                    title="Help &amp; Hints">
+                <span class="help-q" data-action="open-admin-help-modal" aria-hidden="true">?</span>
+                <span class="wf-toggle" data-action="help-toggle-global-tooltips" aria-hidden="true"><span class="wf-knob"></span></span>
+            </button>
+        </div>
     </div>
+</div>
+
+<!-- Help Documentation Modal -->
+<div id="adminHelpDocsModal" class="admin-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminHelpDocsTitle">
+    <div class="admin-modal w-full max-w-5xl flex flex-col" role="document">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h2 id="adminHelpDocsTitle" class="text-lg font-semibold">Documentation</h2>
+            <button type="button" class="admin-modal-close admin-modal-close--tight" data-action="close-admin-help-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body flex-1">
+            <iframe id="adminHelpDocsFrame" class="admin-help-iframe" title="Admin Documentation" loading="lazy"></iframe>
+        </div>
+        <div class="flex items-center justify-end gap-2 p-3 border-t">
+            <a href="/api/admin_file_proxy.php?path=documentation/ADMIN_GUIDE.md" target="_blank" rel="noopener" class="btn btn-secondary">Open in new tab</a>
+            <button type="button" class="btn btn-primary" data-action="close-admin-help-modal">Close</button>
+        </div>
+    </div>
+    
 </div>

@@ -1,3 +1,5 @@
+console.log('[AdminOrders] module evaluated');
+
 class AdminOrdersModule {
     constructor() {
         this.orderData = {};
@@ -7,6 +9,11 @@ class AdminOrdersModule {
 
         this.loadData();
         this.bindEvents();
+        // If DOM is already loaded (likely on dynamic import), initialize immediately
+        if (document.readyState !== 'loading') {
+            this.initInlineEditing();
+            this.ensureOrderModalVisible();
+        }
     }
 
     loadData() {
@@ -22,10 +29,41 @@ class AdminOrdersModule {
 
     bindEvents() {
         document.body.addEventListener('click', this.handleDelegatedClick.bind(this));
-        document.addEventListener('DOMContentLoaded', () => {
+        const run = () => {
             this.initInlineEditing();
-            this.initModal();
-        });
+            this.ensureOrderModalVisible();
+            // Debug visibility: log modal state and presence
+            try {
+                const el = document.getElementById('orderModal');
+                console.log('[AdminOrders] modalMode=', this.modalMode, 'has#orderModal=', !!el);
+            } catch(_) {}
+            // Fallback: observe for #orderModal insertion and show it if needed
+            try {
+                const mo = new MutationObserver(() => {
+                    const el = document.getElementById('orderModal');
+                    if (el && this.modalMode && !el.classList.contains('show')) {
+                        this.showModal(el);
+                        console.log('[AdminOrders] Observed #orderModal insertion; applied show');
+                    }
+                });
+                mo.observe(document.body, { childList: true, subtree: true });
+                this.__ordersMo = mo;
+            } catch(_) {}
+        };
+        if (document.readyState !== 'loading') run(); else document.addEventListener('DOMContentLoaded', run, { once: true });
+    }
+
+    // Small helpers to normalize overlay visibility across CSS guards
+    showModal(el) {
+        try { el.classList.remove('hidden'); } catch(_) {}
+        try { el.classList.add('show'); } catch(_) {}
+        // Safety: ensure pointer events are enabled
+        try { el.style.pointerEvents = 'auto'; } catch(_) {}
+    }
+
+    hideModal(el) {
+        try { el.classList.add('hidden'); } catch(_) {}
+        try { el.classList.remove('show'); } catch(_) {}
     }
 
     handleDelegatedClick(event) {
@@ -59,50 +97,70 @@ class AdminOrdersModule {
             case 'close-modal':
                  // Generic close for any modal with this pattern
                 const modal = event.target.closest('.modal-overlay');
-                if (modal) modal.classList.add('hidden');
+                if (modal) this.hideModal(modal);
                 break;
         }
     }
 
-    initModal() {
+    ensureOrderModalVisible() {
+        try { console.log('[AdminOrders] ensureOrderModalVisible start'); } catch(_) {}
         const orderModal = document.getElementById('orderModal');
-        if (this.modalMode && orderModal) {
-            orderModal.classList.remove('hidden');
+        const params = new URLSearchParams(window.location.search || '');
+        const requestedId = params.get('view') || params.get('edit');
+        if ((this.modalMode || requestedId) && orderModal) {
+            this.showModal(orderModal);
+            try { console.log('[AdminOrders] showing existing #orderModal'); } catch(_) {}
+            return;
+        }
+        // Fallback: if URL requested a modal but it's not in the DOM, fetch and inject it
+        if (requestedId && !orderModal) {
+            try {
+                const url = new URL(window.location.href);
+                fetch(url.toString(), { credentials: 'include' })
+                    .then(r => r.text())
+                    .then(html => {
+                        const tmp = document.createElement('div');
+                        tmp.innerHTML = html;
+                        const el = tmp.querySelector('#orderModal');
+                        if (el) {
+                            document.body.appendChild(el);
+                            this.showModal(el);
+                            console.log('[AdminOrders] Injected #orderModal from fetched HTML');
+                        } else {
+                            console.warn('[AdminOrders] Fallback fetch did not contain #orderModal');
+                        }
+                    })
+                    .catch(() => {});
+            } catch (_) {}
         }
     }
 
     confirmDelete(orderId) {
-        const modal = document.getElementById('deleteConfirmModal');
-        const orderIdInput = document.getElementById('delete_order_id');
-        if (modal && orderIdInput) {
-            orderIdInput.value = orderId;
-            modal.classList.remove('hidden');
-        }
+        const modal = document.getElementById('deleteModal');
+        const orderIdTarget = document.getElementById('deleteOrderId');
+        if (orderIdTarget) orderIdTarget.textContent = String(orderId || '');
+        if (modal) this.showModal(modal);
     }
 
     closeDeleteModal() {
-        const modal = document.getElementById('deleteConfirmModal');
-        if (modal) {
-            modal.classList.add('hidden');
-        }
+        const modal = document.getElementById('deleteModal');
+        if (modal) this.hideModal(modal);
     }
 
     async deleteOrder() {
-        const orderIdInput = document.getElementById('delete_order_id');
-        if (!orderIdInput || !orderIdInput.value) return;
-
-        // Here you would typically make an API call
-        // For now, we'll submit the form that contains the delete logic
-        const form = orderIdInput.closest('form');
-        if (form) {
-            form.submit();
-        }
+        const orderIdText = (document.getElementById('deleteOrderId') || {}).textContent || '';
+        const id = orderIdText.trim();
+        if (!id) return;
+        // TODO: Implement actual delete endpoint; for now log and close modal
+        console.log('Requesting delete for order', id);
+        this.closeDeleteModal();
+        // Optionally trigger a reload or navigate to a server-side delete handler
     }
 
     showAddItemModal() {
         const modal = document.getElementById('addItemModal');
         if (modal) {
-            modal.classList.remove('hidden');
+            this.showModal(modal);
         }
     }
 

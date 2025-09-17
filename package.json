@@ -39,7 +39,10 @@
     "tooltips:seed": "node scripts/dev/seed-admin-tooltips.mjs --apply",
     "smoke:apis": "bash scripts/dev/smoke_all_apis.sh",
     "db:dump": "bash scripts/db/dump_local_db.sh",
-    "db:dump:gzip": "bash scripts/db/dump_local_db.sh --gzip"
+    "db:dump:gzip": "bash scripts/db/dump_local_db.sh --gzip",
+    "release": "bash scripts/release.sh",
+    "release:no-deploy": "bash scripts/release.sh --no-deploy",
+    "release:tag": "bash scripts/release.sh --no-deploy --no-build --no-push"
   },
   "devDependencies": {
     "@babel/parser": "^7.28.0",

@@ -238,12 +238,12 @@ async function main() {
 
   // Generate reorg plan markdown
   const planMd = generatePlanMarkdown(inventory, proposedMappings, duplicates, conflicts);
-  await fs.writeFile(path.join(DOCS_DIR, 'css-reorg-plan.md'), planMd, 'utf8');
+  await fs.writeFile(path.join(DOCS_DIR, 'CSS_REORG_PLAN.md'), planMd, 'utf8');
 
   // Console summary
   console.log(`CSS inventory written to: logs/css-inventory.json`);
   console.log(`Duplicates report written to: logs/css-duplicates.json`);
-  console.log(`Reorg plan written to: documentation/frontend/css-reorg-plan.md`);
+  console.log(`Reorg plan written to: documentation/frontend/CSS_REORG_PLAN.md`);
 }
 
 function generatePlanMarkdown(inventory, proposedMappings, duplicates, conflicts) {

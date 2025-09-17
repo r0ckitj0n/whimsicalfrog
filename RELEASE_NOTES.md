@@ -8,9 +8,9 @@
 ## Key Changes
 - Documentation move:
   - Moved `docs/` tree to `documentation/` via `git mv` to preserve history.
-  - Updated links in `documentation/modal-testing-summary-final.md` from `/docs/...` → `/documentation/...`.
+  - Updated internal modal-related documentation links from `/docs/...` → `/documentation/...`.
 - Tooling updates:
-  - `scripts/css-inventory.mjs` now writes to `documentation/frontend/css-reorg-plan.md` and console message updated.
+  - `scripts/css-inventory.mjs` now writes to `documentation/frontend/CSS_REORG_PLAN.md` and console message updated.
   - `scripts/disallow-inline-styles.mjs` guard now ignores `documentation/legacy-duplicates/`.
   - `.lintstagedignore` updated to ignore `documentation/**`.
 - Deployment:

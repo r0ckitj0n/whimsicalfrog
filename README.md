@@ -5,16 +5,16 @@ Welcome to the WhimsicalFrog codebase! 🎉
 All up-to-date documentation now lives in:
 
 ```
-documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md
+documentation/technical/WHIMSICALFROG_FULL_DOCUMENTATION.md
 ```
 
 That single document replaces the numerous legacy markdown files that previously described various subsystems. Those files have been archived for reference but should *not* be relied upon.
 
 Quick links:
-* [Full Documentation](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md)
-* [Contribution Guide](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#11-contribution-guide)
-* [Local Development Setup](documentation/WHIMSICALFROG_FULL_DOCUMENTATION.md#4-local-development)
-* [Admin Tooltip System](documentation/includes/tooltip-system.md)
+* [Full Documentation](documentation/technical/WHIMSICALFROG_FULL_DOCUMENTATION.md)
+* [Contribution Guide](documentation/technical/WHIMSICALFROG_FULL_DOCUMENTATION.md#11-contribution-guide)
+* [Local Development Setup](documentation/technical/WHIMSICALFROG_FULL_DOCUMENTATION.md#4-local-development)
+* [Admin Tooltip System](documentation/technical/WHIMSICALFROG_FULL_DOCUMENTATION.md#admin-tooltip-system)
 * [Legacy Scripts Archive](backups/legacy/README.md)
 
 ## Front-end Quick Start (Vite)
@@ -77,7 +77,7 @@ Enjoy coding! 🐸
 
 ## Database Configuration (Centralized)
 
-See `documentation/CENTRALIZATION_SUMMARY.md` for full details on the centralized database configuration, environment variable keys, and examples.
+See `documentation/technical/CONSOLIDATION_PROJECT_SUMMARY.md` for details related to centralization/consolidation of configuration, helpers, and environment variables (including database).
 
 Minimal usage in PHP scripts:
 

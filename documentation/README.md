@@ -1,6 +1,6 @@
 # WhimsicalFrog Documentation
 
-<sub><sup>Last updated: 2025-09-14</sup></sub>
+<sub><sup>Last updated: 2025-09-16</sup></sub>
 
 This README serves as a consolidated entry point for project documentation. It reflects the current configuration after admin tooling and routing cleanup.
 
@@ -8,7 +8,7 @@ This README serves as a consolidated entry point for project documentation. It r
 
 ### Current Docs
 - [Admin Guide](./ADMIN_GUIDE.md) — [Current]
-- [Modal Conventions & Upgrade Guide](./Modal_Conventions_and_Upgrade_Guide.md) — [Current]
+- [Modal Conventions & Upgrade Guide](./technical/MODAL_CONVENTIONS_AND_UPGRADE_GUIDE.md) — [Current]
 - [Database Helper Adoption Guide](./includes/db-helper-adoption.md) — [Current]
 
 ### Historical & Deep Technical (Archived or Context)
@@ -21,6 +21,11 @@ This README serves as a consolidated entry point for project documentation. It r
 - backups/documentation/TEST_INLINE_EDITING.md — [Historical]
 
 Other deep technical docs may remain under `documentation/` for reference; prefer the Admin Guide for current behavior and routes.
+
+## Conventions
+- All documentation lives under `documentation/`.
+- Filenames are UPPER_SNAKE_CASE with underscores (no hyphens), except `README.md` in this folder.
+- Use subfolders like `technical/`, `frontend/`, and `includes/` to group related docs.
 
 ## Notes
 - Older docs referencing `/admin/admin.php?section=...` have been updated to the clean route `/admin/?section=...`.

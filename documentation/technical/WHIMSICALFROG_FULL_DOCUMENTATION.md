@@ -20,7 +20,7 @@ See the project root `README.md` for quick start commands and environment setup.
 
 ## Architecture Overview
 
-- Centralized database configuration and helpers live under `includes/` and are documented in `documentation/CENTRALIZATION_SUMMARY.md`.
+- Centralized database configuration and helpers live under `includes/` and are documented in `documentation/technical/CONSOLIDATION_PROJECT_SUMMARY.md`.
 - Frontend is bundled with Vite and entry points live under `src/js/` and `src/styles/`.
 
 ## Frontend (Vite) Conventions
@@ -31,7 +31,7 @@ See the project root `README.md` for quick start commands and environment setup.
 ## Backend (PHP) Conventions
 
 - Use the centralized `Database` utilities from `api/config.php` and `includes/`.
-- New endpoints should follow the JSON response conventions documented in `documentation/FUNCTION_CONSOLIDATION_COMPLETE.md`.
+- New endpoints should follow the JSON response conventions summarized in `documentation/technical/CONSOLIDATION_PROJECT_SUMMARY.md`.
 
 ## Tooling & Scripts
 
@@ -45,7 +45,7 @@ Tooltip CONTENT is dynamic from the database; styling/loader is Vite-managed sta
 - Runtime: `src/modules/tooltip-manager.js` (auto-loaded on admin routes)
 - Styles: `src/styles/components/tooltip.css`
 - API: `api/help_tooltips.php` (`action=get`, `action=list_all`, `action=upsert`)
-- Guide: `documentation/includes/tooltip-system.md`
+- Guide: see [Admin Tooltip System](#admin-tooltip-system) in this document
 - Commands:
   - `npm run tooltips:export`
   - `npm run tooltips:audit`
@@ -54,7 +54,7 @@ Tooltip CONTENT is dynamic from the database; styling/loader is Vite-managed sta
 
 ## Other References
 
-- `documentation/TEMPLATE_SYSTEM_DOCUMENTATION.md`
-- `documentation/GLOBAL_CSS_IMPLEMENTATION.md`
-- `documentation/CSS_CONSOLIDATION_SUMMARY.md`
-- `documentation/CONSOLIDATION_PROJECT_SUMMARY.md`
+- `documentation/technical/FILE_STRUCTURE_ORGANIZATION.md`
+- `documentation/technical/CSS_CLASSES.md`
+- `documentation/technical/FOOTER_SYSTEM_DOCUMENTATION.md`
+- `documentation/technical/SEO_IMPLEMENTATION_GUIDE.md`

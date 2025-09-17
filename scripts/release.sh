@@ -32,6 +32,9 @@ cd "$ROOT_DIR"
 DO_BUILD=true
 DO_PUSH=true
 DO_DEPLOY=true
+DO_TAG=true
+DO_GH_RELEASE=true
+TAG_PREFIX="deploy"
 COMMIT_MESSAGE="chore: release $(date '+%Y-%m-%d %H:%M:%S %Z')"
 REPO=""
 BRANCH="main"
@@ -47,6 +50,9 @@ while [[ $# -gt 0 ]]; do
     --no-build) DO_BUILD=false; shift ;;
     --no-push) DO_PUSH=false; shift ;;
     --no-deploy) DO_DEPLOY=false; shift ;;
+    --no-tag) DO_TAG=false; shift ;;
+    --no-gh-release) DO_GH_RELEASE=false; shift ;;
+    --tag-prefix) TAG_PREFIX="${2:-$TAG_PREFIX}"; shift 2 ;;
     --message) COMMIT_MESSAGE="${2:-$COMMIT_MESSAGE}"; shift 2 ;;
     --repo) REPO="${2:-}"; shift 2 ;;
     --branch) BRANCH="${2:-$BRANCH}"; shift 2 ;;
@@ -120,13 +126,59 @@ else
   section "Git: push skipped (--no-push)"
 fi
 
-# 3) Deploy to live
-if [ "$DO_DEPLOY" = true ]; then
-  section "Deploy: running scripts/wf_deploy.sh"
+# 3) Tag and GitHub release
+if [ "$DO_TAG" = true ]; then
+  section "Tag: creating and pushing annotated tag"
+  TS_TAG=$(date '+%Y-%m-%d-%H%M')
+  TAG_NAME="${TAG_PREFIX}-${TS_TAG}"
+  TAG_TITLE="Live deploy $(date '+%Y-%m-%d %H:%M %Z')"
   if [ "$DRY_RUN" = true ]; then
-    echo "+ bash scripts/wf_deploy.sh"
+    echo "+ git tag -a \"$TAG_NAME\" -m \"$COMMIT_MESSAGE\""
+    echo "+ git push $REMOTE $TAG_NAME"
   else
-    bash scripts/wf_deploy.sh
+    git tag -a "$TAG_NAME" -m "$COMMIT_MESSAGE" || true
+    git push "$REMOTE" "$TAG_NAME" || true
+  fi
+
+  if [ "$DO_GH_RELEASE" = true ]; then
+    section "GitHub: creating release for $TAG_NAME"
+    if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+      NOTES_FILE="$(mktemp -t wf_release_notes.XXXXXX)"
+      CURRENT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+      {
+        echo "Automated release created by scripts/release.sh"
+        echo
+        echo "Branch: $BRANCH"
+        echo "Commit: $CURRENT_SHA"
+        if [ "$DO_DEPLOY" = true ]; then
+          echo "Deploy: scripts/deploy_full.sh"
+        else
+          echo "Deploy: skipped"
+        fi
+        echo
+        echo "Build: $( [ "$DO_BUILD" = true ] && echo 'build.sh ran' || echo 'skipped' )"
+      } > "$NOTES_FILE"
+      if [ "$DRY_RUN" = true ]; then
+        echo "+ gh release create \"$TAG_NAME\" --title \"$TAG_TITLE\" --notes-file \"$NOTES_FILE\""
+      else
+        gh release create "$TAG_NAME" --title "$TAG_TITLE" --notes-file "$NOTES_FILE" || true
+      fi
+      rm -f "$NOTES_FILE"
+    else
+      echo "GitHub CLI (gh) not available or not authenticated; skipping GitHub release"
+    fi
+  fi
+else
+  section "Tag: skipped (--no-tag)"
+fi
+
+# 4) Deploy to live
+if [ "$DO_DEPLOY" = true ]; then
+  section "Deploy: running scripts/deploy_full.sh"
+  if [ "$DRY_RUN" = true ]; then
+    echo "+ bash scripts/deploy_full.sh"
+  else
+    bash scripts/deploy_full.sh
   fi
 else
   section "Deploy: skipped (--no-deploy)"

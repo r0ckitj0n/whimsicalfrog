@@ -5,7 +5,7 @@ set -euo pipefail
 # Patterns handled:
 #  - Files with trailing space+digits (e.g., foo 2.php, style 10.json, bar 123.js)
 #  - Files ending in .bak
-#  - Files containing "test" in the filename
+#  - Files that are clearly test files (starting with "test-" or ending with "-test")
 # Exclusions: backups/, node_modules/, vendor/, dist/, .git/
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -31,14 +31,14 @@ find . \
     -name '* [0-9][0-9][0-9][0-9]' -o \
     -name '* [0-9][0-9][0-9][0-9][0-9]' -o \
     -name '* [0-9]*' -o \
-    -name '*test*' \
+    \( -name 'test-*' -o -name '*-test.*' \) \
   \) \
   -print0 | while IFS= read -r -d '' src; do
   rel="${src#./}"
   filename=$(basename "$rel")
   
   # Route test files to tests directory, others to duplicates
-  if [[ "$filename" == *test* ]]; then
+  if [[ "$filename" =~ ^test- ]] || [[ "$filename" =~ -test\.[^.]*$ ]]; then
     dest="$DEST_ROOT_TESTS/$rel"
     echo "Test file: $rel -> $dest"
   else

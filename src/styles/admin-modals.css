@@ -1,0 +1,357 @@
+/* Admin modal base styles (Vite-managed)
+   Keeps modals consistent without relying on inline utilities only. */
+
+/* Hide when toggled with .hidden (utility-friendly) */
+#testEmailSendModal.hidden { display: none; }
+#emailTemplateEditModal.hidden { display: none; }
+#templateAssignmentModal.hidden { display: none; }
+
+/* Admin Modal Overlay (for larger admin modals) */
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 1;
+  visibility: visible;
+  transition: all 0.3s ease;
+  z-index: var(--wf-admin-overlay-z, var(--wf-overlay-z, 10050));
+}
+
+.admin-modal-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Ensure admin overlays become visible when .show is applied (parity with confirmation overlays) */
+.admin-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* When explicitly marked topmost by JS, guarantee a higher stacking context */
+.admin-modal-overlay.topmost {
+  z-index: var(--z-detailed-item-modal, 100300) !important;
+}
+
+/* Modal panel defaults. Utilities can augment on top. */
+.admin-modal {
+  background: #fff;
+  width: 90% !important;
+  max-width: none !important;
+  color: #111827; /* gray-900 */
+  border-radius: 0.5rem; /* rounded-lg */
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  max-height: 90vh;
+  overflow: hidden; /* keep header/footer fixed */
+  position: relative; /* ensure new stacking context */
+  z-index: var(--wf-admin-overlay-content-z, 10101);
+}
+
+/* Admin modal content variant used by Settings overlays */
+.admin-modal-content {
+  position: relative;
+  z-index: var(--wf-admin-overlay-content-z, 10101);
+}
+
+/* Normalize inner panel appearance (used by JS instead of inline styles) */
+.wf-admin-panel-visible {
+  opacity: 1 !important;
+  transform: none !important;
+  display: block !important;
+  background: #fff !important;
+  position: relative !important;
+  z-index: var(--wf-admin-overlay-content-z, 10101) !important;
+  pointer-events: auto !important;
+  width: 90% !important;
+  max-width: none !important;
+  max-height: 90vh;
+}
+
+/* Customer modal: Override global modal constraints and enforce 90% width */
+.customer-modal .admin-modal,
+.customer-modal .modal-content {
+  width: 90% !important;
+  max-width: none !important;
+}
+
+/* Customer modal: Enforce a 3-column grid layout */
+.customer-modal .modal-body {
+  display: grid !important; /* Use important to override any conflicting styles */
+  grid-template-columns: 1fr 1fr 320px; /* Personal | Address | Sidebar */
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.customer-modal .personal-col { grid-column: 1; }
+.customer-modal .address-col { grid-column: 2; }
+.customer-modal .modal-sidebar { grid-column: 3; }
+
+/* Busy indicator without inline styles */
+.modal-body.is-busy { cursor: progress; }
+
+.admin-modal .form-group { margin-bottom: 0.5rem; }
+
+/* Buttons focus visibility for accessibility */
+.admin-modal button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+.admin-modal [tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+.admin-modal select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+.admin-modal input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+.admin-modal textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .35); /* blue-600 ring */
+}
+
+/* Prevent layout shift on overlay show/hide */
+html.modal-open { overflow: hidden !important; }
+body.modal-open { overflow: hidden !important; }
+body.wf-no-scroll { overflow: hidden !important; }
+
+/* Inline field error messaging */
+.form-error {
+  color: #b91c1c; /* red-700 */
+  font-size: 0.875rem; /* text-sm */
+  margin-top: 0.25rem; /* mt-1 */
+}
+.customer-profile-header { display: none !important; }
+.form-error.hidden { display: none; }
+
+/* Result text colors */
+#dashboardConfigResult.wf-ok { color: #166534; } /* green-800 */
+#dashboardConfigResult.wf-error { color: #991B1B; } /* red-800 */
+
+/* Invalid form fields visual */
+[aria-invalid="true"] {
+  border-color: #dc2626 !important; /* red-600 */
+  box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.25);
+}
+
+/* Busy state for async buttons */
+[aria-busy="true"] {
+  opacity: 0.75;
+  cursor: wait;
+  pointer-events: none;
+}
+
+/* Modal close button styles (replacing prior inline styles) */
+.admin-modal-close {
+  font-size: 32px;
+  line-height: 1;
+  padding: 12px;
+  cursor: pointer;
+}
+
+/* Tighter padding variant when used in dense headers */
+.admin-modal-close--tight {
+  padding: 6px;
+}
+
+/* Admin help docs iframe (replaces inline width/height/border) */
+.admin-help-iframe {
+  width: 100%;
+  height: 70vh;
+  border: 0;
+}
+
+/* Receipt modal specific styles */
+#receiptModal.hidden { display: none; }
+#receiptModal .modal-content {
+  max-width: 800px;
+  width: 90%;
+}
+#receiptContent {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1rem; /* Add padding to content area */
+  margin-right: 0;
+  background: white;
+}
+#receiptContent .receipt-container {
+  margin: 0;
+  box-shadow: none;
+  padding: 0; /* Remove padding since it's on the parent now */
+}
+/* Style the receipt content when displayed in modal */
+#receiptContent table {
+  margin-bottom: 1rem;
+}
+#receiptContent .text-red-600,
+#receiptContent span[class*="red"] {
+  color: #dc2626 !important; /* Ensure red color shows */
+}
+#receiptContent .text-xl {
+  font-size: 1.25rem !important; /* Ensure larger text */
+}
+/* Force total styling in receipt modal */
+#receiptContent .flex.justify-end span,
+#receiptContent span:contains("Total") {
+  color: #dc2626 !important; /* Red color */
+  font-size: 1.25rem !important; /* Larger text */
+  font-weight: bold !important;
+}
+#receiptContent .flex.justify-end {
+  text-align: right !important;
+  justify-content: flex-end !important;
+}
+/* Force total styling - catch all total elements */
+.receipt-total-forced {
+  color: #dc2626 !important;
+  font-size: 1.25rem !important;
+  font-weight: bold !important;
+}
+.receipt-total-container-forced {
+  text-align: right !important;
+  justify-content: flex-end !important;
+  display: flex !important;
+}
+/* Force total styling - catch all total elements */
+#receiptContent .flex.justify-end span,
+#receiptContent span:contains("Total") {
+  color: #dc2626 !important; /* Red color */
+  font-size: 1.25rem !important; /* Larger text */
+  font-weight: bold !important;
+}
+
+/* Business Information modal scrollbar */
+#businessInfoModal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0; /* Let scrollbar be flush with modal edge */
+}
+
+#businessInfoModal .modal-body::-webkit-scrollbar {
+  width: 17px; /* Standard Windows scrollbar width */
+}
+#businessInfoModal .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Light gray track */
+}
+#businessInfoModal .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1; /* Standard gray thumb */
+  border: 1px solid #a6a6a6;
+}
+#businessInfoModal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8; /* Darker on hover */
+}
+#businessInfoModal .modal-body {
+  scrollbar-width: auto; /* Firefox: standard width */
+  scrollbar-color: #c1c1c1 #f1f1f1; /* Firefox: thumb track */
+}
+
+/* Light grey placeholder text for Business Information modal */
+#businessInfoModal input::placeholder,
+#businessInfoModal textarea::placeholder {
+  color: #d1d5db !important; /* Light grey */
+  opacity: 1;
+}
+
+/* Standard Windows scrollbar for receipt modal */
+#receiptContent::-webkit-scrollbar {
+  width: 17px; /* Standard Windows scrollbar width */
+}
+#receiptContent::-webkit-scrollbar-track {
+  background: #f1f1f1; /* Light gray track */
+}
+#receiptContent::-webkit-scrollbar-thumb {
+  background: #c1c1c1; /* Standard gray thumb */
+  border: 1px solid #a6a6a6;
+}
+#receiptContent::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8; /* Darker on hover */
+}
+/* Loading spinner for customer save button */
+.loading-spinner {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+    font-size: 1rem;
+    margin-left: 0.5rem;
+}
+
+.button-text.hidden {
+    display: none;
+}
+
+.loading-spinner.hidden {
+    display: none;
+}
+
+/* Order modal specific styling - auto-size to content */
+.order-modal .modal-content {
+  width: auto !important;
+  min-width: 800px;
+  max-width: 90vw;
+  height: auto !important;
+  min-height: 400px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.order-modal .modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.order-modal .order-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  min-height: 300px;
+}
+
+.order-modal .form-section {
+  margin-bottom: 1.5rem;
+}
+
+.order-modal .form-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Ensure modal grows with content but has reasonable constraints */
+.order-modal .modal-content {
+  resize: both;
+  overflow: auto;
+}
+
+/* Style for when modal has a lot of content */
+.order-modal.show {
+  max-height: 95vh;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .order-modal .modal-content {
+    min-width: 600px;
+    max-width: 95vw;
+  }
+
+  .order-modal .order-form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .order-modal .modal-content {
+    min-width: 90vw;
+    max-width: 95vw;
+  }
+}

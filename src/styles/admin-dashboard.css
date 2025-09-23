@@ -1,0 +1,29 @@
+/* Admin Dashboard: field update status states (replaces inline styles)
+   Use with inputs/selects having class .order-field-update */
+
+.order-field-update.wf-field-updating {
+  /* amber-100 background */
+  background-color: #fef3c7 !important;
+}
+.order-field-update.wf-field-success {
+  /* green-100 background */
+  background-color: #dcfce7 !important;
+}
+.order-field-update.wf-field-error {
+  /* red-200 background */
+  background-color: #fecaca !important;
+}
+
+/* Tiny badge pill for dismissed hints count */
+.wf-badge {
+  display: inline-block;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 18px;
+  border-radius: 9999px;
+  background-color: #ef4444; /* red-500 */
+  color: #fff;
+  text-align: center;
+}

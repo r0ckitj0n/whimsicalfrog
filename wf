@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# WhimsicalFrog Quick Commands
+# Simple wrapper for common server operations
+
+# Change to the WhimsicalFrog directory
+cd /Users/jongraves/Documents/Websites/WhimsicalFrog
+
+case "$1" in
+    start)
+        echo "🐸 Starting WhimsicalFrog with monitoring..."
+        ./scripts/start_servers.sh
+        ;;
+    stop)
+        echo "🐸 Stopping WhimsicalFrog servers and monitor..."
+        ./scripts/server_monitor.sh stop
+        pkill -f 'scripts/server_monitor.sh daemon' 2>/dev/null
+        echo "✅ All servers stopped"
+        ;;
+    restart)
+        echo "🐸 Restarting WhimsicalFrog..."
+        ./scripts/server_monitor.sh stop
+        pkill -f 'scripts/server_monitor.sh daemon' 2>/dev/null
+        sleep 2
+        ./scripts/start_servers.sh
+        ;;
+    status)
+        echo "🐸 WhimsicalFrog Server Status:"
+        ./scripts/server_monitor.sh status
+        echo ""
+        echo "Monitor Status:"
+        MONITOR_PID=$(pgrep -f "scripts/server_monitor.sh daemon")
+        if [ -n "$MONITOR_PID" ]; then
+            echo "✅ Monitor daemon running (PID: $MONITOR_PID)"
+        else
+            echo "❌ Monitor daemon not running"
+        fi
+        ;;
+    logs)
+        echo "🐸 Recent server logs:"
+        echo "=== PHP Server Log (last 20 lines) ==="
+        tail -20 logs/php_server.log 2>/dev/null || echo "No PHP server log found"
+        echo ""
+        echo "=== Monitor Log (last 20 lines) ==="
+        tail -20 logs/monitor.log 2>/dev/null || echo "No monitor log found"
+        ;;
+    dump)
+        shift
+        echo "🐸 Creating local database dump into backups/sql/..."
+        if [ "$1" = "--gzip" ] || [ "$1" = "-z" ]; then
+            ./scripts/db/dump_local_db.sh --gzip
+        else
+            ./scripts/db/dump_local_db.sh
+        fi
+        ;;
+    *)
+        echo "🐸 WhimsicalFrog Quick Commands"
+        echo ""
+        echo "Usage: ./wf {start|stop|restart|status|logs|dump [--gzip]}"
+        echo ""
+        echo "  start   - Start server with automatic monitoring"
+        echo "  stop    - Stop all servers and monitoring"
+        echo "  restart - Restart everything"
+        echo "  status  - Check server and monitor status"
+        echo "  logs    - Show recent server logs"
+        echo "  dump    - Dump local DB to backups/sql/ (add --gzip to compress)"
+        echo ""
+        echo "Website: http://localhost:8080"
+        echo "Admin: admin / Pass.123"
+        ;;
+esac

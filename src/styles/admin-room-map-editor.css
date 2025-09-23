@@ -1,0 +1,26 @@
+/* Room Map Editor component styles (no inline styles) */
+
+.rme-canvas-wrap {
+  height: 80vh;
+}
+.rme-canvas {
+  height: 80vh;
+  background-position: center top;
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100%;
+}
+.rme-svg {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+.rme-fullscreen {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+  background: white !important;
+}

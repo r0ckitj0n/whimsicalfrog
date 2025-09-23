@@ -1,0 +1,18 @@
+/* Compact Login Modal Styles (Vite-managed) */
+.wf-login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:var(--z-global-popup, 2147483000)}
+.wf-login-overlay.show{opacity:1;pointer-events:auto}
+.wf-login-modal{width:100%;max-width:360px;margin:12px;padding:0}
+.wf-login-card{background:#fff;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.18);padding:18px 16px 16px;position:relative}
+.wf-login-close{position:absolute;top:8px;right:10px;border:none;background:transparent;color:#667085;font-size:20px;cursor:pointer}
+.wf-login-title{margin:0 0 10px 0;font-size:18px;line-height:1.2;color:#111827;font-weight:700}
+.wf-login-form{display:flex;flex-direction:column;gap:10px}
+.wf-field{display:flex;flex-direction:column;gap:4px}
+.wf-label{font-size:12px;color:#6b7280}
+.wf-input{height:34px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px}
+.wf-input:focus{outline:none;border-color:#87ac3a;box-shadow:0 0 0 3px rgba(135,172,58,.18)}
+.wf-btn-primary:hover{background:#789a34}
+
+/* Make existing /login page inputs compact without heavy overrides */
+.login-page-container .login-input{height:36px;padding:6px 10px;border-radius:8px;font-size:14px}
+.login-page-container .login-form{max-width:380px;margin:0 auto}
+.login-page-container .login-title{font-size:20px}

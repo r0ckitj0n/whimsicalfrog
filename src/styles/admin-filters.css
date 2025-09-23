@@ -1,0 +1,97 @@
+/* Admin Filters Bar: clear, horizontal, responsive */
+.admin-filter-section {
+  margin: 6px 0;
+}
+
+/* Semantic wrapper for the whole filter bar */
+.admin-filters {
+  display: block; /* the form inside will be the flex row */
+  padding: 10px 12px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow-x: auto; /* allow horizontal scroll instead of wrapping */
+}
+
+/* Ensure the form itself lays out horizontally */
+.admin-filters .admin-filter-form {
+  display: inline-flex; /* shrink-to-fit so overflow-x works */
+  flex-direction: row; /* force horizontal layout; override global column rule */
+  flex-wrap: nowrap; /* single row */
+  align-items: center;
+  gap: 10px 12px;
+  margin: 0; /* remove default form margins */
+  white-space: nowrap; /* prevent line breaks between inline elements */
+}
+
+/* Fallback: enforce row layout even without the .admin-filters wrapper */
+.admin-filter-section .admin-filter-form,
+.admin-filter-section > .admin-filters > form.admin-filter-form {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.admin-filter-section .admin-filter-form > *,
+.admin-filter-section > .admin-filters > form.admin-filter-form > * {
+  flex: 0 0 auto; /* keep controls from stretching */
+}
+
+/* Ensure controls don't expand full width due to legacy rules */
+.admin-filter-section .admin-form-input,
+.admin-filter-section .admin-form-select,
+.admin-filter-section .admin-filter-button,
+.admin-filter-section .btn {
+  width: auto;
+  max-width: none;
+}
+
+/* Inputs/selects sizing and visuals */
+.admin-filters .admin-form-input,
+.admin-filters .admin-form-select {
+  flex: 0 0 auto; /* do not shrink; keep in one row */
+  height: 34px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  background: #fff;
+  color: #111;
+  border: 1px solid #d1d5db; /* gray-300 */
+  border-radius: 8px;
+}
+.admin-filters .admin-form-input::placeholder { color: #6b7280; }
+
+/* Buttons visually aligned with inputs */
+.admin-filters .admin-filter-button,
+.admin-filters .btn {
+  flex: 0 0 auto; /* keep buttons from shrinking */
+  min-height: 34px;
+  height: 34px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Put primary actions at the end consistently */
+.admin-filters .admin-actions {
+  margin-left: 12px; /* spacing from previous control */
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Compact icon button (e.g., refresh) */
+.admin-filters .btn-icon {
+  width: 34px;
+  min-width: 34px;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Responsive: stack more tightly on small screens */
+@media (max-width: 640px) {
+  .admin-filters { padding: 8px 10px; }
+}

@@ -1,0 +1,46 @@
+/* Admin Tooltips (Vite-managed)
+   - Visual style is static; content comes from /api/help_tooltips.php via TooltipManager
+*/
+
+.wf-tooltip {
+  position: absolute;
+  z-index: var(--z-index-tooltip, 250);
+  max-width: min(320px, 90vw);
+  color: #fff;
+  pointer-events: none;
+}
+
+
+.wf-tooltip__content {
+  background: rgba(17, 24, 39, 0.98); /* gray-900 */
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wf-tooltip__title {
+  font-weight: 700;
+  color: #c7d2fe; /* indigo-200 */
+  margin-bottom: 4px;
+}
+
+.wf-tooltip__body {
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Arrow */
+.wf-tooltip__arrow {
+  width: 0; height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid rgba(17, 24, 39, 0.98);
+  margin: 0 auto;
+}
+
+/* Position variants (for future expansion) */
+.wf-tooltip--top .wf-tooltip__arrow { border-top-color: rgba(17, 24, 39, 0.98); }
+.wf-tooltip--bottom .wf-tooltip__arrow { transform: rotate(180deg); }
+.wf-tooltip--left .wf-tooltip__arrow { display: none; }
+.wf-tooltip--right .wf-tooltip__arrow { display: none; }

@@ -1,0 +1,52 @@
+# Node
+node_modules/
+
+# Build outputs
+dist/
+
+# ESLint cache
+.cache/
+
+# Logs
+logs/
+*.log
+
+# PHP sessions (environment-specific, do not track)
+sessions/
+
+# Vite/Dev server
+hot
+
+# PHP Composer
+vendor/
+
+# Secret store key (filesystem)
+config/secret.key
+
+# Deploy keys
+whf_deploy_key
+whf_deploy_key.pub
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Root-level SQL dumps (do not track). Allow SQL under scripts/.
+/*.sql
+!scripts/**/*.sql
+
+# Root-level env/hot files (do not track)
+/.env*
+!/.env.example
+/hot*
+
+# Large files not tracked
+backups/
+# Allow quarantined duplicates to be committed
+!backups/duplicates/**
+logs/
+logs/*.log
+
+# Allow quarantined legacy files to be committed
+!backups/legacy/**

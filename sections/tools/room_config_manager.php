@@ -1,0 +1,242 @@
+<?php
+/**
+ * Room Configuration Manager (migrated to sections/tools)
+ */
+
+require_once dirname(__DIR__, 2) . '/includes/functions.php';
+require_once dirname(__DIR__, 2) . '/includes/auth.php';
+
+if (class_exists('Auth')) {
+    Auth::requireAdmin();
+} elseif (function_exists('requireAdmin')) {
+    requireAdmin();
+}
+
+// Check if this is being loaded in a modal context (no layout needed)
+$is_modal_context = isset($_GET['modal']) || strpos($_SERVER['HTTP_REFERER'] ?? '', 'admin_settings') !== false;
+
+$__wf_included_layout = false;
+if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
+    include dirname(__DIR__, 2) . '/partials/header.php';
+    $__wf_included_layout = true;
+}
+?>
+<div class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Room Configuration Manager</h1>
+            <div id="messageContainer"></div>
+            <div class="mb-6">
+                <label for="roomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>
+                <select id="roomSelect" class="form-input w-full" data-change-action="loadRoomConfig">
+                    <option value="">Choose a room...</option>
+                    <option value="1">Room 1</option>
+                    <option value="2">Room 2</option>
+                    <option value="3">Room 3</option>
+                    <option value="4">Room 4</option>
+                    <option value="5">Room 5</option>
+                </select>
+            </div>
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Current Room Configurations</h2>
+                <div id="roomConfigContainer"></div>
+            </div>
+            <div class="border-t pt-8">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Configure Room Settings</h2>
+                <div id="configFormContainer" class="config-form-container hidden">
+                    <form id="roomConfigForm" class="space-y-8">
+                        <input type="hidden" id="roomNumber" name="room_number">
+                        <div class="config-section">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Popup Settings</h3>
+                            <div class="config-group">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Show Delay (ms)</label>
+                                    <input type="number" id="show_delay" name="show_delay" value="50" min="0" max="1000" class="form-input w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Hide Delay (ms)</label>
+                                    <input type="number" id="hide_delay" name="hide_delay" value="150" min="0" max="1000" class="form-input w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Max Width (px)</label>
+                                    <input type="number" id="max_width" name="max_width" value="450" min="200" max="800" class="form-input w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Min Width (px)</label>
+                                    <input type="number" id="min_width" name="min_width" value="280" min="200" max="600" class="form-input w-full">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="enable_sales_check" checked class="mr-2">
+                                    Enable Sales Check
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="show_category" checked class="mr-2">
+                                    Show Category
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="show_description" checked class="mr-2">
+                                    Show Description
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="enable_image_fallback" checked class="mr-2">
+                                    Image Fallback
+                                </label>
+                            </div>
+                        </div>
+                        <div class="config-section">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Modal Settings</h3>
+                            <div class="config-group">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Max Quantity</label>
+                                    <input type="number" id="max_quantity" name="max_quantity" value="999" min="1" max="9999" class="form-input w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Min Quantity</label>
+                                    <input type="number" id="min_quantity" name="min_quantity" value="1" min="1" max="10" class="form-input w-full">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="enable_colors" name="enable_colors" checked class="mr-2">
+                                    Enable Colors
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="enable_sizes" name="enable_sizes" checked class="mr-2">
+                                    Enable Sizes
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="show_unit_price" checked class="mr-2">
+                                    Show Unit Price
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="enable_stock_checking" checked class="mr-2">
+                                    Stock Checking
+                                </label>
+                            </div>
+                        </div>
+                        <div class="config-section">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Interaction Settings</h3>
+                            <div class="config-group">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Debounce Time (ms)</label>
+                                    <input type="number" id="debounce_time" name="debounce_time" value="50" min="0" max="500" class="form-input w-full">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="click_to_details" checked class="mr-2">
+                                    Click to Details
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="hover_to_popup" checked class="mr-2">
+                                    Hover to Popup
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="popup_add_to_cart" checked class="mr-2">
+                                    Popup Add to Cart
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="enable_touch_events" checked class="mr-2">
+                                    Touch Events
+                                </label>
+                            </div>
+                        </div>
+                        <div class="config-section">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Visual Settings</h3>
+                            <div class="config-group">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Popup Animation</label>
+                                    <select id="popup_animation" name="popup_animation" class="form-input w-full">
+                                        <option value="fade">Fade</option>
+                                        <option value="slide">Slide</option>
+                                        <option value="scale">Scale</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Modal Animation</label>
+                                    <select id="modal_animation" name="modal_animation" class="form-input w-full">
+                                        <option value="scale">Scale</option>
+                                        <option value="fade">Fade</option>
+                                        <option value="slide">Slide</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" data-action="resetForm" class="btn btn-secondary">Reset to Defaults</button>
+                            <button type="submit" class="btn btn-primary" id="saveConfigBtn">Save Configuration</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php if ($__wf_included_layout) {
+    include dirname(__DIR__, 2) . '/partials/footer.php';
+} ?>
+
+<?php if ($is_modal_context): ?>
+<style>
+body { margin: 0; padding: 20px; background: white; font-family: system-ui, sans-serif; }
+.bg-gray-100 { background: white !important; min-height: auto !important; }
+.container { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+.shadow-lg { box-shadow: none !important; }
+h1 { font-size: 20px !important; margin-bottom: 16px !important; }
+</style>
+
+<script>(function(){
+  var f=document.getElementById('roomConfigForm');
+  var s=document.getElementById('roomSelect');
+  var c=document.getElementById('configFormContainer');
+  if(!f||!s) return;
+
+  function load(room){
+    if(!room) return;
+    fetch('/api/room_config.php?action=get&room='+encodeURIComponent(room))
+      .then(function(r){return r.json();})
+      .then(function(j){
+        var cfg=(j&&j.config)||{};
+        Object.keys(cfg).forEach(function(k){
+          var el=f.querySelector('[name="'+k+'"]');
+          if(!el) return;
+          if(el.type==='checkbox') el.checked=!!cfg[k];
+          else el.value=cfg[k];
+        });
+        var rn=f.querySelector('#roomNumber'); if(rn) rn.value=room;
+        if(c) c.classList.remove('hidden');
+      })
+      .catch(function(){});
+  }
+
+  s.addEventListener('change', function(e){ load(e.target.value); });
+
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    var room=s.value; if(!room){ alert('Select a room'); return; }
+    var fd=new FormData(f), cfg={};
+    fd.forEach(function(v,k){
+      if(k==='room_number') return;
+      var el=f.querySelector('[name="'+k+'"]');
+      var val = (el && el.type==='checkbox') ? el.checked : v;
+      var n = Number(val);
+      cfg[k] = isNaN(n) ? val : n;
+    });
+    fetch('/api/room_config.php?action=save',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({room:room, config:cfg})
+    })
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j && j.success){ alert('Settings saved successfully'); location.reload(); }
+      else { alert('Save failed: ' + ((j && (j.message||j.error)) || 'Unknown')); }
+    })
+    .catch(function(){ alert('Save failed'); });
+  });
+
+  if(s.value) load(s.value);
+})();</script>
+<?php endif; ?>

@@ -1,0 +1,353 @@
+<?php
+/**
+ * Load Room Content API
+ *
+ * Returns JSON with HTML content and metadata for room modals.
+ */
+
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/room_helpers.php';
+
+// JSON response headers
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    echo json_encode(['success' => false, 'message' => 'Only GET allowed']);
+    exit;
+}
+
+$roomNumber = $_GET['room'] ?? $_GET['room_number'] ?? 'A';
+$isModal = isset($_GET['modal']);
+
+if (!isValidRoom($roomNumber)) {
+    echo json_encode(['success' => false, 'message' => 'Invalid room']);
+    exit;
+}
+
+try {
+    $pdo = Database::getInstance();
+    $content = generateRoomContent($roomNumber, $pdo, $isModal);
+    $metadata = getRoomMetadata($roomNumber, $pdo);
+
+    echo json_encode([
+        'success' => true,
+        'content' => $content,
+        'room_number' => $roomNumber,
+        'metadata' => $metadata,
+        'is_modal' => $isModal
+    ]);
+} catch (Exception $e) {
+    error_log('load_room_content error: ' . $e->getMessage());
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+}
+
+/**
+ * Generate room content HTML for modal or inline view
+ */
+function generateRoomContent($roomNumber, $pdo, $isModal = false)
+{
+    $roomType = "room{$roomNumber}";
+
+    // fetch category name from room_settings
+    $meta = getRoomMetadata($roomNumber, $pdo);
+    $categoryName = $meta['category'];
+    // Attempt to resolve a category_id from metadata or by name
+    $categoryId = $meta['category_id'] ?? null;
+    if (!$categoryId && $categoryName !== '') {
+        $catInfo = Database::queryOne("SELECT id, description FROM categories WHERE name = ? LIMIT 1", [$categoryName]) ?: [];
+        $categoryId = $catInfo['id'] ?? null;
+    }
+
+    $items = [];
+    // 1) Prefer FK-based lookup by category_id when available
+    if ($categoryId) {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 WHERE i.category_id = ? ORDER BY i.sku ASC",
+                [$categoryId]
+            );
+        } catch (Exception $e) { /* fall back below */
+        }
+    }
+    // 2) Fallback to legacy name-based match
+    if (empty($items) && $categoryName !== '') {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 WHERE i.category = ? ORDER BY i.sku ASC",
+                [$categoryName]
+            );
+        } catch (Exception $e) { /* fall back below */
+        }
+    }
+    // 3) Slug-normalized join fallback (handles small naming differences)
+    if (empty($items) && $categoryName !== '') {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 JOIN categories c ON LOWER(REPLACE(REPLACE(TRIM(i.category), '&', 'and'), ' ', '-')) = LOWER(REPLACE(REPLACE(TRIM(c.name), '&', 'and'), ' ', '-'))
+                 WHERE c.name = ? ORDER BY i.sku ASC",
+                [$categoryName]
+            );
+        } catch (Exception $e) { /* fall back below */
+        }
+    }
+    // 4) Very defensive partial LIKE match to avoid empty UI entirely
+    if (empty($items) && $categoryName !== '') {
+        try {
+            $items = Database::queryAll(
+                "SELECT i.*,
+                        i.stockLevel,
+                        i.retailPrice,
+                        COALESCE(img.image_path, i.imageUrl) as image_path,
+                        img.is_primary,
+                        img.alt_text
+                 FROM items i
+                 LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
+                 WHERE i.category LIKE ? ORDER BY i.sku ASC",
+                ['%' . $categoryName . '%']
+            );
+        } catch (Exception $e) { /* keep empty */
+        }
+    }
+
+    // fetch room settings
+    $rs = Database::queryOne("SELECT room_name, description FROM room_settings WHERE room_number = ?", [$roomNumber]) ?: [];
+
+    // load coordinates
+    $cd = loadRoomCoordinates($roomType, $pdo);
+    $coordsRaw = $cd['coordinates'] ?? [];
+    // Normalize coordinates to a zero-based numeric array in original order
+    $coords = array_values($coordsRaw);
+
+    ob_start(); ?>
+    <div id="modalRoomPage" class="modal-room-page" data-room="<?php echo $roomNumber; ?>">
+      
+      <!-- Modal Header with Title and Description -->
+      <?php if (!empty($rs['room_name']) || !empty($rs['description'])): ?>
+      <div class="room-title-overlay">
+        <?php if (!empty($rs['room_name'])): ?>
+          <h3><?php echo htmlspecialchars($rs['room_name']); ?></h3>
+        <?php endif; ?>
+        <?php if (!empty($rs['description'])): ?>
+          <p><?php echo htmlspecialchars($rs['description']); ?></p>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
+      
+      <div class="room-modal-iframe-container">
+        <div class="room-overlay-wrapper room-modal-content-wrapper">
+          <!-- Room content loaded -->
+          
+          <?php
+          // Debug output for development
+          $itemCount = count($items);
+    $coordCount = count($coords);
+    echo "<!-- DEBUG: Room $roomNumber - Category: '$categoryName' - Items: $itemCount - Coords: $coordCount -->\n";
+
+    if (empty($items)) {
+        echo "<!-- DEBUG: No items found for category '$categoryName' in room $roomNumber -->\n";
+    }
+    ?>
+          
+          <?php foreach ($items as $i => $it):
+              $idx = $i + 1;
+              $coordIdx = $coordCount ? ($i % $coordCount) : 0;
+              $cRaw = $coords[$coordIdx] ?? [];
+              // Allow coordinate arrays to be either associative or numeric index based
+              if (isset($cRaw[0], $cRaw[1])) {
+                  // numeric indexed array [top,left,width,height]
+                  $cRaw = [
+                      'top' => $cRaw[0],
+                      'left' => $cRaw[1],
+                      'width' => $cRaw[2] ?? 80,
+                      'height' => $cRaw[3] ?? 80,
+                  ];
+              }
+              $top = $cRaw['top'] ?? $cRaw['Top'] ?? $cRaw['y'] ?? $cRaw['Y'] ?? 0;
+              $left = $cRaw['left'] ?? $cRaw['Left'] ?? $cRaw['x'] ?? $cRaw['X'] ?? 0;
+              $width = $cRaw['width'] ?? $cRaw['Width'] ?? $cRaw['w'] ?? $cRaw['W'] ?? 80;
+              $height = $cRaw['height'] ?? $cRaw['Height'] ?? $cRaw['h'] ?? $cRaw['H'] ?? 80;
+              $c = ['top' => $top,'left' => $left,'width' => $width,'height' => $height];
+              ?>
+            <div class="room-product-icon positioned area-<?php echo $idx; ?>"
+                 data-sku="<?php echo htmlspecialchars($it['sku']); ?>"
+                 data-name="<?php echo htmlspecialchars($it['name']); ?>"
+                 data-price="<?php echo htmlspecialchars($it['retailPrice'] ?? $it['price'] ?? '0', ENT_QUOTES); ?>"
+                 data-stock-level="<?php echo htmlspecialchars($it['stockLevel'] ?? $it['stock_level'] ?? '0', ENT_QUOTES); ?>"
+                 data-category="<?php echo htmlspecialchars($it['category'] ?? ''); ?>"
+                 data-image="<?php echo getImageUrl($it['image_path'], 'items', 'png'); ?>"
+                 data-description="<?php echo htmlspecialchars($it['description'] ?? '', ENT_QUOTES); ?>"
+                 data-marketing-label="<?php echo htmlspecialchars($it['marketingLabel'] ?? '', ENT_QUOTES); ?>"
+                 data-original-top="<?php echo $c['top']; ?>"
+                 data-original-left="<?php echo $c['left']; ?>"
+                 data-original-width="<?php echo $c['width']; ?>"
+                 data-original-height="<?php echo $c['height']; ?>"
+                 data-debug-position="top:<?php echo $c['top']; ?> left:<?php echo $c['left']; ?> w:<?php echo $c['width']; ?> h:<?php echo $c['height']; ?>">
+              <picture>
+                <source srcset="<?php echo getImageUrl($it['image_path'], 'items'); ?>" type="image/webp">
+                <img src="<?php echo getImageUrl($it['image_path'], 'items', 'png'); ?>"
+                     alt="<?php echo htmlspecialchars($it['name'] ?? ''); ?>"
+                     class="room-product-icon-img">
+              </picture>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      
+    </div>
+    <?php return ob_get_clean();
+}
+
+/**
+ * Get default room coordinates when database has no data
+ */
+function getDefaultRoomCoordinates($roomType)
+{
+    $defaultCoords = [
+        'room1' => [ // T-Shirts & Apparel - spread across room
+            ['top' => 200, 'left' => 150, 'width' => 80, 'height' => 80],
+            ['top' => 350, 'left' => 300, 'width' => 80, 'height' => 80],
+            ['top' => 180, 'left' => 450, 'width' => 80, 'height' => 80],
+            ['top' => 400, 'left' => 600, 'width' => 80, 'height' => 80]
+        ],
+        'room2' => [ // Tumblers & Drinkware - positioned near kitchen area
+            ['top' => 250, 'left' => 200, 'width' => 80, 'height' => 80],
+            ['top' => 180, 'left' => 350, 'width' => 80, 'height' => 80],
+            ['top' => 320, 'left' => 480, 'width' => 80, 'height' => 80],
+            ['top' => 280, 'left' => 600, 'width' => 80, 'height' => 80]
+        ],
+        'room3' => [ // Custom Artwork - wall positions
+            ['top' => 100, 'left' => 200, 'width' => 100, 'height' => 80],
+            ['top' => 150, 'left' => 400, 'width' => 100, 'height' => 80],
+            ['top' => 200, 'left' => 600, 'width' => 100, 'height' => 80]
+        ],
+        'room4' => [ // Sublimation Items - center table area
+            ['top' => 300, 'left' => 400, 'width' => 80, 'height' => 80]
+        ],
+        'room5' => [ // Window Wraps - near window
+            ['top' => 242, 'left' => 261, 'width' => 108, 'height' => 47]
+        ]
+    ];
+
+    return $defaultCoords[$roomType] ?? [];
+}
+
+/**
+ * Load room coordinates from room_maps table
+ */
+function loadRoomCoordinates($roomType, $pdo)
+{
+    try {
+        // Derive room_number from provided roomType like 'room1'
+        $roomNumber = (preg_match('/^room(\d+)$/i', (string)$roomType, $m)) ? (string)((int)$m[1]) : '';
+        $row = Database::queryOne(
+            "SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1",
+            [$roomNumber]
+        );
+        if ($row) {
+            $coords = json_decode($row['coordinates'], true);
+            // Validate that coordinates look plausible (non-zero). If not, fall back to defaults.
+            if (!empty($coords)) {
+                // assume first coord exists
+                $first = $coords[0];
+                if ((int)($first['top'] ?? 0) !== 0 || (int)($first['left'] ?? 0) !== 0) {
+                    return ['coordinates' => $coords];
+                }
+            }
+            // otherwise continue to default
+            // do not return invalid coordinates; fallback to default below
+        }
+    } catch (Exception $e) {
+        error_log('coords error: ' . $e->getMessage());
+    }
+
+    // Fallback coordinates when database has no data
+    return ['coordinates' => getDefaultRoomCoordinates($roomType)];
+}
+
+/**
+ * Get room metadata for modal
+ */
+function getRoomMetadata($roomNumber, $pdo)
+{
+    // Get room settings
+    $rs = Database::queryOne("SELECT room_name, description FROM room_settings WHERE room_number = ?", [$roomNumber]) ?: [];
+
+    // Get primary category for this room
+    $categoryData = Database::queryOne(
+        "SELECT c.id AS category_id, c.name AS category_name
+        FROM room_category_assignments rca
+        JOIN categories c ON rca.category_id = c.id
+        WHERE rca.room_number = ? AND rca.is_primary = 1
+        LIMIT 1",
+        [$roomNumber]
+    );
+    $categoryName = $categoryData ? $categoryData['category_name'] : '';
+    $categoryId = $categoryData ? ($categoryData['category_id'] ?? null) : null;
+
+    return [
+        'room_number' => $roomNumber,
+        'room_name'   => $rs['room_name'] ?? '',
+        'description' => $rs['description'] ?? '',
+        'category'    => $categoryName,
+        'category_id' => $categoryId
+    ];
+}
+
+/**
+ * Build image URL with fallback extension
+ */
+function getImageUrl($path, $dir, $ext = 'webp')
+{
+    if (empty($path)) {
+        return '';
+    }
+
+    // Clean the path and remove leading slash
+    $cleanPath = ltrim($path, '/');
+
+    // If path already contains the full images directory structure, use it as-is
+    if (strpos($cleanPath, 'images/' . $dir . '/') === 0) {
+        $extension = ($ext === 'png') ? 'png' : 'webp';
+        $fileName = preg_replace('/\.[^\.]+$/', '.' . $extension, $cleanPath);
+        return '/' . $fileName;
+    }
+
+    // Otherwise, build the full path
+    $extension = ($ext === 'png') ? 'png' : 'webp';
+    $fileName = preg_replace('/\.[^\.]+$/', '.' . $extension, $cleanPath);
+    $imageDir = rtrim('/images/' . trim($dir, '/'), '/');
+    return $imageDir . '/' . $fileName;
+}
+?>

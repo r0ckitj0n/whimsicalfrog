@@ -1,0 +1,123 @@
+/* Manual notification fallback styles (for when the main system isn't loaded) */
+.wf-notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 999999 !important; /* Very high z-index to appear above all admin modals */
+    pointer-events: none;
+    max-width: 400px;
+}
+
+/* Notification base styles */
+.wf-notification {
+    pointer-events: auto;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid;
+    min-width: 300px;
+    max-width: 400px;
+    position: relative;
+    transform: translateX(100%);
+    opacity: 0;
+    transition: all 0.3s ease-out;
+    cursor: pointer;
+    padding: 16px;
+    background: linear-gradient(135deg, #87ac3a, #6b8e23);
+    color: white;
+    border-color: #6b8e23;
+    z-index: 999999 !important; /* Ensure individual notifications also have high z-index */
+}
+
+/* Visible notification */
+.wf-notification.is-visible {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+/* Slide out animation */
+.wf-notification.slide-out {
+    transform: translateX(120%);
+    opacity: 0;
+    margin-bottom: 0;
+}
+
+.wf-notification-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.wf-notification-icon {
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.wf-notification-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.wf-notification-message {
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+
+.wf-notification-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.wf-notification-close:hover {
+    opacity: 1;
+}
+
+/* Success notification styles */
+.wf-success-notification {
+    background: linear-gradient(135deg, #87ac3a, #6b8e23);
+    border-color: #6b8e23;
+    color: white;
+}
+
+.wf-success-notification .wf-notification-close {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Error notification styles */
+.wf-error-notification {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border-color: #dc2626;
+    color: white;
+}
+
+.wf-error-notification .wf-notification-close {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .wf-notification-container {
+        left: 10px;
+        right: 10px;
+        top: 10px;
+        max-width: none;
+    }
+
+    .wf-notification {
+        min-width: auto;
+        max-width: none;
+    }
+}

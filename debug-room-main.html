@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Debug Room Main</title>
+</head>
+<body>
+    <section id="mainRoomPage" class="main-room-section" data-bg-url="/images/backgrounds/background-room-main.webp">
+        <p>Debug: This should show the correct background</p>
+    </section>
+
+    <script type="module">
+        console.log('=== DEBUG START ===');
+        console.log('Page loaded');
+        console.log('mainRoomPage element:', document.getElementById('mainRoomPage'));
+        console.log('data-bg-url value:', document.getElementById('mainRoomPage')?.getAttribute('data-bg-url'));
+
+        // Test loading room-main.js
+        import('/src/js/room-main.js')
+            .then(() => {
+                console.log('✅ room-main.js loaded successfully');
+            })
+            .catch((error) => {
+                console.error('❌ room-main.js failed to load:', error);
+            });
+    </script>
+</body>
+</html>

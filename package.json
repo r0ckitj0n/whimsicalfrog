@@ -1,0 +1,86 @@
+{
+  "name": "whimsical-frog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "printf 'http://127.0.0.1:5176' > hot && vite --host 127.0.0.1 --port 5176 --strictPort",
+    "dev:5180": "VITE_DEV_PORT=5180 VITE_HMR_PORT=5180 printf 'http://127.0.0.1:5180' > hot && vite --host 127.0.0.1 --port 5180 --strictPort",
+    "stop": "rm hot",
+    "quarantine:dupes": "bash scripts/dev/quarantine_duplicates.sh",
+    "prebuild": "bash scripts/dev/quarantine_duplicates.sh",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --cache --cache-location .cache/eslint/",
+    "lint:fix": "eslint . --fix --cache --cache-location .cache/eslint/",
+    "lint:css": "stylelint \"src/styles/**/*.css\" \"css/**/*.css\"",
+    "lint:css:fix": "stylelint \"src/styles/**/*.css\" \"css/**/*.css\" --fix",
+    "lint:all": "npm run lint && npm run lint:css",
+    "guard:styles": "node scripts/disallow-inline-styles.mjs",
+    "guard:admin-router": "node scripts/dev/guard-admin-router.mjs",
+    "guard:docs": "node scripts/dev/guard-docs-structure.mjs",
+    "guard:docs:filenames": "node scripts/dev/guard-docs-filenames.mjs",
+    "guard:docs:filenames:staged": "node scripts/dev/guard-docs-filenames.mjs --staged",
+    "guard:images": "node scripts/guard-images.mjs",
+    "guard:templates:css": "node scripts/guard-templates-css.mjs",
+    "guard:z-index": "node scripts/guard-z-index.mjs",
+    "guard:duplicates": "node scripts/dev/guard-duplicates.mjs",
+    "guard:legacy": "node scripts/dev/legacy-scan.mjs",
+    "guard:legacy:write": "node scripts/dev/legacy-scan.mjs --write",
+    "audit:images:code": "node scripts/dev/audit-code-image-refs.mjs",
+    "audit:images:db": "node scripts/dev/audit-db-images.mjs",
+    "check:css:orphans": "node scripts/check-orphaned-css.mjs",
+    "check:css:orphans:write": "node scripts/check-orphaned-css.mjs --write",
+    "check:css:inventory": "node scripts/css-inventory.mjs",
+    "prefix-unused": "node scripts/auto-prefix-unused.mjs --run-eslint",
+    "prefix-unused:write": "node scripts/auto-prefix-unused.mjs --run-eslint --write",
+    "prepare": "husky install",
+    "tooltips:export": "node scripts/dev/export-admin-tooltips.mjs",
+    "tooltips:audit": "node scripts/dev/audit-tooltips.mjs",
+    "tooltips:seed:dry": "node scripts/dev/seed-admin-tooltips.mjs --dry-run",
+    "tooltips:seed": "node scripts/dev/seed-admin-tooltips.mjs --apply",
+    "smoke:apis": "bash scripts/dev/smoke_all_apis.sh",
+    "db:dump": "bash scripts/db/dump_local_db.sh",
+    "db:dump:gzip": "bash scripts/db/dump_local_db.sh --gzip",
+    "release": "bash scripts/release.sh",
+    "release:no-deploy": "bash scripts/release.sh --no-deploy",
+    "release:tag": "bash scripts/release.sh --no-deploy --no-build --no-push"
+  },
+  "devDependencies": {
+    "@babel/parser": "^7.28.0",
+    "eslint": "^9.11.1",
+    "@babel/traverse": "^7.25.0",
+    "glob": "^11.0.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "postcss": "^8.5.6",
+    "postcss-safe-parser": "^6.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss-nesting": "^12.1.5",
+    "postcss-selector-parser": "^7.1.0",
+    "recast": "^0.23.11",
+    "stylelint": "^16.23.1",
+    "stylelint-config-standard": "^39.0.0",
+    "vite": "^7.0.6",
+    "vite-plugin-full-reload": "^1.2.0"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.0",
+    "sortablejs": "^1.15.6"
+  },
+  "lint-staged": {
+    "**/*.{js,mjs,cjs}": [
+      "node scripts/disallow-inline-styles.mjs",
+      "eslint --no-warn-ignored --max-warnings=0 --cache --cache-location .cache/eslint/ --format json"
+    ],
+    "src/styles/**/*.css": [
+      "stylelint --fix"
+    ],
+    "css/**/*.css": [
+      "stylelint --fix"
+    ],
+    "**/*.css": [
+      "node scripts/guard-z-index.mjs"
+    ]
+  }
+}

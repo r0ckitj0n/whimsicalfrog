@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          npm ci || npm install
+
+      - name: Run inline-style guard
+        run: npm run guard:styles
+
+      - name: Run template CSS guard
+        run: npm run guard:templates:css
+
+      - name: Guard z-index usage
+        run: npm run guard:z-index
+
+      - name: Run duplicate/backup guard
+        run: npm run guard:duplicates
+
+      - name: Guard admin router
+        run: npm run guard:admin-router
+
+      - name: Guard docs structure
+        run: npm run guard:docs
+
+      - name: Guard docs filename convention (UPPER_SNAKE_CASE)
+        run: npm run -s guard:docs:filenames
+
+      - name: Guard images naming and pairs
+        run: npm run guard:images
+
+      - name: Audit code image references
+        run: npm run audit:images:code
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Stylelint
+        run: npm run lint:css
+      
+      - name: Check orphaned CSS
+        run: npm run check:css:orphans
+      
+      - name: Check tooltip coverage
+        run: ./scripts/check-tooltips.sh

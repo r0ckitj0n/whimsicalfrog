@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Popup Click</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-popup { border: 1px solid #ccc; padding: 10px; margin: 10px 0; background: #f9f9f9; cursor: pointer; }
+        #test-result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Test Popup Click Functionality</h1>
+
+    <div class="test-popup" onclick="testPopupClick()">
+        <strong>Test Popup</strong><br>
+        SKU: WF-TU-001<br>
+        Name: Test Item<br>
+        Click me to test popup functionality
+    </div>
+
+    <div id="test-result">
+        <h3>Test Results:</h3>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // Mock the required functions for testing
+        window.hideGlobalPopupImmediate = function() {
+            console.log('[TEST] hideGlobalPopupImmediate called');
+        };
+
+        window.showGlobalItemModal = function(sku, item) {
+            document.getElementById('results').innerHTML += '<p style="color: green;">✅ showGlobalItemModal called with SKU: ' + sku + '</p>';
+            console.log('[TEST] showGlobalItemModal called with:', sku, item);
+        };
+
+        function testPopupClick() {
+            const testItem = {
+                sku: 'WF-TU-001',
+                name: 'Test Item',
+                price: 19.99
+            };
+
+            document.getElementById('results').innerHTML += '<p>🖱️ Clicked popup with item: ' + testItem.sku + '</p>';
+
+            // Test if showGlobalItemModal is available
+            if (typeof window.showGlobalItemModal === 'function') {
+                window.showGlobalItemModal(testItem.sku, testItem);
+            } else {
+                document.getElementById('results').innerHTML += '<p style="color: red;">❌ showGlobalItemModal is not available</p>';
+            }
+        }
+    </script>
+</body>
+</html>

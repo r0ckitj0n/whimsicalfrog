@@ -1,0 +1,22 @@
+# Security hardening for the /includes directory
+# -----------------------------------------------------------------------------
+# 1. Disable directory listing so visitors cannot browse file structure.
+Options -Indexes
+
+# 2. Protect this very file from outside access.
+<Files .htaccess>
+  Require all denied
+</Files>
+
+# 3. Block direct access to all PHP files in includes directory
+#    These files should only be included by other scripts, not accessed directly
+<FilesMatch "\.php$">
+  Require all denied
+</FilesMatch>
+
+# 4. Block access to common sensitive file types
+<FilesMatch "\.(?:bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|md|json|yml?|env)$">
+  Require all denied
+</FilesMatch>
+
+# End /includes/.htaccess

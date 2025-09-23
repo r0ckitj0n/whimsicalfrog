@@ -1,0 +1,970 @@
+// Admin Settings - Delegated Click Handlers
+// Handles all click events with data-action attributes
+
+document.addEventListener('click', async (e) => {
+  const t = e.target;
+  const closest = (sel) => t && t.closest ? t.closest(sel) : null;
+
+  // Business Info Modal handlers
+  if (closest('[data-action="open-business-info"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const mod = await import('../modules/business-settings-api.js');
+      const BusinessSettingsAPI = mod?.default || mod?.BusinessSettingsAPI;
+      const info = await BusinessSettingsAPI.getBusinessInfo();
+      // Apply business info and show modal
+      if (window.applyBusinessInfo) {
+        window.applyBusinessInfo(info.data || {});
+      }
+      if (window.showModal) {
+        window.showModal('businessInfoModal');
+      }
+    } catch (error) {
+      console.error('Error loading business info:', error);
+    }
+    return;
+  }
+
+  // Dashboard Configuration Modal
+  if (closest('[data-action="open-dashboard-config"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Load dashboard configuration data
+      const response = await fetch('/api/dashboard_sections.php?action=get_sections');
+      const data = await response.json();
+      console.log('Dashboard config data:', data);
+
+      // Show modal
+      if (window.showModal) {
+        window.showModal('dashboardConfigModal');
+      }
+    } catch (error) {
+      console.error('Error loading dashboard config:', error);
+    }
+    return;
+  }
+
+  // Categories Management Modal
+  if (closest('[data-action="open-categories"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Show modal
+      if (window.showModal) {
+        window.showModal('categoriesModal');
+      }
+    } catch (error) {
+      console.error('Error opening categories modal:', error);
+    }
+    return;
+  }
+
+  // Attributes Management Modal (Genders, Sizes, Colors)
+  if (closest('[data-action="open-attributes"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Load global attributes data
+      if (window.fetchGlobalAttributes) {
+        await window.fetchGlobalAttributes();
+      }
+
+      // Show modal
+      if (window.showModal) {
+        window.showModal('attributesModal');
+
+        // Initialize modal after it's shown
+        setTimeout(() => {
+          if (window.initAttributesModal) {
+            window.initAttributesModal('attributesModal');
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Error loading attributes modal:', error);
+    }
+    return;
+  }
+
+  // Email Settings Modal
+  if (closest('[data-action="open-email-settings"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Load email configuration data
+      const response = await fetch('/api/email_config.php?action=get');
+      const data = await response.json();
+      console.log('Email config data:', data);
+
+      // Show modal
+      if (window.showModal) {
+        window.showModal('emailSettingsModal');
+      }
+    } catch (error) {
+      console.error('Error loading email settings:', error);
+    }
+    return;
+  }
+
+  // Square Settings Modal
+  if (closest('[data-action="open-square-settings"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Load Square configuration data
+      const response = await fetch('/api/square_config.php?action=get');
+      const data = await response.json();
+      console.log('Square config data:', data);
+
+      // Show modal
+      if (window.showModal) {
+        window.showModal('squareSettingsModal');
+      }
+    } catch (error) {
+      console.error('Error loading Square settings:', error);
+    }
+    return;
+  }
+
+  // AI Settings Modal
+  if (closest('[data-action="open-ai-settings"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Load AI configuration data
+      const response = await fetch('/api/ai_settings.php?action=get');
+      const data = await response.json();
+      console.log('AI settings data:', data);
+
+      // Show modal
+      if (window.showModal) {
+        window.showModal('aiSettingsModal');
+      }
+    } catch (error) {
+      console.error('Error loading AI settings:', error);
+    }
+    return;
+  }
+
+  // AI Tools Modal
+  if (closest('[data-action="open-ai-tools"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Show modal
+      if (window.showModal) {
+        window.showModal('aiToolsModal');
+      }
+    } catch (error) {
+      console.error('Error opening AI tools modal:', error);
+    }
+    return;
+  }
+
+  // Brand Palette handlers
+  if (closest('[data-action="business-palette-add"]')) {
+    e.preventDefault();
+    const nameInput = document.getElementById('newPaletteName');
+    const hexInput = document.getElementById('newPaletteHex');
+    if (nameInput && hexInput && window.brandPalette) {
+      const name = nameInput.value.trim();
+      const hex = hexInput.value.trim();
+      if (name && hex) {
+        window.brandPalette.push({ name, hex });
+        nameInput.value = '';
+        hexInput.value = '#000000';
+        if (window.renderBrandPalette) {
+          window.renderBrandPalette();
+        }
+        const s = window.collectBusinessInfo ? window.collectBusinessInfo() : {};
+        if (window.applyBusinessCssToRoot) {
+          window.applyBusinessCssToRoot(s);
+        }
+      }
+    }
+    return;
+  }
+
+  if (closest('[data-action="business-palette-delete"]')) {
+    e.preventDefault();
+    const index = parseInt(e.target.dataset.index, 10);
+    if (!isNaN(index) && window.brandPalette && window.brandPalette[index]) {
+      window.brandPalette.splice(index, 1);
+      if (window.renderBrandPalette) {
+        window.renderBrandPalette();
+      }
+      const s = window.collectBusinessInfo ? window.collectBusinessInfo() : {};
+      if (window.applyBusinessCssToRoot) {
+        window.applyBusinessCssToRoot(s);
+      }
+    }
+    return;
+  }
+
+  // Attributes Management handlers
+  if (closest('[data-action="attr-add"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const button = e.target;
+    const type = button.dataset.type;
+    if (window.addAttribute && type) {
+      const form = button.closest('form');
+      const input = form ? form.querySelector('.attr-input') : null;
+      const value = input ? input.value.trim() : '';
+      if (value) {
+        if (type === 'size') {
+          const parts = value.split(' ');
+          if (parts.length >= 2) {
+            const sizeName = parts.slice(0, -1).join(' ');
+            const sizeCode = parts[parts.length - 1];
+            window.addAttribute(type, sizeName, sizeCode);
+          }
+        } else {
+          window.addAttribute(type, value);
+        }
+        if (input) input.value = '';
+      }
+    }
+    return;
+  }
+
+  // Business Save handlers
+  if (closest('[data-action="business-save"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const form = closest('form');
+    if (form && window.saveBusinessInfo) {
+      window.saveBusinessInfo();
+    }
+    return;
+  }
+
+  if (closest('[data-action="business-save-branding"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.saveBusinessInfo) {
+      window.saveBusinessInfo();
+    }
+    return;
+  }
+
+  // Email Settings handlers
+  if (closest('[data-action="email-send-test"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const form = closest('form');
+    const testRecipient = form ? form.querySelector('#testRecipient') : null;
+    if (testRecipient && testRecipient.value) {
+      console.log('Sending test email to:', testRecipient.value);
+      // Implementation would go here
+    }
+    return;
+  }
+
+  // Square Settings handlers
+  if (closest('[data-action="square-save-settings"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Saving Square settings...');
+    // Implementation would go here
+    return;
+  }
+
+  if (closest('[data-action="square-test-connection"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Testing Square connection...');
+    // Implementation would go here
+    return;
+  }
+
+  // Dashboard Configuration handlers
+  if (closest('[data-action="dashboard-config-save"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Saving dashboard configuration...');
+    // Implementation would go here
+  }
+
+  // Email History handlers
+  if (closest('[data-action="email-history-search"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const searchInput = document.getElementById('emailHistorySearch');
+      const searchTerm = searchInput ? searchInput.value : '';
+
+      if (searchTerm.trim()) {
+        await this.loadEmailHistory({ search: searchTerm });
+      } else {
+        await this.loadEmailHistory();
+      }
+    } catch (error) {
+      console.error('Error searching email history:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-apply-filters"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const filters = {
+        from: document.getElementById('emailHistoryFrom')?.value,
+        to: document.getElementById('emailHistoryTo')?.value,
+        type: document.getElementById('emailHistoryType')?.value,
+        status: document.getElementById('emailHistoryStatusFilter')?.value,
+        sort: document.getElementById('emailHistorySort')?.value
+      };
+
+      await this.loadEmailHistory(filters);
+    } catch (error) {
+      console.error('Error applying email history filters:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-clear-filters"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Clear all filter inputs
+      const inputs = ['emailHistorySearch', 'emailHistoryFrom', 'emailHistoryTo', 'emailHistoryType'];
+      inputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) input.value = '';
+      });
+
+      // Reset dropdowns
+      const statusFilter = document.getElementById('emailHistoryStatusFilter');
+      if (statusFilter) statusFilter.value = '';
+
+      const sortSelect = document.getElementById('emailHistorySort');
+      if (sortSelect) sortSelect.value = 'sent_at_desc';
+
+      // Reload with no filters
+      await this.loadEmailHistory();
+    } catch (error) {
+      console.error('Error clearing email history filters:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-refresh"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await this.loadEmailHistory();
+    } catch (error) {
+      console.error('Error refreshing email history:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-download"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const filters = {
+        from: document.getElementById('emailHistoryFrom')?.value,
+        to: document.getElementById('emailHistoryTo')?.value,
+        type: document.getElementById('emailHistoryType')?.value,
+        status: document.getElementById('emailHistoryStatusFilter')?.value,
+        sort: document.getElementById('emailHistorySort')?.value
+      };
+
+      await this.downloadEmailHistory(filters);
+    } catch (error) {
+      console.error('Error downloading email history:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-prev"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const currentPage = parseInt(document.getElementById('emailHistoryPage')?.textContent?.match(/Page (\d+)/)?.[1] || '1');
+      if (currentPage > 1) {
+        await this.loadEmailHistory({}, currentPage - 1);
+      }
+    } catch (error) {
+      console.error('Error loading previous page:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-next"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const currentPage = parseInt(document.getElementById('emailHistoryPage')?.textContent?.match(/Page (\d+)/)?.[1] || '1');
+      await this.loadEmailHistory({}, currentPage + 1);
+    } catch (error) {
+      console.error('Error loading next page:', error);
+    }
+    return;
+  }
+
+  // Email History Detail Drawer handlers
+  if (closest('[data-action="email-history-close-drawer"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.closeEmailHistoryDrawer();
+    return;
+  }
+
+  if (closest('[data-action="email-history-copy-subject"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const subject = document.getElementById('ehdSubject')?.textContent;
+    if (subject) {
+      navigator.clipboard.writeText(subject);
+      this.showToast('Subject copied to clipboard');
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-copy-to"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const to = document.getElementById('ehdTo')?.textContent;
+    if (to) {
+      navigator.clipboard.writeText(to);
+      this.showToast('Recipient copied to clipboard');
+    }
+    return;
+  }
+
+  if (closest('[data-action="email-history-copy-type"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const type = document.getElementById('ehdType')?.textContent;
+    if (type) {
+      navigator.clipboard.writeText(type);
+      this.showToast('Type copied to clipboard');
+    }
+    return;
+  }
+
+  // Dashboard Configuration handlers
+  if (closest('[data-action="dashboard-config-refresh"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await this.loadDashboardConfig();
+    } catch (error) {
+      console.error('Error refreshing dashboard config:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="dashboard-config-reset"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (confirm('Reset dashboard configuration to defaults?')) {
+        const response = await fetch('/api/dashboard_sections.php?action=reset_defaults');
+        const result = await response.json();
+
+        if (result.success) {
+          await this.loadDashboardConfig();
+          this.showToast('Dashboard configuration reset to defaults');
+        } else {
+          throw new Error(result.error || 'Failed to reset dashboard configuration');
+        }
+      }
+    } catch (error) {
+      console.error('Error resetting dashboard config:', error);
+      this.showToast('Error resetting dashboard configuration: ' + error.message, 'error');
+    }
+    return;
+  }
+
+  if (closest('[data-action="move-up"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const key = e.target.dataset.key;
+      if (key) {
+        this.moveDashboardItem(key, -1);
+      }
+    } catch (error) {
+      console.error('Error moving dashboard item up:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="move-down"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const key = e.target.dataset.key;
+      if (key) {
+        this.moveDashboardItem(key, 1);
+      }
+    } catch (error) {
+      console.error('Error moving dashboard item down:', error);
+    }
+    return;
+  }
+
+  // CSS Rules handlers
+  if (closest('[data-action="open-css-rules"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Load CSS rules data
+      const response = await fetch('/api/css_rules.php?action=list');
+      const data = await response.json();
+      console.log('CSS rules data:', data);
+
+      // Show modal
+      if (window.showModal) {
+        window.showModal('cssRulesModal');
+      }
+    } catch (error) {
+      console.error('Error loading CSS rules:', error);
+    }
+    return;
+  }
+
+  // Logging Status handlers
+  if (closest('[data-action="open-logging-status"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Show modal
+      if (window.showModal) {
+        window.showModal('loggingStatusModal');
+      }
+    } catch (error) {
+      console.error('Error opening logging status modal:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="logging-refresh-status"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Logging status refresh triggered');
+    // Implementation would go here
+    return;
+  }
+
+  if (closest('[data-action="logging-open-file"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Open latest log file triggered');
+    // Implementation would go here
+    return;
+  }
+
+  if (closest('[data-action="logging-clear-logs"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Clear logs triggered');
+    return;
+  }
+
+  if (closest('[data-action="secrets-rotate"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Secrets rotation triggered');
+    // Implementation would go here
+    return;
+  }
+
+  if (closest('[data-action="secrets-export"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Secrets export triggered');
+    // Implementation would go here
+    return;
+  }
+
+  if (closest('[data-action="secrets-save"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Saving secrets...');
+    // Implementation would go here
+    return;
+  }
+
+  // Attributes Delete handlers
+  if (closest('[data-action="attr-delete"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const button = e.target;
+    const type = button.dataset.type;
+    const id = button.dataset.id;
+
+    if (window.deleteAttribute && type && id) {
+      if (confirm(`Delete this ${type}?`)) {
+        window.deleteAttribute(type, id);
+        // Refresh the modal data
+        if (window.populateAttributesModal) {
+          window.populateAttributesModal('attributesModal');
+        }
+      }
+    }
+    return;
+  }
+});
+
+// Utility methods for complex features
+const DelegatedHandlers = {
+  async loadEmailHistory(filters = {}, page = 1) {
+    try {
+      const params = new URLSearchParams({
+        page: page,
+        limit: 20,
+        ...filters
+      });
+
+      const response = await fetch(`/api/email_history.php?action=list&${params}`);
+      const result = await response.json();
+
+      if (result.success) {
+        this.populateEmailHistory(result.data);
+        this.updateEmailHistoryPagination(result.pagination);
+      } else {
+        throw new Error(result.error || 'Failed to load email history');
+      }
+    } catch (error) {
+      console.error('Error loading email history:', error);
+      this.showToast('Error loading email history: ' + error.message, 'error');
+    }
+  },
+
+  populateEmailHistory(emails) {
+    const container = document.getElementById('emailHistoryList');
+    if (!container) return;
+
+    if (!emails || emails.length === 0) {
+      container.innerHTML = '<div class="p-4 text-center text-gray-500">No emails found</div>';
+      return;
+    }
+
+    container.innerHTML = emails.map(email => `
+      <div class="email-row border-b hover:bg-gray-50 cursor-pointer p-3" data-email-id="${email.id}">
+        <div class="flex justify-between items-start">
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-sm truncate">${email.subject}</div>
+            <div class="text-xs text-gray-500 mt-1">To: ${email.to_email} • Type: ${email.type}</div>
+            <div class="text-xs text-gray-400">${new Date(email.sent_at).toLocaleString()}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="status-chip ${email.status === 'sent' ? 'chip-success' : email.status === 'failed' ? 'chip-error' : 'chip-warning'}">
+              ${email.status}
+            </span>
+            <button class="text-blue-600 hover:text-blue-800 text-xs" data-action="email-history-view-details" data-email-id="${email.id}">Details</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    // Add click handlers for email rows
+    container.querySelectorAll('[data-action="email-history-view-details"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const emailId = btn.dataset.emailId;
+        this.showEmailHistoryDetails(emailId);
+      });
+    });
+  },
+
+  updateEmailHistoryPagination(pagination) {
+    const pageInfo = document.getElementById('emailHistoryPage');
+    if (pageInfo) {
+      pageInfo.textContent = `Page ${pagination.current_page} of ${pagination.total_pages}`;
+    }
+  },
+
+  async downloadEmailHistory(filters = {}) {
+    try {
+      const params = new URLSearchParams(filters);
+      const response = await fetch(`/api/email_history.php?action=export&${params}`);
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `email-history-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      this.showToast('Email history downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading email history:', error);
+      this.showToast('Error downloading email history: ' + error.message, 'error');
+    }
+  },
+
+  closeEmailHistoryDrawer() {
+    const drawer = document.getElementById('emailHistoryDrawer');
+    const overlay = document.getElementById('emailHistoryDrawerOverlay');
+
+    if (drawer) drawer.classList.add('hidden');
+    if (overlay) overlay.classList.add('hidden');
+  },
+
+  async showEmailHistoryDetails(emailId) {
+    try {
+      const response = await fetch(`/api/email_history.php?action=get&id=${emailId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        const email = result.data;
+        this.populateEmailHistoryDetails(email);
+        this.showEmailHistoryDrawer();
+      } else {
+        throw new Error(result.error || 'Failed to load email details');
+      }
+    } catch (error) {
+      console.error('Error loading email details:', error);
+      this.showToast('Error loading email details: ' + error.message, 'error');
+    }
+  },
+
+  populateEmailHistoryDetails(email) {
+    // Populate detail fields
+    const fields = {
+      'ehdSubject': email.subject,
+      'ehdTo': email.to_email,
+      'ehdType': email.type
+    };
+
+    Object.entries(fields).forEach(([id, value]) => {
+      const element = document.getElementById(id);
+      if (element) element.textContent = value || 'N/A';
+    });
+
+    // Populate content area
+    const content = document.getElementById('emailHistoryDrawerContent');
+    if (content) {
+      content.innerHTML = `
+        <div class="space-y-3">
+          <div>
+            <strong>From:</strong> ${email.from_email || 'N/A'}
+          </div>
+          <div>
+            <strong>BCC:</strong> ${email.bcc_email || 'N/A'}
+          </div>
+          <div>
+            <strong>Headers:</strong>
+            <pre class="text-xs bg-gray-100 p-2 mt-1 overflow-auto">${JSON.stringify(email.headers, null, 2)}</pre>
+          </div>
+          <div>
+            <strong>Body:</strong>
+            <div class="text-xs bg-gray-50 p-2 mt-1 max-h-32 overflow-auto">${email.body || 'No body content'}</div>
+          </div>
+        </div>
+      `;
+    }
+  },
+
+  showEmailHistoryDrawer() {
+    const drawer = document.getElementById('emailHistoryDrawer');
+    const overlay = document.getElementById('emailHistoryDrawerOverlay');
+
+    if (drawer) drawer.classList.remove('hidden');
+    if (overlay) overlay.classList.remove('hidden');
+  },
+
+  showToast(message, type = 'info') {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 z-50 p-3 rounded shadow-lg text-sm font-medium transition-all transform translate-x-full ${
+      type === 'error' ? 'bg-red-500 text-white' :
+      type === 'success' ? 'bg-green-500 text-white' :
+      'bg-blue-500 text-white'
+    }`;
+
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    // Animate in
+    setTimeout(() => {
+      toast.classList.remove('translate-x-full');
+    }, 100);
+
+    // Auto remove
+    setTimeout(() => {
+      toast.classList.add('translate-x-full');
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.parentNode.removeChild(toast);
+        }
+      }, 300);
+    }, 3000);
+  },
+
+  // Dashboard configuration methods
+  async loadDashboardConfig() {
+    try {
+      const response = await fetch('/api/dashboard_sections.php?action=get_sections');
+      const data = await response.json();
+
+      if (data.success) {
+        this.populateDashboardConfig(data.data);
+      } else {
+        throw new Error(data.error || 'Failed to load dashboard configuration');
+      }
+    } catch (error) {
+      console.error('Error loading dashboard config:', error);
+      this.showToast('Error loading dashboard configuration: ' + error.message, 'error');
+    }
+  },
+
+  populateDashboardConfig(data) {
+    const tbody = document.getElementById('dashboardSectionsBody');
+    if (!tbody) return;
+
+    if (!data || !data.sections) {
+      tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">No sections found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = data.sections.map((section, index) => {
+      const isActive = section.is_active ? 'checked' : '';
+      const widthSelected = section.width_class === 'full-width' ? 'selected' : '';
+
+      return `
+        <tr class="border-b hover:bg-gray-50" draggable="true" data-section-key="${section.section_key}">
+          <td class="p-2">
+            <div class="flex items-center gap-1">
+              <button class="text-xs p-1 hover:bg-gray-200" data-action="move-up" data-key="${section.section_key}" ${index === 0 ? 'disabled' : ''}>▲</button>
+              <button class="text-xs p-1 hover:bg-gray-200" data-action="move-down" data-key="${section.section_key}" ${index === data.sections.length - 1 ? 'disabled' : ''}>▼</button>
+              <span class="ml-1 text-gray-500">${section.display_order || index + 1}</span>
+            </div>
+          </td>
+          <td class="p-2">${section.custom_title || section.section_key}</td>
+          <td class="p-2"><code class="text-xs">${section.section_key}</code></td>
+          <td class="p-2">
+            <select class="dash-width text-xs border rounded px-1 py-0.5" data-key="${section.section_key}">
+              <option value="half-width" ${section.width_class === 'half-width' ? 'selected' : ''}>Half</option>
+              <option value="full-width" ${widthSelected}>Full</option>
+            </select>
+          </td>
+          <td class="p-2">
+            <input type="checkbox" class="dash-active" data-key="${section.section_key}" ${isActive}>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    // Add change handlers for width and active state
+    tbody.querySelectorAll('.dash-width').forEach(select => {
+      select.addEventListener('change', (e) => {
+        this.updateDashboardItemWidth(e.target.dataset.key, e.target.value);
+      });
+    });
+
+    tbody.querySelectorAll('.dash-active').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        this.updateDashboardItemActive(e.target.dataset.key, e.target.checked);
+      });
+    });
+
+    // Initialize drag and drop
+    this.initDashboardConfigDragAndDrop();
+  },
+
+  async moveDashboardItem(sectionKey, direction) {
+    const tbody = document.getElementById('dashboardSectionsBody');
+    if (!tbody) return;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const currentIndex = rows.findIndex(row => row.dataset.sectionKey === sectionKey);
+
+    if (currentIndex === -1) return;
+
+    const newIndex = currentIndex + direction;
+    if (newIndex < 0 || newIndex >= rows.length) return;
+
+    // Move the row
+    if (direction < 0) {
+      tbody.insertBefore(rows[currentIndex], rows[newIndex]);
+    } else {
+      tbody.insertBefore(rows[currentIndex], rows[newIndex].nextSibling);
+    }
+
+    // Update order numbers
+    this.updateDashboardOrderNumbers();
+
+    this.showToast('Dashboard item moved');
+  },
+
+  updateDashboardOrderNumbers() {
+    const tbody = document.getElementById('dashboardSectionsBody');
+    if (!tbody) return;
+
+    tbody.querySelectorAll('tr').forEach((row, index) => {
+      const orderSpan = row.querySelector('span');
+      if (orderSpan) {
+        orderSpan.textContent = index + 1;
+      }
+    });
+  },
+
+  updateDashboardItemWidth(sectionKey, width) {
+    console.log('Dashboard item width updated:', sectionKey, width);
+    // This would typically save to the server
+  },
+
+  updateDashboardItemActive(sectionKey, active) {
+    console.log('Dashboard item active state updated:', sectionKey, active);
+    // This would typically save to the server
+  },
+
+  initDashboardConfigDragAndDrop() {
+    const tbody = document.getElementById('dashboardSectionsBody');
+    if (!tbody) return;
+
+    let draggedElement = null;
+
+    tbody.addEventListener('dragstart', (e) => {
+      if (e.target.tagName === 'TR') {
+        draggedElement = e.target;
+        e.target.classList.add('dragging');
+      }
+    });
+
+    tbody.addEventListener('dragend', (_) => {
+      if (draggedElement) {
+        draggedElement.classList.remove('dragging');
+        draggedElement = null;
+      }
+    });
+
+    tbody.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const target = e.target.closest('tr');
+      if (target && target !== draggedElement) {
+        const rect = target.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+
+        if (e.clientY < midpoint) {
+          target.parentNode.insertBefore(draggedElement, target);
+        } else {
+          target.parentNode.insertAfter(draggedElement, target);
+        }
+      }
+    });
+  }
+};
+
+// Make methods available globally for use by event handlers
+if (typeof window !== 'undefined') {
+  window.loadEmailHistory = (filters, page) => DelegatedHandlers.loadEmailHistory(filters, page);
+  window.downloadEmailHistory = (filters) => DelegatedHandlers.downloadEmailHistory(filters);
+  window.showEmailHistoryDetails = (id) => DelegatedHandlers.showEmailHistoryDetails(id);
+  window.closeEmailHistoryDrawer = () => DelegatedHandlers.closeEmailHistoryDrawer();
+  window.loadDashboardConfig = () => DelegatedHandlers.loadDashboardConfig();
+  window.updateSquareConnectionStatus = () => DelegatedHandlers.updateSquareConnectionStatus();
+}

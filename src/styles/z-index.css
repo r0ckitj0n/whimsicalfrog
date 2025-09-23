@@ -1,0 +1,112 @@
+/*
+ * =============================================================================
+ * Z-Index Hierarchy - Single Source of Truth
+ * =============================================================================
+ * This file defines the z-index stacking order for the entire application.
+ * Use these variables instead of hardcoded z-index values to ensure
+ * predictable and conflict-free layering of components.
+ */
+
+:root {
+  /* -- Base & Content Layers -- */
+  --z-index-behind: -1;
+  --z-index-base: 1;
+  --z-index-content-back: 5;
+  --z-index-content-mid: 10;
+  --z-index-content-front: 15;
+
+  /* -- Floating UI & Page-Level Components -- */
+  --z-index-floating-ui: 20;
+  --z-index-page-header: 100;
+  --z-index-page-footer: 90;
+
+  /* -- Overlays & Dropdowns -- */
+  --z-index-dropdown: 200;
+  --z-index-tooltip: 15000; /* Above admin overlays (10100) but below god-mode */
+  --z-index-overlay-backdrop: 300;
+
+  /* -- Modals & Popups -- */
+  --z-index-modal-back: 400;
+  --z-index-modal-base: 410;
+  --z-index-modal-content: 420;
+  --z-index-modal-front: 430;
+
+  /* -- Unified Overlay Tiers (sitewide) -- */
+  /* Standard overlays (confirmation modals, generic modals) should sit above header/nav */
+  --z-overlay: 10050;
+  --z-overlay-content: 10051;
+
+  /* Admin-specific overlays (admin modals/panels) may have distinct stacking needs */
+  --z-admin-overlay: 10100;             /* slightly above global overlays */
+  --z-admin-overlay-content: 10101;
+
+  /* -- Room & Special Modals -- */
+  --z-index-room-modal: 2400;
+  --z-index-room-modal-header: 2450;
+  /* Checkout / Payment overlay (should sit above room modal but below site header overrides) */
+  --z-index-checkout-overlay: 2500;
+
+  /* -- Global Notifications & Highest Level -- */
+  --z-index-global-notification: 500;
+  --z-index-god-mode: 9999;
+
+  /* Detailed Item Modal overlay (sits above hover popups and room overlay) */
+  --z-detailed-item-modal: 100300;
+  /* Global popup above most content but below god-mode unless explicitly raised */
+  --z-global-popup: 100200;
+
+  /* -- Header/Nav & Inline UI (non-overlay) -- */
+  --z-index-header-ink: 200;            /* header text and links */
+  --z-index-nav: 300;                   /* navigation links/items */
+  --z-inline-popup: 1000;               /* product hover popups, small tips */
+  --z-inline-popup-high: 1100;          /* slightly above default inline popups */
+  --z-index-toast: 10000;               /* global toasts/notifications */
+  --z-badge: 10;                        /* decorative badges over images */
+  --z-badge-high: 15;                   /* elevated badge on hover/focus */
+  --z-badge-mid: 9;                     /* mid-tier badge */
+  --z-badge-low: 8;                     /* low-tier badge */
+  --z-badge-very-low: 7;               /* very low-tier badge */
+  --z-index-flat: 0;                    /* neutral stack */
+  --z-content-2: 2;                     /* small content elevation */
+  --z-content-3: 3;                     /* small content elevation */
+  --z-admin-nav: 2000;                  /* admin navigation bar */
+  --z-header-over-room-modal: 3000;     /* keep header above room modal overlay when needed */
+}
+
+/* Legacy variable aliases for backward compatibility */
+:root {
+  /* Aliases mapping old custom properties to the new z-index scale */
+  --z-base: var(--z-index-base);
+  --z-base-elevated: var(--z-index-content-front);
+  --z-modal: var(--z-index-modal-base);
+  --z-notification: var(--z-index-global-notification);
+  --z-tooltip: var(--z-index-tooltip);
+  --z-navigation: var(--z-index-page-header);
+  --z-door-areas: var(--z-index-content-front);
+  --z-room-buttons: var(--z-index-floating-ui);
+  --z-index-overlay: var(--z-index-overlay-backdrop);
+
+  /* Convenience variables used by newer CSS */
+  --wf-overlay-z: var(--z-overlay);
+  --wf-overlay-content-z: var(--z-overlay-content);
+  --wf-admin-overlay-z: var(--z-admin-overlay);
+  --wf-admin-overlay-content-z: var(--z-admin-overlay-content);
+
+  /* Legacy alias for popup stacks used in older CSS */
+  --z-popups: var(--z-global-popup);
+
+  /* Landing page: ensure it sits above the fixed header */
+  --z-index-landing-page: 110; /* header = 100 */
+  
+  /* Admin Settings specific z-indexes */
+  --z-admin-drawer-content: var(--z-index-floating-ui); /* 20 */
+  --z-admin-drawer-header: 25;
+  --z-admin-drawer-meta: 24;
+  --z-admin-drawer-overlay: var(--z-index-base); /* 1 */
+}
+
+/* Admin-only overlay z-index overrides (scoped by route) */
+body[data-page^='admin'] {
+  --wf-admin-overlay-z: var(--z-admin-overlay);
+  --wf-admin-overlay-content-z: var(--z-admin-overlay-content);
+}

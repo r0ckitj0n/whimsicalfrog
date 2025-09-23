@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+
+# Block admin areas
+Disallow: /admin/
+Disallow: /?page=admin
+Disallow: /api/
+
+# Allow important pages
+Allow: /api/generate_sitemap.php
+
+# Sitemap location
+Sitemap: https://whimsicalfrog.us/api/generate_sitemap.php
+
+# Crawl delay (optional)
+Crawl-delay: 1 

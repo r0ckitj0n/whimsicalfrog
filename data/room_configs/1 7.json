@@ -1,0 +1,23 @@
+{
+    "show_delay": 50,
+    "hide_delay": 150,
+    "max_width": 450,
+    "min_width": 280,
+    "max_quantity": 999,
+    "min_quantity": 1,
+    "debounce_time": 50,
+    "popup_animation": "fade",
+    "modal_animation": "scale",
+    "enable_sales_check": true,
+    "show_category": true,
+    "show_description": true,
+    "enable_image_fallback": true,
+    "enable_colors": true,
+    "enable_sizes": true,
+    "show_unit_price": true,
+    "enable_stock_checking": true,
+    "click_to_details": true,
+    "hover_to_popup": true,
+    "popup_add_to_cart": true,
+    "enable_touch_events": true
+}

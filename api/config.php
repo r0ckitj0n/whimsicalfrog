@@ -9,11 +9,25 @@ try {
 $__wf_script_early = $_SERVER['SCRIPT_NAME'] ?? '';
 $__wf_is_api_context_early = (strpos($__wf_script_early, '/api/') !== false) || (strpos($__wf_req_path_early, '/api/') === 0);
 if ($__wf_is_api_context_early && !headers_sent()) {
-    // Development CORS for API endpoints
-    header('Access-Control-Allow-Origin: *');
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $isLocalOrigin = is_string($origin) && preg_match('#^https?://(localhost|127\.0\.0\.1)(:\d+)?$#i', $origin);
+
+    // Only reflect allowed dev origins or your real site origin
+    if ($isLocalOrigin) {
+        header("Access-Control-Allow-Origin: {$origin}");
+        header('Access-Control-Allow-Credentials: true');
+        header('Vary: Origin');
+    } else {
+        // In production, you can either disable CORS for cross-origin completely or reflect a known domain
+        // header('Access-Control-Allow-Origin: https://whimsicalfrog.us');
+        // header('Access-Control-Allow-Credentials: true');
+        // header('Vary: Origin');
+    }
+
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization');
-    // Handle OPTIONS preflight
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+    // Handle OPTIONS preflight quickly
     if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
         http_response_code(200);
         exit;

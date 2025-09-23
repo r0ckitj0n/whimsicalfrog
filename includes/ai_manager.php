@@ -18,7 +18,8 @@ require_once __DIR__ . '/../api/ai_providers.php';
 function loadAISettings()
 {
     $defaults = [
-        'ai_provider' => 'jons_ai',
+        // Default to Anthropic unless overridden by DB settings
+        'ai_provider' => 'anthropic',
         'openai_api_key' => '',
         'openai_model' => 'gpt-3.5-turbo',
         'anthropic_api_key' => '',

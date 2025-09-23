@@ -1,4 +1,5 @@
 import { buildAdminUrl } from '../core/admin-url-builder.js';
+import { ApiClient } from '../core/api-client.js';
 import '../styles/admin/admin-legacy-modals.css';
 class AdminInventoryModule {
     constructor() {
@@ -36,18 +37,19 @@ class AdminInventoryModule {
         try {
             window.buildComparisonInterface = (aiData, currentMarketingData) => this.buildComparisonInterface(aiData, currentMarketingData);
         } catch (_) {}
+
+        // Initialize SKU from DOM early
+        this.initSkuFromDom();
     }
 
-    // Resolve absolute API URL using backend origin injected by PHP (see includes/vite_helper.php)
-    getApiUrl(path) {
+    // Initialize SKU from DOM early to ensure handlers have access to it
+    initSkuFromDom() {
         try {
-            const base = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN)
-                ? String(window.__WF_BACKEND_ORIGIN).replace(/\/$/, '')
-                : '';
-            return base + path;
-        } catch (_) {
-            return path;
-        }
+            if (!this.currentItemSku) {
+                const skuField = document.getElementById('skuEdit') || document.getElementById('sku') || document.getElementById('skuDisplay');
+                if (skuField) this.currentItemSku = skuField.value || skuField.textContent || '';
+            }
+        } catch(_) {}
     }
 
     bindEvents() {
@@ -82,7 +84,16 @@ class AdminInventoryModule {
                         this.showColorModal();
                         break;
                     case 'open-marketing-manager':
-                        // Marketing manager integration
+                        this.initSkuFromDom();
+                        this.openMarketingManager();
+                        break;
+                    case 'generate-marketing-copy':
+                        // Generate AI marketing content inside Marketing Manager modal
+                        this.initSkuFromDom();
+                        this.handleGenerateAllMarketing(element);
+                        break;
+                    case 'close-marketing-manager':
+                        this.closeMarketingManager();
                         break;
                     case 'get-cost-suggestion':
                         this.getCostSuggestion();
@@ -93,10 +104,92 @@ class AdminInventoryModule {
                     case 'process-images-ai':
                         this.processImagesWithAI();
                         break;
+                    case 'apply-price-suggestion':
+                        this.applyPriceSuggestion();
+                        break;
+                    case 'clear-price-suggestion':
+                        this.clearPriceSuggestion();
+                        break;
+                    case 'open-cost-modal': {
+                        const category = element.getAttribute('data-category') || '';
+                        this.openCostModal(category);
+                        break;
+                    }
+                    case 'close-cost-modal':
+                        this.closeCostModal();
+                        break;
+                    case 'save-cost-item':
+                        this.saveCostItem();
+                        break;
+                    case 'close-cost-suggestion-choice-dialog':
+                        this.closeCostSuggestionChoiceDialog();
+                        break;
+                    case 'populate-cost-breakdown-from-suggestion': {
+                        try {
+                            const raw = element.getAttribute('data-suggestion') || '';
+                            const parsed = JSON.parse(raw.replace(/&quot;/g, '"').replace(/&#39;/g, "'"));
+                            this.populateCostBreakdownFromSuggestion(parsed);
+                        } catch (e) {
+                            console.error('Invalid suggestion payload:', e);
+                            this.showError('Invalid suggestion payload');
+                        }
+                        break;
+                    }
+                    case 'apply-suggested-cost-to-cost-field': {
+                        this.applySuggestedCostToCostField(element);
+                        break;
+                    }
+                    case 'add-list-item': {
+                        const field = element.getAttribute('data-field') || '';
+                        this.handleAddListItem(field);
+                        break;
+                    }
+                    case 'remove-list-item': {
+                        const field = element.getAttribute('data-field') || '';
+                        const item = element.getAttribute('data-item') || '';
+                        this.handleRemoveListItem(field, item, element);
+                        break;
+                    }
+                    case 'save-marketing-field': {
+                        const fieldName = element.getAttribute('data-field') || '';
+                        this.handleSaveMarketingField(fieldName, element);
+                        break;
+                    }
+                    case 'apply-selected-comparison':
+                    case 'apply-selected-comparison-changes':
+                        this.applySelectedComparisonChanges();
+                        break;
                     default:
                         // Handle other data-action attributes
                         break;
                 }
+            }
+        });
+
+        // Bind delegated change handlers for comparison toggles and marketing defaults
+        document.addEventListener('change', (event) => {
+            const el = event.target;
+            if (!(el instanceof HTMLElement)) return;
+
+            // Toggle individual comparison checkbox
+            if (el.matches('[data-action="toggle-comparison"][data-field]')) {
+                const fieldKey = el.getAttribute('data-field') || '';
+                if (fieldKey) this.toggleComparison(fieldKey);
+                return;
+            }
+
+            // Select all comparison
+            if (el.id === 'selectAllComparison') {
+                this.toggleSelectAllComparison();
+                return;
+            }
+
+            // Marketing defaults (brand voice, content tone)
+            if (el.matches('[data-action="marketing-default-change"]')) {
+                const settingType = el.getAttribute('data-setting') || '';
+                const value = (el.value || '').trim();
+                if (settingType) this.updateGlobalMarketingDefault(settingType, value);
+                return;
             }
         });
 
@@ -3276,15 +3369,9 @@ class AdminInventoryModule {
                 const skuField = document.getElementById('skuEdit') || document.getElementById('sku') || document.getElementById('skuDisplay');
                 if (skuField) this.currentItemSku = skuField.value || skuField.textContent || '';
             }
-            const response = await fetch(this.getApiUrl('/api/suggest_cost.php'), {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify({ sku: this.currentItemSku, name, description, category })
+            const data = await ApiClient.post('/api/suggest_cost.php', {
+                sku: this.currentItemSku, name, description, category
             });
-            const text = await response.text();
-            let data;
-            try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from suggest_cost: ${text?.slice(0,300)}`); }
             if (data && data.success) {
                 // Map single response to suggestions array expected by UI
                 const suggestions = [{
@@ -3327,15 +3414,7 @@ class AdminInventoryModule {
                 if (skuField) this.currentItemSku = skuField.value || skuField.textContent || '';
             }
             itemData.sku = this.currentItemSku;
-            const response = await fetch(this.getApiUrl('/api/suggest_price.php'), {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: JSON.stringify(itemData)
-            });
-            const text = await response.text();
-            let data;
-            try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from suggest_price: ${text?.slice(0,300)}`); }
+            const data = await ApiClient.post('/api/suggest_price.php', itemData);
             if (data.success) {
                 this.displayPriceSuggestion(data);
                 this.showSuccess('Price suggestion generated!');
@@ -3369,14 +3448,7 @@ class AdminInventoryModule {
                 return;
             }
 
-            const response = await fetch(this.getApiUrl(`/api/run_image_analysis.php?sku=${encodeURIComponent(this.currentItemSku)}`), {
-                method: 'GET',
-                credentials: 'same-origin',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-            const text = await response.text();
-            let data;
-            try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from run_image_analysis: ${text?.slice(0,300)}`); }
+            const data = await ApiClient.get('/api/run_image_analysis.php', { sku: this.currentItemSku });
 
             if (data.success) {
                 const processedCount = data.processed || 0;
@@ -3458,9 +3530,7 @@ class AdminInventoryModule {
     async loadExistingPriceSuggestion(sku) {
         if (!sku) return;
         try {
-            const response = await fetch(this.getApiUrl(`/api/get_price_suggestion.php?sku=${sku}`));
-            const text = await response.text();
-            let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from get_price_suggestion: ${text?.slice(0,300)}`); }
+            const data = await ApiClient.get('/api/get_price_suggestion.php', { sku });
             if (data.success && data.suggestedPrice) {
                 this.displayPriceSuggestion(data);
             }
@@ -3473,9 +3543,7 @@ class AdminInventoryModule {
     async loadExistingViewPriceSuggestion(sku) {
         if (!sku) return;
         try {
-            const response = await fetch(this.getApiUrl(`/api/get_price_suggestion.php?sku=${encodeURIComponent(sku)}&_t=${Date.now()}`));
-            const text = await response.text();
-            let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from get_price_suggestion(view): ${text?.slice(0,300)}`); }
+            const data = await ApiClient.get('/api/get_price_suggestion.php', { sku, _t: Date.now() });
             const viewDisplay = document.getElementById('viewPriceSuggestionDisplay');
             const viewPlaceholder = document.getElementById('viewPriceSuggestionPlaceholder');
             if (data.success && data.suggestedPrice) {
@@ -3501,9 +3569,7 @@ class AdminInventoryModule {
     async loadExistingMarketingSuggestion(sku) {
         if (!sku) return;
         try {
-            const response = await fetch(this.getApiUrl(`/api/get_marketing_suggestion.php?sku=${sku}`));
-            const text = await response.text();
-            let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from get_marketing_suggestion: ${text?.slice(0,300)}`); }
+            const data = await ApiClient.get('/api/get_marketing_suggestion.php', { sku });
             if (data.success && data.exists) {
                 this.displayMarketingSuggestionIndicator(data.suggestion || null);
             }
@@ -3568,16 +3634,7 @@ class AdminInventoryModule {
         };
 
         try {
-            const res = await fetch(this.getApiUrl('/api/suggest_marketing.php'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(itemData)
-            });
-            const text = await res.text();
-            let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from suggest_marketing: ${text?.slice(0,300)}`); }
+            const data = await ApiClient.post('/api/suggest_marketing.php', itemData);
             if (!data || !data.success) {
                 this.showError((data && data.error) || 'Failed to generate marketing content');
                 this.closeAiComparisonModal();
@@ -3588,20 +3645,15 @@ class AdminInventoryModule {
             window.aiComparisonData = data;
 
             // Populate comparison UI using module builder
-            const buildUI = async () => {
-                try {
-                    const resp = await fetch(this.getApiUrl(`/api/marketing_manager.php?action=get_marketing_data&sku=${encodeURIComponent(sku)}&_t=${Date.now()}`));
-                    const t = await resp.text();
-                    const current = (()=>{ try { return JSON.parse(t); } catch(_) { return {}; } })();
-                    this.buildComparisonInterface(data, current?.data || null);
-                } catch (e) {
-                    this.buildComparisonInterface(data, null);
-                }
-            };
+            const current = await ApiClient.get('/api/marketing_manager.php', {
+                action: 'get_marketing_data',
+                sku,
+                _t: Date.now()
+            });
+            this.buildComparisonInterface(data, current?.data || null);
             if (window.collapseAIProgressSection) {
                 try { window.collapseAIProgressSection(); } catch (_) {}
             }
-            await buildUI();
             const applyBtn = document.getElementById('applyChangesBtn');
             if (applyBtn) applyBtn.classList.remove('hidden');
             const status = document.getElementById('statusText');
@@ -3623,33 +3675,76 @@ class AdminInventoryModule {
         const modal = document.getElementById('marketingManagerModal');
         if (!modal) return;
         const skuEl = document.getElementById('currentEditingSku');
-        if (skuEl && this.currentItemSku) skuEl.textContent = this.currentItemSku;
+        if (skuEl && this.currentItemSku) skuEl.textContent = `SKU: ${this.currentItemSku}`;
         modal.classList.remove('hidden');
+        modal.classList.add('show');
+        // optional: show previous suggestion badge
+        this.loadExistingMarketingSuggestion(this.currentItemSku);
+        // show AI provider/model status
+        this.loadAiProviderStatus(modal);
     }
 
     closeMarketingManager() {
         const modal = document.getElementById('marketingManagerModal');
-        if (modal) modal.classList.add('hidden');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('show');
+        }
+    }
+
+    async loadAiProviderStatus(modal) {
+        try {
+            if (!modal) modal = document.getElementById('marketingManagerModal');
+            if (!modal) return;
+            // Fetch AI settings
+            const data = await ApiClient.get('/api/ai_settings.php', { action: 'get_settings', _t: Date.now() });
+            const settings = (data && data.settings) ? data.settings : {};
+            const provider = settings.ai_provider || 'unknown';
+            // Map provider to model key for display
+            const modelKey = provider + '_model';
+            const model = settings[modelKey] || settings.anthropic_model || settings.openai_model || settings.google_model || 'default';
+
+            // Create or update status element in header
+            const header = modal.querySelector('.modal-header');
+            if (!header) return;
+            let statusEl = header.querySelector('#aiProviderStatus');
+            if (!statusEl) {
+                statusEl = document.createElement('div');
+                statusEl.id = 'aiProviderStatus';
+                statusEl.className = 'text-xs text-gray-500 flex items-center gap-2';
+                // Insert near the close button group if present, else append to header
+                const rightGroup = header.querySelector('.flex.items-center.gap-2');
+                if (rightGroup) {
+                    rightGroup.parentElement.insertBefore(statusEl, rightGroup);
+                } else {
+                    header.appendChild(statusEl);
+                }
+            }
+            statusEl.textContent = `Using AI: ${provider} • ${model}`;
+        } catch (err) {
+            // Non-fatal – just skip status on error
+            console.warn('[AdminInventory] Failed to load AI provider status:', err);
+        }
     }
 
     closeAiComparisonModal() {
         const modal = document.getElementById('aiComparisonModal');
-        if (modal) modal.classList.add('hidden');
+        if (!modal) return;
+        modal.classList.add('hidden');
     }
 
     ensureAiComparisonModal() {
         if (document.getElementById('aiComparisonModal')) return;
         const modal = document.createElement('div');
         modal.id = 'aiComparisonModal';
-        modal.className = 'fixed inset-0 z-50 hidden';
+        modal.className = 'admin-modal-overlay hidden fixed inset-0 flex items-start justify-center overflow-y-auto';
         modal.innerHTML = `
-            <div class="absolute inset-0 bg-black bg-opacity-40" data-action="close-ai-comparison"></div>
-            <div class="relative mx-auto my-8 w-11/12 max-w-4xl bg-white rounded-lg shadow-lg overflow-hidden">
-                <div class="border-b px-4 py-3 flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-800">AI Content Comparison</h3>
-                    <button type="button" class="text-gray-500 hover:text-gray-700" data-action="close-ai-comparison">✕</button>
+            <div class="admin-modal relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-4xl">
+                <div class="modal-header flex justify-between items-center p-3 border-b border-gray-200">
+                    <h4 class="text-base font-semibold text-gray-800">AI Comparison</h4>
+                    <button type="button" class="modal-close-btn" data-action="close-ai-comparison" aria-label="Close">×</button>
                 </div>
-                <div class="p-4 space-y-4">
+                <div class="modal-body p-4">
                     <div id="aiProgressText" class="text-sm text-gray-500"></div>
                     <div id="aiComparisonContent" class="space-y-4"></div>
                 </div>
@@ -3679,16 +3774,7 @@ class AdminInventoryModule {
                 const brandVoiceField = document.getElementById('brandVoice');
                 updateData.default_brand_voice = brandVoiceField ? brandVoiceField.value : 'friendly';
             }
-            const response = await fetch(this.getApiUrl('/api/website_config.php?action=update_marketing_defaults'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(updateData)
-            });
-            const text = await response.text();
-            let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from update_marketing_defaults: ${text?.slice(0,300)}`); }
+            const data = await ApiClient.post('/api/website_config.php?action=update_marketing_defaults', updateData);
             if (data.success) {
                 this.showSuccess(`Global ${settingType.replace('_', ' ')} updated successfully!`);
             } else {
@@ -3898,16 +3984,8 @@ class AdminInventoryModule {
                     value
                 };
                 try {
-                    const res = await fetch(this.getApiUrl('/api/marketing_manager.php?action=update_field'), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                    const text = await res.text();
-                    let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from update_field: ${text?.slice(0,300)}`); }
+                    const res = await ApiClient.post('/api/marketing_manager.php?action=update_field', payload);
+                    const data = res;
                     if (!data.success) throw new Error(data.error || 'Save failed');
                     return { fieldKey, success: true };
                 } catch (e) {
@@ -4003,17 +4081,8 @@ class AdminInventoryModule {
         // Persist all fields
         Promise.all(payloads.map(async (p) => {
             try {
-                const res = await fetch(this.getApiUrl('/api/marketing_manager.php?action=update_field'), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify(p)
-                });
-                const text = await res.text();
-                let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from update_field: ${text?.slice(0,300)}`); }
-                return !!(data && data.success);
+                const res = await ApiClient.post('/api/marketing_manager.php?action=update_field', p);
+                return !!(res && res.success);
             } catch (e) {
                 console.error('Error saving field', p.field, e);
                 return false;
@@ -4163,18 +4232,9 @@ class AdminInventoryModule {
             this.startLoadingInput(inputEl);
 
             const payload = { sku, field: fieldName, item: value };
-            const res = await fetch(this.getApiUrl('/api/marketing_manager.php?action=add_list_item'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(payload)
-            });
-            const text = await res.text();
-            let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from add_list_item: ${text?.slice(0,300)}`); }
-            if (!data || !data.success) {
-                this.showError((data && data.error) || 'Failed to add item');
+            const res = await ApiClient.post('/api/marketing_manager.php?action=add_list_item', payload);
+            if (!res || !res.success) {
+                this.showError((res && res.error) || 'Failed to add item');
                 return;
             }
             // Clear input and update UI
@@ -4215,18 +4275,9 @@ class AdminInventoryModule {
 
             this.startLoadingButton(target, 'Removing...');
 
-            const res = await fetch(this.getApiUrl('/api/marketing_manager.php?action=remove_list_item'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ sku, field: fieldName, item })
-            });
-            const text = await res.text();
-            let data; try { data = JSON.parse(text); } catch (e) { throw new Error(`Invalid JSON from remove_list_item: ${text?.slice(0,300)}`); }
-            if (!data || !data.success) {
-                this.showError((data && data.error) || 'Failed to remove item');
+            const res = await ApiClient.post('/api/marketing_manager.php?action=remove_list_item', { sku, field: fieldName, item });
+            if (!res || !res.success) {
+                this.showError((res && res.error) || 'Failed to remove item');
                 return;
             }
             // Remove UI element
@@ -4277,15 +4328,8 @@ class AdminInventoryModule {
 
             this.startLoadingButton(target, 'Saving...');
 
-            const res = await fetch('/api/marketing_manager.php?action=update_field', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify({ sku, field: fieldName, value })
-            });
-            const data = await res.json();
+            const res = await ApiClient.post('/api/marketing_manager.php?action=update_field', { sku, field: fieldName, value });
+            const data = res;
             if (!data || !data.success) {
                 this.showError((data && data.error) || 'Failed to save field');
                 return;
@@ -4330,15 +4374,8 @@ class AdminInventoryModule {
             useImages: supportsImages
         };
         try {
-            const res = await fetch('/api/suggest_marketing.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(itemData)
-            });
-            const data = await res.json();
+            const res = await ApiClient.post('/api/suggest_marketing.php', itemData);
+            const data = res;
             if (data.success) {
                 this.showSuccess('🎯 AI content generated for: Target Audience, Selling Points, SEO & Keywords, and Conversion tabs!');
                 if (window.populateAllMarketingTabs) window.populateAllMarketingTabs(data);
@@ -4396,15 +4433,8 @@ class AdminInventoryModule {
             fresh_start: true
         };
         try {
-            const res = await fetch('/api/suggest_marketing.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: JSON.stringify(itemData)
-            });
-            const data = await res.json();
+            const res = await ApiClient.post('/api/suggest_marketing.php', itemData);
+            const data = res;
             if (data.success) {
                 this.showSuccess('🔥 Fresh marketing content generated! All fields updated with brand new AI suggestions.');
                 if (window.populateAllMarketingTabs) window.populateAllMarketingTabs(data);
@@ -4591,13 +4621,8 @@ class AdminInventoryModule {
             const body = (category === 'materials')
                 ? { name: data.name || `Suggested ${category}`, cost: data.cost }
                 : { description: data.name || data.description || `Suggested ${category}`, cost: data.cost };
-            const q = `inventoryId=${encodeURIComponent(this.currentItemSku)}&costType=${encodeURIComponent(category)}`;
-            const response = await fetch(`/functions/process_cost_breakdown.php?${q}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            const result = await response.json();
+            const response = await ApiClient.post('/functions/process_cost_breakdown.php', body, { method: 'POST' });
+            const result = response;
             if (!result.success) {
                 this.showError('Failed to save suggested cost item.');
             } else if (result.data && result.data.id && itemId && this.costBreakdown[category] && this.costBreakdown[category][itemId]) {

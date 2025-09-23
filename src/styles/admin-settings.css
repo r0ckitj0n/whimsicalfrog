@@ -419,14 +419,41 @@ body[data-page^='admin'] .page-content {
 .admin-modal-overlay.hidden { display: none !important; }
 .admin-modal-overlay.show { display: flex; }
 
-/* Category badges (class-based; replaces getCategoryColor) */
-.category-badge {
-  display: inline-block;
-  border-radius: 0.375rem; /* rounded */
-  font-size: 0.75rem;      /* text-xs */
-  font-weight: 600;        /* font-medium */
-  line-height: 1;
-  padding: 0.25rem 0.5rem; /* px-2 py-1 */
+/* Brand swatch colors from settings - will be dynamically updated via CSS variables */
+.brand-primary-swatch {
+  background-color: var(--brand-primary, #0ea5e9);
+  color: #fff;
+}
+.brand-secondary-swatch {
+  background-color: var(--brand-secondary, #6366f1);
+  color: #fff;
+}
+.brand-accent-swatch {
+  background-color: var(--brand-accent, #22c55e);
+  color: #fff;
+}
+
+/* Brand swatch colors by palette index */
+.brand-swatch[data-index="0"] { background-color: var(--palette-0, #f3f4f6); }
+.brand-swatch[data-index="1"] { background-color: var(--palette-1, #e5e7eb); }
+.brand-swatch[data-index="2"] { background-color: var(--palette-2, #d1d5db); }
+.brand-swatch[data-index="3"] { background-color: var(--palette-3, #9ca3af); }
+.brand-swatch[data-index="4"] { background-color: var(--palette-4, #6b7280); }
+.brand-swatch[data-index="5"] { background-color: var(--palette-5, #4b5563); }
+.brand-swatch[data-index="6"] { background-color: var(--palette-6, #374151); }
+.brand-swatch[data-index="7"] { background-color: var(--palette-7, #1f2937); }
+.brand-swatch[data-index="8"] { background-color: var(--palette-8, #111827); }
+.brand-swatch[data-index="9"] { background-color: var(--palette-9, #000000); }
+
+/* Color chip for attributes */
+.color-chip[data-color] {
+  background-color: attr(data-color);
+}
+
+/* Help documentation title styling */
+.help-title {
+  font-size: 24px;
+  margin-bottom: 16px;
 }
 
 /* Map semantic slugs to colors via CSS (source-managed with Vite) */

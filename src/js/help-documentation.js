@@ -16,11 +16,11 @@ class HelpDocumentation {
 
     loadSection(sectionId) {
         const content = {
-            'getting-started': `<h2 style="font-size:24px;margin-bottom:16px">🚀 Getting Started</h2><p>Welcome! Set up your business info, configure payments, add products, and set up categories.</p>`,
-            'inventory': `<h2 style="font-size:24px;margin-bottom:16px">📦 Inventory</h2><p>Manage products and stock levels.</p>`,
-            'orders': `<h2 style="font-size:24px;margin-bottom:16px">📋 Orders</h2><p>Track customer orders.</p>`,
-            'rooms': `<h2 style="font-size:24px;margin-bottom:16px">🏠 Rooms</h2><p>Configure room layouts.</p>`,
-            'payments': `<h2 style="font-size:24px;margin-bottom:16px">💳 Payments</h2><p>Set up Square payments.</p>`
+            'getting-started': `<h2 class="help-title">🚀 Getting Started</h2><p>Welcome! Set up your business info, configure payments, add products, and set up categories.</p>`,
+            'inventory': `<h2 class="help-title">📦 Inventory</h2><p>Manage products and stock levels.</p>`,
+            'orders': `<h2 class="help-title">📋 Orders</h2><p>Track customer orders.</p>`,
+            'rooms': `<h2 class="help-title">🏠 Rooms</h2><p>Configure room layouts.</p>`,
+            'payments': `<h2 class="help-title">💳 Payments</h2><p>Set up Square payments.</p>`
         };
         document.getElementById('helpContent').innerHTML = content[sectionId] || content['getting-started'];
     }

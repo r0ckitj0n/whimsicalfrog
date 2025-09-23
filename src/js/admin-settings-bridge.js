@@ -32,13 +32,16 @@ function updateBrandPreviewSwatches(s) {
     const accent = s.business_brand_accent || '';
     boxes.forEach((box) => {
       const t = (box.getAttribute('title') || '').toLowerCase();
-      /* eslint-disable no-restricted-syntax */
-      if (t === 'primary' && primary) box.style.backgroundColor = primary;
-      if (t === 'secondary' && secondary) box.style.backgroundColor = secondary;
-      if (t === 'accent' && accent) box.style.backgroundColor = accent;
-      const bg = box.style.backgroundColor;
-      if (bg) box.style.color = '#fff';
-      /* eslint-enable no-restricted-syntax */
+      if (t === 'primary' && primary) {
+        box.classList.add('brand-primary-swatch');
+        box.classList.remove('brand-secondary-swatch', 'brand-accent-swatch');
+      } else if (t === 'secondary' && secondary) {
+        box.classList.add('brand-secondary-swatch');
+        box.classList.remove('brand-primary-swatch', 'brand-accent-swatch');
+      } else if (t === 'accent' && accent) {
+        box.classList.add('brand-accent-swatch');
+        box.classList.remove('brand-primary-swatch', 'brand-secondary-swatch');
+      }
     });
   } catch (_) {}
 }
@@ -63,8 +66,8 @@ function applyBusinessCssToRoot(s){
     if (s.business_brand_font_secondary) vars.push(`--brand-font-secondary: ${s.business_brand_font_secondary};`);
     
     // Add palette colors as CSS variables
-    brandPalette.forEach(p => {
-        if(p.name && p.hex) vars.push(`${p.name.startsWith('--') ? p.name : '--' + p.name}: ${p.hex};`);
+    brandPalette.forEach((p, i) => {
+        if(p.name && p.hex) vars.push(`--palette-${i}: ${p.hex};`);
     });
 
     const raw = s.business_css_vars || '';
@@ -431,7 +434,7 @@ function populateAttributesModal(modal) {
       const li = document.createElement('li');
       li.className = 'attr-item flex justify-between items-center mb-1 p-2 bg-gray-50 rounded';
       li.innerHTML = `
-        <span class="attr-name">${color.color_name} <span class="inline-block w-4 h-4 rounded border" style="background-color: ${color.color_code}"></span></span>
+        <span class="attr-name">${color.color_name} <span class="inline-block w-4 h-4 rounded border color-chip" data-color="${color.color_code}"></span></span>
         <div class="attr-actions flex gap-1">
           <button type="button" class="btn btn-secondary btn-sm" data-action="attr-edit" data-type="color" data-id="${color.id}">Edit</button>
           <button type="button" class="btn btn-secondary btn-sm text-red-700" data-action="attr-delete" data-type="color" data-id="${color.id}">Delete</button>

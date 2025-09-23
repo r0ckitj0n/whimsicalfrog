@@ -409,8 +409,7 @@ export const FormHandlers = {
       const swatches = document.getElementById('brandPreviewSwatches');
       if (swatches && window.brandPalette) {
         swatches.innerHTML = window.brandPalette.map((color, index) => `
-          <div class="w-8 h-8 rounded border-2 border-gray-300" style="background-color: ${color.hex}"
-               title="${color.name}" data-index="${index}"></div>
+          <div class="w-8 h-8 rounded border-2 border-gray-300 brand-swatch" data-index="${index}" title="${color.name}"></div>
         `).join('');
       }
     } catch (error) {

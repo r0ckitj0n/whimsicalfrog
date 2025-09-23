@@ -141,13 +141,14 @@
     "isEntry": true
   },
   "src/entries/admin-inventory.js": {
-    "file": "assets/js/admin-inventory.js-sq5oY3Qa.js",
+    "file": "assets/js/admin-inventory.js-D0LxJveU.js",
     "name": "js/admin-inventory.js",
     "src": "src/entries/admin-inventory.js",
     "isEntry": true,
     "isDynamicEntry": true,
     "imports": [
-      "_admin-url-builder-BqhpoA3u.js"
+      "_admin-url-builder-BqhpoA3u.js",
+      "_api-client-CSwW4XUm.js"
     ],
     "css": [
       "assets/admin-legacy-modals-Yz6AOQsl.css"
@@ -217,7 +218,7 @@
     ]
   },
   "src/entries/app.js": {
-    "file": "assets/js/app.js-BE-B2uzy.js",
+    "file": "assets/js/app.js-CWvO1l0N.js",
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,

@@ -149,6 +149,11 @@ echo -e "${GREEN}🔄 Preparing to overwrite live database from local dump after
 
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
+
+# Quarantine any new duplicate files created during build
+echo -e "${GREEN}🧹 Quarantining any duplicate files created during build...${NC}"
+bash scripts/dev/quarantine_duplicates.sh || true
+
 cat > deploy_commands.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -166,6 +171,7 @@ mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
   --exclude-glob .vscode/ \
   --exclude-glob hot \
   --exclude-glob sessions/** \
+  --exclude-glob backups/duplicates/** \
   --include-glob backups/**/*.sql \
   --include-glob backups/**/*.sql.gz \
   --exclude-glob backups/** \

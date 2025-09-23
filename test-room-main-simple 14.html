@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Room Main Test</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        #mainRoomPage {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #ccc;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+<body>
+    <h1>Room Main Background Test</h1>
+    <div id="mainRoomPage" class="main-room-section" data-bg-url="/images/backgrounds/background-room-main.webp">
+        <p>Background should be visible here if working correctly.</p>
+        <p>URL: /images/backgrounds/background-room-main.webp</p>
+    </div>
+
+    <script type="module">
+        console.log('=== TEST PAGE START ===');
+
+        // Test loading room-main.js directly
+        import('/src/js/room-main.js')
+            .then(() => {
+                console.log('✅ room-main.js loaded successfully');
+                console.log('mainRoomPage element:', document.getElementById('mainRoomPage'));
+                console.log('data-bg-url value:', document.getElementById('mainRoomPage')?.getAttribute('data-bg-url'));
+
+                // Check if the script created the expected CSS
+                setTimeout(() => {
+                    const mainRoomPage = document.getElementById('mainRoomPage');
+                    if (mainRoomPage) {
+                        const computedStyle = window.getComputedStyle(mainRoomPage);
+                        console.log('Computed background-image:', computedStyle.backgroundImage);
+                        console.log('Element classes:', mainRoomPage.className);
+                    }
+                }, 1000);
+            })
+            .catch((error) => {
+                console.error('❌ room-main.js failed to load:', error);
+            });
+    </script>
+</body>
+</html>

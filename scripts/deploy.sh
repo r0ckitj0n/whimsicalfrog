@@ -178,6 +178,10 @@ EOL
 lftp -f preclean_remote.txt || true
 rm -f preclean_remote.txt
 
+# Quarantine any new duplicate files created during build
+echo -e "${GREEN}🧹 Quarantining any duplicate files created during build...${NC}"
+bash scripts/dev/quarantine_duplicates.sh || true
+
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
 cat > deploy_commands.txt << EOL

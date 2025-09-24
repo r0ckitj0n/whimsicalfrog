@@ -14,26 +14,31 @@ class Database
         $isDevelopment = $this->isDevelopmentEnvironment();
         
         if ($isDevelopment) {
-            // SQLite for development
-            $sqliteDbPath = __DIR__ . '/../database/whimsicalfrog_dev.sqlite';
+            // PostgreSQL for development - much more robust than SQLite
+            $pgHost = getenv('PGHOST');
+            $pgPort = getenv('PGPORT');
+            $pgDatabase = getenv('PGDATABASE');
+            $pgUser = getenv('PGUSER');
+            $pgPassword = getenv('PGPASSWORD');
             
-            if (!file_exists($sqliteDbPath)) {
-                throw new PDOException("Development database not found. Please run setup-dev-database.php first.");
+            if (empty($pgHost) || empty($pgPort) || empty($pgDatabase) || empty($pgUser) || empty($pgPassword)) {
+                throw new PDOException("Development database not configured. PostgreSQL environment variables not found.");
             }
             
-            $dsn = "sqlite:" . $sqliteDbPath;
+            $dsn = "pgsql:host=$pgHost;port=$pgPort;dbname=$pgDatabase;sslmode=require";
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES   => false,
+                PDO::ATTR_TIMEOUT            => 10,
             ];
             
             try {
-                $this->pdo = new PDO($dsn, null, null, $options);
-                // Enable foreign key constraints in SQLite
-                $this->pdo->exec("PRAGMA foreign_keys = ON");
+                $this->pdo = new PDO($dsn, $pgUser, $pgPassword, $options);
+                // Set timezone for PostgreSQL
+                $this->pdo->exec("SET TIME ZONE 'UTC'");
             } catch (PDOException $e) {
-                throw new PDOException("SQLite connection failed: " . $e->getMessage(), (int)$e->getCode());
+                throw new PDOException("PostgreSQL connection failed: " . $e->getMessage(), (int)$e->getCode());
             }
             
         } else {

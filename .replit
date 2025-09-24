@@ -1,10 +1,11 @@
-modules = ["nodejs-20", "php-8.2", "web", "bash"]
+modules = ["nodejs-20", "php-8.2", "web", "bash", "postgresql-16"]
 [agent]
 expertMode = true
+integrations = ["javascript_database:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["sqlite", "sshpass"]
+packages = ["sqlite", "sshpass", "php82Extensions.pdo_pgsql", "php82Extensions.pgsql", "postgresql"]
 
 [workflows]
 runButton = "Project"
@@ -35,7 +36,7 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 36039
+localPort = 45505
 externalPort = 3000
 
 [deployment]

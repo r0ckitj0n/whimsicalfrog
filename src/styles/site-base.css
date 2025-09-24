@@ -75,7 +75,7 @@ body[data-page^='admin'] .admin-filter-section {
   border: none !important;
   border-bottom: none !important;
   box-shadow: none !important;
-  padding: 0.5rem 0 !important;
+  padding: 0 !important;
 }
 /* Ensure no decorative borders from pseudo-elements */
 body[data-page^='admin'] .admin-filter-section::before,

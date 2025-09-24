@@ -86,9 +86,6 @@ if command -v git >/dev/null 2>&1; then
 
     # Rebase on top of remote to avoid non-fast-forward push failures
     git fetch origin || true
-<<<<<<< Updated upstream
-    git pull --rebase origin "$BRANCH" || echo -e "${YELLOW}⚠️  Git pull --rebase encountered issues; continuing...${NC}"
-=======
     # If working tree is dirty, stash changes before rebase
     NEED_STASH=false
     if [ -n "$(git status --porcelain)" ]; then NEED_STASH=true; fi
@@ -101,37 +98,21 @@ if command -v git >/dev/null 2>&1; then
     if [ "$NEED_STASH" = true ]; then
       git stash list | grep -q 'deploy-autostash' && git stash pop || true
     fi
->>>>>>> Stashed changes
 
     # Commit any pending changes (if any)
     if [ -n "$(git status --porcelain)" ]; then
       echo -e "${GREEN}📝 Committing changes to GitHub...${NC}"
-      git add -A
-<<<<<<< Updated upstream
-      git commit -m "Auto-commit before full deployment ($(date +'%Y-%m-%d %H:%M:%S'))" || true
-=======
       # Disable husky hooks for automated commits
       HUSKY=0 git commit --no-verify -m "Auto-commit before full deployment ($(date +'%Y-%m-%d %H:%M:%S'))" || true
->>>>>>> Stashed changes
     else
       echo -e "${GREEN}✅ No local changes to commit${NC}"
     fi
 
-    # Push with a retry after another rebase if needed
-<<<<<<< Updated upstream
-    if git push origin "$BRANCH"; then
-=======
     if HUSKY=0 git push origin "$BRANCH"; then
->>>>>>> Stashed changes
       echo -e "${GREEN}✅ Successfully pushed to GitHub${NC}"
     else
       echo -e "${YELLOW}⚠️  Initial push failed; attempting rebase and retry...${NC}"
-      git pull --rebase origin "$BRANCH" || true
-<<<<<<< Updated upstream
-      if git push origin "$BRANCH"; then
-=======
       if HUSKY=0 git push origin "$BRANCH"; then
->>>>>>> Stashed changes
         echo -e "${GREEN}✅ Push succeeded after rebase${NC}"
       else
         echo -e "${YELLOW}⚠️  GitHub push failed even after rebase. Continuing with deployment...${NC}"

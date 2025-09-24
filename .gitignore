@@ -32,9 +32,9 @@ whf_deploy_key.pub
 .idea/
 .vscode/
 
-# Root-level SQL dumps (do not track). Allow SQL under scripts/.
-/*.sql
-!scripts/**/*.sql
+# All SQL files (do not track any SQL files to GitHub)
+**/*.sql
+*.sql
 
 # Root-level env/hot files (do not track)
 /.env*

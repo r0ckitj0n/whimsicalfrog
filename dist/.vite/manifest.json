@@ -19,15 +19,9 @@
     "file": "assets/auto-C8LTT2Eg.js",
     "name": "auto"
   },
-<<<<<<< Updated upstream
-  "_main-m3HUWi9O.css": {
-    "file": "assets/main-m3HUWi9O.css",
-    "src": "_main-m3HUWi9O.css"
-=======
   "_main-tw5clO3o.css": {
     "file": "assets/main-tw5clO3o.css",
     "src": "_main-tw5clO3o.css"
->>>>>>> Stashed changes
   },
   "_preload-helper-BXl3LOEh.js": {
     "file": "assets/preload-helper-BXl3LOEh.js",
@@ -188,11 +182,7 @@
     ]
   },
   "src/entries/admin-settings.js": {
-<<<<<<< Updated upstream
-    "file": "assets/js/admin-settings.js-Dm2eQIhw.js",
-=======
     "file": "assets/js/admin-settings.js-DY7eJtot.js",
->>>>>>> Stashed changes
     "name": "js/admin-settings.js",
     "src": "src/entries/admin-settings.js",
     "isEntry": true,
@@ -206,13 +196,8 @@
       "src/modules/business-settings-api.js"
     ],
     "css": [
-<<<<<<< Updated upstream
-      "assets/admin-settings-BCCxUxPG.css",
-      "assets/main-m3HUWi9O.css",
-=======
       "assets/admin-settings-PgGXmvfX.css",
       "assets/main-tw5clO3o.css",
->>>>>>> Stashed changes
       "assets/admin-modals-0Zd99rTK.css"
     ],
     "assets": [
@@ -233,11 +218,7 @@
     ]
   },
   "src/entries/app.js": {
-<<<<<<< Updated upstream
-    "file": "assets/js/app.js-BpC_8Y9T.js",
-=======
     "file": "assets/js/app.js-Cw7Fl5N1.js",
->>>>>>> Stashed changes
     "name": "js/app.js",
     "src": "src/entries/app.js",
     "isEntry": true,
@@ -315,11 +296,7 @@
     ],
     "css": [
       "assets/app-aPLV9Oox.css",
-<<<<<<< Updated upstream
-      "assets/main-m3HUWi9O.css"
-=======
       "assets/main-tw5clO3o.css"
->>>>>>> Stashed changes
     ],
     "assets": [
       "assets/background-room-main-CD7UiX_S.webp",

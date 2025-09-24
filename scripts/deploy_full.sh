@@ -25,6 +25,24 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}🚀 Starting file deployment...${NC}"
 
+# Ensure frontend build artifacts exist
+echo -e "${GREEN}🧱 Ensuring Vite build artifacts exist...${NC}"
+if [ ! -f dist/manifest.json ]; then
+  echo -e "${YELLOW}⚠️  dist/manifest.json not found. Running vite build...${NC}"
+  if command -v npm >/dev/null 2>&1; then
+    if npm run build; then
+      echo -e "${GREEN}✅ Vite build completed${NC}"
+    else
+      echo -e "${RED}❌ Vite build failed. Aborting deployment.${NC}"
+      exit 1
+    fi
+  else
+    echo -e "${YELLOW}⚠️  npm not available; skipping build step${NC}"
+  fi
+else
+  echo -e "${GREEN}✅ Found dist/manifest.json${NC}"
+fi
+
 # Quarantine duplicate/backup files before upload
 echo -e "${GREEN}🧹 Quarantining duplicate/backup files...${NC}"
 bash scripts/dev/quarantine_duplicates.sh || true

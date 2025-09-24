@@ -16,11 +16,12 @@ fi
 echo "Target: $SFTP_USER@$SFTP_HOST:${SFTP_PORT:-22}"
 echo
 
-# Build frontend assets
+# Build frontend assets FIRST
 echo "Building frontend assets..."
 npm run build
 if [[ $? -ne 0 ]]; then
-    echo "Warning: Frontend build failed, continuing with existing assets"
+    echo "Error: Frontend build failed!"
+    exit 1
 fi
 
 echo "Preparing deployment package..."

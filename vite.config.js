@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 
 
-const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5176);
+const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5000);
 const hmrPort = Number(process.env.VITE_HMR_PORT || devPort);
 
 export default defineConfig({
@@ -34,7 +34,7 @@ export default defineConfig({
         // Ensure dev server runs on a stable port that matches our PHP helper hot origin
         port: devPort,
         strictPort: true,
-        host: 'localhost', // use localhost so cookies are same-site with backend on localhost
+        host: '0.0.0.0', // use 0.0.0.0 for Replit environment to allow all hosts
         // Use HTTP; we proxy via PHP to avoid CORS/TLS issues
         // https: false by default
         cors: true,
@@ -46,7 +46,7 @@ export default defineConfig({
         // Enable HMR so @vite/client can inject CSS and handle updates
         hmr: {
             protocol: 'ws',
-            host: 'localhost',
+            host: '0.0.0.0',
             port: hmrPort,
             clientPort: hmrPort,
         },

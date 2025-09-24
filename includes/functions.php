@@ -343,8 +343,10 @@ function get_active_background($roomType)
             $roomNumber = (int)$m[1];
         } elseif (ctype_digit($roomTypeStr)) {
             $roomNumber = (int)$roomTypeStr;
-        } elseif ($roomTypeStr === 'landing' || $roomTypeStr === 'room_main' || $roomTypeStr === 'shop') {
+        } elseif ($roomTypeStr === 'landing' || $roomTypeStr === 'shop') {
             $roomNumber = 0;
+        } elseif ($roomTypeStr === 'room_main') {
+            $roomNumber = 1;
         } else {
             return '';
         }

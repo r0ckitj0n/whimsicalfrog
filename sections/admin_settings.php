@@ -1092,10 +1092,22 @@ body[data-page="admin/settings"] .settings-grid {
   const TBODY = 'dashboardSectionsBody';
   const STATUS = 'dashboardConfigResult';
 
+  // Fallback: if API returns no available_sections, use this local map
+  const FALLBACK_SECTIONS = {
+    metrics: { title: '📊 Quick Metrics' },
+    recent_orders: { title: '📋 Recent Orders' },
+    low_stock: { title: '⚠️ Low Stock Alerts' },
+    inventory_summary: { title: '📦 Inventory Summary' },
+    customer_summary: { title: '👥 Customer Overview' },
+    marketing_tools: { title: '📈 Marketing Tools' },
+    order_fulfillment: { title: '🚚 Order Fulfillment' },
+    reports_summary: { title: '📊 Reports Summary' }
+  };
+
   const updateOrderNumbers=()=>{document.querySelectorAll('#'+TBODY+' tr').forEach((row,i)=>{const span=row.querySelector('span');if(span)span.textContent=i+1;});};
   const setStatus=(m,ok)=>{const s=document.getElementById(STATUS);if(!s)return;s.textContent=m||'';s.classList.toggle('text-green-600',!!ok);s.classList.toggle('text-red-600',ok===false);};
   const show=()=>{const el=document.getElementById(MODAL);if(el){el.classList.remove('hidden');el.classList.add('show');el.removeAttribute('aria-hidden');}};
-  const api=function(u,p){return fetch(u,{method:p?'POST':'GET',headers:p?{'Content-Type':'application/json'}:{},body:p?JSON.stringify(p):undefined,credentials:'include'}).then(function(r){return r.text()}).then(function(t){var j={};try{j=JSON.parse(t)}catch(_){throw new Error('Non-JSON')}if(!j.success)throw new Error(j.error||'Bad');return j.data||{});}};
+  const api=function(u,p){return fetch(u,{method:p?'POST':'GET',headers:p?{'Content-Type':'application/json'}:{},body:p?JSON.stringify(p):undefined,credentials:'include'}).then(function(r){return r.text()}).then(function(t){var j={};try{j=JSON.parse(t)}catch(_){throw new Error('Non-JSON')}if(!j.success)throw new Error(j.error||'Bad');return j.data||{}});};
   const get=()=>api('/api/dashboard_sections.php?action=get_sections');
 
   const draw = function(d) {
@@ -1107,6 +1119,10 @@ body[data-page="admin/settings"] .settings-grid {
     }
 
     var avail = (d && d.available_sections) ? d.available_sections : {};
+    if (!avail || Object.keys(avail).length === 0) {
+      console.warn('⚠️ Dashboard Config: available_sections missing from API response; using FALLBACK_SECTIONS');
+      avail = FALLBACK_SECTIONS;
+    }
     var act = (d && Array.isArray(d.sections)) ? d.sections : [];
     var ks = new Set(Object.keys(avail));
 
@@ -1211,9 +1227,10 @@ body[data-page="admin/settings"] .settings-grid {
   };
 
   // Add direct click handler to the button to bypass Vite module interference
-  document.addEventListener('DOMContentLoaded', function() {
+  const attachDashboardConfigButtonHandler = function() {
     const dashboardBtn = document.getElementById('dashboardConfigBtn');
-    if (dashboardBtn) {
+    if (dashboardBtn && !dashboardBtn.__wfDashboardClickAttached) {
+      dashboardBtn.__wfDashboardClickAttached = true;
       dashboardBtn.addEventListener('click', function(e) {
         console.log('🎯 Dashboard Config button clicked directly');
         e.preventDefault();
@@ -1226,14 +1243,25 @@ body[data-page="admin/settings"] .settings-grid {
           setStatus('Loaded', true);
         }).catch(function(error) {
           console.error('❌ Dashboard Config API error:', error);
-          setStatus('Load failed', false);
+          console.warn('⚠️ Falling back to default sections');
+          try {
+            draw({ sections: [], available_sections: FALLBACK_SECTIONS });
+            setStatus('Loaded (defaults)', true);
+          } catch (e2) {
+            setStatus('Load failed', false);
+          }
         });
       });
       console.log('✅ Dashboard Config: Direct click handler attached');
-    } else {
+    } else if (!dashboardBtn) {
       console.error('❌ Dashboard Config: Button not found with ID dashboardConfigBtn');
     }
-  });
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachDashboardConfigButtonHandler);
+  } else {
+    attachDashboardConfigButtonHandler();
+  }
 
   document.addEventListener('click', function(e) {
     const a = e.target.closest('[data-action]');
@@ -1250,8 +1278,15 @@ body[data-page="admin/settings"] .settings-grid {
       get().then(function(data) {
         draw(data);
         setStatus('Refreshed', true);
-      }).catch(function() {
-        setStatus('Refresh failed', false);
+      }).catch(function(err) {
+        console.error('❌ Dashboard Config refresh error:', err);
+        console.warn('⚠️ Falling back to default sections');
+        try {
+          draw({ sections: [], available_sections: FALLBACK_SECTIONS });
+          setStatus('Refreshed (defaults)', true);
+        } catch (e2) {
+          setStatus('Refresh failed', false);
+        }
       });
     }
     if (action === 'dashboard-config-reset') {

@@ -3701,13 +3701,16 @@ body { /* Allow content overflow */
 }/* Navigation */
 /* Admin tab navigation bar (container around nav buttons) */
 .admin-tab-navigation {
-    background: #ffffff;
-    border-bottom: none;
-    display: inline-block;
-    width: auto;
-    max-width: 100%;
-    padding: 10px;
-    margin-bottom: 1rem;
+    /* Source of truth moved to components/admin-nav.css */
+    background: transparent !important;
+    border-bottom: none !important;
+    display: block;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
 }
 /* Settings-page-specific overrides removed to unify navbar styling across admin pages */
 .admin-nav ul {

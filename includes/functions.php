@@ -344,9 +344,31 @@ function get_active_background($roomType)
         } elseif (ctype_digit($roomTypeStr)) {
             $roomNumber = (int)$roomTypeStr;
         } elseif ($roomTypeStr === 'landing' || $roomTypeStr === 'shop') {
-            $roomNumber = 0;
+            // Landing and shop pages use home background
+            $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = '0' AND (webp_filename = 'background-home.webp' OR image_filename = 'background-home.png') AND is_active = 1 ORDER BY id DESC LIMIT 1");
+            $stmt->execute();
+            $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if ($background) {
+                $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
+                $abs = __DIR__ . '/..' . '/images/backgrounds/' . ltrim($imageFile, '/');
+                if (is_file($abs)) {
+                    return '/images/backgrounds/' . ltrim($imageFile, '/');
+                }
+            }
+            return '';
         } elseif ($roomTypeStr === 'room_main') {
-            $roomNumber = 1;
+            // room_main uses its own specific background
+            $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = '0' AND (webp_filename = 'background-room-main.webp' OR image_filename = 'background-room-main.png') ORDER BY id DESC LIMIT 1");
+            $stmt->execute();
+            $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if ($background) {
+                $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
+                $abs = __DIR__ . '/..' . '/images/backgrounds/' . ltrim($imageFile, '/');
+                if (is_file($abs)) {
+                    return '/images/backgrounds/' . ltrim($imageFile, '/');
+                }
+            }
+            return '';
         } else {
             return '';
         }

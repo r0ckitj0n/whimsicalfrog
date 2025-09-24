@@ -374,12 +374,12 @@ if ($__is_admin_route) {
 .site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
 .site-header nav ul{list-style:none;margin:0;padding:0;display:flex;gap:14px;flex-wrap:wrap}
 .site-header nav ul>li{display:inline-flex}
-.admin-tab-navigation{position:fixed!important;top:64px!important;left:0;right:0;z-index:2000;margin:0!important;padding:0px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
+.admin-tab-navigation{position:fixed!important;top:68px!important;left:0;right:0;z-index:2000;margin:0!important;padding:0px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation ul{list-style:none!important;margin:0 auto!important;padding:0!important;display:flex!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .container,.admin-tab-navigation .wrapper,.admin-tab-navigation .flex,.admin-tab-navigation > div,.admin-tab-navigation .u-display-flex{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}
 .admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}
-.admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
+.admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 18px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
 /* Inline spacing rules removed (source-of-truth in CSS files) */
 /* Standalone Settings template (no #admin-section-content wrapper): apply to direct child only */
 /* (kept intentionally minimal) */
@@ -409,13 +409,15 @@ if ($isAdmin && (strpos($pageSlug, 'admin/settings') === 0)) {
 .site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
 .site-header nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:row!important;gap:14px;flex-wrap:nowrap!important}
 .site-header nav ul>li{display:inline-flex}
-.admin-tab-navigation{position:fixed;top:64px;left:0;right:0;z-index:2000;margin:0!important;padding:0px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
+.admin-tab-navigation{position:fixed;top:68px;left:0;right:0;z-index:2000;margin:0!important;padding:0px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
 .admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}
 /* Standalone Settings template (light mode): apply to direct child only */
-/* Inline spacing rules removed (source-of-truth in CSS files) */
-body[data-page='admin/settings'] > .settings-page{padding-top:0!important}
+body[data-page='admin/settings'] > .settings-page{padding-top:136px!important}
+
+/* Settings page: override navbar position for more space */
+body[data-page='admin/settings'] .admin-tab-navigation{top:84px!important}
 </style>
 STYLE;
         // Optional: Prevent hash-driven modal auto-opens and suppress overlays unless user triggered

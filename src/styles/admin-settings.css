@@ -687,9 +687,15 @@ body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable td {
 /* Admin page spacing - single source of truth (header + navbar only) */
 body[data-page^='admin'] {
   /* Define a global navbar height token for admin pages */
-  --admin-tabs-height: 40px;
-  /* Reserve exactly header + navbar */
-  padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 40px)) !important;
+  --admin-tabs-height: 44px;
+  /* Reserve minimal space - compact layout as requested */
+  padding-top: 20px !important;
+}
+
+/* Settings page needs more padding due to different layout structure */
+body[data-page='admin/settings'] {
+  /* Reserve space: header(64px) + gap(20px) + navbar(32px) + gap(20px) = 136px */
+  padding-top: 136px !important;
 }
 
 
@@ -742,7 +748,14 @@ body[data-page^='admin'] .admin-modal-overlay {
 /* Admin navbar positioning - CONSISTENT SPACING */
 body[data-page^='admin'] .admin-tab-navigation {
   /* Ensure navbar is positioned below header */
-  top: var(--wf-header-height, 64px) !important;
+  top: 68px !important; /* 64px header + 4px gap for compact layout */
+  z-index: 2000 !important;
+  margin: 0 !important;
+}
+
+/* Settings page: add more space between header and navbar */
+body[data-page='admin/settings'] .admin-tab-navigation {
+  top: 84px !important; /* 64px header + 20px gap for settings page */
   z-index: 2000 !important;
   margin: 0 !important;
 }

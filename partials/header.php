@@ -651,7 +651,7 @@ if ($pageSlug === 'landing') {
         }
         $bodyBgUrl = $landingBg;
         $bodyClasses[] = 'room-bg-landing';
-        echo "<script>console.log('[Header] ✅ Landing background applied successfully: \"$landingBg\"');</script>\n";
+        // Background applied successfully
     } else {
         echo "<script>console.error('[Header] ❌ No active landing background configured; none will be applied');</script>\n";
     }

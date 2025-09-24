@@ -5,6 +5,9 @@
  * All JavaScript logic has been moved to js/landing-page.js.
  */
 
+// Include database connection
+require_once __DIR__ . '/includes/database.php';
+
 // Fetch coordinates from the database (room_maps now uses room_number, not room_type)
 try {
     $pdo = Database::getInstance();

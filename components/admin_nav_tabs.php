@@ -29,7 +29,7 @@ $tooltipIds = [
     'settings' => 'adminSettingsTab'
 ];
 ?>
-<div class="admin-tab-navigation mb-1">
+<div class="admin-tab-navigation">
     <div class="wf-admin-nav-row">
         <div class="wf-nav-left"></div>
 

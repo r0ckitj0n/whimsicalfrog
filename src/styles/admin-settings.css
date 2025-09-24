@@ -687,9 +687,9 @@ body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable td {
 /* Admin page spacing - single source of truth (header + navbar only) */
 body[data-page^='admin'] {
   /* Define a global navbar height token for admin pages */
-  --admin-tabs-height: 36px;
+  --admin-tabs-height: 40px;
   /* Reserve exactly header + navbar */
-  padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 36px)) !important;
+  padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 40px)) !important;
 }
 
 

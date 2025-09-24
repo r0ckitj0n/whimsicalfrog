@@ -56,11 +56,11 @@ try {
     exit;
 }
 
-// New contract: use 'room' (1..5) or 'room_number'
+// New contract: use 'room' (0..5) or 'room_number' - include 0 for landing page
 $roomParam = $_GET['room'] ?? $_GET['room_number'] ?? '';
 if ($roomParam === '') {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Room is required (use room=1..5)']);
+    echo json_encode(['success' => false, 'message' => 'Room is required (use room=0..5, where 0=landing)']);
     exit;
 }
 if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
@@ -68,9 +68,9 @@ if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
 } else {
     $roomNumber = (string)((int)$roomParam);
 }
-if (!preg_match('/^[1-5]$/', $roomNumber)) {
+if (!preg_match('/^[0-5]$/', $roomNumber)) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid room. Expected 1-5.']);
+    echo json_encode(['success' => false, 'message' => 'Invalid room. Expected 0-5 (where 0=landing).']);
     exit;
 }
 

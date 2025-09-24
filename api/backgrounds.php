@@ -196,7 +196,7 @@ function wf_handle_backgrounds_get(): void
                 Response::success(['backgrounds' => $rows]);
             }
         } else {
-            $summary = Database::queryAll("SELECT room_number AS room_key, COUNT(*) as total_count, SUM(is_active) as active_count, GROUP_CONCAT(CASE WHEN is_active = 1 THEN background_name END) as active_background FROM backgrounds GROUP BY room_number ORDER BY room_number");
+            $summary = Database::queryAll("SELECT room_number AS room_key, COUNT(*) as total_count, SUM(is_active) as active_count, STRING_AGG(CASE WHEN is_active = 1 THEN background_name END, ', ') as active_background FROM backgrounds GROUP BY room_number ORDER BY room_number");
             Response::success(['summary' => $summary]);
         }
     } catch (Throwable $e) {

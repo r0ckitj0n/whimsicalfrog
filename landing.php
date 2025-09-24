@@ -64,13 +64,15 @@ try {
 }
 ?>
 
-<section id="landingPage" class="relative" data-coords='<?php echo htmlspecialchars($landingCoordsJson, ENT_NOQUOTES, 'UTF-8'); ?>'>
-    <a href="/room_main" class="clickable-area area-1" title="Enter the Main Room">
-        <picture>
-            <source srcset="images/signs/sign-welcome.webp" type="image/webp">
-            <source srcset="images/signs/sign-welcome.png" type="image/png">
-            <img src="images/signs/sign-welcome.png" alt="Welcome - Click to Enter">
-        </picture>
-    </a>
+<section id="landingPage" class="relative" style="min-height: calc(100vh - 64px); padding-top: 20px;" data-coords='<?php echo htmlspecialchars($landingCoordsJson, ENT_NOQUOTES, 'UTF-8'); ?>'>
+    <div class="landing-content" style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+        <a href="/room_main" class="clickable-area area-1" style="display: inline-block; text-align: center;" title="Enter the Main Room">
+            <picture>
+                <source srcset="images/signs/sign-welcome.webp" type="image/webp">
+                <source srcset="images/signs/sign-welcome.png" type="image/png">
+                <img src="images/signs/sign-welcome.png" alt="Welcome - Click to Enter" style="max-width: 300px; height: auto;">
+            </picture>
+        </a>
+    </div>
 </section>
 

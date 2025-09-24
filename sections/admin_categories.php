@@ -1,25 +1,50 @@
 <?php
 // sections/admin_categories.php — Primary implementation for Category Management
 
-// Load the lightweight modal header to get CSS/JS
-require_once dirname(__DIR__) . '/partials/modal_header.php';
-
-// Ensure shared layout (header/footer) is bootstrapped so the admin navbar is present
-if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
-    $page = 'admin';
-    include dirname(__DIR__) . '/partials/header.php';
-    if (!function_exists('__wf_admin_categories_footer_shutdown')) {
-        function __wf_admin_categories_footer_shutdown()
-        {
-            @include __DIR__ . '/../partials/footer.php';
-        }
-    }
-    register_shutdown_function('__wf_admin_categories_footer_shutdown');
+// Detect modal context
+$isModal = isset($_GET['modal']) && $_GET['modal'] == '1';
+if (!$isModal) {
+    // Check if loaded via iframe from admin settings (referrer detection)
+    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+    $isModal = strpos($referrer, 'admin_settings') !== false || strpos($referrer, 'admin/') !== false;
 }
 
-// Always include admin navbar on categories page, even when accessed directly
-$section = 'categories';
-include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
+if ($isModal) {
+    // Modal context - load minimal header for CSS/JS only
+    require_once dirname(__DIR__) . '/partials/modal_header.php';
+    echo '<style>
+        body { 
+            background: white !important; 
+            margin: 0 !important; 
+            padding: 16px !important; 
+            font-family: system-ui, -apple-system, sans-serif !important;
+        }
+        .admin-title { 
+            margin-top: 0 !important; 
+            margin-bottom: 1rem !important; 
+        }
+    </style>';
+} else {
+    // Full page context - load complete admin layout
+    require_once dirname(__DIR__) . '/partials/modal_header.php';
+    
+    // Ensure shared layout (header/footer) is bootstrapped so the admin navbar is present
+    if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+        $page = 'admin';
+        include dirname(__DIR__) . '/partials/header.php';
+        if (!function_exists('__wf_admin_categories_footer_shutdown')) {
+            function __wf_admin_categories_footer_shutdown()
+            {
+                @include __DIR__ . '/../partials/footer.php';
+            }
+        }
+        register_shutdown_function('__wf_admin_categories_footer_shutdown');
+    }
+
+    // Always include admin navbar on categories page, even when accessed directly
+    $section = 'categories';
+    include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
+}
 
 // Authentication check - case insensitive
 require_once dirname(__DIR__) . '/includes/functions.php';

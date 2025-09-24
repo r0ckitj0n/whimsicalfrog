@@ -5,6 +5,7 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/components/admin_order_editor.php';
 
+
 // Ensure shared layout (header/footer) is bootstrapped so the admin navbar is present
 if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
     $page = 'admin';

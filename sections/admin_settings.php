@@ -39,18 +39,11 @@ if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
 $section = 'settings';
 include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
 
+// Reusable settings card renderer
+require_once dirname(__DIR__) . '/components/settings_card.php';
+
 // Ensure admin-specific CSS variables are set
 echo '<style id="admin-settings-navbar-fix">:root{--wf-header-height:64px;--admin-tabs-height:56px;}</style>';
-
-// Extra hardening: eliminate any residual bottom spacing from last elements
-echo '<style id="admin-settings-bottom-gap-fix">
-body[data-page="admin/settings"] .settings-page { padding-bottom: 0 !important; }
-body[data-page="admin/settings"] #admin-section-content > *:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; }
-body[data-page="admin/settings"] .settings-page > *:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; }
-body[data-page="admin/settings"] .settings-grid > *:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; }
-body[data-page="admin/settings"] .settings-section:last-of-type { margin-bottom: 0 !important; padding-bottom: 0 !important; }
-body[data-page="admin/settings"] hr { margin: 0 !important; }
-</style>';
 
 // Reduce spacing between header and admin navbar
 echo '<style id="admin-settings-navbar-spacing">
@@ -89,13 +82,13 @@ body[data-page="admin/settings"] .admin-tab-navigation {
 // Calculate proper content spacing to avoid overlap with fixed navbar
 echo '<style id="admin-settings-content-positioning">
 body[data-page="admin/settings"] .settings-page {
-    padding-top: 128px !important;
+    padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 8px) !important;
     margin-top: 0 !important;
-    min-height: calc(100vh - 128px) !important;
+    min-height: calc(100vh - var(--wf-header-height, 64px) - var(--admin-tabs-height, 56px)) !important;
     overflow-y: visible !important;
 }
 body[data-page="admin/settings"] #adminSettingsRoot {
-    min-height: calc(100vh - 128px - 2rem) !important;
+    min-height: calc(100vh - var(--wf-header-height, 64px) - var(--admin-tabs-height, 56px) - 2rem) !important;
     overflow-y: auto !important;
 }
 </style>';
@@ -211,114 +204,48 @@ body[data-page="admin/settings"] .settings-grid {
   <div id="adminSettingsRoot" class="admin-settings-root">
     <!-- Settings cards grid using legacy classes -->
     <div class="settings-grid">
-      <!-- Content Management -->
-      <section class="settings-section content-section card-theme-blue">
-        <header class="section-header">
-          <h3 class="section-title">Content Management</h3>
-          <p class="section-description">Organize products, categories, and room content</p>
-        </header>
-        <div class="section-content">
-          <button type="button" id="dashboardConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
-          <button type="button" id="categoriesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-categories">Category Management</button>
-          <button type="button" id="attributesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-attributes">Genders, Sizes, &amp; Colors</button>
-          <button type="button" id="templateManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-template-manager">Template Manager</button>
-        </div>
-      </section>
+      <?php // Content Management ?>
+      <?php ob_start(); ?>
+        <button type="button" id="dashboardConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
+        <button type="button" id="categoriesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-categories">Category Management</button>
+        <button type="button" id="attributesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-attributes">Genders, Sizes, &amp; Colors</button>
+        <button type="button" id="templateManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-template-manager">Template Manager</button>
+      <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-blue', 'Content Management', 'Organize products, categories, and room content', $__content); ?>
 
-      <!-- Visual & Design -->
-      <section class="settings-section visual-section card-theme-purple">
-        <header class="section-header">
-          <h3 class="section-title">Visual &amp; Design</h3>
-          <p class="section-description">Customize appearance and interactive elements</p>
-        </header>
-        <div class="section-content">
-          <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-css-rules">CSS Rules</button>
-          <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-background-manager">Background Manager</button>
-          <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-editor">Room Map Editor</button>
-          <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-area-item-mapper">Area-Item Mapper</button>
-        </div>
-      </section>
+      <?php // Visual & Design ?>
+      <?php ob_start(); ?>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-css-rules">CSS Rules</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-background-manager">Background Manager</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-editor">Room Map Editor</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-area-item-mapper">Area-Item Mapper</button>
+      <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-purple', 'Visual & Design', 'Customize appearance and interactive elements', $__content); ?>
 
-      <!-- Business & Analytics -->
-      <section class="settings-section business-section card-theme-emerald">
-        <header class="section-header">
-          <h3 class="section-title">Business &amp; Analytics</h3>
-          <p class="section-description">Manage sales, promotions, and business insights</p>
-        </header>
-        <div class="section-content">
-          <button type="button" id="businessInfoBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-business-info">Business Information</button>
-          <button type="button" id="squareSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-square-settings">Configure Square</button>
-        </div>
-      </section>
+      <?php // Business & Analytics ?>
+      <?php ob_start(); ?>
+        <button type="button" id="businessInfoBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-business-info">Business Information</button>
+        <button type="button" id="squareSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-square-settings">Configure Square</button>
+        <button type="button" id="aiSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-settings">AI Provider</button>
+        <button type="button" id="aiToolsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-tools">AI &amp; Automation Tools</button>
+      <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-emerald', 'Business & Analytics', 'Manage sales, promotions, and business insights', $__content); ?>
 
-      <!-- Communication -->
-      <section class="settings-section communication-section card-theme-orange">
-        <header class="section-header">
-          <h3 class="section-title">Communication</h3>
-          <p class="section-description">Email configuration and customer messaging</p>
-        </header>
-        <div class="section-content">
-          <button type="button" id="emailConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-settings">Email Configuration</button>
-          <button type="button" id="emailHistoryBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-history">Email History</button>
-          <button type="button" id="emailTestBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-test">Send Sample Email</button>
-          <button type="button" id="loggingStatusBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-logging-status">Logging Status</button>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/receipt.php">Receipt Messages</a>
-        </div>
-      </section>
+      <?php // Communication ?>
+      <?php ob_start(); ?>
+        <button type="button" id="emailConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-settings">Email Configuration</button>
+        <button type="button" id="emailHistoryBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-history">Email History</button>
+        <button type="button" id="emailTestBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-test">Send Sample Email</button>
+        <button type="button" id="loggingStatusBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-logging-status">Logging Status</button>
+        <a class="admin-settings-button btn-primary btn-full-width" href="/receipt.php">Receipt Messages</a>
+      <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-orange', 'Communication', 'Email configuration and customer messaging', $__content); ?>
 
-      <!-- Technical & System -->
-      <section class="settings-section technical-section card-theme-red">
-        <header class="section-header">
-          <h3 class="section-title">Technical &amp; System</h3>
-          <p class="section-description">System tools and advanced configuration</p>
-        </header>
-        <div class="section-content">
-          <button type="button" id="accountSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-account-settings">Account Settings</button>
-          <button type="button" id="secretsManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-secrets-modal">Secrets Manager</button>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=cost-breakdown-manager">Cost Breakdown Manager</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=customers">User Manager</a>
-          <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=reports-browser">Reports &amp; Documentation Browser</a>
-        </div>
-      </section>
-
-      <!-- Health & Diagnostics -->
-      <section class="settings-section health-section card-theme-slate">
-        <header class="section-header">
-          <h3 class="section-title">Health &amp; Diagnostics</h3>
-          <p class="section-description">Check for missing backgrounds and item images</p>
-        </header>
-        <div class="section-content">
-          <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Open Health &amp; Diagnostics</button>
-        </div>
-      </section>
-
-      <!-- Help & Hints -->
-      <section class="settings-section help-hints-section card-theme-amber">
-        <header class="section-header">
-          <h3 class="section-title">Help &amp; Hints</h3>
-          <p class="section-description">Control admin tooltips and contextual banners</p>
-        </header>
-        <div class="section-content grid gap-2">
-          <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="hints-enable-session">Enable tooltips (this session)</button>
-          <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="hints-enable-persist">Enable tooltips (always)</button>
-          <button type="button" class="admin-settings-button btn-secondary btn-full-width" data-action="hints-disable">Disable tooltips</button>
-          <div class="border-t my-2"></div>
-          <button type="button" class="admin-settings-button btn-secondary btn-full-width" data-action="hints-restore-banners-session">Restore dismissed banners (this session)</button>
-          <button type="button" class="admin-settings-button btn-secondary btn-full-width" data-action="hints-restore-banners-persist">Restore dismissed banners (always)</button>
-        </div>
-      </section>
-
-      <!-- AI & Automation -->
-      <section class="settings-section ai-automation-section card-theme-teal">
-        <header class="section-header">
-          <h3 class="section-title">AI &amp; Automation</h3>
-          <p class="section-description">Artificial intelligence and automation settings</p>
-        </header>
-        <div class="section-content">
-          <button type="button" id="aiSettingsBtn" class="admin-settings-button btn-primary btn-full-width ai-settings-btn" data-action="open-ai-settings">AI Provider</button>
-          <button type="button" id="aiToolsBtn" class="admin-settings-button btn-primary btn-full-width ai-tools-btn" data-action="open-ai-tools">AI &amp; Automation Tools</button>
-        </div>
-      </section>
+      <?php // Technical & System ?>
+      <?php ob_start(); ?>
+        <button type="button" id="accountSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-account-settings">Account Settings</button>
+        <button type="button" id="secretsManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-secrets-modal">Secrets Manager</button>
+        <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Health & Diagnostics</button>
+        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=cost-breakdown-manager">Cost Breakdown Manager</a>
+        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=customers">User Manager</a>
+        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=reports-browser">Reports &amp; Documentation Browser</a>
+      <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-red', 'Technical & System', 'System tools and advanced configuration', $__content); ?>
     </div>
 
     <!-- Health & Diagnostics Modal (hidden by default) -->
@@ -935,7 +862,7 @@ body[data-page="admin/settings"] .settings-grid {
         </div>
         <div class="modal-body">
           <div class="space-y-4">
-            <iframe src="/sections/admin_categories.php" style="width:100%;height:100%;min-height:250px;border:none;" class="wf-admin-embed-frame"></iframe>
+            <iframe src="/sections/admin_categories.php?modal=1" style="width:100%;height:100%;min-height:250px;border:none;" class="wf-admin-embed-frame"></iframe>
           </div>
         </div>
       </div>
@@ -1096,6 +1023,62 @@ body[data-page="admin/settings"] .settings-grid {
           </form>
         </div>
       </div>
+    <!-- AI Settings Modal (hidden by default) -->
+    <div id="aiSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="admin-modal">
+        <div class="modal-header">
+          <h2 class="admin-card-title">🤖 AI Settings</h2>
+          <button type="button" class="admin-modal-close" data-action="close-ai-settings" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="aiSettingsForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="aiProvider" class="block text-sm font-medium mb-1">AI Provider</label>
+                <select id="aiProvider" name="ai_provider" class="form-select w-full">
+                  <option value="jons_ai">Jon&apos;s AI (Local)</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="google">Google AI</option>
+                </select>
+              </div>
+              <div>
+                <label for="aiTemperature" class="block text-sm font-medium mb-1">Temperature</label>
+                <input id="aiTemperature" name="ai_temperature" type="range" min="0" max="1" step="0.1" class="w-full" />
+                <span id="aiTemperatureValue" class="text-xs text-gray-500">0.7</span>
+              </div>
+            </div>
+
+            <div id="aiProviderSettings">
+              <!-- Dynamic settings will be populated here based on selected provider -->
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="aiMaxTokens" class="block text-sm font-medium mb-1">Max Tokens</label>
+                <input id="aiMaxTokens" name="ai_max_tokens" type="number" min="100" max="4000" class="form-input w-full" value="1000" />
+              </div>
+              <div>
+                <label for="aiTimeout" class="block text-sm font-medium mb-1">Timeout (seconds)</label>
+                <input id="aiTimeout" name="ai_timeout" type="number" min="5" max="120" class="form-input w-full" value="30" />
+              </div>
+            </div>
+
+            <div class="flex items-center">
+              <input id="fallbackToLocal" name="fallback_to_local" type="checkbox" class="mr-2" />
+              <label for="fallbackToLocal" class="text-sm">Fallback to local AI if external API fails</label>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <div id="aiSettingsResult" class="text-sm text-gray-500"></div>
+              <div class="flex items-center gap-2">
+                <button type="button" class="btn-secondary" data-action="test-ai-provider">Test Provider</button>
+                <button type="button" class="btn-brand" data-action="save-ai-settings">Save Settings</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1112,22 +1095,217 @@ body[data-page="admin/settings"] .settings-grid {
   const updateOrderNumbers=()=>{document.querySelectorAll('#'+TBODY+' tr').forEach((row,i)=>{const span=row.querySelector('span');if(span)span.textContent=i+1;});};
   const setStatus=(m,ok)=>{const s=document.getElementById(STATUS);if(!s)return;s.textContent=m||'';s.classList.toggle('text-green-600',!!ok);s.classList.toggle('text-red-600',ok===false);};
   const show=()=>{const el=document.getElementById(MODAL);if(el){el.classList.remove('hidden');el.classList.add('show');el.removeAttribute('aria-hidden');}};
-  const api=function(u,p){return fetch(u,{method:p?'POST':'GET',headers:p?{'Content-Type':'application/json'}:{},body:p?JSON.stringify(p):undefined,credentials:'include'}).then(function(r){return r.text()}).then(function(t){var j={};try{j=JSON.parse(t)}catch(_){throw new Error('Non-JSON')}if(!j.success)throw new Error(j.error||'Bad');return j.data||{}})};};
+  const api=function(u,p){return fetch(u,{method:p?'POST':'GET',headers:p?{'Content-Type':'application/json'}:{},body:p?JSON.stringify(p):undefined,credentials:'include'}).then(function(r){return r.text()}).then(function(t){var j={};try{j=JSON.parse(t)}catch(_){throw new Error('Non-JSON')}if(!j.success)throw new Error(j.error||'Bad');return j.data||{});}};
   const get=()=>api('/api/dashboard_sections.php?action=get_sections');
 
-  const draw = function(d){var tb=document.getElementById(TBODY);if(!tb)return;var avail=(d&&d.available_sections)?d.available_sections:{},act=(d&&Array.isArray(d.sections))?d.sections:[];var ks=new Set(Object.keys(avail));act.forEach(function(s){if(s&&s.section_key)ks.add(s.section_key)});var active=new Set(act.map(function(s){return s.section_key}));var sectionData=Array.from(ks).sort().map(function(k,i){var found=null;for(var ii=0;ii<act.length;ii++){if(act[ii]&&act[ii].section_key===k){found=act[ii];break}}var section=found||{section_key:k,display_order:i+1,is_active:0,show_title:1,show_description:1,custom_title:null,custom_description:null,width_class:'half-width'};var info=avail[k];return{key:k,title:(info&&info.title)||k,active:active.has(k),order:section.display_order||(i+1),width:section.width_class||'half-width',section_key:section.section_key,display_order:section.display_order,is_active:section.is_active,show_title:section.show_title,show_description:section.show_description,custom_title:section.custom_title,custom_description:section.custom_description,width_class:section.width_class}});tb.innerHTML='';sectionData.forEach(function(item,i){var tr=document.createElement('tr');tr.className='border-b';var html='<td class=\"p-2\"><div class=\"flex items-center gap-1\"><button class=\"text-xs p-1\" data-action=\"move-up\" data-key=\"'+item.key+'\" '+(i===0?'disabled':'')+'>▲</button><button class=\"text-xs p-1\" data-action=\"move-down\" data-key=\"'+item.key+'\" '+(i===sectionData.length-1?'disabled':'')+'>▼</button><span class=\"ml-1 text-gray-500\">'+item.order+'</span></div></td><td class=\"p-2\">'+item.title+'</td><td class=\"p-2\"><code>'+item.key+'</code></td><td class=\"p-2\"><select class=\"dash-width text-xs\" data-key=\"'+item.key+'\"><option value=\"half-width\" '+(item.width==='half-width'?'selected':'')+'>Half</option><option value=\"full-width\" '+(item.width==='full-width'?'selected':'')+'>Full</option></select></td><td class=\"p-2\"><input type=\"checkbox\" class=\"dash-active\" data-key=\"'+item.key+'\" '+(item.active?'checked':'')+'></td>';tr.innerHTML=html;tb.appendChild(tr);});};
-  const payload = function(){var rows=Array.prototype.slice.call(document.querySelectorAll('#'+TBODY+' tr'));return{action:'update_sections',sections:rows.map(function(row,i){var elA=row.querySelector('.dash-active');var key=(elA&&elA.dataset)?elA.dataset.key:undefined;var elW=row.querySelector('.dash-width');var width=(elW?elW.value:'half-width');var active=(elA&&elA.checked?1:0);return{key:key,section_key:key,display_order:i+1,is_active:active,show_title:1,show_description:1,custom_title:null,custom_description:null,width_class:width};}).filter(function(s){return s.key;})}};
+  const draw = function(d) {
+    console.log('🎯 Dashboard Config draw() called with data:', d);
+    var tb = document.getElementById(TBODY);
+    if (!tb) {
+      console.error('❌ Dashboard Config: tbody not found:', TBODY);
+      return;
+    }
 
-  document.addEventListener('click',function(e){
-    const a=e.target.closest('[data-action]');if(!a)return;
-    const action=a.dataset.action;
+    var avail = (d && d.available_sections) ? d.available_sections : {};
+    var act = (d && Array.isArray(d.sections)) ? d.sections : [];
+    var ks = new Set(Object.keys(avail));
 
-    if(action==='open-dashboard-config'){e.preventDefault();show();setStatus('Loading…',true);get().then(function(data){draw(data);setStatus('Loaded',true);}).catch(function(){setStatus('Load failed',false);})}
-    if(action==='dashboard-config-refresh'){e.preventDefault();setStatus('Refreshing…',true);get().then(function(data){draw(data);setStatus('Refreshed',true);}).catch(function(){setStatus('Refresh failed',false);})}
-    if(action==='dashboard-config-reset'){e.preventDefault();setStatus('Resetting…',true);api('/api/dashboard_sections.php?action=reset_defaults').then(function(){return get();}).then(function(data){draw(data);setStatus('Defaults restored',true);}).catch(function(){setStatus('Reset failed',false);})}
-    if(action==='dashboard-config-save'){e.preventDefault();const p=payload();if(!p.sections.length){setStatus('Select at least one',false);return;}setStatus('Saving…',true);api('/api/dashboard_sections.php?action=update_sections',p).then(function(){setStatus('Saved',true);}).catch(function(){setStatus('Save failed',false);})}
-    if(action==='move-up'){e.preventDefault();const key=e.target.dataset.key;const rows=Array.prototype.slice.call(document.querySelectorAll('#'+TBODY+' tr'));const idx=rows.findIndex(function(r){var __el=r.querySelector('.dash-active');return(__el&&__el.dataset?__el.dataset.key:undefined)===key});if(idx>0){rows[idx].parentNode.insertBefore(rows[idx],rows[idx-1]);updateOrderNumbers();}}
-    if(action==='move-down'){e.preventDefault();const key=e.target.dataset.key;const rows=Array.prototype.slice.call(document.querySelectorAll('#'+TBODY+' tr'));const idx=rows.findIndex(function(r){var __el=r.querySelector('.dash-active');return(__el&&__el.dataset?__el.dataset.key:undefined)===key});if(idx<rows.length-1){rows[idx].parentNode.insertBefore(rows[idx+1],rows[idx]);updateOrderNumbers();}}
+    act.forEach(function(s) {
+      if (s && s.section_key) ks.add(s.section_key);
+    });
+
+    var active = new Set(act.map(function(s) { return s.section_key; }));
+    var sectionData = Array.from(ks).sort().map(function(k, i) {
+      var found = null;
+      for (var ii = 0; ii < act.length; ii++) {
+        if (act[ii] && act[ii].section_key === k) {
+          found = act[ii];
+          break;
+        }
+      }
+
+      var section = found || {
+        section_key: k,
+        display_order: i + 1,
+        is_active: 0,
+        show_title: 1,
+        show_description: 1,
+        custom_title: null,
+        custom_description: null,
+        width_class: 'half-width'
+      };
+
+      var info = avail[k];
+      return {
+        key: k,
+        title: (info && info.title) || k,
+        active: active.has(k),
+        order: section.display_order || (i + 1),
+        width: section.width_class || 'half-width',
+        section_key: section.section_key,
+        display_order: section.display_order,
+        is_active: section.is_active,
+        show_title: section.show_title,
+        show_description: section.show_description,
+        custom_title: section.custom_title,
+        custom_description: section.custom_description,
+        width_class: section.width_class
+      };
+    });
+
+    console.log('📊 Dashboard Config sectionData:', sectionData);
+    tb.innerHTML = '';
+
+    sectionData.forEach(function(item, i) {
+      var tr = document.createElement('tr');
+      tr.className = 'border-b';
+
+      var html = '<td class="p-2">' +
+        '<div class="flex items-center gap-1">' +
+        '<button class="text-xs p-1" data-action="move-up" data-key="' + item.key + '" ' + (i === 0 ? 'disabled' : '') + '>▲</button>' +
+        '<button class="text-xs p-1" data-action="move-down" data-key="' + item.key + '" ' + (i === sectionData.length - 1 ? 'disabled' : '') + '>▼</button>' +
+        '<span class="ml-1 text-gray-500">' + item.order + '</span>' +
+        '</div>' +
+        '</td>' +
+        '<td class="p-2">' + item.title + '</td>' +
+        '<td class="p-2"><code>' + item.key + '</code></td>' +
+        '<td class="p-2">' +
+        '<select class="dash-width text-xs" data-key="' + item.key + '">' +
+        '<option value="half-width" ' + (item.width === 'half-width' ? 'selected' : '') + '>Half</option>' +
+        '<option value="full-width" ' + (item.width === 'full-width' ? 'selected' : '') + '>Full</option>' +
+        '</select>' +
+        '</td>' +
+        '<td class="p-2">' +
+        '<input type="checkbox" class="dash-active" data-key="' + item.key + '" ' + (item.active ? 'checked' : '') + '>' +
+        '</td>';
+
+      tr.innerHTML = html;
+      tb.appendChild(tr);
+    });
+
+    console.log('✅ Dashboard Config: Successfully rendered', sectionData.length, 'sections');
+  };
+  const payload = function() {
+    var rows = Array.prototype.slice.call(document.querySelectorAll('#' + TBODY + ' tr'));
+    return {
+      action: 'update_sections',
+      sections: rows.map(function(row, i) {
+        var elA = row.querySelector('.dash-active');
+        var key = (elA && elA.dataset) ? elA.dataset.key : undefined;
+        var elW = row.querySelector('.dash-width');
+        var width = (elW ? elW.value : 'half-width');
+        var active = (elA && elA.checked ? 1 : 0);
+        return {
+          key: key,
+          section_key: key,
+          display_order: i + 1,
+          is_active: active,
+          show_title: 1,
+          show_description: 1,
+          custom_title: null,
+          custom_description: null,
+          width_class: width
+        };
+      }).filter(function(s) { return s.key; })
+    };
+  };
+
+  // Add direct click handler to the button to bypass Vite module interference
+  document.addEventListener('DOMContentLoaded', function() {
+    const dashboardBtn = document.getElementById('dashboardConfigBtn');
+    if (dashboardBtn) {
+      dashboardBtn.addEventListener('click', function(e) {
+        console.log('🎯 Dashboard Config button clicked directly');
+        e.preventDefault();
+        e.stopPropagation();
+        show();
+        setStatus('Loading…', true);
+        get().then(function(data) {
+          console.log('🎯 Dashboard Config API response:', data);
+          draw(data);
+          setStatus('Loaded', true);
+        }).catch(function(error) {
+          console.error('❌ Dashboard Config API error:', error);
+          setStatus('Load failed', false);
+        });
+      });
+      console.log('✅ Dashboard Config: Direct click handler attached');
+    } else {
+      console.error('❌ Dashboard Config: Button not found with ID dashboardConfigBtn');
+    }
+  });
+
+  document.addEventListener('click', function(e) {
+    const a = e.target.closest('[data-action]');
+    if (!a) return;
+    const action = a.dataset.action;
+
+    // Skip open-dashboard-config since we handle it directly above
+    if (action === 'open-dashboard-config') {
+      return; // Let the direct handler take care of it
+    }
+    if (action === 'dashboard-config-refresh') {
+      e.preventDefault();
+      setStatus('Refreshing…', true);
+      get().then(function(data) {
+        draw(data);
+        setStatus('Refreshed', true);
+      }).catch(function() {
+        setStatus('Refresh failed', false);
+      });
+    }
+    if (action === 'dashboard-config-reset') {
+      e.preventDefault();
+      setStatus('Resetting…', true);
+      api('/api/dashboard_sections.php?action=reset_defaults').then(function() {
+        return get();
+      }).then(function(data) {
+        draw(data);
+        setStatus('Defaults restored', true);
+      }).catch(function() {
+        setStatus('Reset failed', false);
+      });
+    }
+    if (action === 'dashboard-config-save') {
+      e.preventDefault();
+      const p = payload();
+      if (!p.sections.length) {
+        setStatus('Select at least one', false);
+        return;
+      }
+      setStatus('Saving…', true);
+      api('/api/dashboard_sections.php?action=update_sections', p).then(function() {
+        setStatus('Saved', true);
+      }).catch(function() {
+        setStatus('Save failed', false);
+      });
+    }
+    if (action === 'move-up') {
+      e.preventDefault();
+      const key = e.target.dataset.key;
+      const rows = Array.prototype.slice.call(document.querySelectorAll('#' + TBODY + ' tr'));
+      const idx = rows.findIndex(function(r) {
+        var __el = r.querySelector('.dash-active');
+        return (__el && __el.dataset ? __el.dataset.key : undefined) === key;
+      });
+      if (idx > 0) {
+        rows[idx].parentNode.insertBefore(rows[idx], rows[idx - 1]);
+        updateOrderNumbers();
+      }
+    }
+    if (action === 'move-down') {
+      e.preventDefault();
+      const key = e.target.dataset.key;
+      const rows = Array.prototype.slice.call(document.querySelectorAll('#' + TBODY + ' tr'));
+      const idx = rows.findIndex(function(r) {
+        var __el = r.querySelector('.dash-active');
+        return (__el && __el.dataset ? __el.dataset.key : undefined) === key;
+      });
+      if (idx < rows.length - 1) {
+        rows[idx].parentNode.insertBefore(rows[idx + 1], rows[idx]);
+        updateOrderNumbers();
+      }
+    }
   });
 })();
 </script>

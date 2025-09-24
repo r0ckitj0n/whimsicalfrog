@@ -29,17 +29,17 @@ body[data-page^='admin'] .admin-content-container {
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
-  padding-top: 0 !important;
   box-shadow: none !important;
+  /* padding-top is now managed by admin-settings.css */
 }
 /* Admin page containers: ensure proper padding to avoid navbar overlap */
 body[data-page^='admin'] .dashboard-container,
-body[data-page^='admin'] .admin-content-container,
 body[data-page^='admin'] .admin-reports-page,
 body[data-page^='admin'] .admin-marketing-page {
   padding-top: 0 !important;
   margin-top: 0 !important;
 }
+/* admin-content-container padding is now managed by admin-settings.css */
 
 /* Base styling for all admin page containers */
 .dashboard-container,
@@ -4994,15 +4994,6 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     opacity: 0.5;
     transform: rotate(2deg);
     cursor: grabbing;
-}.draggable-section-item .drag-handle {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    color: #9ca3af;
-    cursor: grab;
-    padding: 0.25rem;
-}.draggable-section-item .drag-handle:hover {
-    color: #3b82f6;
 }.section-item-content {
     display: flex;
     align-items: start;

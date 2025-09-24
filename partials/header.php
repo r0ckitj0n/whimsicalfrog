@@ -368,74 +368,26 @@ if ($__is_admin_route) {
     echo <<<'STYLE'
 <style id="wf-admin-nav-fallback-global">
 :root{--wf-header-height:64px}
-.site-header, .universal-page-header{margin:0!important;padding-top:4px!important;padding-bottom:4px!important}
+.site-header, .universal-page-header{margin:0!important;padding-top:0px!important;padding-bottom:0px!important;height:64px!important;min-height:64px!important}
 .header-container{margin:0 auto;max-width:1200px}
 .site-header .nav-links{display:flex!important;gap:14px!important;align-items:center!important;flex-wrap:wrap!important;margin:0!important;padding:0!important}
 .site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
 .site-header nav ul{list-style:none;margin:0;padding:0;display:flex;gap:14px;flex-wrap:wrap}
 .site-header nav ul>li{display:inline-flex}
-.admin-tab-navigation{position:fixed!important;top:var(--wf-admin-nav-top, calc(var(--wf-header-height,64px) + 12px))!important;left:0;right:0;z-index:2000;margin:0!important;padding:4px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
+.admin-tab-navigation{position:fixed!important;top:64px!important;left:0;right:0;z-index:2000;margin:0!important;padding:0px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation ul{list-style:none!important;margin:0 auto!important;padding:0!important;display:flex!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .container,.admin-tab-navigation .wrapper,.admin-tab-navigation .flex,.admin-tab-navigation > div,.admin-tab-navigation .u-display-flex{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}
 .admin-tab-navigation ul>li{display:inline-flex!important;margin:0!important;padding:0!important}
 .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
-/* Apply the computed extra pad ONLY once to the primary content wrapper */
-body[data-page^=admin] #admin-section-content{padding-top:var(--wf-admin-content-pad,12px)!important}
+/* Inline spacing rules removed (source-of-truth in CSS files) */
 /* Standalone Settings template (no #admin-section-content wrapper): apply to direct child only */
-body[data-page='admin/settings'] > .settings-page{padding-top:var(--wf-admin-content-pad,12px)!important}
+/* (kept intentionally minimal) */
+body[data-page='admin/settings'] > .settings-page{padding-top:0!important}
 @media (min-width:0px){.admin-tab-navigation .flex,.admin-tab-navigation>div,.admin-tab-navigation ul{flex-direction:row!important;align-items:center!important}}
 </style>
 STYLE;
-    // Dynamically compute header height to tighten the gap precisely
-    echo <<<'SCRIPT'
-<script>
-(function(){
-  try {
-    var computeLayout = function(){
-      var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header');
-      if (h && h.getBoundingClientRect) {
-        var hh = Math.max(40, Math.round(h.getBoundingClientRect().height));
-        document.documentElement.style.setProperty("--wf-header-height", hh + "px");
-      }
-      var hc = document.querySelector('.header-content');
-      if (hc && hc.getBoundingClientRect) {
-        var bottom = Math.round(hc.getBoundingClientRect().bottom + 12);
-        document.documentElement.style.setProperty("--wf-admin-nav-top", bottom + "px");
-      }
-      var nav = document.querySelector('.admin-tab-navigation');
-      if (nav && nav.getBoundingClientRect) {
-        // Compute both total (header + navbar) and extra (beyond header) pads
-        var hb = h && h.getBoundingClientRect ? h.getBoundingClientRect().bottom : 0;
-        var nb = nav.getBoundingClientRect().bottom;
-        var total = Math.max(0, Math.round(nb + 12));
-        var extra = Math.max(0, Math.round((nb - hb) + 12));
-        document.documentElement.style.setProperty("--wf-admin-total-pad", total + "px");
-        document.documentElement.style.setProperty("--wf-admin-content-pad", extra + "px");
-      } else if (h && h.getBoundingClientRect) {
-        // Fallbacks when navbar not present
-        var headerBottom = Math.max(0, Math.round(h.getBoundingClientRect().bottom + 12));
-        document.documentElement.style.setProperty("--wf-admin-total-pad", headerBottom + "px");
-        document.documentElement.style.setProperty("--wf-admin-content-pad", Math.max(0, 12) + "px");
-      }
-    };
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", computeLayout, {once:true}); else computeLayout();
-    window.addEventListener("load", computeLayout, {once:true});
-    window.addEventListener("resize", computeLayout);
-    try {
-      if (window.ResizeObserver) {
-        var ro = new ResizeObserver(function(){computeLayout();});
-        var hc = document.querySelector('.header-content'); if (hc) ro.observe(hc);
-        var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header'); if (h) ro.observe(h);
-      } else {
-        var t = setInterval(computeLayout, 500);
-        setTimeout(function(){clearInterval(t);}, 4000);
-      }
-    } catch(_) {}
-  } catch(e) {}
-})();
-</script>
-SCRIPT;
+    // Removed dynamic layout computation - using static CSS positioning instead
 }
 // If on admin/settings ensure assets are emitted and avoid kill-switching JS
 if ($isAdmin && (strpos($pageSlug, 'admin/settings') === 0)) {
@@ -451,18 +403,19 @@ if ($isAdmin && (strpos($pageSlug, 'admin/settings') === 0)) {
         echo <<<'STYLE'
 <style id="wf-admin-nav-fallback">
 :root{--wf-header-height:64px}
-.site-header, .universal-page-header{margin:0!important;padding-top:6px!important;padding-bottom:6px!important}
+.site-header, .universal-page-header{margin:0!important;padding-top:0px!important;padding-bottom:0px!important;height:64px!important;min-height:64px!important}
 .header-container{margin:0 auto;max-width:1200px}
 .site-header .nav-links{display:flex!important;flex-direction:row!important;gap:14px!important;align-items:center!important;flex-wrap:nowrap!important;margin:0!important;padding:0!important}
 .site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
 .site-header nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:row!important;gap:14px;flex-wrap:nowrap!important}
 .site-header nav ul>li{display:inline-flex}
-.admin-tab-navigation{position:fixed;top:var(--wf-admin-nav-top, calc(var(--wf-header-height,64px) + 22px));left:0;right:0;z-index:2000;margin:0!important;padding:6px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
+.admin-tab-navigation{position:fixed;top:64px;left:0;right:0;z-index:2000;margin:0!important;padding:0px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
 .admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}
 /* Standalone Settings template (light mode): apply to direct child only */
-body[data-page='admin/settings'] > .settings-page{padding-top:var(--wf-admin-content-pad,12px)!important}
+/* Inline spacing rules removed (source-of-truth in CSS files) */
+body[data-page='admin/settings'] > .settings-page{padding-top:0!important}
 </style>
 STYLE;
         // Optional: Prevent hash-driven modal auto-opens and suppress overlays unless user triggered

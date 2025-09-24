@@ -1,12 +1,12 @@
 /* Admin Filters Bar: clear, horizontal, responsive */
 .admin-filter-section {
-  margin: 6px 0;
+  margin: 0px 0;
 }
 
 /* Semantic wrapper for the whole filter bar */
 .admin-filters {
   display: block; /* the form inside will be the flex row */
-  padding: 10px 12px;
+  padding: 4px 12px;
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;

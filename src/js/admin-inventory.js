@@ -3721,6 +3721,19 @@ class AdminInventoryModule {
                 }
             }
             statusEl.textContent = `Using AI: ${provider} • ${model}`;
+            // Make the status line clickable to open AI settings
+            statusEl.className = 'text-xs text-gray-500 flex items-center gap-2 cursor-pointer';
+            statusEl.title = 'Click to open AI Settings';
+            statusEl.addEventListener('click', () => {
+                // Open AI settings modal if we're on the admin settings page
+                if (window.location.pathname.includes('admin_settings')) {
+                    const openBtn = document.querySelector('[data-action="open-ai-settings"]');
+                    if (openBtn) openBtn.click();
+                } else {
+                    // Navigate to admin settings page
+                    window.location.href = '/admin/admin_settings.php';
+                }
+            });
         } catch (err) {
             // Non-fatal – just skip status on error
             console.warn('[AdminInventory] Failed to load AI provider status:', err);

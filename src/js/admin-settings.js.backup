@@ -8222,6 +8222,225 @@ if (typeof window !== 'undefined') {
                 return;
             }
 
+    // AI Settings Modal functions
+    function openAISettingsModal() {
+        const modal = document.getElementById('aiSettingsModal');
+        if (!modal) return;
+
+        // Load current settings
+        loadAISettings();
+
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeAISettingsModal() {
+        const modal = document.getElementById('aiSettingsModal');
+        if (!modal) return;
+
+        modal.classList.add('hidden');
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+    }
+
+    async function loadAISettings() {
+        try {
+            const response = await fetch('/api/ai_settings.php?action=get_settings', {
+                credentials: 'include'
+            });
+            const data = await response.json();
+
+            if (data.success && data.settings) {
+                const settings = data.settings;
+
+                // Populate form fields
+                const providerSelect = document.getElementById('aiProvider');
+                if (providerSelect && settings.ai_provider) {
+                    providerSelect.value = settings.ai_provider;
+                }
+
+                const temperatureInput = document.getElementById('aiTemperature');
+                const temperatureValue = document.getElementById('aiTemperatureValue');
+                if (temperatureInput && settings.ai_temperature !== undefined) {
+                    temperatureInput.value = settings.ai_temperature;
+                    if (temperatureValue) temperatureValue.textContent = settings.ai_temperature;
+                }
+
+                const maxTokensInput = document.getElementById('aiMaxTokens');
+                if (maxTokensInput && settings.ai_max_tokens) {
+                    maxTokensInput.value = settings.ai_max_tokens;
+                }
+
+                const timeoutInput = document.getElementById('aiTimeout');
+                if (timeoutInput && settings.ai_timeout) {
+                    timeoutInput.value = settings.ai_timeout;
+                }
+
+                const fallbackCheckbox = document.getElementById('fallbackToLocal');
+                if (fallbackCheckbox && settings.fallback_to_local !== undefined) {
+                    fallbackCheckbox.checked = settings.fallback_to_local;
+                }
+
+                // Update provider-specific settings
+                updateProviderSettings(settings.ai_provider || 'jons_ai', settings);
+            }
+        } catch (error) {
+            console.error('Failed to load AI settings:', error);
+        }
+    }
+
+    function updateProviderSettings(provider, settings) {
+        const container = document.getElementById('aiProviderSettings');
+        if (!container) return;
+
+        let html = '';
+
+        switch (provider) {
+            case 'openai':
+                html = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="openaiApiKey" class="block text-sm font-medium mb-1">OpenAI API Key</label>
+                            <input id="openaiApiKey" name="openai_api_key" type="password" class="form-input w-full"
+                                   value="${settings.openai_api_key || ''}" placeholder="sk-..." />
+                        </div>
+                        <div>
+                            <label for="openaiModel" class="block text-sm font-medium mb-1">OpenAI Model</label>
+                            <select id="openaiModel" name="openai_model" class="form-select w-full">
+                                <option value="gpt-3.5-turbo" ${settings.openai_model === 'gpt-3.5-turbo' ? 'selected' : ''}>GPT-3.5 Turbo</option>
+                                <option value="gpt-4" ${settings.openai_model === 'gpt-4' ? 'selected' : ''}>GPT-4</option>
+                                <option value="gpt-4-turbo" ${settings.openai_model === 'gpt-4-turbo' ? 'selected' : ''}>GPT-4 Turbo</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                break;
+
+            case 'anthropic':
+                html = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="anthropicApiKey" class="block text-sm font-medium mb-1">Anthropic API Key</label>
+                            <input id="anthropicApiKey" name="anthropic_api_key" type="password" class="form-input w-full"
+                                   value="${settings.anthropic_api_key || ''}" placeholder="sk-ant-api..." />
+                        </div>
+                        <div>
+                            <label for="anthropicModel" class="block text-sm font-medium mb-1">Anthropic Model</label>
+                            <select id="anthropicModel" name="anthropic_model" class="form-select w-full">
+                                <option value="claude-3-haiku-20240307" ${settings.anthropic_model === 'claude-3-haiku-20240307' ? 'selected' : ''}>Claude 3 Haiku</option>
+                                <option value="claude-3-sonnet-20240229" ${settings.anthropic_model === 'claude-3-sonnet-20240229' ? 'selected' : ''}>Claude 3 Sonnet</option>
+                                <option value="claude-3-opus-20240229" ${settings.anthropic_model === 'claude-3-opus-20240229' ? 'selected' : ''}>Claude 3 Opus</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                break;
+
+            case 'google':
+                html = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="googleApiKey" class="block text-sm font-medium mb-1">Google AI API Key</label>
+                            <input id="googleApiKey" name="google_api_key" type="password" class="form-input w-full"
+                                   value="${settings.google_api_key || ''}" placeholder="AIza..." />
+                        </div>
+                        <div>
+                            <label for="googleModel" class="block text-sm font-medium mb-1">Google AI Model</label>
+                            <select id="googleModel" name="google_model" class="form-select w-full">
+                                <option value="gemini-pro" ${settings.google_model === 'gemini-pro' ? 'selected' : ''}>Gemini Pro</option>
+                                <option value="gemini-pro-vision" ${settings.google_model === 'gemini-pro-vision' ? 'selected' : ''}>Gemini Pro Vision</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                break;
+
+            default:
+                // Local AI - no additional settings needed
+                break;
+        }
+
+        container.innerHTML = html;
+    }
+
+    async function saveAISettings() {
+        const form = document.getElementById('aiSettingsForm');
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const settings = {};
+
+        for (let [key, value] of formData.entries()) {
+            if (key === 'ai_temperature') {
+                settings[key] = parseFloat(value);
+            } else if (key === 'ai_max_tokens' || key === 'ai_timeout') {
+                settings[key] = parseInt(value, 10);
+            } else if (key === 'fallback_to_local') {
+                settings[key] = true; // Checkbox
+            } else {
+                settings[key] = value;
+            }
+        }
+
+        try {
+            const response = await fetch('/api/ai_settings.php?action=update_settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(settings),
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const resultEl = document.getElementById('aiSettingsResult');
+                if (resultEl) {
+                    resultEl.textContent = 'Settings saved successfully!';
+                    resultEl.className = 'text-sm text-green-600';
+                }
+                setTimeout(() => closeAISettingsModal(), 1500);
+            } else {
+                throw new Error(data.error || 'Failed to save settings');
+            }
+        } catch (error) {
+            console.error('Failed to save AI settings:', error);
+            const resultEl = document.getElementById('aiSettingsResult');
+            if (resultEl) {
+                resultEl.textContent = 'Error: ' + error.message;
+                resultEl.className = 'text-sm text-red-600';
+            }
+        }
+    }
+
+    async function testAIProvider() {
+        const providerSelect = document.getElementById('aiProvider');
+        if (!providerSelect) return;
+
+        const provider = providerSelect.value;
+
+        try {
+            const response = await fetch('/api/ai_settings.php?action=test_provider&provider=' + encodeURIComponent(provider), {
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            const resultEl = document.getElementById('aiSettingsResult');
+            if (resultEl) {
+                if (data.success) {
+                    resultEl.textContent = '✅ Provider test successful!';
+                    resultEl.className = 'text-sm text-green-600';
+                } else {
+                    resultEl.textContent = '❌ Test failed: ' + (data.error || 'Unknown error');
+                    resultEl.className = 'text-sm text-red-600';
+                }
+            }
+        } catch (error) {
+            console.error('Failed to test AI provider:', error);
+
     const bootDelegation = () => {
         if (!__wfIsOnAdminSettingsPage()) return;
         // Run delegated admin modal handlers even in light mode so buttons remain responsive.

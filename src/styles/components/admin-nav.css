@@ -2,9 +2,9 @@
 
 /* Container: sticky under header, centered row, safe height token */
 .admin-tab-navigation {
-  --admin-tabs-height: 56px;
+  --admin-tabs-height: 40px; /* minimal height for tight spacing */
   position: fixed; /* hard placement under header */
-  top: var(--wf-header-height, var(--header-height, 80px));
+  top: 64px !important; /* Static positioning - no JavaScript */
   left: 0;
   right: 0;
   width: 100%;
@@ -15,8 +15,8 @@
   box-shadow: none !important;
   border: none !important;
   outline: none !important;
-  padding: 8px 12px; /* space around pills */
-  margin: 0;
+  padding: 2px 12px !important; /* minimal padding for tight spacing */
+  margin: 0 !important; /* ensure no margin */
   border-bottom: none !important;
   overflow: visible; /* allow halos to render outside container */
 }

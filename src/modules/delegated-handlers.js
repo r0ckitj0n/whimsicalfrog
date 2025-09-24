@@ -26,25 +26,25 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // Dashboard Configuration Modal
-  if (closest('[data-action="open-dashboard-config"]')) {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      // Load dashboard configuration data
-      const response = await fetch('/api/dashboard_sections.php?action=get_sections');
-      const data = await response.json();
-      console.log('Dashboard config data:', data);
+  // Dashboard Configuration Modal - Handled by inline script in admin_settings.php
+  // if (closest('[data-action="open-dashboard-config"]')) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   try {
+  //     // Load dashboard configuration data
+  //     const response = await fetch('/api/dashboard_sections.php?action=get_sections');
+  //     const data = await response.json();
+  //     console.log('Dashboard config data:', data);
 
-      // Show modal
-      if (window.showModal) {
-        window.showModal('dashboardConfigModal');
-      }
-    } catch (error) {
-      console.error('Error loading dashboard config:', error);
-    }
-    return;
-  }
+  //     // Show modal
+  //     if (window.showModal) {
+  //       window.showModal('dashboardConfigModal');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading dashboard config:', error);
+  //   }
+  //   return;
+  // }
 
   // Categories Management Modal
   if (closest('[data-action="open-categories"]')) {
@@ -280,13 +280,13 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // Dashboard Configuration handlers
-  if (closest('[data-action="dashboard-config-save"]')) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('Saving dashboard configuration...');
-    // Implementation would go here
-  }
+  // Dashboard Configuration handlers - Handled by inline script in admin_settings.php
+  // if (closest('[data-action="dashboard-config-save"]')) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   console.log('Saving dashboard configuration...');
+  //   // Implementation would go here
+  // }
 
   // Email History handlers
   if (closest('[data-action="email-history-search"]')) {
@@ -449,67 +449,69 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // Dashboard Configuration handlers
-  if (closest('[data-action="dashboard-config-refresh"]')) {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await this.loadDashboardConfig();
-    } catch (error) {
-      console.error('Error refreshing dashboard config:', error);
-    }
-    return;
-  }
+  // Dashboard Configuration handlers - Handled by inline script in admin_settings.php
+  // if (closest('[data-action="dashboard-config-refresh"]')) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   try {
+  //     await this.loadDashboardConfig();
+  //   } catch (error) {
+  //     console.error('Error refreshing dashboard config:', error);
+  //   }
+  //   return;
+  // }
 
-  if (closest('[data-action="dashboard-config-reset"]')) {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      if (confirm('Reset dashboard configuration to defaults?')) {
-        const response = await fetch('/api/dashboard_sections.php?action=reset_defaults');
-        const result = await response.json();
+  // Dashboard Configuration handlers - Handled by inline script in admin_settings.php
+  // if (closest('[data-action="dashboard-config-reset"]')) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   try {
+  //     if (confirm('Reset dashboard configuration to defaults?')) {
+  //       const response = await fetch('/api/dashboard_sections.php?action=reset_defaults');
+  //       const result = await response.json();
 
-        if (result.success) {
-          await this.loadDashboardConfig();
-          this.showToast('Dashboard configuration reset to defaults');
-        } else {
-          throw new Error(result.error || 'Failed to reset dashboard configuration');
-        }
-      }
-    } catch (error) {
-      console.error('Error resetting dashboard config:', error);
-      this.showToast('Error resetting dashboard configuration: ' + error.message, 'error');
-    }
-    return;
-  }
+  //       if (result.success) {
+  //         await this.loadDashboardConfig();
+  //         this.showToast('Dashboard configuration reset to defaults');
+  //       } else {
+  //         throw new Error(result.error || 'Failed to reset dashboard configuration');
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error resetting dashboard config:', error);
+  //     this.showToast('Error resetting dashboard configuration: ' + error.message, 'error');
+  //   }
+  //   return;
+  // }
 
-  if (closest('[data-action="move-up"]')) {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      const key = e.target.dataset.key;
-      if (key) {
-        this.moveDashboardItem(key, -1);
-      }
-    } catch (error) {
-      console.error('Error moving dashboard item up:', error);
-    }
-    return;
-  }
+  // Dashboard Configuration handlers - Handled by inline script in admin_settings.php
+  // if (closest('[data-action="move-up"]')) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   try {
+  //     const key = e.target.dataset.key;
+  //     if (key) {
+  //       this.moveDashboardItem(key, -1);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error moving dashboard item up:', error);
+  //   }
+  //   return;
+  // }
 
-  if (closest('[data-action="move-down"]')) {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      const key = e.target.dataset.key;
-      if (key) {
-        this.moveDashboardItem(key, 1);
-      }
-    } catch (error) {
-      console.error('Error moving dashboard item down:', error);
-    }
-    return;
-  }
+  // if (closest('[data-action="move-down"]')) {
+  //   e.preventDefault();
+  //   e.stopPropagation();
+  //   try {
+  //     const key = e.target.dataset.key;
+  //     if (key) {
+  //       this.moveDashboardItem(key, 1);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error moving dashboard item down:', error);
+  //   }
+  //   return;
+  // }
 
   // CSS Rules handlers
   if (closest('[data-action="open-css-rules"]')) {

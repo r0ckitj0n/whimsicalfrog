@@ -189,7 +189,7 @@ body[data-page^='admin'] .bg-container.mode-fullscreen { z-index: var(--z-index-
 
 /* Ensure admin navbar (tabs) starts below the fixed page header */
 body[data-page^='admin'] .admin-tab-navigation {
-  margin-top: calc(var(--wf-header-height, var(--header-height, 80px)) + 8px);
+  margin-top: 0;
 }
 
 /* Neutralize global modal-open scroll locks on admin routes */
@@ -679,4 +679,74 @@ body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable th,
 body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable td {
   border: 1px solid #e5e7eb;
   vertical-align: middle;
+}
+
+/* ===== ADMIN PAGE HEADER SPACING ===== */
+/* Ensure all admin pages have proper top padding to avoid header overlap */
+
+/* Admin page spacing - single source of truth (header + navbar only) */
+body[data-page^='admin'] {
+  /* Reserve exactly header(64px) + navbar(40px). Keep in sync with admin-nav.css */
+  padding-top: calc(var(--wf-header-height, 64px) + 40px) !important;
+}
+
+
+/* Target the filter sections specifically to reduce spacing */
+body[data-page^='admin'] .admin-filter-section,
+body[data-page^='admin'] .admin-filters {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 2px !important;
+}
+
+/* Reduce spacing between filters and table/list content */
+body[data-page^='admin'] .admin-table-section,
+body[data-page^='admin'] .admin-data-table,
+body[data-page^='admin'] .admin-list-section {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Reduce spacing for filter forms */
+body[data-page^='admin'] .admin-filter-form {
+  margin-bottom: 0.5rem !important;
+}
+
+/* All admin page elements use consistent spacing */
+body[data-page^='admin'] .admin-filters,
+body[data-page^='admin'] .page-filters,
+body[data-page^='admin'] .admin-controls {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* All admin page titles use consistent spacing */
+body[data-page^='admin'] .admin-title,
+body[data-page^='admin'] .page-title,
+body[data-page^='admin'] h1:first-child {
+  margin-top: 0 !important;
+  margin-bottom: 1rem !important;
+  padding-top: 0.5rem !important;
+}
+
+/* Admin modals - ensure they appear below header */
+body[data-page^='admin'] .admin-modal-overlay {
+  /* Already handled above but reinforcing */
+  padding-top: var(--wf-overlay-offset, calc(var(--wf-header-height, 64px) + 12px)) !important;
+  z-index: var(--wf-admin-overlay-z, 10050) !important;
+}
+
+/* Admin navbar positioning - CONSISTENT SPACING */
+body[data-page^='admin'] .admin-tab-navigation {
+  /* Ensure navbar is positioned below header */
+  top: var(--wf-header-height, 64px) !important;
+  z-index: 2000 !important;
+  margin: 0 !important;
+}
+
+/* All admin pages have consistent header styling */
+body[data-page^='admin'] .admin-header {
+  margin-top: 0 !important;
+  padding-top: 0.5rem !important;
 }

@@ -121,12 +121,6 @@ if (empty($dashboardConfig)) {
 <div class="dashboard-container">
     <!-- Marker for Background Manager deep-links -->
     <div id="background" data-section="background" aria-hidden="true"></div>
-    <div class="flex justify-end mb-3">
-      <button type="button" class="btn btn-secondary flex items-center gap-2" data-action="restore-help-hints" title="Restore contextual help banners and tooltips">
-        <span>Restore help hints</span>
-        <span id="helpHintsBadge" class="wf-badge hidden" aria-label="Dismissed help hints count">0</span>
-      </button>
-    </div>
     <!-- Dashboard Sections -->
     <div id="dashboardGrid" class="dashboard-grid space-y-6">
         <?php foreach ($dashboardConfig as $config): ?>
@@ -169,11 +163,6 @@ if (empty($dashboardConfig)) {
                                 <?= htmlspecialchars(($config['custom_description'] ?? '') ?: $sectionInfo['description']) ?>
                             </p>
                             <?php endif; ?>
-                        </div>
-                        <div class="drag-handle cursor-move text-gray-400 hover:text-gray-600 rounded hover:bg-gray-100" title="Drag to reorder">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M8 6h2v2H8V6zm6 0h2v2h-2V6zM8 10h2v2H8v-2zm6 0h2v2h-2v-2zM8 14h2v2H8v-2zm6 0h2v2h-2v-2z"/>
-                            </svg>
                         </div>
                     </div>
                 </div>

@@ -123,7 +123,12 @@ class Database
             return true;
         }
         
-        // If REPLIT_DEPLOYMENT_ID is set, this is a Replit deployment (production)
+        // Check if we have PostgreSQL environment variables (Replit development)
+        if (getenv('PGHOST') && getenv('PGDATABASE') && getenv('PGUSER')) {
+            return true; // PostgreSQL available = development environment
+        }
+        
+        // If REPLIT_DEPLOYMENT_ID is set AND no PostgreSQL, this is a Replit deployment (production)
         if (!empty($_SERVER['REPLIT_DEPLOYMENT_ID']) || getenv('REPLIT_DEPLOYMENT_ID') !== false) {
             return false;
         }

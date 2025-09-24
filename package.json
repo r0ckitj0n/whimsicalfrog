@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "printf 'http://0.0.0.0:5000' > hot && vite --host 0.0.0.0 --port 5000 --strictPort",
+    "dev": "printf 'http://0.0.0.0:5180' > hot && vite --host 0.0.0.0 --port 5180 --strictPort",
     "dev:5180": "VITE_DEV_PORT=5180 VITE_HMR_PORT=5180 printf 'http://127.0.0.1:5180' > hot && vite --host 127.0.0.1 --port 5180 --strictPort",
     "stop": "rm hot",
     "quarantine:dupes": "bash scripts/dev/quarantine_duplicates.sh",

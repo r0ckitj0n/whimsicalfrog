@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 
 
-const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5000);
+const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5180);
 const hmrPort = Number(process.env.VITE_HMR_PORT || devPort);
 
 export default defineConfig({
@@ -53,7 +53,7 @@ export default defineConfig({
         // Proxy API requests to avoid PHP execution issues
         proxy: {
             '/api': {
-                target: 'http://localhost:8080',
+                target: 'http://127.0.0.1:5000',
                 changeOrigin: true,
                 secure: false,
                 rewrite: (path) => path.replace(/^\/api/, '/api'),

@@ -6,8 +6,9 @@ WhimsicalFrog is a PHP-based web application with a modern frontend built using 
 ## Current Setup
 - **Application Type**: PHP web application with Vite frontend
 - **Frontend Port**: 5000 (PHP server serving the main application)  
+- **Asset Port**: 5180 (Vite development server for HMR when needed)
 - **Asset Management**: Vite for JavaScript and CSS bundling
-- **Database**: Not currently configured (uses MySQL/MariaDB in production)
+- **Database**: SQLite for development, MySQL/MariaDB for production
 
 ## Architecture
 - **Backend**: PHP 8.2.23 with built-in development server
@@ -16,10 +17,11 @@ WhimsicalFrog is a PHP-based web application with a modern frontend built using 
 - **Session Management**: PHP sessions with security configurations
 
 ## Key Configuration Changes for Replit
-1. **Vite Configuration**: Modified to use port 5000 and host 0.0.0.0 for Replit compatibility
-2. **Package.json**: Updated dev script to use correct ports and host settings
-3. **Workflow**: Configured to run PHP server directly on port 5000
-4. **Deployment**: Set up for autoscale deployment with proper PHP server command
+1. **Vite Configuration**: Modified to use port 5180 and host 0.0.0.0 for development, with proxy to PHP server on port 5000
+2. **Package.json**: Updated dev script to use port 5180 for Vite development server
+3. **Workflow**: Configured to run PHP server directly on port 5000 
+4. **Database**: Environment-aware configuration (SQLite for development, MySQL for production)
+5. **Deployment**: Set up for autoscale deployment with proper PHP server command
 
 ## Development Workflow
 The application runs using a single PHP server on port 5000 that:
@@ -38,11 +40,19 @@ The application runs using a single PHP server on port 5000 that:
 - `images/`: Static image assets
 
 ## Recent Changes (2025-09-24)
-- Configured for Replit environment
+- Configured for Replit environment with proper dev/prod separation
 - Set up PHP server to run on 0.0.0.0:5000
-- Modified Vite configuration for compatibility
-- Created deployment configuration for autoscale
-- Verified application functionality and asset loading
+- Modified Vite configuration to use port 5180 with proxy to PHP server
+- Converted MySQL database dump to SQLite for development
+- Fixed environment detection for proper database selection
+- Removed security vulnerabilities in deployment scripts
+- Created secure deployment configuration for autoscale
+- Verified application functionality with database connectivity
+
+## Environment Configuration
+- **Development**: Automatically detected in Replit IDE, uses SQLite database
+- **Production**: Set `WHF_ENV=production` to force MySQL database usage
+- **Database**: 10+ tables restored from MySQL dump, 8 users available for testing
 
 ## User Preferences
 - Development server configured for Replit environment

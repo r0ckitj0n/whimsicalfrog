@@ -651,8 +651,9 @@ if ($pageSlug === 'landing') {
         }
         $bodyBgUrl = $landingBg;
         $bodyClasses[] = 'room-bg-landing';
+        echo "<script>console.log('[Header] ✅ Landing background applied successfully: \"$landingBg\"');</script>\n";
     } else {
-        echo "<script>console.error('[Header] No active landing background configured; none will be applied');</script>\n";
+        echo "<script>console.error('[Header] ❌ No active landing background configured; none will be applied');</script>\n";
     }
 }
 // Attach background for Main Room page (prefer DB-configured room 0 "room_main" asset)

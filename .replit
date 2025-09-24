@@ -23,7 +23,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "./start-replit.sh"
+args = "php -S 0.0.0.0:5000 -t . router.php"
 waitForPort = 5000
 
 [workflows.workflow.metadata]

@@ -1,1 +1,4 @@
-RewriteEngine Off
+# No rewrites; host-safe routing via ErrorDocument
+DirectoryIndex index.php
+ErrorDocument 404 /router.php
+ErrorDocument 403 /router.php

@@ -12,5 +12,11 @@ RewriteCond %{REQUEST_URI} ^/dist/ [NC]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# Route everything else through router.php
-RewriteRule ^ router.php [L,QSA]
+# Explicit clean-URL mappings (no catch-all)
+RewriteRule ^shop/?$ shop.php [L,QSA]
+RewriteRule ^about/?$ about.php [L,QSA]
+RewriteRule ^contact/?$ contact.php [L,QSA]
+RewriteRule ^login/?$ login.php [L,QSA]
+RewriteRule ^register/?$ register.php [L,QSA]
+RewriteRule ^cart/?$ cart.php [L,QSA]
+RewriteRule ^room_main/?$ room_main.php [L,QSA]

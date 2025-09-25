@@ -10,21 +10,17 @@ class Database
 
     private function __construct()
     {
-        // Detect environment for database selection
-        $isDevelopment = $this->isDevelopmentEnvironment();
+        // Prefer MySQL unless PostgreSQL environment variables are explicitly provided.
+        $hasPg = getenv('PGHOST') && getenv('PGPORT') && getenv('PGDATABASE') && getenv('PGUSER') && getenv('PGPASSWORD');
         
-        if ($isDevelopment) {
-            // PostgreSQL for development - much more robust than SQLite
+        if ($hasPg) {
+            // PostgreSQL branch (used primarily in certain hosted dev environments)
             $pgHost = getenv('PGHOST');
             $pgPort = getenv('PGPORT');
             $pgDatabase = getenv('PGDATABASE');
             $pgUser = getenv('PGUSER');
             $pgPassword = getenv('PGPASSWORD');
-            
-            if (empty($pgHost) || empty($pgPort) || empty($pgDatabase) || empty($pgUser) || empty($pgPassword)) {
-                throw new PDOException("Development database not configured. PostgreSQL environment variables not found.");
-            }
-            
+
             $dsn = "pgsql:host=$pgHost;port=$pgPort;dbname=$pgDatabase;sslmode=require";
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -32,15 +28,13 @@ class Database
                 PDO::ATTR_EMULATE_PREPARES   => false,
                 PDO::ATTR_TIMEOUT            => 10,
             ];
-            
+
             try {
                 $this->pdo = new PDO($dsn, $pgUser, $pgPassword, $options);
-                // Set timezone for PostgreSQL
                 $this->pdo->exec("SET TIME ZONE 'UTC'");
             } catch (PDOException $e) {
                 throw new PDOException("PostgreSQL connection failed: " . $e->getMessage(), (int)$e->getCode());
             }
-            
         } else {
             // MySQL for production - use existing globals or environment variables
             global $host, $db, $user, $pass, $port, $socket;
@@ -123,9 +117,9 @@ class Database
             return true;
         }
         
-        // Check if we have PostgreSQL environment variables (Replit development)
-        if (getenv('PGHOST') && getenv('PGDATABASE') && getenv('PGUSER')) {
-            return true; // PostgreSQL available = development environment
+        // Only treat as special dev if PostgreSQL envs exist
+        if (getenv('PGHOST') && getenv('PGDATABASE') && getenv('PGUSER') && getenv('PGPASSWORD')) {
+            return true;
         }
         
         // If REPLIT_DEPLOYMENT_ID is set AND no PostgreSQL, this is a Replit deployment (production)
@@ -133,15 +127,10 @@ class Database
             return false;
         }
         
-        // Multiple checks for development environment (only if no deployment ID)
+        // Generic dev indicators
         return (
-            // Command line
             PHP_SAPI === 'cli' ||
-            // Localhost indicators
-            (isset($_SERVER['HTTP_HOST']) && 
-                (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || 
-                 strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) ||
-            // Replit development environment (but not deployment)
+            (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) ||
             (!empty($_SERVER['REPL_ID']) && empty($_SERVER['REPLIT_DEPLOYMENT_ID']))
         );
     }

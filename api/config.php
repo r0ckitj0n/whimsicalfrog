@@ -34,6 +34,21 @@ if ($__wf_is_api_context_early && !headers_sent()) {
     }
 }
 
+// Polyfills for PHP < 8.0
+if (!function_exists('str_starts_with')) {
+    function str_starts_with($haystack, $needle) {
+        return $needle === '' || strpos($haystack, $needle) === 0;
+    }
+}
+if (!function_exists('str_ends_with')) {
+    function str_ends_with($haystack, $needle) {
+        if ($needle === '') return true;
+        $len = strlen($needle);
+        if ($len === 0) return true;
+        return substr($haystack, -$len) === $needle;
+    }
+}
+
 // Improved environment detection with multiple checks
 $isLocalhost = false;
 

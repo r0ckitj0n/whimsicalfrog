@@ -1,4 +1,5 @@
 # Root .htaccess for clean URL routing via router.php and to avoid MultiViews interfering
+
 # Disable MultiViews so /shop does not get rewritten to shop.php implicitly
 Options -MultiViews
 
@@ -59,6 +60,8 @@ RewriteRule ^\.(?!well-known/) - [R=403,L]
   </FilesMatch>
 </IfModule>
 
+# Removed old special-case rewrite for app.js-*; general /dist assets rules below handle fallbacks safely
+
 # Ensure correct MIME types and strong caching for built assets
 <IfModule mod_mime.c>
   AddType application/javascript .js
@@ -99,6 +102,7 @@ RewriteRule ^ router.php [L,QSA]
   # backgrounds: background_* -> background-*
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^images/backgrounds/background_(.+)\.(webp|png)$ images/backgrounds/background-$1.$2 [R=301,L]
+
   # signs: sign_door_roomN -> sign-door-roomN
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^images/signs/sign_door_room([0-9]+)\.(webp|png)$ images/signs/sign-door-room$1.$2 [R=301,L]
@@ -109,16 +113,24 @@ RewriteRule ^ router.php [L,QSA]
   RewriteRule ^images/signs/sign_main\.(webp|png)$ images/signs/sign-main.$1 [R=301,L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^images/signs/sign_whimsicalfrog\.(webp|png)$ images/signs/sign-whimsicalfrog.$1 [R=301,L]
+
   # logos: logo_whimsicalfrog -> logo-whimsicalfrog
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteRule ^images/logos/logo_whimsicalfrog\.(webp|png)$ images/logos/logo-whimsicalfrog.$1 [R=301,L]
 </IfModule>
 
-# Allow direct access to existing files, directories, and PHP files
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d [OR]
-RewriteCond %{REQUEST_FILENAME} \\.(php)$ -f
+# Only allow direct access to existing files. Route other requests (including
+# missing files under existing directories) through router.php so it can
+# implement graceful fallbacks for built assets.
+RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
 # Route everything else through router.php (front controller)
+# Exclude nothing special here; router.php will itself allow static files
 RewriteRule ^ router.php [L,QSA]
+
+# Allow direct access to existing files, directories, and PHP files
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d [OR]
+RewriteCond %{REQUEST_FILENAME} \.php$ -f
+RewriteRule ^ - [L]

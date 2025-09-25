@@ -1,3 +1,20 @@
+#!/bin/bash
+# WhimsicalFrog Hotfix: Install canonical clean .htaccess and deploy
+# Usage: bash scripts/hotfix_htaccess_clean.sh
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR"
+
+echo "[Hotfix-Clean] Installing canonical .htaccess..."
+
+TS=$(date +%Y%m%d_%H%M%S)
+if [ -f .htaccess ]; then
+  cp .htaccess ".htaccess.preclean.$TS"
+  echo "[Hotfix-Clean] Backed up existing .htaccess -> .htaccess.preclean.$TS"
+fi
+
+cat > .htaccess <<'EOF'
 # Root .htaccess for clean URL routing via router.php and to avoid MultiViews interfering
 # Disable MultiViews so /shop does not get rewritten to shop.php implicitly
 Options -MultiViews
@@ -122,3 +139,21 @@ RewriteRule ^ - [L]
 
 # Route everything else through router.php (front controller)
 RewriteRule ^ router.php [L,QSA]
+EOF
+
+# Clean strays so they don't get deployed again
+rm -f .htaccess.new .htaccess.tmp .htaccess.fixed .htaccess.working || true
+
+# Preview
+echo "[Hotfix-Clean] .htaccess preview (head):"; head -n 24 .htaccess
+
+# Deploy
+if [ -x scripts/deploy.sh ]; then
+  echo "[Hotfix-Clean] Deploying..."
+  bash scripts/deploy.sh || true
+else
+  echo "[Hotfix-Clean] WARNING: scripts/deploy.sh missing or not executable."
+fi
+
+# Basic post-check hints
+echo "[Hotfix-Clean] Done. Test: / , /shop , /dist/.vite/manifest.json , a CSS asset."

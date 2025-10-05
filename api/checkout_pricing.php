@@ -157,7 +157,10 @@ try {
     $taxShipping = (bool)$taxCfg['taxShipping'];
     $settingsEnabled = (bool)$taxCfg['enabled'];
     $settingsRate = (float)$taxCfg['rate'];
-    $zipForTax = $zip ?: (string) BusinessSettings::get('business_zip', '');
+    // Prefer Business Info postal code; fallback to legacy business_zip
+    $bizPostal = (string) BusinessSettings::get('business_postal', '');
+    $bizZipLegacy = (string) BusinessSettings::get('business_zip', '');
+    $zipForTax = $zip ?: ($bizPostal !== '' ? $bizPostal : $bizZipLegacy);
     $zipState = null;
     $zipRate = null;
     $taxSource = 'settings';
@@ -168,10 +171,18 @@ try {
             $taxSource = 'zip';
         }
     }
-    // Choose rate: prefer positive ZIP rate; otherwise use settings rate if enabled and > 0
-    $rateToUse = ($zipRate !== null && $zipRate > 0)
-        ? $zipRate
-        : (($settingsEnabled && $settingsRate > 0) ? $settingsRate : 0.0);
+    // Choose rate: prefer ZIP rate; else settings; else fallback 7%
+    $fallbackRate = 0.07;
+    if ($zipRate !== null && $zipRate > 0) {
+        $rateToUse = $zipRate;
+        $taxSource = 'zip';
+    } elseif ($settingsEnabled && $settingsRate > 0) {
+        $rateToUse = $settingsRate;
+        $taxSource = 'settings';
+    } else {
+        $rateToUse = $fallbackRate;
+        $taxSource = 'fallback';
+    }
     $taxEnabled = $rateToUse > 0;
     $taxBase = $subtotal + ($taxShipping ? $shipping : 0.0);
     $tax = $taxEnabled ? round($taxBase * $rateToUse, 2) : 0.0;

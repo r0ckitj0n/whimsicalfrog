@@ -58,6 +58,7 @@ try {
 
     $orsKey = (string) BusinessSettings::get('ors_api_key', '');
     $miles = null;
+    $estimated = false;
 
     if ($orsKey) {
         // Very lightweight geocoding and routing via OpenRouteService (free tier)
@@ -90,9 +91,35 @@ try {
     }
 
     if ($miles === null) {
-        // Fallback: geocoding not available; return null miles
-        // Frontend should treat null as ineligible unless admin permits fallback
-        Response::success(['miles' => null, 'cached' => false]);
+        // Anonymous fallback: use zippopotam.us to geocode ZIP centroids, then haversine miles
+        // This is an estimate (straight-line), not driving distance.
+        $zipFrom = trim((string)($from['zip'] ?? ''));
+        $zipTo = trim((string)($to['zip'] ?? ''));
+        if ($zipFrom !== '' && $zipTo !== '') {
+            $fetchZip = function($zip){
+                $url = 'https://api.zippopotam.us/us/' . rawurlencode($zip);
+                $ctx = stream_context_create(['http' => ['method' => 'GET', 'timeout' => 6, 'header' => "User-Agent: WF-Distance/1.0\r\n"]]);
+                $resp = @file_get_contents($url, false, $ctx);
+                if (!$resp) return null;
+                $j = json_decode($resp, true);
+                $p = $j['places'][0] ?? null;
+                if (!$p) return null;
+                $lat = isset($p['latitude']) ? (float)$p['latitude'] : null;
+                $lon = isset($p['longitude']) ? (float)$p['longitude'] : null;
+                if ($lat === null || $lon === null) return null;
+                return ['lat' => $lat, 'lon' => $lon];
+            };
+            $fc = $fetchZip($zipFrom);
+            $tc = $fetchZip($zipTo);
+            if ($fc && $tc) {
+                $miles = haversineMiles($fc['lat'], $fc['lon'], $tc['lat'], $tc['lon']);
+                $estimated = true;
+            }
+        }
+        if ($miles === null) {
+            // Fallback: geocoding not available; return null miles
+            Response::success(['miles' => null, 'cached' => false, 'estimated' => false]);
+        }
     }
 
     // Cache
@@ -101,7 +128,7 @@ try {
             [$cacheKey, $fromStr, $toStr, $miles]);
     } catch (Exception $e) {}
 
-    Response::success(['miles' => round($miles, 2), 'cached' => false]);
+    Response::success(['miles' => round($miles, 2), 'cached' => false, 'estimated' => $estimated]);
 } catch (Throwable $e) {
     if (class_exists('Logger')) {
         Logger::exception('distance error', $e, ['endpoint' => 'distance']);

@@ -15,6 +15,13 @@
   margin: 0 12px;
   pointer-events: auto; /* ensure modal itself captures events */
 }
+/* Ensure the cart modal content forms a flex column so the items section can scroll */
+#cartModalOverlay .confirmation-modal > div {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* cap to viewport */
+  width: 100%;
+}
 #cartModalOverlay .cart-modal .room-title {
   font-size: 1.25rem;
   font-weight: 700;
@@ -61,20 +68,24 @@
     margin: 0;
   }
   #cartModalOverlay .cart-header {
-    position: sticky;
     top: 0;
     background: #fff;
     z-index: var(--z-index-modal-content, 420);
   }
   #cartModalOverlay #cartModalItems {
+    /* allow scrolling when content exceeds available space */
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0; /* critical in flex containers to allow child to shrink and scroll */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+  }
   }
   /* Tighten spacing for cart rows on small screens */
   #cartModalOverlay .cart-item {
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-  }
+{{ ... }}
   #cartModalOverlay .cart-item-title {
     font-size: 0.95rem;
     line-height: 1.2;

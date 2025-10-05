@@ -71,7 +71,7 @@ try {
 
     $rates = [];
 
-    // Without provider keys, we will not call external APIs; return empty so frontend can fallback
+    // Without provider keys, we will not call external APIs by default
     $wantUSPS = (!$carrier || $carrier === 'USPS' || $carrier === 'ALL');
     $wantUPS  = (!$carrier || $carrier === 'UPS'  || $carrier === 'ALL');
     $wantFedEx= (!$carrier || $carrier === 'FEDEX'|| $carrier === 'ALL');
@@ -113,6 +113,42 @@ try {
 
     // UPS/FedEx: require keys; if absent we leave empty so frontend can fallback
     // We intentionally skip implementing their auth flows here to keep this endpoint safe and optional
+
+    // Localhost demo mode: If running on localhost and no keys are configured, return heuristic estimates
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $isLocalhost = (strpos($host, 'localhost') !== false) || (strpos($host, '127.0.0.1') !== false);
+    $noCarrierKeys = ($uspsUserId === '' && $upsKey === '' && $fedexKey === '');
+    if ($isLocalhost && $noCarrierKeys && $fromZip && $toZip) {
+        // Estimate total weight in pounds
+        $totalOz = 0.0;
+        foreach ($items as $i) {
+            $qty = (int)($i['qty'] ?? $i['quantity'] ?? 1);
+            $w = isset($i['weightOz']) ? (float)$i['weightOz'] : 16.0;
+            $totalOz += max(0, $w) * max(1, $qty);
+        }
+        $lbs = max(0.5, round($totalOz / 16, 2));
+        // Get approximate distance via internal distance API (haversine fallback will trigger w/o ORS key)
+        $miles = null;
+        try {
+            $payload = json_encode(['from' => ['zip' => $fromZip], 'to' => ['zip' => $toZip], 'debug' => false]);
+            $opts = ['http' => ['method' => 'POST', 'header' => "Content-Type: application/json\r\n", 'content' => $payload, 'timeout' => 6]];
+            $ctx = stream_context_create($opts);
+            $distResp = @file_get_contents((isset($_SERVER['REQUEST_SCHEME'])?$_SERVER['REQUEST_SCHEME']:'http') . '://' . $host . '/api/distance.php', false, $ctx);
+            if ($distResp) {
+                $dj = json_decode($distResp, true);
+                if (isset($dj['miles']) && $dj['miles'] !== null) $miles = (float)$dj['miles'];
+            }
+        } catch (Exception $e) {}
+        if ($miles === null) $miles = 50.0; // fallback guess
+        // Heuristic pricing formulae (rough, for demo only)
+        $calc = function($base, $perLb, $perMile) use ($lbs, $miles) {
+            $amt = $base + ($perLb * $lbs) + ($perMile * max(0, $miles));
+            return round(max(3.95, $amt), 2);
+        };
+        if ($wantUSPS)  $rates[] = ['carrier' => 'USPS',  'service' => 'Estimate (demo)', 'amount' => $calc(5.95, 0.35, 0.0015), 'estimated' => true];
+        if ($wantUPS)   $rates[] = ['carrier' => 'UPS',   'service' => 'Estimate (demo)', 'amount' => $calc(9.25, 0.45, 0.0025), 'estimated' => true];
+        if ($wantFedEx) $rates[] = ['carrier' => 'FedEx', 'service' => 'Estimate (demo)', 'amount' => $calc(9.75, 0.50, 0.0028), 'estimated' => true];
+    }
 
     // Save cache
     try {

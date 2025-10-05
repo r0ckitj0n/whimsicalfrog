@@ -671,6 +671,13 @@ import apiClient from './api-client.js';
             const addr = addresses.find(a => String(a.id) === String(selectedAddressId));
             if (addr && addr.zip_code) payload.zip = String(addr.zip_code);
           }
+          // Fallback: if no selected address ZIP, use business postal ZIP so backend can compute tax from settings/ZIP
+          if (!payload.zip) {
+            try {
+              const bi = await ensureBusinessInfo();
+              if (bi && bi.business_postal) payload.zip = String(bi.business_postal);
+            } catch(_) {}
+          }
           // Always request backend pricing debug during current checkout debugging
           // This surfaces taxEnabled, taxRate, taxBase, and computed subtotal/shipping.
           payload.debug = true;
@@ -687,26 +694,34 @@ import apiClient from './api-client.js';
             if (methodNow === 'Local Delivery') {
               try {
                 const miles = await fetchDrivingMiles();
-                if (miles == null || miles > 30) {
-                  // Ineligible; switch to USPS
+                if (miles == null) {
+                  // No distance yet (no address or service offline). Keep selection; no badge.
+                  pmHideShippingBenefitNote();
+                } else if (miles > 30) {
+                  // Ineligible by rule; switch to USPS
                   if (shipMethodSel) shipMethodSel.value = 'USPS';
                   pmHideShippingBenefitNote();
                 } else {
                   dispShipping = Math.round(miles * 2 * 100) / 100;
                 }
-              } catch(_) { dispShipping = 75.00; }
+              } catch(_) { /* keep default pricing; no switch */ }
             }
             // Carrier quotes when available
             if (methodNow === 'USPS') {
               const quote = await fetchCarrierRate('USPS');
-              // Savings badge when eligible (subtotal >= 50)
-              if (dispSubtotal >= 50 && quote != null && quote > 0) { pmShowSavings(quote); }
-              else { pmHideShippingBenefitNote(); }
+              // Savings badge when eligible (subtotal >= 50). Show even if quote not available.
+              if (dispSubtotal >= 50) {
+                if (quote != null && quote > 0) pmShowSavings(quote); else pmShowShippingBenefitNote('Free USPS shipping on orders $50+.');
+                dispShipping = 0;
+              } else {
+                pmHideShippingBenefitNote();
+              }
               // For sub-$50 orders, prefer live quote if present
               if (dispSubtotal < 50 && quote != null && quote > 0) dispShipping = quote;
+              // If no quote, keep backend-provided pricing as source of truth
             } else if (methodNow === 'UPS' || methodNow === 'FedEx') {
               const quote = await fetchCarrierRate(methodNow);
-              if (quote != null && quote > 0) dispShipping = quote; else if (dispShipping === 0) dispShipping = 20.00;
+              if (quote != null && quote > 0) dispShipping = quote;
               pmHideShippingBenefitNote();
             }
             // Determine tax using server’s tax flags if available
@@ -731,7 +746,7 @@ import apiClient from './api-client.js';
               const methodNow = shipMethodSel?.value || res.pricing.shippingMethod || 'USPS';
               updateShippingBadges(methodNow);
               const eligible = (methodNow === 'USPS' && Number(dispSubtotal) >= 50);
-              if (!eligible) { pmHideShippingBenefitNote(); }
+              if (eligible) { pmShowShippingBenefitNote('Free USPS shipping on orders $50+.'); } else { pmHideShippingBenefitNote(); }
             } catch(_) {}
             // Warn if we have items but backend computed subtotal is zero
             const hasItems = Array.isArray(items) && items.length > 0;
@@ -872,7 +887,7 @@ import apiClient from './api-client.js';
           else { const q = await fetchCarrierRate('USPS'); shipNow = (q != null && q > 0) ? q : (Number(pricing?.shipping) || 0); pmHideShippingBenefitNote(); }
         } else if (shipMethodSel.value === 'FedEx' || shipMethodSel.value === 'UPS') {
           const q = await fetchCarrierRate(shipMethodSel.value);
-          shipNow = (q != null && q > 0) ? q : (Number(pricing?.shipping) || 20);
+          shipNow = (q != null && q > 0) ? q : (Number(pricing?.shipping) || 0);
           pmHideShippingBenefitNote();
         }
         const taxRateHint = Number((window.__WF_DEBUG_TAX_RATE ?? 0));
@@ -935,6 +950,24 @@ import apiClient from './api-client.js';
       loadAddresses()
         .catch(() => {})
         .finally(() => { updatePricing(); });
+
+      // Resiliency: refresh pricing on cart updates / focus / visibility when modal is open
+      try {
+        if (!state._pmHandlers) state._pmHandlers = {};
+        let last = 0;
+        const throttledRefresh = () => {
+          const now = Date.now();
+          if (now - last < 500) return; // throttle
+          last = now;
+          try { updatePricing(); } catch(_) {}
+        };
+        state._pmHandlers.onCartUpdated = throttledRefresh;
+        state._pmHandlers.onFocus = throttledRefresh;
+        state._pmHandlers.onVisibility = () => { if (document.visibilityState === 'visible') throttledRefresh(); };
+        window.addEventListener('cartUpdated', state._pmHandlers.onCartUpdated);
+        window.addEventListener('focus', state._pmHandlers.onFocus);
+        document.addEventListener('visibilitychange', state._pmHandlers.onVisibility);
+      } catch(_) {}
     }
 
     // CSS class-based scroll lock helpers (WFModals-free)

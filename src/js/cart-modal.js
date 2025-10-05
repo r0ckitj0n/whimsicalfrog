@@ -162,15 +162,16 @@ import '../styles/cart-modal.css';
     window.closeCartModal = close;
 
     // Intercept header cart button/link clicks (support multiple selector variants)
+    // Capture phase to prevent default navigation to /cart before our handler runs
     document.addEventListener('click', (e) => {
-      const btn = e.target && e.target.closest && e.target.closest('a.cart-link, .cart-toggle, .cart-button, [data-action="open-cart"], #cartButton');
+      const btn = e.target && e.target.closest && e.target.closest('a.cart-link, a[href*="/cart"], .cart-toggle, .cart-button, [data-action="open-cart"], #cartButton, #cartLink');
       if (!btn) return;
       // Allow new tab/window behavior for anchor clicks
       if ((btn.tagName === 'A') && (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) return;
       e.preventDefault();
       e.stopPropagation();
       open();
-    });
+    }, true);
 
     // Intercept Checkout button clicks inside the cart modal to go directly to payment (login-gated)
     document.addEventListener('click', (e) => {

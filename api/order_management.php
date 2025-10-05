@@ -1,6 +1,7 @@
 <?php
 // Order Management API - Admin features for order editing
 require_once 'config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -51,11 +52,7 @@ try {
             // Update order total
             Database::execute("UPDATE orders SET total = ? WHERE id = ?", [$newTotal, $data['order_id']]);
 
-            echo json_encode([
-                'success' => true,
-                'message' => $message,
-                'new_total' => $newTotal
-            ]);
+            Response::updated(['message' => $message, 'new_total' => $newTotal]);
             break;
 
         case 'remove_item_from_order':
@@ -83,11 +80,7 @@ try {
             // Update order total
             Database::execute("UPDATE orders SET total = ? WHERE id = ?", [$newTotal, $orderId]);
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Item removed from order',
-                'new_total' => $newTotal
-            ]);
+            Response::updated(['message' => 'Item removed from order', 'new_total' => $newTotal]);
             break;
 
         case 'update_item_quantity':
@@ -122,11 +115,7 @@ try {
             // Update order total
             Database::execute("UPDATE orders SET total = ? WHERE id = ?", [$newTotal, $orderId]);
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Item quantity updated',
-                'new_total' => $newTotal
-            ]);
+            Response::updated(['message' => 'Item quantity updated', 'new_total' => $newTotal]);
             break;
 
         case 'update_order_address':
@@ -158,10 +147,7 @@ try {
                 $userId
             ]);
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Order address updated'
-            ]);
+            Response::updated(['message' => 'Order address updated']);
             break;
 
         case 'get_available_items':
@@ -220,12 +206,7 @@ try {
                 'impersonated' => true
             ];
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Now impersonating customer: ' . $customer['username'],
-                'customer' => $_SESSION['user'],
-                'redirect_url' => '/?impersonating=true'
-            ]);
+            Response::updated(['message' => 'Now impersonating customer: ' . $customer['username'], 'customer' => $_SESSION['user'], 'redirect_url' => '/?impersonating=true']);
             break;
 
         case 'stop_impersonation':
@@ -238,11 +219,7 @@ try {
                 unset($_SESSION['original_admin']);
             }
 
-            echo json_encode([
-                'success' => true,
-                'message' => 'Stopped impersonating customer',
-                'redirect_url' => '/?page=admin'
-            ]);
+            Response::updated(['message' => 'Stopped impersonating customer', 'redirect_url' => '/?page=admin']);
             break;
 
         default:

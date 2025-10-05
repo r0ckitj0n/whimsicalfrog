@@ -34,6 +34,13 @@ if ($__wf_is_api_context_early && !headers_sent()) {
     }
 }
 
+// For API context, hard-disable HTML error output so JSON isn't polluted
+if ($__wf_is_api_context_early) {
+    // Do this as early as possible
+    ini_set('display_errors', '0');
+    ini_set('html_errors', '0');
+}
+
 // Polyfills for PHP < 8.0
 if (!function_exists('str_starts_with')) {
     function str_starts_with($haystack, $needle) {
@@ -142,10 +149,14 @@ if (isset($_SERVER['WHF_ENV'])) {
     }
 }
 
-// For API endpoints, don't display HTML errors - only log them
-if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
-    ini_set('display_errors', 0);
-    ini_set('html_errors', 0);
+// For API endpoints, don't display HTML errors - only log them (force off for any /api path)
+// Ensure the flag is defined before use
+if (!isset($__wf_is_api_context)) {
+    $__wf_is_api_context = isset($__wf_is_api_context_early) ? $__wf_is_api_context_early : false;
+}
+if ($__wf_is_api_context) {
+    ini_set('display_errors', '0');
+    ini_set('html_errors', '0');
 } else {
     // Only display errors in the browser while in local development
     ini_set('display_errors', $isLocalhost ? 1 : 0);
@@ -253,7 +264,9 @@ $__wf_req_path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $__wf_script = $_SERVER['SCRIPT_NAME'] ?? '';
 $__wf_is_api_context = (strpos($__wf_script, '/api/') !== false) || (strpos($__wf_req_path, '/api/') === 0);
 $__wf_enable_db_loggers = getenv('WF_ENABLE_DB_LOGGERS') === '1';
-if ($__wf_is_api_context || $__wf_enable_db_loggers) {
+// IMPORTANT: Only enable heavy DB loggers when explicitly requested via env.
+// Loading these on every API request can introduce large cold-start TTFB.
+if ($__wf_enable_db_loggers) {
     require_once __DIR__ . '/../includes/database_logger.php';
     require_once __DIR__ . '/../includes/admin_logger.php';
 }

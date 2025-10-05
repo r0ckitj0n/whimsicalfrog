@@ -58,8 +58,7 @@ function saveBackground($input)
     $webpFilename = $input['webp_filename'] ?? null;
 
     if ($roomNumber === '' || !preg_match('/^[1-5]$/', $roomNumber) || empty($backgroundName) || empty($imageFilename)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Missing or invalid fields']);
+        Response::error('Missing or invalid fields', null, 400);
         return;
     }
 
@@ -68,7 +67,7 @@ function saveBackground($input)
         $exists = Database::queryOne("SELECT id FROM backgrounds WHERE room_number = ? AND background_name = ? LIMIT 1", [$roomNumber, $backgroundName]);
 
         if ($exists) {
-            echo json_encode(['success' => false, 'message' => 'Background name already exists for this room']);
+            Response::error('Background name already exists for this room', null, 400);
             return;
         }
 
@@ -95,8 +94,7 @@ function applyBackground($input)
     $backgroundId = $input['background_id'] ?? '';
 
     if ($roomNumber === '' || !preg_match('/^[1-5]$/', $roomNumber) || empty($backgroundId)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Missing or invalid fields']);
+        Response::error('Missing or invalid fields', null, 400);
         return;
     }
 
@@ -127,8 +125,7 @@ function handleDelete($input)
     $backgroundId = $input['background_id'] ?? '';
 
     if (empty($backgroundId)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Background ID is required']);
+        Response::error('Background ID is required', null, 400);
         return;
     }
 
@@ -137,12 +134,12 @@ function handleDelete($input)
         $background = Database::queryOne("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?", [$backgroundId]);
 
         if (!$background) {
-            echo json_encode(['success' => false, 'message' => 'Background not found']);
+            Response::notFound('Background not found');
             return;
         }
 
         if ($background['background_name'] === 'Original') {
-            echo json_encode(['success' => false, 'message' => 'Original backgrounds cannot be deleted - they are protected']);
+            Response::forbidden('Original backgrounds cannot be deleted - they are protected');
             return;
         }
 

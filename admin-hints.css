@@ -1,0 +1,35 @@
+/* Admin contextual hint banners */
+
+.wf-admin-hint-banner {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  background: #ecfeff; /* cyan-50 */
+  border: 1px solid #a5f3fc; /* cyan-200 */
+  color: #083344; /* cyan-950 */
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 10px 0 18px 0;
+}
+.wf-admin-hint-banner .wf-banner-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+.wf-admin-hint-banner .wf-banner-content {
+  flex: 1;
+}
+.wf-admin-hint-banner .wf-banner-title {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.wf-admin-hint-banner .wf-banner-actions a,
+.wf-admin-hint-banner .wf-banner-actions button {
+  margin-right: 8px;
+}
+.wf-admin-hint-banner .wf-banner-close {
+  background: transparent;
+  border: 0;
+  color: #0e7490; /* cyan-600 */
+  font-size: 18px;
+  cursor: pointer;
+}

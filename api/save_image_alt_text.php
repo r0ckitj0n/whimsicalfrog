@@ -1,38 +1,29 @@
 <?php
 require_once __DIR__ . '/config.php';
-
-// Set JSON response header
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Invalid request method. Only POST is allowed.']);
-    exit;
+    Response::methodNotAllowed('Invalid request method. Only POST is allowed.');
 }
 
 // Get and validate input data
-$input = json_decode(file_get_contents('php://input'), true);
+$raw = file_get_contents('php://input');
+$input = json_decode($raw, true);
 
-if (!$input) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Invalid JSON input.']);
-    exit;
+if (!is_array($input)) {
+    Response::error('Invalid JSON input.', null, 400);
 }
 
 $sku = trim($input['sku'] ?? '');
 $imageAnalysisData = $input['imageAnalysis'] ?? [];
 
 if (empty($sku)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'SKU is required.']);
-    exit;
+    Response::error('SKU is required.', null, 400);
 }
 
 if (empty($imageAnalysisData) || !is_array($imageAnalysisData)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Image analysis data is required.']);
-    exit;
+    Response::error('Image analysis data is required.', null, 400);
 }
 
 try {
@@ -67,23 +58,13 @@ try {
     }
 
     if ($updatedImages > 0) {
-        echo json_encode([
-            'success' => true,
-            'message' => "Updated alt text for {$updatedImages} image(s)",
-            'updated_count' => $updatedImages,
-            'errors' => $errors
-        ]);
+        Response::updated(['message' => "Updated alt text for {$updatedImages} image(s)", 'updated_count' => $updatedImages, 'errors' => $errors]);
     } else {
-        echo json_encode([
-            'success' => false,
-            'error' => 'No images were updated',
-            'errors' => $errors
-        ]);
+        Response::noChanges(['message' => 'No images were updated', 'errors' => $errors]);
     }
 
 } catch (PDOException $e) {
     error_log("Error saving image alt text: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error occurred.']);
+    Response::serverError('Database error occurred.');
 }
 ?> 

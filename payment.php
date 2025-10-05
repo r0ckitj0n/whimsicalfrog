@@ -79,7 +79,7 @@ if (!empty($___wf_direct_include)) {
       </div>
 
       <!-- Shipping Method -->
-      <div class="card-standard p-4">
+      <div class="card-standard p-4 has-shipping-badges">
         <h2 class="text-lg font-medium mb-3">Shipping method</h2>
         <select id="shippingMethodSelect" class="form-select">
           <option value="Customer Pickup">Customer Pickup (free)</option>
@@ -88,6 +88,25 @@ if (!empty($___wf_direct_include)) {
           <option value="FedEx">FedEx</option>
           <option value="UPS">UPS</option>
         </select>
+        <div id="shippingPolicyNote" class="shipping-policy-note">Free USPS shipping on orders $50+.</div>
+        <div id="shippingBadges" class="shipping-badges">
+          <span id="pickupBadge" class="hidden shipping-badge pickup" aria-live="polite">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Customer Pickup">
+              <rect x="0" y="0" width="100" height="100" rx="10" ry="10" fill="transparent" />
+              <text x="50" y="42" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="18" font-weight="700" fill="currentColor">PICKUP</text>
+              <text x="50" y="64" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="12" font-weight="700" fill="currentColor">NO FEE</text>
+            </svg>
+            <span class="sr-only">No shipping charge for Customer Pickup</span>
+          </span>
+          <span id="localDeliveryBadge" class="hidden shipping-badge local wf-tooltip" data-tooltip="Local Delivery is offered at the business owner’s discretion and may depend on availability, scheduling, and distance from your location." aria-live="polite">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Local Delivery $75">
+              <rect x="0" y="0" width="100" height="100" rx="10" ry="10" fill="transparent" />
+              <text x="50" y="42" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="18" font-weight="700" fill="currentColor">LOCAL</text>
+              <text x="50" y="64" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="14" font-weight="800" fill="currentColor">$75</text>
+            </svg>
+            <span class="sr-only">Local Delivery fee: $75</span>
+          </span>
+        </div>
       </div>
 
       <!-- Payment Method -->

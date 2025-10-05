@@ -19,5 +19,6 @@
     "click_to_details": true,
     "hover_to_popup": true,
     "popup_add_to_cart": true,
-    "enable_touch_events": true
+    "enable_touch_events": true,
+    "icons_white_background": false
 }

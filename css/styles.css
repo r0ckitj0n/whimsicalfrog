@@ -388,8 +388,8 @@ body {
 #updateInventoryBtn:hover,
 #addCustomerBtn:hover,
 #saveCustomerBtn:hover {
-    background-color: #6b8e23;
-    border-color: #6b8e23;
+    background-color: var(--brand-secondary, #BF5700);
+    border-color: var(--brand-secondary, #BF5700);
 }
 
 /* Test rule - this should make the red test button red */
@@ -410,8 +410,8 @@ button.bg-indigo-600:hover,
 .bg-indigo-600:hover,
 button.hover\\:bg-indigo-700:hover,
 .hover\\:bg-indigo-700:hover {
-    background-color: #6b8e23;
-    border-color: #6b8e23;
+    background-color: var(--brand-secondary, #BF5700);
+    border-color: var(--brand-secondary, #BF5700);
 }
 
 /* Admin Tab Bar - Transparent Background */

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -21,15 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 function checkAuth()
 {
     if (!isset($_SESSION['user']) || !is_array($_SESSION['user'])) {
-        http_response_code(401);
-        echo json_encode(['error' => 'Not authenticated']);
+        Response::json(['error' => 'Not authenticated'], 401);
         exit();
     }
 
     $userRole = strtolower($_SESSION['user']['role'] ?? '');
     if ($userRole !== 'admin') {
-        http_response_code(403);
-        echo json_encode(['error' => 'Admin access required']);
+        Response::json(['error' => 'Admin access required'], 403);
         exit();
     }
 }
@@ -82,7 +81,7 @@ try {
                 ORDER BY s.created_at DESC"
             );
 
-            echo json_encode(['success' => true, 'sales' => $sales]);
+            Response::json(['success' => true, 'sales' => $sales]);
             break;
 
         case 'get':
@@ -90,7 +89,7 @@ try {
 
             $saleId = $_GET['id'] ?? 0;
             if (!$saleId) {
-                echo json_encode(['error' => 'Sale ID required']);
+                Response::json(['error' => 'Sale ID required']);
                 break;
             }
 
@@ -98,7 +97,7 @@ try {
             $sale = Database::queryOne("SELECT * FROM sales WHERE id = ?", [$saleId]);
 
             if (!$sale) {
-                echo json_encode(['error' => 'Sale not found']);
+                Response::json(['error' => 'Sale not found']);
                 break;
             }
 
@@ -112,7 +111,7 @@ try {
             );
 
             $sale['items'] = $saleItems;
-            echo json_encode(['success' => true, 'sale' => $sale]);
+            Response::json(['success' => true, 'sale' => $sale]);
             break;
 
         case 'create':
@@ -129,7 +128,7 @@ try {
             $items = $input['items'] ?? [];
 
             if (!$name || !$discountPercentage || !$startDate || !$endDate) {
-                echo json_encode(['error' => 'Missing required fields']);
+                Response::json(['error' => 'Missing required fields']);
                 break;
             }
 
@@ -152,11 +151,11 @@ try {
                 }
 
                 Database::commit();
-                echo json_encode(['success' => true, 'sale_id' => $saleId, 'message' => 'Sale created successfully']);
+                Response::json(['success' => true, 'sale_id' => $saleId, 'message' => 'Sale created successfully']);
 
             } catch (Exception $e) {
                 Database::rollBack();
-                echo json_encode(['error' => 'Failed to create sale: ' . $e->getMessage()]);
+                Response::json(['error' => 'Failed to create sale: ' . $e->getMessage()]);
             }
             break;
 
@@ -175,7 +174,7 @@ try {
             $items = $input['items'] ?? [];
 
             if (!$saleId || !$name || !$discountPercentage || !$startDate || !$endDate) {
-                echo json_encode(['error' => 'Missing required fields']);
+                Response::json(['error' => 'Missing required fields']);
                 break;
             }
 
@@ -201,11 +200,11 @@ try {
                 }
 
                 Database::commit();
-                echo json_encode(['success' => true, 'message' => 'Sale updated successfully']);
+                Response::json(['success' => true, 'message' => 'Sale updated successfully']);
 
             } catch (Exception $e) {
                 Database::rollBack();
-                echo json_encode(['error' => 'Failed to update sale: ' . $e->getMessage()]);
+                Response::json(['error' => 'Failed to update sale: ' . $e->getMessage()]);
             }
             break;
 
@@ -221,9 +220,9 @@ try {
             $result = Database::execute("DELETE FROM sales WHERE id = ?", [$saleId]);
 
             if ($result) {
-                echo json_encode(['success' => true, 'message' => 'Sale deleted successfully']);
+                Response::json(['success' => true, 'message' => 'Sale deleted successfully']);
             } else {
-                echo json_encode(['error' => 'Failed to delete sale']);
+                Response::json(['error' => 'Failed to delete sale']);
             }
             break;
 
@@ -250,7 +249,7 @@ try {
             );
 
             http_response_code(200);
-            echo json_encode(['success' => true, 'sale' => $activeSale ?: null]);
+            Response::json(['success' => true, 'sale' => $activeSale ?: null]);
             exit;
 
         case 'get_all_items':
@@ -259,7 +258,7 @@ try {
             // Get all items for sale assignment
             $items = Database::queryAll("SELECT sku, name, retailPrice FROM items ORDER BY name");
 
-            echo json_encode(['success' => true, 'items' => $items]);
+            Response::json(['success' => true, 'items' => $items]);
             break;
 
         case 'toggle_active':
@@ -274,19 +273,19 @@ try {
             $result = Database::execute("UPDATE sales SET is_active = NOT is_active WHERE id = ?", [$saleId]);
 
             if ($result) {
-                echo json_encode(['success' => true, 'message' => 'Sale status updated']);
+                Response::json(['success' => true, 'message' => 'Sale status updated']);
             } else {
-                echo json_encode(['error' => 'Failed to update sale status']);
+                Response::json(['error' => 'Failed to update sale status']);
             }
             break;
 
         default:
-            echo json_encode(['error' => 'Invalid action']);
+            Response::json(['error' => 'Invalid action']);
             break;
     }
 
 } catch (PDOException $e) {
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    Response::json(['error' => 'Database error: ' . $e->getMessage()]);
     exit();
 }
 ?> 

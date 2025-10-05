@@ -59,7 +59,12 @@ if (!empty($categories)) {
 }
 ?>
 
-<section id="shopPage" class="page-content">
+<section id="shopPage" class="page-content" data-shop-fixed-padding="1">
+    <style>
+        /* Temporary fixed offset per request */
+        #shopPage { padding-top: 160px !important; }
+        #shopPage .shop-content-area { padding-top: 0; margin-top: 0; }
+    </style>
 
     <!-- Fixed Navigation Area - Stays at top, doesn't scroll -->
     <div class="shop-navigation-area">
@@ -99,8 +104,11 @@ if (!empty($categories)) {
     </div>
     </div> <!-- End shop-navigation-area -->
 
+    <!-- Spacer that matches the navigation bar height to push content below it (must be OUTSIDE fixed container) -->
+    <div id="shopNavSpacer" class="shop-nav-spacer" aria-hidden="true" style="height:0"></div>
+
     <!-- Scrollable Content Area - Only this area scrolls -->
-    <div class="shop-content-area">
+    <div class="shop-content-area" style="margin-top:160px !important; padding-top:0 !important;">
         <!-- Products Grid - CSS Grid Layout for Equal Heights -->
     <div id="productsGrid">
         <?php
@@ -142,7 +150,7 @@ foreach ($categories as $slug => $catData):
         // Simple formatting
         $formattedPrice = '$' . number_format((float)$price, 2);
         ?>
-        <div class="product-card" data-category="<?php echo htmlspecialchars($slug); ?>" data-sku="<?php echo $sku; ?>" data-name="<?php echo $productName; ?>" data-price="<?php echo $price; ?>">
+        <div class="product-card<?php echo ($stock <= 0 ? ' is-out-of-stock' : ''); ?>" data-category="<?php echo htmlspecialchars($slug); ?>" data-sku="<?php echo $sku; ?>" data-name="<?php echo $productName; ?>" data-price="<?php echo $price; ?>" data-stock="<?php echo $stock; ?>">
             <!-- Product Image -->
             <div class="product-image-container">
                 <div class="product-image-container" id="image-container-<?php echo $sku; ?>">
@@ -152,6 +160,9 @@ foreach ($categories as $slug => $catData):
                              class="product-image">
                     <?php else: ?>
                         <span class="no-image-placeholder">📷 No Image</span>
+                    <?php endif; ?>
+                    <?php if ($stock <= 0): ?>
+                        <div class="product-badge product-badge--oos">Out of Stock</div>
                     <?php endif; ?>
                 </div>
             </div>
@@ -209,6 +220,97 @@ endforeach;
 ?>
     </div>
     </div> <!-- End shop-content-area -->
+    <script>
+    (function(){
+        function rectBottom(el){
+            try { return (el && el.getBoundingClientRect) ? Math.max(0, Math.round(el.getBoundingClientRect().bottom)) : 0; } catch(_) { return 0; }
+        }
+        function cssPx(val){
+            if (!val) return 0;
+            var n = parseFloat(String(val).replace('px','').trim());
+            return Number.isFinite(n) ? n : 0;
+        }
+        function topChromeBottom(){
+            var maxBottom = 0;
+            try {
+                var all = document.body ? document.body.getElementsByTagName('*') : [];
+                for (var i = 0; i < all.length; i++) {
+                    var el = all[i];
+                    // Skip invisible / zero-size nodes
+                    var rect = (el && el.getBoundingClientRect) ? el.getBoundingClientRect() : null;
+                    if (!rect || rect.height === 0 || rect.width === 0) continue;
+                    var cs = getComputedStyle(el);
+                    if (!cs) continue;
+                    var pos = cs.position;
+                    if (pos !== 'fixed' && pos !== 'sticky') continue;
+                    // Elements anchored to the top (<= 4px to account for subpixel)
+                    var top = rect.top;
+                    if (top > 4) continue;
+                    var bottom = Math.max(0, Math.round(rect.bottom));
+                    if (bottom > maxBottom) maxBottom = bottom;
+                }
+            } catch(_) {}
+            return maxBottom;
+        }
+        var __wfShopLast = { chrome: -1, nav: -1 };
+        var __wfShopStabilizeUntil = 0;
+        function applyIfChanged(chrome, navH){
+            var changed = (chrome !== __wfShopLast.chrome) || (navH !== __wfShopLast.nav);
+            if (!changed) return false;
+            __wfShopLast.chrome = chrome; __wfShopLast.nav = navH;
+            document.documentElement.style.setProperty('--shop-chrome-height', chrome + 'px');
+            document.documentElement.style.setProperty('--shop-nav-height', navH + 'px');
+            // Section padding = header + filter height so cards start exactly below filters
+            var total = (chrome|0) + (navH|0);
+            var section = document.getElementById('shopPage'); if (section) section.style.paddingTop = total + 'px';
+            // Neutralize spacer/margins to avoid double offsets
+            var spacer = document.getElementById('shopNavSpacer'); if (spacer) spacer.style.height = '0px';
+            var content = document.querySelector('#shopPage .shop-content-area'); if (content) { content.style.marginTop = '0px'; content.style.paddingTop = '0px'; }
+            return true;
+        }
+        function setShopNavHeight(){
+            try {
+                var sec = document.getElementById('shopPage');
+                if (sec && sec.getAttribute('data-shop-fixed-padding') === '1') return; // honor fixed padding
+                var nav = document.querySelector('#shopPage .navigation-bar');
+                if (!nav) return;
+                // Header height = actual header element height (preferred), fallback to CSS var/body padding
+                var headerEl = document.querySelector('.site-header, .universal-page-header, header.site-header, header.universal-page-header, .header-content, header .header-content');
+                var headerH = 0;
+                if (headerEl && headerEl.getBoundingClientRect) headerH = Math.max(0, Math.round(headerEl.getBoundingClientRect().height));
+                if (!headerH) headerH = cssPx(getComputedStyle(document.documentElement).getPropertyValue('--wf-header-height'));
+                if (!headerH) headerH = cssPx(getComputedStyle(document.body).paddingTop);
+
+                // Filter/navigation height
+                var navH = nav.offsetHeight || 0;
+                if (navH <= 0 && nav.getBoundingClientRect) navH = Math.round(nav.getBoundingClientRect().height) || 0;
+                if (navH <= 0) navH = 96; // sensible fallback
+
+                // Apply exactly: section padding = header height; content padding = nav height
+                applyIfChanged(headerH, navH);
+            } catch(e) { /* no-op */ }
+        }
+        function stabilizeLoop(){
+            if (!__wfShopStabilizeUntil) __wfShopStabilizeUntil = Date.now() + 1800; // run ~1.8s
+            setShopNavHeight();
+            if (Date.now() < __wfShopStabilizeUntil) requestAnimationFrame(stabilizeLoop);
+        }
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(stabilizeLoop, 0);
+        } else {
+            document.addEventListener('DOMContentLoaded', stabilizeLoop);
+        }
+        window.addEventListener('load', setShopNavHeight);
+        window.addEventListener('resize', setShopNavHeight);
+        if (window.ResizeObserver){ try{
+            var ro = new ResizeObserver(setShopNavHeight);
+            var hdr = document.querySelector('.site-header, .universal-page-header'); if (hdr) ro.observe(hdr);
+            var adm = document.querySelector('.admin-tab-navigation'); if (adm) ro.observe(adm);
+            var nav = document.querySelector('#shopPage .navigation-bar'); if (nav) ro.observe(nav);
+        }catch(_){} }
+        try { new MutationObserver(function(){ setShopNavHeight(); }).observe(document.body, { attributes:true, childList:true, subtree:true }); } catch(_) {}
+    })();
+    </script>
 </section>
 
 <?php

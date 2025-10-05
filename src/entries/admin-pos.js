@@ -1,4 +1,7 @@
+// Vite entry: admin-pos.js
 import '../css/admin-pos.css';
-
-// POS admin wrapper entry so vite manifest key is stable
-import '../js/admin-pos.js';
+try {
+  await import('../js/admin-pos.js');
+} catch (e) {
+  console.warn('[Vite] admin-pos.js module not found under src/js. Entry stub loaded.');
+}

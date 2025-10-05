@@ -313,18 +313,5 @@ export class RoomCoordinator {
   }
 }
 
-// Auto-initialize if DOM is ready
-let roomCoordinatorInstance = null;
-
-function initializeRoomCoordinator() {
-  if (!roomCoordinatorInstance) {
-    roomCoordinatorInstance = new RoomCoordinator();
-    roomCoordinatorInstance.init();
-  }
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeRoomCoordinator, { once: true });
-} else {
-  initializeRoomCoordinator();
-}
+// Auto-initialization removed; app.js is responsible for creating and initializing
+// a single RoomCoordinator instance and exposing it as window.RoomCoordinator.

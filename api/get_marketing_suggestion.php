@@ -1,8 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -20,16 +19,12 @@ if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsi
 }
 
 if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+    Response::forbidden('Admin access required');
 }
 
 // Check if SKU parameter is provided
 if (!isset($_GET['sku']) || empty($_GET['sku'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'SKU parameter is required.']);
-    exit;
+    Response::error('SKU parameter is required.', null, 400);
 }
 
 $sku = trim($_GET['sku']);
@@ -65,13 +60,13 @@ try {
             }
         }
 
-        echo json_encode([
+        Response::json([
             'success' => true,
             'exists' => true,
             'suggestion' => $suggestion
         ]);
     } else {
-        echo json_encode([
+        Response::json([
             'success' => true,
             'exists' => false,
             'message' => 'No marketing suggestion found for this SKU.'
@@ -80,11 +75,9 @@ try {
 
 } catch (PDOException $e) {
     error_log("Database error in get_marketing_suggestion.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error occurred.']);
+    Response::serverError('Database error occurred.');
 } catch (Exception $e) {
     error_log("Error in get_marketing_suggestion.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
-?> 
+?>

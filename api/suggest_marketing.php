@@ -1,12 +1,9 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/ai_providers.php';
 require_once __DIR__ . '/marketing_helper.php';
-
-// Suppress all output before JSON header
-ob_start();
-header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -26,18 +23,14 @@ $userData = getCurrentUser();
 
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Invalid request method. Only POST is allowed.']);
-    exit;
+    Response::methodNotAllowed();
 }
 
 // Get and validate input data
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Invalid JSON input.']);
-    exit;
+    Response::error('Invalid JSON input.', 400);
 }
 
 // Extract required fields
@@ -62,9 +55,7 @@ error_log("Marketing API Request ID: $requestId - Timestamp: $timestamp");
 $useImages = $input['useImages'] ?? false;
 
 if (empty($name)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Item name is required for marketing suggestion.']);
-    exit;
+    Response::error('Item name is required for marketing suggestion.', 400);
 }
 
 try {
@@ -205,36 +196,26 @@ try {
         error_log("Local fallback completed for Request ID: $requestId");
     }
 
-    // Clear any buffered output and send clean JSON (after AI try/catch completes)
-    ob_clean();
-    echo json_encode([
+    // Respond preserving original top-level shape
+    Response::json([
         'success' => true,
         'title' => $marketingData['title'],
         'description' => $marketingData['description'],
         'keywords' => $marketingData['keywords'],
         'targetAudience' => $marketingData['target_audience'],
-        'imageAnalysis' => $imageAnalysisData, // New field for image analysis
+        'imageAnalysis' => $imageAnalysisData,
         'marketingIntelligence' => [
-            // Target Audience data
             'demographic_targeting' => $marketingData['demographic_targeting'],
             'psychographic_profile' => $marketingData['psychographic_profile'],
-
-            // SEO & Keywords data
             'seo_keywords' => $marketingData['seo_keywords'],
             'search_intent' => $marketingData['search_intent'],
             'seasonal_relevance' => $marketingData['seasonal_relevance'],
-
-            // Selling Points data
             'selling_points' => $marketingData['selling_points'],
             'competitive_advantages' => $marketingData['competitive_advantages'],
             'customer_benefits' => $marketingData['customer_benefits'],
-
-            // Conversion data
             'call_to_action_suggestions' => $marketingData['call_to_action_suggestions'],
             'urgency_factors' => $marketingData['urgency_factors'],
             'conversion_triggers' => $marketingData['conversion_triggers'],
-
-            // Legacy fields for compatibility
             'emotional_triggers' => $marketingData['emotional_triggers'],
             'marketing_channels' => $marketingData['marketing_channels']
         ],
@@ -244,9 +225,7 @@ try {
 
 } catch (Exception $e) {
     error_log("Error in suggest_marketing.php: " . $e->getMessage());
-    http_response_code(500);
-    ob_clean();
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
 
 function generateMarketingIntelligence($name, $description, $category, $pdo, $preferredBrandVoice = '', $preferredContentTone = '', $existingMarketingData = null)

@@ -2,29 +2,20 @@
 
 // Include the configuration file
 require_once __DIR__ . '/config.php';
-
-// Set CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+require_once __DIR__ . '/../includes/response.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 
 try {
     // Get POST data
-    $data = json_decode(file_get_contents('php://input'), true);
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true);
+    if (!is_array($data)) {
+        Response::error('Invalid JSON', null, 400);
+    }
 
     // Create database connection using config
     try {
@@ -43,30 +34,29 @@ try {
         // Validate field
         $allowedFields = ['name', 'category', 'stockLevel', 'reorderPoint', 'costPrice', 'retailPrice', 'description'];
         if (!in_array($field, $allowedFields)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid field']);
-            exit;
+            Response::error('Invalid field', null, 400);
         }
 
         // Update the field
-        $result = Database::execute("UPDATE items SET `$field` = ? WHERE sku = ?", [$value, $sku]);
+        $affected = Database::execute("UPDATE items SET `$field` = ? WHERE sku = ?", [$value, $sku]);
 
-        if ($result) {
-            echo json_encode([
-                'success' => true,
-                'message' => ucfirst($field) . ' updated successfully'
-            ]);
+        if ($affected > 0) {
+            Response::updated();
         } else {
-            throw new Exception('Failed to update ' . $field);
+            // No rows affected: either no change needed or item missing
+            $exists = Database::queryOne("SELECT sku FROM items WHERE sku = ?", [$sku]);
+            if ($exists) {
+                Response::noChanges();
+            } else {
+                Response::notFound('Item not found');
+            }
         }
     } else {
         // Handle full item updates
         $requiredFields = ['sku', 'name'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || $data[$field] === '') {
-                http_response_code(400);
-                echo json_encode(['error' => ucfirst($field) . ' is required']);
-                exit;
+                Response::error(ucfirst($field) . ' is required', null, 400);
             }
         }
 
@@ -79,29 +69,24 @@ try {
         $retailPrice = floatval($data['retailPrice'] ?? 0);
         $description = $data['description'] ?? '';
 
-        // Update the item
-        $result = Database::execute('UPDATE items SET name = ?, category = ?, stockLevel = ?, reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ? WHERE sku = ?', [$name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description, $sku]);
+        // Update the item (full update)
+        $affected = Database::execute('UPDATE items SET name = ?, category = ?, stockLevel = ?, reorderPoint = ?, costPrice = ?, retailPrice = ?, description = ? WHERE sku = ?', [$name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description, $sku]);
 
-        if ($result) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Item updated successfully'
-            ]);
+        if ($affected > 0) {
+            Response::updated();
         } else {
-            throw new Exception('Failed to update item');
+            // No-op update or item missing
+            $exists = Database::queryOne('SELECT sku FROM items WHERE sku = ?', [$sku]);
+            if ($exists) {
+                Response::noChanges();
+            } else {
+                Response::notFound('Item not found');
+            }
         }
     }
 
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'Database connection failed',
-        'details' => $e->getMessage()
-    ]);
+    Response::serverError('Database connection failed', $e->getMessage());
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'An unexpected error occurred',
-        'details' => $e->getMessage()
-    ]);
+    Response::serverError('An unexpected error occurred', $e->getMessage());
 }

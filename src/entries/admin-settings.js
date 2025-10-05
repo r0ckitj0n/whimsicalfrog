@@ -1,8 +1,6 @@
-// Vite entry for Admin Settings UI - Lightweight Version
-// This is the new lightweight entry point that replaces the large admin-settings.js
-
-// Import the lightweight admin settings coordinator
-import '../modules/admin-settings-lightweight.js';
-
-// The heavy legacy functionality is now loaded on-demand
-// This dramatically improves initial load performance
+// Vite entry: admin-settings.js
+try {
+  await import('../js/admin-settings.js');
+} catch (e) {
+  console.warn('[Vite] admin-settings.js module not found under src/js. Entry stub loaded.');
+}

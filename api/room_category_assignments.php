@@ -1,9 +1,5 @@
 <?php
 // Room-Category assignment management API
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
@@ -11,14 +7,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Include database configuration
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Authentication check
 require_once dirname(__DIR__) . '/includes/auth.php';
 
 if (!isLoggedIn()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Access denied. Please log in.']);
-    exit;
+    Response::forbidden('Access denied. Please log in.');
 }
 
 try {
@@ -29,9 +24,7 @@ try {
         throw $e;
     }
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]);
-    exit;
+    Response::serverError('Database connection failed: ' . $e->getMessage());
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -51,8 +44,7 @@ switch ($method) {
         handleDelete(Database::getInstance(), $input);
         break;
     default:
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        Response::methodNotAllowed('Method not allowed');
         break;
 }
 function handleGet($pdo)
@@ -70,25 +62,24 @@ function handleGet($pdo)
             getRoomAssignments($pdo);
             break;
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            Response::error('Invalid action', null, 400);
             break;
     }
+
 }
 
 function getAllAssignments($pdo)
 {
     try {
         $assignments = Database::queryAll(
-            "SELECT rca.*, c.name as category_name, c.description as category_description
-             FROM room_category_assignments rca 
-             JOIN categories c ON rca.category_id = c.id 
-             ORDER BY rca.room_number, rca.display_order"
+             "SELECT rca.*, c.name as category_name, c.description as category_description
+              FROM room_category_assignments rca 
+              JOIN categories c ON rca.category_id = c.id 
+              ORDER BY rca.room_number, rca.display_order"
         );
-        echo json_encode(['success' => true, 'assignments' => $assignments]);
+        Response::success(['assignments' => $assignments]);
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -107,10 +98,9 @@ function getSummary($pdo)
              GROUP BY rca.room_number, rca.room_name
              ORDER BY rca.room_number"
         );
-        echo json_encode(['success' => true, 'summary' => $summary]);
+        Response::success(['summary' => $summary]);
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -119,8 +109,7 @@ function getRoomAssignments($pdo)
     $roomNumber = $_GET['room_number'] ?? null;
 
     if ($roomNumber === null) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Room number is required']);
+        Response::error('Room number is required', null, 400);
         return;
     }
 
@@ -133,10 +122,9 @@ function getRoomAssignments($pdo)
              ORDER BY rca.display_order",
             [$roomNumber]
         );
-        echo json_encode(['success' => true, 'assignments' => $assignments]);
+        Response::success(['assignments' => $assignments]);
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -158,8 +146,7 @@ function handlePost($pdo, $input)
             updateSingleOrder($pdo, $input);
             break;
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            Response::error('Invalid action', null, 400);
             break;
     }
 }
@@ -178,8 +165,7 @@ function addAssignment($pdo, $input)
     $displayOrder = $input['display_order'] ?? 0;
 
     if ($roomNumber === null || $categoryId === null) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Room number and category ID are required']);
+        Response::error('Room number and category ID are required', null, 400);
         return;
     }
 
@@ -188,7 +174,7 @@ function addAssignment($pdo, $input)
         $exists = Database::queryOne("SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ?", [$roomNumber, $categoryId]);
 
         if ($exists) {
-            echo json_encode(['success' => false, 'message' => 'This room-category assignment already exists']);
+            Response::error('This room-category assignment already exists', null, 400);
             return;
         }
 
@@ -205,13 +191,12 @@ function addAssignment($pdo, $input)
 
         if ($rows > 0) {
             $assignmentId = Database::lastInsertId();
-            echo json_encode(['success' => true, 'message' => 'Room-category assignment added successfully', 'id' => $assignmentId]);
+            Response::success(['message' => 'Room-category assignment added successfully', 'id' => $assignmentId]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to add assignment']);
+            Response::error('Failed to add assignment');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -237,15 +222,14 @@ function setPrimary($pdo, $input)
 
         if ($affected > 0) {
             Database::commit();
-            echo json_encode(['success' => true, 'message' => 'Primary category updated successfully']);
+            Response::updated(['message' => 'Primary category updated successfully']);
         } else {
             Database::rollBack();
-            echo json_encode(['success' => false, 'message' => 'Assignment not found']);
+            Response::notFound('Assignment not found');
         }
     } catch (PDOException $e) {
         Database::rollBack();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -254,8 +238,7 @@ function updateOrder($pdo, $input)
     $assignments = $input['assignments'] ?? [];
 
     if (empty($assignments)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Assignments array is required']);
+        Response::error('Assignments array is required', null, 400);
         return;
     }
 
@@ -267,11 +250,10 @@ function updateOrder($pdo, $input)
         }
 
         Database::commit();
-        echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
+        Response::updated(['message' => 'Display order updated successfully']);
     } catch (PDOException $e) {
         Database::rollBack();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -281,8 +263,7 @@ function updateSingleOrder($pdo, $input)
     $displayOrder = $input['display_order'] ?? null;
 
     if ($assignmentId === null || $displayOrder === null) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Assignment ID and display order are required']);
+        Response::error('Assignment ID and display order are required', null, 400);
         return;
     }
 
@@ -290,13 +271,12 @@ function updateSingleOrder($pdo, $input)
         $result = Database::execute("UPDATE room_category_assignments SET display_order = ? WHERE id = ?", [$displayOrder, $assignmentId]);
 
         if ($result > 0) {
-            echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
+            Response::updated(['message' => 'Display order updated successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Assignment not found']);
+            Response::notFound('Assignment not found');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -307,8 +287,7 @@ function handleDelete($pdo, $input)
     $categoryId = $input['category_id'] ?? null;
 
     if ($assignmentId === null && ($roomNumber === null || $categoryId === null)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Assignment ID or room number and category ID are required']);
+        Response::error('Assignment ID or room number and category ID are required', null, 400);
         return;
     }
 
@@ -320,13 +299,12 @@ function handleDelete($pdo, $input)
         }
 
         if ($result > 0) {
-            echo json_encode(['success' => true, 'message' => 'Room-category assignment deleted successfully']);
+            Response::success(['message' => 'Room-category assignment deleted successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Assignment not found']);
+            Response::notFound('Assignment not found');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 ?> 

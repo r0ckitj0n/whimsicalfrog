@@ -1,15 +1,22 @@
 <?php
 
 header('Content-Type: application/json');
-require_once '../includes/functions.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Check admin authentication
-AuthHelper::requireAdmin();
+try {
+    AuthHelper::requireAdmin(403, 'Admin access required');
+} catch (Throwable $e) {
+    Response::json(['success' => false, 'error' => 'Admin access required'], 403);
+    exit;
+}
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 try {
-    Database::getInstance();
+    $pdo = Database::getInstance();
 
     switch ($action) {
         case 'list_logs':
@@ -54,12 +61,10 @@ try {
             }
             break;
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid action']);
+            Response::error('Invalid action', null, 400);
     }
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Server error: ' . $e->getMessage()]);
+    Response::serverError('Server error: ' . $e->getMessage());
 }
 
 function listAvailableLogs($pdo)

@@ -37,6 +37,19 @@ try {
     } catch (Exception $e) {
         // Column already exists, skip
     }
+    // Ensure icons_white_background column exists (controls white panels behind room icons)
+    try {
+        Database::execute("ALTER TABLE room_settings ADD COLUMN icons_white_background TINYINT(1) NOT NULL DEFAULT 1");
+    } catch (Exception $e) {
+        // Column already exists, skip
+    }
+
+    // Set initial preference: turn off white icon backgrounds for room 1
+    try {
+        Database::execute("UPDATE room_settings SET icons_white_background = 0 WHERE room_number = '1'");
+    } catch (Exception $e) {
+        // Ignore failures silently
+    }
 
     // Insert default room settings
     $defaultRooms = [

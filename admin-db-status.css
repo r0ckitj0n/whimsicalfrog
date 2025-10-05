@@ -1,0 +1,23 @@
+/* Styles for Admin DB Status API Smoke Test card */
+
+/* Utility */
+.is-hidden { display: none !important; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+
+/* Subtle note text within headings */
+.subtle-note {
+  font-weight: normal;
+  opacity: 0.8;
+}
+
+/* Raw JSON output area */
+.json-output {
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow: auto;
+  background: #0b1020;
+  color: #e6edf3;
+  padding: 8px;
+  border-radius: 6px;
+}

@@ -283,7 +283,8 @@ const POSModule = {
             const result = await response.json();
 
             if (result.success) {
-                this.showReceiptModal({ ...orderData, orderId: result.orderId, cashReceived, changeAmount, timestamp: new Date() });
+                // Open the canonical receipt page so POS uses the same template as checkout/admin
+                this.openReceiptPage(result.orderId);
             } else {
                 throw new Error(result.error || 'Checkout failed');
             }
@@ -293,23 +294,13 @@ const POSModule = {
         }
     },
 
-    showReceiptModal(saleData) {
-        this.lastSaleData = saleData;
-        this.hidePOSModal();
-        const receiptContent = this.generateReceiptContent(saleData);
-        const modalHTML = `
-            <div class="pos-modal-content pos-modal-small">
-                <div class="pos-modal-header pos-modal-header-success">
-                    <h3 class="pos-modal-title">🧾 Transaction Complete</h3>
-                </div>
-                <div class="pos-modal-body pos-modal-body-scroll">${receiptContent}</div>
-                <div class="pos-modal-footer">
-                    <button class="btn btn-secondary" data-action="print-receipt">🖨️ Print Receipt</button>
-                    <button class="btn btn-secondary" data-action="email-receipt">📧 Email Receipt</button>
-                    <button class="btn btn-primary" data-action="finish-sale">✅ Finish Sale</button>
-                </div>
-            </div>`;
-        this.showPOSModal('', modalHTML, 'custom');
+    openReceiptPage(orderId) {
+        try {
+            this.hidePOSModal();
+        } catch(_) {}
+        this.lastSaleData = { orderId };
+        const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
+        try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
     },
 
     generateReceiptContent(saleData) {
@@ -346,13 +337,10 @@ const POSModule = {
     },
 
     printReceipt() {
-        const receiptContent = this.generateReceiptContent(this.lastSaleData);
-        const printWindow = window.open('', 'PRINT', 'height=600,width=800');
-        printWindow.document.write(`<html><head><title>Receipt</title></head><body>${receiptContent}</body></html>`);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
+        const id = this.lastSaleData && this.lastSaleData.orderId ? String(this.lastSaleData.orderId) : '';
+        if (!id) return;
+        const url = `/receipt?orderId=${encodeURIComponent(id)}&bare=1`;
+        try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
     },
 
     async emailReceipt(orderId) {

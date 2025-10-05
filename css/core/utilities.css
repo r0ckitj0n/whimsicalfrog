@@ -738,7 +738,7 @@ span, div, p, h1, h2, h3, h4, h5, h6, td, th, li, a, button, input, textarea, la
 
 .u-background-linear-gradient-135deg-10b981-3b82f6 { background: linear-gradient(135deg, #10b981, #3b82f6); }
 .u-background-linear-gradient-to-right-3b82f6-1d4ed8 { background: linear-gradient(to right, #3b82f6, #1d4ed8); }
-.u-background-linear-gradient-to-right-87ac3a-6b8e23 { background: linear-gradient(to right, #87ac3a, #6b8e23); }
+.u-background-linear-gradient-to-right-87ac3a-6b8e23 { background: linear-gradient(to right, #87ac3a, var(--brand-secondary, #BF5700)); }
 .u-background-rgba-0-0-0-0-5 { background: rgb(0 0 0 / 50%); }
 .u-background-white { background: white; }
 .u-background-f8f9fa { background:#f8f9fa; }

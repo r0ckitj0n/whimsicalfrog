@@ -33,7 +33,8 @@ function getPrimaryImageBySku($sku)
 
         if ($primaryImage) {
             // Add file existence check
-            $primaryImage['file_exists'] = file_exists($primaryImage['image_path']);
+            $fullPath = __DIR__ . '/../' . ltrim($primaryImage['image_path'], '/');
+            $primaryImage['file_exists'] = file_exists($fullPath);
             return $primaryImage;
         }
 
@@ -42,7 +43,8 @@ function getPrimaryImageBySku($sku)
 
         if ($image) {
             // Add file existence check
-            $image['file_exists'] = file_exists($image['image_path']);
+            $fullPath = __DIR__ . '/../' . ltrim($image['image_path'], '/');
+            $image['file_exists'] = file_exists($fullPath);
             return $image;
         }
 
@@ -137,13 +139,6 @@ function getImageUrlWithFallback($imagePath, $sku = null)
  */
 function getItemImages($sku, $pdo = null)
 {
-    if (!$pdo) {
-        $pdo = getDbConnection();
-    }
-    if (!$pdo) {
-        return [];
-    }
-
     try {
         // Check if item_images table exists
         $tables = Database::queryAll("SHOW TABLES LIKE 'item_images'");
@@ -177,7 +172,7 @@ function getItemImages($sku, $pdo = null)
             $image['sort_order'] = (int)$image['sort_order'];
 
             // Check if file exists
-            $fullPath = __DIR__ . '/../' . $image['image_path'];
+            $fullPath = __DIR__ . '/../' . ltrim($image['image_path'], '/');
             $image['file_exists'] = file_exists($fullPath);
         }
 

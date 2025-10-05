@@ -38,7 +38,8 @@ function vite(string $entry): string
     // Vite manifest location: use dist/.vite/manifest.json (authoritative in production for us)
     $manifestPath = __DIR__ . '/../dist/.vite/manifest.json';
     $hotPath = __DIR__ . '/../hot';
-    $forceDev = (getenv('WF_VITE_DEV') === '1') || (defined('VITE_FORCE_DEV') && VITE_FORCE_DEV === true);
+    // Default to production unless explicitly requested via ?vite=dev or cookie
+    $forceDev = false;
 
     // Allow disabling dev/HMR even if a hot file exists, to avoid periodic auto-reloads in flaky dev envs.
     // Priority: explicit query param (?vite=prod|dev) with cookie persistence > env WF_VITE_DISABLE_DEV
@@ -48,15 +49,13 @@ function vite(string $entry): string
         @setcookie('wf_vite_mode', $requestedMode, [ 'expires' => time() + 60 * 60 * 24 * 30, 'path' => '/', 'httponly' => false, 'samesite' => 'Lax' ]);
     }
     $cookieMode = isset($_COOKIE['wf_vite_mode']) ? strtolower((string)$_COOKIE['wf_vite_mode']) : '';
+    $explicitDev = ($requestedMode === 'dev') || ($cookieMode === 'dev');
     $disableDevByEnv = getenv('WF_VITE_DISABLE_DEV') === '1';
     $disableDevByFlag = file_exists(__DIR__ . '/../.disable-vite-dev');
-    // Prefer dev when hot server is available. Only explicit query param, env, or flag disables dev.
-    $devDisabled = ($requestedMode === 'prod') || $disableDevByEnv || $disableDevByFlag;
-    // Allow explicit dev request (query or cookie) to force dev resolution path later
-    if ($requestedMode === 'dev' || $cookieMode === 'dev') {
-        if (!defined('VITE_FORCE_DEV')) {
-            define('VITE_FORCE_DEV', true);
-        }
+    // New default: dev is disabled unless explicitly requested
+    $devDisabled = !$explicitDev || $disableDevByEnv || $disableDevByFlag;
+    if ($explicitDev && !defined('VITE_FORCE_DEV')) {
+        define('VITE_FORCE_DEV', true);
     }
     // Determine Vite dev server origin. Priority: WF_VITE_ORIGIN env > hot file > default
     $viteOrigin = getenv('WF_VITE_ORIGIN');
@@ -71,12 +70,15 @@ function vite(string $entry): string
     // This only rewrites host; scheme/port/path are preserved.
     try {
         $parts = @parse_url($viteOrigin);
-        if (is_array($parts) && isset($parts['host']) && $parts['host'] === '127.0.0.1') {
-            $scheme = $parts['scheme'] ?? 'http';
-            $host = 'localhost';
-            $port = isset($parts['port']) ? (':' . $parts['port']) : '';
-            $path = $parts['path'] ?? '';
-            $viteOrigin = $scheme . '://' . $host . $port . $path;
+        if (is_array($parts) && isset($parts['host'])) {
+            $hostIn = $parts['host'];
+            if ($hostIn === '127.0.0.1' || $hostIn === '0.0.0.0') {
+                $scheme = $parts['scheme'] ?? 'http';
+                $host = 'localhost';
+                $port = isset($parts['port']) ? (':' . $parts['port']) : '';
+                $path = $parts['path'] ?? '';
+                $viteOrigin = $scheme . '://' . $host . $port . $path;
+            }
         }
     } catch (Throwable $e) {
         // ignore normalization errors
@@ -104,7 +106,7 @@ function vite(string $entry): string
     }
     $bootScript = "<script>window.__WF_BACKEND_ORIGIN = '" . addslashes(rtrim($backendOrigin, '/')) . "';</script>\n";
 
-    // If a hot file exists, try dev server. Probe @vite/client to avoid emitting dev tags on live accidentally.
+    // Only try dev server when explicitly requested
     if (!$devDisabled && file_exists($hotPath)) {
         $origin = rtrim($viteOrigin, '/');
         $probeOk = $probe_dev($origin);
@@ -143,7 +145,7 @@ function vite(string $entry): string
     }
 
     // If explicitly forcing dev, try dev server first regardless of manifest (do NOT require hot file)
-    if (!$devDisabled && $forceDev) {
+    if (!$devDisabled && (defined('VITE_FORCE_DEV') && VITE_FORCE_DEV === true)) {
         $origin = rtrim($viteOrigin, '/');
         $probeOk = $probe_dev($origin, 0.75);
         if (!$probeOk) {

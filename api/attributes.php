@@ -126,6 +126,7 @@ try {
                 Response::validationError('Value required');
             }
             $db = Database::getInstance();
+            $changed = 0;
             if ($type === 'gender' && table_exists($db, 'global_genders')) {
                 $hasOrder = has_column($db, 'global_genders', 'display_order');
                 $hasActive = has_column($db, 'global_genders', 'is_active');
@@ -138,7 +139,7 @@ try {
                 $params = [$value];
                 if ($hasOrder) {
                     $params[] = $next;
-                } Database::execute($sql, $params);
+                } $changed += (int)Database::execute($sql, $params);
             } elseif ($type === 'size' && table_exists($db, 'global_sizes')) {
                 $hasOrder = has_column($db, 'global_sizes', 'display_order');
                 $hasActive = has_column($db, 'global_sizes', 'is_active');
@@ -152,7 +153,7 @@ try {
                 $params = [$value, $code];
                 if ($hasOrder) {
                     $params[] = $next;
-                } Database::execute($sql, $params);
+                } $changed += (int)Database::execute($sql, $params);
             } elseif ($type === 'color' && table_exists($db, 'global_colors')) {
                 $hasOrder = has_column($db, 'global_colors', 'display_order');
                 $hasActive = has_column($db, 'global_colors', 'is_active');
@@ -165,18 +166,18 @@ try {
                 $params = [$value];
                 if ($hasOrder) {
                     $params[] = $next;
-                } Database::execute($sql, $params);
+                } $changed += (int)Database::execute($sql, $params);
             } else {
                 ensure_attributes_table($db);
                 $row = Database::queryOne('SELECT COALESCE(MAX(sort_order), -1) + 1 AS next_sort FROM attribute_values WHERE type = ?', [$type]);
                 $next = (int)($row['next_sort'] ?? 0);
                 $stmt = $db->prepare('INSERT INTO attribute_values (type, value, sort_order) VALUES (?, ?, ?)');
                 try {
-                    $stmt->execute([$type, $value, $next]);
+                    $stmt->execute([$type, $value, $next]); $changed += (int)$stmt->rowCount();
                 } catch (Throwable $e) {
                 }
             }
-            Response::success(['type' => $type, 'value' => $value], 'Attribute added');
+            if ($changed > 0) { Response::updated(['type' => $type, 'value' => $value]); } else { Response::noChanges(['type' => $type, 'value' => $value]); }
             break; }
 
         case 'rename': {
@@ -222,29 +223,30 @@ try {
                 Response::validationError('Value required');
             }
             $db = Database::getInstance();
+            $changed = 0;
             if ($type === 'gender' && table_exists($db, 'global_genders')) {
                 if (has_column($db, 'global_genders', 'is_active')) {
-                    Database::execute('UPDATE global_genders SET is_active = 0 WHERE gender_name = ?', [$value]);
+                    $changed += (int)Database::execute('UPDATE global_genders SET is_active = 0 WHERE gender_name = ?', [$value]);
                 } else {
-                    Database::execute('DELETE FROM global_genders WHERE gender_name = ?', [$value]);
+                    $changed += (int)Database::execute('DELETE FROM global_genders WHERE gender_name = ?', [$value]);
                 }
             } elseif ($type === 'size' && table_exists($db, 'global_sizes')) {
                 if (has_column($db, 'global_sizes', 'is_active')) {
-                    Database::execute('UPDATE global_sizes SET is_active = 0 WHERE size_name = ? OR size_code = ?', [$value, $value]);
+                    $changed += (int)Database::execute('UPDATE global_sizes SET is_active = 0 WHERE size_name = ? OR size_code = ?', [$value, $value]);
                 } else {
-                    Database::execute('DELETE FROM global_sizes WHERE size_name = ? OR size_code = ?', [$value, $value]);
+                    $changed += (int)Database::execute('DELETE FROM global_sizes WHERE size_name = ? OR size_code = ?', [$value, $value]);
                 }
             } elseif ($type === 'color' && table_exists($db, 'global_colors')) {
                 if (has_column($db, 'global_colors', 'is_active')) {
-                    Database::execute('UPDATE global_colors SET is_active = 0 WHERE color_name = ?', [$value]);
+                    $changed += (int)Database::execute('UPDATE global_colors SET is_active = 0 WHERE color_name = ?', [$value]);
                 } else {
-                    Database::execute('DELETE FROM global_colors WHERE color_name = ?', [$value]);
+                    $changed += (int)Database::execute('DELETE FROM global_colors WHERE color_name = ?', [$value]);
                 }
             } else {
                 ensure_attributes_table($db);
-                Database::execute('DELETE FROM attribute_values WHERE type = ? AND value = ?', [$type, $value]);
+                $changed += (int)Database::execute('DELETE FROM attribute_values WHERE type = ? AND value = ?', [$type, $value]);
             }
-            Response::success(['type' => $type, 'value' => $value], 'Attribute deleted');
+            if ($changed > 0) { Response::updated(['type' => $type, 'value' => $value]); } else { Response::noChanges(['type' => $type, 'value' => $value]); }
             break; }
 
         case 'reorder': {
@@ -257,29 +259,30 @@ try {
                 Response::validationError('values must be an array');
             }
             $db = Database::getInstance();
+            $changed = 0;
             if ($type === 'gender' && table_exists($db, 'global_genders') && has_column($db, 'global_genders', 'display_order')) {
                 $stmt = $db->prepare('UPDATE global_genders SET display_order = ? WHERE gender_name = ?');
                 foreach (array_values($values) as $i => $v) {
-                    $stmt->execute([$i, (string)$v]);
+                    $stmt->execute([$i, (string)$v]); $changed += (int)$stmt->rowCount();
                 }
             } elseif ($type === 'size' && table_exists($db, 'global_sizes') && has_column($db, 'global_sizes', 'display_order')) {
                 $stmt = $db->prepare('UPDATE global_sizes SET display_order = ? WHERE size_name = ? OR size_code = ?');
                 foreach (array_values($values) as $i => $v) {
-                    $stmt->execute([$i, (string)$v, (string)$v]);
+                    $stmt->execute([$i, (string)$v, (string)$v]); $changed += (int)$stmt->rowCount();
                 }
             } elseif ($type === 'color' && table_exists($db, 'global_colors') && has_column($db, 'global_colors', 'display_order')) {
                 $stmt = $db->prepare('UPDATE global_colors SET display_order = ? WHERE color_name = ?');
                 foreach (array_values($values) as $i => $v) {
-                    $stmt->execute([$i, (string)$v]);
+                    $stmt->execute([$i, (string)$v]); $changed += (int)$stmt->rowCount();
                 }
             } else {
                 ensure_attributes_table($db);
                 $stmt = $db->prepare('UPDATE attribute_values SET sort_order = ? WHERE type = ? AND value = ?');
                 foreach (array_values($values) as $i => $v) {
-                    $stmt->execute([$i, $type, (string)$v]);
+                    $stmt->execute([$i, $type, (string)$v]); $changed += (int)$stmt->rowCount();
                 }
             }
-            Response::success(['type' => $type, 'values' => array_values($values)], 'Order saved');
+            if ($changed > 0) { Response::updated(['type' => $type, 'values' => array_values($values)]); } else { Response::noChanges(['type' => $type, 'values' => array_values($values)]); }
             break; }
 
         default:

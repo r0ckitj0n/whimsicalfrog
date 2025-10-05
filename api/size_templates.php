@@ -2,6 +2,7 @@
 // Size Templates Management API
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Start session for authentication
 
@@ -100,7 +101,7 @@ try {
                     );
                 }
                 Database::commit();
-                echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template created successfully']);
+                Response::updated(['template_id' => $templateId]);
 
             } catch (Exception $e) {
                 Database::rollBack();
@@ -139,7 +140,7 @@ try {
                     }
                 }
                 Database::commit();
-                echo json_encode(['success' => true, 'message' => 'Template updated successfully']);
+                Response::updated();
 
             } catch (Exception $e) {
                 Database::rollBack();
@@ -151,9 +152,13 @@ try {
             // Delete size template (soft delete)
             $templateId = $_POST['template_id'] ?? 0;
 
-            Database::execute("UPDATE size_templates SET is_active = 0 WHERE id = ?", [$templateId]);
-
-            echo json_encode(['success' => true, 'message' => 'Template deleted successfully']);
+            $affected = Database::execute("UPDATE size_templates SET is_active = 0 WHERE id = ?", [$templateId]);
+            if ($affected > 0) {
+                Response::updated();
+            } else {
+                $exists = Database::queryOne('SELECT id FROM size_templates WHERE id = ?', [$templateId]);
+                if ($exists) { Response::noChanges(); } else { http_response_code(404); echo json_encode(['success' => false, 'error' => 'Template not found']); }
+            }
             break;
 
         case 'apply_to_item':
@@ -199,11 +204,7 @@ try {
                     );
                 }
                 Database::commit();
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Template applied successfully',
-                    'applied_sizes' => count($templateSizes)
-                ]);
+                Response::updated(['applied_sizes' => count($templateSizes)]);
 
             } catch (Exception $e) {
                 Database::rollBack();

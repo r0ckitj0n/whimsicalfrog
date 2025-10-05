@@ -37,6 +37,39 @@ To generate the production bundle used in `dist/`, run:
 npm run build
 ```
 
+## Brand Tokens (CSS)
+
+Standard variables for consistent styling across the app:
+
+- **Colors**
+  - Primary: `var(--brand-primary)`
+  - Secondary/hover: `var(--brand-secondary)`
+  - Buttons: `--button-bg-primary`, `--button-bg-primary-hover`, `--button-text-primary`
+- **Fonts**
+  - Display: `var(--font-primary)`
+  - Body/UI: `var(--font-secondary)`
+  - Code/receipts: `var(--code-font-family)`
+- **Z-index**
+  - `--z-overlay`, `--z-index-modal-content`, `--z-admin-overlay`, `--z-admin-overlay-content`, `--z-global-popup`
+- **Layout**
+  - `--header-height`, `--overlay-offset`, `--header-offset`
+
+See detailed guidance and CI guard patterns in:
+
+```
+documentation/frontend/CSS_COMPONENTIZATION_AND_CI.md
+```
+
+### Pre-commit checks (no Husky)
+
+Husky hooks have been removed. Run staged checks locally before committing:
+
+```bash
+npm run precommit
+```
+
+CI will also enforce the same guards and linters on every PR/push.
+
 ## Full Stack Dev Servers (PHP + Vite)
 
 To start both the PHP dev server (http://localhost:8080) and the Vite dev server (http://localhost:5176) together, run:

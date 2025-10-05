@@ -144,7 +144,14 @@ if ($page === 'admin') {
     }
     $page_path = __DIR__ . '/sections/admin_router.php';
 } else {
-    $page_path = __DIR__ . '/' . $page . '.php';
+    // Dynamic room pages: map room1..roomN to the universal room template
+    if (preg_match('/^room\d+$/i', (string)$page)) {
+        // Ensure the room identifier is visible to the template
+        $_GET['page'] = $page;
+        $page_path = __DIR__ . '/sections/room_template.php';
+    } else {
+        $page_path = __DIR__ . '/' . $page . '.php';
+    }
 }
 
 // If visiting the shop page, preload categories so shop.php always has $categories defined
@@ -155,8 +162,27 @@ if ($page === 'shop') {
 // Start output buffering
 ob_start();
 
-// Include the header
-include __DIR__ . '/partials/header.php';
+// Determine if we should skip the global layout (header/footer)
+// Use a conservative scope: only honor for the canonical receipt page
+// when explicitly requested via bare/embed/modal/print flags.
+$__wf_skip_layout = false;
+try {
+    $p = strtolower((string)($page ?? ''));
+    if ($p === 'receipt') {
+        $qs = $_GET ?? [];
+        $__wf_skip_layout = (
+            (isset($qs['bare']) && $qs['bare'] === '1') ||
+            (isset($qs['embed']) && $qs['embed'] === '1') ||
+            (isset($qs['modal']) && $qs['modal'] === '1') ||
+            (isset($qs['print']) && $qs['print'] === '1')
+        );
+    }
+} catch (\Throwable $e) { $__wf_skip_layout = false; }
+
+// Include the header unless skipping layout for a bare receipt render
+if (!$__wf_skip_layout) {
+    include __DIR__ . '/partials/header.php';
+}
 
 // Main content inclusion
 if (file_exists($page_path)) {
@@ -167,8 +193,10 @@ if (file_exists($page_path)) {
     include __DIR__ . '/under_construction.php';
 }
 
-// Include the footer
-include __DIR__ . '/partials/footer.php';
+// Include the footer unless skipping layout for a bare receipt render
+if (!$__wf_skip_layout) {
+    include __DIR__ . '/partials/footer.php';
+}
 
 // Get the buffered content and end buffering
 $content = ob_get_clean();

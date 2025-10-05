@@ -18,6 +18,7 @@ class AdminOrdersModule {
             this.ensureOrderModalVisible();
             this.ensureOrderOverlayVisible();
         }
+        try { window.__WF_ADMIN_ORDERS_READY = true; } catch(_) {}
     }
 
     loadData() {
@@ -284,33 +285,30 @@ class AdminOrdersModule {
         const modal = document.getElementById('receiptModal');
         const content = document.getElementById('receiptContent');
         if (!modal || !content) return;
+        // Remember the current order id for print action
+        try { this.currentOrderId = orderId; } catch(_) {}
         
         content.innerHTML = '<div class="p-4">Loading...</div>';
         this.showModal(modal);
-        
-        const response = await fetch(`/receipt?orderId=${orderId}`);
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const receiptDiv = doc.querySelector('.receipt-container');
-        if (receiptDiv) {
-            content.innerHTML = receiptDiv.innerHTML;
-            
-            // Force total styling after content loads
-            setTimeout(() => {
-                const totalElements = content.querySelectorAll('span, div');
-                totalElements.forEach(el => {
-                    if (el.textContent && el.textContent.includes('Total:')) {
-                        el.classList.add('receipt-total-forced');
-                        if (el.parentElement) {
-                            el.parentElement.classList.add('receipt-total-container-forced');
-                        }
-                    }
-                });
-            }, 100);
-        } else {
-            content.innerHTML = '<div class="p-4">Receipt not found</div>';
-        }
+
+        // Use an iframe to guarantee identical layout and CSS isolation as checkout receipt
+        const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.title = 'Receipt';
+        iframe.className = 'receipt-iframe';
+        iframe.loading = 'eager';
+        iframe.addEventListener('load', () => {
+            content.innerHTML = '';
+            content.appendChild(iframe);
+        }, { once: true });
+        // In case load fails, still swap content after a timeout
+        setTimeout(() => {
+            if (!content.contains(iframe)) {
+                content.innerHTML = '';
+                content.appendChild(iframe);
+            }
+        }, 800);
     }
 
     closeReceiptModal() {
@@ -319,6 +317,13 @@ class AdminOrdersModule {
     }
 
     printReceipt() {
+        const id = this.currentOrderId ? String(this.currentOrderId) : '';
+        if (id) {
+            const url = `/receipt?orderId=${encodeURIComponent(id)}&bare=1`;
+            try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
+            return;
+        }
+        // Fallback: print currently injected content (legacy behavior)
         const content = document.getElementById('receiptContent');
         if (content) {
             const printWindow = window.open('', '_blank');
@@ -374,8 +379,213 @@ class AdminOrdersModule {
     }
 
     initInlineEditing() {
-        // Placeholder for the complex inline editing logic
-        console.log('Inline editing initialization logic goes here.');
+        if (this.__inlineEditingInitialized) return;
+        this.__inlineEditingInitialized = true;
+
+        const getStatusBadgeClass = (status) => {
+            const s = String(status || '').toLowerCase();
+            switch (s) {
+                case 'pending': return 'badge-status-pending';
+                case 'processing': return 'badge-status-processing';
+                case 'shipped': return 'badge-status-shipped';
+                case 'delivered': return 'badge-status-delivered';
+                case 'cancelled': return 'badge-status-cancelled';
+                default: return 'badge-status-default';
+            }
+        };
+        const getPaymentStatusBadgeClass = (status) => {
+            const s = String(status || '').toLowerCase();
+            switch (s) {
+                case 'pending': return 'badge-payment-pending';
+                case 'received': return 'badge-payment-received';
+                case 'processing': return 'badge-payment-processing';
+                case 'refunded': return 'badge-payment-refunded';
+                case 'failed': return 'badge-payment-failed';
+                default: return 'badge-payment-default';
+            }
+        };
+
+        // Extract options from the filter dropdowns (authoritative for this page)
+        const getOptionsFromFilter = (nameAttr) => {
+            const sel = document.querySelector(`form.admin-filter-form select[name="${nameAttr}"]`);
+            if (!sel) return [];
+            return Array.from(sel.options)
+                .map(o => o.value)
+                .filter(v => v !== '');
+        };
+
+        const ORDER_STATUS_OPTS = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+        const PAYMENT_METHOD_OPTS = getOptionsFromFilter('filter_payment_method');
+        const SHIPPING_METHOD_OPTS = getOptionsFromFilter('filter_shipping_method');
+        const PAYMENT_STATUS_OPTS = getOptionsFromFilter('filter_payment_status').length
+            ? getOptionsFromFilter('filter_payment_status')
+            : ['Pending', 'Received', 'Processing', 'Refunded', 'Failed'];
+
+        const fieldToApiKey = (field) => {
+            // Map DB/UI field names to API payload keys expected by /api/update_order.php
+            switch (field) {
+                case 'order_status': return 'status';
+                case 'paymentMethod': return 'paymentMethod';
+                case 'shippingMethod': return 'shippingMethod';
+                case 'paymentStatus': return 'paymentStatus';
+                case 'date': return 'date'; // now supported by API
+                default: return field; // fallback
+            }
+        };
+
+        const buildEditor = (cell) => {
+            const type = cell.getAttribute('data-type') || 'text';
+            const field = cell.getAttribute('data-field') || '';
+            const originalHtml = cell.innerHTML;
+            const originalText = cell.textContent.trim();
+            const rawValue = cell.getAttribute('data-raw-value');
+
+            // Prevent double-editors
+            if (cell.__editing) return;
+            cell.__editing = true;
+            const cleanup = (restore = false) => {
+                if (restore) cell.innerHTML = originalHtml;
+                cell.__editing = false;
+            };
+
+            const commit = async (newValue) => {
+                const orderId = cell.getAttribute('data-order-id');
+                const apiKey = fieldToApiKey(field);
+                if (!orderId || !apiKey) {
+                    cleanup(true);
+                    if (!apiKey && field === 'date') {
+                        try { window.showNotification && window.showNotification('Editing date inline is not supported yet', 'info'); } catch(_) {}
+                    }
+                    return;
+                }
+
+                const payload = { orderId: String(orderId) };
+                payload[apiKey] = newValue;
+
+                try {
+                    const r = await fetch('/api/update_order.php', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await r.json().catch(() => ({}));
+                    if (r.ok && data && (data.success || data.orderId)) {
+                        // Update UI
+                        if (field === 'order_status') {
+                            const span = cell.querySelector('.status-badge') || document.createElement('span');
+                            span.className = `status-badge ${getStatusBadgeClass(newValue)}`;
+                            span.textContent = newValue;
+                            cell.innerHTML = '';
+                            cell.appendChild(span);
+                        } else if (field === 'paymentStatus') {
+                            const span = cell.querySelector('.payment-status-badge') || document.createElement('span');
+                            span.className = `payment-status-badge ${getPaymentStatusBadgeClass(newValue)}`;
+                            span.textContent = newValue;
+                            cell.innerHTML = '';
+                            cell.appendChild(span);
+                        } else if (field === 'date') {
+                            // Persist raw ISO value if user provided only date
+                            // Accept common inputs like YYYY-MM-DD or full datetime
+                            let isoDate = String(newValue || '').slice(0, 10);
+                            if (/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+                                cell.setAttribute('data-raw-value', isoDate);
+                            } else {
+                                // Fallback: try to compute yyyy-mm-dd from Date
+                                const d = new Date(newValue);
+                                if (!isNaN(d)) {
+                                    const y = d.getFullYear();
+                                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                                    const dd = String(d.getDate()).padStart(2, '0');
+                                    isoDate = `${y}-${m}-${dd}`;
+                                    cell.setAttribute('data-raw-value', isoDate);
+                                }
+                            }
+                            // Friendly display like 'Oct 4, 2025'
+                            try {
+                                const friendly = new Date(isoDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                                cell.textContent = friendly;
+                            } catch (_) {
+                                cell.textContent = isoDate || newValue;
+                            }
+                        } else {
+                            cell.textContent = newValue;
+                        }
+                        cleanup(false);
+                        try { window.showNotification && window.showNotification('Saved', 'success'); } catch(_) {}
+                    } else {
+                        cleanup(true);
+                        const msg = (data && (data.error || data.message)) || 'Save failed';
+                        try { window.showNotification && window.showNotification(msg, 'error'); } catch(_) {}
+                    }
+                } catch (_) {
+                    cleanup(true);
+                    try { window.showNotification && window.showNotification('Network error', 'error'); } catch(_) {}
+                }
+            };
+
+            const onKey = (ev, input) => {
+                if (ev.key === 'Enter') {
+                    ev.preventDefault();
+                    commit(input.value.trim());
+                } else if (ev.key === 'Escape') {
+                    ev.preventDefault();
+                    cleanup(true);
+                }
+            };
+
+            if (type === 'select') {
+                const field = cell.getAttribute('data-field') || '';
+                let options = [];
+                if (field === 'order_status') options = ORDER_STATUS_OPTS;
+                else if (field === 'paymentMethod') options = PAYMENT_METHOD_OPTS;
+                else if (field === 'shippingMethod') options = SHIPPING_METHOD_OPTS;
+                else if (field === 'paymentStatus') options = PAYMENT_STATUS_OPTS;
+
+                const select = document.createElement('select');
+                select.className = 'form-select';
+                options.forEach(opt => {
+                    const o = document.createElement('option');
+                    o.value = opt;
+                    o.textContent = opt;
+                    if (opt === originalText) o.selected = true;
+                    select.appendChild(o);
+                });
+                cell.innerHTML = '';
+                cell.appendChild(select);
+                select.focus();
+                select.addEventListener('blur', () => commit(select.value));
+                select.addEventListener('keydown', (ev) => onKey(ev, select));
+            } else {
+                // Default: text/date/number become input
+                const input = document.createElement('input');
+                input.type = (type === 'date' || type === 'number' || type === 'datetime-local') ? type : 'text';
+                input.className = 'form-input';
+                if (type === 'date') {
+                    // Prefer raw ISO (YYYY-MM-DD) to seed the date control
+                    input.value = (rawValue && /^\d{4}-\d{2}-\d{2}$/.test(rawValue)) ? rawValue : originalText;
+                } else {
+                    input.value = originalText;
+                }
+                cell.innerHTML = '';
+                cell.appendChild(input);
+                input.focus();
+                input.select && input.select();
+                input.addEventListener('blur', () => commit(input.value.trim()));
+                input.addEventListener('keydown', (ev) => onKey(ev, input));
+            }
+        };
+
+        // Delegated click to activate editor (capture=true to avoid other handlers blocking it)
+        document.addEventListener('click', (e) => {
+            try { console.debug('[AdminOrders] editable click handler fired'); } catch(_) {}
+            const cell = e.target.closest && e.target.closest('.editable-field');
+            if (!cell) return;
+            // Avoid activating if we clicked on an input/select already
+            if (e.target.closest('input,select,textarea,button,a')) return;
+            try { console.debug('[AdminOrders] building editor for field', cell.getAttribute('data-field'), 'order', cell.getAttribute('data-order-id')); } catch(_) {}
+            buildEditor(cell);
+        }, true);
     }
 
     // Normalize visibility for the new component-based overlay

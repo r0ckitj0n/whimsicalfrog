@@ -58,34 +58,36 @@ class UnifiedPopupSystem {
     } else {
       return;
     }
-    // Click anywhere inside popup opens item modal
-    this.popupEl.addEventListener('click', (e) => {
+    // Click anywhere inside popup opens item modal (even if out of stock)
+    this.popupEl.addEventListener('click', async (e) => {
       // Prevent any default anchor behavior and stop the event from reaching
       // underlying room links/areas (which could navigate to under_construction)
       try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
       // Prevent aria-hidden focus warning by removing focus before hiding
       try { if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur(); } catch (_) {}
+      // Allow opening even if out of stock; Add to Cart remains disabled in detailed modal
       if (typeof window.hideGlobalPopupImmediate === 'function') {
         window.hideGlobalPopupImmediate();
       }
       const sku = this.currentItem?.sku;
       console.log('[globalPopup] Popup clicked! SKU:', sku, 'Current item:', this.currentItem);
-      console.log('[globalPopup] Available functions:', {
-        showGlobalItemModal: typeof window.showGlobalItemModal,
-        wfGlobalModal: typeof window.WhimsicalFrog?.GlobalModal?.show
-      });
+      try {
+        if (typeof window.showGlobalItemModal !== 'function') {
+          await import('../js/global-item-modal.js');
+        }
+      } catch (e2) {
+        console.warn('[globalPopup] failed to lazy-load item modal', e2);
+      }
       if (typeof window.showGlobalItemModal === 'function' && sku) {
-        console.log('[globalPopup] opening detailed modal from popup click for', sku);
         window.showGlobalItemModal(sku, this.currentItem);
       } else if (window.WhimsicalFrog?.GlobalModal?.show && sku) {
-        console.log('[globalPopup] opening detailed modal via WF.GlobalModal for', sku);
         window.WhimsicalFrog.GlobalModal.show(sku, this.currentItem);
       } else {
         console.warn('[globalPopup] No modal function available to open detailed modal');
       }
+      this.isPointerOverPopup = true;
+      this.cancelHide();
     });
-
-    // Sticky hover: cancel hide when hovering popup; schedule when leaving
     this.popupEl.addEventListener('mouseenter', () => {
       this.isPointerOverPopup = true;
       this.cancelHide();
@@ -98,7 +100,7 @@ class UnifiedPopupSystem {
     // Explicit: Add to Cart button triggers detailed item modal
     const addBtn = this.popupEl.querySelector('#popupAddBtn');
     if (addBtn) {
-      addBtn.addEventListener('click', (e) => {
+      addBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
         // Prevent aria-hidden focus warning and close popup before opening modal
@@ -107,6 +109,13 @@ class UnifiedPopupSystem {
           window.hideGlobalPopupImmediate();
         }
         const sku = this.currentItem?.sku;
+        try {
+          if (typeof window.showGlobalItemModal !== 'function') {
+            await import('../js/global-item-modal.js');
+          }
+        } catch (e2) {
+          console.warn('[globalPopup] failed to lazy-load item modal (Add)', e2);
+        }
         if (typeof window.showGlobalItemModal === 'function' && sku) {
           console.log('[globalPopup] opening detailed modal from Add button for', sku);
           window.showGlobalItemModal(sku, this.currentItem);
@@ -121,9 +130,10 @@ class UnifiedPopupSystem {
     const img = this.popupEl.querySelector('#popupImage');
     if (img) {
       try { img.classList.add('cursor-pointer'); } catch (_) {}
-      img.addEventListener('click', (e) => {
+      img.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+        // Allow opening even if OOS; detailed modal will reflect OOS state
         // Prevent aria-hidden focus warning and close popup before opening modal
         try { if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur(); } catch (_) {}
         if (typeof window.hideGlobalPopupImmediate === 'function') {
@@ -199,13 +209,43 @@ class UnifiedPopupSystem {
     setText('#popupTitle', item.name || item.productName || item.sku);
     setText('#popupDescription', item.description || '');
 
-    // Stock badge
+    // Stock badge and disabled state
     const stockBadge = this.popupEl.querySelector('#popupStockBadge');
+    const stockText = this.popupEl.querySelector('#popupStockText');
     const stockInfo = this.popupEl.querySelector('#popupStock');
-    if ('stock' in item && stockInfo) {
-      const stock = Number(item.stock ?? item.stockLevel ?? 0);
+    const saleBadge = this.popupEl.querySelector('#popupSaleBadge');
+    const stock = Number(item.stock ?? item.stockLevel ?? 0);
+    if (stockInfo) {
       stockInfo.textContent = stock > 0 ? `${stock} in stock` : 'Out of stock';
-      if (stockBadge) stockBadge.classList.toggle('hidden', stock > 3);
+    }
+    // Configure popup badges for OOS vs in-stock
+    if (stock <= 0) {
+      // Mark popup state for CSS overrides
+      try { this.popupEl.classList.add('oos'); } catch(_) {}
+      if (saleBadge) { try { saleBadge.classList.add('hidden'); } catch(_) {} }
+      // Remove any existing stock badge entirely to avoid duplicates
+      try { if (stockBadge && stockBadge.parentNode) stockBadge.parentNode.removeChild(stockBadge); } catch(_) {}
+      // Also purge any dynamically rendered badges
+      try { const badgeContainer = this.popupEl.querySelector('#popupBadgeContainer'); if (badgeContainer) badgeContainer.innerHTML = ''; } catch(_) {}
+      if (stockText) stockText.textContent = 'OUT OF STOCK';
+      // Hide the small STOCK pill via class
+      try { const pill = this.popupEl.querySelector('#popupStockBadge .stock-badge'); if (pill) pill.classList.add('hidden'); } catch(_) {}
+    } else {
+      try { this.popupEl.classList.remove('oos'); } catch(_) {}
+      // Restore default stock badge behavior (limited stock only shows for low stock)
+      if (saleBadge) { try { saleBadge.classList.remove('hidden'); } catch(_) {} }
+      if (stockBadge) { stockBadge.classList.toggle('hidden', stock > 3); }
+      if (stockBadge) stockBadge.classList.remove('is-oos');
+      if (stockText && stockText.textContent !== 'LIMITED STOCK') stockText.textContent = 'LIMITED STOCK';
+      // Show pill again when in stock
+      try { const pill = this.popupEl.querySelector('#popupStockBadge .stock-badge'); if (pill) pill.classList.remove('hidden'); } catch(_) {}
+    }
+    // Mark Add button disabled when OOS
+    const addBtn = this.popupEl.querySelector('#popupAddBtn');
+    if (addBtn) {
+      const disabled = stock <= 0;
+      addBtn.classList.toggle('is-disabled', disabled);
+      if (disabled) addBtn.setAttribute('aria-disabled', 'true'); else addBtn.removeAttribute('aria-disabled');
     }
 
     // Price
@@ -233,7 +273,8 @@ class UnifiedPopupSystem {
     // Badges overlay (async fetch; render when ready)
     this._clearPopupBadges();
     const sku = item?.sku;
-    if (sku) this._loadAndRenderBadges(sku);
+    // Do NOT render badges when OOS; we show a single centered overlay instead
+    if (sku && stock > 0) this._loadAndRenderBadges(sku);
 
     // Determine if anchor is inside room modal (or its iframe) to adjust layering
     let inRoomModal = false;

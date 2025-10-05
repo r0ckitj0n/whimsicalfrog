@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 header('Content-Type: application/json');
 
@@ -49,7 +50,7 @@ try {
                     $template['equipment'] = json_decode($template['equipment'] ?? '[]', true);
                 }
 
-                echo json_encode(['success' => true, 'templates' => $templates]);
+                Response::json(['success' => true, 'templates' => $templates]);
 
             } elseif ($action === 'get' && isset($_GET['id'])) {
                 // Get specific template
@@ -62,15 +63,13 @@ try {
                     $template['energy'] = json_decode($template['energy'] ?? '[]', true);
                     $template['equipment'] = json_decode($template['equipment'] ?? '[]', true);
 
-                    echo json_encode(['success' => true, 'template' => $template]);
+                    Response::json(['success' => true, 'template' => $template]);
                 } else {
-                    http_response_code(404);
-                    echo json_encode(['success' => false, 'error' => 'Template not found']);
+                    Response::error('Template not found', null, 404);
                 }
 
             } else {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Invalid action for GET request']);
+                Response::error('Invalid action for GET request', null, 400);
             }
             break;
 
@@ -94,7 +93,7 @@ try {
                 ]);
 
                 $templateId = Database::lastInsertId();
-                echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template created successfully']);
+                Response::json(['success' => true, 'template_id' => $templateId, 'message' => 'Template created successfully']);
 
             } elseif ($action === 'save_from_breakdown') {
                 // Save current cost breakdown as template
@@ -104,9 +103,7 @@ try {
                 $sku = $input['sku'] ?? '';
 
                 if (empty($templateName)) {
-                    http_response_code(400);
-                    echo json_encode(['success' => false, 'error' => 'Template name is required']);
-                    exit;
+                    Response::error('Template name is required', null, 400);
                 }
 
                 // Get current cost breakdown data for the SKU
@@ -145,11 +142,10 @@ try {
                 ]);
 
                 $templateId = Database::lastInsertId();
-                echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template saved successfully']);
+                Response::json(['success' => true, 'template_id' => $templateId, 'message' => 'Template saved successfully']);
 
             } else {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Invalid action for POST request']);
+                Response::error('Invalid action for POST request', null, 400);
             }
             break;
 
@@ -158,9 +154,7 @@ try {
             $templateId = $input['id'] ?? '';
 
             if (empty($templateId)) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Template ID is required']);
-                exit;
+                Response::error('Template ID is required', null, 400);
             }
 
             // Update template
@@ -182,10 +176,9 @@ try {
             ]);
 
             if ($affected !== false) {
-                echo json_encode(['success' => true, 'message' => 'Template updated successfully']);
+                Response::json(['success' => true, 'message' => 'Template updated successfully']);
             } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'error' => 'Failed to update template']);
+                Response::error('Failed to update template', null, 500);
             }
             break;
 
@@ -193,30 +186,25 @@ try {
             $templateId = $_GET['id'] ?? '';
 
             if (empty($templateId)) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'error' => 'Template ID is required']);
-                exit;
+                Response::error('Template ID is required', null, 400);
             }
 
             // Delete template
             $affected = Database::execute("DELETE FROM cost_breakdown_templates WHERE id = ?", [$templateId]);
             if ($affected !== false) {
-                echo json_encode(['success' => true, 'message' => 'Template deleted successfully']);
+                Response::json(['success' => true, 'message' => 'Template deleted successfully']);
             } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'error' => 'Failed to delete template']);
+                Response::error('Failed to delete template', null, 500);
             }
             break;
 
         default:
-            http_response_code(405);
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+            Response::methodNotAllowed();
             break;
     }
 
 } catch (Exception $e) {
     error_log("Error in cost_breakdown_templates.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
 ?> 

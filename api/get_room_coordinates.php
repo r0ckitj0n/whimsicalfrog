@@ -1,9 +1,6 @@
 <?php
 
-// CORS headers for development
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+// Lightweight CORS/headers are handled by config; use Response helpers
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -11,8 +8,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
 
 // Ensure absolute include and clean JSON output
 require_once __DIR__ . '/config.php';
-ini_set('display_errors', 0);
-ob_start();
+require_once __DIR__ . '/../includes/response.php';
 
 try {
     try {
@@ -27,8 +23,7 @@ try {
     $roomParam = is_string($roomParam) ? trim($roomParam) : $roomParam;
 
     if ($roomParam === '' || $roomParam === null) {
-        echo json_encode(['success' => false, 'message' => 'Room is required']);
-        exit;
+        Response::error('Room is required', null, 400);
     }
 
     // Normalize to integer 1..5 if possible, otherwise accept strings like 'room1'
@@ -38,8 +33,7 @@ try {
         $roomNumber = (int)$roomParam;
     }
     if ($roomNumber < 1 || $roomNumber > 5) {
-        echo json_encode(['success' => false, 'message' => 'Invalid room. Expected 1-5.']);
-        exit;
+        Response::error('Invalid room. Expected 1-5.', null, 400);
     }
 
     // room_number-only lookup
@@ -48,22 +42,14 @@ try {
 
     if ($map) {
         $coordinates = json_decode($map['coordinates'], true);
-        if (ob_get_length() !== false) {
-            ob_end_clean();
-        }
-        echo json_encode([
-            'success' => true,
-            'coordinates' => $coordinates,
+        Response::success([
+            'coordinates' => is_array($coordinates) ? $coordinates : [],
             'map_name' => $map['map_name'],
             'updated_at' => $map['updated_at']
         ]);
     } else {
         // Return empty coordinates if no active map found
-        if (ob_get_length() !== false) {
-            ob_end_clean();
-        }
-        echo json_encode([
-            'success' => true,
+        Response::success([
             'coordinates' => [],
             'message' => 'No active map found for this room'
         ]);
@@ -72,13 +58,5 @@ try {
 } catch (Exception $e) {
     // Log error but don't expose sensitive database info
     error_log("Room coordinates API error: " . $e->getMessage());
-
-    // Return error for debugging
-    if (ob_get_length() !== false) {
-        ob_end_clean();
-    }
-    echo json_encode([
-        'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
-    ]);
+    Response::serverError('Database error: ' . $e->getMessage());
 }

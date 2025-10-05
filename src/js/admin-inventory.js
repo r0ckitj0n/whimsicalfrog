@@ -42,12 +42,512 @@ class AdminInventoryModule {
         this.initSkuFromDom();
     }
 
+    async distributeGeneralStockEvenly() {
+        if (!this.currentItemSku) {
+            const skuField = document.getElementById('skuEdit') || document.getElementById('sku') || document.getElementById('skuDisplay');
+            const hiddenSku = document.querySelector('input[name="itemSku"]');
+            this.currentItemSku = (skuField ? (skuField.value || skuField.textContent || '').trim() : '') || (hiddenSku ? (hiddenSku.value || '').trim() : '');
+        }
+        if (!this.currentItemSku) { this.showError('No item selected'); return; }
+        const btn = document.querySelector('[data-action="distribute-general-stock-evenly"]');
+        try { btn && btn.setAttribute('aria-busy','true'); btn && (btn.disabled = true); } catch(_) {}
+        try {
+            const res = await fetch('/api/item_sizes.php?action=distribute_general_stock_evenly', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                body: JSON.stringify({ item_sku: this.currentItemSku })
+            });
+            const data = await res.json().catch(()=>({}));
+            if (!res.ok || !data?.success) throw new Error(data?.message || `Failed (${res.status})`);
+            const msg = `Distributed ${data.moved_total} units across ${data.colors} colors; updated ${data.updated} rows${data.created?`, created ${data.created}`:''}.`;
+            this.showSuccess(msg);
+            if (typeof data.new_total_stock !== 'undefined') {
+                const stockField = document.getElementById('stockLevel');
+                if (stockField) stockField.value = data.new_total_stock;
+            }
+            // Refresh
+            this.loadNestedInventoryEditor();
+            try { this.loadItemColors(); } catch(_) {}
+            try { this.loadItemSizes(); } catch(_) {}
+        } catch (e) {
+            this.showError('Error distributing stock: ' + (e.message || ''));
+        } finally {
+            try { btn && btn.removeAttribute('aria-busy'); btn && (btn.disabled = false); } catch(_) {}
+        }
+    }
+
+    async ensureColorSizes() {
+        if (!this.currentItemSku) {
+            const skuField = document.getElementById('skuEdit') || document.getElementById('sku') || document.getElementById('skuDisplay');
+            const hiddenSku = document.querySelector('input[name="itemSku"]');
+            this.currentItemSku = (skuField ? (skuField.value || skuField.textContent || '').trim() : '') || (hiddenSku ? (hiddenSku.value || '').trim() : '');
+        }
+        if (!this.currentItemSku) {
+            this.showError('No item selected');
+            return;
+        }
+        try {
+            const btn = document.querySelector('[data-action="ensure-color-sizes"]');
+            try { btn && btn.setAttribute('aria-busy','true'); } catch(_) {}
+            const res = await fetch('/api/item_sizes.php?action=ensure_color_sizes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ item_sku: this.currentItemSku })
+            });
+            const data = await res.json().catch(()=>({}));
+            if (!res.ok || !data?.success) throw new Error(data?.message || `Failed (${res.status})`);
+            const msg = `Containers configured: created ${data.created} sizes across ${data.colors} colors${data.skipped ? `, skipped ${data.skipped}` : ''}.`;
+            this.showSuccess(msg);
+            // Update stock field if provided
+            if (typeof data.new_total_stock !== 'undefined') {
+                const stockField = document.getElementById('stockLevel');
+                if (stockField) stockField.value = data.new_total_stock;
+            }
+            // Refresh UI to reflect new per-color sizes
+            this.loadNestedInventoryEditor();
+            try { this.loadItemColors(); } catch(_) {}
+            try { this.loadItemSizes(); } catch(_) {}
+        } catch (e) {
+            this.showError('Error configuring containers: ' + (e.message || ''));
+        } finally {
+            const btn = document.querySelector('[data-action="ensure-color-sizes"]');
+            try { btn && btn.removeAttribute('aria-busy'); } catch(_) {}
+        }
+    }
+
+    // ------- Nested Inventory Editor (Gender -> Color -> Size) -------
+    async loadNestedInventoryEditor() {
+        let host = document.getElementById('nestedInventoryEditor');
+        if (!host) return;
+        const sku = host.dataset.sku || this.currentItemSku;
+        const write = (html) => {
+            const live = document.getElementById('nestedInventoryEditor');
+            if (live) live.innerHTML = html;
+        };
+        if (!sku) { write('<div class="text-sm text-gray-500">No SKU</div>'); return; }
+        write('<div class="text-sm text-gray-500">Loading nested inventory…</div>');
+        console.debug('[NestedEditor] start', { sku });
+
+        try {
+            console.debug('[NestedEditor] fetching …');
+            const [colorsRes, sizesAdminRes] = await Promise.all([
+                fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${encodeURIComponent(sku)}&wf_dev_admin=1`, { credentials: 'same-origin' }).then(r=>r.json()).catch(()=>({})),
+                fetch(`/api/item_sizes.php?action=get_all_sizes&item_sku=${encodeURIComponent(sku)}&wf_dev_admin=1`, { credentials: 'same-origin' }).then(r=>r.json()).catch(()=>({}))
+            ]);
+            console.debug('[NestedEditor] fetched');
+            let colors = Array.isArray(colorsRes?.colors) ? colorsRes.colors : [];
+            const sizesAll = Array.isArray(sizesAdminRes?.sizes) ? sizesAdminRes.sizes : [];
+
+            // Read control filters
+            const genderFilterEl = document.getElementById('nestedGenderFilter');
+            const colorFilterEl = document.getElementById('nestedColorFilter');
+            const searchEl = document.getElementById('nestedSearch');
+            const sortEl = document.getElementById('nestedSort');
+            const filterGender = (genderFilterEl?.value || '').trim();
+            const filterColorId = (colorFilterEl?.value || '').trim();
+            const searchTerm = (searchEl?.value || '').trim().toLowerCase();
+            const sortBy = (sortEl?.value || 'code');
+            // Restore persisted state if empty
+            try {
+                const key = `wf:nested:${sku}`;
+                const saved = JSON.parse(localStorage.getItem(key) || '{}');
+                if (genderFilterEl && !genderFilterEl.value && saved.gender) genderFilterEl.value = saved.gender;
+                if (colorFilterEl && !colorFilterEl.value && saved.colorId) colorFilterEl.value = saved.colorId;
+                if (searchEl && !searchEl.value && saved.search) searchEl.value = saved.search;
+                if (sortEl && !sortEl.value && saved.sort) sortEl.value = saved.sort;
+                const showInactiveEl = document.getElementById('nestedShowInactive');
+                if (showInactiveEl && saved.showInactive != null) showInactiveEl.checked = !!saved.showInactive;
+            } catch(_) {}
+            const showInactive = !!document.getElementById('nestedShowInactive')?.checked;
+
+            // Apply showInactive to colors list (include inactive if checked)
+            if (!showInactive) {
+                colors = colors.filter(c => Number(c.is_active) === 1);
+            }
+
+            // Populate color filter options once per load
+            if (colorFilterEl && !colorFilterEl.dataset.populated) {
+                const prev = colorFilterEl.value;
+                colorFilterEl.innerHTML = '<option value="">All</option>' + colors.map(c => `<option value="${String(c.id)}">${c.color_name}</option>`).join('');
+                colorFilterEl.value = prev || '';
+                colorFilterEl.dataset.populated = '1';
+            }
+            // Build gender set from sizes
+            const genderSet = new Set();
+            sizesAll.forEach(s => {
+                const g = (s.gender == null || s.gender === '') ? 'Unisex' : String(s.gender);
+                genderSet.add(g);
+            });
+            if (genderSet.size === 0) genderSet.add('Unisex');
+            let genders = Array.from(genderSet);
+            if (filterGender) genders = genders.filter(g => g === filterGender);
+
+            // Helper groupings
+            const byColorId = (list, colorId) => list.filter(s => String(s.color_id || '') === String(colorId || ''));
+            const byGender = (list, g) => list.filter(s => {
+                const norm = (g === 'Unisex') ? null : g;
+                return (norm === null) ? (s.gender == null) : (String(s.gender||'').trim() === String(norm));
+            });
+            const bySearch = (list) => {
+                if (!searchTerm) return list;
+                return list.filter(s => {
+                    const name = String(s.size_name || '').toLowerCase();
+                    const code = String(s.size_code || '').toLowerCase();
+                    return name.includes(searchTerm) || code.includes(searchTerm);
+                });
+            };
+            const sortSizes = (list) => {
+                const copy = list.slice();
+                if (sortBy === 'name') return copy.sort((a,b)=>String(a.size_name||'').localeCompare(String(b.size_name||'')));
+                if (sortBy === 'stock') return copy.sort((a,b)=>Number(a.stock_level||0)-Number(b.stock_level||0));
+                // default code sort, natural-ish
+                return copy.sort((a,b)=>String(a.size_code||'').localeCompare(String(b.size_code||''), undefined, { numeric:true, sensitivity:'base'}));
+            };
+            const byActive = (list) => showInactive ? list : list.filter(s => Number(s.is_active || 0) === 1);
+
+            // Compose HTML using details/summary for accessibility and simplicity
+            let html = '';
+            genders.forEach(g => {
+                // Compute gender total based on what will be displayed
+                const sizesForGender = byActive(byGender(sizesAll, g));
+                let genderTotal = 0;
+                if (colors.length > 0) {
+                    const allowedColorIds = filterColorId ? new Set([String(filterColorId)]) : null;
+                    genderTotal = sizesForGender
+                        .filter(s => s.color_id != null && (!allowedColorIds || allowedColorIds.has(String(s.color_id))))
+                        .reduce((sum, s) => sum + (Number(s.stock_level || 0)), 0);
+                } else {
+                    genderTotal = sizesForGender
+                        .filter(s => s.color_id == null)
+                        .reduce((sum, s) => sum + (Number(s.stock_level || 0)), 0);
+                }
+
+                html += `<details class="border rounded-md">
+  <summary class="cursor-pointer px-3 py-2 bg-gray-50 text-sm font-medium text-gray-800">
+    <span class="wf-folder-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M2 5.5A1.5 1.5 0 013.5 4H7l2 2h7.5A1.5 1.5 0 0118 7.5v7A1.5 1.5 0 0116.5 16h-13A1.5 1.5 0 012 14.5v-9z"/></svg></span>
+    <span>${g}</span>
+    <span class="ml-2 wf-container-badge" title="This is a group container (not directly linked to item stock)">Group container</span>
+    <span class="ml-2 wf-container-badge wf-gender-total" title="Sum of visible sizes within this group">Total: ${genderTotal}</span>
+  </summary>
+  <div class="p-3 space-y-3">
+`;
+                if (colors.length > 0) {
+                    // Render a distinct General Sizes block (sizes with no color) so purpose is obvious
+                    const generalSizes = byActive(byGender(sizesAll.filter(s => s.color_id == null), g));
+                    const generalFiltered = sortSizes(bySearch(generalSizes));
+                    if (generalFiltered.length > 0) {
+                        const gTotal = generalFiltered.reduce((sum, s) => sum + (Number(s.stock_level || 0)), 0);
+                        html += `<div class="border rounded-md border-amber-200 bg-amber-50">
+  <div class="px-3 py-2 flex items-center justify-between">
+    <div class="text-sm font-semibold text-amber-800 flex items-center gap-2">
+      <span>General Sizes (not tied to a color)</span>
+      <span class="wf-container-badge">General</span>
+    </div>
+    <div class="text-xs text-amber-700"><span class="wf-color-total">Total: ${gTotal}</span></div>
+  </div>
+  <div class="p-3 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead><tr class="text-gray-600"><th class="text-left pr-4 py-1">Size</th><th class="text-left pr-4 py-1">Code</th><th class="text-left py-1">Stock</th></tr></thead>
+      <tbody>
+        ${generalFiltered.map(s => `<tr class="border-t"><td class="pr-4 py-1">${s.size_name || s.size_code}</td><td class="pr-4 py-1 text-gray-500">${s.size_code || ''}</td><td class="py-1"><input type="number" class="wf-nested-stock-input border rounded px-2 py-1 w-24" data-size-id="${s.id}" value="${Number(s.stock_level || 0)}" min="0" /></td></tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+</div>`;
+                    }
+                    // Apply color filter if set
+                    const colorList = filterColorId ? colors.filter(c => String(c.id) === String(filterColorId)) : colors;
+                    colorList.forEach(c => {
+                        const sizes = byActive(byGender(byColorId(sizesAll, c.id), g));
+                        const sizesFiltered = sortSizes(bySearch(sizes));
+                        if (sizesFiltered.length === 0) return;
+                        const colorTotal = sizesFiltered.reduce((sum, s) => sum + (Number(s.stock_level || 0)), 0);
+                        // Build size chips (show up to 4, then +N)
+                        const sizeCodes = sizesFiltered.map(s => s.size_code || s.size_name || '').filter(Boolean);
+                        const maxChips = 4;
+                        const chips = sizeCodes.slice(0, maxChips).map(code => `<span class=\"wf-size-chip\">${code}</span>`).join('');
+                        const moreCount = Math.max(0, sizeCodes.length - maxChips);
+                        const moreChip = moreCount > 0 ? `<span class=\"wf-size-chip more\">+${moreCount}</span>` : '';
+                        html += `<div class=\"border rounded-md\" data-color-id=\"${String(c.id)}\">
+  <div class=\"px-3 py-2 bg-white flex items-center justify-between\">
+    <div class=\"text-sm font-semibold text-gray-700 flex items-center gap-2\">
+      <span class=\"wf-box-icon\" aria-hidden=\"true\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 20 20\" fill=\"currentColor\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M4 3h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm1 3v9h10V6H5zm2-2v2h6V4H7z\"/></svg></span>
+      <span>${c.color_name}</span>
+      <span class=\"wf-container-badge\" title=\"This is an item container (totals roll up from sizes)\">Item container</span>
+      <span class=\"hidden sm:inline-flex items-center\">${chips}${moreChip}</span>
+    </div>
+    <div class=\"text-xs text-gray-600 flex items-center gap-3\">
+      <span class=\"wf-color-total\" title=\"Items total for this color\">Total: ${colorTotal}</span>
+      <span class=\"text-gray-400\">${c.color_code ? c.color_code : ''}</span>
+    </div>
+  </div>
+  <div class="p-3 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead><tr class="text-gray-600"><th class="text-left pr-4 py-1">Size</th><th class="text-left pr-4 py-1">Code</th><th class="text-left py-1">Stock</th></tr></thead>
+      <tbody>
+`;
+                        sizesFiltered.forEach(s => {
+                            html += `<tr class="border-t">
+  <td class="pr-4 py-1">${s.size_name || s.size_code}</td>
+  <td class="pr-4 py-1 text-gray-500">${s.size_code || ''}</td>
+  <td class="py-1"><input type="number" class="wf-nested-stock-input border rounded px-2 py-1 w-24" data-size-id="${s.id}" value="${Number(s.stock_level || 0)}" min="0" /></td>
+</tr>`;
+                        });
+                        html += `      </tbody>
+    </table>
+  </div>
+</div>`;
+                    });
+                } else {
+                    // No colors: show single sizes table filtered by gender where color_id is null
+                    const sizes = byActive(byGender(sizesAll.filter(s => s.color_id == null), g));
+                    const sizesFiltered = sortSizes(bySearch(sizes));
+                    if (sizesFiltered.length > 0) {
+                        html += `<div class="border rounded-md">
+  <div class="px-3 py-2 bg-white text-sm font-semibold text-gray-700">Sizes</div>
+  <div class="p-3 overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead><tr class="text-gray-600"><th class="text-left pr-4 py-1">Size</th><th class="text-left pr-4 py-1">Code</th><th class="text-left py-1">Stock</th></tr></thead>
+      <tbody>
+`;
+                        sizesFiltered.forEach(s => {
+                            html += `<tr class="border-t">
+  <td class="pr-4 py-1">${s.size_name || s.size_code}</td>
+  <td class="pr-4 py-1 text-gray-500">${s.size_code || ''}</td>
+  <td class="py-1"><input type="number" class="wf-nested-stock-input border rounded px-2 py-1 w-24" data-size-id="${s.id}" value="${Number(s.stock_level || 0)}" min="0" /></td>
+</tr>`;
+                        });
+                        html += `      </tbody>
+    </table>
+  </div>
+</div>`;
+                    } else {
+                        html += `<div class="text-sm text-gray-500">No sizes for ${g}</div>`;
+                    }
+                }
+                html += `  </div>
+</details>`;
+            });
+
+            // Helper: recompute totals from currently visible inputs and update labels
+            const recomputeFromDom = () => {
+                try {
+                    // Per-color totals
+                    document.querySelectorAll('#nestedInventoryEditor [data-color-id]').forEach(block => {
+                        const inputs = block.querySelectorAll('input.wf-nested-stock-input');
+                        let sum = 0;
+                        inputs.forEach(inp => {
+                            const v = Math.floor(Number(inp.value || 0));
+                            if (Number.isFinite(v) && v > -Infinity) sum += Math.max(0, v);
+                        });
+                        const label = block.querySelector('.wf-color-total');
+                        if (label) label.textContent = `Total: ${sum}`;
+                    });
+                    // Per-gender totals (top-level details)
+                    document.querySelectorAll('#nestedInventoryEditor > details').forEach(group => {
+                        const inputs = group.querySelectorAll('input.wf-nested-stock-input');
+                        let sum = 0;
+                        inputs.forEach(inp => {
+                            const v = Math.floor(Number(inp.value || 0));
+                            if (Number.isFinite(v) && v > -Infinity) sum += Math.max(0, v);
+                        });
+                        const label = group.querySelector('.wf-gender-total');
+                        if (label) label.textContent = `Total: ${sum}`;
+                    });
+                } catch (_) {}
+            };
+
+            write(html || '<div class="text-sm text-gray-500">No option inventory defined yet.</div>');
+            // If the container was swapped during render, write again
+            host = document.getElementById('nestedInventoryEditor');
+            if (host && /Loading\s+nested\s+inventory/i.test((host.textContent||'').trim())) {
+                write(html || '<div class="text-sm text-gray-500">No option inventory defined yet.</div>');
+            }
+            // Ensure labels match inputs immediately
+            recomputeFromDom();
+            console.debug('[NestedEditor] rendered');
+
+            // Bind events for stock inputs (delegated)
+            if (!host.__nestedBound) {
+                host.addEventListener('keydown', (ev) => {
+                    const t = ev.target;
+                    if (!(t instanceof HTMLInputElement)) return;
+                    if (!t.matches('.wf-nested-stock-input')) return;
+                    if (ev.key === 'Enter') { ev.preventDefault(); t.blur(); }
+                });
+                host.addEventListener('blur', async (ev) => {
+                    const t = ev.target;
+                    if (!(t instanceof HTMLInputElement)) return;
+                    if (!t.matches('.wf-nested-stock-input')) return;
+                    const sizeId = Number(t.getAttribute('data-size-id') || 0);
+                    const newVal = Math.max(0, Math.floor(Number(t.value || 0)));
+                    if (!Number.isFinite(newVal) || sizeId <= 0) return;
+                    try {
+                        const res = await fetch('/api/item_sizes.php?action=update_stock', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
+                            body: JSON.stringify({ size_id: sizeId, stock_level: newVal })
+                        });
+                        const data = await res.json().catch(() => ({}));
+                        if (!res.ok || !data?.success) throw new Error(data?.message || `Save failed (${res.status})`);
+                        // Update item total stock field if present
+                        const total = data?.new_total_stock;
+                        const totalInput = document.getElementById('stockLevel');
+                        if (typeof total !== 'undefined' && totalInput) { totalInput.value = String(total); }
+                        this.showSuccess('Stock saved');
+                        // Refresh nested editor to reflect synced totals/labels
+                        this.loadNestedInventoryEditor();
+                        // Optionally refresh legacy lists too
+                        try { this.loadItemColors(); } catch(_) {}
+                        try { this.loadItemSizes(); } catch(_) {}
+                    } catch (e) {
+                        this.showError(e.message || 'Failed to save');
+                    }
+                }, true);
+                // Controls events
+                const skuLocal = sku; // capture for closures
+                const persist = () => {
+                    try {
+                        const key = `wf:nested:${skuLocal}`;
+                        const payload = {
+                            gender: document.getElementById('nestedGenderFilter')?.value || '',
+                            colorId: document.getElementById('nestedColorFilter')?.value || '',
+                            search: document.getElementById('nestedSearch')?.value || '',
+                            sort: document.getElementById('nestedSort')?.value || 'code',
+                            showInactive: !!document.getElementById('nestedShowInactive')?.checked,
+                        };
+                        localStorage.setItem(key, JSON.stringify(payload));
+                    } catch(_) {}
+                };
+                const rerender = () => { persist(); this.loadNestedInventoryEditor(); };
+                const genderFilterEl2 = document.getElementById('nestedGenderFilter');
+                const colorFilterEl2 = document.getElementById('nestedColorFilter');
+                const searchEl2 = document.getElementById('nestedSearch');
+                const sortEl2 = document.getElementById('nestedSort');
+                genderFilterEl2?.addEventListener('change', rerender);
+                colorFilterEl2?.addEventListener('change', rerender);
+                searchEl2?.addEventListener('input', () => { clearTimeout(this._nestedSearchT); this._nestedSearchT = setTimeout(rerender, 200); });
+                sortEl2?.addEventListener('change', rerender);
+                document.getElementById('nestedShowInactive')?.addEventListener('change', rerender);
+                // Expand/Collapse controls
+                document.getElementById('btnExpandAllNested')?.addEventListener('click', () => {
+                    document.querySelectorAll('#nestedInventoryEditor details').forEach(d => { try { d.open = true; } catch(_) {} });
+                });
+                document.getElementById('btnCollapseAllNested')?.addEventListener('click', () => {
+                    document.querySelectorAll('#nestedInventoryEditor details').forEach(d => { try { d.open = false; } catch(_) {} });
+                });
+                // Color picker handler (delegated)
+                document.getElementById('nestedInventoryEditor')?.addEventListener('change', async (e) => {
+                    const el = e.target;
+                    if (!(el instanceof HTMLInputElement)) return;
+                    if (el.type !== 'color' || el.getAttribute('data-action') !== 'update-color-code') return;
+                    const colorId = Number(el.getAttribute('data-color-id') || 0);
+                    if (!colorId) return;
+                    const colorCode = el.value;
+                    try {
+                        const res = await fetch('/api/item_colors.php?action=update_color_code', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                            body: JSON.stringify({ color_id: colorId, color_code: colorCode })
+                        });
+                        const data = await res.json().catch(()=>({}));
+                        if (!res.ok || !data?.success) throw new Error(data?.message || 'Failed to update color');
+                        // Update adjacent hex label
+                        const label = el.parentElement?.querySelector('.text-gray-400');
+                        if (label) label.textContent = colorCode;
+                        this.showSuccess('Color updated');
+                        // Optionally refresh color list badges without full reload
+                        try { this.loadItemColors(); } catch(_) {}
+                    } catch (err) {
+                        this.showError(err?.message || 'Failed to update color');
+                    }
+                }, { once: true });
+                // Bulk actions
+                const getVisibleInputs = () => Array.from(document.querySelectorAll('#nestedInventoryEditor .wf-nested-stock-input'));
+                const applyBulk = async (mode) => {
+                    const valEl = document.getElementById('nestedBulkValue');
+                    const n = Math.max(0, Math.floor(Number(valEl?.value || 0)));
+                    if (!Number.isFinite(n)) { this.showError('Enter a valid bulk value'); return; }
+                    const inputs = getVisibleInputs();
+                    if (!inputs.length) { this.showInfo('No rows to update'); return; }
+                    // Sequential saves to avoid overload
+                    for (const inp of inputs) {
+                        const sizeId = Number(inp.getAttribute('data-size-id') || 0);
+                        if (sizeId <= 0) continue;
+                        let newVal;
+                        const current = Math.max(0, Math.floor(Number(inp.value || 0)));
+                        if (mode === 'set') newVal = n;
+                        if (mode === 'add') newVal = current + n;
+                        if (mode === 'sub') newVal = Math.max(0, current - n);
+                        try {
+                            const res = await fetch('/api/item_sizes.php?action=update_stock', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                                body: JSON.stringify({ size_id: sizeId, stock_level: newVal })
+                            });
+                            const data = await res.json().catch(()=>({}));
+                            if (!res.ok || !data?.success) throw new Error(data?.message || 'Save failed');
+                        } catch (e) {
+                            this.showError(e.message || 'Failed to save some rows');
+                            return; // stop on first error
+                        }
+                    }
+                    this.showSuccess('Bulk update completed');
+                    this.loadNestedInventoryEditor();
+                    try { this.loadItemColors(); } catch(_) {}
+                    try { this.loadItemSizes(); } catch(_) {}
+                };
+                document.getElementById('nestedBulkSet')?.addEventListener('click', () => applyBulk('set'));
+                document.getElementById('nestedBulkAdjustPlus')?.addEventListener('click', () => applyBulk('add'));
+                document.getElementById('nestedBulkAdjustMinus')?.addEventListener('click', () => applyBulk('sub'));
+                host.__nestedBound = true;
+            }
+
+        } catch (e) {
+            console.error('[NestedEditor] error', e);
+            write(`<div class="text-sm text-red-600">Failed to load nested inventory: ${e?.message || 'Unknown error'}</div>`);
+        } finally {
+            // Final guard: never leave the loading text in place
+            const live = document.getElementById('nestedInventoryEditor');
+            if (live) {
+                const txt = (live.textContent || '').trim();
+                if (/^Loading(\s+nested\s+inventory)?…?$/.test(txt)) {
+                    write('<div class="text-sm text-gray-500">No option inventory defined yet.</div>');
+                }
+            }
+        }
+    }
+
     // Initialize SKU from DOM early to ensure handlers have access to it
     initSkuFromDom() {
         try {
+            // Try several DOM sources, in order of reliability
             if (!this.currentItemSku) {
-                const skuField = document.getElementById('skuEdit') || document.getElementById('sku') || document.getElementById('skuDisplay');
-                if (skuField) this.currentItemSku = skuField.value || skuField.textContent || '';
+                // 1) Hidden input emitted by server in edit mode
+                const hiddenSku = document.querySelector('input[name="itemSku"]');
+                if (hiddenSku && hiddenSku.value) this.currentItemSku = hiddenSku.value.trim();
+            }
+            if (!this.currentItemSku) {
+                // 2) Editable SKU field
+                const skuEdit = document.getElementById('skuEdit');
+                if (skuEdit && (skuEdit.value || skuEdit.textContent)) this.currentItemSku = (skuEdit.value || skuEdit.textContent).trim();
+            }
+            if (!this.currentItemSku) {
+                // 3) Generic fallbacks used in some templates
+                const skuField = document.getElementById('sku') || document.getElementById('skuDisplay');
+                if (skuField && (skuField.value || skuField.textContent)) this.currentItemSku = (skuField.value || skuField.textContent).trim();
+            }
+            if (!this.currentItemSku) {
+                // 4) Panel data attribute
+                const panel = document.getElementById('optionCascadePanel');
+                const dsSku = panel && panel.dataset ? (panel.dataset.sku || '') : '';
+                if (dsSku) this.currentItemSku = dsSku.trim();
+            }
+            if (!this.currentItemSku) {
+                // 5) Marketing modal header fallback
+                const m = document.getElementById('currentEditingSku');
+                const txt = m ? (m.textContent || '') : '';
+                const match = txt.match(/SKU:\s*(\S+)/i);
+                if (match && match[1]) this.currentItemSku = match[1].trim();
             }
         } catch(_) {}
     }
@@ -68,6 +568,79 @@ class AdminInventoryModule {
             if (element) {
                 const action = element.getAttribute('data-action');
                 switch (action) {
+            case 'recompute-nested-totals': {
+                try {
+                    // Update per-color totals
+                    document.querySelectorAll('#nestedInventoryEditor [data-color-id]').forEach(block => {
+                        const inputs = block.querySelectorAll('input.wf-nested-stock-input');
+                        let sum = 0;
+                        inputs.forEach(inp => { const v = Math.floor(Number(inp.value || 0)); if (Number.isFinite(v) && v > -Infinity) sum += Math.max(0, v); });
+                        const label = block.querySelector('.wf-color-total');
+                        if (label) label.textContent = `Total: ${sum}`;
+                    });
+                    // Update per-gender totals (each top-level <details>)
+                    document.querySelectorAll('#nestedInventoryEditor > details').forEach(group => {
+                        const inputs = group.querySelectorAll('input.wf-nested-stock-input');
+                        let sum = 0;
+                        inputs.forEach(inp => { const v = Math.floor(Number(inp.value || 0)); if (Number.isFinite(v) && v > -Infinity) sum += Math.max(0, v); });
+                        const label = group.querySelector('.wf-gender-total');
+                        if (label) label.textContent = `Total: ${sum}`;
+                    });
+                    this.showInfo('Totals recomputed from current inputs (not saved)');
+                } catch (_) {}
+                break;
+            }
+            case 'save-visible-size-stocks': {
+                // Persist all visible size inputs under the nested editor, sequentially
+                const btn = target;
+                try { btn.setAttribute('aria-busy', 'true'); btn.disabled = true; } catch(_) {}
+                (async () => {
+                    const inputs = Array.from(document.querySelectorAll('#nestedInventoryEditor .wf-nested-stock-input'));
+                    if (!inputs.length) { this.showInfo('No visible size rows to save'); return; }
+                    let lastTotal = null;
+                    for (const inp of inputs) {
+                        const sizeId = Number(inp.getAttribute('data-size-id') || 0);
+                        const newVal = Math.max(0, Math.floor(Number(inp.value || 0)));
+                        if (!Number.isFinite(newVal) || sizeId <= 0) continue;
+                        try {
+                            const res = await fetch('/api/item_sizes.php?action=update_stock', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                                body: JSON.stringify({ size_id: sizeId, stock_level: newVal })
+                            });
+                            const data = await res.json().catch(()=>({}));
+                            if (!res.ok || !data?.success) throw new Error(data?.message || `Save failed (${res.status})`);
+                            if (typeof data.new_total_stock !== 'undefined') lastTotal = data.new_total_stock;
+                        } catch (e) {
+                            this.showError('Error saving some rows: ' + (e.message || ''));
+                            break;
+                        }
+                    }
+                    // Update top-level stock field if we have a total
+                    if (lastTotal !== null) {
+                        const stockField = document.getElementById('stockLevel');
+                        if (stockField) stockField.value = lastTotal;
+                    }
+                    // Refresh views so totals/labels align with server
+                    this.loadNestedInventoryEditor();
+                    try { this.loadItemColors(); } catch(_) {}
+                    try { this.loadItemSizes(); } catch(_) {}
+                    this.showSuccess('All visible size totals saved');
+                })().finally(() => { try { btn.removeAttribute('aria-busy'); btn.disabled = false; } catch(_) {} });
+                break;
+            }
+            case 'recompute-nested-totals':
+                try {
+                    // For each color block, sum visible size inputs and update the total label
+                    document.querySelectorAll('#nestedInventoryEditor [data-color-id]').forEach(block => {
+                        const inputs = block.querySelectorAll('input.wf-nested-stock-input');
+                        let sum = 0;
+                        inputs.forEach(inp => { const v = Math.floor(Number(inp.value || 0)); if (Number.isFinite(v) && v > 0) sum += v; });
+                        const label = block.querySelector('.wf-color-total');
+                        if (label) label.textContent = `Total: ${sum}`;
+                    });
+                    this.showInfo('Totals recomputed from current inputs (not saved)');
+                } catch (_) {}
+                break;
                     case 'close-admin-editor':
                         this.closeAdminEditor();
                         break;
@@ -151,13 +724,18 @@ class AdminInventoryModule {
                         break;
                     }
                     case 'save-marketing-field': {
-                        const fieldName = element.getAttribute('data-field') || '';
                         this.handleSaveMarketingField(fieldName, element);
                         break;
                     }
                     case 'apply-selected-comparison':
                     case 'apply-selected-comparison-changes':
                         this.applySelectedComparisonChanges();
+                        break;
+                    case 'save-option-settings':
+                        this.saveOptionSettings && this.saveOptionSettings();
+                        break;
+                    case 'reload-option-settings':
+                        this.loadOptionSettings && this.loadOptionSettings();
                         break;
                     default:
                         // Handle other data-action attributes
@@ -167,7 +745,7 @@ class AdminInventoryModule {
         });
 
         // Bind delegated change handlers for comparison toggles and marketing defaults
-        document.addEventListener('change', (event) => {
+        document.addEventListener('click', async (event) => {
             const el = event.target;
             if (!(el instanceof HTMLElement)) return;
 
@@ -194,6 +772,161 @@ class AdminInventoryModule {
         });
 
         console.log('[AdminInventory] Event listeners bound');
+
+        // Initialize editor data if editor containers are present
+        try {
+            // Ensure SKU is available for loaders
+            this.initSkuFromDom();
+
+            // Load current images into the editor if the container exists
+            if (document.getElementById('currentImagesList')) {
+                this.loadModalImages();
+            }
+
+            // Load colors/sizes panels if present
+            if (document.getElementById('colorsList')) {
+                this.loadItemColors();
+            }
+            if (document.getElementById('sizesList')) {
+                this.loadItemSizes();
+            }
+            // Load option cascade settings if panel exists
+            if (document.getElementById('optionCascadePanel')) {
+                this.loadOptionSettings && this.loadOptionSettings();
+            }
+            // Render nested inventory editor if present
+            if (document.getElementById('nestedInventoryEditor')) {
+                this.loadNestedInventoryEditor();
+            }
+            // If we still have empty lists due to delayed SKU detection, try again shortly
+            setTimeout(() => {
+                if (!this.currentItemSku) this.initSkuFromDom();
+                this.__ensureEditorDataLoadedIfAvailable();
+            }, 0);
+        } catch (e) {
+            console.warn('[AdminInventory] Failed to initialize editor loaders', e);
+        }
+
+        // Enable guarded inline editing for the inventory table
+        try { this.enableInlineEditing(); } catch(_) {}
+    }
+
+    async shouldBlockStockEdit(sku) {
+        try {
+            const queries = [];
+            // Settings to check enabled dimensions
+            queries.push(fetch(`/api/item_options.php?action=get_settings&item_sku=${encodeURIComponent(sku)}&wf_dev_admin=1`).then(r=>r.json()).catch(()=>({}))); 
+            // Presence of sizes/colors/genders
+            queries.push(fetch(`/api/item_colors.php?action=get_colors&item_sku=${encodeURIComponent(sku)}`).then(r=>r.json()).catch(()=>({}))); 
+            queries.push(fetch(`/api/item_sizes.php?action=get_sizes&item_sku=${encodeURIComponent(sku)}`).then(r=>r.json()).catch(()=>({}))); 
+            queries.push(fetch(`/api/item_genders.php?action=get_all&item_sku=${encodeURIComponent(sku)}`).then(r=>r.json()).catch(()=>({}))); 
+
+            const [settingsRes, colorsRes, sizesRes, gendersRes] = await Promise.all(queries);
+            const enabled = settingsRes?.settings?.enabled_dimensions || [];
+            const hasEnabledDims = Array.isArray(enabled) && enabled.length > 0 && enabled.some(k => ['gender','size','color'].includes(k));
+            const hasColors = Array.isArray(colorsRes?.colors) && colorsRes.colors.length > 0;
+            const hasSizes = Array.isArray(sizesRes?.sizes) && sizesRes.sizes.length > 0;
+            const hasGenders = Array.isArray(gendersRes?.genders) && gendersRes.genders.length > 0;
+            return !!(hasEnabledDims || hasColors || hasSizes || hasGenders);
+        } catch(_) { return false; }
+    }
+
+    enableInlineEditing() {
+        const table = document.getElementById('inventoryTable');
+        if (!table) return;
+        table.addEventListener('click', async (e) => {
+            const td = e.target && e.target.closest ? e.target.closest('td.editable[data-field]') : null;
+            if (!td) return;
+            const field = td.getAttribute('data-field');
+            const tr = td.closest('tr');
+            const sku = tr ? (tr.getAttribute('data-sku') || '') : '';
+            if (!sku) return;
+
+            // Only guard stockLevel for now
+            if (field === 'stockLevel') {
+                e.preventDefault();
+                e.stopPropagation();
+                const block = await this.shouldBlockStockEdit(sku);
+                if (block) {
+                    // Show non-blocking toast with link to editor
+                    this.showActionToast('This item has options (gender/size/color). Edit stock in the item editor.', 'Open editor', `/admin/inventory?edit=${encodeURIComponent(sku)}`);
+                    return;
+                }
+                // If no options, allow default browser selection/editing, or implement simple prompt
+                // Make cell content editable for quick change
+                this.makeCellEditable(td, sku, field);
+            }
+        });
+    }
+
+    makeCellEditable(td, sku, field) {
+        const original = td.textContent.trim();
+        if (td.querySelector('input')) return;
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.className = 'inline-edit-input border rounded px-1 py-0.5 w-24';
+        input.value = original.replace(/[^0-9.-]/g, '');
+        td.innerHTML = '';
+        td.appendChild(input);
+        input.focus();
+        input.select();
+        const save = async () => {
+            const raw = String(input.value || '').trim();
+            const num = Number(raw);
+            if (!Number.isFinite(num) || num < 0) {
+                this.showError('Please enter a non-negative number.');
+                td.textContent = original;
+                return;
+            }
+            const newVal = String(Math.floor(num));
+            if (newVal === original) { td.textContent = original; return; }
+            try {
+                const res = await fetch('/api/update_item_field.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ sku, field, value: newVal })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data?.success) throw new Error(data?.error || `Save failed (${res.status})`);
+                td.textContent = newVal;
+                this.showSuccess('Stock saved');
+            } catch (e) {
+                td.textContent = original;
+                this.showError(e.message || 'Failed to save');
+            }
+        };
+        const cancel = () => { td.textContent = original; };
+        input.addEventListener('blur', save, { once: true });
+        input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+            if (ev.key === 'Escape') { ev.preventDefault(); cancel(); }
+        });
+    }
+
+    /**
+     * Ensure editor lists are populated once SKU is known and containers exist.
+     */
+    __ensureEditorDataLoadedIfAvailable() {
+        try {
+            if (!this.currentItemSku) return;
+            if (document.getElementById('currentImagesList')) {
+                // Only (re)load if list appears empty
+                if (!document.getElementById('currentImagesList').children.length) {
+                    this.loadModalImages && this.loadModalImages();
+                }
+            }
+            if (document.getElementById('colorsList')) {
+                if (!document.getElementById('colorsList').children.length) {
+                    this.loadItemColors && this.loadItemColors();
+                }
+            }
+            if (document.getElementById('sizesList')) {
+                if (!document.getElementById('sizesList').children.length) {
+                    this.loadItemSizes && this.loadItemSizes();
+                }
+            }
+        } catch (_) {}
     }
 
     /**
@@ -557,21 +1290,28 @@ class AdminInventoryModule {
             colorsLoading.classList.remove('hidden');
         }
         try {
-            const res = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
-            const data = await res.json();
-            if (data.success) {
-                this.renderColors(data.colors);
-            } else {
-                console.error('Error loading colors:', data.message);
-                this.renderColors([]);
-            }
+            // Fetch colors and sizes together so we can derive per-color totals from sizes
+            const [colorsRes, sizesRes] = await Promise.all([
+                fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${encodeURIComponent(this.currentItemSku)}`).then(r => r.json()),
+                fetch(`/api/item_sizes.php?action=get_all_sizes&item_sku=${encodeURIComponent(this.currentItemSku)}&wf_dev_admin=1`).then(r => r.json())
+            ]);
+            const colorsOk = !!colorsRes?.success;
+            const sizesOk = !!sizesRes?.success;
+            const colors = colorsOk ? (colorsRes.colors || []) : [];
+            const sizes = sizesOk ? (sizesRes.sizes || []) : [];
+            const totalsByColor = sizes.reduce((acc, s) => {
+                const cid = s.color_id ? String(s.color_id) : null;
+                if (cid) acc[cid] = (acc[cid] || 0) + (parseInt(s.stock_level, 10) || 0);
+                return acc;
+            }, {});
+            this.renderColors(colors, totalsByColor);
         } catch (e) {
-            console.error('Error fetching colors:', e);
+            console.error('Error fetching colors/sizes:', e);
             this.renderColors([]);
         }
     }
 
-    renderColors(colors) {
+    renderColors(colors, totalsByColor = {}) {
         const colorsList = document.getElementById('colorsList');
         const colorsLoading = document.getElementById('colorsLoading');
         if (colorsLoading) colorsLoading.classList.add('hidden');
@@ -581,7 +1321,12 @@ class AdminInventoryModule {
             return;
         }
         const activeColors = colors.filter(c => c.is_active == 1);
-        const totalColorStock = activeColors.reduce((sum, c) => sum + (parseInt(c.stock_level, 10) || 0), 0);
+        const totalColorStock = activeColors.reduce((sum, c) => {
+            const cid = String(c.id);
+            const derived = totalsByColor[cid];
+            const val = typeof derived === 'number' ? derived : (parseInt(c.stock_level, 10) || 0);
+            return sum + val;
+        }, 0);
         const stockField = document.getElementById('stockLevel');
         const currentItemStock = stockField ? (parseInt(stockField.value, 10) || 0) : 0;
         const isInSync = totalColorStock === currentItemStock;
@@ -603,12 +1348,15 @@ class AdminInventoryModule {
             const isActive = color.is_active == 1;
             const activeClass = isActive ? 'bg-white' : 'bg-gray-100 opacity-75';
             const activeText = isActive ? '' : ' (Inactive)';
+            const cid = String(color.id);
+            const derivedTotal = totalsByColor[cid];
+            const displayTotal = typeof derivedTotal === 'number' ? derivedTotal : (parseInt(color.stock_level, 10) || 0);
             return `
                 <div class="color-item flex items-center justify-between border border-gray-200 rounded-lg ${activeClass}">
                     <div class="flex items-center space-x-3">
                         <div class="color-swatch w-8 h-8 rounded-full border-2 border-gray-300" ${color.color_code ? `data-color="${color.color_code}"` : ''}></div>
                         <div>
-                            <div class="font-medium text-gray-800">${color.color_name}${activeText}</div>
+                            <div class="font-medium text-gray-800">${color.color_name}${activeText} <span class=\"ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-gray-700 border border-gray-200\" title=\"Items total for this color\">Total: ${displayTotal}</span></div>
                             <div class="text-sm text-gray-500 flex items-center">
                                 <span class="inline-stock-editor"
                                       data-type="color"
@@ -939,6 +1687,10 @@ class AdminInventoryModule {
             } else if (targetColorId === 'general') {
                 url += '&color_id=0';
             }
+            const genderFilter = document.getElementById('sizeGenderFilter');
+            if (genderFilter && genderFilter.value) {
+                url += `&gender=${encodeURIComponent(genderFilter.value)}`;
+            }
             const response = await fetch(url);
             const data = await response.json();
             if (data.success) {
@@ -999,12 +1751,13 @@ class AdminInventoryModule {
                 const activeClass = isActive ? 'bg-white' : 'bg-gray-100 opacity-75';
                 const activeText = isActive ? '' : ' (Inactive)';
                 const priceAdjustmentText = size.price_adjustment > 0 ? ` (+$${size.price_adjustment})` : '';
+                const genderBadge = size.gender ? `<span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-gray-700 border border-gray-200">${size.gender}</span>` : '';
                 html += `
                     <div class="size-item flex items-center justify-between border border-gray-200 rounded-lg ${activeClass} ml-${Object.keys(grouped).length > 1 ? '4' : '0'}">
                         <div class="flex items-center space-x-3">
                             <div class="size-badge bg-blue-100 text-blue-800 rounded text-sm font-medium">${size.size_code}</div>
                             <div>
-                                <div class="font-medium text-gray-800">${size.size_name}${activeText}${priceAdjustmentText}</div>
+                                <div class="font-medium text-gray-800">${size.size_name}${activeText}${priceAdjustmentText}${genderBadge}</div>
                                 <div class="text-sm text-gray-500 flex items-center">
                                     <span class="inline-stock-editor"
                                           data-type="size"
@@ -1561,6 +2314,12 @@ class AdminInventoryModule {
             case 'sync-size-stock':
                 this.syncSizeStock();
                 break;
+            case 'ensure-color-sizes':
+                this.ensureColorSizes();
+                break;
+            case 'distribute-general-stock-evenly':
+                this.distributeGeneralStockEvenly();
+                break;
             case 'open-color-template-modal':
                 this.openColorTemplateModal();
                 break;
@@ -1596,7 +2355,16 @@ class AdminInventoryModule {
                 this.closeAdminEditor();
                 break;
             case 'save-inventory':
-                this.saveInventoryForm(event);
+                try { event.preventDefault(); } catch (_) {}
+                {
+                    const formEl = (target && target.closest) ? target.closest('form') : null;
+                    const form = formEl || document.getElementById('inventoryForm');
+                    if (form instanceof HTMLFormElement) {
+                        this.saveInventoryForm(form);
+                    } else {
+                        console.warn('[AdminInventory] save-inventory clicked but form element not found');
+                    }
+                }
                 break;
         }
     }
@@ -1668,6 +2436,7 @@ class AdminInventoryModule {
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
                 body: JSON.stringify(payload)
             });
             const data = await res.json().catch(() => ({}));
@@ -1678,8 +2447,9 @@ class AdminInventoryModule {
                 return;
             }
 
-            // Success UX
-            this.showSuccess(isAdd ? 'Item created successfully.' : 'Item updated successfully.');
+            // Success UX (prefer backend message when provided)
+            const okMessage = (data && data.message) ? data.message : (isAdd ? 'Updated successfully' : 'Updated successfully');
+            this.showSuccess(okMessage);
 
             // Navigate to canonical editor URL for the SKU to refresh server-rendered overlay state
             const sku = payload.sku || data.id;
@@ -1708,6 +2478,8 @@ class AdminInventoryModule {
             // Respond to size configuration radio changes
             this.updateSizeConfiguration();
         } else if (t.id === 'sizeColorFilter') {
+            this.loadItemSizes();
+        } else if (t.id === 'sizeGenderFilter') {
             this.loadItemSizes();
         } else if (t.id === 'colorTemplateCategory') {
             this.filterColorTemplates();
@@ -1807,16 +2579,21 @@ class AdminInventoryModule {
             const response = await fetch('/api/item_sizes.php?action=sync_stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({ item_sku: this.currentItemSku })
             });
             const data = await response.json();
             if (data.success) {
-                this.showSuccess(`Stock synchronized - Total: ${data.new_total_stock}`);
+                const msg = (data && data.message) ? data.message : (typeof data.new_total_stock !== 'undefined' ? `Updated successfully (Total: ${data.new_total_stock})` : 'Updated successfully');
+                this.showSuccess(msg);
                 const stockField = document.getElementById('stockLevel');
                 if (stockField && data.new_total_stock !== undefined) {
                     stockField.value = data.new_total_stock;
                 }
-                this.loadItemSizes();
+                // Refresh both colors and sizes lists, and the nested editor, so color totals reflect size sums
+                try { this.loadItemColors(); } catch (_) {}
+                try { this.loadItemSizes(); } catch (_) {}
+                try { this.loadNestedInventoryEditor(); } catch (_) {}
             } else {
                 this.showError(`Error syncing stock: ${data.message || ''}`);
             }
@@ -4709,6 +5486,34 @@ class AdminInventoryModule {
         this.showToast(message, 'info');
     }
 
+    // Non-blocking toast with action link (fixed, auto-dismiss)
+    showActionToast(message, linkText, href) {
+        try {
+            let host = document.getElementById('wf-admin-toast-host');
+            if (!host) {
+                host = document.createElement('div');
+                host.id = 'wf-admin-toast-host';
+                host.className = 'wf-admin-toast-host';
+                document.body.appendChild(host);
+            }
+            const el = document.createElement('div');
+            el.className = 'wf-admin-toast';
+            el.innerHTML = `<span>${message}</span>`;
+            if (href) {
+                const a = document.createElement('a');
+                a.href = href;
+                a.textContent = linkText || 'Open';
+                // Style comes from CSS
+                el.appendChild(a);
+            }
+            host.appendChild(el);
+            setTimeout(() => {
+                try { el.classList.add('fade-out'); } catch(_) {}
+                setTimeout(() => { try { el.remove(); } catch(_) {} }, 350);
+            }, 6000);
+        } catch(_) {}
+    }
+
     async loadInventoryThumbnails() {
         const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
         if (!thumbnailContainers.length) return;
@@ -4747,6 +5552,38 @@ class AdminInventoryModule {
                 ${totalCount > 1 ? `<div class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">${totalCount}</div>` : ''}
             </div>
         `;
+
+        // If the editor is present, ensure its panels are populated
+        try {
+            // Expose selected handlers for legacy calls in PHP markup
+            window.handleGlobalColorSelection = this.handleGlobalColorSelection?.bind?.(this) || this.handleGlobalColorSelection;
+            // Expose loaders for compatibility with migrated inline calls
+            window.loadItemColors = this.loadItemColors.bind(this);
+            window.loadItemSizes = this.loadItemSizes.bind(this);
+            // Expose suggestion helpers for compatibility with legacy inline calls
+            window.loadExistingPriceSuggestion = this.loadExistingPriceSuggestion?.bind?.(this) || this.loadExistingPriceSuggestion;
+            window.loadExistingViewPriceSuggestion = this.loadExistingViewPriceSuggestion?.bind?.(this) || this.loadExistingViewPriceSuggestion;
+            window.loadExistingMarketingSuggestion = this.loadExistingMarketingSuggestion?.bind?.(this) || this.loadExistingMarketingSuggestion;
+            window.displayMarketingSuggestionIndicator = this.displayMarketingSuggestionIndicator?.bind?.(this) || this.displayMarketingSuggestionIndicator;
+
+            // Load editor sections when present
+            if (document.getElementById('colorsList')) {
+                this.loadItemColors();
+            }
+            if (document.getElementById('sizesList')) {
+                this.loadItemSizes();
+            }
+            // Ensure SKU is set and initial images load on page load
+            const skuField = document.getElementById('skuEdit') || document.getElementById('skuDisplay') || document.getElementById('sku');
+            if (skuField && skuField.value) {
+                this.currentItemSku = skuField.value;
+            }
+            if (document.getElementById('currentImagesList') && this.currentItemSku) {
+                this.loadCurrentImages(this.currentItemSku, false);
+            }
+        } catch (e) {
+            console.warn('[AdminInventory] Failed to trigger editor loaders from thumbnail render', e);
+        }
     }
 
     renderEmptyThumbnail(container) {

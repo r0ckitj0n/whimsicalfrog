@@ -65,6 +65,7 @@ require_once __DIR__ . '/email_notifications.php';
 require_once __DIR__ . '/business_settings_helper.php';
 require_once __DIR__ . '/../includes/tax_service.php';
 require_once __DIR__ . '/../includes/stock_manager.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Error display controlled centrally in api/config.php
 // Content-Type header already set at top of file
@@ -97,14 +98,12 @@ try {
     // Stock management functions are now available from includes/functions.php
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
         // Clear any buffered notices/warnings
         while (function_exists('ob_get_level') && ob_get_level() > 0) {
             @ob_end_clean();
         }
-        echo json_encode(['success' => false,'error' => 'Method not allowed']);
         $__wf_add_order_sent = true;
-        exit;
+        Response::methodNotAllowed('Method not allowed');
     }
 
     // Use previously captured $rawInput for JSON decoding to avoid double-reading php://input
@@ -114,13 +113,11 @@ try {
         if (class_exists('Logger')) {
             Logger::debug('add-order JSON decode error', ['endpoint' => 'add-order', 'error' => $jsonError]);
         }
-        http_response_code(400);
         while (function_exists('ob_get_level') && ob_get_level() > 0) {
             @ob_end_clean();
         }
-        echo json_encode(['success' => false,'error' => 'Invalid JSON: ' . $jsonError]);
         $__wf_add_order_sent = true;
-        exit;
+        Response::error('Invalid JSON: ' . $jsonError, null, 400);
     }
 
     // Debug the parsed input
@@ -260,13 +257,11 @@ try {
     $required = ['customerId','itemIds','quantities','paymentMethod','total'];
     foreach ($required as $field) {
         if (!isset($input[$field])) {
-            http_response_code(400);
             while (function_exists('ob_get_level') && ob_get_level() > 0) {
                 @ob_end_clean();
             }
-            echo json_encode(['success' => false,'error' => 'Missing field: '.$field]);
             $__wf_add_order_sent = true;
-            exit;
+            Response::error('Missing field: ' . $field, null, 400);
         }
     }
     $itemIds = $input['itemIds'];  // These are actually SKUs now
@@ -286,13 +281,11 @@ try {
     }
 
     if (!is_array($itemIds) || !is_array($quantities) || count($itemIds) !== count($quantities)) {
-        http_response_code(400);
         while (function_exists('ob_get_level') && ob_get_level() > 0) {
             @ob_end_clean();
         }
-        echo json_encode(['success' => false,'error' => 'Invalid items array']);
         $__wf_add_order_sent = true;
-        exit;
+        Response::error('Invalid items array', null, 400);
     }
 
     // Ensure colors and sizes arrays have same length as items (fill with nulls if needed)
@@ -397,12 +390,16 @@ try {
     $rateFedEx       = (float)$shipCfg['shipping_rate_fedex'];
     $rateUPS         = (float)$shipCfg['shipping_rate_ups'];
 
+    // Shipping rules:
+    // - Customer Pickup: always free ($0)
+    // - Local Delivery: flat fee $75, never free
+    // - Carriers (USPS/FedEx/UPS): eligible for free shipping threshold
     if ($shippingMethod === 'Customer Pickup') {
         $computedShipping = 0.0;
+    } elseif ($shippingMethod === 'Local Delivery') {
+        $computedShipping = 75.00;
     } elseif ($computedSubtotal >= $freeThreshold && $freeThreshold > 0) {
         $computedShipping = 0.0;
-    } elseif ($shippingMethod === 'Local Delivery') {
-        $computedShipping = $localDeliveryFee;
     } elseif ($shippingMethod === 'USPS') {
         $computedShipping = $rateUSPS;
     } elseif ($shippingMethod === 'FedEx') {
@@ -498,13 +495,11 @@ try {
     if ($paymentMethod === 'Square') {
         $squareToken = $input['squareToken'] ?? '';
         if (!$squareToken) {
-            http_response_code(400);
             while (function_exists('ob_get_level') && ob_get_level() > 0) {
                 @ob_end_clean();
             }
-            echo json_encode(['success' => false, 'error' => 'Missing Square token']);
             $__wf_add_order_sent = true;
-            exit;
+            Response::error('Missing Square token', null, 400);
         }
 
         // Load Square settings
@@ -517,9 +512,8 @@ try {
             if (class_exists('Logger')) {
                 Logger::debug('Square not properly configured', ['endpoint' => 'add-order']);
             }
-            echo json_encode(['success' => false, 'error' => 'Payment configuration error']);
             $__wf_add_order_sent = true;
-            exit;
+            Response::error('Payment configuration error', null, 400);
         }
 
         // Prepare Square charge
@@ -532,13 +526,11 @@ try {
 
         $amountCents = (int) round($computedTotal * 100);
         if ($amountCents <= 0) {
-            http_response_code(400);
             while (function_exists('ob_get_level') && ob_get_level() > 0) {
                 @ob_end_clean();
             }
-            echo json_encode(['success' => false, 'error' => 'Invalid amount for payment']);
             $__wf_add_order_sent = true;
-            exit;
+            Response::error('Invalid amount for payment', null, 400);
         }
 
         $payload = [
@@ -586,13 +578,11 @@ try {
             if (class_exists('Logger')) {
                 Logger::debug('Square payment failed', ['endpoint' => 'add-order', 'httpCode' => $httpCode, 'resp' => $resp, 'curlErr' => $curlErr]);
             }
-            http_response_code(400);
             while (function_exists('ob_get_level') && ob_get_level() > 0) {
                 @ob_end_clean();
             }
-            echo json_encode(['success' => false, 'error' => 'Payment failed']);
             $__wf_add_order_sent = true;
-            exit;
+            Response::error('Payment failed', null, 400);
         }
 
         $respData = json_decode($resp, true);
@@ -600,13 +590,11 @@ try {
             if (class_exists('Logger')) {
                 Logger::debug('Square payment not completed', ['endpoint' => 'add-order', 'resp' => $respData]);
             }
-            http_response_code(400);
             while (function_exists('ob_get_level') && ob_get_level() > 0) {
                 @ob_end_clean();
             }
-            echo json_encode(['success' => false, 'error' => 'Payment not completed']);
             $__wf_add_order_sent = true;
-            exit;
+            Response::error('Payment not completed', null, 400);
         }
 
         $squarePaymentId = $respData['payment']['id'] ?? null;
@@ -944,19 +932,12 @@ try {
         while (function_exists('ob_get_level') && ob_get_level() > 0) {
             @ob_end_clean();
         }
-        $jsonOut = json_encode($resp);
-        error_log('add-order.php: Sending success response, bytes=' . strlen($jsonOut));
-        echo $jsonOut;
         $__wf_add_order_sent = true;
+        Response::success($resp);
     } catch (PDOException $e) {
         Database::rollBack();
         error_log("add-order.php: Database error: " . $e->getMessage());
-        if (!empty($debug)) {
-            http_response_code(200); // surface debug in client
-        } else {
-            http_response_code(500);
-        }
-        $resp = ['success' => false,'error' => $e->getMessage()];
+        $resp = ['error' => $e->getMessage()];
         if (!empty($debug)) {
             // Attach PDO error info if available
             $pdoInfo = method_exists($e, 'errorInfo') ? $e->errorInfo : (property_exists($e, 'errorInfo') ? $e->errorInfo : null);
@@ -966,50 +947,25 @@ try {
             ];
             $resp['debug'] = $debugData;
         }
-        while (function_exists('ob_get_level') && ob_get_level() > 0) {
-            @ob_end_clean();
-        }
-        $jsonOut = json_encode($resp);
-        error_log('add-order.php: Sending DB error response, bytes=' . strlen($jsonOut));
-        echo $jsonOut;
         $__wf_add_order_sent = true;
-    } catch (Throwable $e) {
+        Response::serverError('Database error', $resp);
+    } catch (Exception $e) {
         Database::rollBack();
         error_log("add-order.php: General error: " . $e->getMessage());
-        if (!empty($debug)) {
-            http_response_code(200);
-        } else {
-            http_response_code(500);
-        }
-        $resp = ['success' => false,'error' => $e->getMessage()];
+        $resp = ['error' => $e->getMessage()];
         if (!empty($debug)) {
             $resp['debug'] = $debugData;
         }
-        while (function_exists('ob_get_level') && ob_get_level() > 0) {
-            @ob_end_clean();
-        }
-        $jsonOut = json_encode($resp);
-        error_log('add-order.php: Sending general error response, bytes=' . strlen($jsonOut));
-        echo $jsonOut;
         $__wf_add_order_sent = true;
+        Response::serverError('Server error', $resp);
     }
 
 } catch (Throwable $e) {
     error_log("add-order.php: Fatal error: " . $e->getMessage());
-    if (isset($debug) && $debug) {
-        http_response_code(200);
-    } else {
-        http_response_code(500);
-    }
-    $resp = ['success' => false,'error' => 'Fatal error: ' . $e->getMessage()];
+    $resp = ['error' => 'Fatal error: ' . $e->getMessage()];
     if (isset($debug) && $debug) {
         $resp['debug'] = $debugData;
     }
-    while (function_exists('ob_get_level') && ob_get_level() > 0) {
-        @ob_end_clean();
-    }
-    $jsonOut = json_encode($resp);
-    error_log('add-order.php: Sending fatal error response, bytes=' . strlen($jsonOut));
-    echo $jsonOut;
     $__wf_add_order_sent = true;
+    Response::serverError('Fatal error', $resp);
 }

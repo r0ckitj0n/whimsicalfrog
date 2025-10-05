@@ -18,7 +18,7 @@
   opacity: 1;
   visibility: visible;
   transition: all 0.3s ease;
-  z-index: var(--wf-admin-overlay-z, var(--wf-overlay-z, 10050));
+  z-index: var(--z-admin-overlay,  var(--wf-overlay-z, 10050));
 }
 
 .admin-modal-overlay.hidden {
@@ -34,7 +34,6 @@
   pointer-events: auto;
 }
 
-/* When explicitly marked topmost by JS, guarantee a higher stacking context */
 .admin-modal-overlay.topmost {
   z-index: var(--z-detailed-item-modal, 100300) !important;
 }
@@ -50,13 +49,21 @@
   max-height: 90vh;
   overflow: hidden; /* keep header/footer fixed */
   position: relative; /* ensure new stacking context */
-  z-index: var(--wf-admin-overlay-content-z, 10101);
+  z-index: var(--z-admin-overlay-content,  10101);
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-modal .modal-body {
+  flex: 1 1 auto;
+  min-height: 0; /* allow flex item to shrink so overflow can occur */
+  overflow-y: auto;
 }
 
 /* Admin modal content variant used by Settings overlays */
 .admin-modal-content {
   position: relative;
-  z-index: var(--wf-admin-overlay-content-z, 10101);
+  z-index: var(--z-admin-overlay-content,  10101);
 }
 
 /* Normalize inner panel appearance (used by JS instead of inline styles) */
@@ -66,7 +73,7 @@
   display: block !important;
   background: #fff !important;
   position: relative !important;
-  z-index: var(--wf-admin-overlay-content-z, 10101) !important;
+  z-index: var(--z-admin-overlay-content,  10101) !important;
   pointer-events: auto !important;
   width: 90% !important;
   max-width: none !important;
@@ -308,6 +315,12 @@ body.wf-no-scroll { overflow: hidden !important; }
   flex: 1;
   overflow-y: auto;
   padding: 1.5rem;
+}
+
+/* Orders page: add a fixed 80px top offset so the view/edit modal appears below padding */
+body[data-page='admin/orders'] #orderModal {
+  padding-top: 80px !important;
+  align-items: flex-start !important; /* ensure padding space is respected */
 }
 
 .order-modal .order-form-grid {

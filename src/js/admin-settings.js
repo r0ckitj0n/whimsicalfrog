@@ -9,6 +9,14 @@ function __unusedDelegatedPreamble(e, closest, target) {
                 if (typeof window !== 'undefined' && typeof window.navigateUp === 'function') window.navigateUp();
                 else if (typeof navigateUp === 'function') navigateUp();
             } catch (_) {}
+
+// ---- Centralized toast helpers (safe if WFToast is missing) ----
+function _wfToast(data, fallbackMsg = 'Updated successfully') {
+  try { if (window?.WFToast?.toastFromData) return window.WFToast.toastFromData(data, fallbackMsg); } catch (_) {}
+}
+function _wfToastErr(message = 'Request failed') {
+  try { if (window?.WFToast?.toastError) return window.WFToast.toastError(message); } catch (_) {}
+}
             return;
         }
 
@@ -759,10 +767,10 @@ async function saveContentToneOptions() {
     // Reload and refresh UI
     await loadContentToneOptions();
     populateContentToneDropdown();
-    try { showNotification('Content Tone Options', 'Options saved!', 'success'); } catch (_) {}
+    try { wfToast({ success: true, message: 'Updated successfully' }); } catch(_) {}
     closeContentToneModal();
   } catch (error) {
-    try { showNotification('Content Tone Options', 'Error saving options: ' + error.message, 'error'); } catch (_) {}
+    try { wfToastErr('Error saving options: ' + error.message); } catch (_) {}
   }
 }
 
@@ -774,10 +782,11 @@ async function saveContentToneOption(option, isNew = false) {
       body: JSON.stringify({ id: option.id, value: option.value || option.id, label: option.name, description: option.description })
     });
     const result = await response.json();
-    if (!result.success) { try { showNotification('Content Tone Options', 'Failed to save option: ' + result.error, 'error'); } catch (_) {} }
+    try { wfToast(result); } catch(_) {}
+    if (!result.success) { try { /* keep legacy */ showNotification('Content Tone Options', 'Failed to save option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
   } catch (error) {
-    try { showNotification('Content Tone Options', 'Error saving option: ' + error.message, 'error'); } catch (_) {}
+    try { wfToastErr('Error saving option: ' + error.message); } catch (_) {}
     return false;
   }
 }
@@ -786,10 +795,11 @@ async function deleteContentToneOptionFromDB(optionId) {
   try {
     const response = await fetch(`/api/content_tone_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, { method: 'DELETE' });
     const result = await response.json();
-    if (!result.success) { try { showNotification('Content Tone Options', 'Failed to delete option: ' + result.error, 'error'); } catch (_) {} }
+    try { wfToast(result); } catch(_) {}
+    if (!result.success) { try { showNotification('Content Tone Options', 'Failed to delete option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
   } catch (error) {
-    try { showNotification('Content Tone Options', 'Error deleting option: ' + error.message, 'error'); } catch (_) {}
+    try { wfToastErr('Error deleting option: ' + error.message); } catch (_) {}
     return false;
   }
 }
@@ -968,10 +978,10 @@ async function saveBrandVoiceOptions() {
 
     await loadBrandVoiceOptions();
     populateBrandVoiceDropdown();
-    try { showNotification('Brand Voice Options', 'Options saved!', 'success'); } catch (_) {}
+    try { wfToast({ success: true, message: 'Updated successfully' }); } catch(_) {}
     closeBrandVoiceModal();
   } catch (error) {
-    try { showNotification('Brand Voice Options', 'Error saving options: ' + error.message, 'error'); } catch (_) {}
+    try { wfToastErr('Error saving options: ' + error.message); } catch (_) {}
   }
 }
 
@@ -983,10 +993,11 @@ async function saveBrandVoiceOption(option, isNew = false) {
       body: JSON.stringify({ id: option.id, value: option.value || option.id, label: option.name, description: option.description })
     });
     const result = await response.json();
-    if (!result.success) { try { showNotification('Brand Voice Options', 'Failed to save option: ' + result.error, 'error'); } catch (_) {} }
+    try { wfToast(result); } catch(_) {}
+    if (!result.success) { try { showNotification('Brand Voice Options', 'Failed to save option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
   } catch (error) {
-    try { showNotification('Brand Voice Options', 'Error saving option: ' + error.message, 'error'); } catch (_) {}
+    try { wfToastErr('Error saving option: ' + error.message); } catch (_) {}
     return false;
   }
 }
@@ -995,10 +1006,11 @@ async function deleteBrandVoiceOptionFromDB(optionId) {
   try {
     const response = await fetch(`/api/brand_voice_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, { method: 'DELETE' });
     const result = await response.json();
-    if (!result.success) { try { showNotification('Brand Voice Options', 'Failed to delete option: ' + result.error, 'error'); } catch (_) {} }
+    try { wfToast(result); } catch(_) {}
+    if (!result.success) { try { showNotification('Brand Voice Options', 'Failed to delete option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
   } catch (error) {
-    try { showNotification('Brand Voice Options', 'Error deleting option: ' + error.message, 'error'); } catch (_) {}
+    try { wfToastErr('Error deleting option: ' + error.message); } catch (_) {}
     return false;
   }
 }
@@ -1757,7 +1769,9 @@ window.openDatabaseMaintenanceModal = function openDatabaseMaintenanceModal() {
     const modal = document.getElementById('databaseMaintenanceModal');
     if (!modal) {
         console.error('databaseMaintenanceModal element not found!');
-        if (window.showError) {
+        if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+            window.wfNotifications.show('Database Maintenance modal not found. Please refresh the page.', 'error', { title: 'Admin Settings' });
+        } else if (window.showError) {
             window.showError('Database Maintenance modal not found. Please refresh the page.');
         } else {
             alert('Database Maintenance modal not found. Please refresh the page.');
@@ -2252,7 +2266,9 @@ async function compactRepairDatabase() {
         }
     } catch (error) {
         console.error('Database optimization error:', error);
-        if (typeof window.showError === 'function') {
+        if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+            window.wfNotifications.show(error.message || 'Database optimization failed', 'error', { title: 'Database Maintenance' });
+        } else if (typeof window.showError === 'function') {
             window.showError(error.message || 'Database optimization failed');
         } else {
             alert(error.message || 'Database optimization failed');
@@ -4843,7 +4859,14 @@ function initAdminSettingsDelegatedListeners() {
             if (data && data.success) {
                 await loadRoomSettings();
             } else {
-                alert((data && (data.error || data.message)) || 'Failed to initialize room settings');
+                const msg = (data && (data.error || data.message)) || 'Failed to initialize room settings';
+                if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                    window.wfNotifications.show(msg, 'error', { title: 'Room Settings' });
+                } else if (typeof window.showError === 'function') {
+                    window.showError(msg);
+                } else {
+                    alert(msg);
+                }
             }
         } catch (err) {
             console.warn('[RoomSettings] initialize error', err);
@@ -4870,12 +4893,26 @@ function initAdminSettingsDelegatedListeners() {
             });
             const data = await res.json().catch(() => ({}));
             if (data && data.success) {
-                try { if (typeof window.showSuccess === 'function') window.showSuccess('Room settings saved'); } catch(_) {}
+                try {
+                    if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                        window.wfNotifications.show('Room settings saved', 'success', { title: 'Room Settings' });
+                    } else if (typeof window.showSuccess === 'function') {
+                        window.showSuccess('Room settings saved');
+                    }
+                } catch(_) {}
                 await loadRoomSettings();
                 currentEditingRoom = null;
             } else {
                 const msg = (data && (data.error || data.message)) || 'Failed to save';
-                try { if (typeof window.showError === 'function') window.showError(msg); } catch(_) { alert(msg); }
+                try {
+                    if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                        window.wfNotifications.show(msg, 'error', { title: 'Room Settings' });
+                    } else if (typeof window.showError === 'function') {
+                        window.showError(msg);
+                    } else {
+                        alert(msg);
+                    }
+                } catch(_) { alert(msg); }
             }
         } catch (err) {
             console.warn('[RoomSettings] save error', err);
@@ -4966,7 +5003,16 @@ function initAdminSettingsDelegatedListeners() {
                 updatePathDisplay();
                 updateUpButton();
             } else {
-                try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to load directory'); } catch(_) { alert(result?.error || 'Failed to load directory'); }
+                try {
+                    const msg = result?.error || 'Failed to load directory';
+                    if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                        window.wfNotifications.show(msg, 'error', { title: 'File Explorer' });
+                    } else if (typeof window.showError === 'function') {
+                        window.showError(msg);
+                    } else {
+                        alert(msg);
+                    }
+                } catch(_) { alert(result?.error || 'Failed to load directory'); }
             }
         } catch (err) {
             console.warn('[FileExplorer] loadDirectory error', err);
@@ -5099,7 +5145,16 @@ function initAdminSettingsDelegatedListeners() {
     }
     async function saveFile() {
         if (!currentFile || currentFile.readonly) {
-            try { if (typeof window.showError === 'function') window.showError('No editable file selected'); } catch(_) { alert('No editable file selected'); }
+            try {
+                const msg = 'No editable file selected';
+                if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+                    window.wfNotifications.show(msg, 'error', { title: 'File Explorer' });
+                } else if (typeof window.showError === 'function') {
+                    window.showError(msg);
+                } else {
+                    alert(msg);
+                }
+            } catch(_) { alert('No editable file selected'); }
             return;
         }
         const content = (document.getElementById('fileContent')||{}).value || '';
@@ -8202,25 +8257,26 @@ if (typeof window !== 'undefined') {
 
             // AI Settings Modal handlers
             if (action === 'open-ai-settings') {
-                e.preventDefault();
+                ev.preventDefault();
                 openAISettingsModal();
                 return;
             }
             if (action === 'close-ai-settings') {
-                e.preventDefault();
+                ev.preventDefault();
                 closeAISettingsModal();
                 return;
             }
             if (action === 'save-ai-settings') {
-                e.preventDefault();
+                ev.preventDefault();
                 saveAISettings();
                 return;
             }
             if (action === 'test-ai-provider') {
-                e.preventDefault();
+                ev.preventDefault();
                 testAIProvider();
                 return;
             }
+        });
 
     const bootDelegation = () => {
         if (!__wfIsOnAdminSettingsPage()) return;
@@ -8229,7 +8285,12 @@ if (typeof window !== 'undefined') {
     };
     if (document.readyState !== 'loading') bootDelegation();
     else document.addEventListener('DOMContentLoaded', bootDelegation, { once: true });
-}
+  }; // end onReady
+
+  // Run onReady once DOM is ready
+  if (document.readyState !== 'loading') onReady();
+  else document.addEventListener('DOMContentLoaded', onReady, { once: true });
+} // end if (typeof window !== 'undefined')
 
 // Helper to initialize SSL checkbox-driven visibility
 function initSSLHandlers(root = document) {

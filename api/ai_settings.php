@@ -5,9 +5,8 @@
  */
 
 require_once 'config.php';
+require_once __DIR__ . '/../includes/response.php';
 require_once 'ai_providers.php';
-
-header('Content-Type: application/json');
 
 // Check if user is admin
 
@@ -28,9 +27,7 @@ if ($isLoggedIn) {
 }
 
 if (!$isLoggedIn || !$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Admin access required']);
-    exit;
+    Response::forbidden('Admin access required');
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -46,46 +43,45 @@ try {
     switch ($action) {
         case 'get_settings':
             $settings = getAISettings();
-            echo json_encode(['success' => true, 'settings' => $settings]);
+            Response::json(['success' => true, 'settings' => $settings]);
             break;
 
         case 'get_providers':
             $providers = getAIProviders()->getAvailableProviders();
-            echo json_encode(['success' => true, 'providers' => $providers]);
+            Response::json(['success' => true, 'providers' => $providers]);
             break;
 
         case 'update_settings':
             $input = json_decode(file_get_contents('php://input'), true);
             if (!$input) {
-                throw new Exception('Invalid JSON input');
+                Response::error('Invalid JSON input', null, 400);
             }
 
             $result = updateAISettings($input, $pdo);
-            echo json_encode(['success' => true, 'message' => 'AI settings updated successfully']);
+            Response::json(['success' => true, 'message' => 'AI settings updated successfully']);
             break;
 
         case 'test_provider':
             $provider = $_POST['provider'] ?? $_GET['provider'] ?? '';
             if (empty($provider)) {
-                throw new Exception('Provider not specified');
+                Response::error('Provider not specified', null, 400);
             }
 
             $result = getAIProviders()->testProvider($provider);
-            echo json_encode($result);
+            Response::json($result);
             break;
 
         case 'init_ai_settings':
             $result = initializeAISettings($pdo);
-            echo json_encode(['success' => true, 'message' => 'AI settings initialized', 'inserted' => $result]);
+            Response::json(['success' => true, 'message' => 'AI settings initialized', 'inserted' => $result]);
             break;
 
         default:
-            throw new Exception('Invalid action');
+            Response::error('Invalid action', null, 400);
     }
 
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['error' => $e->getMessage()]);
+    Response::serverError($e->getMessage());
 }
 
 /**

@@ -1,0 +1,81 @@
+/* Legacy Room Modal CSS (from backup 2025-09-23)
+   Source: backups/src/styles/components/room-modal.css
+   Purpose: enable A/B test via ?wf_legacy_modal=1 */
+
+/* Keep original dimmed background image when popup is active */
+.room-modal-overlay.popup-active {
+  background-image: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), var(--dynamic-bg-url) !important;
+  background-size: cover !important;
+  background-color: transparent !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+.site-header.universal-page-header { z-index: var(--z-header-over-room-modal, 3000) !important; }
+.room-page-header { position: relative !important; z-index: var(--z-header-over-room-modal, 3000) !important; }
+
+/* Container */
+.room-modal-overlay {
+  padding-bottom: 0 !important;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-index-room-modal, 2400);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+.room-modal-overlay.show {
+  align-items: flex-start !important;
+  padding-top: calc(var(--header-height, 80px) + 5px) !important;
+  opacity: 1;
+  visibility: visible;
+}
+.room-modal-container {
+  margin-bottom: 5px !important;
+  position: relative;
+  width: min(95vw, min(95vh * 1.43, 1200px));
+  aspect-ratio: 1280 / 896;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%);
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+.room-modal-overlay.show .room-modal-container { transform: scale(1); }
+
+/* Header */
+.room-modal-header { position: absolute; top: 0; left: 0; right: 0; z-index: var(--z-index-room-modal-header, 2450); pointer-events: none; width: 100%; max-width: 100%; box-sizing: border-box; overflow: hidden; }
+.back-button-container { position: absolute; top: 1rem; left: 1rem; pointer-events: auto; z-index: var(--z-room-buttons, 55); }
+.room-modal-back-btn { width:auto; max-width:max-content; display:flex; align-items:center; gap:8px; background: var(--brand-primary, #87ac3a); color:#fff; border:none; border-radius:12px; backdrop-filter: blur(4px); box-shadow:0 4px 8px rgba(0,0,0,0.1); min-width:120px; padding:8px 16px; font-size:16px; font-weight:600; cursor:pointer; transition: all .2s ease; pointer-events:auto; text-decoration:none; }
+.room-modal-back-btn:hover { background: var(--brand-secondary, #6d8a2e); transform: translateY(-1px); }
+.room-modal-title-container { margin-left:auto; display:inline-flex; align-items:center; padding:6px 12px; border-radius:8px; background: var(--brand-primary, #87ac3a); color: var(--white, #ffffff); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+/* Ensure inner title text inherits contrast color */
+.room-modal-title-container h1,
+.room-modal-title-container h2,
+.room-modal-title-container h3,
+.room-modal-title-container p,
+.room-modal-title-container span { color: inherit; margin: 0; }
+
+/* Body */
+.room-modal-body { position:relative; width:100%; height:100%; background: #f8fafc; }
+.room-overlay-wrapper { position:relative; width:100%; height:100%; background-image: var(--room-bg-image, none); background-size:cover; background-position:center; background-repeat:no-repeat; min-height:500px; }
+
+/* Icons */
+.room-overlay-wrapper .room-product-icon { position:absolute; top:var(--icon-top, 0); left:var(--icon-left, 0); width:var(--icon-width, 80px); height:var(--icon-height, 80px); cursor:pointer; z-index: var(--z-badge, 10); transition: transform .2s, box-shadow .2s; border-radius:8px; overflow:hidden; background: rgba(255,255,255,.9); border:2px solid rgba(255,255,255,.3); backdrop-filter: blur(2px); box-shadow:0 2px 8px rgba(0,0,0,.2); }
+.room-overlay-wrapper.no-icon-bg .room-product-icon { background: transparent !important; border-color: transparent !important; box-shadow: none !important; backdrop-filter: none !important; }
+.room-overlay-wrapper .room-product-icon:hover { transform: scale(1.1); box-shadow:0 4px 16px rgba(0,0,0,.2); z-index: var(--z-badge-high, 15); }
+.room-overlay-wrapper .room-product-icon-img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
+
+/* Loading */
+.room-modal-loading { position:absolute; inset:0; background:#f8fafc; display:flex; align-items:center; justify-content:center; border-radius:12px; z-index: var(--z-index-modal-content, 420); }
+.room-modal-spinner { width:50px; height:50px; border:4px solid #e5e7eb; border-top:4px solid var(--brand-primary,#87ac3a); border-radius:50%; animation: room-modal-spin 1s linear infinite; }
+@keyframes room-modal-spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+/* Responsive */
+@media (max-width:768px){ .room-modal-container{ width:min(98vw,min(98vh*1.43,800px)); aspect-ratio: 1280/896 } }
+@media (max-width:480px){ .room-modal-container{ width:min(96vw,min(96vh*1.43,600px)); aspect-ratio: 1280/896 } }

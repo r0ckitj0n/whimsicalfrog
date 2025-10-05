@@ -1,6 +1,9 @@
 <?php
 // sections/admin_dashboard.php — Primary implementation for Admin Dashboard
 
+// Detect modal context (?modal=1) to optionally skip full admin layout
+$__wf_is_modal = isset($_GET['modal']) && $_GET['modal'] == '1';
+
 // Initialize API config and helpers
 require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
@@ -117,6 +120,24 @@ if (empty($dashboardConfig)) {
     ];
 }
 ?>
+
+<?php if (!$__wf_is_modal): ?>
+<?php
+  // When not in modal, include shared admin layout and nav tabs
+  if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+      $page = 'admin';
+      include dirname(__DIR__) . '/partials/header.php';
+      if (!function_exists('__wf_admin_dashboard_footer_shutdown')) {
+          function __wf_admin_dashboard_footer_shutdown() { @include __DIR__ . '/../partials/footer.php'; }
+      }
+      register_shutdown_function('__wf_admin_dashboard_footer_shutdown');
+  }
+  $section = 'dashboard';
+  include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
+?>
+<div class="admin-dashboard page-content">
+  <div id="admin-section-content">
+<?php endif; ?>
 
 <div class="dashboard-container">
     <!-- Marker for Background Manager deep-links -->
@@ -464,21 +485,15 @@ if (empty($dashboardConfig)) {
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
-                                    
                                     <div class="flex items-end space-x-2">
                                         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors">Filter</button>
                                         <a href="/admin" class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded transition-colors">Clear</a>
                                     </div>
-                                </form>
-                            </div>
 
                             <!-- Orders Table -->
                             <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                                 <?php if (empty($orders)): ?>
                                     <div class="text-center text-gray-500">
-                                        <div class="text-3xl">📋</div>
-                                        <div class="text-sm">No orders found</div>
-                                        <div class="text-xs">Try adjusting your filters</div>
                                     </div>
                                 <?php else: ?>
                                     <div class="overflow-x-auto">

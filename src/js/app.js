@@ -10,6 +10,7 @@ import '../core/action-registry.js';
 import './body-background-from-data.js';
 import initializeTooltipManager from '../modules/tooltip-manager.js';
 import { buildAdminUrl } from '../core/admin-url-builder.js';
+import RoomModalManager from '../modules/room-modal-manager.js';
 
 // TEMP: detect duplicate module evaluations during dev or unexpected reloads
 try {
@@ -48,49 +49,65 @@ async function initializeCoreSystemsApp() {
         return;
     }
     
-    // Load core public modules dynamically
-    const [CartSystemMod, RoomModalManagerMod, SearchSystemMod, SalesSystemMod, UtilsMod] = await Promise.all([
+    // Load core public modules dynamically (modern modal only)
+    const [CartSystemMod, SearchSystemMod, SalesSystemMod, UtilsMod] = await Promise.all([
         import('../modules/cart-system.js'),
-        import('../modules/room-modal-manager.js'),
         import('../modules/search-system.js'),
         import('../modules/sales-system.js'),
         import('../modules/utilities.js'),
     ]);
 
+    // Always use modern room modal manager (statically imported at top)
     const CartSystem = CartSystemMod.default;
-    const RoomModalManager = RoomModalManagerMod.default;
     const SearchSystem = SearchSystemMod.default;
     const SalesSystem = SalesSystemMod.default;
     const WhimsicalFrogUtils = UtilsMod.default;
 
     // Side-effect and UI modules (no exports needed)
+    // Keep the absolute minimum on the critical path to reduce first-load latency
     await Promise.all([
-        import('./dynamic-background-loader.js'),
-        import('./room-coordinate-manager.js'),
-        import('./api-client.js'),
-        import('./api-aliases.js'),
-        import('./wait-for-function.js'),
         import('./modal-manager.js'),
-        import('./global-item-modal.js'),
-        import('./global-modals.js'),
-        import('./cart-modal.js'),
-        import('../ui/global-popup.js'),
         import('./global-notifications.js'),
-        import('../modules/room-coordinator.js').then(m => { new m.RoomCoordinator().init(); }),
-        import('./analytics.js'),
-        import('./login-modal.js'),
-        import('./header-auth-sync.js'),
-        import('./payment-modal.js'),
-        import('./receipt-modal.js'),
-        import('./header-offset.js'),
-        import('./main-application.js'),
-        import('./contact.js'),
-        import('./reveal-company-modal.js'),
-        import('./room-icons-init.js'),
-        import('../modules/image-carousel.js'),
-        import('../modules/footer-newsletter.js'),
-        import('../modules/ai-processing-modal.js'),
-    ]).catch(err => console.warn('[App] Non-fatal: some side-effect modules failed to import', err));
+        import('./api-aliases.js'),
+    ]).catch(err => console.warn('[App] Non-fatal: minimal side-effect imports failed', err));
+
+    // Defer non-critical UX/analytics modules to idle time to speed initial render
+    const defer = (fn) => {
+        try {
+            if ('requestIdleCallback' in window) {
+                // @ts-ignore
+                return window.requestIdleCallback(fn, { timeout: 2000 });
+            }
+        } catch(_) {}
+        return setTimeout(fn, 250);
+    };
+    defer(() => {
+        // Defer the rest of the ecosystem, including background utilities and UI enhancers
+        Promise.all([
+            import('./dynamic-background-loader.js'),
+            import('./room-coordinate-manager.js'),
+            import('./wait-for-function.js'),
+            import('./global-item-modal.js'),
+            import('./global-modals.js'),
+            import('./cart-modal.js'),
+            import('../ui/global-popup.js'),
+            import('../modules/room-coordinator.js').then(m => { try { new m.RoomCoordinator().init(); } catch(_) {} }),
+            import('./login-modal.js'),
+            import('./header-auth-sync.js'),
+            import('./header-offset.js'),
+            import('./main-application.js'),
+            import('./room-icons-init.js'),
+            // Non-critical UX/analytics
+            import('./analytics.js'),
+            import('./payment-modal.js'),
+            import('./receipt-modal.js'),
+            import('./contact.js'),
+            import('./reveal-company-modal.js'),
+            import('../modules/image-carousel.js'),
+            import('../modules/footer-newsletter.js'),
+            import('../modules/ai-processing-modal.js'),
+        ]).catch(err => console.warn('[App] Deferred modules failed', err));
+    });
 
     // Initialize cart system
     const cartSystem = new CartSystem();
@@ -98,6 +115,47 @@ async function initializeCoreSystemsApp() {
     if (window.WhimsicalFrog && WhimsicalFrog.registerModule) {
         WhimsicalFrog.registerModule('cart-system', cartSystem);
     }
+    // Legacy bridge: expose/augment global `window.cart` for legacy callers (e.g., global-item-modal.js)
+    try {
+        const ensureAdapter = () => {
+            const target = (window.cart = window.cart || {});
+            if (typeof target.add !== 'function') {
+                target.add = (payload, qty = 1) => {
+                    try {
+                        const item = { ...(payload || {}) };
+                        if (qty != null) item.quantity = qty;
+                        console.log('[App] Legacy cart adapter add()', { sku: item?.sku, qty: item?.quantity });
+                        if (window.WF_Cart && typeof window.WF_Cart.addItem === 'function') {
+                            window.WF_Cart.addItem(item);
+                        }
+                    } catch (e) { console.warn('[App] window.cart.add adapter failed', e); }
+                };
+            }
+            if (typeof target.addItem !== 'function') {
+                target.addItem = (payload) => { try { window.WF_Cart && typeof window.WF_Cart.addItem === 'function' && window.WF_Cart.addItem(payload); } catch (e) { console.warn('[App] window.cart.addItem adapter failed', e); } };
+            }
+            if (typeof target.remove !== 'function') {
+                target.remove = (sku) => { try { window.WF_Cart && typeof window.WF_Cart.removeItem === 'function' && window.WF_Cart.removeItem(sku); } catch (e) { console.warn('[App] window.cart.remove adapter failed', e); } };
+            }
+            if (typeof target.updateQuantity !== 'function') {
+                target.updateQuantity = (sku, qty) => { try { window.WF_Cart && typeof window.WF_Cart.updateItem === 'function' && window.WF_Cart.updateItem(sku, qty); } catch (e) { console.warn('[App] window.cart.updateQuantity adapter failed', e); } };
+            }
+            if (typeof target.clear !== 'function') {
+                target.clear = () => { try { window.WF_Cart && typeof window.WF_Cart.clearCart === 'function' && window.WF_Cart.clearCart(); } catch (e) { console.warn('[App] window.cart.clear adapter failed', e); } };
+            }
+            if (typeof target.getItems !== 'function') {
+                target.getItems = () => { try { return (window.WF_Cart && typeof window.WF_Cart.getItems === 'function') ? window.WF_Cart.getItems() : []; } catch (_) { return []; } };
+            }
+            if (typeof target.getTotal !== 'function') {
+                target.getTotal = () => { try { return (window.WF_Cart && typeof window.WF_Cart.getTotal === 'function') ? window.WF_Cart.getTotal() : 0; } catch (_) { return 0; } };
+            }
+            if (typeof target.getCount !== 'function') {
+                target.getCount = () => { try { return (window.WF_Cart && typeof window.WF_Cart.getCount === 'function') ? window.WF_Cart.getCount() : 0; } catch (_) { return 0; } };
+            }
+        };
+        ensureAdapter();
+        console.log('[App] Legacy cart adapter ensured (window.cart methods bound to WF_Cart)');
+    } catch (_) { /* non-fatal */ }
     
     // Initialize room modal manager
     console.log('[App] Creating RoomModalManager instance...');
@@ -108,6 +166,7 @@ async function initializeCoreSystemsApp() {
         WhimsicalFrog.registerModule('room-modal-manager', roomModalManager);
     }
     console.log('[App] RoomModalManager created and exposed globally:', roomModalManager);
+    // Prewarm disabled to avoid saturating single-threaded dev server and inflating TTFB
     
     // Initialize search system
     const searchSystem = new SearchSystem();
@@ -139,6 +198,8 @@ async function initializeCoreSystemsApp() {
     // Mark systems as initialized
     window.WF_SYSTEMS_INITIALIZED = true;
     console.log('[App] All core systems initialized successfully');
+
+    // Removed API warm-up ping to avoid extra network noise on first load
 }
 
 // Debug WhimsicalFrog.ready function
@@ -233,6 +294,8 @@ if (__WF_IS_ADMIN) {
                 'payment': () => import('./pages/payment-page.js'),
                 // Only load landing page positioning on the landing page
                 'landing': () => import('./landing-page.js'),
+                // Main room page loader (fullscreen doors & background)
+                'room_main': () => import('./room-main.js'),
                 // Shop page module binds product card and button click handlers to open the global item modal
                 'shop': () => import('./shop.js'),
             };
@@ -401,6 +464,18 @@ if (__WF_IS_ADMIN) {
             };
             if (aliases[section]) section = aliases[section];
 
+            // If body dataset declares an admin settings page, honor it regardless of URL path
+            try {
+              const pageToken = (typeof page === 'string' ? page.toLowerCase() : '');
+              if (!section && pageToken && pageToken.indexOf('admin/settings') === 0) {
+                section = 'settings';
+              }
+              // Also accept 'admin-settings' slug or 'admin_settings'
+              if (!section && pageToken && (pageToken === 'admin-settings' || pageToken === 'admin_settings')) {
+                section = 'settings';
+              }
+            } catch (_) {}
+
             // If navigating via admin router e.g. /admin/?section=settings, prefer the query param
             try {
                 const params = new URLSearchParams(window.location.search || '');
@@ -409,6 +484,31 @@ if (__WF_IS_ADMIN) {
                     section = aliases[qSection] || qSection;
                 }
             } catch (_) {}
+
+            // Fallback: derive section from body dataset.page (e.g., 'admin/orders') if still empty
+            if (!section) {
+                try {
+                    const pageToken = (ds && typeof ds.page === 'string') ? ds.page : '';
+                    if (pageToken && pageToken.indexOf('admin/') === 0) {
+                        let seg = pageToken.split('/')[1] || '';
+                        if (seg) {
+                          // Normalize like other paths: strip .php
+                          seg = seg.replace(/\.php$/i, '');
+                          // Map common legacy names to canonical sections
+                          const fallbackAliases = {
+                            'admin_orders': 'orders',
+                            'orders': 'orders',
+                            'admin_customers': 'customers',
+                            'admin_inventory': 'inventory',
+                          };
+                          section = aliases[seg] || fallbackAliases[seg] || seg;
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            // Minimal diagnostic log
+            try { console.log('[App] Admin section resolved:', section); } catch(_) {}
 
             // Dynamic import per admin section
             const loaders = {
@@ -434,6 +534,9 @@ if (__WF_IS_ADMIN) {
                 'room-map-editor': () => import('./admin-room-map-editor.js'),
             };
 
+            // Load nested editor enhancer when on Inventory
+            if (section === 'inventory') { try { import('./inventory-nested-enhancer.js').catch(() => {}); } catch (_) {} }
+
             const load = loaders[section] || (() => import('./admin-dashboard.js'));
             // Diagnostic guard: allow disabling specific admin sections via flag/URL to isolate freezes
             try {
@@ -450,6 +553,30 @@ if (__WF_IS_ADMIN) {
                     window.__WF_SETTINGS_MINI_INSTALLED = true;
                     const quickShow = (id) => { const el = document.getElementById(id); if (!el) return false; el.classList.remove('hidden'); el.classList.add('show'); el.setAttribute('aria-hidden','false'); return true; };
                     const quickHide = (id) => { const el = document.getElementById(id); if (!el) return false; el.classList.add('hidden'); el.classList.remove('show'); el.setAttribute('aria-hidden','true'); return true; };
+                    const ensureCssCatalogModal = () => {
+                        let el = document.getElementById('cssCatalogModal');
+                        if (el) return el;
+                        el = document.createElement('div');
+                        el.id = 'cssCatalogModal';
+                        el.className = 'admin-modal-overlay hidden';
+                        el.setAttribute('aria-hidden','true');
+                        el.setAttribute('role','dialog');
+                        el.setAttribute('aria-modal','true');
+                        el.setAttribute('tabindex','-1');
+                        el.setAttribute('aria-labelledby','cssCatalogTitle');
+                        el.innerHTML = `
+                          <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+                            <div class="modal-header">
+                              <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>
+                              <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                            </div>
+                            <div class="modal-body">
+                              <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>
+                            </div>
+                          </div>`;
+                        try { document.body.appendChild(el); } catch(_) {}
+                        return el;
+                    };
                     document.addEventListener('click', (e) => {
                         try {
                             const t = e.target; const closest = (sel) => (t && t.closest ? t.closest(sel) : null);
@@ -561,11 +688,113 @@ if (__WF_IS_ADMIN) {
                             if (closest('[data-action="open-logging-status"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('loggingStatusModal'); return; }
                             if (closest('[data-action="open-ai-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiSettingsModal'); return; }
                             if (closest('[data-action="open-ai-tools"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiToolsModal'); return; }
+                            if (closest('[data-action="open-css-catalog"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                ensureCssCatalogModal();
+                                if (quickShow('cssCatalogModal')) {
+                                    const iframe = document.getElementById('cssCatalogFrame');
+                                    if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
+                                        iframe.src = iframe.dataset.src;
+                                    }
+                                }
+                                return;
+                            }
                             if (closest('[data-action="open-css-rules"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('cssRulesModal'); return; }
                             if (closest('[data-action="open-background-manager"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('backgroundManagerModal'); return; }
                             if (closest('[data-action="open-receipt-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('receiptSettingsModal'); return; }
                             if (closest('[data-action="open-dashboard-config"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('dashboardConfigModal'); return; }
                             if (closest('[data-action="open-secrets-modal"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('secretsModal'); return; }
+
+                            // Open Health & Diagnostics modal
+                            if (closest('[data-action="open-health-diagnostics"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                quickShow('healthModal');
+                                // Trigger initial refresh
+                                try {
+                                    const btn = document.querySelector('[data-action="health-refresh"]');
+                                    if (btn) btn.click();
+                                } catch(_) {}
+                                return;
+                            }
+
+                            // Health: Refresh backgrounds/items via admin APIs
+                            if (closest('[data-action="health-refresh"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v); };
+                                const fillList = (id, arr) => {
+                                    const ul = document.getElementById(id); if (!ul) return;
+                                    ul.innerHTML = '';
+                                    (arr || []).forEach(v => { const li = document.createElement('li'); li.textContent = String(v); ul.appendChild(li); });
+                                };
+                                // Backgrounds
+                                fetch('/api/health_backgrounds.php', { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} })
+                                   .then(r => r.ok ? r.json() : null).then(j => {
+                                       if (!j || j.success !== true || !j.data) return;
+                                       const d = j.data;
+                                       setText('bgMissingActiveCount', (d.missingActive||[]).length);
+                                       fillList('bgMissingActiveList', d.missingActive||[]);
+                                       setText('bgMissingFilesCount', (d.missingFiles||[]).length);
+                                       fillList('bgMissingFilesList', d.missingFiles||[]);
+                                   }).catch(()=>{});
+                                // Items
+                                fetch('/api/health_items.php', { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} })
+                                   .then(r => r.ok ? r.json() : null).then(j => {
+                                       if (!j || j.success !== true || !j.data) return;
+                                       const d = j.data;
+                                       const counts = d.counts || {};
+                                       setText('itemsNoPrimaryCount', counts.noPrimary || 0);
+                                       setText('itemsMissingFilesCount', counts.missingFiles || 0);
+                                       // Optional: show up to 20 examples in lists
+                                       const listFrom = (rows, labelKeyA, labelKeyB) => (rows||[]).slice(0,20).map(row => {
+                                           const a = row[labelKeyA] || row.sku || row.id || '';
+                                           const b = row[labelKeyB] || row.name || '';
+                                           return b ? `${a} – ${b}` : a;
+                                       });
+                                       fillList('itemsNoPrimaryList', listFrom(d.noPrimary, 'sku', 'name'));
+                                       fillList('itemsMissingFilesList', listFrom(d.missingFiles, 'sku', 'name'));
+                                   }).catch(()=>{});
+                                const hs = document.getElementById('healthStatus'); if (hs) hs.textContent = 'Refreshed at ' + new Date().toLocaleTimeString();
+                                return;
+                            }
+
+                            // Open Dev Status Dashboard modal
+                            if (closest('[data-action="open-dev-status"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                quickShow('devStatusModal');
+                                try {
+                                    const frame = document.getElementById('devStatusFrame');
+                                    if (frame && frame.dataset && frame.dataset.src && (!frame.src || frame.src === 'about:blank')) {
+                                        frame.src = frame.dataset.src;
+                                    }
+                                } catch(_) {}
+                                return;
+                            }
+
+                            // Run /health.php and display output
+                            if (closest('[data-action="run-health-check"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = 'Running /health.php...';
+                                fetch('/health.php', { credentials:'include' })
+                                  .then(r => r.text())
+                                  .then(t => { const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = t; })
+                                  .catch(err => { const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = String(err); });
+                                return;
+                            }
+
+                            // Scan item images (dev scanner) and display JSON
+                            if (closest('[data-action="scan-item-images"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = 'Scanning item images...';
+                                fetch('/api/dev_scan_images.php', { credentials:'include' })
+                                  .then(r => r.json().catch(()=>null).then(j => j || r.text()))
+                                  .then(res => {
+                                     const out = document.getElementById('advancedHealthOutput');
+                                     if (!out) return;
+                                     out.textContent = (typeof res === 'string') ? res : JSON.stringify(res, null, 2);
+                                  })
+                                  .catch(err => { const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = String(err); });
+                                return;
+                            }
                             if (closest('[data-action="open-attributes"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); if (quickShow('attributesModal')) { try { if (typeof window.initAttributesModal === 'function') window.initAttributesModal(document.getElementById('attributesModal')); } catch(_) {} } return; }
                         } catch(_) {}
                     });

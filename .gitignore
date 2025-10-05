@@ -50,3 +50,4 @@ logs/*.log
 
 # Allow quarantined legacy files to be committed
 !backups/legacy/**
+reports/diff_report_20250924_223003.txt

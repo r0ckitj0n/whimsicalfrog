@@ -1,10 +1,9 @@
 <?php
 
 // Search items API with fuzzy matching
-header('Content-Type: application/json');
-
 // Include database configuration
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 /**
  * Generate fuzzy search variations for a search term
@@ -105,12 +104,7 @@ try {
     $searchTerm = trim($searchTerm);
 
     if (empty($searchTerm)) {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Search term is required',
-            'results' => []
-        ]);
-        exit();
+        Response::error('Search term is required', ['results' => []], 400);
     }
 
     // Generate fuzzy search variations
@@ -191,8 +185,7 @@ try {
         unset($item['relevance_score']);
     }
 
-    echo json_encode([
-        'success' => true,
+    Response::success([
         'search_term' => $searchTerm,
         'variations_used' => $variations,
         'results' => $results,
@@ -201,16 +194,8 @@ try {
 
 } catch (PDOException $e) {
     error_log("Search API Error: " . $e->getMessage());
-    echo json_encode([
-        'success' => false,
-        'message' => 'Database error occurred',
-        'results' => []
-    ]);
+    Response::serverError('Database error occurred', ['results' => []]);
 } catch (Exception $e) {
     error_log("Search API Error: " . $e->getMessage());
-    echo json_encode([
-        'success' => false,
-        'message' => 'An error occurred while searching',
-        'results' => []
-    ]);
+    Response::serverError('An error occurred while searching', ['results' => []]);
 }

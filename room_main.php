@@ -56,6 +56,9 @@ $backgroundMain = get_active_background('room_main') ?: '/images/backgrounds/bac
 
 
 
+<!-- Preload the main room background to start fetch earlier -->
+<link rel="preload" as="image" href="<?php echo htmlspecialchars($backgroundMain, ENT_QUOTES, 'UTF-8'); ?>">
+
 <!-- Room main styles now managed by global CSS system (css/room-main.css) -->
 
 <section id="mainRoomPage" class="main-room-section" data-bg-url="<?php echo htmlspecialchars($backgroundMain, ENT_QUOTES, 'UTF-8'); ?>">
@@ -68,6 +71,9 @@ $backgroundMain = get_active_background('room_main') ?: '/images/backgrounds/bac
 
 try {
     $roomDoors = getRoomDoorsData();
+    if (!empty($debugMode)) {
+        echo "\n<!-- DEBUG: roomDoors count = " . count($roomDoors) . " -->\n";
+    }
 
     if (empty($roomDoors)) {
         echo '<div class="no-doors-message">No rooms are currently available.</div>';
@@ -80,8 +86,8 @@ try {
                 continue;
             }
 
-            $roomName = htmlspecialchars($door['room_name']);
-            $doorLabel = htmlspecialchars($door['door_label']);
+            $roomName = htmlspecialchars((string)($door['room_name'] ?? ''));
+            $doorLabel = htmlspecialchars((string)($door['door_label'] ?? ''));
             ?>
     <!-- <?php echo $roomName; ?> Door -->
         <div class="door-area area-<?php echo $roomNumber; ?> room-door" data-category="<?php echo $doorLabel; ?>" data-room="<?php echo $roomNumber; ?>" style="cursor: pointer;">
@@ -102,37 +108,9 @@ try {
 ?>
 </section>
 
-<!-- Load room-main.js directly to ensure it always works -->
-<script type="module">
-    console.log('🚀 Loading room-main.js...');
+<!-- room-main.js is now loaded by app.js per-page loader (page: room_main) -->
 
-    // Try multiple import paths
-    const loadScript = async () => {
-        try {
-            // Try Vite dev server first with correct path
-            await import('http://localhost:5176/src/js/room-main.js');
-            console.log('✅ room-main.js loaded from Vite dev server');
-        } catch (error) {
-            console.warn('❌ Failed to load from Vite dev server:', error);
-            try {
-                // Try direct path
-                await import('./src/js/room-main.js');
-                console.log('✅ room-main.js loaded from direct path');
-            } catch (error2) {
-                console.error('❌ Failed to load from direct path:', error2);
-                try {
-                    // Try Vite proxy
-                    await import('/vite-proxy.php?path=src/js/room-main.js');
-                    console.log('✅ room-main.js loaded from Vite proxy');
-                } catch (error3) {
-                    console.error('❌ Failed to load from Vite proxy:', error3);
-                }
-            }
-        }
-    };
-
-    loadScript();
-</script>
+<!-- Fallback click script removed: handled by src/js/room-main.js and RoomModalManager -->
 
 <!-- Room modal system loaded globally in index.php -->
 

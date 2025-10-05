@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm ci || npm install
+
+      - name: Run style guard (no inline styles)
+        run: npm run guard:styles
+
+      - name: Run brand color and font guards
+        run: npm run guard:brand-and-fonts
+
+      - name: Run z-index guard
+        run: npm run guard:z-index
+
+      - name: Lint JS
+        run: npm run lint
+
+      - name: Lint CSS
+        run: npm run lint:css
+
+      - name: Check orphaned CSS
+        run: npm run check:css:orphans

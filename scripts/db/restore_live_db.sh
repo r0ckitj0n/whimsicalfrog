@@ -56,6 +56,7 @@ MYSQL_ARGS=(
   "--port=${PORT}"
   "--user=${USER}"
   "--default-character-set=utf8mb4"
+  "--database=${DB}"
 )
 if [[ -n "${SOCKET}" ]]; then MYSQL_ARGS+=("--socket=${SOCKET}"); fi
 

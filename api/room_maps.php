@@ -1,7 +1,7 @@
 <?php
 // Version: 2.2 - room_number-only schema and queries
-header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 function normalize_room_number($value)
 {
@@ -64,9 +64,9 @@ try {
                 $result = Database::execute("INSERT INTO room_maps (room_number, map_name, coordinates, is_active) VALUES (?, ?, ?, FALSE)", [$rn, $mapName, $coordinates]);
 
                 if ($result) {
-                    echo json_encode(['success' => true, 'message' => 'Room map saved successfully']);
+                    Response::success(['message' => 'Room map saved successfully']);
                 } else {
-                    echo json_encode(['success' => false, 'message' => 'Failed to save room map']);
+                    Response::error('Failed to save room map');
                 }
             } elseif ($action === 'apply') {
                 // Apply a map to a room (set as active and deactivate others)
@@ -80,10 +80,10 @@ try {
                     Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$input['map_id']]);
 
                     Database::commit();
-                    echo json_encode(['success' => true, 'message' => 'Room map applied successfully']);
+                    Response::updated(['message' => 'Room map applied successfully']);
                 } catch (Exception $e) {
                     Database::rollBack();
-                    echo json_encode(['success' => false, 'message' => 'Failed to apply room map: ' . $e->getMessage()]);
+                    Response::serverError('Failed to apply room map: ' . $e->getMessage());
                 }
             } elseif ($action === 'restore') {
                 // Restore a historical map (create a new map based on an old one)
@@ -116,15 +116,14 @@ try {
                     }
 
                     Database::commit();
-                    echo json_encode([
-                        'success' => true,
+                    Response::success([
                         'message' => 'Map restored successfully',
                         'new_map_id' => $newMapId,
                         'new_map_name' => $newMapName
                     ]);
                 } catch (Exception $e) {
                     Database::rollBack();
-                    echo json_encode(['success' => false, 'message' => 'Failed to restore map: ' . $e->getMessage()]);
+                    Response::serverError('Failed to restore map: ' . $e->getMessage());
                 }
             }
             break;
@@ -145,9 +144,9 @@ try {
 
                         if ($map) {
                             $map['coordinates'] = json_decode($map['coordinates'], true);
-                            echo json_encode(['success' => true, 'map' => $map]);
+                            Response::success(['map' => $map]);
                         } else {
-                            echo json_encode(['success' => false, 'message' => 'No active map found']);
+                            Response::notFound('No active map found');
                         }
                     } else {
                         // Get all maps for a specific room
@@ -157,7 +156,7 @@ try {
                             $map['coordinates'] = json_decode($map['coordinates'], true);
                         }
 
-                        echo json_encode(['success' => true, 'maps' => $maps]);
+                        Response::success(['maps' => $maps]);
                     }
                 } else {
                     // Get all room maps
@@ -167,11 +166,10 @@ try {
                         $map['coordinates'] = json_decode($map['coordinates'], true);
                     }
 
-                    echo json_encode(['success' => true, 'maps' => $maps]);
+                    Response::success(['maps' => $maps]);
                 }
             } catch (Exception $e) {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Failed to load maps: ' . $e->getMessage()]);
+                Response::serverError('Failed to load maps: ' . $e->getMessage());
             }
             break;
 
@@ -181,32 +179,30 @@ try {
                 $map = Database::queryOne("SELECT map_name FROM room_maps WHERE id = ?", [$input['map_id']]);
 
                 if (!$map) {
-                    echo json_encode(['success' => false, 'message' => 'Map not found']);
+                    Response::notFound('Map not found');
                     break;
                 }
 
                 if ($map['map_name'] === 'Original') {
-                    echo json_encode(['success' => false, 'message' => 'Original maps cannot be deleted - they are protected']);
+                    Response::forbidden('Original maps cannot be deleted - they are protected');
                     break;
                 }
 
                 $result = Database::execute("DELETE FROM room_maps WHERE id = ?", [$input['map_id']]);
 
                 if ($result > 0) {
-                    echo json_encode(['success' => true, 'message' => 'Room map deleted successfully']);
+                    Response::success(['message' => 'Room map deleted successfully']);
                 } else {
-                    echo json_encode(['success' => false, 'message' => 'Failed to delete room map']);
+                    Response::error('Failed to delete room map');
                 }
             }
             break;
 
         default:
-            http_response_code(405);
-            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            Response::methodNotAllowed('Method not allowed');
     }
 
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    Response::serverError('Database error: ' . $e->getMessage());
 }
 ?> 

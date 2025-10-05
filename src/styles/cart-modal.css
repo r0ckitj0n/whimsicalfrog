@@ -1,12 +1,19 @@
 /* Cart Modal specific tweaks */
 #cartModalOverlay {
-  z-index: var(--wf-overlay-z, 10050); /* ensure above header/nav and other overlays */
+  /* Use a dedicated cart overlay z-index above room modals and most overlays */
+  z-index: var(--z-index-cart-overlay, 10070) !important;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: auto; /* make overlay capture events */
 }
 #cartModalOverlay .confirmation-modal {
   width: 100%;
   max-width: 48rem; /* = max-w-3xl */
   max-height: 90vh;
   margin: 0 12px;
+  pointer-events: auto; /* ensure modal itself captures events */
 }
 #cartModalOverlay .cart-modal .room-title {
   font-size: 1.25rem;
@@ -153,4 +160,10 @@
     flex: 0 0 auto;
     padding: 12px 16px;
   }
+}
+
+/* Lock background scroll when modal is open via class toggled on <html> and <body> */
+html.wf-scroll-locked,
+body.wf-scroll-locked {
+  overflow: hidden !important;
 }

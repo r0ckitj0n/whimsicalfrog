@@ -1,16 +1,52 @@
 <?php
 // Room settings management API
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// Headers/CORS handled via api/config.php; use Response helpers for JSON
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
+/**
+ * Update lightweight room flags without requiring full room payload
+ */
+function updateRoomFlags($input)
+{
+    $roomNumber = $input['room_number'] ?? null;
+    if ($roomNumber === null || $roomNumber === '') {
+        Response::error('room_number is required', null, 400);
+        return;
+    }
+
+    // Accept icons_white_background as boolean; ignore if not provided
+    $fields = [];
+    $params = [];
+    if (array_key_exists('icons_white_background', $input)) {
+        $fields[] = 'icons_white_background = ?';
+        $params[] = (int)!!$input['icons_white_background'];
+    }
+
+    if (empty($fields)) {
+        Response::noChanges(['message' => 'No changes provided']);
+        return;
+    }
+
+    $params[] = $roomNumber;
+    try {
+        $sql = 'UPDATE room_settings SET ' . implode(', ', $fields) . ' WHERE room_number = ?';
+        $affected = Database::execute($sql, $params);
+        if ($affected > 0) {
+            Response::updated(['message' => 'Flags updated']);
+        } else {
+            Response::noChanges(['message' => 'Room not found or no changes made']);
+        }
+    } catch (PDOException $e) {
+        Response::serverError('Database error: ' . $e->getMessage());
+    }
+}
+
 // Include database configuration
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 try {
     try {
@@ -20,9 +56,7 @@ try {
         throw $e;
     }
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]);
-    exit;
+    Response::serverError('Database connection failed: ' . $e->getMessage());
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -33,7 +67,7 @@ switch ($method) {
         handleGet($pdo);
         break;
     case 'POST':
-        handlePost($pdo, $input);
+        handlePost($input);
         break;
     case 'PUT':
         handlePut($pdo, $input);
@@ -42,8 +76,7 @@ switch ($method) {
         handleDelete($pdo, $input);
         break;
     default:
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        Response::methodNotAllowed('Method not allowed');
         break;
 }
 
@@ -59,7 +92,7 @@ function handleGet($pdo)
                 "SELECT * FROM room_settings WHERE is_active = 1 ORDER BY display_order, room_number"
             );
 
-            echo json_encode(['success' => true, 'rooms' => $rooms]);
+            Response::success(['rooms' => $rooms]);
 
         } elseif ($action === 'get_room' && $roomNumber !== null) {
             // Get specific room settings
@@ -69,9 +102,9 @@ function handleGet($pdo)
             );
 
             if ($room) {
-                echo json_encode(['success' => true, 'room' => $room]);
+                Response::success(['room' => $room]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Room not found']);
+                Response::notFound('Room not found');
             }
 
         } elseif ($action === 'get_navigation_rooms') {
@@ -86,7 +119,7 @@ function handleGet($pdo)
             echo json_encode(['success' => true, 'rooms' => $rooms]);
 
         } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            Response::error('Invalid action', null, 400);
         }
 
     } catch (PDOException $e) {
@@ -102,8 +135,7 @@ function handlePost($input)
     if ($action === 'create_room') {
         createRoom($input);
     } else {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Invalid action']);
+        Response::error('Invalid action', null, 400);
     }
 }
 
@@ -113,8 +145,7 @@ function createRoom($input)
 
     foreach ($requiredFields as $field) {
         if (!isset($input[$field]) || empty(trim($input[$field]))) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => "Missing required field: $field"]);
+            Response::error("Missing required field: $field", null, 400);
             return;
         }
     }
@@ -124,8 +155,7 @@ function createRoom($input)
         $exists = Database::queryOne("SELECT id FROM room_settings WHERE room_number = ?", [$input['room_number']]);
 
         if ($exists) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Room number already exists']);
+            Response::error('Room number already exists', null, 400);
             return;
         }
 
@@ -142,11 +172,7 @@ function createRoom($input)
 
         $roomId = Database::lastInsertId();
 
-        echo json_encode([
-            'success' => true,
-            'message' => 'Room created successfully',
-            'room_id' => $roomId
-        ]);
+        Response::success(['message' => 'Room created successfully', 'room_id' => $roomId]);
 
     } catch (PDOException $e) {
         http_response_code(500);
@@ -162,6 +188,8 @@ function handlePut($input)
         updateRoom($input);
     } elseif ($action === 'update_display_order') {
         updateDisplayOrder($input);
+    } elseif ($action === 'update_flags') {
+        updateRoomFlags($input);
     } else {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Invalid action']);
@@ -196,9 +224,9 @@ function updateRoom($input)
         );
 
         if ($affected > 0) {
-            echo json_encode(['success' => true, 'message' => 'Room updated successfully']);
+            Response::updated(['message' => 'Room updated successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Room not found or no changes made']);
+            Response::noChanges(['message' => 'Room not found or no changes made']);
         }
 
     } catch (PDOException $e) {
@@ -207,11 +235,10 @@ function updateRoom($input)
     }
 }
 
-function updateDisplayOrder($pdo, $input)
+function updateDisplayOrder($input)
 {
     if (!isset($input['rooms']) || !is_array($input['rooms'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Invalid rooms data']);
+        Response::error('Invalid rooms data', null, 400);
         return;
     }
 
@@ -225,12 +252,11 @@ function updateDisplayOrder($pdo, $input)
         }
 
         Database::commit();
-        echo json_encode(['success' => true, 'message' => 'Display order updated successfully']);
+        Response::updated(['message' => 'Display order updated successfully']);
 
     } catch (PDOException $e) {
         Database::rollBack();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -239,8 +265,7 @@ function handleDelete($pdo, $input)
     $roomNumber = $input['room_number'] ?? null;
 
     if ($roomNumber === null) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Room number is required']);
+        Response::error('Room number is required', null, 400);
         return;
     }
 
@@ -248,8 +273,7 @@ function handleDelete($pdo, $input)
     require_once __DIR__ . '/room_helpers.php';
     $coreRooms = getCoreRooms();
     if (in_array($roomNumber, $coreRooms)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Core rooms cannot be deleted']);
+        Response::forbidden('Core rooms cannot be deleted');
         return;
     }
 
@@ -257,9 +281,9 @@ function handleDelete($pdo, $input)
         $result = Database::execute("UPDATE room_settings SET is_active = 0 WHERE room_number = ?", [$roomNumber]);
 
         if ($result > 0) {
-            echo json_encode(['success' => true, 'message' => 'Room deactivated successfully']);
+            Response::success(['message' => 'Room deactivated successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Room not found']);
+            Response::notFound('Room not found');
         }
 
     } catch (PDOException $e) {

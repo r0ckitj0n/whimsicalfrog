@@ -2,8 +2,8 @@
 
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
-header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -46,14 +46,12 @@ try {
             updateSEO($pdo);
             break;
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid action specified.']);
+            Response::error('Invalid action specified.', null, 400);
     }
 
 } catch (Exception $e) {
     error_log("Error in marketing_manager.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
 // getMarketingData function moved to data_manager.php for centralization
 
@@ -65,8 +63,7 @@ function updateMarketingField($pdo)
     $value = $input['value'] ?? '';
 
     if (empty($sku) || empty($field)) {
-        echo json_encode(['success' => false, 'error' => 'SKU and field are required.']);
-        return;
+        Response::json(['success' => false, 'error' => 'SKU and field are required.']);
     }
 
     // Validate field name
@@ -77,8 +74,7 @@ function updateMarketingField($pdo)
     ];
 
     if (!in_array($field, $allowedFields)) {
-        echo json_encode(['success' => false, 'error' => 'Invalid field name.']);
-        return;
+        Response::json(['success' => false, 'error' => 'Invalid field name.']);
     }
 
     // Check if record exists
@@ -92,7 +88,7 @@ function updateMarketingField($pdo)
         Database::execute("INSERT INTO marketing_suggestions (sku, {$field}) VALUES (?, ?)", [$sku, $value]);
     }
 
-    echo json_encode(['success' => true, 'message' => 'Field updated successfully.']);
+    Response::json(['success' => true, 'message' => 'Field updated successfully.']);
 }
 
 function addListItem($pdo)
@@ -103,8 +99,7 @@ function addListItem($pdo)
     $item = $input['item'] ?? '';
 
     if (empty($sku) || empty($field) || empty($item)) {
-        echo json_encode(['success' => false, 'error' => 'SKU, field, and item are required.']);
-        return;
+        Response::json(['success' => false, 'error' => 'SKU, field, and item are required.']);
     }
 
     // Validate field name
@@ -117,8 +112,7 @@ function addListItem($pdo)
     ];
 
     if (!in_array($field, $allowedListFields)) {
-        echo json_encode(['success' => false, 'error' => 'Invalid field name.']);
-        return;
+        Response::json(['success' => false, 'error' => 'Invalid field name.']);
     }
 
     // Get current data
@@ -141,7 +135,7 @@ function addListItem($pdo)
         Database::execute("INSERT INTO marketing_suggestions (sku, {$field}) VALUES (?, ?)", [$sku, json_encode($currentList)]);
     }
 
-    echo json_encode(['success' => true, 'message' => 'Item added successfully.', 'list' => $currentList]);
+    Response::json(['success' => true, 'message' => 'Item added successfully.', 'list' => $currentList]);
 }
 
 function removeListItem($pdo)
@@ -160,8 +154,7 @@ function removeListItem($pdo)
     $result = Database::queryOne("SELECT {$field} FROM marketing_suggestions WHERE sku = ?", [$sku]);
 
     if (!$result) {
-        echo json_encode(['success' => false, 'error' => 'Marketing data not found.']);
-        return;
+        Response::json(['success' => false, 'error' => 'Marketing data not found.']);
     }
 
     $currentList = json_decode($result[$field], true) ?? [];
@@ -174,7 +167,7 @@ function removeListItem($pdo)
     // Update database
     Database::execute("UPDATE marketing_suggestions SET {$field} = ?, updated_at = CURRENT_TIMESTAMP WHERE sku = ?", [json_encode($currentList), $sku]);
 
-    echo json_encode(['success' => true, 'message' => 'Item removed successfully.', 'list' => $currentList]);
+    Response::json(['success' => true, 'message' => 'Item removed successfully.', 'list' => $currentList]);
 }
 
 function getSEOData($pdo)
@@ -189,7 +182,7 @@ function getSEOData($pdo)
         $result[$row['setting_name']] = $row['setting_value'];
     }
 
-    echo json_encode(['success' => true, 'data' => $result]);
+    Response::json(['success' => true, 'data' => $result]);
 }
 
 function updateSEO($pdo)
@@ -202,5 +195,5 @@ function updateSEO($pdo)
         Database::execute("\n            INSERT INTO seo_settings (page_type, setting_name, setting_value) \n            VALUES (?, ?, ?) \n            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP\n        ", [$page, $settingName, $settingValue]);
     }
 
-    echo json_encode(['success' => true, 'message' => 'SEO settings updated successfully.']);
+    Response::json(['success' => true, 'message' => 'SEO settings updated successfully.']);
 }

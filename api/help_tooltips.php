@@ -8,6 +8,7 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 // Centralized environment and DB config (includes Database class)
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Get the action first to determine if authentication is needed
 $action = $_GET['action'] ?? 'get';
@@ -27,24 +28,22 @@ if (isAdminWithToken()) {
 
 // Admin token fallback for API access (check both GET and POST/JSON)
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
-$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
 if (!$isAdmin && $adminToken === 'whimsical_admin_2024') {
     $isAdmin = true;
 }
 
 // If this is an admin-only action, check authentication
-if (in_array($action, $adminOnlyActions)) {
-    if (!$isAdmin) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Admin access required']);
-        exit;
+    if (in_array($action, $adminOnlyActions)) {
+        if (!$isAdmin) {
+            Response::forbidden();
+        }
     }
-}
 
 try {
     try {
         Database::getInstance();
     } catch (Exception $e) {
+        Response::internalServerError($e->getMessage());
         error_log("Database connection failed: " . $e->getMessage());
         throw $e;
     }
@@ -185,9 +184,16 @@ try {
             ]);
 
             if ($result > 0) {
-                echo json_encode(['success' => true, 'message' => 'Tooltip updated successfully']);
+                Response::updated();
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to update tooltip']);
+                // If zero rows affected, consider no-op if the record exists
+                $exists = Database::queryOne('SELECT id FROM help_tooltips WHERE id = ?', [$data['id']]);
+                if ($exists) {
+                    Response::noChanges();
+                } else {
+                    http_response_code(404);
+                    echo json_encode(['success' => false, 'error' => 'Tooltip not found']);
+                }
             }
             break;
 
@@ -230,9 +236,10 @@ try {
 
             if ($result > 0) {
                 $newId = Database::lastInsertId();
-                echo json_encode(['success' => true, 'message' => 'Tooltip created successfully', 'id' => $newId]);
+                Response::updated(['id' => $newId]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to create tooltip']);
+                http_response_code(500);
+                echo json_encode(['success' => false, 'error' => 'Failed to create tooltip']);
             }
             break;
 
@@ -256,9 +263,15 @@ try {
             $result = Database::execute("UPDATE help_tooltips SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [$id]);
 
             if ($result > 0) {
-                echo json_encode(['success' => true, 'message' => 'Tooltip deactivated successfully']);
+                Response::updated();
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to deactivate tooltip']);
+                $exists = Database::queryOne('SELECT id FROM help_tooltips WHERE id = ?', [$id]);
+                if ($exists) {
+                    Response::noChanges();
+                } else {
+                    http_response_code(404);
+                    echo json_encode(['success' => false, 'error' => 'Tooltip not found']);
+                }
             }
             break;
 
@@ -282,9 +295,10 @@ try {
             $result = Database::execute("DELETE FROM help_tooltips WHERE id = ?", [$id]);
 
             if ($result > 0) {
-                echo json_encode(['success' => true, 'message' => 'Tooltip permanently deleted']);
+                Response::updated();
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to delete tooltip']);
+                http_response_code(404);
+                echo json_encode(['success' => false, 'error' => 'Tooltip not found']);
             }
             break;
 
@@ -308,9 +322,15 @@ try {
             $result = Database::execute("UPDATE help_tooltips SET is_active = NOT is_active, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [$id]);
 
             if ($result > 0) {
-                echo json_encode(['success' => true, 'message' => 'Tooltip status toggled successfully']);
+                Response::updated();
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to toggle tooltip status']);
+                $exists = Database::queryOne('SELECT id FROM help_tooltips WHERE id = ?', [$id]);
+                if ($exists) {
+                    Response::noChanges();
+                } else {
+                    http_response_code(404);
+                    echo json_encode(['success' => false, 'error' => 'Tooltip not found']);
+                }
             }
             break;
 
@@ -335,10 +355,9 @@ try {
             $result = Database::execute("UPDATE help_tooltips SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE page_context = ?", [$active ? 1 : 0, $pageContext]);
 
             if ($result > 0) {
-                $action_text = $active ? 'activated' : 'deactivated';
-                echo json_encode(['success' => true, 'message' => "All tooltips for page '$pageContext' have been $action_text"]);
+                Response::updated(['page_context' => $pageContext, 'active' => (bool)$active]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to update tooltips']);
+                Response::noChanges(['page_context' => $pageContext, 'active' => (bool)$active]);
             }
             break;
 
@@ -469,23 +488,14 @@ try {
             break;
 
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            Response::error('Invalid action', null, 400);
             break;
     }
 
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Database error: ' . $e->getMessage()
-    ]);
+    Response::serverError('Database error: ' . $e->getMessage());
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Server error: ' . $e->getMessage()
-    ]);
+    Response::serverError('Server error: ' . $e->getMessage());
 }
 
 /**

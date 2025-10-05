@@ -3,7 +3,7 @@
 
 <?php
 
-require_once __DIR__ . '/image_helper.php';
+require_once __DIR__ . '/../includes/image_helper.php';
 // Universal room template - determines room data from URL
 $roomNumber = isset($_GET['page']) ? str_replace('room', '', $_GET['page']) : '2';
 $roomType = "room{$roomNumber}";

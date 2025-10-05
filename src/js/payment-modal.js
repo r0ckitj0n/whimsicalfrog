@@ -18,6 +18,50 @@ import apiClient from './api-client.js';
       try { return (document && document.body && document.body.getAttribute('data-is-logged-in') === 'true'); } catch (_) { return false; }
     }
 
+    // --- Shipping helpers: business info, carrier quotes, distance miles ---
+    let businessInfo = null; // { business_postal, business_address, business_city, business_state }
+    async function ensureBusinessInfo() {
+      if (businessInfo) return businessInfo;
+      try {
+        const res = await apiClient.get('/api/business_settings.php', { action: 'get_business_info' });
+        businessInfo = res?.data || res; // endpoint returns success+data
+      } catch(_) { businessInfo = {}; }
+      return businessInfo;
+    }
+    async function fetchCarrierRate(carrier) {
+      try {
+        const bi = await ensureBusinessInfo();
+        const fromZip = String(bi?.business_postal || '').trim();
+        const addr = await getSelectedShippingAddress();
+        const toZip = String(addr?.zip_code || '').trim();
+        if (!fromZip || !toZip) return null;
+        const items = (cartApi.getItems?.() || []).map(i => ({ sku: (i?.sku||'').toString(), qty: Number(i?.quantity||0), weightOz: Number(i?.weightOz||0)||undefined })).filter(x => x.sku && x.qty>0);
+        const resp = await apiClient.post('/api/shipping_rates.php', { items, from: { zip: fromZip }, to: { zip: toZip }, carrier: carrier.toUpperCase(), debug: false });
+        const rates = resp?.data?.rates || resp?.rates || [];
+        if (!Array.isArray(rates) || rates.length === 0) return null;
+        rates.sort((a,b)=>Number(a.amount||0)-Number(b.amount||0));
+        return Number(rates[0].amount || 0);
+      } catch(_) { return null; }
+    }
+    async function fetchDrivingMiles() {
+      try {
+        const bi = await ensureBusinessInfo();
+        const from = { address: (bi?.business_address||''), city: (bi?.business_city||''), state: (bi?.business_state||''), zip: (bi?.business_postal||'') };
+        const addr = await getSelectedShippingAddress();
+        if (!addr) return null;
+        const to = { address: (addr.address_line1||''), city: (addr.city||''), state: (addr.state||''), zip: (addr.zip_code||'') };
+        const resp = await apiClient.post('/api/distance.php', { from, to });
+        const miles = resp?.data?.miles ?? resp?.miles;
+        return (miles == null ? null : Number(miles));
+      } catch(_) { return null; }
+    }
+    function pmShowSavings(amount) {
+      try {
+        const msg = `Free USPS shipping on orders $50+. You save ${currency(amount)}.`;
+        pmShowShippingBenefitNote(msg);
+      } catch(_) { /* noop */ }
+    }
+
     function ensureOverlay() {
       if (state.overlay && state.container) return;
 
@@ -26,7 +70,9 @@ import apiClient from './api-client.js';
 
       const overlay = document.createElement('div');
       overlay.id = 'paymentModalOverlay';
-      overlay.className = 'confirmation-modal-overlay under-header checkout-overlay';
+      overlay.className = 'confirmation-modal-overlay checkout-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
 
       const modal = document.createElement('div');
       modal.className = 'confirmation-modal payment-modal animate-slide-in-up';
@@ -56,7 +102,6 @@ import apiClient from './api-client.js';
       state.container.innerHTML = `
         <div class="payment-header">
           <h3 class="payment-title">Checkout</h3>
-          <p class="payment-subtitle">Complete your purchase without leaving the page</p>
         </div>
         <div class="payment-body">
           <div class="payment-grid">
@@ -110,7 +155,7 @@ import apiClient from './api-client.js';
                 </div>
               </div>
 
-              <div class="section-card mt-14">
+              <div class="section-card mt-14 has-shipping-badges">
                 <h4 class="section-title">Shipping method</h4>
                 <select id="pm-shippingMethodSelect">
                   <option value="Customer Pickup">Customer Pickup</option>
@@ -119,6 +164,24 @@ import apiClient from './api-client.js';
                   <option value="FedEx">FedEx</option>
                   <option value="UPS">UPS</option>
                 </select>
+                <div id="pm-shippingBadges" class="shipping-badges">
+                  <span id="pm-pickupBadge" class="hidden shipping-badge pickup" aria-live="polite">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Customer Pickup">
+                      <rect x="0" y="0" width="100" height="100" rx="10" ry="10" fill="transparent" />
+                      <text x="50" y="42" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="18" font-weight="700" fill="currentColor">PICKUP</text>
+                      <text x="50" y="64" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="12" font-weight="700" fill="currentColor">NO FEE</text>
+                    </svg>
+                    <span class="sr-only">No shipping charge for Customer Pickup</span>
+                  </span>
+                  <span id="pm-localDeliveryBadge" class="hidden shipping-badge local wf-tooltip" data-tooltip="Local Delivery is offered at the business owner’s discretion and may depend on availability, scheduling, and distance from your location." aria-live="polite">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Local Delivery $75">
+                      <rect x="0" y="0" width="100" height="100" rx="10" ry="10" fill="transparent" />
+                      <text x="50" y="42" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="18" font-weight="700" fill="currentColor">LOCAL</text>
+                      <text x="50" y="64" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="14" font-weight="800" fill="currentColor">$75</text>
+                    </svg>
+                    <span class="sr-only">Local Delivery fee: $75</span>
+                  </span>
+                </div>
                 <p class="hint mt-8">Select a method. Address is required for delivery and carriers.</p>
               </div>
 
@@ -190,6 +253,32 @@ import apiClient from './api-client.js';
       const cardContainerEl = q('#pm-card-container');
       const cardErrorsEl = q('#pm-card-errors');
       const cancelBtn = q('#pm-cancelBtn');
+      const pickupBadgeEl = q('#pm-pickupBadge');
+      const localDeliveryBadgeEl = q('#pm-localDeliveryBadge');
+      // USPS policy note element (always visible; grey by default; brand-secondary when active)
+      let pmShippingBenefitNoteEl = null;
+      function ensurePmShippingBenefitNote() {
+        if (pmShippingBenefitNoteEl && state.container.contains(pmShippingBenefitNoteEl)) return pmShippingBenefitNoteEl;
+        const sel = shipMethodSel;
+        if (!sel) return null;
+        pmShippingBenefitNoteEl = document.createElement('div');
+        pmShippingBenefitNoteEl.id = 'pm-shippingBenefitNote';
+        pmShippingBenefitNoteEl.className = 'shipping-policy-note';
+        pmShippingBenefitNoteEl.textContent = 'Free USPS shipping on orders $50+.';
+        try { sel.insertAdjacentElement('afterend', pmShippingBenefitNoteEl); } catch(_) {}
+        return pmShippingBenefitNoteEl;
+      }
+      function pmShowShippingBenefitNote(msg) {
+        const el = ensurePmShippingBenefitNote();
+        if (!el) return;
+        el.textContent = msg || 'Free USPS shipping on orders $50+';
+        el.classList.add('is-active');
+      }
+      function pmHideShippingBenefitNote() {
+        const el = ensurePmShippingBenefitNote();
+        if (!el) return;
+        el.classList.remove('is-active');
+      }
 
       // Ensure shipping method defaults to USPS on load if not already selected
       try {
@@ -250,6 +339,24 @@ import apiClient from './api-client.js';
         const okAddress = !needsAddress || !!selectedAddressId;
         const hasUser = !!userId;
         if (placeOrderBtn) placeOrderBtn.disabled = !(hasItems && !!pm && okAddress && hasUser);
+      }
+
+      // Toggle in-modal shipping badges
+      function updateShippingBadges(method) {
+        const m = (method || shipMethodSel?.value || '').trim();
+        try {
+          if (pickupBadgeEl) pickupBadgeEl.classList.toggle('hidden', m !== 'Customer Pickup');
+          if (localDeliveryBadgeEl) localDeliveryBadgeEl.classList.toggle('hidden', m !== 'Local Delivery');
+        } catch (_) {}
+      }
+
+      // Lightweight tooltip enhancer within modal scope
+      function initTooltips() {
+        try {
+          state.container.querySelectorAll('[data-tooltip]').forEach((el) => {
+            if (!el.classList.contains('wf-tooltip')) el.classList.add('wf-tooltip');
+          });
+        } catch (_) {}
       }
 
       function renderOrderSummary() {
@@ -542,6 +649,7 @@ import apiClient from './api-client.js';
         }
         try {
           const items = cartApi.getItems ? cartApi.getItems() : [];
+          const clientSubtotal = (Array.isArray(items) ? items : []).reduce((sum, it) => sum + (Number(it?.price)||0) * (Number(it?.quantity)||0), 0);
           // Normalize cart lines to ensure valid sku and positive quantity
           const lines = (Array.isArray(items) ? items : [])
             .map(i => ({
@@ -570,13 +678,61 @@ import apiClient from './api-client.js';
           console.debug('[PaymentModal] pricing request ->', payload, 'response ->', res);
           if (res && res.success && res.pricing) {
             pricing = res.pricing;
-            if (orderSubtotalEl) orderSubtotalEl.textContent = currency(pricing.subtotal);
-            if (orderShippingEl) orderShippingEl.textContent = currency(pricing.shipping);
-            if (orderTaxEl) orderTaxEl.textContent = currency(pricing.tax);
-            if (orderTotalEl) orderTotalEl.textContent = currency(pricing.total);
+            // Apply client-side fallbacks when server returns $0 but we have priced items
+            let dispSubtotal = Number(pricing.subtotal || 0);
+            if (dispSubtotal === 0 && clientSubtotal > 0) dispSubtotal = clientSubtotal;
+            let dispShipping = Number(pricing.shipping || 0);
+            const methodNow = shipMethodSel?.value || pricing.shippingMethod || 'USPS';
+            // Local Delivery: enforce eligibility and $2/mile when possible
+            if (methodNow === 'Local Delivery') {
+              try {
+                const miles = await fetchDrivingMiles();
+                if (miles == null || miles > 30) {
+                  // Ineligible; switch to USPS
+                  if (shipMethodSel) shipMethodSel.value = 'USPS';
+                  pmHideShippingBenefitNote();
+                } else {
+                  dispShipping = Math.round(miles * 2 * 100) / 100;
+                }
+              } catch(_) { dispShipping = 75.00; }
+            }
+            // Carrier quotes when available
+            if (methodNow === 'USPS') {
+              const quote = await fetchCarrierRate('USPS');
+              // Savings badge when eligible (subtotal >= 50)
+              if (dispSubtotal >= 50 && quote != null && quote > 0) { pmShowSavings(quote); }
+              else { pmHideShippingBenefitNote(); }
+              // For sub-$50 orders, prefer live quote if present
+              if (dispSubtotal < 50 && quote != null && quote > 0) dispShipping = quote;
+            } else if (methodNow === 'UPS' || methodNow === 'FedEx') {
+              const quote = await fetchCarrierRate(methodNow);
+              if (quote != null && quote > 0) dispShipping = quote; else if (dispShipping === 0) dispShipping = 20.00;
+              pmHideShippingBenefitNote();
+            }
+            // Determine tax using server’s tax flags if available
+            let dispTax = Number(pricing.tax || 0);
+            if (res.debug) {
+              const rate = Number(res.debug.taxRate || 0);
+              const taxShip = !!res.debug.taxShipping;
+              const base = dispSubtotal + (taxShip ? dispShipping : 0);
+              if (rate > 0) dispTax = Math.round(base * rate * 100) / 100;
+            }
+            const dispTotal = Math.round((dispSubtotal + dispShipping + dispTax) * 100) / 100;
+
+            if (orderSubtotalEl) orderSubtotalEl.textContent = currency(dispSubtotal);
+            if (orderShippingEl) orderShippingEl.textContent = currency(dispShipping);
+            if (orderTaxEl) orderTaxEl.textContent = currency(dispTax);
+            if (orderTotalEl) orderTotalEl.textContent = currency(dispTotal);
             if (res.debug) {
               console.info('[PaymentModal] pricing debug ->', res.debug);
             }
+            // Toggle badges and USPS-only free shipping hint (subtotal >= $50)
+            try {
+              const methodNow = shipMethodSel?.value || res.pricing.shippingMethod || 'USPS';
+              updateShippingBadges(methodNow);
+              const eligible = (methodNow === 'USPS' && Number(dispSubtotal) >= 50);
+              if (!eligible) { pmHideShippingBenefitNote(); }
+            } catch(_) {}
             // Warn if we have items but backend computed subtotal is zero
             const hasItems = Array.isArray(items) && items.length > 0;
             if (hasItems && Number(pricing.subtotal) === 0) {
@@ -688,7 +844,7 @@ import apiClient from './api-client.js';
             try { close(); } catch(_) {}
             return;
           }
-          const serverMsg = (res && typeof res === 'object' && res.error) ? res.error : (typeof res === 'string' ? res : null);
+          const serverMsg = (res && typeof res === 'object' && (res.error || res.message)) ? (res.error || res.message) : (typeof res === 'string' ? res : null);
           throw new Error(serverMsg || 'Failed to create order.');
         } catch (e) {
           console.error('[PaymentModal] Order failed', e);
@@ -701,7 +857,34 @@ import apiClient from './api-client.js';
       if (addToggleBtn) addToggleBtn.addEventListener('click', () => toggleAddForm());
       if (cancelAddrBtn) cancelAddrBtn.addEventListener('click', () => toggleAddForm(false));
       if (saveAddrBtn) saveAddrBtn.addEventListener('click', () => saveAddress());
-      if (shipMethodSel) shipMethodSel.addEventListener('change', async () => { ensurePlaceButtonState(); await updatePricing(); });
+      if (shipMethodSel) shipMethodSel.addEventListener('change', async () => {
+        updateShippingBadges();
+        initTooltips();
+        const itemsNow = cartApi.getItems ? cartApi.getItems() : [];
+        const subNow = (Array.isArray(itemsNow) ? itemsNow : []).reduce((s, it) => s + (Number(it?.price)||0) * (Number(it?.quantity)||0), 0);
+        let shipNow = 0;
+        if (shipMethodSel.value === 'Local Delivery') {
+          const miles = await fetchDrivingMiles();
+          if (miles == null || miles > 30) { shipNow = 0; if (shipMethodSel) shipMethodSel.value = 'USPS'; pmHideShippingBenefitNote(); }
+          else { shipNow = Math.round(miles * 2 * 100) / 100; }
+        } else if (shipMethodSel.value === 'USPS') {
+          if (subNow >= 50) { shipNow = 0; const q = await fetchCarrierRate('USPS'); if (q != null && q > 0) pmShowSavings(q); }
+          else { const q = await fetchCarrierRate('USPS'); shipNow = (q != null && q > 0) ? q : (Number(pricing?.shipping) || 0); pmHideShippingBenefitNote(); }
+        } else if (shipMethodSel.value === 'FedEx' || shipMethodSel.value === 'UPS') {
+          const q = await fetchCarrierRate(shipMethodSel.value);
+          shipNow = (q != null && q > 0) ? q : (Number(pricing?.shipping) || 20);
+          pmHideShippingBenefitNote();
+        }
+        const taxRateHint = Number((window.__WF_DEBUG_TAX_RATE ?? 0));
+        const taxShip = !!(pricing && pricing.taxShipping);
+        const taxNow = taxRateHint > 0 ? Math.round((subNow + (taxShip ? shipNow : 0)) * taxRateHint * 100) / 100 : Number(pricing?.tax || 0);
+        if (orderSubtotalEl) orderSubtotalEl.textContent = currency(subNow);
+        if (orderShippingEl) orderShippingEl.textContent = currency(shipNow);
+        if (orderTaxEl) orderTaxEl.textContent = currency(taxNow);
+        if (orderTotalEl) orderTotalEl.textContent = currency(subNow + shipNow + taxNow);
+        ensurePlaceButtonState();
+        await updatePricing();
+      });
       state.container.querySelectorAll('input[name="pm-paymentMethod"]').forEach((el) => {
         el.addEventListener('change', async () => {
           ensurePlaceButtonState();
@@ -725,56 +908,28 @@ import apiClient from './api-client.js';
           await resolveUserIdWithFallback();
         }
         // After login, populate addresses and recompute pricing
-        await loadAddresses();
-        ensurePlaceButtonState();
-        await updatePricing();
+        renderOrderSummary();
+      updateShippingBadges();
+      initTooltips();
+      pmShowShippingBenefitNote('Free USPS shipping on orders over $50!');
+      loadAddresses();
+      ensurePlaceButtonState();
+      updatePricing();
       }, { once: false });
 
-      // React immediately when <body data-user-id> or login state changes (eliminates race conditions)
-      try {
-        if (document && document.body) {
-          const onUserIdAttr = async () => {
-            try {
-              const v = document.body?.dataset?.userId;
-              const n = Number(v);
-              if (Number.isFinite(n) && n > 0) {
-                const newId = String(n);
-                if (userId !== newId) {
-                  userId = newId;
-                  await loadAddresses();
-                  ensurePlaceButtonState();
-                  await updatePricing();
-                }
-              }
-            } catch(_) {}
-          };
-          const onLoggedInAttr = async () => {
-            try {
-              const loggedIn = document.body?.getAttribute('data-is-logged-in') === 'true';
-              if (loggedIn && !userId) {
-                await resolveUserIdWithFallback();
-                if (userId) {
-                  await loadAddresses();
-                  ensurePlaceButtonState();
-                  await updatePricing();
-                }
-              }
-            } catch(_) {}
-          };
-          const mo = new MutationObserver((mutations) => {
-            for (const m of mutations) {
-              if (m.type === 'attributes') {
-                if (m.attributeName === 'data-user-id') { onUserIdAttr(); }
-                else if (m.attributeName === 'data-is-logged-in') { onLoggedInAttr(); }
-              }
-            }
-          });
-          mo.observe(document.body, { attributes: true, attributeFilter: ['data-user-id', 'data-is-logged-in'] });
-        }
-      } catch(_) {}
+      // Note: login changes are handled via the wf:login-success listener above.
 
       // Initial loads
       renderOrderSummary();
+      updateShippingBadges();
+      initTooltips();
+      ensurePmShippingBenefitNote();
+      try {
+        const currentSubtotal = Number((window.WF_Cart?.getTotal?.() ?? 0));
+        const eligible = (shipMethodSel && shipMethodSel.value === 'USPS' && currentSubtotal >= 50);
+        if (eligible) { pmShowShippingBenefitNote('Free USPS shipping on orders $50+.'); }
+        else { pmHideShippingBenefitNote(); }
+      } catch(_) { pmHideShippingBenefitNote(); }
       checkSquareSettings();
       // Load addresses first to set selectedAddressId, then compute pricing so ZIP-based tax is applied on open
       loadAddresses()
@@ -782,13 +937,45 @@ import apiClient from './api-client.js';
         .finally(() => { updatePricing(); });
     }
 
+    // CSS class-based scroll lock helpers (WFModals-free)
+    function lockScrollCss() {
+      try { document.documentElement.classList.add('wf-scroll-locked'); document.body.classList.add('wf-scroll-locked'); } catch(_) {}
+    }
+    function unlockScrollCss() {
+      try { document.documentElement.classList.remove('wf-scroll-locked'); document.body.classList.remove('wf-scroll-locked'); } catch(_) {}
+    }
+
     function openInternal() {
       ensureOverlay();
       render();
+      // Ensure modal elements are attached to body
       try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
-      state.overlay.classList.add('show');
+      // Blur any currently focused element to avoid aria-hidden focus retention issues
+      try { const ae = document.activeElement; if (ae && typeof ae.blur === 'function') ae.blur(); } catch(_) {}
+      // Proactively close other overlays that could sit above or trap focus
+      try { window.WF_CartModal && typeof window.WF_CartModal.close === 'function' && window.WF_CartModal.close(); } catch(_) {}
+      try {
+        const cartOv = document.getElementById('cartModalOverlay');
+        if (cartOv) { cartOv.classList.remove('show'); cartOv.setAttribute('aria-hidden', 'true'); cartOv.setAttribute('inert', ''); }
+      } catch(_) {}
+      try {
+        const roomOv = document.getElementById('roomModalOverlay');
+        if (roomOv) { roomOv.classList.remove('show'); roomOv.setAttribute('aria-hidden', 'true'); roomOv.setAttribute('inert', ''); }
+      } catch(_) {}
+      // Normalize overlay classes (remove legacy under-header, ensure checkout-overlay)
+      try { state.overlay.classList.remove('under-header'); } catch(_) {}
+      try { state.overlay.classList.add('checkout-overlay'); } catch(_) {}
+      // Make overlay visible
+      try { state.overlay.classList.add('show'); } catch(_) {}
       try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-      try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
+      // Lock background scroll via CSS class
+      try { lockScrollCss(); } catch(_) {}
+      // Mark body so the dedicated /payment page can be hidden beneath the modal
+      try {
+        document.body?.setAttribute('data-checkout-modal-open', '1');
+        const mainEl = document.querySelector('main');
+        if (mainEl) mainEl.setAttribute('aria-hidden', 'true');
+      } catch(_) {}
     }
 
     function open() {
@@ -829,7 +1016,14 @@ import apiClient from './api-client.js';
       if (!state.overlay) return;
       state.overlay.classList.remove('show');
       try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-      try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
+      // Unlock background scroll via CSS class
+      try { unlockScrollCss(); } catch(_) {}
+      // Restore underlying page visibility
+      try {
+        document.body?.removeAttribute('data-checkout-modal-open');
+        const mainEl = document.querySelector('main');
+        if (mainEl) mainEl.removeAttribute('aria-hidden');
+      } catch(_) {}
     }
 
     window.WF_PaymentModal = {
@@ -840,6 +1034,14 @@ import apiClient from './api-client.js';
 
     // Precreate overlay for z-index stacking
     ensureOverlay();
+    // If a prior step requested opening checkout as a modal from another page, honor it once
+    try {
+      const want = localStorage.getItem('wf:openCheckoutModal');
+      if (want === '1') {
+        localStorage.removeItem('wf:openCheckoutModal');
+        setTimeout(() => { try { open(); } catch(_) {} }, 0);
+      }
+    } catch(_) {}
     console.log('[PaymentModal] initialized');
   } catch (err) {
     console.error('[PaymentModal] init error', err);

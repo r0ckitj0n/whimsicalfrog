@@ -41,6 +41,22 @@ class Response
     }
 
     /**
+     * Convenience: standardized "Updated successfully" response
+     */
+    public static function updated($data = null)
+    {
+        self::success($data, 'Updated successfully');
+    }
+
+    /**
+     * Convenience: standardized "No changes detected" response
+     */
+    public static function noChanges($data = null)
+    {
+        self::success($data, 'No changes detected');
+    }
+
+    /**
      * Send an error JSON response
      * @param string $message
      * @param mixed $details

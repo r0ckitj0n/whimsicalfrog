@@ -6,8 +6,7 @@
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -25,9 +24,7 @@ if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsi
 }
 
 if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+    Response::forbidden('Admin access required');
 }
 
 // Authentication is handled by requireAdmin() above
@@ -98,28 +95,26 @@ try {
             initializeDefaultOptions($pdo);
             break;
         default:
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid action specified']);
+            Response::error('Invalid action specified', null, 400);
     }
 
 } catch (Exception $e) {
     error_log("Error in brand_voice_options.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['error' => 'Internal server error']);
+    Response::serverError('Internal server error');
 }
 
 function getAllBrandVoiceOptions($pdo)
 {
     $options = Database::queryAll("SELECT * FROM brand_voice_options ORDER BY display_order, label");
 
-    echo json_encode(['success' => true, 'options' => $options]);
+    Response::json(['success' => true, 'options' => $options]);
 }
 
 function getActiveBrandVoiceOptions($pdo)
 {
     $options = Database::queryAll("SELECT * FROM brand_voice_options WHERE is_active = 1 ORDER BY display_order, label");
 
-    echo json_encode(['success' => true, 'options' => $options]);
+    Response::json(['success' => true, 'options' => $options]);
 }
 
 function addBrandVoiceOption($pdo)
@@ -132,19 +127,16 @@ function addBrandVoiceOption($pdo)
     $displayOrder = (int)($input['display_order'] ?? 0);
 
     if (empty($value) || empty($label)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Value and label are required']);
-        return;
+        Response::error('Value and label are required', null, 400);
     }
 
     try {
         Database::execute("INSERT INTO brand_voice_options (value, label, description, display_order) VALUES (?, ?, ?, ?)", [$value, $label, $description, $displayOrder]);
 
-        echo json_encode(['success' => true, 'message' => 'Brand voice option added successfully']);
+        Response::json(['success' => true, 'message' => 'Brand voice option added successfully']);
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) { // Duplicate entry
-            http_response_code(409);
-            echo json_encode(['error' => 'Brand voice option with this value already exists']);
+            Response::error('Brand voice option with this value already exists', null, 409);
         } else {
             throw $e;
         }
@@ -163,18 +155,15 @@ function updateBrandVoiceOption($pdo)
     $displayOrder = (int)($input['display_order'] ?? 0);
 
     if ($id <= 0 || empty($value) || empty($label)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'ID, value and label are required']);
-        return;
+        Response::error('ID, value and label are required', null, 400);
     }
 
     $affected = Database::execute("UPDATE brand_voice_options SET value = ?, label = ?, description = ?, is_active = ?, display_order = ? WHERE id = ?", [$value, $label, $description, $isActive, $displayOrder, $id]);
 
     if ($affected > 0) {
-        echo json_encode(['success' => true, 'message' => 'Brand voice option updated successfully']);
+        Response::json(['success' => true, 'message' => 'Brand voice option updated successfully']);
     } else {
-        http_response_code(404);
-        echo json_encode(['error' => 'Brand voice option not found']);
+        Response::error('Brand voice option not found', null, 404);
     }
 }
 
@@ -183,18 +172,15 @@ function deleteBrandVoiceOption($pdo)
     $id = (int)($_GET['id'] ?? 0);
 
     if ($id <= 0) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Valid ID is required']);
-        return;
+        Response::error('Valid ID is required', null, 400);
     }
 
     $affected = Database::execute("DELETE FROM brand_voice_options WHERE id = ?", [$id]);
 
     if ($affected > 0) {
-        echo json_encode(['success' => true, 'message' => 'Brand voice option deleted successfully']);
+        Response::json(['success' => true, 'message' => 'Brand voice option deleted successfully']);
     } else {
-        http_response_code(404);
-        echo json_encode(['error' => 'Brand voice option not found']);
+        Response::error('Brand voice option not found', null, 404);
     }
 }
 
@@ -204,9 +190,7 @@ function reorderBrandVoiceOptions($pdo)
     $orders = $input['orders'] ?? [];
 
     if (empty($orders)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Orders array is required']);
-        return;
+        Response::error('Orders array is required', null, 400);
     }
 
     foreach ($orders as $order) {
@@ -218,7 +202,7 @@ function reorderBrandVoiceOptions($pdo)
         }
     }
 
-    echo json_encode(['success' => true, 'message' => 'Brand voice options reordered successfully']);
+    Response::json(['success' => true, 'message' => 'Brand voice options reordered successfully']);
 }
 
 function getItemMarketingPreferences($pdo)
@@ -226,9 +210,7 @@ function getItemMarketingPreferences($pdo)
     $sku = $_GET['sku'] ?? '';
 
     if (empty($sku)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'SKU is required']);
-        return;
+        Response::error('SKU is required', null, 400);
     }
 
     $preferences = Database::queryOne("SELECT * FROM item_marketing_preferences WHERE sku = ?", [$sku]);
@@ -251,7 +233,7 @@ function getItemMarketingPreferences($pdo)
         $preferences['is_default'] = false;
     }
 
-    echo json_encode(['success' => true, 'preferences' => $preferences]);
+    Response::json(['success' => true, 'preferences' => $preferences]);
 }
 
 function saveItemMarketingPreferences($pdo)
@@ -271,9 +253,7 @@ function saveItemMarketingPreferences($pdo)
     // Check if item exists
     $exists = Database::queryOne("SELECT sku FROM items WHERE sku = ?", [$sku]);
     if (!$exists) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Item not found']);
-        return;
+        Response::error('Item not found', null, 404);
     }
 
     // Insert or update preferences
@@ -286,7 +266,7 @@ function saveItemMarketingPreferences($pdo)
         updated_at = CURRENT_TIMESTAMP
     ", [$sku, $brandVoice, $contentTone]);
 
-    echo json_encode(['success' => true, 'message' => 'Marketing preferences saved successfully']);
+    Response::json(['success' => true, 'message' => 'Marketing preferences saved successfully']);
 }
 
 function initializeDefaultOptions($pdo)
@@ -320,7 +300,7 @@ function initializeDefaultOptions($pdo)
         }
     }
 
-    echo json_encode([
+    Response::json([
         'success' => true,
         'message' => "Initialized {$inserted} default brand voice options",
         'total_options' => count($defaultOptions)

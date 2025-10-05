@@ -18,7 +18,7 @@
   transform: scale(1);
   transition: transform 0.3s ease;
   position: relative;
-  z-index: var(--wf-admin-overlay-content-z, 10101);
+  z-index: var(--z-admin-overlay-content,  10101);
 
   /* Enhanced scrollbar styling */
   scrollbar-width: thin;
@@ -59,7 +59,7 @@
 /* Buttons inside modal footer (compat) */
 .admin-modal .btn { border-radius: 8px; font-weight: 500; }
 .admin-modal .btn-primary { background: #87ac3a; border: 1px solid #87ac3a; color: #fff; }
-.admin-modal .btn-primary:hover { background: #6b8e23; border-color: #6b8e23; }
+.admin-modal .btn-primary:hover { background: var(--brand-secondary, #BF5700); border-color: var(--brand-secondary, #BF5700); }
 
 /* Form controls inside modal (compat) */
 .admin-modal input[type="text"],
@@ -92,4 +92,43 @@
     flex-direction: column;
     gap: 8px;
   }
+}
+
+/* Admin Toast Host and Toasts (used by admin-inventory.js) */
+.wf-admin-toast-host {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 100000; /* above admin panels */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none; /* allow clicks to pass except on toasts */
+}
+
+.wf-admin-toast {
+  pointer-events: auto;
+  background: #dc2626; /* red-600 */
+  color: #ffffff;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -2px rgb(0 0 0 / 5%);
+  padding: 0.5rem 0.75rem; /* 8px 12px */
+  font-size: 0.875rem; /* text-sm */
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: opacity 300ms ease;
+}
+
+.wf-admin-toast a {
+  background: #ffffff;
+  color: #991b1b; /* red-800 */
+  font-weight: 600;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  text-decoration: none;
+}
+
+.wf-admin-toast.fade-out {
+  opacity: 0;
 }

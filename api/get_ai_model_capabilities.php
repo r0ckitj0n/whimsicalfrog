@@ -5,8 +5,7 @@
  */
 
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 try {
     try {
@@ -36,7 +35,7 @@ try {
                 $model = Database::queryOne("SELECT * FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1", ['jons_ai', 'jons-ai-basic']);
             }
 
-            echo json_encode([
+            Response::json([
                 'success' => true,
                 'current_provider' => $provider,
                 'current_model' => $modelId,
@@ -53,7 +52,7 @@ try {
                 $grouped[$model['provider']][] = $model;
             }
 
-            echo json_encode([
+            Response::json([
                 'success' => true,
                 'models' => $grouped
             ]);
@@ -77,7 +76,7 @@ try {
             $row = Database::queryOne("SELECT supports_images FROM ai_models WHERE provider = ? AND model_id = ? AND is_active = 1", [$provider, $modelId]);
             $supportsImages = $row ? $row['supports_images'] : 0;
 
-            echo json_encode([
+            Response::json([
                 'success' => true,
                 'provider' => $provider,
                 'model' => $modelId,
@@ -86,16 +85,10 @@ try {
             break;
 
         default:
-            echo json_encode([
-                'success' => false,
-                'error' => 'Invalid action'
-            ]);
+            Response::error('Invalid action', null, 400);
     }
 
 } catch (Exception $e) {
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+    Response::serverError($e->getMessage());
 }
 ?> 

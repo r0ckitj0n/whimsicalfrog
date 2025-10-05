@@ -198,6 +198,150 @@ body[data-page="admin/settings"] .settings-grid {
     <div class="admin-alert alert-warning">
       JavaScript is required to use the Settings page.
     </div>
+
+    <script>
+    (function(){
+      try {
+        const openBtn = document.getElementById('shippingSettingsBtn');
+        const modal = document.getElementById('shippingSettingsModal');
+        const statusEl = document.getElementById('shippingSettingsStatus');
+        const saveBtn = document.getElementById('shippingSettingsSaveBtn');
+        const closeEls = Array.from(document.querySelectorAll('[data-action="close-shipping-settings"]'));
+        const getVal = (id) => (document.getElementById(id)?.value || '').trim();
+        const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+
+        function showModal(){ if (modal){ modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false'); } }
+        function hideModal(){ if (modal){ modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); } }
+        function setStatus(msg, ok){ if (!statusEl) return; statusEl.textContent = msg || ''; statusEl.className = 'modal-status-chip ' + (ok ? 'text-green-700' : 'text-gray-600'); }
+
+        async function loadSettings(){
+          try {
+            setStatus('Loading…', false);
+            const url = '/api/business_settings.php?action=get_by_category&category=shipping';
+            const r = await fetch(url, { credentials: 'include' });
+            const j = r.ok ? await r.json() : null;
+            const list = (j && j.success && Array.isArray(j.data?.settings)) ? j.data.settings : (j?.data?.settings || []);
+            const map = {}; (list||[]).forEach(row => { if (row && row.setting_key) map[row.setting_key] = row.setting_value; });
+            setVal('uspsUserId', map['usps_webtools_userid'] || '');
+            setVal('upsAccessKey', map['ups_access_key'] || '');
+            setVal('upsSecret', map['ups_secret'] || '');
+            setVal('fedexKey', map['fedex_key'] || '');
+            setVal('fedexSecret', map['fedex_secret'] || '');
+            setVal('orsKey', map['ors_api_key'] || '');
+            setStatus('Loaded', true);
+          } catch (e) { setStatus('Load failed', false); }
+        }
+
+        async function saveSettings(){
+          try {
+            setStatus('Saving…', false);
+            const payload = {
+              action: 'upsert_settings',
+              category: 'shipping',
+              settings: {
+                usps_webtools_userid: getVal('uspsUserId'),
+                ups_access_key: getVal('upsAccessKey'),
+                ups_secret: getVal('upsSecret'),
+                fedex_key: getVal('fedexKey'),
+                fedex_secret: getVal('fedexSecret'),
+                ors_api_key: getVal('orsKey')
+              }
+            };
+            const r = await fetch('/api/business_settings.php?action=upsert_settings', {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const j = r.ok ? await r.json() : null;
+            if (j && j.success) {
+              setStatus('Saved', true);
+              // Optional: close after short delay
+              setTimeout(hideModal, 600);
+            } else {
+              setStatus('Save failed', false);
+            }
+          } catch (e) { setStatus('Save failed', false); }
+        }
+
+        openBtn && openBtn.addEventListener('click', async () => { showModal(); await loadSettings(); });
+        closeEls.forEach(el => el.addEventListener('click', hideModal));
+        saveBtn && saveBtn.addEventListener('click', saveSettings);
+      } catch (_) {}
+    })();
+    </script>
+
+    <!-- Shipping & Distance Settings Modal -->
+    <div id="shippingSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shippingSettingsTitle">
+      <div class="admin-modal admin-modal-content">
+        <div class="modal-header">
+          <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings</h2>
+          <button type="button" class="admin-modal-close" data-action="close-shipping-settings" aria-label="Close">×</button>
+          <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"></span>
+        </div>
+        <div class="modal-body">
+          <div class="text-sm text-gray-600 mb-3">Configure carrier API keys and distance service. These enable live USPS/UPS/FedEx rates and local delivery eligibility by driving miles. Optional keys fall back safely if unset.</div>
+          <form id="shippingSettingsForm" data-action="prevent-submit" class="space-y-4">
+            <fieldset class="border rounded p-3">
+              <legend class="text-sm font-semibold">USPS</legend>
+              <label class="block text-sm font-medium mb-1" for="uspsUserId">USPS Web Tools USERID</label>
+              <input id="uspsUserId" type="text" class="form-input w-full" placeholder="(required for USPS live rates)" />
+            </fieldset>
+            <fieldset class="border rounded p-3">
+              <legend class="text-sm font-semibold">UPS</legend>
+              <div class="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label class="block text-sm font-medium mb-1" for="upsAccessKey">UPS Access Key</label>
+                  <input id="upsAccessKey" type="text" class="form-input w-full" placeholder="optional" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1" for="upsSecret">UPS Secret</label>
+                  <input id="upsSecret" type="password" class="form-input w-full" placeholder="optional" />
+                </div>
+              </div>
+            </fieldset>
+            <fieldset class="border rounded p-3">
+              <legend class="text-sm font-semibold">FedEx</legend>
+              <div class="grid gap-3 md:grid-cols-2">
+                <div>
+                  <label class="block text-sm font-medium mb-1" for="fedexKey">FedEx Key</label>
+                  <input id="fedexKey" type="text" class="form-input w-full" placeholder="optional" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1" for="fedexSecret">FedEx Secret</label>
+                  <input id="fedexSecret" type="password" class="form-input w-full" placeholder="optional" />
+                </div>
+              </div>
+            </fieldset>
+            <fieldset class="border rounded p-3">
+              <legend class="text-sm font-semibold">Driving Distance</legend>
+              <label class="block text-sm font-medium mb-1" for="orsKey">OpenRouteService API Key</label>
+              <input id="orsKey" type="text" class="form-input w-full" placeholder="optional (used for driving miles)" />
+            </fieldset>
+            <div class="flex items-center justify-between pt-2">
+              <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
+              <div class="flex gap-2">
+                <button type="button" class="btn-secondary" data-action="close-shipping-settings">Close</button>
+                <button type="button" class="btn-brand" id="shippingSettingsSaveBtn">Save Settings</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dev Status Dashboard Modal (iframe embed) -->
+    <div id="devStatusModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
+      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+        <div class="modal-header">
+          <h2 id="devStatusTitle" class="admin-card-title">🧪 Dev Status Dashboard</h2>
+          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <iframe id="devStatusFrame" title="Dev Status" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/dev/status.php" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
   </noscript>
 
   <!-- Root containers the JS module can enhance -->
@@ -214,7 +358,7 @@ body[data-page="admin/settings"] .settings-grid {
 
       <?php // Visual & Design ?>
       <?php ob_start(); ?>
-        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-css-rules">CSS Rules</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-css-catalog">CSS Catalog</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-background-manager">Background Manager</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-editor">Room Map Editor</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-area-item-mapper">Area-Item Mapper</button>
@@ -226,6 +370,7 @@ body[data-page="admin/settings"] .settings-grid {
         <button type="button" id="squareSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-square-settings">Configure Square</button>
         <button type="button" id="aiSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-settings">AI Provider</button>
         <button type="button" id="aiToolsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-tools">AI &amp; Automation Tools</button>
+        <button type="button" id="shippingSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shipping-settings">Shipping &amp; Distance Settings</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-emerald', 'Business & Analytics', 'Manage sales, promotions, and business insights', $__content); ?>
 
       <?php // Communication ?>
@@ -281,6 +426,17 @@ body[data-page="admin/settings"] .settings-grid {
               <div class="text-sm mt-3 mb-1">Missing Image Files: <span id="itemsMissingFilesCount">0</span></div>
               <ul id="itemsMissingFilesList" class="list-disc ml-4 text-sm max-h-56 overflow-auto"></ul>
             </div>
+          </div>
+
+          <div class="border rounded p-3 mt-4">
+            <div class="font-semibold mb-2">Advanced Diagnostics</div>
+            <div class="text-sm text-gray-600 mb-2">Extra checks and dashboards for development and troubleshooting.</div>
+            <div class="flex flex-wrap gap-2 mb-3">
+              <button type="button" class="btn" data-action="open-dev-status">Open Dev Status Dashboard</button>
+              <button type="button" class="btn-secondary" data-action="run-health-check">Run /health.php</button>
+              <button type="button" class="btn-secondary" data-action="scan-item-images">Scan Item Images</button>
+            </div>
+            <pre id="advancedHealthOutput" class="text-xs bg-gray-50 p-2 rounded border max-h-64 overflow-auto" aria-live="polite"></pre>
           </div>
         </div>
       </div>

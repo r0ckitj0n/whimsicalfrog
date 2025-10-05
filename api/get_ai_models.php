@@ -8,13 +8,10 @@
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/ai_providers.php';
-
-// Set JSON header
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 // Ensure clean JSON
 ini_set('display_errors', 0);
-ob_start();
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -32,9 +29,7 @@ if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsi
 }
 
 if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+    Response::forbidden('Admin access required');
 }
 
 try {
@@ -54,10 +49,7 @@ try {
                 'google' => $aiProviders->getAvailableModels('google')
             ];
 
-            if (ob_get_length() !== false) {
-                ob_end_clean();
-            }
-            echo json_encode([
+            Response::json([
                 'success' => true,
                 'models' => $allModels
             ]);
@@ -65,10 +57,7 @@ try {
             // Return models for specific provider
             $models = $aiProviders->getAvailableModels($provider);
 
-            if (ob_get_length() !== false) {
-                ob_end_clean();
-            }
-            echo json_encode([
+            Response::json([
                 'success' => true,
                 'provider' => $provider,
                 'models' => $models
@@ -76,21 +65,11 @@ try {
         }
 
     } else {
-        http_response_code(405);
-        if (ob_get_length() !== false) {
-            ob_end_clean();
-        }
-        echo json_encode(['error' => 'Method not allowed']);
+        Response::methodNotAllowed();
     }
 
 } catch (Exception $e) {
     error_log("Get AI Models API Error: " . $e->getMessage());
-    http_response_code(500);
-    if (ob_get_length() !== false) {
-        ob_end_clean();
-    }
-    echo json_encode([
-        'error' => 'Failed to fetch AI models',
-        'message' => $e->getMessage()
-    ]);
+    Response::serverError('Failed to fetch AI models', $e->getMessage());
 }
+

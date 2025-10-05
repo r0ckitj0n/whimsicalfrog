@@ -1,9 +1,8 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/config.php';
 require_once 'ai_providers.php';
-
-header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -21,9 +20,7 @@ if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsi
 }
 
 if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+    Response::forbidden('Admin access required');
 }
 
 // Authentication is handled by requireAdmin() above
@@ -38,7 +35,7 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new Exception('Only POST method allowed');
+        Response::methodNotAllowed();
     }
 
     // Check if image was uploaded
@@ -81,7 +78,7 @@ try {
     $suggestedCategory = $analysisResult['category'] ?? 'General';
     $newSku = generateSkuForCategory($pdo, $suggestedCategory);
 
-    echo json_encode([
+    Response::json([
         'success' => true,
         'analysis' => [
             'category' => $analysisResult['category'] ?? 'General',
@@ -99,11 +96,7 @@ try {
         unlink($tempPath);
     }
 
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+    Response::serverError($e->getMessage());
 }
 
 function generateSkuForCategory($pdo, $category)

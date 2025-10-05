@@ -192,7 +192,7 @@ function renderDetailedItemModal($item, $images = [])
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         Gender/Style: <span class="text-red-500">*</span>
                                     </label>
-                                    <select id="itemGenderSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field">
+                                    <select id="itemGenderSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field detailed-select">
                                         <option value="">Select a style...</option>
                                     </select>
                                 </div>
@@ -202,10 +202,9 @@ function renderDetailedItemModal($item, $images = [])
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Size: <span class="text-red-500">*</span>
                                 </label>
-                                <select id="itemSizeSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field">
+                                <select id="itemSizeSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field detailed-select">
                                     <option value="">Select a size...</option>
                                 </select>
-                                <div id="sizeStockInfo" class="text-xs text-gray-500 mt-1"></div>
                             </div>
                                 
                                 <!-- Color Selection (Third in hierarchy) -->
@@ -213,10 +212,9 @@ function renderDetailedItemModal($item, $images = [])
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Color: <span class="text-red-500">*</span>
                                 </label>
-                                <select id="itemColorSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field">
+                                <select id="itemColorSelect" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-green-500 focus:border-green-500 required-field detailed-select">
                                     <option value="">Select a color...</option>
                                 </select>
-                                <div id="colorStockInfo" class="text-xs text-gray-500 mt-1"></div>
                             </div>
                             </div>
                             

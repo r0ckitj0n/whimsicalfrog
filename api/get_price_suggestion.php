@@ -1,8 +1,7 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -20,25 +19,19 @@ if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsi
 }
 
 if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+    Response::forbidden('Admin access required');
 }
 
 // Check if the request method is GET
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Invalid request method. Only GET is allowed.']);
-    exit;
+    Response::methodNotAllowed();
 }
 
 // Get SKU parameter
 $sku = $_GET['sku'] ?? '';
 
 if (empty($sku)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'SKU parameter is required.']);
-    exit;
+    Response::error('SKU parameter is required.', null, 400);
 }
 
 try {
@@ -97,7 +90,7 @@ try {
         // Use stored components if available, otherwise parse from reasoning text
         $components = !empty($storedComponents) ? $storedComponents : parseReasoningIntoComponents($reasoningText, $result);
 
-        echo json_encode([
+        Response::json([
             'success' => true,
             'suggestedPrice' => floatval($result['suggested_price']),
             'reasoning' => $reasoningText,
@@ -134,7 +127,7 @@ try {
             'createdAt' => $result['created_at']
         ]);
     } else {
-        echo json_encode([
+        Response::json([
             'success' => false,
             'error' => 'No price suggestion found for this SKU'
         ]);
@@ -142,8 +135,7 @@ try {
 
 } catch (Exception $e) {
     error_log("Error in get_price_suggestion.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
 
 function parseReasoningIntoComponents($reasoningText, $dbData)

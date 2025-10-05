@@ -1,4 +1,5 @@
 import { buildAdminUrl } from '../core/admin-url-builder.js';
+import { toastFromData, toastError } from '../core/toast.js';
 
 const AdminCustomersModule = {
     config: {
@@ -388,6 +389,8 @@ const AdminCustomersModule = {
             .then(data => {
                 console.log('[AdminCustomers] Response data:', data);
 
+                try { if (data) toastFromData(data); } catch (_) {}
+
                 if (data && data.success) {
                     console.log('[AdminCustomers] Customer saved successfully, showing notification...');
                     console.log('[AdminCustomers] Available notification systems:');
@@ -439,6 +442,7 @@ const AdminCustomersModule = {
                     console.log('- window.showNotification:', typeof window.showNotification);
 
                     // Show error notification using standardized system
+                    try { toastError(msg); } catch (_) {}
                     if (window.adminNotifications) {
                         console.log('[AdminCustomers] Using adminNotifications for error');
                         window.adminNotifications.error(msg, { title: 'Save Failed' });
@@ -458,6 +462,7 @@ const AdminCustomersModule = {
             .catch((error) => {
                 console.error('[AdminCustomers] Network error saving customer:', error);
                 const msg = 'Network error saving customer';
+                try { toastError(msg); } catch (_) {}
                 console.log('[AdminCustomers] Available notification systems for network error:');
                 console.log('- window.adminNotifications:', typeof window.adminNotifications);
                 console.log('- window.showError:', typeof window.showError);

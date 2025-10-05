@@ -4,13 +4,10 @@
  */
 
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 
 try {
@@ -21,11 +18,13 @@ try {
         throw $e;
     }
 
-    $input = json_decode(file_get_contents('php://input'), true);
-
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true);
+    if (!is_array($input)) {
+        Response::error('Invalid JSON', null, 400);
+    }
     if (!isset($input['imageId']) || !isset($input['sku'])) {
-        echo json_encode(['success' => false, 'error' => 'Missing required parameters']);
-        exit;
+        Response::error('Missing required parameters', null, 400);
     }
 
     $imageId = $input['imageId'];
@@ -41,8 +40,7 @@ try {
 
     if ($affected === 0) {
         Database::rollBack();
-        echo json_encode(['success' => false, 'error' => 'Image not found or does not belong to this item']);
-        exit;
+        Response::notFound('Image not found or does not belong to this item');
     }
 
     // Get the updated image path for response
@@ -51,16 +49,15 @@ try {
 
     Database::commit();
 
-    echo json_encode([
-        'success' => true,
+    Response::success([
         'message' => 'Primary image updated successfully',
         'imagePath' => $imagePath
     ]);
 
 } catch (PDOException $e) {
     Database::rollBack();
-    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    Response::serverError('Database error: ' . $e->getMessage());
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Error: ' . $e->getMessage()]);
+    Response::serverError('Error: ' . $e->getMessage());
 }
 ?> 

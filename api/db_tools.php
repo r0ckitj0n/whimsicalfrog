@@ -15,13 +15,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
+require_once __DIR__ . '/../includes/response.php';
 
 try {
     // Require admin session/login
     AuthHelper::requireAdmin(403, 'Admin access required');
 } catch (Throwable $e) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Forbidden']);
+    Response::json(['success' => false, 'message' => 'Forbidden'], 403);
     exit;
 }
 
@@ -66,13 +66,12 @@ function require_csrf_if_mutating(string $action): void
         $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
         http_response_code(428); // Precondition Required
         header('X-CSRF-Token: ' . $_SESSION['csrf_token']);
-        echo json_encode(['success' => false, 'message' => 'CSRF token required', 'csrf_token' => $_SESSION['csrf_token']]);
+        Response::json(['success' => false, 'message' => 'CSRF token required', 'csrf_token' => $_SESSION['csrf_token']], 428);
         exit;
     }
     $hdr = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     if (!hash_equals($_SESSION['csrf_token'], $hdr)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Invalid CSRF token']);
+        Response::json(['success' => false, 'message' => 'Invalid CSRF token'], 403);
         exit;
     }
 }
@@ -118,8 +117,7 @@ $env = $_GET['env'] ?? 'local';
 
 // Permission gate
 if (isset($ROLE_ALLOW[$action]) && !user_has_any_role($ROLE_ALLOW[$action])) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Insufficient permissions']);
+    Response::json(['success' => false, 'message' => 'Insufficient permissions'], 403);
     exit;
 }
 
@@ -135,21 +133,21 @@ switch ($action) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
         }
         header('X-CSRF-Token: ' . $_SESSION['csrf_token']);
-        echo json_encode(['success' => true, 'data' => ['csrf_token' => $_SESSION['csrf_token']]]);
+        Response::json(['success' => true, 'data' => ['csrf_token' => $_SESSION['csrf_token']]]);
         break;
     }
     case 'test-css': {
         $pdo = connectLocal();
         if (!$pdo) {
-            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+            Response::json(['success' => false, 'message' => 'Database connection failed']);
             break;
         }
         try {
             $row = Database::queryOne("SELECT COUNT(*) as count FROM global_css_rules WHERE is_active = 1");
             $count = (int)($row['count'] ?? 0);
-            echo json_encode(['success' => true, 'message' => "CSS Test Complete: {$count} active rules found", 'data' => ['active_rules' => $count]]);
+            Response::json(['success' => true, 'message' => "CSS Test Complete: {$count} active rules found", 'data' => ['active_rules' => $count]]);
         } catch (Throwable $e) {
-            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            Response::json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
         break;
     }
@@ -175,9 +173,9 @@ switch ($action) {
                 }
             }
             file_put_contents(__DIR__ . '/generated_css_api.css', $css);
-            echo json_encode(['success' => true, 'message' => 'CSS Generated', 'data' => ['rules_count' => count($rules), 'file' => 'api/generated_css_api.css']]);
+            Response::json(['success' => true, 'message' => 'CSS Generated', 'data' => ['rules_count' => count($rules), 'file' => 'api/generated_css_api.css']]);
         } catch (Throwable $e) {
-            echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+            Response::json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
         }
         break;
     }
@@ -199,7 +197,7 @@ switch ($action) {
                 $status[$target] = ['online' => false, 'error' => $e->getMessage()];
             }
         }
-        echo json_encode(['success' => true, 'data' => $status]);
+        Response::json(['success' => true, 'data' => $status]);
         break;
     }
 
@@ -207,11 +205,11 @@ switch ($action) {
     case 'version': {
         $pdo = getPdoForEnv($env);
         if (!$pdo) {
-            echo json_encode(['success' => false,'message' => 'Database connection failed']);
+            Response::json(['success' => false,'message' => 'Database connection failed']);
             break;
         }
         $row = $pdo->query('SELECT VERSION() AS version')->fetch(PDO::FETCH_ASSOC) ?: [];
-        echo json_encode(['success' => true,'data' => ['version' => $row['version'] ?? null]]);
+        Response::json(['success' => true,'data' => ['version' => $row['version'] ?? null]]);
         break;
     }
     case 'table_counts': {
@@ -223,7 +221,7 @@ switch ($action) {
         $dbName = wf_get_db_config($env === 'live' ? 'live' : 'local')['db'] ?? '';
         $stmt = $pdo->query("SELECT COUNT(*) AS table_count FROM information_schema.tables WHERE table_schema = '" . addslashes($dbName) . "'");
         $row = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : [];
-        echo json_encode(['success' => true,'data' => ['table_count' => (int)($row['table_count'] ?? 0)]]);
+        Response::json(['success' => true,'data' => ['table_count' => (int)($row['table_count'] ?? 0)]]);
         break;
     }
     case 'db_size': {
@@ -235,7 +233,7 @@ switch ($action) {
         $dbName = wf_get_db_config($env === 'live' ? 'live' : 'local')['db'] ?? '';
         $stmt = $pdo->query("SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS size_mb FROM information_schema.tables WHERE table_schema = '" . addslashes($dbName) . "'");
         $row = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : [];
-        echo json_encode(['success' => true,'data' => ['size_mb' => (float)($row['size_mb'] ?? 0)]]);
+        Response::json(['success' => true,'data' => ['size_mb' => (float)($row['size_mb'] ?? 0)]]);
         break;
     }
     case 'list_tables': {
@@ -246,7 +244,7 @@ switch ($action) {
         }
         $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_NUM);
         $names = array_slice(array_map(fn ($r) => $r[0] ?? null, $tables), 0, 200);
-        echo json_encode(['success' => true,'data' => ['tables' => $names]]);
+        Response::json(['success' => true,'data' => ['tables' => $names]]);
         break;
     }
     case 'describe': {
@@ -258,14 +256,14 @@ switch ($action) {
         }
         $table = $_GET['table'] ?? '';
         if (!$table || !preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
-            echo json_encode(['success' => false,'message' => 'Invalid table']);
+            Response::json(['success' => false,'message' => 'Invalid table']);
             break;
         }
         $stmt = $pdo->query("DESCRIBE `" . str_replace('`', '', $table) . "`");
         $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
-        echo json_encode(['success' => true,'data' => ['structure' => $rows]]);
+        Response::json(['success' => true,'data' => ['structure' => $rows]]);
         break;
     }
     default:
-        echo json_encode(['success' => false, 'message' => 'Invalid action']);
+        Response::json(['success' => false, 'message' => 'Invalid action']);
 }

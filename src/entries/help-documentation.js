@@ -1,9 +1,6 @@
-/**
- * Help Documentation Entry Point
- * Loads the interactive help documentation system
- */
-
-import '../js/help-documentation.js';
-import '../styles/help-documentation.css';
-
-console.log('[Help Documentation] Module loaded');
+// Vite entry: help-documentation.js
+try {
+  await import('../js/help-documentation.js');
+} catch (e) {
+  console.warn('[Vite] help-documentation.js module not found under src/js. Entry stub loaded.');
+}

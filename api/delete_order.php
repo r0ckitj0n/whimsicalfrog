@@ -2,8 +2,7 @@
 
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -21,25 +20,19 @@ if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsi
 }
 
 if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+    Response::forbidden('Admin access required');
 }
 
 // Check if the request method is DELETE
 if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode(['success' => false, 'message' => 'Invalid request method. Only DELETE is allowed.']);
-    exit;
+    Response::methodNotAllowed('Invalid request method. Only DELETE is allowed.');
 }
 
 // Get orderId from query parameter
 $orderId = $_GET['orderId'] ?? null;
 
 if (empty($orderId)) {
-    http_response_code(400); // Bad Request
-    echo json_encode(['success' => false, 'message' => 'Order ID is required.']);
-    exit;
+    Response::error('Order ID is required.', null, 400);
 }
 
 try {
@@ -55,9 +48,7 @@ try {
     $orderExists = $row ? (int)$row['c'] : 0;
 
     if ($orderExists == 0) {
-        http_response_code(404); // Not Found
-        echo json_encode(['success' => false, 'message' => 'Order not found.']);
-        exit;
+        Response::notFound('Order not found.');
     }
 
     // 2. Delete the order and related items within a transaction
@@ -72,25 +63,19 @@ try {
 
         if ($deletedOrders > 0) {
             Database::commit();
-            echo json_encode([
-                'success' => true,
-                'message' => "Order deleted successfully. Removed {$deletedItems} order items and 1 order."
-            ]);
+            Response::success(['message' => "Order deleted successfully. Removed {$deletedItems} order items and 1 order."]);
         } else {
             Database::rollBack();
-            http_response_code(409); // Conflict
-            echo json_encode(['success' => false, 'message' => 'Order found but could not be deleted. It might have been deleted by another process.']);
+            Response::error('Order found but could not be deleted. It might have been deleted by another process.', null, 409);
         }
     } catch (Exception $e) {
         Database::rollBack();
         error_log("Failed to delete order $orderId in transaction: " . $e->getMessage());
-        http_response_code(500); // Internal Server Error
-        echo json_encode(['success' => false, 'message' => 'Failed to delete order due to a database error: ' . $e->getMessage()]);
+        Response::serverError('Failed to delete order due to a database error: ' . $e->getMessage());
     }
 
 } catch (PDOException $e) {
     // If using a transaction and an exception occurs before commit: if ($pdo->inTransaction()) { $pdo->rollBack(); }
     error_log("Database error in delete-order.php for order ID $orderId: " . $e->getMessage());
-    http_response_code(500); // Internal Server Error
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    Response::serverError('Database error: ' . $e->getMessage());
 }

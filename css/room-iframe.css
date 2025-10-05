@@ -259,7 +259,7 @@ html, body {
 }
 
 .popup-add-to-cart-btn:hover {
-    background: var(--brand-primary-hover, #6b8e23);
+    background: var(--brand-primary-hover, var(--brand-secondary, #BF5700));
     transform: translateY(-1px);
 }
 
@@ -290,7 +290,7 @@ html, body {
 }
 
 .room-title-overlay:hover {
-    background: var(--brand-primary-dark, #6b8e23);
+    background: var(--brand-secondary, #BF5700);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
 }

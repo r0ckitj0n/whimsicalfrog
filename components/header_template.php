@@ -241,7 +241,7 @@ try {
                 <?php if ($config['show_user_menu']): ?>
                     <?php if ($is_logged_in): ?>
                         <span class="welcome-message">
-                            <a href="/account_settings" class="nav-link"><?php echo htmlspecialchars($username); ?></a>
+                            <a href="/account_settings" class="nav-link"><?php echo htmlspecialchars((string)$username); ?></a>
                         </span>
                         <?php if (!empty($is_admin)): ?>
                             <a href="/sections/admin_router.php?section=settings" class="nav-link">Settings</a>

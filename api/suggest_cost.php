@@ -2,16 +2,16 @@
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/ai_providers.php';
+require_once __DIR__ . '/../includes/response.php';
 
-header('Content-Type: application/json');
+// JSON responses standardized via Response helper
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
 // Check admin authentication using centralized helper
 AuthHelper::requireAdmin();
 
-// Suppress all output before JSON header
-ob_start();
+// Remove output buffering; Response helper handles output
 
 // Turn off error display for this API to prevent HTML in JSON response
 ini_set('display_errors', 0);
@@ -22,18 +22,14 @@ $userData = getCurrentUser();
 
 // Check if the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Invalid request method. Only POST is allowed.']);
-    exit;
+    Response::methodNotAllowed();
 }
 
 // Get and validate input data
 $input = json_decode(file_get_contents('php://input'), true);
 
 if (!$input) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Invalid JSON input.']);
-    exit;
+    Response::error('Invalid JSON input.', null, 400);
 }
 
 // Extract required fields
@@ -43,9 +39,7 @@ $category = trim($input['category'] ?? '');
 $sku = trim($input['sku'] ?? '');
 
 if (empty($name)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Item name is required for cost suggestion.']);
-    exit;
+    Response::error('Item name is required for cost suggestion.', null, 400);
 }
 
 try {
@@ -102,9 +96,8 @@ try {
         }
     }
 
-    // Clear any buffered output and send clean JSON
-    ob_clean();
-    echo json_encode([
+    // Preserve original top-level payload shape
+    Response::json([
         'success' => true,
         'suggestedCost' => $costData['cost'],
         'reasoning' => $costData['reasoning'],
@@ -115,9 +108,7 @@ try {
 
 } catch (Exception $e) {
     error_log("Error in suggest_cost.php: " . $e->getMessage());
-    http_response_code(500);
-    ob_clean();
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
 
 function analyzeCostStructure($name, $description, $category, $pdo)

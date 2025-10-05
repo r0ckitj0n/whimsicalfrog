@@ -12,6 +12,9 @@ import '../styles/cart-modal.css';
       container: null,
       itemsEl: null,
       keydownHandler: null,
+      lockDepth: 0,
+      prevHtmlOverflow: '',
+      prevBodyOverflow: ''
     };
 
     function createOverlay() {
@@ -23,6 +26,8 @@ import '../styles/cart-modal.css';
       const overlay = document.createElement('div');
       overlay.id = 'cartModalOverlay';
       overlay.className = 'confirmation-modal-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
 
       // Modal container
       const modal = document.createElement('div');
@@ -56,6 +61,9 @@ import '../styles/cart-modal.css';
       state.container = modal;
       state.itemsEl = overlay.querySelector('#cartModalItems');
 
+      // Let clicks inside the modal bubble so global delegated handlers (e.g., remove item) work.
+      // Underlying page is already shielded by the overlay covering the viewport.
+
       // Close on overlay click (outside modal content)
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) close();
@@ -75,6 +83,26 @@ import '../styles/cart-modal.css';
         };
         document.addEventListener('keydown', state.keydownHandler);
       }
+    }
+
+    // CSS class-based scroll lock (WFModals-free)
+    function lockScrollCss() {
+      try {
+        if (state.lockDepth === 0) {
+          document.documentElement.classList.add('wf-scroll-locked');
+          document.body.classList.add('wf-scroll-locked');
+        }
+        state.lockDepth++;
+      } catch(_) {}
+    }
+    function unlockScrollCss() {
+      try {
+        state.lockDepth = Math.max(0, state.lockDepth - 1);
+        if (state.lockDepth === 0) {
+          document.documentElement.classList.remove('wf-scroll-locked');
+          document.body.classList.remove('wf-scroll-locked');
+        }
+      } catch(_) {}
     }
 
     function renderIfOpen() {
@@ -101,7 +129,8 @@ import '../styles/cart-modal.css';
       try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
       state.overlay.classList.add('show');
       try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-      try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
+      // Lock background scroll via CSS class
+      try { lockScrollCss(); } catch(_) {}
       // Always resync from storage upon open to avoid stale in-memory state
       try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
       // Render into the modal container
@@ -112,9 +141,15 @@ import '../styles/cart-modal.css';
 
     function close() {
       if (!state.overlay) return;
+      // Proactively release focus from any focused control inside the overlay
+      try {
+        const ae = document.activeElement;
+        if (ae && typeof ae.blur === 'function') ae.blur();
+      } catch(_) {}
       state.overlay.classList.remove('show');
       try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-      try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
+      // Unlock background scroll via CSS class
+      try { unlockScrollCss(); } catch(_) {}
     }
 
     // Public API
@@ -126,13 +161,14 @@ import '../styles/cart-modal.css';
     window.openCartModal = open;
     window.closeCartModal = close;
 
-    // Intercept header cart link clicks
+    // Intercept header cart button/link clicks (support multiple selector variants)
     document.addEventListener('click', (e) => {
-      const link = e.target && e.target.closest && e.target.closest('a.cart-link');
-      if (!link) return;
-      // Allow new tab/window behavior
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+      const btn = e.target && e.target.closest && e.target.closest('a.cart-link, .cart-toggle, .cart-button, [data-action="open-cart"], #cartButton');
+      if (!btn) return;
+      // Allow new tab/window behavior for anchor clicks
+      if ((btn.tagName === 'A') && (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) return;
       e.preventDefault();
+      e.stopPropagation();
       open();
     });
 
@@ -152,32 +188,44 @@ import '../styles/cart-modal.css';
       if (isDisabled) return;
       e.preventDefault();
       e.stopPropagation();
+      // Release focus first to avoid aria-hidden block warnings
+      try {
+        const ae = document.activeElement;
+        if (ae && typeof ae.blur === 'function') ae.blur();
+      } catch(_) {}
+      // Close the cart overlay before proceeding so stacking/context is clear
       try { close(); } catch(_){ }
 
-      // Preferred: open in-place payment modal if available (handles login gating internally)
-      if (window.WF_PaymentModal && typeof window.WF_PaymentModal.open === 'function') {
-        try { localStorage.setItem('pendingCheckout', 'true'); } catch(_) {}
-        window.WF_PaymentModal.open();
-        return;
-      }
+      const proceed = () => {
+        // Preferred: open in-place payment modal if available (handles login gating internally)
+        const disableInline = (typeof window.__WF_DISABLE_INLINE_CHECKOUT !== 'undefined') ? !!window.__WF_DISABLE_INLINE_CHECKOUT : false;
+        if (!disableInline && window.WF_PaymentModal && typeof window.WF_PaymentModal.open === 'function') {
+          try { localStorage.setItem('pendingCheckout', 'true'); } catch(_) {}
+          window.WF_PaymentModal.open();
+          return;
+        }
 
-      // Fallback: navigate to the dedicated payment page
-      const target = btn.getAttribute('href') || '/payment';
-      try { localStorage.setItem('pendingCheckout', 'true'); } catch(_) {}
-      
-      const isLoggedIn = (document && document.body && document.body.getAttribute('data-is-logged-in') === 'true');
-      if (!isLoggedIn && typeof window.openLoginModal === 'function') {
-        const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
-        window.openLoginModal(desiredReturn, {
-          suppressRedirect: true,
-          onSuccess: () => {
-            try { if (document && document.body) document.body.setAttribute('data-is-logged-in', 'true'); } catch(_) {}
-            window.location.href = target;
-          }
-        });
-        return;
-      }
-      window.location.href = target;
+        // Fallback: navigate to the dedicated payment page
+        const target = btn.getAttribute('href') || '/payment';
+        try { localStorage.setItem('pendingCheckout', 'true'); } catch(_) {}
+
+        const isLoggedIn = (document && document.body && document.body.getAttribute('data-is-logged-in') === 'true');
+        if (!isLoggedIn && typeof window.openLoginModal === 'function') {
+          const desiredReturn = window.location.pathname + window.location.search + window.location.hash;
+          window.openLoginModal(desiredReturn, {
+            suppressRedirect: true,
+            onSuccess: () => {
+              try { if (document && document.body) document.body.setAttribute('data-is-logged-in', 'true'); } catch(_) {}
+              window.location.href = target;
+            }
+          });
+          return;
+        }
+        window.location.href = target;
+      };
+
+      // Defer slightly to allow the cart overlay to finish closing and release focus
+      setTimeout(proceed, 40);
     });
 
     // Re-render when cart updates

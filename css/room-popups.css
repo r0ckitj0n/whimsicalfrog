@@ -14,7 +14,8 @@
     --popup-padding: 15px;
     --popup-min-width: 280px;
     --popup-max-width: 450px;
-    --popup-z-index: 200;
+    /* Normalize popup z-index to unified variable system */
+    --popup-z-index: var(--z-inline-popup, 1000);
     
     /* Popup Text Variables */
     --popup-title-color: #556B2F;

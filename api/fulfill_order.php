@@ -1,11 +1,9 @@
 <?php
 
 require_once __DIR__ . '/config.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false,'error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 try {
     Database::getInstance();
@@ -27,14 +25,12 @@ if ($payRaw !== '') {
     $payLine = date('Y-m-d H:i') . ' - ' . $payRaw;
 }
 if (!$orderId || !in_array($action, ['ship','deliver','note','updateField'])) {
-    echo json_encode(['success' => false,'error' => 'Missing or invalid parameters']);
-    exit;
+    Response::error('Missing or invalid parameters', null, 400);
 }
 try {
     if ($action === 'ship') {
         if ($tracking === '') {
-            echo json_encode(['success' => false,'error' => 'Tracking number required']);
-            exit;
+            Response::error('Tracking number required', null, 400);
         }
         Database::execute("UPDATE orders SET order_status='Shipped', trackingNumber=?, fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END, paymentStatus=IF(paymentStatus='Received', paymentStatus, 'Received') WHERE id=?", [$tracking, $noteLine, $noteLine, $payLine, $payLine, $orderId]);
 
@@ -48,7 +44,7 @@ try {
             );
         }
 
-        echo json_encode(['success' => true,'message' => 'Order marked as shipped.']);
+        Response::updated(['message' => 'Order marked as shipped.']);
     } elseif ($action === 'deliver') {
         Database::execute("UPDATE orders SET order_status='Delivered', fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?", [$noteLine, $noteLine, $payLine, $payLine, $orderId]);
 
@@ -62,11 +58,10 @@ try {
             );
         }
 
-        echo json_encode(['success' => true,'message' => 'Order marked as delivered.']);
+        Response::updated(['message' => 'Order marked as delivered.']);
     } elseif ($action === 'note') {
         if ($noteLine === '' && $payLine === '') {
-            echo json_encode(['success' => false,'error' => 'No note provided']);
-            exit;
+            Response::error('No note provided', null, 400);
         }
         Database::execute("UPDATE orders SET fulfillmentNotes = CASE WHEN ?='' THEN fulfillmentNotes ELSE CONCAT_WS('\n', fulfillmentNotes, ?) END, paymentNotes = CASE WHEN ?='' THEN paymentNotes ELSE CONCAT_WS('\n', paymentNotes, ?) END WHERE id=?", [$noteLine, $noteLine, $payLine, $payLine, $orderId]);
 
@@ -88,7 +83,7 @@ try {
             );
         }
 
-        echo json_encode(['success' => true,'message' => 'Notes saved.']);
+        Response::updated(['message' => 'Notes saved.']);
     } elseif ($action === 'updateField') {
         $field = $_POST['field'] ?? '';
         $value = $_POST['value'] ?? '';
@@ -96,8 +91,7 @@ try {
         // Validate field and value
         $allowedFields = ['status', 'order_status', 'paymentMethod', 'shippingMethod', 'paymentStatus', 'paymentDate', 'date'];
         if (!in_array($field, $allowedFields)) {
-            echo json_encode(['success' => false,'error' => 'Invalid field']);
-            exit;
+            Response::error('Invalid field', null, 400);
         }
 
         // Map field names to actual database column names
@@ -113,8 +107,7 @@ try {
         $dbField = $fieldMapping[$field];
 
         if ($value === '' && $field !== 'paymentDate') {
-            echo json_encode(['success' => false,'error' => 'Value cannot be empty']);
-            exit;
+            Response::error('Value cannot be empty', null, 400);
         }
 
         // Validate field-specific values
@@ -129,12 +122,10 @@ try {
         // Special handling for date fields
         if ($field === 'paymentDate' || $field === 'date') {
             if ($value !== '' && !DateTime::createFromFormat('Y-m-d', $value)) {
-                echo json_encode(['success' => false,'error' => 'Invalid date format. Use YYYY-MM-DD']);
-                exit;
+                Response::error('Invalid date format. Use YYYY-MM-DD', null, 400);
             }
         } elseif (!in_array($value, $allowedValues[$field])) {
-            echo json_encode(['success' => false,'error' => 'Invalid value for field']);
-            exit;
+            Response::error('Invalid value for field', null, 400);
         }
 
         // Update the field
@@ -145,18 +136,17 @@ try {
                        (($field === 'date') ? 'Date' : ucfirst($field));
 
         if ($affected > 0) {
-            echo json_encode(['success' => true,'message' => $displayField . ' updated successfully']);
+            Response::updated(['message' => $displayField . ' updated successfully']);
         } else {
             // Check if order exists
             $exists = Database::queryOne("SELECT id FROM orders WHERE id = ?", [$orderId]);
             if ($exists) {
-                echo json_encode(['success' => true,'message' => 'No change needed - ' . $displayField . ' is already set to that value']);
+                Response::noChanges(['message' => 'No change needed - ' . $displayField . ' is already set to that value']);
             } else {
-                echo json_encode(['success' => false,'error' => 'Order not found']);
+                Response::notFound('Order not found');
             }
         }
     }
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false,'error' => 'Server error: '.$e->getMessage()]);
+    Response::serverError('Server error: ' . $e->getMessage());
 }

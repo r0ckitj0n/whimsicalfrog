@@ -280,7 +280,7 @@ function getPaymentStatusBadgeClass($status)
                 <tr>
                     <td class="font-mono"><?= htmlspecialchars($order['id']) ?></td>
                     <td><?= htmlspecialchars($order['username'] ?? 'N/A') ?></td>
-                    <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="date" data-type="date" >
+                    <td class="editable-field" data-order-id="<?= $order['id'] ?>" data-field="date" data-type="date" data-raw-value="<?= htmlspecialchars(date('Y-m-d', strtotime($order['date'] ?? 'now'))) ?>">
                         <?= htmlspecialchars(date('M j, Y', strtotime($order['date'] ?? 'now'))) ?>
                     </td>
                     <td class="text-gray-600" >
@@ -648,3 +648,79 @@ function getPaymentStatusBadgeClass($status)
 </script>
 
 <?php // Admin orders script is loaded via app.js per-page imports?>
+<script type="module">
+  // Minimal guard: if the Orders module did not mark itself ready shortly after DOM, import it.
+  document.addEventListener('DOMContentLoaded', () => {
+    const ensure = () => {
+      try {
+        if (!window.__WF_ADMIN_ORDERS_READY) {
+          import('/src/js/admin-orders.js')
+            .then(() => console.log('[OrdersPage] admin-orders module imported via guard'))
+            .catch(err => {
+              console.error('[OrdersPage] guard failed to import admin-orders.js', err);
+            });
+        }
+      } catch (e) {
+        console.error('[OrdersPage] guard error', e);
+      }
+    };
+    // First attempt shortly after DOM ready
+    setTimeout(ensure, 200);
+    // Second pass: if still not ready after 1s, install a minimal inline editor as a last resort
+    setTimeout(() => {
+      try {
+        if (!window.__WF_ADMIN_ORDERS_READY && !window.__WF_ORDERS_INLINE_EDITOR) {
+          window.__WF_ORDERS_INLINE_EDITOR = true;
+          const fieldToApiKey = (f) => ({ order_status:'status', paymentMethod:'paymentMethod', shippingMethod:'shippingMethod', paymentStatus:'paymentStatus', date:'date' }[f] || f);
+          const badgeStatus = (v) => ({ pending:'badge-status-pending', processing:'badge-status-processing', shipped:'badge-status-shipped', delivered:'badge-status-delivered', cancelled:'badge-status-cancelled' }[(v||'').toLowerCase()] || 'badge-status-default');
+          const badgePay = (v) => ({ pending:'badge-payment-pending', received:'badge-payment-received', processing:'badge-payment-processing', refunded:'badge-payment-refunded', failed:'badge-payment-failed' }[(v||'').toLowerCase()] || 'badge-payment-default');
+          const commit = (cell, key, val) => {
+            const orderId = cell.getAttribute('data-order-id'); if (!orderId || !key) return Promise.resolve({ ok:false, data:{} });
+            const payload = { orderId:String(orderId) }; payload[key] = val;
+            return fetch('/api/update_order.php', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+              .then(r => r.json().catch(()=>({})).then(j => ({ ok:r.ok, data:j })));
+          };
+          const buildEditor = (cell) => {
+            if (cell.__editing) return; cell.__editing = true;
+            const type = cell.getAttribute('data-type')||'text'; const field = cell.getAttribute('data-field')||''; const apiKey = fieldToApiKey(field);
+            const originalHtml = cell.innerHTML; const originalText = (cell.textContent||'').trim();
+            const cleanup = (restore) => { if (restore) cell.innerHTML = originalHtml; cell.__editing=false; };
+            const onKey = (ev, input) => { if (ev.key==='Enter'){ ev.preventDefault(); doCommit(input.value); } else if (ev.key==='Escape'){ ev.preventDefault(); cleanup(true); } };
+            const doCommit = (val) => commit(cell, apiKey, val).then(res => {
+              const ok = res && res.ok && (res.data && (res.data.success || res.data.orderId));
+              if (ok) {
+                if (field==='order_status') { const s=document.createElement('span'); s.className='status-badge '+badgeStatus(val); s.textContent=val; cell.innerHTML=''; cell.appendChild(s); }
+                else if (field==='paymentStatus') { const s=document.createElement('span'); s.className='payment-status-badge '+badgePay(val); s.textContent=val; cell.innerHTML=''; cell.appendChild(s); }
+                else if (field==='date') { let iso=String(val||'').slice(0,10); cell.setAttribute('data-raw-value', iso); try{ cell.textContent=new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}catch(_){ cell.textContent=iso||val; } }
+                else { cell.textContent = val; }
+                cleanup(false); try{ window.showNotification && window.showNotification('Saved','success'); }catch(_){}
+              } else { cleanup(true); try{ window.showNotification && window.showNotification((res&&res.data&&(res.data.error||res.data.message))||'Save failed','error'); }catch(_){} }
+            }).catch(()=>{ cleanup(true); try{ window.showNotification && window.showNotification('Network error','error'); }catch(_){} });
+            if (type==='select') {
+              let options=[]; if(field==='order_status') options=['Pending','Processing','Shipped','Delivered','Cancelled'];
+              else if(field==='paymentMethod') options=['Credit Card','Cash','Check','PayPal','Venmo','Other'];
+              else if(field==='shippingMethod') options=['Customer Pickup','Local Delivery','USPS','FedEx','UPS'];
+              else if(field==='paymentStatus') options=['Pending','Received','Processing','Refunded','Failed'];
+              const sel=document.createElement('select'); sel.className='form-select'; options.forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=o; if(o===originalText) opt.selected=true; sel.appendChild(opt); });
+              cell.innerHTML=''; cell.appendChild(sel); sel.focus(); sel.addEventListener('blur',()=>doCommit(sel.value)); sel.addEventListener('keydown',ev=>onKey(ev,sel));
+            } else {
+              const input=document.createElement('input'); input.type=(type==='date'||type==='number'||type==='datetime-local')?type:'text'; input.className='form-input';
+              if(type==='date'){ const rv = cell.getAttribute('data-raw-value'); input.value = (/^\d{4}-\d{2}-\d{2}$/.test(rv||''))?rv:originalText; } else { input.value = originalText; }
+              cell.innerHTML=''; cell.appendChild(input); input.focus(); try{ input.select && input.select(); }catch(_){}
+              input.addEventListener('blur',()=>doCommit((input.value||'').trim())); input.addEventListener('keydown',ev=>onKey(ev,input));
+            }
+          };
+          document.addEventListener('click', (e) => {
+            const cell = e.target && e.target.closest ? e.target.closest('.editable-field') : null;
+            if (!cell) return; if (e.target.closest('input,select,textarea,button,a')) return; buildEditor(cell);
+          }, true);
+          console.warn('[OrdersPage] Minimal inline editor installed as fallback');
+        }
+      } catch (e) {
+        console.error('[OrdersPage] fallback install error', e);
+      }
+    }, 1000);
+  });
+  // Hint tokens for resolvers
+  try { const b=document.body; if (b) { if (!b.dataset.page) b.dataset.page='admin/orders'; b.dataset.isAdmin='true'; } } catch(_) {}
+  </script>

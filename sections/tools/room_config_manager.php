@@ -163,6 +163,13 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
                                     </select>
                                 </div>
                             </div>
+                            <div class="mt-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="icons_white_background" name="icons_white_background" class="mr-2" checked>
+                                    Show white background behind room items (panels)
+                                </label>
+                                <div class="text-xs text-gray-500 mt-1">Uncheck to make item backgrounds transparent for this room.</div>
+                            </div>
                         </div>
                         <div class="flex justify-end space-x-4">
                             <button type="button" data-action="resetForm" class="btn btn-secondary">Reset to Defaults</button>
@@ -195,7 +202,8 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
 
   function load(room){
     if(!room) return;
-    fetch('/api/room_config.php?action=get&room='+encodeURIComponent(room))
+    // Load JSON config (legacy UI settings)
+    var p1 = fetch('/api/room_config.php?action=get&room='+encodeURIComponent(room))
       .then(function(r){return r.json();})
       .then(function(j){
         var cfg=(j&&j.config)||{};
@@ -205,10 +213,25 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
           if(el.type==='checkbox') el.checked=!!cfg[k];
           else el.value=cfg[k];
         });
-        var rn=f.querySelector('#roomNumber'); if(rn) rn.value=room;
-        if(c) c.classList.remove('hidden');
-      })
-      .catch(function(){});
+      });
+    // Load DB flags (room_settings)
+    var p2 = fetch('/api/room_settings.php?action=get_room&room_number='+encodeURIComponent(room))
+      .then(function(r){return r.json();})
+      .then(function(j){
+        var room=(j&&j.room)||{};
+        var cb=f.querySelector('#icons_white_background');
+        if(cb){
+          if(room && typeof room.icons_white_background !== 'undefined'){
+            cb.checked = !!Number(room.icons_white_background);
+          } else {
+            cb.checked = (room==="1" || String(s.value)==="1") ? false : true;
+          }
+        }
+      }).catch(function(){});
+    Promise.allSettled([p1,p2]).finally(function(){
+      var rn=f.querySelector('#roomNumber'); if(rn) rn.value=room;
+      if(c) c.classList.remove('hidden');
+    });
   }
 
   s.addEventListener('change', function(e){ load(e.target.value); });
@@ -224,17 +247,19 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
       var n = Number(val);
       cfg[k] = isNaN(n) ? val : n;
     });
-    fetch('/api/room_config.php?action=save',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
+    var saveJson = fetch('/api/room_config.php?action=save',{
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({room:room, config:cfg})
-    })
-    .then(function(r){return r.json();})
-    .then(function(j){
-      if(j && j.success){ alert('Settings saved successfully'); location.reload(); }
-      else { alert('Save failed: ' + ((j && (j.message||j.error)) || 'Unknown')); }
-    })
-    .catch(function(){ alert('Save failed'); });
+    }).then(function(r){return r.json();});
+    var saveFlags = fetch('/api/room_settings.php',{
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'update_flags', room_number: room, icons_white_background: !!(f.querySelector('#icons_white_background')||{}).checked})
+    }).then(function(r){return r.json();});
+    Promise.all([saveJson, saveFlags]).then(function(results){
+      var ok = (results[0]&&results[0].success)!==false && (results[1]&&results[1].success)!==false;
+      if(ok){ alert('Settings saved successfully'); location.reload(); }
+      else { alert('Save failed: ' + (JSON.stringify(results))); }
+    }).catch(function(){ alert('Save failed'); });
   });
 
   if(s.value) load(s.value);

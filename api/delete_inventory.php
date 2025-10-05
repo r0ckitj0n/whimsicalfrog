@@ -2,35 +2,24 @@
 
 // Include the configuration file
 require_once __DIR__ . '/config.php';
-
-// Set CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+require_once __DIR__ . '/../includes/response.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 
 try {
     // Get POST data
-    $data = json_decode(file_get_contents('php://input'), true);
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true);
+    if (!is_array($data)) {
+        Response::error('Invalid JSON', null, 400);
+    }
 
     // Validate SKU field
     if (!isset($data['sku']) || empty($data['sku'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Item SKU is required']);
-        exit;
+        Response::error('Item SKU is required', null, 400);
     }
 
     // Extract SKU
@@ -47,9 +36,7 @@ try {
     // Check if item exists
     $row = Database::queryOne('SELECT COUNT(*) AS c FROM items WHERE sku = ?', [$sku]);
     if ((int)($row['c'] ?? 0) === 0) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Item not found']);
-        exit;
+        Response::notFound('Item not found');
     }
 
     // Delete item
@@ -57,27 +44,15 @@ try {
 
     if ($affected !== false) {
         // Return success response
-        echo json_encode([
-            'success' => true,
-            'message' => 'Item deleted successfully',
-            'sku' => $sku
-        ]);
+        Response::success(['message' => 'Item deleted successfully', 'sku' => $sku]);
     } else {
         throw new Exception('Failed to delete item');
     }
 
 } catch (PDOException $e) {
     // Handle database errors
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'Database connection failed',
-        'details' => $e->getMessage()
-    ]);
+    Response::serverError('Database connection failed', $e->getMessage());
 } catch (Exception $e) {
     // Handle general errors
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'An unexpected error occurred',
-        'details' => $e->getMessage()
-    ]);
+    Response::serverError('An unexpected error occurred', $e->getMessage());
 }

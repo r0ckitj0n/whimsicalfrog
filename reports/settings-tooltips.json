@@ -1,0 +1,2130 @@
+[
+  {
+    "element_id": "id:admin-settings-navbar-fix",
+    "page_context": "settings",
+    "title": "Admin Settings Navbar Fix",
+    "content": "Because you clicked admin-settings-navbar-fix. Turns Admin Settings Navbar Fix from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:admin-settings-navbar-spacing",
+    "page_context": "settings",
+    "title": "Admin Settings Navbar Spacing",
+    "content": "Because you clicked admin-settings-navbar-spacing. Makes Admin Settings Navbar Spacing look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:admin-settings-content-positioning",
+    "page_context": "settings",
+    "title": "Admin Settings Content Positioning",
+    "content": "Because you clicked admin-settings-content-positioning. Keeps Admin Settings Content Positioning from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:admin-settings-content-height",
+    "page_context": "settings",
+    "title": "Admin Settings Content Height",
+    "content": "Because you clicked admin-settings-content-height. Makes Admin Settings Content Height look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:admin-settings-content-spacing",
+    "page_context": "settings",
+    "title": "Admin Settings Content Spacing",
+    "content": "Because you clicked admin-settings-content-spacing. Because without Admin Settings Content Spacing, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:admin-section-content",
+    "page_context": "settings",
+    "title": "Admin Section Content",
+    "content": "Because you clicked admin-section-content. Controls the mystical powers of Admin Section Content. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssCatalogModal",
+    "page_context": "settings",
+    "title": "CssCatalogModal",
+    "content": "Because you clicked cssCatalogModal. Makes CssCatalogModal look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssCatalogTitle",
+    "page_context": "settings",
+    "title": "CssCatalogTitle",
+    "content": "Because you clicked cssCatalogTitle. Makes CssCatalogTitle look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssCatalogFrame",
+    "page_context": "settings",
+    "title": "CssCatalogFrame",
+    "content": "Because you clicked cssCatalogFrame. Makes CssCatalogFrame look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:devStatusModal",
+    "page_context": "settings",
+    "title": "DevStatusModal",
+    "content": "Because you clicked devStatusModal. Controls the mystical powers of DevStatusModal. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:devStatusTitle",
+    "page_context": "settings",
+    "title": "DevStatusTitle",
+    "content": "Because you clicked devStatusTitle. Controls the mystical powers of DevStatusTitle. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:devStatusFrame",
+    "page_context": "settings",
+    "title": "DevStatusFrame",
+    "content": "Because you clicked devStatusFrame. Controls the mystical powers of DevStatusFrame. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:adminSettingsRoot",
+    "page_context": "settings",
+    "title": "AdminSettingsRoot",
+    "content": "Because you clicked adminSettingsRoot. Sprinkles just enough flair on AdminSettingsRoot to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:dashboardConfigBtn",
+    "page_context": "settings",
+    "title": "DashboardConfigBtn",
+    "content": "Because you clicked dashboardConfigBtn. Turns DashboardConfigBtn from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:categoriesBtn",
+    "page_context": "settings",
+    "title": "CategoriesBtn",
+    "content": "Because you clicked categoriesBtn. Keeps CategoriesBtn from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:attributesBtn",
+    "page_context": "settings",
+    "title": "AttributesBtn",
+    "content": "Because you clicked attributesBtn. Keeps AttributesBtn from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:templateManagerBtn",
+    "page_context": "settings",
+    "title": "TemplateManagerBtn",
+    "content": "Because you clicked templateManagerBtn. Turns TemplateManagerBtn from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:businessInfoBtn",
+    "page_context": "settings",
+    "title": "BusinessInfoBtn",
+    "content": "Because you clicked businessInfoBtn. Makes BusinessInfoBtn look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareSettingsBtn",
+    "page_context": "settings",
+    "title": "SquareSettingsBtn",
+    "content": "Because you clicked squareSettingsBtn. Sprinkles just enough flair on SquareSettingsBtn to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiSettingsBtn",
+    "page_context": "settings",
+    "title": "AiSettingsBtn",
+    "content": "Because you clicked aiSettingsBtn. Keeps AiSettingsBtn from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiToolsBtn",
+    "page_context": "settings",
+    "title": "AiToolsBtn",
+    "content": "Because you clicked aiToolsBtn. Sprinkles just enough flair on AiToolsBtn to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailConfigBtn",
+    "page_context": "settings",
+    "title": "EmailConfigBtn",
+    "content": "Because you clicked emailConfigBtn. Controls the mystical powers of EmailConfigBtn. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryBtn",
+    "page_context": "settings",
+    "title": "EmailHistoryBtn",
+    "content": "Because you clicked emailHistoryBtn. Makes EmailHistoryBtn look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailTestBtn",
+    "page_context": "settings",
+    "title": "EmailTestBtn",
+    "content": "Because you clicked emailTestBtn. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:loggingStatusBtn",
+    "page_context": "settings",
+    "title": "LoggingStatusBtn",
+    "content": "Because you clicked loggingStatusBtn. Because without LoggingStatusBtn, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:accountSettingsBtn",
+    "page_context": "settings",
+    "title": "AccountSettingsBtn",
+    "content": "Because you clicked accountSettingsBtn. Turns AccountSettingsBtn from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:secretsManagerBtn",
+    "page_context": "settings",
+    "title": "SecretsManagerBtn",
+    "content": "Because you clicked secretsManagerBtn. Sprinkles just enough flair on SecretsManagerBtn to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:healthDiagnosticsBtn",
+    "page_context": "settings",
+    "title": "HealthDiagnosticsBtn",
+    "content": "Because you clicked healthDiagnosticsBtn. Keeps HealthDiagnosticsBtn from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:healthModal",
+    "page_context": "settings",
+    "title": "HealthModal",
+    "content": "Because you clicked healthModal. Turns HealthModal from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:healthTitle",
+    "page_context": "settings",
+    "title": "HealthTitle",
+    "content": "Because you clicked healthTitle. Turns HealthTitle from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:healthStatus",
+    "page_context": "settings",
+    "title": "HealthStatus",
+    "content": "Because you clicked healthStatus. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bgMissingActiveCount",
+    "page_context": "settings",
+    "title": "BgMissingActiveCount",
+    "content": "Because you clicked bgMissingActiveCount. Keeps BgMissingActiveCount from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bgMissingActiveList",
+    "page_context": "settings",
+    "title": "BgMissingActiveList",
+    "content": "Because you clicked bgMissingActiveList. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bgMissingFilesCount",
+    "page_context": "settings",
+    "title": "BgMissingFilesCount",
+    "content": "Because you clicked bgMissingFilesCount. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bgMissingFilesList",
+    "page_context": "settings",
+    "title": "BgMissingFilesList",
+    "content": "Because you clicked bgMissingFilesList. Turns BgMissingFilesList from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:itemsNoPrimaryCount",
+    "page_context": "settings",
+    "title": "ItemsNoPrimaryCount",
+    "content": "Because you clicked itemsNoPrimaryCount. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:itemsNoPrimaryList",
+    "page_context": "settings",
+    "title": "ItemsNoPrimaryList",
+    "content": "Because you clicked itemsNoPrimaryList. Turns ItemsNoPrimaryList from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:itemsMissingFilesCount",
+    "page_context": "settings",
+    "title": "ItemsMissingFilesCount",
+    "content": "Because you clicked itemsMissingFilesCount. Makes ItemsMissingFilesCount look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:itemsMissingFilesList",
+    "page_context": "settings",
+    "title": "ItemsMissingFilesList",
+    "content": "Because you clicked itemsMissingFilesList. Controls the mystical powers of ItemsMissingFilesList. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:advancedHealthOutput",
+    "page_context": "settings",
+    "title": "AdvancedHealthOutput",
+    "content": "Because you clicked advancedHealthOutput. Keeps AdvancedHealthOutput from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:areaItemMapperModal",
+    "page_context": "settings",
+    "title": "AreaItemMapperModal",
+    "content": "Because you clicked areaItemMapperModal. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:areaItemMapperTitle",
+    "page_context": "settings",
+    "title": "AreaItemMapperTitle",
+    "content": "Because you clicked areaItemMapperTitle. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:areaItemMapperFrame",
+    "page_context": "settings",
+    "title": "AreaItemMapperFrame",
+    "content": "Because you clicked areaItemMapperFrame. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:roomMapEditorModal",
+    "page_context": "settings",
+    "title": "RoomMapEditorModal",
+    "content": "Because you clicked roomMapEditorModal. Turns RoomMapEditorModal from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:roomMapEditorTitle",
+    "page_context": "settings",
+    "title": "RoomMapEditorTitle",
+    "content": "Because you clicked roomMapEditorTitle. Turns RoomMapEditorTitle from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:roomMapEditorFrame",
+    "page_context": "settings",
+    "title": "RoomMapEditorFrame",
+    "content": "Because you clicked roomMapEditorFrame. Turns RoomMapEditorFrame from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:templateManagerModal",
+    "page_context": "settings",
+    "title": "TemplateManagerModal",
+    "content": "Because you clicked templateManagerModal. Keeps TemplateManagerModal from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:templateManagerTitle",
+    "page_context": "settings",
+    "title": "TemplateManagerTitle",
+    "content": "Because you clicked templateManagerTitle. Keeps TemplateManagerTitle from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:templateManagerFrame",
+    "page_context": "settings",
+    "title": "TemplateManagerFrame",
+    "content": "Because you clicked templateManagerFrame. Keeps TemplateManagerFrame from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:businessInfoModal",
+    "page_context": "settings",
+    "title": "BusinessInfoModal",
+    "content": "Because you clicked businessInfoModal. Sprinkles just enough flair on BusinessInfoModal to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:businessInfoTitle",
+    "page_context": "settings",
+    "title": "BusinessInfoTitle",
+    "content": "Because you clicked businessInfoTitle. Sprinkles just enough flair on BusinessInfoTitle to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:businessInfoForm",
+    "page_context": "settings",
+    "title": "BusinessInfoForm",
+    "content": "Because you clicked businessInfoForm. Because without BusinessInfoForm, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizName",
+    "page_context": "settings",
+    "title": "BizName",
+    "content": "Because you clicked bizName. Controls the mystical powers of BizName. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizEmail",
+    "page_context": "settings",
+    "title": "BizEmail",
+    "content": "Because you clicked bizEmail. Makes BizEmail look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:brandPreviewCard",
+    "page_context": "settings",
+    "title": "BrandPreviewCard",
+    "content": "Because you clicked brandPreviewCard. Because without BrandPreviewCard, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:brandPreviewTitle",
+    "page_context": "settings",
+    "title": "BrandPreviewTitle",
+    "content": "Because you clicked brandPreviewTitle. Sprinkles just enough flair on BrandPreviewTitle to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:brandPreviewText",
+    "page_context": "settings",
+    "title": "BrandPreviewText",
+    "content": "Because you clicked brandPreviewText. Because without BrandPreviewText, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:brandPreviewSwatches",
+    "page_context": "settings",
+    "title": "BrandPreviewSwatches",
+    "content": "Because you clicked brandPreviewSwatches. Keeps BrandPreviewSwatches from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:brandFontPrimary",
+    "page_context": "settings",
+    "title": "BrandFontPrimary",
+    "content": "Because you clicked brandFontPrimary. Because without BrandFontPrimary, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:brandFontSecondary",
+    "page_context": "settings",
+    "title": "BrandFontSecondary",
+    "content": "Because you clicked brandFontSecondary. Turns BrandFontSecondary from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizWebsite",
+    "page_context": "settings",
+    "title": "BizWebsite",
+    "content": "Because you clicked bizWebsite. Sprinkles just enough flair on BizWebsite to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizLogoUrl",
+    "page_context": "settings",
+    "title": "BizLogoUrl",
+    "content": "Because you clicked bizLogoUrl. Sprinkles just enough flair on BizLogoUrl to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizTagline",
+    "page_context": "settings",
+    "title": "BizTagline",
+    "content": "Because you clicked bizTagline. Sprinkles just enough flair on BizTagline to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizDescription",
+    "page_context": "settings",
+    "title": "BizDescription",
+    "content": "Because you clicked bizDescription. Controls the mystical powers of BizDescription. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizPhone",
+    "page_context": "settings",
+    "title": "BizPhone",
+    "content": "Because you clicked bizPhone. Makes BizPhone look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizHours",
+    "page_context": "settings",
+    "title": "BizHours",
+    "content": "Because you clicked bizHours. Makes BizHours look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizAddress",
+    "page_context": "settings",
+    "title": "BizAddress",
+    "content": "Because you clicked bizAddress. Sprinkles just enough flair on BizAddress to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizAddress2",
+    "page_context": "settings",
+    "title": "BizAddress2",
+    "content": "Because you clicked bizAddress2. Turns BizAddress2 from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizCity",
+    "page_context": "settings",
+    "title": "BizCity",
+    "content": "Because you clicked bizCity. Controls the mystical powers of BizCity. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizState",
+    "page_context": "settings",
+    "title": "BizState",
+    "content": "Because you clicked bizState. Makes BizState look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizPostal",
+    "page_context": "settings",
+    "title": "BizPostal",
+    "content": "Because you clicked bizPostal. Because without BizPostal, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizCountry",
+    "page_context": "settings",
+    "title": "BizCountry",
+    "content": "Because you clicked bizCountry. Sprinkles just enough flair on BizCountry to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizSupportEmail",
+    "page_context": "settings",
+    "title": "BizSupportEmail",
+    "content": "Because you clicked bizSupportEmail. Makes BizSupportEmail look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizSupportPhone",
+    "page_context": "settings",
+    "title": "BizSupportPhone",
+    "content": "Because you clicked bizSupportPhone. Makes BizSupportPhone look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizFacebook",
+    "page_context": "settings",
+    "title": "BizFacebook",
+    "content": "Because you clicked bizFacebook. Turns BizFacebook from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizInstagram",
+    "page_context": "settings",
+    "title": "BizInstagram",
+    "content": "Because you clicked bizInstagram. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizTwitter",
+    "page_context": "settings",
+    "title": "BizTwitter",
+    "content": "Because you clicked bizTwitter. Sprinkles just enough flair on BizTwitter to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizTikTok",
+    "page_context": "settings",
+    "title": "BizTikTok",
+    "content": "Because you clicked bizTikTok. Because without BizTikTok, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizYouTube",
+    "page_context": "settings",
+    "title": "BizYouTube",
+    "content": "Because you clicked bizYouTube. Sprinkles just enough flair on BizYouTube to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizLinkedIn",
+    "page_context": "settings",
+    "title": "BizLinkedIn",
+    "content": "Because you clicked bizLinkedIn. Turns BizLinkedIn from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizTermsUrl",
+    "page_context": "settings",
+    "title": "BizTermsUrl",
+    "content": "Because you clicked bizTermsUrl. Turns BizTermsUrl from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizPrivacyUrl",
+    "page_context": "settings",
+    "title": "BizPrivacyUrl",
+    "content": "Because you clicked bizPrivacyUrl. Keeps BizPrivacyUrl from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizTaxId",
+    "page_context": "settings",
+    "title": "BizTaxId",
+    "content": "Because you clicked bizTaxId. Makes BizTaxId look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizTimezone",
+    "page_context": "settings",
+    "title": "BizTimezone",
+    "content": "Because you clicked bizTimezone. Turns BizTimezone from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizCurrency",
+    "page_context": "settings",
+    "title": "BizCurrency",
+    "content": "Because you clicked bizCurrency. Turns BizCurrency from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bizLocale",
+    "page_context": "settings",
+    "title": "BizLocale",
+    "content": "Because you clicked bizLocale. Because without BizLocale, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:footerNote",
+    "page_context": "settings",
+    "title": "FooterNote",
+    "content": "Because you clicked footerNote. Sprinkles just enough flair on FooterNote to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:footerHtml",
+    "page_context": "settings",
+    "title": "FooterHtml",
+    "content": "Because you clicked footerHtml. Sprinkles just enough flair on FooterHtml to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:returnPolicy",
+    "page_context": "settings",
+    "title": "ReturnPolicy",
+    "content": "Because you clicked returnPolicy. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:shippingPolicy",
+    "page_context": "settings",
+    "title": "ShippingPolicy",
+    "content": "Because you clicked shippingPolicy. Controls the mystical powers of ShippingPolicy. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:warrantyPolicy",
+    "page_context": "settings",
+    "title": "WarrantyPolicy",
+    "content": "Because you clicked warrantyPolicy. Controls the mystical powers of WarrantyPolicy. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:policyUrl",
+    "page_context": "settings",
+    "title": "PolicyUrl",
+    "content": "Because you clicked policyUrl. Because without PolicyUrl, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:businessInfoStatus",
+    "page_context": "settings",
+    "title": "BusinessInfoStatus",
+    "content": "Because you clicked businessInfoStatus. Turns BusinessInfoStatus from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailSettingsModal",
+    "page_context": "settings",
+    "title": "EmailSettingsModal",
+    "content": "Because you clicked emailSettingsModal. Turns EmailSettingsModal from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailSettingsTitle",
+    "page_context": "settings",
+    "title": "EmailSettingsTitle",
+    "content": "Because you clicked emailSettingsTitle. Turns EmailSettingsTitle from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailConfigForm",
+    "page_context": "settings",
+    "title": "EmailConfigForm",
+    "content": "Because you clicked emailConfigForm. Makes EmailConfigForm look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:fromEmail",
+    "page_context": "settings",
+    "title": "FromEmail",
+    "content": "Because you clicked fromEmail. Because without FromEmail, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:fromName",
+    "page_context": "settings",
+    "title": "FromName",
+    "content": "Because you clicked fromName. Makes FromName look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:adminEmail",
+    "page_context": "settings",
+    "title": "AdminEmail",
+    "content": "Because you clicked adminEmail. Sprinkles just enough flair on AdminEmail to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:bccEmail",
+    "page_context": "settings",
+    "title": "BccEmail",
+    "content": "Because you clicked bccEmail. Makes BccEmail look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:replyToEmail",
+    "page_context": "settings",
+    "title": "ReplyToEmail",
+    "content": "Because you clicked replyToEmail. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:testRecipient",
+    "page_context": "settings",
+    "title": "TestRecipient",
+    "content": "Because you clicked testRecipient. Keeps TestRecipient from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpEnabled",
+    "page_context": "settings",
+    "title": "SmtpEnabled",
+    "content": "Because you clicked smtpEnabled. Turns SmtpEnabled from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpSettings",
+    "page_context": "settings",
+    "title": "SmtpSettings",
+    "content": "Because you clicked smtpSettings. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpHost",
+    "page_context": "settings",
+    "title": "SmtpHost",
+    "content": "Because you clicked smtpHost. Makes SmtpHost look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpPort",
+    "page_context": "settings",
+    "title": "SmtpPort",
+    "content": "Because you clicked smtpPort. Makes SmtpPort look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpUsername",
+    "page_context": "settings",
+    "title": "SmtpUsername",
+    "content": "Because you clicked smtpUsername. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpPassword",
+    "page_context": "settings",
+    "title": "SmtpPassword",
+    "content": "Because you clicked smtpPassword. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpEncryption",
+    "page_context": "settings",
+    "title": "SmtpEncryption",
+    "content": "Because you clicked smtpEncryption. Controls the mystical powers of SmtpEncryption. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpTimeout",
+    "page_context": "settings",
+    "title": "SmtpTimeout",
+    "content": "Because you clicked smtpTimeout. Turns SmtpTimeout from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpAuth",
+    "page_context": "settings",
+    "title": "SmtpAuth",
+    "content": "Because you clicked smtpAuth. Makes SmtpAuth look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:smtpDebug",
+    "page_context": "settings",
+    "title": "SmtpDebug",
+    "content": "Because you clicked smtpDebug. Because without SmtpDebug, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryModal",
+    "page_context": "settings",
+    "title": "EmailHistoryModal",
+    "content": "Because you clicked emailHistoryModal. Sprinkles just enough flair on EmailHistoryModal to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryTitle",
+    "page_context": "settings",
+    "title": "EmailHistoryTitle",
+    "content": "Because you clicked emailHistoryTitle. Sprinkles just enough flair on EmailHistoryTitle to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistorySearch",
+    "page_context": "settings",
+    "title": "EmailHistorySearch",
+    "content": "Because you clicked emailHistorySearch. Turns EmailHistorySearch from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryFrom",
+    "page_context": "settings",
+    "title": "EmailHistoryFrom",
+    "content": "Because you clicked emailHistoryFrom. Because without EmailHistoryFrom, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryTo",
+    "page_context": "settings",
+    "title": "EmailHistoryTo",
+    "content": "Because you clicked emailHistoryTo. Controls the mystical powers of EmailHistoryTo. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryType",
+    "page_context": "settings",
+    "title": "EmailHistoryType",
+    "content": "Because you clicked emailHistoryType. Because without EmailHistoryType, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistorySort",
+    "page_context": "settings",
+    "title": "EmailHistorySort",
+    "content": "Because you clicked emailHistorySort. Because without EmailHistorySort, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryStatusFilter",
+    "page_context": "settings",
+    "title": "EmailHistoryStatusFilter",
+    "content": "Because you clicked emailHistoryStatusFilter. Sprinkles just enough flair on EmailHistoryStatusFilter to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryStatus",
+    "page_context": "settings",
+    "title": "EmailHistoryStatus",
+    "content": "Because you clicked emailHistoryStatus. Turns EmailHistoryStatus from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryList",
+    "page_context": "settings",
+    "title": "EmailHistoryList",
+    "content": "Because you clicked emailHistoryList. Because without EmailHistoryList, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryDrawerOverlay",
+    "page_context": "settings",
+    "title": "EmailHistoryDrawerOverlay",
+    "content": "Because you clicked emailHistoryDrawerOverlay. Turns EmailHistoryDrawerOverlay from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryDrawer",
+    "page_context": "settings",
+    "title": "EmailHistoryDrawer",
+    "content": "Because you clicked emailHistoryDrawer. Turns EmailHistoryDrawer from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryDrawerMeta",
+    "page_context": "settings",
+    "title": "EmailHistoryDrawerMeta",
+    "content": "Because you clicked emailHistoryDrawerMeta. Makes EmailHistoryDrawerMeta look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:ehdSubject",
+    "page_context": "settings",
+    "title": "EhdSubject",
+    "content": "Because you clicked ehdSubject. Sprinkles just enough flair on EhdSubject to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:ehdTo",
+    "page_context": "settings",
+    "title": "EhdTo",
+    "content": "Because you clicked ehdTo. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:ehdType",
+    "page_context": "settings",
+    "title": "EhdType",
+    "content": "Because you clicked ehdType. Controls the mystical powers of EhdType. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:ehdEndpoint",
+    "page_context": "settings",
+    "title": "EhdEndpoint",
+    "content": "Because you clicked ehdEndpoint. Turns EhdEndpoint from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryDrawerContent",
+    "page_context": "settings",
+    "title": "EmailHistoryDrawerContent",
+    "content": "Because you clicked emailHistoryDrawerContent. Turns EmailHistoryDrawerContent from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailTypeOptions",
+    "page_context": "settings",
+    "title": "EmailTypeOptions",
+    "content": "Because you clicked emailTypeOptions. Because without EmailTypeOptions, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:emailHistoryPage",
+    "page_context": "settings",
+    "title": "EmailHistoryPage",
+    "content": "Because you clicked emailHistoryPage. Because without EmailHistoryPage, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareSettingsModal",
+    "page_context": "settings",
+    "title": "SquareSettingsModal",
+    "content": "Because you clicked squareSettingsModal. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareSettingsTitle",
+    "page_context": "settings",
+    "title": "SquareSettingsTitle",
+    "content": "Because you clicked squareSettingsTitle. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareConfiguredChip",
+    "page_context": "settings",
+    "title": "SquareConfiguredChip",
+    "content": "Because you clicked squareConfiguredChip. Keeps SquareConfiguredChip from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareConnectionStatus",
+    "page_context": "settings",
+    "title": "SquareConnectionStatus",
+    "content": "Because you clicked squareConnectionStatus. Makes SquareConnectionStatus look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:connectionIndicator",
+    "page_context": "settings",
+    "title": "ConnectionIndicator",
+    "content": "Because you clicked connectionIndicator. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:connectionText",
+    "page_context": "settings",
+    "title": "ConnectionText",
+    "content": "Because you clicked connectionText. Controls the mystical powers of ConnectionText. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareConfigForm",
+    "page_context": "settings",
+    "title": "SquareConfigForm",
+    "content": "Because you clicked squareConfigForm. Because without SquareConfigForm, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareAppId",
+    "page_context": "settings",
+    "title": "SquareAppId",
+    "content": "Because you clicked squareAppId. Turns SquareAppId from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareLocationId",
+    "page_context": "settings",
+    "title": "SquareLocationId",
+    "content": "Because you clicked squareLocationId. Because without SquareLocationId, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:squareAccessToken",
+    "page_context": "settings",
+    "title": "SquareAccessToken",
+    "content": "Because you clicked squareAccessToken. Sprinkles just enough flair on SquareAccessToken to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:syncPrices",
+    "page_context": "settings",
+    "title": "SyncPrices",
+    "content": "Because you clicked syncPrices. Sprinkles just enough flair on SyncPrices to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:syncInventory",
+    "page_context": "settings",
+    "title": "SyncInventory",
+    "content": "Because you clicked syncInventory. Keeps SyncInventory from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:syncDescriptions",
+    "page_context": "settings",
+    "title": "SyncDescriptions",
+    "content": "Because you clicked syncDescriptions. Because without SyncDescriptions, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:autoSync",
+    "page_context": "settings",
+    "title": "AutoSync",
+    "content": "Because you clicked autoSync. Makes AutoSync look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:saveSquareSettingsBtn",
+    "page_context": "settings",
+    "title": "SaveSquareSettingsBtn",
+    "content": "Because you clicked saveSquareSettingsBtn. Controls the mystical powers of SaveSquareSettingsBtn. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:connectionResult",
+    "page_context": "settings",
+    "title": "ConnectionResult",
+    "content": "Because you clicked connectionResult. Because without ConnectionResult, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:accountSettingsModal",
+    "page_context": "settings",
+    "title": "AccountSettingsModal",
+    "content": "Because you clicked accountSettingsModal. Keeps AccountSettingsModal from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:accountSettingsTitle",
+    "page_context": "settings",
+    "title": "AccountSettingsTitle",
+    "content": "Because you clicked accountSettingsTitle. Keeps AccountSettingsTitle from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:accountSettingsFrame",
+    "page_context": "settings",
+    "title": "AccountSettingsFrame",
+    "content": "Because you clicked accountSettingsFrame. Keeps AccountSettingsFrame from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiSettingsModal",
+    "page_context": "settings",
+    "title": "AiSettingsModal",
+    "content": "Because you clicked aiSettingsModal. Makes AiSettingsModal look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiSettingsTitle",
+    "page_context": "settings",
+    "title": "AiSettingsTitle",
+    "content": "Because you clicked aiSettingsTitle. Makes AiSettingsTitle look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:categoriesFrame",
+    "page_context": "settings",
+    "title": "CategoriesFrame",
+    "content": "Because you clicked categoriesFrame. Makes CategoriesFrame look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiToolsModal",
+    "page_context": "settings",
+    "title": "AiToolsModal",
+    "content": "Because you clicked aiToolsModal. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiToolsTitle",
+    "page_context": "settings",
+    "title": "AiToolsTitle",
+    "content": "Because you clicked aiToolsTitle. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiToolsFrame",
+    "page_context": "settings",
+    "title": "AiToolsFrame",
+    "content": "Because you clicked aiToolsFrame. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:categoriesModal",
+    "page_context": "settings",
+    "title": "CategoriesModal",
+    "content": "Because you clicked categoriesModal. Makes CategoriesModal look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:categoriesTitle",
+    "page_context": "settings",
+    "title": "CategoriesTitle",
+    "content": "Because you clicked categoriesTitle. Makes CategoriesTitle look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:attributesModal",
+    "page_context": "settings",
+    "title": "AttributesModal",
+    "content": "Because you clicked attributesModal. Makes AttributesModal look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:attributesTitle",
+    "page_context": "settings",
+    "title": "AttributesTitle",
+    "content": "Because you clicked attributesTitle. Makes AttributesTitle look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:attributesResult",
+    "page_context": "settings",
+    "title": "AttributesResult",
+    "content": "Because you clicked attributesResult. Because without AttributesResult, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:attrListGender",
+    "page_context": "settings",
+    "title": "AttrListGender",
+    "content": "Because you clicked attrListGender. Controls the mystical powers of AttrListGender. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:attrListSize",
+    "page_context": "settings",
+    "title": "AttrListSize",
+    "content": "Because you clicked attrListSize. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:attrListColor",
+    "page_context": "settings",
+    "title": "AttrListColor",
+    "content": "Because you clicked attrListColor. Keeps AttrListColor from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssRulesModal",
+    "page_context": "settings",
+    "title": "CssRulesModal",
+    "content": "Because you clicked cssRulesModal. Keeps CssRulesModal from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssRulesTitle",
+    "page_context": "settings",
+    "title": "CssRulesTitle",
+    "content": "Because you clicked cssRulesTitle. Keeps CssRulesTitle from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssRulesForm",
+    "page_context": "settings",
+    "title": "CssRulesForm",
+    "content": "Because you clicked cssRulesForm. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssToastBg",
+    "page_context": "settings",
+    "title": "CssToastBg",
+    "content": "Because you clicked cssToastBg. Sprinkles just enough flair on CssToastBg to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:cssToastText",
+    "page_context": "settings",
+    "title": "CssToastText",
+    "content": "Because you clicked cssToastText. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:dashboardConfigModal",
+    "page_context": "settings",
+    "title": "DashboardConfigModal",
+    "content": "Because you clicked dashboardConfigModal. Keeps DashboardConfigModal from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:dashboardConfigTitle",
+    "page_context": "settings",
+    "title": "DashboardConfigTitle",
+    "content": "Because you clicked dashboardConfigTitle. Keeps DashboardConfigTitle from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:dashboardSectionsTable",
+    "page_context": "settings",
+    "title": "DashboardSectionsTable",
+    "content": "Because you clicked dashboardSectionsTable. Makes DashboardSectionsTable look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:dashboardSectionsBody",
+    "page_context": "settings",
+    "title": "DashboardSectionsBody",
+    "content": "Because you clicked dashboardSectionsBody. Controls the mystical powers of DashboardSectionsBody. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:dashboardConfigResult",
+    "page_context": "settings",
+    "title": "DashboardConfigResult",
+    "content": "Because you clicked dashboardConfigResult. Controls the mystical powers of DashboardConfigResult. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:loggingStatusModal",
+    "page_context": "settings",
+    "title": "LoggingStatusModal",
+    "content": "Because you clicked loggingStatusModal. Turns LoggingStatusModal from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:loggingSummary",
+    "page_context": "settings",
+    "title": "LoggingSummary",
+    "content": "Because you clicked loggingSummary. Controls the mystical powers of LoggingSummary. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:loggingStatusResult",
+    "page_context": "settings",
+    "title": "LoggingStatusResult",
+    "content": "Because you clicked loggingStatusResult. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:secretsModal",
+    "page_context": "settings",
+    "title": "SecretsModal",
+    "content": "Because you clicked secretsModal. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:secretsForm",
+    "page_context": "settings",
+    "title": "SecretsForm",
+    "content": "Because you clicked secretsForm. Turns SecretsForm from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:secretsCsrf",
+    "page_context": "settings",
+    "title": "SecretsCsrf",
+    "content": "Because you clicked secretsCsrf. Turns SecretsCsrf from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:secretsPayload",
+    "page_context": "settings",
+    "title": "SecretsPayload",
+    "content": "Because you clicked secretsPayload. Controls the mystical powers of SecretsPayload. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:secretsResult",
+    "page_context": "settings",
+    "title": "SecretsResult",
+    "content": "Because you clicked secretsResult. Keeps SecretsResult from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiSettingsForm",
+    "page_context": "settings",
+    "title": "AiSettingsForm",
+    "content": "Because you clicked aiSettingsForm. Controls the mystical powers of AiSettingsForm. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiProvider",
+    "page_context": "settings",
+    "title": "AiProvider",
+    "content": "Because you clicked aiProvider. Sprinkles just enough flair on AiProvider to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiTemperature",
+    "page_context": "settings",
+    "title": "AiTemperature",
+    "content": "Because you clicked aiTemperature. Keeps AiTemperature from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiTemperatureValue",
+    "page_context": "settings",
+    "title": "AiTemperatureValue",
+    "content": "Because you clicked aiTemperatureValue. Turns AiTemperatureValue from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiProviderSettings",
+    "page_context": "settings",
+    "title": "AiProviderSettings",
+    "content": "Because you clicked aiProviderSettings. Turns AiProviderSettings from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiMaxTokens",
+    "page_context": "settings",
+    "title": "AiMaxTokens",
+    "content": "Because you clicked aiMaxTokens. Turns AiMaxTokens from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiTimeout",
+    "page_context": "settings",
+    "title": "AiTimeout",
+    "content": "Because you clicked aiTimeout. Because without AiTimeout, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:fallbackToLocal",
+    "page_context": "settings",
+    "title": "FallbackToLocal",
+    "content": "Because you clicked fallbackToLocal. Makes FallbackToLocal look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "id:aiSettingsResult",
+    "page_context": "settings",
+    "title": "AiSettingsResult",
+    "content": "Because you clicked aiSettingsResult. Because without AiSettingsResult, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-admin-modal",
+    "page_context": "settings",
+    "title": "Close Admin Modal",
+    "content": "Because you clicked close-admin-modal. Sprinkles just enough flair on Close Admin Modal to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-dashboard-config",
+    "page_context": "settings",
+    "title": "Open Dashboard Config",
+    "content": "Because you clicked open-dashboard-config. Controls the mystical powers of Open Dashboard Config. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-categories",
+    "page_context": "settings",
+    "title": "Open Categories",
+    "content": "Because you clicked open-categories. Makes Open Categories look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-attributes",
+    "page_context": "settings",
+    "title": "Open Attributes",
+    "content": "Because you clicked open-attributes. Makes Open Attributes look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-template-manager",
+    "page_context": "settings",
+    "title": "Open Template Manager",
+    "content": "Because you clicked open-template-manager. Controls the mystical powers of Open Template Manager. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-css-rules",
+    "page_context": "settings",
+    "title": "Open Css Rules",
+    "content": "Because you clicked open-css-rules. Controls the mystical powers of Open Css Rules. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-css-catalog",
+    "page_context": "settings",
+    "title": "Open Css Catalog",
+    "content": "Because you clicked open-css-catalog. Because without Open Css Catalog, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-background-manager",
+    "page_context": "settings",
+    "title": "Open Background Manager",
+    "content": "Because you clicked open-background-manager. Because without Open Background Manager, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-room-map-editor",
+    "page_context": "settings",
+    "title": "Open Room Map Editor",
+    "content": "Because you clicked open-room-map-editor. Keeps Open Room Map Editor from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-area-item-mapper",
+    "page_context": "settings",
+    "title": "Open Area Item Mapper",
+    "content": "Because you clicked open-area-item-mapper. Controls the mystical powers of Open Area Item Mapper. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-business-info",
+    "page_context": "settings",
+    "title": "Open Business Info",
+    "content": "Because you clicked open-business-info. Turns Open Business Info from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-square-settings",
+    "page_context": "settings",
+    "title": "Open Square Settings",
+    "content": "Because you clicked open-square-settings. Keeps Open Square Settings from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-ai-settings",
+    "page_context": "settings",
+    "title": "Open Ai Settings",
+    "content": "Because you clicked open-ai-settings. Because without Open Ai Settings, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-ai-tools",
+    "page_context": "settings",
+    "title": "Open Ai Tools",
+    "content": "Because you clicked open-ai-tools. Keeps Open Ai Tools from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-email-settings",
+    "page_context": "settings",
+    "title": "Open Email Settings",
+    "content": "Because you clicked open-email-settings. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-email-history",
+    "page_context": "settings",
+    "title": "Open Email History",
+    "content": "Because you clicked open-email-history. Turns Open Email History from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-email-test",
+    "page_context": "settings",
+    "title": "Open Email Test",
+    "content": "Because you clicked open-email-test. Makes Open Email Test look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-logging-status",
+    "page_context": "settings",
+    "title": "Open Logging Status",
+    "content": "Because you clicked open-logging-status. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-account-settings",
+    "page_context": "settings",
+    "title": "Open Account Settings",
+    "content": "Because you clicked open-account-settings. Controls the mystical powers of Open Account Settings. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-secrets-modal",
+    "page_context": "settings",
+    "title": "Open Secrets Modal",
+    "content": "Because you clicked open-secrets-modal. Turns Open Secrets Modal from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-health-diagnostics",
+    "page_context": "settings",
+    "title": "Open Health Diagnostics",
+    "content": "Because you clicked open-health-diagnostics. Because without Open Health Diagnostics, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:health-refresh",
+    "page_context": "settings",
+    "title": "Health Refresh",
+    "content": "Because you clicked health-refresh. Controls the mystical powers of Health Refresh. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:open-dev-status",
+    "page_context": "settings",
+    "title": "Open Dev Status",
+    "content": "Because you clicked open-dev-status. Makes Open Dev Status look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:run-health-check",
+    "page_context": "settings",
+    "title": "Run Health Check",
+    "content": "Because you clicked run-health-check. Because without Run Health Check, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:scan-item-images",
+    "page_context": "settings",
+    "title": "Scan Item Images",
+    "content": "Because you clicked scan-item-images. Because without Scan Item Images, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-business-info",
+    "page_context": "settings",
+    "title": "Close Business Info",
+    "content": "Because you clicked close-business-info. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:prevent-submit",
+    "page_context": "settings",
+    "title": "Prevent Submit",
+    "content": "Because you clicked prevent-submit. Controls the mystical powers of Prevent Submit. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:business-save-branding",
+    "page_context": "settings",
+    "title": "Business Save Branding",
+    "content": "Because you clicked business-save-branding. Makes Business Save Branding look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:business-reset-branding",
+    "page_context": "settings",
+    "title": "Business Reset Branding",
+    "content": "Because you clicked business-reset-branding. Because without Business Reset Branding, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:business-save",
+    "page_context": "settings",
+    "title": "Business Save",
+    "content": "Because you clicked business-save. Keeps Business Save from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-email-settings",
+    "page_context": "settings",
+    "title": "Close Email Settings",
+    "content": "Because you clicked close-email-settings. Keeps Close Email Settings from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-send-test",
+    "page_context": "settings",
+    "title": "Email Send Test",
+    "content": "Because you clicked email-send-test. Makes Email Send Test look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-search",
+    "page_context": "settings",
+    "title": "Email History Search",
+    "content": "Because you clicked email-history-search. Keeps Email History Search from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-apply-filters",
+    "page_context": "settings",
+    "title": "Email History Apply Filters",
+    "content": "Because you clicked email-history-apply-filters. Keeps Email History Apply Filters from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-clear-filters",
+    "page_context": "settings",
+    "title": "Email History Clear Filters",
+    "content": "Because you clicked email-history-clear-filters. Keeps Email History Clear Filters from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-refresh",
+    "page_context": "settings",
+    "title": "Email History Refresh",
+    "content": "Because you clicked email-history-refresh. Controls the mystical powers of Email History Refresh. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-download",
+    "page_context": "settings",
+    "title": "Email History Download",
+    "content": "Because you clicked email-history-download. Makes Email History Download look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-close-drawer",
+    "page_context": "settings",
+    "title": "Email History Close Drawer",
+    "content": "Because you clicked email-history-close-drawer. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-copy-subject",
+    "page_context": "settings",
+    "title": "Email History Copy Subject",
+    "content": "Because you clicked email-history-copy-subject. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-copy-to",
+    "page_context": "settings",
+    "title": "Email History Copy To",
+    "content": "Because you clicked email-history-copy-to. Controls the mystical powers of Email History Copy To. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-copy-type",
+    "page_context": "settings",
+    "title": "Email History Copy Type",
+    "content": "Because you clicked email-history-copy-type. Because without Email History Copy Type, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-copy-headers",
+    "page_context": "settings",
+    "title": "Email History Copy Headers",
+    "content": "Because you clicked email-history-copy-headers. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-toggle-json",
+    "page_context": "settings",
+    "title": "Email History Toggle Json",
+    "content": "Because you clicked email-history-toggle-json. Turns Email History Toggle Json from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-copy-curl",
+    "page_context": "settings",
+    "title": "Email History Copy Curl",
+    "content": "Because you clicked email-history-copy-curl. Because without Email History Copy Curl, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-save-endpoint",
+    "page_context": "settings",
+    "title": "Email History Save Endpoint",
+    "content": "Because you clicked email-history-save-endpoint. Keeps Email History Save Endpoint from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-open-test",
+    "page_context": "settings",
+    "title": "Email History Open Test",
+    "content": "Because you clicked email-history-open-test. Because without Email History Open Test, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-prev",
+    "page_context": "settings",
+    "title": "Email History Prev",
+    "content": "Because you clicked email-history-prev. Turns Email History Prev from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:email-history-next",
+    "page_context": "settings",
+    "title": "Email History Next",
+    "content": "Because you clicked email-history-next. Turns Email History Next from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-square-settings",
+    "page_context": "settings",
+    "title": "Close Square Settings",
+    "content": "Because you clicked close-square-settings. Controls the mystical powers of Close Square Settings. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:square-save-settings",
+    "page_context": "settings",
+    "title": "Square Save Settings",
+    "content": "Because you clicked square-save-settings. Keeps Square Save Settings from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:square-test-connection",
+    "page_context": "settings",
+    "title": "Square Test Connection",
+    "content": "Because you clicked square-test-connection. Makes Square Test Connection look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:square-sync-items",
+    "page_context": "settings",
+    "title": "Square Sync Items",
+    "content": "Because you clicked square-sync-items. Sprinkles just enough flair on Square Sync Items to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:square-clear-token",
+    "page_context": "settings",
+    "title": "Square Clear Token",
+    "content": "Because you clicked square-clear-token. Turns Square Clear Token from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-ai-settings",
+    "page_context": "settings",
+    "title": "Close Ai Settings",
+    "content": "Because you clicked close-ai-settings. Sprinkles just enough flair on Close Ai Settings to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-ai-tools",
+    "page_context": "settings",
+    "title": "Close Ai Tools",
+    "content": "Because you clicked close-ai-tools. Controls the mystical powers of Close Ai Tools. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:attr-add-form",
+    "page_context": "settings",
+    "title": "Attr Add Form",
+    "content": "Because you clicked attr-add-form. Keeps Attr Add Form from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:attr-add",
+    "page_context": "settings",
+    "title": "Attr Add",
+    "content": "Because you clicked attr-add. Makes Attr Add look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:attr-save-order",
+    "page_context": "settings",
+    "title": "Attr Save Order",
+    "content": "Because you clicked attr-save-order. Makes Attr Save Order look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-css-rules",
+    "page_context": "settings",
+    "title": "Close Css Rules",
+    "content": "Because you clicked close-css-rules. Makes Close Css Rules look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:dashboard-config-reset",
+    "page_context": "settings",
+    "title": "Dashboard Config Reset",
+    "content": "Because you clicked dashboard-config-reset. Makes Dashboard Config Reset look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:dashboard-config-refresh",
+    "page_context": "settings",
+    "title": "Dashboard Config Refresh",
+    "content": "Because you clicked dashboard-config-refresh. Sprinkles just enough flair on Dashboard Config Refresh to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:dashboard-config-save",
+    "page_context": "settings",
+    "title": "Dashboard Config Save",
+    "content": "Because you clicked dashboard-config-save. Controls the mystical powers of Dashboard Config Save. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-logging-status",
+    "page_context": "settings",
+    "title": "Close Logging Status",
+    "content": "Because you clicked close-logging-status. Keeps Close Logging Status from wandering off the layout like a toddler in a candy store.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:logging-refresh-status",
+    "page_context": "settings",
+    "title": "Logging Refresh Status",
+    "content": "Because you clicked logging-refresh-status. Makes Logging Refresh Status look like you actually meant it. Fancy.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:logging-open-file",
+    "page_context": "settings",
+    "title": "Logging Open File",
+    "content": "Because you clicked logging-open-file. Sprinkles just enough flair on Logging Open File to impress your future self.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:logging-clear-logs",
+    "page_context": "settings",
+    "title": "Logging Clear Logs",
+    "content": "Because you clicked logging-clear-logs. Turns Logging Clear Logs from \"meh\" into \"chef's kiss\". You're welcome.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:close-secrets-modal",
+    "page_context": "settings",
+    "title": "Close Secrets Modal",
+    "content": "Because you clicked close-secrets-modal. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:secrets-save",
+    "page_context": "settings",
+    "title": "Secrets Save",
+    "content": "Because you clicked secrets-save. What does it do? It bosses your layout around.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:secrets-rotate",
+    "page_context": "settings",
+    "title": "Secrets Rotate",
+    "content": "Because you clicked secrets-rotate. Controls the mystical powers of Secrets Rotate. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:secrets-export",
+    "page_context": "settings",
+    "title": "Secrets Export",
+    "content": "Because you clicked secrets-export. Controls the mystical powers of Secrets Export. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:test-ai-provider",
+    "page_context": "settings",
+    "title": "Test Ai Provider",
+    "content": "Because you clicked test-ai-provider. Because without Test Ai Provider, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:save-ai-settings",
+    "page_context": "settings",
+    "title": "Save Ai Settings",
+    "content": "Because you clicked save-ai-settings. Because without Save Ai Settings, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:move-up",
+    "page_context": "settings",
+    "title": "Move Up",
+    "content": "Because you clicked move-up. Controls the mystical powers of Move Up. Use wisely, Gandalf.",
+    "position": "bottom",
+    "is_active": 1
+  },
+  {
+    "element_id": "action:move-down",
+    "page_context": "settings",
+    "title": "Move Down",
+    "content": "Because you clicked move-down. Because without Move Down, the UI looked like a Craigslist ad.",
+    "position": "bottom",
+    "is_active": 1
+  }
+]

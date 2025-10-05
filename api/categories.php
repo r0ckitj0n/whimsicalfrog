@@ -102,11 +102,13 @@ try {
             ensure_categories_table($db);
             // Insert or ignore duplicate
             $stmt = $db->prepare('INSERT INTO categories (name) VALUES (?)');
+            $affected = 0;
             try {
                 $stmt->execute([$name]);
+                $affected = (int)$stmt->rowCount();
             } catch (Throwable $e) {
             }
-            Response::success(['name' => $name], 'Category added');
+            if ($affected > 0) { Response::updated(['name' => $name]); } else { Response::noChanges(['name' => $name]); }
             break; }
 
         case 'rename': {
@@ -118,11 +120,12 @@ try {
             }
             $db = Database::getInstance();
             ensure_categories_table($db);
-            Database::execute('UPDATE categories SET name = ? WHERE name = ?', [$new, $old]);
+            $changed = 0;
+            $changed += (int)Database::execute('UPDATE categories SET name = ? WHERE name = ?', [$new, $old]);
             if ($touchItems) {
-                Database::execute('UPDATE items SET category = ? WHERE category = ?', [$new, $old]);
+                $changed += (int)Database::execute('UPDATE items SET category = ? WHERE category = ?', [$new, $old]);
             }
-            Response::success(['old' => $old, 'new' => $new], 'Category renamed');
+            if ($changed > 0) { Response::updated(['old' => $old, 'new' => $new]); } else { Response::noChanges(['old' => $old, 'new' => $new]); }
             break; }
 
         case 'delete': {
@@ -142,8 +145,8 @@ try {
             if ($count > 0 && $reassign !== null) {
                 Database::execute('UPDATE items SET category = ? WHERE category = ?', [$reassign, $name]);
             }
-            Database::execute('DELETE FROM categories WHERE name = ?', [$name]);
-            Response::success(['name' => $name, 'reassigned_to' => $reassign]);
+            $affected = (int)Database::execute('DELETE FROM categories WHERE name = ?', [$name]);
+            if ($affected > 0) { Response::updated(['name' => $name, 'reassigned_to' => $reassign]); } else { Response::noChanges(['name' => $name, 'reassigned_to' => $reassign]); }
             break; }
 
         case 'reorder': {
@@ -170,13 +173,15 @@ try {
             }
             // Apply sort_order sequence
             $stmt = $db->prepare('UPDATE categories SET sort_order = ? WHERE name = ?');
+            $changed = 0;
             foreach ($ordered as $i => $name) {
                 try {
                     $stmt->execute([$i, $name]);
+                    $changed += (int)$stmt->rowCount();
                 } catch (Throwable $____) {
                 }
             }
-            Response::success(['count' => count($ordered)], 'Category order saved');
+            if ($changed > 0) { Response::updated(['count' => count($ordered)]); } else { Response::noChanges(['count' => count($ordered)]); }
             break; }
 
         default:

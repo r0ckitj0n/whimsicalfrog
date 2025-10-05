@@ -2,22 +2,7 @@
 
 // Include the configuration file
 require_once __DIR__ . '/config.php';
-
-// Set CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
-
-// Suppress warnings/notices from leaking into JSON and buffer early output
-ini_set('display_errors', 0);
-ob_start();
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+require_once __DIR__ . '/../includes/response.php';
 
 try {
     // Create database connection using config
@@ -32,7 +17,11 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Get specific items by SKUs
-        $input = json_decode(file_get_contents('php://input'), true);
+        $raw = file_get_contents('php://input');
+        $input = json_decode($raw, true);
+        if (!is_array($input)) {
+            Response::error('Invalid JSON', null, 400);
+        }
 
         if (isset($input['item_ids']) && is_array($input['item_ids']) && !empty($input['item_ids'])) {
             $skus = $input['item_ids'];  // Now expecting SKUs instead of IDs
@@ -123,26 +112,12 @@ try {
         }
     }
 
-    // Discard any accidental output captured earlier and return JSON
-    if (ob_get_length() !== false) {
-        ob_end_clean();
-    }
-    echo json_encode($items);
+    Response::success($items);
 
 } catch (PDOException $e) {
     // Handle database errors
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'Database error occurred',
-        'details' => $e->getMessage()
-    ]);
-    exit;
+    Response::serverError('Database error occurred', $e->getMessage());
 } catch (Exception $e) {
     // Handle general errors
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'An unexpected error occurred',
-        'details' => $e->getMessage()
-    ]);
-    exit;
+    Response::serverError('An unexpected error occurred', $e->getMessage());
 }

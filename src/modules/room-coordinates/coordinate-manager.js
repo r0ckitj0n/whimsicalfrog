@@ -45,7 +45,7 @@ export class RoomCoordinateManager {
         console.log('[CoordinateManager] Skipping coordinate load for room_main - not needed');
         return true;
       }
-
+      try { performance.mark('wf:coords:load:start'); } catch(_) {}
       const response = await fetch(`/api/get_room_coordinates.php?room=${encodeURIComponent(roomType)}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -57,6 +57,12 @@ export class RoomCoordinateManager {
           ...coord,
           selector: coord.selector.startsWith('.') ? coord.selector : `.${coord.selector}`,
         }));
+        try {
+          performance.mark('wf:coords:load:end');
+          performance.measure('wf:coords:load', 'wf:coords:load:start', 'wf:coords:load:end');
+          const m = performance.getEntriesByName('wf:coords:load').pop();
+          if (m) console.log(`[Perf] Coordinates loaded for ${roomType} in ${m.duration.toFixed(1)}ms`);
+        } catch(_) {}
         return true;
       }
 
@@ -83,7 +89,7 @@ export class RoomCoordinateManager {
       console.log('No door coordinates available - skipping application');
       return;
     }
-
+    try { performance.mark('wf:coords:apply:start'); } catch(_) {}
     const rect = container.getBoundingClientRect();
     const scaleX = rect.width / this.config.originalImageWidth;
     const scaleY = rect.height / this.config.originalImageHeight;
@@ -107,6 +113,12 @@ export class RoomCoordinateManager {
     });
 
     this.styleElement.textContent = css;
+    try {
+      performance.mark('wf:coords:apply:end');
+      performance.measure('wf:coords:apply', 'wf:coords:apply:start', 'wf:coords:apply:end');
+      const m = performance.getEntriesByName('wf:coords:apply').pop();
+      if (m) console.log(`[Perf] Coordinates applied in ${m.duration.toFixed(1)}ms for ${this.config.doorCoordinates.length} doors`);
+    } catch(_) {}
   }
 
   /**

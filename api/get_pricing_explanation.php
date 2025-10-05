@@ -1,12 +1,10 @@
 <?php
 
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 // Ensure clean JSON (avoid warnings/notices in output)
 ini_set('display_errors', 0);
-ob_start();
 
 try {
     // Ensure database is initialized via shared helper
@@ -19,14 +17,7 @@ try {
     $reasoningText = $_GET['text'] ?? '';
 
     if (empty($reasoningText)) {
-        if (ob_get_length() !== false) {
-            ob_end_clean();
-        }
-        echo json_encode([
-            'success' => false,
-            'error' => 'No reasoning text provided'
-        ]);
-        exit;
+        Response::error('No reasoning text provided', null, 400);
     }
 
     // Convert reasoning text to lowercase for matching
@@ -65,34 +56,24 @@ try {
 
     // Default to generic AI analysis if no specific match
     if (!$matchedKeyword) {
-        if (ob_get_length() !== false) {
-            ob_end_clean();
-        }
-        echo json_encode([
+        Response::json([
             'success' => true,
             'title' => 'AI Pricing Analysis',
             'explanation' => 'Advanced algorithmic analysis considering multiple market factors and pricing strategies. This comprehensive approach evaluates various pricing models, market conditions, and competitive factors to recommend optimal pricing strategies.'
         ]);
-        exit;
     }
 
     // Get explanation from database
     $result = Database::queryOne("SELECT title, explanation FROM pricing_explanations WHERE keyword = ?", [$matchedKeyword]);
 
     if ($result) {
-        if (ob_get_length() !== false) {
-            ob_end_clean();
-        }
-        echo json_encode([
+        Response::json([
             'success' => true,
             'title' => $result['title'],
             'explanation' => $result['explanation']
         ]);
     } else {
-        if (ob_get_length() !== false) {
-            ob_end_clean();
-        }
-        echo json_encode([
+        Response::json([
             'success' => true,
             'title' => 'AI Pricing Analysis',
             'explanation' => 'Advanced algorithmic analysis considering multiple market factors and pricing strategies.'
@@ -100,11 +81,5 @@ try {
     }
 
 } catch (Exception $e) {
-    if (ob_get_length() !== false) {
-        ob_end_clean();
-    }
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+    Response::serverError($e->getMessage());
 }

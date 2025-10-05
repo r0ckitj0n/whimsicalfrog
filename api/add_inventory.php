@@ -2,29 +2,20 @@
 
 // Include the configuration file
 require_once __DIR__ . '/config.php';
-
-// Set CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
-
-// Handle preflight OPTIONS request
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
+require_once __DIR__ . '/../includes/response.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 
 try {
     // Get POST data
-    $data = json_decode(file_get_contents('php://input'), true);
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true);
+    if (!is_array($data)) {
+        Response::error('Invalid JSON', null, 400);
+    }
 
     // Create database connection using config
     try {
@@ -50,11 +41,7 @@ try {
         $affected = Database::execute('INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [$sku, $name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description]);
 
         if ($affected !== false) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'Item added successfully',
-                'id' => $sku
-            ]);
+            Response::success(['message' => 'Item added successfully', 'id' => $sku]);
         } else {
             throw new Exception('Failed to add item');
         }
@@ -63,9 +50,7 @@ try {
         $requiredFields = ['itemName'];
         foreach ($requiredFields as $field) {
             if (!isset($data[$field]) || empty($data[$field])) {
-                http_response_code(400);
-                echo json_encode(['error' => "Field '$field' is required"]);
-                exit;
+                Response::error("Field '$field' is required", null, 400);
             }
         }
 
@@ -83,27 +68,14 @@ try {
         $affected = Database::execute('INSERT INTO items (sku, name, category, stockLevel, reorderPoint, costPrice, retailPrice, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [$sku, $name, $category, $stockLevel, $reorderPoint, $costPrice, $retailPrice, $description]);
 
         if ($affected !== false) {
-            http_response_code(201);
-            echo json_encode([
-                'success' => true,
-                'message' => 'Item added successfully',
-                'id' => $sku
-            ]);
+            Response::success(['message' => 'Item added successfully', 'id' => $sku]);
         } else {
             throw new Exception('Failed to add item');
         }
     }
 
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'Database connection failed',
-        'details' => $e->getMessage()
-    ]);
+    Response::serverError('Database connection failed', $e->getMessage());
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'error' => 'An unexpected error occurred',
-        'details' => $e->getMessage()
-    ]);
+    Response::serverError('An unexpected error occurred', $e->getMessage());
 }

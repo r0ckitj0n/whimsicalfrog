@@ -6,20 +6,17 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/business_settings_helper.php';
 require_once __DIR__ . '/../includes/tax_service.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
-        echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-        exit;
+        Response::methodNotAllowed('Method not allowed');
     }
 
-    $input = json_decode(file_get_contents('php://input'), true);
-    if (!$input) {
-        echo json_encode(['success' => false, 'error' => 'Invalid JSON']);
-        exit;
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true);
+    if (!is_array($input)) {
+        Response::error('Invalid JSON', null, 400);
     }
 
     $itemIds = $input['itemIds'] ?? [];
@@ -29,8 +26,7 @@ try {
     $debug = !empty($input['debug']);
 
     if (!is_array($itemIds) || !is_array($quantities) || count($itemIds) !== count($quantities)) {
-        echo json_encode(['success' => false, 'error' => 'Invalid items or quantities']);
-        exit;
+        Response::error('Invalid items or quantities', null, 400);
     }
 
     try {
@@ -42,9 +38,7 @@ try {
                 'stage' => 'db_connect',
             ]);
         }
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => 'Database error']);
-        exit;
+        Response::serverError('Database error');
     }
 
     // Compute subtotal based on current item prices
@@ -136,12 +130,17 @@ try {
     $shipping = 0.0;
     $method = (string)$shippingMethod;
 
+    // Shipping rules:
+    // - Customer Pickup: always free ($0)
+    // - Local Delivery: flat fee (override to 75.00 regardless of free threshold)
+    // - USPS: eligible for free shipping threshold
+    // - FedEx/UPS: NOT eligible for free shipping threshold
     if ($method === 'Customer Pickup') {
         $shipping = 0.0;
-    } elseif ($subtotal >= $freeThreshold && $freeThreshold > 0) {
-        $shipping = 0.0;
     } elseif ($method === 'Local Delivery') {
-        $shipping = $localDeliveryFee;
+        $shipping = 75.00; // Flat fee, never free
+    } elseif ($method === 'USPS' && $subtotal >= $freeThreshold && $freeThreshold > 0) {
+        $shipping = 0.0;
     } elseif ($method === 'USPS') {
         $shipping = $rateUSPS;
     } elseif ($method === 'FedEx') {
@@ -184,7 +183,6 @@ try {
     $currency = BusinessSettings::get('currency_code', 'USD');
 
     $response = [
-        'success' => true,
         'pricing' => [
             'subtotal' => round($subtotal, 2),
             'shipping' => round($shipping, 2),
@@ -225,7 +223,7 @@ try {
         }
     }
 
-    echo json_encode($response);
+    Response::success($response);
 
 } catch (Throwable $e) {
     if (class_exists('Logger')) {
@@ -233,6 +231,5 @@ try {
             'endpoint' => 'checkout_pricing',
         ]);
     }
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Server error']);
+    Response::serverError('Server error');
 }

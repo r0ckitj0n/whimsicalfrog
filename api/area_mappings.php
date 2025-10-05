@@ -1,9 +1,5 @@
 <?php
 // Area mappings management API
-header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
@@ -11,6 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Include database configuration (absolute)
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 try {
     try {
@@ -20,9 +17,7 @@ try {
         throw $e;
     }
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Database connection failed: ' . $e->getMessage()]);
-    exit;
+    Response::serverError('Database connection failed: ' . $e->getMessage());
 }
 
 // Ensure table exists with expected schema (room_number preferred)
@@ -67,9 +62,7 @@ try {
     } catch (Exception $e) { /* ignore */
     }
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Failed to ensure schema: ' . $e->getMessage()]);
-    exit;
+    Response::serverError('Failed to ensure schema: ' . $e->getMessage());
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -114,8 +107,7 @@ switch ($method) {
         handleDelete($input);
         break;
     default:
-        http_response_code(405);
-        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+        Response::methodNotAllowed('Method not allowed');
         break;
 }
 // handlePost function moved to api_handlers_extended.php for centralization
@@ -147,26 +139,26 @@ function handleGet()
         switch ($action) {
             case 'get_room_coordinates':
                 if ($roomNumber === null) {
-                    echo json_encode(['success' => false, 'message' => 'room is required']);
+                    Response::error('room is required', null, 400);
                     return;
                 }
                 $map = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
                 $coords = $map ? json_decode($map['coordinates'], true) : [];
-                echo json_encode(['success' => true, 'coordinates' => is_array($coords) ? $coords : []]);
+                Response::success(['coordinates' => is_array($coords) ? $coords : []]);
                 return;
 
             case 'get_mappings':
                 if ($roomNumber === null) {
-                    echo json_encode(['success' => false, 'message' => 'room is required']);
+                    Response::error('room is required', null, 400);
                     return;
                 }
                 $rows = Database::queryAll("SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order FROM area_mappings WHERE is_active = 1 AND room_number = ? ORDER BY display_order, id", [$roomNumber]);
-                echo json_encode(['success' => true, 'mappings' => $rows]);
+                Response::success(['mappings' => $rows]);
                 return;
 
             case 'get_live_view':
                 if ($roomNumber === null) {
-                    echo json_encode(['success' => false, 'message' => 'room is required']);
+                    Response::error('room is required', null, 400);
                     return;
                 }
                 try {
@@ -211,19 +203,18 @@ function handleGet()
                         ];
                     }
 
-                    echo json_encode(['success' => true, 'mappings' => $derived, 'category' => $categoryName, 'coordinates_count' => count($coords)]);
+                    Response::success(['mappings' => $derived, 'category' => $categoryName, 'coordinates_count' => count($coords)]);
                 } catch (Exception $e) {
-                    echo json_encode(['success' => false, 'message' => 'get_live_view failed: ' . $e->getMessage()]);
+                    Response::serverError('get_live_view failed: ' . $e->getMessage());
                 }
                 return;
 
             default:
-                echo json_encode(['success' => false, 'message' => 'Invalid action']);
+                Response::error('Invalid action', null, 400);
                 return;
         }
     } catch (Throwable $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Unhandled error: ' . $e->getMessage()]);
+        Response::serverError('Unhandled error: ' . $e->getMessage());
     }
 }
 function handlePost($input)
@@ -237,8 +228,7 @@ function handlePost($input)
             swapMappings($input);
             return;
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            Response::error('Invalid action', null, 400);
             return;
     }
 }
@@ -257,20 +247,17 @@ function addMapping($input)
     $displayOrder = $input['display_order'] ?? 0;
 
     if ($roomNumber === null || !$areaSelector || !$mappingType) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Room number, area selector, and mapping type are required']);
+        Response::error('Room number, area selector, and mapping type are required', null, 400);
         return;
     }
 
     if ($mappingType === 'item' && !$itemId && !$itemSku) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Item ID or SKU is required for item mapping']);
+        Response::error('Item ID or SKU is required for item mapping', null, 400);
         return;
     }
 
     if ($mappingType === 'category' && !$categoryId) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Category ID is required for category mapping']);
+        Response::error('Category ID is required for category mapping', null, 400);
         return;
     }
 
@@ -279,7 +266,7 @@ function addMapping($input)
         $exists = Database::queryOne("SELECT id FROM area_mappings WHERE room_number = ? AND area_selector = ? AND is_active = 1", [$roomNumber, $areaSelector]);
 
         if ($exists) {
-            echo json_encode(['success' => false, 'message' => 'Mapping already exists for this area']);
+            Response::error('Mapping already exists for this area', null, 400);
             return;
         }
 
@@ -290,13 +277,12 @@ function addMapping($input)
 
         if ($result > 0) {
             $mappingId = Database::lastInsertId();
-            echo json_encode(['success' => true, 'message' => 'Area mapping added successfully', 'id' => $mappingId]);
+            Response::success(['message' => 'Area mapping added successfully', 'id' => $mappingId]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to add mapping']);
+            Response::error('Failed to add mapping');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -306,8 +292,7 @@ function swapMappings($input)
     $area2Id = $input['area2_id'] ?? null;
 
     if (!$area1Id || !$area2Id) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Both area mapping IDs are required for swapping']);
+        Response::error('Both area mapping IDs are required for swapping', null, 400);
         return;
     }
 
@@ -319,7 +304,7 @@ function swapMappings($input)
 
         if (count($mappings) !== 2) {
             Database::rollBack();
-            echo json_encode(['success' => false, 'message' => 'One or both mappings not found']);
+            Response::notFound('One or both mappings not found');
             return;
         }
 
@@ -340,12 +325,11 @@ function swapMappings($input)
         );
 
         Database::commit();
-        echo json_encode(['success' => true, 'message' => 'Area mappings swapped successfully']);
+        Response::updated(['message' => 'Area mappings swapped successfully']);
 
     } catch (PDOException $e) {
         Database::rollBack();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -360,8 +344,7 @@ function handlePut($input)
     $areaSelector = $input['area_selector'] ?? null;
 
     if (!$mappingId) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Mapping ID is required']);
+        Response::error('Mapping ID is required', null, 400);
         return;
     }
 
@@ -395,7 +378,7 @@ function handlePut($input)
         }
 
         if (empty($updateFields)) {
-            echo json_encode(['success' => false, 'message' => 'No fields to update']);
+            Response::error('No fields to update', null, 400);
             return;
         }
 
@@ -404,13 +387,12 @@ function handlePut($input)
         $result = Database::execute("UPDATE area_mappings SET " . implode(', ', $updateFields) . " WHERE id = ?", $updateValues);
 
         if ($result > 0) {
-            echo json_encode(['success' => true, 'message' => 'Area mapping updated successfully']);
+            Response::updated(['message' => 'Area mapping updated successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Mapping not found or no changes made']);
+            Response::noChanges(['message' => 'Mapping not found or no changes made']);
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 
@@ -428,13 +410,12 @@ function handleDelete($input)
         $result = Database::execute("UPDATE area_mappings SET is_active = 0 WHERE id = ?", [$mappingId]);
 
         if ($result > 0) {
-            echo json_encode(['success' => true, 'message' => 'Area mapping removed successfully']);
+            Response::success(['message' => 'Area mapping removed successfully']);
         } else {
-            echo json_encode(['success' => false, 'message' => 'Mapping not found']);
+            Response::notFound('Mapping not found');
         }
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 }
 ?> 

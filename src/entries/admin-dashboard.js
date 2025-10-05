@@ -1,2 +1,2 @@
-// Wrapper entry under src for admin dashboard
-import '../js/admin-dashboard.js';
+// Vite entry: admin-dashboard.js
+console.log('[Vite] admin-dashboard.js entry loaded');

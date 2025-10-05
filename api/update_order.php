@@ -2,33 +2,20 @@
 
 // api/update-order.php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
-}
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 
-$input = json_decode(file_get_contents('php://input'), true);
-if (!$input) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Invalid JSON']);
-    exit;
+$raw = file_get_contents('php://input');
+$input = json_decode($raw, true);
+if (!is_array($input)) {
+    Response::error('Invalid JSON', null, 400);
 }
 
 if (empty($input['orderId'])) {
-    http_response_code(400);
-    echo json_encode(['error' => 'orderId required']);
-    exit;
+    Response::error('orderId required', null, 400);
 }
 $orderId = $input['orderId'];
 
@@ -42,9 +29,7 @@ try {
     // Ensure order exists
     $row = Database::queryOne('SELECT id FROM orders WHERE id = ?', [$orderId]);
     if (!$row) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Order not found']);
-        exit;
+        Response::notFound('Order not found');
     }
 
     Database::beginTransaction();
@@ -61,12 +46,27 @@ try {
         'paymentDate' => 'paymentDate',
         'paymentNotes' => 'paymentNotes',
         'shippingAddress' => 'shippingAddress',
-        'checkNumber' => 'checkNumber'
+        'checkNumber' => 'checkNumber',
+        // New: allow updating the main order date
+        'date' => 'date',
     ];
     foreach ($scalarFields as $k => $col) {
         if (array_key_exists($k, $input)) {
+            $val = $input[$k];
+            // Normalize date values to full datetime if necessary
+            if ($k === 'date' || $k === 'paymentDate') {
+                if ($val === '' || $val === null) {
+                    $val = null;
+                } else {
+                    // Accept date-only (YYYY-MM-DD), datetime-local, or any strtotime-compatible string
+                    $ts = @strtotime((string)$val);
+                    if ($ts !== false) {
+                        $val = date('Y-m-d H:i:s', $ts);
+                    }
+                }
+            }
             $updateMap[] = "$col = ?";
-            $params[] = ($input[$k] === '' ? null : $input[$k]);
+            $params[] = $val;
         }
     }
     if ($updateMap) {
@@ -106,9 +106,8 @@ try {
     }
 
     Database::commit();
-    echo json_encode(['success' => true,'orderId' => $orderId]);
+    Response::success(['orderId' => $orderId]);
 } catch (Exception $e) {
     Database::rollBack();
-    http_response_code(500);
-    echo json_encode(['error' => 'Server error','details' => $e->getMessage()]);
+    Response::serverError('Server error', $e->getMessage());
 }

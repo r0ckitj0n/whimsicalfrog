@@ -7,10 +7,13 @@
 
 require_once __DIR__ . '/../api/config.php';
 // getPrimaryImageBySku function moved to image_helper.php for centralization
+// Load canonical image helpers; guard duplicates below per-function
+require_once __DIR__ . '/image_helper.php';
 
 /**
  * Get all images for an item by SKU
  */
+if (!function_exists('getAllImagesBySku')) {
 function getAllImagesBySku($sku)
 {
     try {
@@ -29,28 +32,34 @@ function getAllImagesBySku($sku)
         return [];
     }
 }
+}
 
 /**
  * Check if an item has images
  */
+if (!function_exists('hasImagesBySku')) {
 function hasImagesBySku($sku)
 {
     $images = getAllImagesBySku($sku);
     return !empty($images);
 }
+}
 
 /**
  * Get count of images for an item
  */
+if (!function_exists('getImageCountBySku')) {
 function getImageCountBySku($sku)
 {
     $images = getAllImagesBySku($sku);
     return count($images);
 }
+}
 
 /**
  * Get placeholder image info - DEPRECATED: Use CSS-only solution instead
  */
+if (!function_exists('getPlaceholderImage')) {
 function getPlaceholderImage()
 {
     return [
@@ -59,10 +68,12 @@ function getPlaceholderImage()
         'css_fallback' => true // Flag to use CSS-only display
     ];
 }
+}
 
 /**
  * Get image URL with fallback to image server if needed
  */
+if (!function_exists('getImageUrlWithFallback')) {
 function getImageUrlWithFallback($imagePath, $sku = null)
 {
     if (empty($imagePath)) {
@@ -79,6 +90,7 @@ function getImageUrlWithFallback($imagePath, $sku = null)
     // Strict: do not attempt to guess alternative files; surface missing asset
     return null;
 }
+}
 // getImageWithFallback function moved to image_helper.php for centralization
 // getDbConnection function moved to database.php for centralization
 
@@ -86,14 +98,17 @@ function getImageUrlWithFallback($imagePath, $sku = null)
  * Get fallback image from old system
  */
 // Strict: deprecated; do not synthesize images from filesystem
+if (!function_exists('getFallbackItemImage')) {
 function getFallbackItemImage($sku)
 {
     return null;
+}
 }
 
 /**
  * Get all images for an item
  */
+if (!function_exists('getItemImages')) {
 function getItemImages($sku, $pdo = null)
 {
     // Use Database singleton if no PDO provided
@@ -135,10 +150,12 @@ function getItemImages($sku, $pdo = null)
         return [];
     }
 }
+}
 
 /**
  * Get primary image for an item
  */
+if (!function_exists('getPrimaryItemImage')) {
 function getPrimaryItemImage($sku, $pdo = null)
 {
     $images = getItemImages($sku, $pdo);
@@ -152,10 +169,12 @@ function getPrimaryItemImage($sku, $pdo = null)
     // If no primary image, return first image
     return !empty($images) ? $images[0] : null;
 }
+}
 
 /**
  * Get fallback image path for an item (for backward compatibility)
  */
+if (!function_exists('getItemImagePath')) {
 function getItemImagePath($sku, $pdo = null)
 {
     $primaryImage = getPrimaryItemImage($sku, $pdo);
@@ -166,19 +185,23 @@ function getItemImagePath($sku, $pdo = null)
 
     return null; // No placeholder needed - use CSS fallback
 }
+}
 
 /**
  * Check if an item has multiple images
  */
+if (!function_exists('hasMultipleImages')) {
 function hasMultipleImages($sku, $pdo = null)
 {
     $images = getItemImages($sku, $pdo);
     return count($images) > 1;
 }
+}
 
 /**
  * Render item image display (single image or carousel)
  */
+if (!function_exists('renderItemImageDisplay')) {
 function renderItemImageDisplay($sku, $options = [])
 {
     $images = getItemImages($sku);
@@ -217,7 +240,9 @@ function renderItemImageDisplay($sku, $options = [])
     $carouselHtml .= '</div>';
     return $carouselHtml;
 }
+}
 
+if (!function_exists('getPrimaryImageUrl')) {
 function getPrimaryImageUrl($sku)
 {
     try {
@@ -241,7 +266,9 @@ function getPrimaryImageUrl($sku)
         return null;
     }
 }
+}
 
+if (!function_exists('getAllImagesForSku')) {
 function getAllImagesForSku($sku)
 {
     try {
@@ -259,6 +286,9 @@ function getAllImagesForSku($sku)
     }
 }
 
+}
+
+if (!function_exists('getItemImageForDisplay')) {
 function getItemImageForDisplay($item)
 {
     // Try database images first
@@ -279,4 +309,5 @@ function getItemImageForDisplay($item)
 
     // Return null - let CSS handle the fallback
     return null;
+}
 }

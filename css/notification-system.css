@@ -42,7 +42,7 @@
 /* Notification Types */
 .wf-success-notification {
     background: var(--brand-primary, #87ac3a);
-    border-color: #6b8e23;
+    border-color: var(--brand-secondary, #BF5700);
     color: white;
     box-shadow: 0 12px 28px rgb(135 172 58 / 35%), 0 4px 8px rgb(135 172 58 / 15%);
 }

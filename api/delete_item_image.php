@@ -6,11 +6,10 @@
  */
 
 require_once __DIR__ . '/../api/config.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-    exit;
+    Response::methodNotAllowed('Invalid request method');
 }
 
 try {
@@ -21,20 +20,22 @@ try {
         throw $e;
     }
 
-    $input = json_decode(file_get_contents('php://input'), true);
+    $raw = file_get_contents('php://input');
+    $input = json_decode($raw, true);
+    if (!is_array($input)) {
+        Response::error('Invalid JSON', null, 400);
+    }
     $imageId = $input['imageId'] ?? '';
 
     if (empty($imageId)) {
-        echo json_encode(['success' => false, 'error' => 'Image ID is required']);
-        exit;
+        Response::error('Image ID is required', null, 400);
     }
 
     // Get image details before deletion
     $imageData = Database::queryOne("SELECT sku, image_path, is_primary FROM item_images WHERE id = ?", [$imageId]);
 
     if (!$imageData) {
-        echo json_encode(['success' => false, 'error' => 'Image not found']);
-        exit;
+        Response::notFound('Image not found');
     }
 
     $sku = $imageData['sku'];
@@ -73,8 +74,7 @@ try {
 
     Database::commit();
 
-    echo json_encode([
-        'success' => true,
+    Response::success([
         'message' => 'Image deleted successfully.' . $promotedMessage,
         'was_primary' => $wasPrimary,
         'promoted_new_primary' => $wasPrimary && isset($newPrimary) && $newPrimary
@@ -83,10 +83,10 @@ try {
 } catch (PDOException $e) {
     Database::rollBack();
     error_log("Database error in delete_item_image: " . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error occurred']);
+    Response::serverError('Database error occurred');
 } catch (Exception $e) {
     Database::rollBack();
     error_log("Error in delete_item_image: " . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Failed to delete image']);
+    Response::serverError('Failed to delete image');
 }
 ?> 

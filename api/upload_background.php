@@ -4,22 +4,15 @@
 // Saves original image to images/backgrounds and generates WebP.
 
 require_once __DIR__ . '/config.php'; // sets headers/CORS and DB env, loads Database class
-
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+require_once __DIR__ . '/../includes/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
-    echo json_encode(['success' => true]);
-    exit;
+    Response::json(['success' => true]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 
 // Helpers
@@ -103,16 +96,12 @@ try {
     $backgroundName = $_POST['background_name'] ?? '';
 
     if ($roomType === '' || !preg_match('/^room[0-5]$/', $roomType)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'room is required (use 0..5)']);
-        exit;
+        Response::error('room is required (use 0..5)', null, 400);
     }
 
     if (!isset($_FILES['background_image']) || $_FILES['background_image']['error'] !== UPLOAD_ERR_OK) {
-        http_response_code(400);
         $err = $_FILES['background_image']['error'] ?? 'missing';
-        echo json_encode(['success' => false, 'message' => 'background_image upload failed', 'error' => $err]);
-        exit;
+        Response::error('background_image upload failed', ['error' => $err], 400);
     }
 
     $file = $_FILES['background_image'];
@@ -122,9 +111,7 @@ try {
     finfo_close($finfo);
 
     if (!isset($allowed[$mime])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Unsupported file type. Allowed: JPG, PNG, WEBP']);
-        exit;
+        Response::error('Unsupported file type. Allowed: JPG, PNG, WEBP', null, 400);
     }
 
     // Build filenames
@@ -180,8 +167,7 @@ try {
         Database::execute('INSERT INTO backgrounds (room_type, room_number, background_name, image_filename, webp_filename, is_active) VALUES (?, ?, ?, ?, ?, 0)', [$roomType, $roomNumber, $backgroundName, $destOriginalRel, $destWebpRel]);
         $id = Database::lastInsertId();
 
-        echo json_encode([
-            'success' => true,
+        Response::success([
             'message' => 'Background uploaded successfully',
             'id' => $id,
             'room_type' => $roomType,
@@ -191,7 +177,6 @@ try {
             'image_url' => '/images/' . $destOriginalRel,
             'webp_url' => $destWebpRel ? '/images/' . $destWebpRel : null
         ]);
-        exit;
     } catch (PDOException $e) {
         // Cleanup files on DB error
         if (file_exists($destOriginalAbs)) {
@@ -200,13 +185,9 @@ try {
         if (!empty($destWebpAbs) && file_exists($destWebpAbs)) {
             @unlink($destWebpAbs);
         }
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
-        exit;
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 
 } catch (Exception $e) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-    exit;
+    Response::error($e->getMessage(), null, 400);
 }

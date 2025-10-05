@@ -7,12 +7,10 @@
  */
 
 require_once __DIR__ . '/config.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed();
 }
 
 try {
@@ -22,19 +20,16 @@ try {
     $options = $input['options'] ?? [];
 
     if ($action !== 'process_image') {
-        echo json_encode(['success' => false, 'error' => 'Invalid action']);
-        exit;
+        Response::json(['success' => false, 'error' => 'Invalid action']);
     }
 
     if (!$imagePath) {
-        echo json_encode(['success' => false, 'error' => 'imagePath is required']);
-        exit;
+        Response::json(['success' => false, 'error' => 'imagePath is required']);
     }
 
     $absPath = realpath(__DIR__ . '/../' . ltrim($imagePath, '/'));
     if (!$absPath || !file_exists($absPath)) {
-        echo json_encode(['success' => false, 'error' => 'Image file not found']);
-        exit;
+        Response::json(['success' => false, 'error' => 'Image file not found']);
     }
 
     require_once __DIR__ . '/ai_image_processor.php';
@@ -61,9 +56,8 @@ try {
         }
     }
 
-    echo json_encode($result);
+    Response::json($result);
 } catch (Throwable $e) {
     error_log('process_image_ai error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Server error']);
+    Response::serverError('Server error');
 }

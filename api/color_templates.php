@@ -2,6 +2,7 @@
 // Color Templates Management API
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 // Start session for authentication
 
@@ -108,7 +109,7 @@ try {
                     }
                 }
                 Database::commit();
-                echo json_encode(['success' => true, 'template_id' => $templateId, 'message' => 'Template created successfully']);
+                Response::updated(['template_id' => $templateId]);
 
             } catch (Exception $e) {
                 Database::rollBack();
@@ -151,7 +152,7 @@ try {
                     }
                 }
                 Database::commit();
-                echo json_encode(['success' => true, 'message' => 'Template updated successfully']);
+                Response::updated();
 
             } catch (Exception $e) {
                 Database::rollBack();
@@ -163,9 +164,13 @@ try {
             // Delete color template (soft delete)
             $templateId = $_POST['template_id'] ?? 0;
 
-            Database::execute("UPDATE color_templates SET is_active = 0 WHERE id = ?", [$templateId]);
-
-            echo json_encode(['success' => true, 'message' => 'Template deleted successfully']);
+            $affected = Database::execute("UPDATE color_templates SET is_active = 0 WHERE id = ?", [$templateId]);
+            if ($affected > 0) {
+                Response::updated();
+            } else {
+                $exists = Database::queryOne('SELECT id FROM color_templates WHERE id = ?', [$templateId]);
+                if ($exists) { Response::noChanges(); } else { http_response_code(404); echo json_encode(['success' => false, 'error' => 'Template not found']); }
+            }
             break;
 
         case 'apply_to_item':
@@ -196,7 +201,9 @@ try {
                 }
 
                 // Insert template colors
-                foreach ($colors as $c) {
+                foreach ($colors as $idx => $c) {
+                    $cname = trim($c['color_name'] ?? '');
+                    if ($cname === '') continue;
                     Database::execute(
                         "INSERT INTO item_colors (item_sku, color_name, color_code, stock_level, display_order) 
                          VALUES (?, ?, ?, ?, ?)
@@ -204,16 +211,17 @@ try {
                             color_code = VALUES(color_code),
                             stock_level = VALUES(stock_level),
                             display_order = VALUES(display_order)",
-                        [$data['item_sku'], $c['color_name'], $c['color_code'], $data['default_stock'] ?? 0, $c['display_order'] ?? 0]
+                        [
+                            $data['item_sku'],
+                            $cname,
+                            $c['color_code'] ?? '',
+                            $data['default_stock'] ?? 0,
+                            $c['display_order'] ?? ($idx + 1)
+                        ]
                     );
                 }
                 Database::commit();
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Template applied successfully',
-                    'applied_colors' => count($colors)
-                ]);
-
+                Response::updated(['applied_colors' => count($colors)]);
             } catch (Exception $e) {
                 Database::rollBack();
                 throw $e;

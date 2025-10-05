@@ -1,19 +1,17 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/database_logger.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false,'error' => 'Method not allowed']);
-    exit;
+    Response::methodNotAllowed('Method not allowed');
 }
 
 try {
     Database::getInstance();
 } catch (Exception $e) {
     error_log("Database connection failed: " . $e->getMessage());
-    throw $e;
+    Response::serverError('Database connection failed', $e->getMessage());
 }
 
 // Updated to use SKU instead of inventoryId
@@ -22,28 +20,24 @@ $field = $_POST['field'] ?? '';
 $value = $_POST['value'] ?? '';
 
 if (!$sku || !$field) {
-    echo json_encode(['success' => false,'error' => 'Missing SKU or field']);
-    exit;
+    Response::error('Missing SKU or field', null, 400);
 }
 
 try {
     // Updated field validation to match current database structure
     $allowedFields = ['name', 'category', 'stockLevel', 'reorderPoint', 'costPrice', 'retailPrice', 'description', 'price'];
     if (!in_array($field, $allowedFields)) {
-        echo json_encode(['success' => false,'error' => 'Invalid field: ' . $field . '. Allowed fields: ' . implode(', ', $allowedFields)]);
-        exit;
+        Response::error('Invalid field: ' . $field . '. Allowed fields: ' . implode(', ', $allowedFields), null, 400);
     }
 
     if ($value === '') {
-        echo json_encode(['success' => false,'error' => 'Value cannot be empty']);
-        exit;
+        Response::error('Value cannot be empty', null, 400);
     }
 
     // Validate numeric fields
     if (in_array($field, ['stockLevel', 'reorderPoint', 'costPrice', 'retailPrice', 'price'])) {
         if (!is_numeric($value) || $value < 0) {
-            echo json_encode(['success' => false,'error' => 'Value must be a positive number']);
-            exit;
+            Response::error('Value must be a positive number', null, 400);
         }
     }
 
@@ -61,25 +55,23 @@ try {
             $sku,
             'field_update',
             $description,
-            null, // old quantity not available for field updates
-            null, // new quantity not available for field updates
-            null, // old price not available for field updates
-            null  // new price not available for field updates
+            null,
+            null,
+            null,
+            null
         );
-
-        echo json_encode(['success' => true, 'message' => 'Field updated successfully']);
+        Response::updated(['message' => 'Field updated successfully']);
     } else {
         // Check if item exists
         $exists = Database::queryOne("SELECT sku FROM items WHERE sku = ?", [$sku]);
         if ($exists) {
-            echo json_encode(['success' => true,'message' => 'No change needed - ' . ucfirst($field) . ' is already set to that value']);
+            Response::noChanges(['message' => 'No change needed - ' . ucfirst($field) . ' is already set to that value']);
         } else {
-            echo json_encode(['success' => false,'error' => 'Item not found with SKU: ' . $sku]);
+            Response::notFound('Item not found with SKU: ' . $sku);
         }
     }
 
 } catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false,'error' => 'Server error: '.$e->getMessage()]);
+    Response::serverError('Server error', $e->getMessage());
 }
 ?> 

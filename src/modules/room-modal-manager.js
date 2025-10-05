@@ -51,7 +51,21 @@ class RoomModalManager {
         this.isLoading = false;
         this.currentRoomNumber = null;
         this.roomCache = new Map();
+        // Caches for performance
+        this._bgMetaCache = new Map(); // roomNumber -> background meta
+        this._prefetchedRooms = new Set(); // room numbers we pre-warmed
+        this._inflightContent = new Map(); // roomNumber -> Promise
+        this._apiBusy = false; // deprecated: do not serialize all requests globally
+        this._prewarmStopped = false; // stop flag after first open
+        this._inflightByUrl = new Map(); // url -> Promise to coalesce identical requests
         
+        // Diagnostics from URL params
+        try {
+            const p = new URLSearchParams(window.location.search || '');
+            this.__diag_no_bg = p.get('wf_diag_no_bg') === '1';
+            this.__diag_no_content = p.get('wf_diag_no_content') === '1';
+        } catch (_) { this.__diag_no_bg = false; this.__diag_no_content = false; }
+
         this.init();
     }
 
@@ -142,6 +156,9 @@ class RoomModalManager {
         this.overlay.addEventListener('click', (e) => {
             if (e.target === this.overlay) {
                 this.close();
+            } else if (this.__diag_no_content && !roomContent) {
+                console.warn('[RoomModalManager][DIAG] wf_diag_no_content=1 active: skipping content API');
+                roomContent = `<div class="room-modal-body-inner"><p>DIAG MODE: content fetch skipped.</p></div>`;
             }
         });
 
@@ -152,9 +169,93 @@ class RoomModalManager {
             }
         });
 
+        // Lightweight fetch coalescer: if same URL is already in-flight, await it
+        const _coalescedFetch = async (url, opts) => {
+            if (this._inflightByUrl.has(url)) {
+                return this._inflightByUrl.get(url);
+            }
+            const p = fetch(url, opts).finally(() => { this._inflightByUrl.delete(url); });
+            this._inflightByUrl.set(url, p);
+            return p;
+        };
+
+        const prefetchBg = async (roomNumber) => {
+            try {
+                if (!roomNumber) return;
+                if (this._prefetchedRooms.has(String(roomNumber))) return;
+                // Fetch metadata and warm the image cache
+                const r = await _coalescedFetch(`/api/get_background.php?room=${encodeURIComponent(roomNumber)}`, { cache: 'no-store' });
+                const j = await r.json().catch(() => null);
+                if (!j || !j.success || !j.background) return;
+                this._bgMetaCache.set(String(roomNumber), j.background);
+                let filename = j.background.webp_filename || j.background.image_filename;
+                if (!filename) return;
+                if (!filename.startsWith('backgrounds/')) filename = `backgrounds/${filename}`;
+                const url = `/images/${filename}`;
+                // Create CSS class (also warms style path)
+                ensureRoomBgClass(url);
+                // Warm image in memory cache
+                const img = new Image();
+                img.src = url;
+                this._prefetchedRooms.add(String(roomNumber));
+            } catch (_) {}
+        };
+
+        // Prefetch room content on hover as well (warm first API)
+        const prefetchContent = async (roomNumber) => {
+            try {
+                if (!roomNumber) return;
+                if (this.roomCache.has(String(roomNumber))) return;
+                if (this._inflightContent.has(String(roomNumber))) return;
+                const p = (async () => {
+                    const resp = await fetch(`/api/load_room_content.php?room=${encodeURIComponent(roomNumber)}&modal=1&perf=1`, { cache: 'no-store' });
+                    const j = await resp.json().catch(() => null);
+                    if (j && j.success && j.content) {
+                        this.roomCache.set(String(roomNumber), j.content);
+                    }
+                })().finally(() => { this._inflightContent.delete(String(roomNumber)); });
+                this._inflightContent.set(String(roomNumber), p);
+                await p;
+            } catch (_) {}
+        };
+
+        // Door hover prefetch gated behind flag to avoid noisy first-load network
+        const PREFETCH_ON_HOVER = false;
+        if (PREFETCH_ON_HOVER) {
+            document.addEventListener('pointerenter', (e) => {
+                const doorEl = e.target.closest && e.target.closest('[data-room], .room-door, .door-area, [data-room-number]');
+                if (!doorEl) return;
+                const rn = doorEl.dataset?.room || doorEl.getAttribute('data-room-number');
+                if (rn) { prefetchBg(rn); prefetchContent(rn); }
+            }, { passive: true, capture: true });
+        }
+
+        // Expose public prefetch method for app.js global warmup
+        this.prefetchRoom = async (roomNumber) => {
+            await Promise.all([
+                prefetchBg(roomNumber),
+                prefetchContent(roomNumber)
+            ]).catch(() => {});
+        };
+
+        // Expose bulk prewarm for visible doors (limited & staggered)
+        this.prewarmVisibleDoors = async () => {
+            try {
+                const doors = Array.from(document.querySelectorAll('[data-room], .room-door'));
+                const rooms = Array.from(new Set(doors.map(d => d.dataset?.room || d.getAttribute('data-room-number')).filter(Boolean)));
+                // Limit to first 2 rooms, stagger to avoid queueing
+                const targets = rooms.slice(0, 2);
+                for (const r of targets) {
+                    if (this._prewarmStopped) break;
+                    await this.prefetchRoom(r);
+                    await new Promise(res => setTimeout(res, 300));
+                }
+            } catch(_) {}
+        };
+
         // Room door clicks
         document.addEventListener('click', (e) => {
-            const doorLink = e.target.closest('[data-room], .door-link, .room-door');
+            const doorLink = e.target.closest('[data-room], .door-link, .room-door, .door-area, [data-room-number]');
             if (doorLink && !e.defaultPrevented) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -181,27 +282,69 @@ class RoomModalManager {
 
     async openRoom(roomNumber) {
         if (this.isLoading) return;
-        this.currentRoomNumber = roomNumber;
+        const key = String(roomNumber);
+        this.currentRoomNumber = key;
         this.isLoading = true;
 
         this.show();
         this.setContent('<div class="loading">Loading room...</div>');
 
         try {
-            let roomContent = this.roomCache.get(roomNumber);
-            if (!roomContent) {
-                const response = await fetch(`/api/load_room_content.php?room=${encodeURIComponent(roomNumber)}&modal=1`, {
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
+            try { performance.mark('wf:roomModal:open:start'); } catch(_) {}
+            // If a prefetch is in flight for this room, await it first
+            if (this._inflightContent.has(key)) {
+                try { await this._inflightContent.get(key); } catch(_) {}
+            }
+            let roomContent = this.roomCache.get(key);
+            if (!roomContent && !this.__diag_no_content) {
+                try { performance.mark('wf:roomModal:fetch:start'); } catch(_) {}
+                const url = `/api/load_room_content.php?room=${encodeURIComponent(key)}&modal=1&perf=1`;
+                const tNavStart = performance.timeOrigin || (performance.timing && performance.timing.navigationStart) || 0;
+                const tFetchStart = performance.now();
+                const response = await fetch(url, { cache: 'no-store' });
                 if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 const json = await response.json();
                 if (!json.success) throw new Error(json.message || 'Failed to load room content');
                 roomContent = json.content;
                 if (json.metadata) this.updateHeader(json.metadata);
-                this.roomCache.set(roomNumber, roomContent);
+                // Cache background metadata if provided to avoid extra API call
+                if (json.background) {
+                    this._bgMetaCache.set(key, json.background);
+                }
+                this.roomCache.set(key, roomContent);
+                try {
+                    performance.mark('wf:roomModal:fetch:end');
+                    performance.measure('wf:roomModal:fetch', 'wf:roomModal:fetch:start', 'wf:roomModal:fetch:end');
+                    const m = performance.getEntriesByName('wf:roomModal:fetch').pop();
+                    if (m) console.log(`[Perf] Room ${key} content fetched in ${m.duration.toFixed(1)}ms`);
+                    // ResourceTiming breakdown if available
+                    const entries = performance.getEntriesByType('resource');
+                    const rt = entries && entries.find(e => (e.name && e.name.indexOf('/api/load_room_content.php') !== -1));
+                    if (rt) {
+                        console.log('[Perf:RT] content', {
+                            name: rt.name,
+                            dns: (rt.domainLookupEnd - rt.domainLookupStart).toFixed(1),
+                            tcp: (rt.connectEnd - rt.connectStart).toFixed(1),
+                            ssl: (rt.secureConnectionStart > 0 ? (rt.connectEnd - rt.secureConnectionStart).toFixed(1) : 0),
+                            ttfb: (rt.responseStart - rt.requestStart).toFixed(1),
+                            download: (rt.responseEnd - rt.responseStart).toFixed(1),
+                            total: (rt.responseEnd - rt.startTime).toFixed(1)
+                        });
+                    } else {
+                        const tFetchEnd = performance.now();
+                        console.log('[Perf:Approx] content', { totalMs: (tFetchEnd - tFetchStart).toFixed(1), sinceNavMs: (tFetchEnd + tNavStart - tNavStart).toFixed(1) });
+                    }
+                } catch(_) {}
             }
 
+            try { performance.mark('wf:roomModal:dom:set:start'); } catch(_) {}
             this.setContent(roomContent);
+            try {
+                performance.mark('wf:roomModal:dom:set:end');
+                performance.measure('wf:roomModal:dom:set', 'wf:roomModal:dom:set:start', 'wf:roomModal:dom:set:end');
+                const m = performance.getEntriesByName('wf:roomModal:dom:set').pop();
+                if (m) console.log(`[Perf] Room ${roomNumber} DOM set in ${m.duration.toFixed(1)}ms`);
+            } catch(_) {}
             this.updateHeaderFromDOM();
             if (window.WhimsicalFrog) window.WhimsicalFrog.emit('room:opened', { roomNumber, content: roomContent });
         } catch (err) {
@@ -215,6 +358,12 @@ class RoomModalManager {
             `);
         } finally {
             this.isLoading = false;
+            try {
+                performance.mark('wf:roomModal:open:end');
+                performance.measure('wf:roomModal:open', 'wf:roomModal:open:start', 'wf:roomModal:open:end');
+                const m = performance.getEntriesByName('wf:roomModal:open').pop();
+                if (m) console.log(`[Perf] Room ${roomNumber} open total ${m.duration.toFixed(1)}ms`);
+            } catch(_) {}
         }
     }
 
@@ -257,11 +406,11 @@ class RoomModalManager {
             });
         });
 
-        // Product icons (hover + click)
-        body.querySelectorAll('.room-product-icon').forEach(icon => {
-            const sku = icon.dataset.sku;
-            if (!sku) return;
-            const itemData = {
+        // Delegated events for product icons (hover + click) to avoid many listeners
+        const getIconData = (icon) => {
+            const sku = icon?.dataset?.sku;
+            if (!sku) return null;
+            return {
                 sku,
                 name: icon.dataset.name,
                 price: Number(icon.dataset.price || 0),
@@ -272,43 +421,38 @@ class RoomModalManager {
                 description: icon.dataset.description || '',
                 marketingLabel: icon.dataset.marketingLabel || ''
             };
+        };
 
-            let originalTop, originalLeft, originalWidth, originalHeight;
-            if (icon.dataset.originalTop !== undefined && icon.dataset.originalTop !== '') {
-                originalTop = parseFloat(icon.dataset.originalTop);
-                originalLeft = parseFloat(icon.dataset.originalLeft);
-                originalWidth = parseFloat(icon.dataset.originalWidth);
-                originalHeight = parseFloat(icon.dataset.originalHeight);
-            } else {
-                const cs = getComputedStyle(icon);
-                originalTop = parseFloat(cs.top) || 0;
-                originalLeft = parseFloat(cs.left) || 0;
-                originalWidth = parseFloat(cs.width) || 80;
-                originalHeight = parseFloat(cs.height) || 80;
-                icon.dataset.originalTop = originalTop;
-                icon.dataset.originalLeft = originalLeft;
-                icon.dataset.originalWidth = originalWidth;
-                icon.dataset.originalHeight = originalHeight;
-            }
-
-            const showPopup = () => {
-                if (typeof window.showGlobalPopup === 'function') window.showGlobalPopup(icon, itemData);
-                else if (window.parent && typeof window.parent.showGlobalPopup === 'function') window.parent.showGlobalPopup(icon, itemData);
-            };
-            const hidePopup = () => {
-                if (typeof window.hideGlobalPopup === 'function') window.hideGlobalPopup();
-                else if (window.parent && typeof window.parent.hideGlobalPopup === 'function') window.parent.hideGlobalPopup();
-            };
-            icon.addEventListener('mouseenter', showPopup);
-            icon.addEventListener('focus', showPopup);
-            icon.addEventListener('mouseleave', hidePopup);
-            icon.addEventListener('blur', hidePopup);
-            icon.addEventListener('click', (e) => {
-                e.preventDefault(); e.stopPropagation();
-                if (typeof window.showGlobalItemModal === 'function') window.showGlobalItemModal(sku, itemData);
-                else if (window.parent && typeof window.parent.showGlobalItemModal === 'function') window.parent.showGlobalItemModal(sku, itemData);
-                else if (window.WhimsicalFrog) window.WhimsicalFrog.emit('product:modal-requested', { element: icon, sku });
-            });
+        const onOver = (e) => {
+            const icon = e.target.closest && e.target.closest('.room-product-icon');
+            if (!icon || !body.contains(icon)) return;
+            const data = getIconData(icon);
+            if (!data) return;
+            if (typeof window.showGlobalPopup === 'function') window.showGlobalPopup(icon, data);
+            else if (window.parent && typeof window.parent.showGlobalPopup === 'function') window.parent.showGlobalPopup(icon, data);
+        };
+        const onOut = (e) => {
+            const related = e.relatedTarget;
+            const fromIcon = e.target.closest && e.target.closest('.room-product-icon');
+            const stillInside = related && (related === fromIcon || (related.closest && related.closest('.room-product-icon') === fromIcon));
+            if (stillInside) return;
+            if (typeof window.hideGlobalPopup === 'function') window.hideGlobalPopup();
+            else if (window.parent && typeof window.parent.hideGlobalPopup === 'function') window.parent.hideGlobalPopup();
+        };
+        body.addEventListener('mouseover', onOver);
+        body.addEventListener('mouseout', onOut);
+        body.addEventListener('focusin', onOver);
+        body.addEventListener('focusout', onOut);
+        body.addEventListener('click', (e) => {
+            const icon = e.target.closest && e.target.closest('.room-product-icon');
+            if (!icon) return;
+            e.preventDefault(); e.stopPropagation();
+            const data = getIconData(icon);
+            if (!data) return;
+            const sku = data.sku;
+            if (typeof window.showGlobalItemModal === 'function') window.showGlobalItemModal(sku, data);
+            else if (window.parent && typeof window.parent.showGlobalItemModal === 'function') window.parent.showGlobalItemModal(sku, data);
+            else if (window.WhimsicalFrog) window.WhimsicalFrog.emit('product:modal-requested', { element: icon, sku });
         });
 
         // Background + coordinate scaling
@@ -325,17 +469,40 @@ class RoomModalManager {
         const loadRoomBackground = async () => {
             if (!roomWrapper || !rn) return;
             try {
-                const response = await fetch(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
-                const data = await response.json();
-                if (data.success && data.background) {
-                    const bg = data.background;
+                if (this.__diag_no_bg) { console.warn('[RoomModalManager][DIAG] wf_diag_no_bg=1 active: skipping background API'); return; }
+                let bg = this._bgMetaCache.get(String(rn));
+                if (!bg) {
+                    const bgUrl = `/api/get_background.php?room=${encodeURIComponent(rn)}`;
+                    const response = await fetch(bgUrl, { cache: 'no-store' });
+                    const data = await response.json();
+                    if (!data.success || !data.background) return;
+                    bg = data.background;
+                    this._bgMetaCache.set(String(rn), bg);
+                }
+                if (bg) {
                     // Prefer WebP if API provides it; fall back to PNG if WebP is missing
                     let filename = bg.webp_filename || bg.image_filename;
                     if (!filename.startsWith('backgrounds/')) filename = `backgrounds/${filename}`;
-                    const imageUrl = `/images/${filename}?v=${Date.now()}`;
+                    const imageUrl = `/images/${filename}`;
                     const bgCls = ensureRoomBgClass(imageUrl);
                     if (roomWrapper.dataset.roomBgClass && roomWrapper.dataset.roomBgClass !== bgCls) roomWrapper.classList.remove(roomWrapper.dataset.roomBgClass);
                     if (bgCls) { roomWrapper.classList.add(bgCls); roomWrapper.dataset.roomBgClass = bgCls; }
+                    // ResourceTiming breakdown if available
+                    try {
+                        const entries = performance.getEntriesByType('resource');
+                        const rt = entries && entries.find(e => (e.name && e.name.indexOf('/api/get_background.php') !== -1 && e.name.indexOf(`room=${encodeURIComponent(rn)}`) !== -1));
+                        if (rt) {
+                            console.log('[Perf:RT] background', {
+                                name: rt.name,
+                                dns: (rt.domainLookupEnd - rt.domainLookupStart).toFixed(1),
+                                tcp: (rt.connectEnd - rt.connectStart).toFixed(1),
+                                ssl: (rt.secureConnectionStart > 0 ? (rt.connectEnd - rt.secureConnectionStart).toFixed(1) : 0),
+                                ttfb: (rt.responseStart - rt.requestStart).toFixed(1),
+                                download: (rt.responseEnd - rt.responseStart).toFixed(1),
+                                total: (rt.responseEnd - rt.startTime).toFixed(1)
+                            });
+                        }
+                    } catch(_) {}
                 }
             } catch (err) {
                 console.error('[Room Modal] Error loading background:', err);
@@ -387,7 +554,22 @@ class RoomModalManager {
         if (this._resizeHandler) { window.removeEventListener('resize', this._resizeHandler); this._resizeHandler = null; }
         this._resizeHandler = () => { clearTimeout(this._resizeTimeout); this._resizeTimeout = setTimeout(scaleRoomCoordinates, 100); };
         window.addEventListener('resize', this._resizeHandler);
-        loadRoomBackground().then(() => { setTimeout(() => { scaleRoomCoordinates(); setTimeout(scaleRoomCoordinates, 500); }, 300); });
+        const bgStart = performance.now();
+        loadRoomBackground().then(() => {
+            const bgDur = performance.now() - bgStart;
+            console.log(`[Perf] Room ${rn} background metadata+class in ${bgDur.toFixed(1)}ms (image may still be loading by browser)`);
+            setTimeout(() => {
+                const s1 = performance.now();
+                scaleRoomCoordinates();
+                const s1d = performance.now() - s1;
+                setTimeout(() => {
+                    const s2 = performance.now();
+                    scaleRoomCoordinates();
+                    const s2d = performance.now() - s2;
+                    console.log(`[Perf] Room ${rn} coordinate scale pass1 ${s1d.toFixed(1)}ms, pass2 ${s2d.toFixed(1)}ms`);
+                }, 500);
+            }, 300);
+        });
     }
 
     show() {

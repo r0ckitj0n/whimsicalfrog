@@ -7,15 +7,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 // Ensure we can clear cached settings after writes
 @require_once __DIR__ . '/business_settings_helper.php';
-
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
-}
+require_once __DIR__ . '/../includes/response.php';
 
 /**
  * Ensure About Page settings exist with defaults
@@ -28,10 +20,9 @@ function ensureAboutSettings()
             ('site', 'about_page_title', 'Our Story', 'Title shown at the top of the About page', 'text', 'About Page Title'),
             ('site', 'about_page_content', '<p>Once upon a time in a cozy little workshop, Calvin &amp; Lisa Lemley began crafting whimsical treasures for friends and family. What started as a weekend habit of chasing ideas and laughter soon grew into WhimsicalFrog&mdash;a tiny brand with a big heart.</p><p>Every piece we make is a small celebration of play and everyday magic: things that delight kids, spark curiosity, and make grown‑ups smile. We believe in craftsmanship, kindness, and creating goods that feel like they were made just for you.</p><p>Thank you for visiting our little corner of the pond. We hope our creations bring a splash of joy to your day!</p>', 'Main content of the About page (HTML)', 'html', 'About Page Content (HTML)')
            ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
-        echo json_encode(['success' => true]);
+        Response::success(true);
     } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        Response::serverError($e->getMessage());
     }
 }
 
@@ -138,16 +129,9 @@ try {
                 foreach ($rows as $r) {
                     $settings[$r['setting_key']] = $r['setting_value'];
                 }
-
-                Response::json([
-                    'success' => true,
-                    'verbiage' => $settings
-                ]);
+                Response::success(['verbiage' => $settings]);
             } catch (Exception $e) {
-                Response::json([
-                    'success' => false,
-                    'error' => 'Failed to load sales verbiage: ' . $e->getMessage()
-                ], 500);
+                Response::serverError('Failed to load sales verbiage: ' . $e->getMessage());
             }
             break;
 
@@ -168,25 +152,21 @@ try {
             break;
 
         default:
-            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            Response::error('Invalid action', null, 400);
             break;
     }
 
 } catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    Response::serverError('Database error: ' . $e->getMessage());
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+    Response::serverError('Error: ' . $e->getMessage());
 }
 
 function getAllSettings($pdo)
 {
     $settings = Database::queryAll("SELECT * FROM business_settings ORDER BY category, display_order, setting_key");
 
-    echo json_encode([
-        'success' => true,
-        'settings' => $settings,
-        'count' => count($settings)
-    ]);
+    Response::success(['settings' => $settings, 'count' => count($settings)]);
 }
 
 function getSetting($pdo)
@@ -194,16 +174,15 @@ function getSetting($pdo)
     $key = $_GET['key'] ?? '';
 
     if (empty($key)) {
-        echo json_encode(['success' => false, 'message' => 'Setting key is required']);
-        return;
+        Response::error('Setting key is required', null, 400);
     }
 
     $setting = Database::queryOne("SELECT * FROM business_settings WHERE setting_key = ?", [$key]);
 
     if ($setting) {
-        echo json_encode(['success' => true, 'setting' => $setting]);
+        Response::success(['setting' => $setting]);
     } else {
-        echo json_encode(['success' => false, 'message' => 'Setting not found']);
+        Response::error('Setting not found', null, 404);
     }
 }
 
@@ -224,9 +203,9 @@ function updateSetting($pdo)
         if (class_exists('BusinessSettings')) {
             BusinessSettings::clearCache();
         }
-        echo json_encode(['success' => true, 'message' => 'Setting updated successfully']);
+        Response::updated();
     } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to update setting or setting not found']);
+        Response::noChanges();
     }
 }
 
@@ -235,14 +214,12 @@ function updateMultipleSettings($pdo)
     $settingsJson = $_POST['settings'] ?? '';
 
     if (empty($settingsJson)) {
-        echo json_encode(['success' => false, 'message' => 'Settings data is required']);
-        return;
+        Response::error('Settings data is required', null, 400);
     }
 
     $settings = json_decode($settingsJson, true);
     if (!$settings) {
-        echo json_encode(['success' => false, 'message' => 'Invalid settings data']);
-        return;
+        Response::error('Invalid settings data', null, 400);
     }
 
     Database::beginTransaction();
@@ -264,15 +241,11 @@ function updateMultipleSettings($pdo)
             BusinessSettings::clearCache();
         }
 
-        echo json_encode([
-            'success' => true,
-            'message' => "Updated {$updatedCount} settings successfully",
-            'updated_count' => $updatedCount
-        ]);
+        Response::success(['message' => "Updated {$updatedCount} settings successfully", 'updated_count' => $updatedCount]);
 
     } catch (Exception $e) {
         Database::rollBack();
-        echo json_encode(['success' => false, 'message' => 'Failed to update settings: ' . $e->getMessage()]);
+        Response::serverError('Failed to update settings: ' . $e->getMessage());
     }
 }
 /**
@@ -315,8 +288,7 @@ function upsertSettings($pdo)
     }
 
     if (!is_array($settings) || empty($settings)) {
-        echo json_encode(['success' => false, 'message' => 'Settings map is required']);
-        return;
+        Response::error('Settings map is required', null, 400);
     }
 
     $pdo->beginTransaction();
@@ -362,16 +334,11 @@ function upsertSettings($pdo)
             BusinessSettings::clearCache();
         }
 
-        echo json_encode([
-            'success' => true,
-            'message' => "Upserted {$saved} settings successfully",
-            'updated_count' => $saved,
-            'category' => $category
-        ]);
+        Response::success(['message' => "Upserted {$saved} settings successfully", 'updated_count' => $saved, 'category' => $category]);
 
     } catch (Exception $e) {
         Database::rollBack();
-        echo json_encode(['success' => false, 'message' => 'Failed to upsert settings: ' . $e->getMessage()]);
+        Response::serverError('Failed to upsert settings: ' . $e->getMessage());
     }
 }
 // resetToDefaults function moved to data_manager.php for centralization
@@ -381,18 +348,12 @@ function getByCategory($pdo)
     $category = $_GET['category'] ?? '';
 
     if (empty($category)) {
-        echo json_encode(['success' => false, 'message' => 'Category is required']);
-        return;
+        Response::error('Category is required', null, 400);
     }
 
     $settings = Database::queryAll("SELECT * FROM business_settings WHERE category = ? ORDER BY display_order, setting_key", [$category]);
 
-    echo json_encode([
-        'success' => true,
-        'settings' => $settings,
-        'category' => $category,
-        'count' => count($settings)
-    ]);
+    Response::success(['settings' => $settings, 'category' => $category, 'count' => count($settings)]);
 }
 
 /**
@@ -404,16 +365,13 @@ function getBusinessInfo()
 {
     // BusinessSettings helper is included at top of this file (if available)
     if (!class_exists('BusinessSettings')) {
-        // Guard against fatal error if helper is missing
         if (file_exists(__DIR__ . '/business_settings_helper.php')) {
             require_once __DIR__ . '/business_settings_helper.php';
         } else {
-            echo json_encode(['success' => false, 'message' => 'BusinessSettings helper not found']);
-            return;
+            Response::error('BusinessSettings helper not found', null, 500);
         }
     }
 
-    // Build a flat map matching the keys from the modal's collectBusinessInfo() JS function
     $get = function ($key, $default = '') {
         try {
             return BusinessSettings::get($key, $default);
@@ -467,5 +425,5 @@ function getBusinessInfo()
         'business_css_vars' => $get('business_css_vars'),
     ];
 
-    echo json_encode(['success' => true, 'data' => $info]);
+    Response::success($info);
 }

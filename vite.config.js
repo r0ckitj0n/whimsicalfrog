@@ -1,98 +1,59 @@
 import { resolve } from 'path';
-import { globSync } from 'glob';
-import fullReload from 'vite-plugin-full-reload';
 import { defineConfig } from 'vite';
-
-
 
 const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5180);
 const hmrPort = Number(process.env.VITE_HMR_PORT || devPort);
 
 export default defineConfig({
-    root: __dirname,
-    plugins: [
-        {
-            name: 'wf-cors-headers',
-            configureServer(server) {
-                server.middlewares.use((req, res, next) => {
-                    res.setHeader('Access-Control-Allow-Origin', '*');
-                    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-                    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-                    if (req.method === 'OPTIONS') {
-                        res.statusCode = 204;
-                        return res.end();
-                    }
-                    next();
-                });
-            },
-        },
-    ],
-    define: {
-        '__APP_ENV__': JSON.stringify('development'),
+  root: __dirname,
+  define: {
+    '__APP_ENV__': JSON.stringify(process.env.NODE_ENV || 'development'),
+  },
+  server: {
+    port: devPort,
+    strictPort: true,
+    host: 'localhost',
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     },
-    server: {
-        // Ensure dev server runs on a stable port that matches our PHP helper hot origin
-        port: devPort,
-        strictPort: true,
-        host: '0.0.0.0', // use 0.0.0.0 for Replit environment to allow all hosts
-        // Use HTTP; we proxy via PHP to avoid CORS/TLS issues
-        // https: false by default
-        cors: true,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-        // Enable HMR so @vite/client can inject CSS and handle updates
-        hmr: {
-            protocol: 'ws',
-            host: '0.0.0.0',
-            port: hmrPort,
-            clientPort: hmrPort,
-        },
-        // Proxy API requests to avoid PHP execution issues
-        proxy: {
-            '/api': {
-                target: 'http://127.0.0.1:5000',
-                changeOrigin: true,
-                secure: false,
-                rewrite: (path) => path.replace(/^\/api/, '/api'),
-                configure: (proxy, options) => {
-                    proxy.on('error', (err, req, res) => {
-                        console.log('proxy error', err);
-                    });
-                    proxy.on('proxyReq', (proxyReq, req, res) => {
-                        console.log('Sending Request to the Target:', req.method, req.url);
-                    });
-                    proxy.on('proxyRes', (proxyRes, req, res) => {
-                        console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
-                    });
-                },
-            }
-        }
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost',
+      port: hmrPort,
+      clientPort: hmrPort,
     },
-    build: {
-        outDir: 'dist',
-        emptyOutDir: true,
-        manifest: true,
-        rollupOptions: {
-            input: {
-                // Keep manifest keys stable while sourcing from src entries
-                'js/app.js': resolve(__dirname, 'src/entries/app.js'),
-                'js/admin-dashboard.js': resolve(__dirname, 'src/entries/admin-dashboard.js'),
-                'js/admin-inventory.js': resolve(__dirname, 'src/entries/admin-inventory.js'),
-                'js/admin-settings.js': resolve(__dirname, 'src/entries/admin-settings.js'),
-                'js/admin-db-status.js': resolve(__dirname, 'src/entries/admin-db-status.js'),
-                'js/header-bootstrap.js': resolve(__dirname, 'src/entries/header-bootstrap.js'),
-                'js/admin-email-settings.js': resolve(__dirname, 'src/entries/admin-email-settings.js'),
-                'js/admin-customers.js': resolve(__dirname, 'src/entries/admin-customers.js'),
-                'js/admin-account-settings.js': resolve(__dirname, 'src/entries/admin-account-settings.js'),
-                'js/admin-orders.js': resolve(__dirname, 'src/entries/admin-orders.js'),
-                'js/admin-pos.js': resolve(__dirname, 'src/entries/admin-pos.js'),
-                'js/admin-cost-breakdown.js': resolve(__dirname, 'src/entries/admin-cost-breakdown.js'),
-                'js/help-documentation.js': resolve(__dirname, 'src/entries/help-documentation.js'),
-            },
-        }
-    },
-
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path,
+      }
+    }
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    manifest: true,
+    rollupOptions: {
+      input: {
+        'js/app.js': resolve(__dirname, 'src/entries/app.js'),
+        'js/admin-dashboard.js': resolve(__dirname, 'src/entries/admin-dashboard.js'),
+        'js/admin-inventory.js': resolve(__dirname, 'src/entries/admin-inventory.js'),
+        'js/admin-settings.js': resolve(__dirname, 'src/entries/admin-settings.js'),
+        'js/admin-db-status.js': resolve(__dirname, 'src/entries/admin-db-status.js'),
+        'js/header-bootstrap.js': resolve(__dirname, 'src/entries/header-bootstrap.js'),
+        'js/admin-email-settings.js': resolve(__dirname, 'src/entries/admin-email-settings.js'),
+        'js/admin-customers.js': resolve(__dirname, 'src/entries/admin-customers.js'),
+        'js/admin-account-settings.js': resolve(__dirname, 'src/entries/admin-account-settings.js'),
+        'js/admin-orders.js': resolve(__dirname, 'src/entries/admin-orders.js'),
+        'js/admin-pos.js': resolve(__dirname, 'src/entries/admin-pos.js'),
+        'js/admin-cost-breakdown.js': resolve(__dirname, 'src/entries/admin-cost-breakdown.js'),
+        'js/help-documentation.js': resolve(__dirname, 'src/entries/help-documentation.js'),
+      },
+    }
+  },
 });

@@ -6,8 +6,7 @@
 
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/config.php';
-
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/response.php';
 
 // Use centralized authentication
 // Admin authentication with token fallback for API access
@@ -56,14 +55,12 @@ try {
             updateMarketingDefaults($pdo);
             break;
         default:
-            http_response_code(400);
-            echo json_encode(['success' => false, 'error' => 'Invalid action specified.']);
+            Response::error('Invalid action specified.', null, 400);
     }
 
 } catch (Exception $e) {
     error_log("Error in website_config.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
 
 function getConfig($pdo)
@@ -82,7 +79,7 @@ function getConfig($pdo)
         $grouped[$config['category']][] = $config;
     }
 
-    echo json_encode(['success' => true, 'data' => $grouped]);
+    Response::success($grouped);
 }
 
 function updateConfig($pdo)
@@ -94,15 +91,13 @@ function updateConfig($pdo)
     $setting_type = $input['setting_type'] ?? 'string';
 
     if (empty($category) || empty($setting_key)) {
-        echo json_encode(['success' => false, 'error' => 'Category and setting key are required.']);
-        return;
+        Response::error('Category and setting key are required.', null, 400);
     }
 
     // Validate setting type
     $allowedTypes = ['string', 'number', 'boolean', 'json', 'color', 'css'];
     if (!in_array($setting_type, $allowedTypes)) {
-        echo json_encode(['success' => false, 'error' => 'Invalid setting type.']);
-        return;
+        Response::error('Invalid setting type.', null, 400);
     }
 
     // Convert boolean values
@@ -114,23 +109,22 @@ function updateConfig($pdo)
     if ($setting_type === 'json' && !empty($setting_value)) {
         $decoded = json_decode($setting_value);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            echo json_encode(['success' => false, 'error' => 'Invalid JSON format.']);
-            return;
+            Response::error('Invalid JSON format.', null, 400);
         }
     }
 
     // Check if setting exists
-    $exists = Database::queryOne("SELECT id FROM website_config WHERE category = ? AND setting_key = ?", [$category, $setting_key]);
+    $exists = Database::queryOne("SELECT id, setting_value, setting_type FROM website_config WHERE category = ? AND setting_key = ?", [$category, $setting_key]);
 
     if ($exists) {
         // Update existing setting
-        Database::execute("UPDATE website_config SET setting_value = ?, setting_type = ?, updated_at = CURRENT_TIMESTAMP WHERE category = ? AND setting_key = ?", [$setting_value, $setting_type, $category, $setting_key]);
+        $affected = Database::execute("UPDATE website_config SET setting_value = ?, setting_type = ?, updated_at = CURRENT_TIMESTAMP WHERE category = ? AND setting_key = ?", [$setting_value, $setting_type, $category, $setting_key]);
+        if ($affected > 0) { Response::updated(); } else { Response::noChanges(); }
     } else {
         // Create new setting
-        Database::execute("INSERT INTO website_config (category, setting_key, setting_value, setting_type) VALUES (?, ?, ?, ?)", [$category, $setting_key, $setting_value, $setting_type]);
+        $affected = Database::execute("INSERT INTO website_config (category, setting_key, setting_value, setting_type) VALUES (?, ?, ?, ?)", [$category, $setting_key, $setting_value, $setting_type]);
+        if ($affected > 0) { Response::updated(); } else { Response::serverError('Failed to create configuration'); }
     }
-
-    echo json_encode(['success' => true, 'message' => 'Configuration updated successfully.']);
 }
 
 function getCSSVariables($pdo)
@@ -161,8 +155,7 @@ function updateCSSVariable($pdo)
     $description = $input['description'] ?? '';
 
     if (empty($variable_name) || empty($variable_value)) {
-        echo json_encode(['success' => false, 'error' => 'Variable name and value are required.']);
-        return;
+        Response::error('Variable name and value are required.', null, 400);
     }
 
     // Ensure variable name starts with -
@@ -171,17 +164,15 @@ function updateCSSVariable($pdo)
     }
 
     // Check if variable exists
-    $exists = Database::queryOne("SELECT id FROM css_variables WHERE variable_name = ?", [$variable_name]);
+    $exists = Database::queryOne("SELECT id, variable_value FROM css_variables WHERE variable_name = ?", [$variable_name]);
 
     if ($exists) {
-        // Update existing variable
-        Database::execute("UPDATE css_variables SET variable_value = ?, category = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE variable_name = ?", [$variable_value, $category, $description, $variable_name]);
+        $affected = Database::execute("UPDATE css_variables SET variable_value = ?, category = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE variable_name = ?", [$variable_value, $category, $description, $variable_name]);
+        if ($affected > 0) { Response::updated(); } else { Response::noChanges(); }
     } else {
-        // Create new variable
-        Database::execute("INSERT INTO css_variables (variable_name, variable_value, category, description) VALUES (?, ?, ?, ?)", [$variable_name, $variable_value, $category, $description]);
+        $affected = Database::execute("INSERT INTO css_variables (variable_name, variable_value, category, description) VALUES (?, ?, ?, ?)", [$variable_name, $variable_value, $category, $description]);
+        if ($affected > 0) { Response::updated(); } else { Response::serverError('Failed to create CSS variable'); }
     }
-
-    echo json_encode(['success' => true, 'message' => 'CSS variable updated successfully.']);
 }
 
 function getUIComponents($pdo)
@@ -195,7 +186,7 @@ function getUIComponents($pdo)
             $component['component_config'] = json_decode($component['component_config'], true);
         }
 
-        echo json_encode(['success' => true, 'data' => $component]);
+        Response::success($component);
     } else {
         $components = Database::queryAll("SELECT * FROM ui_components WHERE is_active = 1 ORDER BY component_name");
 
@@ -205,7 +196,7 @@ function getUIComponents($pdo)
             }
         }
 
-        echo json_encode(['success' => true, 'data' => $components]);
+        Response::success($components);
     }
 }
 
@@ -226,17 +217,15 @@ function updateUIComponent($pdo)
     $config_json = json_encode($component_config);
 
     // Check if component exists
-    $exists = Database::queryOne("SELECT id FROM ui_components WHERE component_name = ?", [$component_name]);
+    $exists = Database::queryOne("SELECT id, component_config, css_classes, custom_css FROM ui_components WHERE component_name = ?", [$component_name]);
 
     if ($exists) {
-        // Update existing component
-        Database::execute("UPDATE ui_components SET component_config = ?, css_classes = ?, custom_css = ?, updated_at = CURRENT_TIMESTAMP WHERE component_name = ?", [$config_json, $css_classes, $custom_css, $component_name]);
+        $affected = Database::execute("UPDATE ui_components SET component_config = ?, css_classes = ?, custom_css = ?, updated_at = CURRENT_TIMESTAMP WHERE component_name = ?", [$config_json, $css_classes, $custom_css, $component_name]);
+        if ($affected > 0) { Response::updated(); } else { Response::noChanges(); }
     } else {
-        // Create new component
-        Database::execute("INSERT INTO ui_components (component_name, component_config, css_classes, custom_css) VALUES (?, ?, ?, ?)", [$component_name, $config_json, $css_classes, $custom_css]);
+        $affected = Database::execute("INSERT INTO ui_components (component_name, component_config, css_classes, custom_css) VALUES (?, ?, ?, ?)", [$component_name, $config_json, $css_classes, $custom_css]);
+        if ($affected > 0) { Response::updated(); } else { http_response_code(500); echo json_encode(['success' => false, 'error' => 'Failed to create UI component']); }
     }
-
-    echo json_encode(['success' => true, 'message' => 'UI component updated successfully.']);
 }
 
 function getCSSOutput($pdo)
@@ -261,7 +250,7 @@ function getCSSOutput($pdo)
         }
     }
 
-    echo json_encode(['success' => true, 'css' => $css]);
+    Response::success(['css' => $css]);
 }
 
 function getMarketingDefaults($pdo)
@@ -273,7 +262,7 @@ function getMarketingDefaults($pdo)
         $defaults[$setting['setting_key']] = $setting['setting_value'];
     }
 
-    echo json_encode(['success' => true, 'data' => $defaults]);
+    Response::success($defaults);
 }
 
 function updateMarketingDefaults($pdo)
@@ -284,8 +273,7 @@ function updateMarketingDefaults($pdo)
     $auto_apply = $input['auto_apply_defaults'] ?? 'false';
 
     if (empty($brand_voice) || empty($content_tone)) {
-        echo json_encode(['success' => false, 'error' => 'Brand voice and content tone are required.']);
-        return;
+        Response::error('Brand voice and content tone are required.', null, 400);
     }
 
     // Update marketing defaults
@@ -295,15 +283,17 @@ function updateMarketingDefaults($pdo)
         'auto_apply_defaults' => $auto_apply
     ];
 
+    $changed = 0;
     foreach ($updates as $key => $value) {
-        Database::execute("UPDATE website_config SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE category = 'marketing' AND setting_key = ?", [$value, $key]);
+        $affected = Database::execute("UPDATE website_config SET setting_value = ?, updated_at = CURRENT_TIMESTAMP WHERE category = 'marketing' AND setting_key = ?", [$value, $key]);
+        if ((int)$affected > 0) $changed += 1;
     }
 
     // Also update the business_settings table for backward compatibility
     Database::execute("UPDATE business_settings SET setting_value = ? WHERE category = 'ai' AND setting_key = 'ai_brand_voice'", [$brand_voice]);
     Database::execute("UPDATE business_settings SET setting_value = ? WHERE category = 'ai' AND setting_key = 'ai_content_tone'", [$content_tone]);
 
-    echo json_encode(['success' => true, 'message' => 'Marketing defaults updated successfully.']);
+    if ($changed > 0) { Response::updated(); } else { Response::noChanges(); }
 }
 
 ?> 

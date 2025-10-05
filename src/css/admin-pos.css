@@ -25,8 +25,8 @@ body[data-page="admin/pos"] .admin-tab-navigation {
 }
 
 /* Modal */
-.pos-modal-overlay { position: fixed; inset: 0; display: grid; place-items: center; background: var(--overlay); z-index: var(--wf-overlay-z, 10050); }
-.pos-modal-content { background: var(--pos-bg); color: var(--pos-fg); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: min(640px, 92vw); max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: var(--wf-overlay-content-z, 10051); }
+.pos-modal-overlay { position: fixed; inset: 0; display: grid; place-items: center; background: var(--overlay); z-index: var(--z-overlay,  10050); }
+.pos-modal-content { background: var(--pos-bg); color: var(--pos-fg); border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: min(640px, 92vw); max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: var(--z-index-modal-content,  10051); }
 .pos-modal-small { width: min(520px, 92vw); }
 .pos-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
 .pos-modal-title { margin: 0; font-size: 16px; font-weight: 700; }

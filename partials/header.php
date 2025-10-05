@@ -97,15 +97,16 @@ $__is_admin_route = ($__req_path_for_admin === 'admin') || (strpos($__req_path_f
 if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET['section'] !== '') {
     $q = strtolower($_GET['section']);
     $aliases = [
-        'index' => 'dashboard', 'home' => 'dashboard', 'order' => 'orders', 'product' => 'inventory', 'products' => 'inventory',
-        'customer' => 'customers', 'users' => 'customers', 'report' => 'reports', 'marketing' => 'marketing', 'pos' => 'pos',
+        'index' => 'dashboard', 'home' => 'dashboard', 'order' => 'orders', 'orders' => 'orders', 'product' => 'inventory', 'products' => 'inventory',
+        'customer' => 'customers', 'user' => 'customers', 'users' => 'customers', 'report' => 'reports', 'reports' => 'reports', 'marketing' => 'marketing', 'pos' => 'pos',
         'settings' => 'settings', 'admin_settings' => 'settings', 'admin_settings.php' => 'settings', 'categories' => 'categories',
     ];
     if (isset($aliases[$q])) {
         $q = $aliases[$q];
     }
-    if ($q === 'settings') {
-        $pageSlug = 'admin/settings';
+    // Normalize to admin/<section> for ALL sections, not just settings
+    if ($q) {
+        $pageSlug = 'admin/' . $q;
     }
 }
 ?>
@@ -409,15 +410,15 @@ if ($isAdmin && (strpos($pageSlug, 'admin/settings') === 0)) {
 .site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
 .site-header nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:row!important;gap:14px;flex-wrap:nowrap!important}
 .site-header nav ul>li{display:inline-flex}
-.admin-tab-navigation{position:fixed;top:68px;left:0;right:0;z-index:2000;margin:0!important;padding:0px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
+.admin-tab-navigation{position:fixed;top:72px;left:0;right:0;z-index:2000;margin:0!important;padding:0px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
 .admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}
 /* Standalone Settings template (light mode): apply to direct child only */
-body[data-page='admin/settings'] > .settings-page{padding-top:136px!important}
+body[data-page='admin/settings'] > .settings-page{padding-top:156px!important}
 
 /* Settings page: override navbar position for more space */
-body[data-page='admin/settings'] .admin-tab-navigation{top:84px!important}
+body[data-page='admin/settings'] .admin-tab-navigation{top:76px!important}
 </style>
 STYLE;
         // Optional: Prevent hash-driven modal auto-opens and suppress overlays unless user triggered

@@ -8,55 +8,108 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/room_helpers.php';
+require_once __DIR__ . '/../includes/response.php';
+// capture request start as early as possible
+$__wf_req_start = microtime(true);
+header('X-WF-Request-Start: ' . number_format($__wf_req_start, 6, '.', ''));
 
-// JSON response headers
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+// IMPORTANT: release PHP session lock ASAP so API calls don't serialize
+if (function_exists('session_status') && session_status() === PHP_SESSION_ACTIVE) {
+    @session_write_close();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    echo json_encode(['success' => false, 'message' => 'Only GET allowed']);
-    exit;
+    Response::methodNotAllowed('Only GET allowed');
 }
 
 $roomNumber = $_GET['room'] ?? $_GET['room_number'] ?? 'A';
 $isModal = isset($_GET['modal']);
+$withPerf = isset($_GET['perf']);
+
+// Simple microcache helpers (APCu preferred, fallback to filesystem)
+function wf_cache_get($key) {
+    if (function_exists('apcu_fetch')) {
+        $ok = false; $v = apcu_fetch($key, $ok); return $ok ? $v : null;
+    }
+    $f = sys_get_temp_dir() . '/wf_cache_' . md5($key) . '.json';
+    if (is_file($f) && (time() - filemtime($f)) < 300) { $s = @file_get_contents($f); if ($s !== false) { $j = json_decode($s, true); if (is_array($j)) return $j; } }
+    return null;
+}
+function wf_cache_set($key, $val) {
+    if (function_exists('apcu_store')) { apcu_store($key, $val, 300); return; }
+    $f = sys_get_temp_dir() . '/wf_cache_' . md5($key) . '.json';
+    @file_put_contents($f, json_encode($val));
+}
 
 if (!isValidRoom($roomNumber)) {
-    echo json_encode(['success' => false, 'message' => 'Invalid room']);
-    exit;
+    Response::error('Invalid room', null, 400);
 }
 
 try {
-    $pdo = Database::getInstance();
-    $content = generateRoomContent($roomNumber, $pdo, $isModal);
-    $metadata = getRoomMetadata($roomNumber, $pdo);
+    $cacheKey = 'room_modal:' . $roomNumber;
+    $cached = wf_cache_get($cacheKey);
+    if ($cached) {
+        Response::json($cached);
+    }
 
-    echo json_encode([
+    $pdo = Database::getInstance();
+    $t0 = microtime(true);
+    $content = generateRoomContent($roomNumber, $pdo, $isModal, $withPerf, $perfData);
+    $t1 = microtime(true);
+    $metadata = getRoomMetadata($roomNumber, $pdo);
+    // Also include background metadata to avoid an extra API call on the client
+    $bgMeta = Database::queryOne(
+        "SELECT background_name, image_filename, webp_filename, created_at
+         FROM backgrounds
+         WHERE room_number = ? AND is_active = 1
+         LIMIT 1",
+        [$roomNumber]
+    ) ?: null;
+    $t2 = microtime(true);
+
+    $resp = [
         'success' => true,
         'content' => $content,
         'room_number' => $roomNumber,
         'metadata' => $metadata,
-        'is_modal' => $isModal
-    ]);
+        'is_modal' => $isModal,
+        'background' => $bgMeta
+    ];
+    if ($withPerf) {
+        $resp['perf'] = array_merge($perfData ?? [], [
+            'generate_content_ms' => (int)round(($t1 - $t0) * 1000),
+            'metadata_ms' => (int)round(($t2 - $t1) * 1000),
+            'total_ms' => (int)round(($t2 - $t0) * 1000),
+            'server_received_at' => number_format($__wf_req_start, 6, '.', ''),
+            'server_finished_at' => number_format($t2, 6, '.', ''),
+        ]);
+        // Also expose via headers for DevTools
+        $dur = (int)round(($t2 - $t0) * 1000);
+        header('Server-Timing: app;desc="load_room_content";dur=' . $dur);
+        header('X-WF-Server-Perf: total_ms=' . $dur . '; gen_ms=' . (int)round(($t1-$t0)*1000) . '; meta_ms=' . (int)round(($t2-$t1)*1000));
+        header('X-WF-Request-Finish: ' . number_format($t2, 6, '.', ''));
+    }
+    wf_cache_set($cacheKey, $resp);
+    Response::json($resp);
 } catch (Exception $e) {
     error_log('load_room_content error: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    Response::serverError($e->getMessage());
 }
 
 /**
  * Generate room content HTML for modal or inline view
  */
-function generateRoomContent($roomNumber, $pdo, $isModal = false)
+function generateRoomContent($roomNumber, $pdo, $isModal = false, $withPerf = false, &$perfOut = null)
 {
+    $p = [];
     $roomType = "room{$roomNumber}";
 
     // fetch category name from room_settings
+    $tm0 = microtime(true);
     $meta = getRoomMetadata($roomNumber, $pdo);
     $categoryName = $meta['category'];
     // Attempt to resolve a category_id from metadata or by name
@@ -70,18 +123,19 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     // 1) Prefer FK-based lookup by category_id when available
     if ($categoryId) {
         try {
+            $q0 = microtime(true);
             $items = Database::queryAll(
-                "SELECT i.*,
-                        i.stockLevel,
-                        i.retailPrice,
-                        COALESCE(img.image_path, i.imageUrl) as image_path,
-                        img.is_primary,
-                        img.alt_text
+                "SELECT i.sku, i.name, i.stockLevel, i.retailPrice, i.category,
+                        COALESCE(img.image_path, i.imageUrl) AS image_path,
+                        img.is_primary, img.alt_text
                  FROM items i
                  LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
-                 WHERE i.category_id = ? ORDER BY i.sku ASC",
+                 WHERE i.category_id = ?
+                 ORDER BY i.sku ASC
+                 LIMIT 24",
                 [$categoryId]
             );
+            $p['q_items_by_category_id_ms'] = (int)round((microtime(true) - $q0) * 1000);
         } catch (Exception $e) { /* fall back below */
         }
     }
@@ -89,17 +143,17 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     if (empty($items) && $categoryName !== '') {
         try {
             $items = Database::queryAll(
-                "SELECT i.*,
-                        i.stockLevel,
-                        i.retailPrice,
-                        COALESCE(img.image_path, i.imageUrl) as image_path,
-                        img.is_primary,
-                        img.alt_text
+                "SELECT i.sku, i.name, i.stockLevel, i.retailPrice, i.category,
+                        COALESCE(img.image_path, i.imageUrl) AS image_path,
+                        img.is_primary, img.alt_text
                  FROM items i
                  LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
-                 WHERE i.category = ? ORDER BY i.sku ASC",
+                 WHERE i.category = ?
+                 ORDER BY i.sku ASC
+                 LIMIT 24",
                 [$categoryName]
             );
+            $p['q_items_by_category_name_ms'] = (int)round((microtime(true) - $q1) * 1000);
         } catch (Exception $e) { /* fall back below */
         }
     }
@@ -107,16 +161,15 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     if (empty($items) && $categoryName !== '') {
         try {
             $items = Database::queryAll(
-                "SELECT i.*,
-                        i.stockLevel,
-                        i.retailPrice,
-                        COALESCE(img.image_path, i.imageUrl) as image_path,
-                        img.is_primary,
-                        img.alt_text
+                "SELECT i.sku, i.name, i.stockLevel, i.retailPrice, i.category,
+                        COALESCE(img.image_path, i.imageUrl) AS image_path,
+                        img.is_primary, img.alt_text
                  FROM items i
                  LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
                  JOIN categories c ON LOWER(REPLACE(REPLACE(TRIM(i.category), '&', 'and'), ' ', '-')) = LOWER(REPLACE(REPLACE(TRIM(c.name), '&', 'and'), ' ', '-'))
-                 WHERE c.name = ? ORDER BY i.sku ASC",
+                 WHERE c.name = ?
+                 ORDER BY i.sku ASC
+                 LIMIT 24",
                 [$categoryName]
             );
         } catch (Exception $e) { /* fall back below */
@@ -126,29 +179,63 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
     if (empty($items) && $categoryName !== '') {
         try {
             $items = Database::queryAll(
-                "SELECT i.*,
-                        i.stockLevel,
-                        i.retailPrice,
-                        COALESCE(img.image_path, i.imageUrl) as image_path,
-                        img.is_primary,
-                        img.alt_text
+                "SELECT i.sku, i.name, i.stockLevel, i.retailPrice, i.category,
+                        COALESCE(img.image_path, i.imageUrl) AS image_path,
+                        img.is_primary, img.alt_text
                  FROM items i
                  LEFT JOIN item_images img ON img.sku = i.sku AND img.is_primary = 1
-                 WHERE i.category LIKE ? ORDER BY i.sku ASC",
+                 WHERE i.category LIKE ?
+                 ORDER BY i.sku ASC
+                 LIMIT 24",
                 ['%' . $categoryName . '%']
             );
+            $p['q_items_like_ms'] = (int)round((microtime(true) - $q3) * 1000);
         } catch (Exception $e) { /* keep empty */
         }
     }
 
-    // fetch room settings
+    // fetch room settings (avoid selecting new columns directly to stay backward compatible)
+    $q4 = microtime(true);
     $rs = Database::queryOne("SELECT room_name, description FROM room_settings WHERE room_number = ?", [$roomNumber]) ?: [];
+    $p['q_room_settings_ms'] = (int)round((microtime(true) - $q4) * 1000);
+    // Try to read icons_white_background if the column exists (guarded)
+    $dbFlag = null;
+    try {
+        $rowFlag = Database::queryOne("SELECT icons_white_background FROM room_settings WHERE room_number = ?", [$roomNumber]);
+        if ($rowFlag && array_key_exists('icons_white_background', $rowFlag)) {
+            $dbFlag = $rowFlag['icons_white_background'];
+        }
+    } catch (Throwable $____) {
+        // Column may not exist yet; ignore
+    }
 
     // load coordinates
     $cd = loadRoomCoordinates($roomType, $pdo);
     $coordsRaw = $cd['coordinates'] ?? [];
     // Normalize coordinates to a zero-based numeric array in original order
     $coords = array_values($coordsRaw);
+
+    $p['metadata_ms'] = (int)round((microtime(true) - $tm0) * 1000);
+
+    // Per-room UI config (JSON) for display options (legacy override)
+    $roomConfig = [];
+    $configPath = dirname(__DIR__) . '/data/room_configs/' . $roomNumber . '.json';
+    if (is_file($configPath)) {
+        $cfgRaw = @file_get_contents($configPath);
+        if ($cfgRaw !== false) {
+            $cfgJson = json_decode($cfgRaw, true);
+            if (is_array($cfgJson)) { $roomConfig = $cfgJson; }
+        }
+    }
+    // Determine icon background behavior (DB first, then JSON fallback, then default)
+    // Use DB flag if we successfully read it above
+    if ($dbFlag !== null) {
+        $iconsWhiteBg = (bool)$dbFlag;
+    } elseif (array_key_exists('icons_white_background', $roomConfig)) {
+        $iconsWhiteBg = (bool)$roomConfig['icons_white_background'];
+    } else {
+        $iconsWhiteBg = ($roomNumber === '1') ? false : true;
+    }
 
     ob_start(); ?>
     <div id="modalRoomPage" class="modal-room-page" data-room="<?php echo $roomNumber; ?>">
@@ -166,7 +253,7 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
       <?php endif; ?>
       
       <div class="room-modal-iframe-container">
-        <div class="room-overlay-wrapper room-modal-content-wrapper">
+        <div class="room-overlay-wrapper room-modal-content-wrapper<?php echo ($iconsWhiteBg ? '' : ' no-icon-bg'); ?>">
           <!-- Room content loaded -->
           
           <?php
@@ -226,7 +313,7 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false)
       </div>
       
     </div>
-    <?php return ob_get_clean();
+    <?php $html = ob_get_clean(); if ($withPerf) { $perfOut = $p; } return $html;
 }
 
 /**

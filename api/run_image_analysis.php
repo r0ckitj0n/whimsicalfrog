@@ -11,22 +11,19 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/ai_image_processor.php';
-
-header('Content-Type: application/json');
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-        echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-        exit;
+        Response::methodNotAllowed();
     }
 
     $sku = isset($_GET['sku']) ? trim($_GET['sku']) : '';
     $force = isset($_GET['force']) ? ($_GET['force'] === '1' || strtolower($_GET['force']) === 'true') : false;
 
     if ($sku === '') {
-        echo json_encode(['success' => false, 'error' => 'SKU is required']);
-        exit;
+        Response::json(['success' => false, 'error' => 'SKU is required']);
     }
 
     Database::getInstance();
@@ -39,8 +36,7 @@ try {
     );
 
     if (!$images) {
-        echo json_encode(['success' => false, 'error' => 'No images found for SKU']);
-        exit;
+        Response::json(['success' => false, 'error' => 'No images found for SKU']);
     }
 
     $rootDir = dirname(__DIR__);
@@ -177,11 +173,11 @@ try {
         'results' => $results
     ];
 
-    echo json_encode($response);
+    Response::json($response);
 } catch (PDOException $e) {
     error_log('Database error in run_image_analysis: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    Response::serverError('Database error: ' . $e->getMessage());
 } catch (Throwable $e) {
     error_log('Error in run_image_analysis: ' . $e->getMessage());
-    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    Response::serverError($e->getMessage());
 }

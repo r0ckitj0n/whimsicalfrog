@@ -29,7 +29,7 @@ if (!function_exists('renderAdminItemEditor')) {
         $description = htmlspecialchars($editItem['description'] ?? '', ENT_QUOTES, 'UTF-8');
         ?>
 
-        <div id="inventoryModalOuter" class="admin-modal-overlay show fixed inset-0 flex items-start justify-center overflow-y-auto">
+        <div id="inventoryModalOuter" class="admin-modal-overlay topmost show fixed inset-0 flex items-start justify-center overflow-y-auto">
             <div class="admin-modal wf-admin-panel-visible show relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-5xl">
                 <div class="modal-header flex justify-between items-center p-2 border-b border-gray-100">
                     <h2 class="text-lg font-bold text-green-700">
@@ -64,7 +64,7 @@ if (!function_exists('renderAdminItemEditor')) {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div>
                                     <label for="categoryEdit" class="block text-gray-700">Category *</nlabel>
                                     <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required<?= $isReadOnly ? ' disabled' : '' ?>>
@@ -72,20 +72,6 @@ if (!function_exists('renderAdminItemEditor')) {
                                         <?php foreach ($categories as $cat): $c = htmlspecialchars($cat, ENT_QUOTES, 'UTF-8'); ?>
                                             <option value="<?= $c ?>" <?= ($category === $c) ? 'selected' : '' ?>><?= $c ?></option>
                                         <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="genderEdit" class="block text-gray-700">Gender *</label>
-                                    <select id="genderEdit" name="gender" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('gender', $field_errors) ? 'field-error-highlight' : '' ?>" required<?= $isReadOnly ? ' disabled' : '' ?>>
-                                        <?php
-                                        $genders = ['Unisex','Men','Women','Boys','Girls','Baby'];
-        echo '<option value="">Select Gender</option>';
-        foreach ($genders as $g) {
-            $gEsc = htmlspecialchars($g, ENT_QUOTES, 'UTF-8');
-            $sel = ($gender === $gEsc) ? 'selected' : '';
-            echo "<option value=\"{$gEsc}\" {$sel}>{$gEsc}</option>";
-        }
-        ?>
                                     </select>
                                 </div>
                                 <div>
@@ -262,19 +248,78 @@ if (!function_exists('renderAdminItemEditor')) {
                 <div class="bg-white border border-gray-200 rounded-lg p-4">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold text-gray-800 flex items-center"><span class="mr-2">📦</span> Gender, Size & Color Management</h3>
-                        <button type="button" data-action="sync-size-stock" class="bg-blue-500 text-white rounded text-xs px-2 py-1 hover:bg-blue-600">Sync Stock</button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" data-action="ensure-color-sizes" class="bg-gray-700 text-white rounded text-xs px-2 py-1 hover:bg-gray-800" title="Ensure each color has its own size rows (clone general sizes to each color)">Configure containers</button>
+                            <button type="button" data-action="distribute-general-stock-evenly" class="bg-amber-600 text-white rounded text-xs px-2 py-1 hover:bg-amber-700" title="Copy general size stock evenly across all colors for each size, then zero the general rows">Distribute general stock</button>
+                            <button type="button" data-action="sync-size-stock" class="bg-blue-500 text-white rounded text-xs px-2 py-1 hover:bg-blue-600">Sync Stock</button>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h4 class="font-medium text-gray-700 text-sm mb-2">Sizes</h4>
-                            <div id="sizesList" class="space-y-2"></div>
-                            <div id="sizesLoading" class="text-center text-gray-500 text-sm">Loading sizes...</div>
+                    <!-- Nested Inventory Editor (JS renders tree here) -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-700 text-sm mb-2">Nested Inventory Editor (by Gender ➜ Color ➜ Size)</h4>
+                        <div class="flex flex-wrap items-center gap-2 mb-3" id="nestedInventoryControls">
+                            <label class="text-xs text-gray-600">Gender
+                                <select id="nestedGenderFilter" class="border border-gray-300 rounded text-xs p-1 ml-1">
+                                    <option value="">All</option>
+                                    <option value="Unisex">Unisex</option>
+                                    <option value="Men">Men</option>
+                                    <option value="Women">Women</option>
+                                    <option value="Boys">Boys</option>
+                                    <option value="Girls">Girls</option>
+                                    <option value="Baby">Baby</option>
+                                </select>
+                            </label>
+                            <label class="text-xs text-gray-600">Color
+                                <select id="nestedColorFilter" class="border border-gray-300 rounded text-xs p-1 ml-1">
+                                    <option value="">All</option>
+                                </select>
+                            </label>
+                            <label class="text-xs text-gray-600">Search
+                                <input id="nestedSearch" type="text" class="border border-gray-300 rounded text-xs p-1 ml-1" placeholder="Size name/code…" />
+                            </label>
+                            <label class="text-xs text-gray-600">Sort
+                                <select id="nestedSort" class="border border-gray-300 rounded text-xs p-1 ml-1">
+                                    <option value="code">Size Code</option>
+                                    <option value="name">Size Name</option>
+                                    <option value="stock">Stock</option>
+                                </select>
+                            </label>
+                            <button type="button" data-action="recompute-nested-totals" class="ml-2 bg-gray-200 text-gray-800 rounded text-xs px-2 py-1" title="Recalculate color totals from the visible size inputs without saving">Recompute totals</button>
+                            <button type="button" data-action="save-visible-size-stocks" class="bg-blue-600 text-white rounded text-xs px-2 py-1 hover:bg-blue-700" title="Persist all visible size quantities to the server">Save all visible totals</button>
+                            <div class="ml-auto flex items-center gap-2">
+                                <button type="button" id="btnExpandAllNested" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1">Expand all</button>
+                                <button type="button" id="btnCollapseAllNested" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1">Collapse all</button>
+                                <label class="text-xs text-gray-600 inline-flex items-center gap-1 ml-2">
+                                    <input id="nestedShowInactive" type="checkbox" class="align-middle"> Show inactive
+                                </label>
+                                <div class="flex items-center gap-1 ml-4 text-xs text-gray-700">
+                                    <span>Bulk:</span>
+                                    <input id="nestedBulkValue" type="number" min="0" class="border border-gray-300 rounded text-xs p-1 w-20" placeholder="Qty" />
+                                    <button type="button" id="nestedBulkSet" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1" title="Set all visible stock to value">Set</button>
+                                    <button type="button" id="nestedBulkAdjustPlus" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1" title="Add value to all visible">+ Add</button>
+                                    <button type="button" id="nestedBulkAdjustMinus" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1" title="Subtract value from all visible">− Sub</button>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-medium text-gray-700 text-sm mb-2">Colors</h4>
-                            <div id="colorsList" class="space-y-2"></div>
-                            <div id="colorsLoading" class="text-center text-gray-500 text-sm">Loading colors...</div>
+                        <div id="nestedInventoryEditor" class="space-y-3" data-sku="<?= $sku ?>">
+                            <div class="text-sm text-gray-500">Loading nested inventory…</div>
                         </div>
+                        <div class="mt-2 text-xs text-gray-600">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 mr-2">Group container</span>
+                            Groups options like Gender. These do not directly hold stock.
+                            <br />
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 mr-2">Item container</span>
+                            Represents actual sellable variants (e.g., Colors). Totals roll up from Sizes.
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">Tip: Edit size-level stock below. Totals auto-sync to colors and item stock.</div>
+                    </div>
+                    <div>
+                        <!-- Temporary fallback: showing legacy Sizes/Colors panels while nested editor stabilizes -->
+                        <div class="mb-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">Temporary fallback: Legacy Sizes/Colors lists are visible while the nested editor is loading.</div>
+                        <div id="sizesList" class="space-y-2"></div>
+                        <div id="sizesLoading" class="text-center text-gray-500 text-sm">Loading sizes...</div>
+                        <div id="colorsList" class="space-y-2"></div>
+                        <div id="colorsLoading" class="text-center text-gray-500 text-sm">Loading colors...</div>
                     </div>
                     <?php if (!$isView): ?>
                     <div class="mt-4 flex gap-2">
@@ -282,6 +327,63 @@ if (!function_exists('renderAdminItemEditor')) {
                         <button type="button" data-action="add-item-color" class="bg-gray-700 text-white rounded text-xs px-3 py-2">+ Add Color</button>
                     </div>
                     <?php endif; ?>
+                </div>
+
+                <!-- Option Cascade & Grouping -->
+                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center"><span class="mr-2">🧭</span> Option Cascade & Grouping</h3>
+                        <span class="text-xs text-gray-500">Configure how options are shown and aggregated</span>
+                    </div>
+                    <div id="optionCascadePanel" class="space-y-4" data-sku="<?= $sku ?>">
+                        <div>
+                            <h4 class="font-medium text-gray-700 text-sm mb-2">Cascade Order</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-600">First</label>
+                                    <select id="cascadeOrder1" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                        <option value="gender">Gender</option>
+                                        <option value="size">Size</option>
+                                        <option value="color">Color</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600">Second</label>
+                                    <select id="cascadeOrder2" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                        <option value="gender">Gender</option>
+                                        <option value="size">Size</option>
+                                        <option value="color">Color</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600">Third</label>
+                                    <select id="cascadeOrder3" class="mt-1 block w-full p-2 border border-gray-300 rounded">
+                                        <option value="gender">Gender</option>
+                                        <option value="size">Size</option>
+                                        <option value="color">Color</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 text-sm mb-2">Enabled Dimensions</h4>
+                            <div class="flex gap-4 items-center text-sm">
+                                <label class="inline-flex items-center gap-2"><input type="checkbox" id="dimGender" checked> Gender</label>
+                                <label class="inline-flex items-center gap-2"><input type="checkbox" id="dimSize" checked> Size</label>
+                                <label class="inline-flex items-center gap-2"><input type="checkbox" id="dimColor" checked> Color</label>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-700 text-sm mb-2">Grouping Rules (JSON)</h4>
+                            <textarea id="groupingRules" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder='{"size": {"Plus": ["XL","XXL"]}}'></textarea>
+                            <div class="text-xs text-gray-500 mt-1">Optional. Leave blank to use default size codes and color names.</div>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" class="btn" data-action="reload-option-settings">Reload</button>
+                            <button type="button" class="btn btn-primary" data-action="save-option-settings">Save Option Settings</button>
+                        </div>
+                        <div id="optionSettingsStatus" class="text-xs text-gray-600"></div>
+                    </div>
                 </div>
                 <!-- Form actions -->
                 <div class="mt-6 flex justify-end gap-2">

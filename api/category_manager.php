@@ -1,14 +1,12 @@
 <?php
 
 // api/category_manager.php
-header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/response.php';
 
 if (!isAdminWithToken()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Authentication required.']);
-    exit;
+    Response::forbidden('Authentication required.');
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -19,9 +17,7 @@ if ($action === 'update_category_name') {
     $newName = $input['new_name'] ?? '';
 
     if (empty($oldName) || empty($newName)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Old and new category names are required.']);
-        exit;
+        Response::error('Old and new category names are required.', null, 400);
     }
 
     try {
@@ -33,11 +29,10 @@ if ($action === 'update_category_name') {
         // Update sku_rules table
         Database::execute("UPDATE sku_rules SET category_name = ? WHERE category_name = ?", [$newName, $oldName]);
         Database::commit();
-        echo json_encode(['success' => true, 'message' => 'Category name updated successfully.']);
+        Response::json(['success' => true, 'message' => 'Category name updated successfully.']);
     } catch (Exception $e) {
         Database::rollBack();
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 
 } elseif ($action === 'update_sku_code') {
@@ -45,9 +40,7 @@ if ($action === 'update_category_name') {
     $newSku = $input['new_sku'] ?? '';
 
     if (empty($categoryName) || empty($newSku)) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Category name and new SKU code are required.']);
-        exit;
+        Response::error('Category name and new SKU code are required.', null, 400);
     }
 
     try {
@@ -57,13 +50,11 @@ if ($action === 'update_category_name') {
             VALUES (?, ?) 
             ON DUPLICATE KEY UPDATE sku_prefix = ?
         ", [$categoryName, $newSku, $newSku]);
-        echo json_encode(['success' => true, 'message' => 'SKU code updated successfully.']);
+        Response::json(['success' => true, 'message' => 'SKU code updated successfully.']);
     } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+        Response::serverError('Database error: ' . $e->getMessage());
     }
 
 } else {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Invalid action.']);
+    Response::error('Invalid action.', null, 400);
 }

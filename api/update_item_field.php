@@ -6,6 +6,7 @@
  */
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/response.php';
 
 header('Content-Type: application/json');
 
@@ -78,21 +79,44 @@ try {
         throw new Exception('Item not found');
     }
 
+    // If updating stockLevel, ensure no options/dimensions exist or are enabled
+    if ($field === 'stockLevel') {
+        // Check option settings
+        $settings = Database::queryOne("SELECT enabled_dimensions FROM item_option_settings WHERE item_sku = ?", [$sku]);
+        $enabledDims = [];
+        if ($settings && !empty($settings['enabled_dimensions'])) {
+            $decoded = json_decode($settings['enabled_dimensions'], true);
+            if (is_array($decoded)) { $enabledDims = $decoded; }
+        }
+        $hasEnabledDims = !empty(array_intersect($enabledDims, ['gender','size','color']));
+        // Check presence of option rows
+        $hasColorsRow = Database::queryOne("SELECT COUNT(*) AS cnt FROM item_colors WHERE item_sku = ? AND is_active = 1", [$sku]);
+        $hasSizesRow = Database::queryOne("SELECT COUNT(*) AS cnt FROM item_sizes WHERE item_sku = ? AND is_active = 1", [$sku]);
+        $hasGendersRow = Database::queryOne("SELECT COUNT(*) AS cnt FROM item_genders WHERE item_sku = ?", [$sku]);
+        $hasColors = (int)($hasColorsRow['cnt'] ?? 0) > 0;
+        $hasSizes = (int)($hasSizesRow['cnt'] ?? 0) > 0;
+        $hasGenders = (int)($hasGendersRow['cnt'] ?? 0) > 0;
+        if ($hasEnabledDims || $hasColors || $hasSizes || $hasGenders) {
+            throw new Exception('This item has options (gender/size/color). Edit stock via the item editor.');
+        }
+    }
+
     // Update the field
     $sql = "UPDATE items SET {$field} = ? WHERE sku = ?";
     $dbValue = ($field === 'category' && empty($value)) ? null : $value;
-    $result = Database::execute($sql, [$dbValue, $sku]);
+    $affected = Database::execute($sql, [$dbValue, $sku]);
 
-    if ($result) {
-        echo json_encode([
-            'success' => true,
-            'message' => ucfirst($field) . ' updated successfully',
-            'field' => $field,
-            'value' => $value,
-            'sku' => $sku
-        ]);
+    if ($affected > 0) {
+        Response::updated(['field' => $field, 'value' => $value, 'sku' => $sku]);
     } else {
-        throw new Exception('Failed to update database');
+        // No rows updated could mean no change; verify item exists
+        $exists = Database::queryOne('SELECT sku FROM items WHERE sku = ?', [$sku]);
+        if ($exists) {
+            Response::noChanges(['field' => $field, 'value' => $value, 'sku' => $sku]);
+        } else {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'error' => 'Item not found']);
+        }
     }
 
 } catch (Exception $e) {

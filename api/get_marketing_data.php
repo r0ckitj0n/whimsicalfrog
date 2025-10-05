@@ -4,18 +4,15 @@
  * Provides basic marketing data for popups without authentication
  */
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET');
-header('Access-Control-Allow-Headers: Content-Type');
-
+require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/config.php';
+
+// CORS for public access (GET only)
+Response::setCorsHeaders(['*'], ['GET'], ['Content-Type']);
 
 // Check if SKU parameter is provided
 if (!isset($_GET['sku']) || empty($_GET['sku'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'SKU parameter is required.']);
-    exit;
+    Response::error('SKU parameter is required.', null, 400);
 }
 
 $sku = trim($_GET['sku']);
@@ -61,13 +58,13 @@ try {
             }
         }
 
-        echo json_encode([
+        Response::json([
             'success' => true,
             'exists' => true,
             'marketing_data' => $suggestion
         ]);
     } else {
-        echo json_encode([
+        Response::json([
             'success' => true,
             'exists' => false,
             'message' => 'No marketing data found for this SKU.'
@@ -76,11 +73,9 @@ try {
 
 } catch (PDOException $e) {
     error_log("Database error in get_marketing_data.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database error occurred.']);
+    Response::serverError('Database error occurred.');
 } catch (Exception $e) {
     error_log("Error in get_marketing_data.php: " . $e->getMessage());
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Internal server error occurred.']);
+    Response::serverError('Internal server error occurred.');
 }
 ?> 

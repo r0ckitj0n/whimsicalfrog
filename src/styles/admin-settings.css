@@ -147,19 +147,19 @@ body[data-page='admin/settings'] {
 body[data-page^='admin'] .admin-modal-overlay {
   align-items: flex-start !important;
   padding-top: var(--wf-overlay-offset, calc(var(--wf-header-height, 64px) + 12px)) !important;
-  z-index: var(--z-admin-overlay,  10050) !important;
+  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important;
 }
 body[data-page^='admin'] .admin-modal-overlay .admin-modal {
   margin-top: 0 !important;
 }
 
-/* Ensure the settings page and its content stack above any backgrounds/overlays */
+/* Ensure settings content does NOT create a stacking context that traps overlays */
 body[data-page='admin/settings'] .settings-page,
 body[data-page='admin/settings'] #adminSettingsRoot,
 body[data-page='admin/settings'] .settings-grid,
 body[data-page='admin/settings'] .settings-section {
-  position: relative;
-  z-index: var(--z-content-2, 2);
+  position: static; /* avoid stacking context */
+  z-index: auto;    /* let overlays stack against the viewport/header */
   overflow: visible !important;
 }
 
@@ -256,6 +256,24 @@ body[data-page^='admin'] .room-modal-overlay.show {
   visibility: visible !important;
   pointer-events: auto !important;
 }
+
+/* Over-header variant: let certain modals (e.g., Deploy Manager) fully cover header/navbar */
+body[data-page^='admin'] .admin-modal-overlay.over-header {
+  padding-top: 0 !important;            /* remove header offset */
+  align-items: center !important;       /* recenter vertically */
+  z-index: var(--z-detailed-item-modal, 100300) !important; /* ensure topmost */
+}
+/* Explicit IDs for critical tools that must always sit above header/navbar */
+body[data-page^='admin'] #deployManagerModal {
+  padding-top: 0 !important;
+  align-items: center !important;
+  z-index: var(--z-detailed-item-modal, 100300) !important;
+}
+body[data-page^='admin'] #devStatusModal {
+  padding-top: 0 !important;
+  align-items: center !important;
+  z-index: var(--z-detailed-item-modal, 100300) !important;
+}
 /* Explicit helpers for inventory detailed modal and orders modal on admin routes */
 body[data-page^='admin'] #detailedItemModal:not(.hidden),
 body[data-page^='admin'] .detailed-item-modal.show {
@@ -291,7 +309,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   padding: 0 !important;
   position: fixed !important;
   inset: 0 !important;
-  z-index: var(--z-admin-overlay,  10050) !important; /* ensure above header/nav (match legacy) */
+  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important; /* ensure above header/nav */
   pointer-events: auto !important;
 }
 
@@ -336,7 +354,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   height: 100vh !important;
   overflow: auto !important;
   box-sizing: border-box !important;
-  z-index: var(--z-admin-overlay,  10050) !important; /* above admin content/header stacks; align with legacy overlays */
+  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important; /* above admin content/header stacks */
   display: flex !important; /* ensure centering */
   align-items: center !important;
   justify-content: center !important;

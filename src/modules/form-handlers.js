@@ -1,6 +1,8 @@
 // Admin Settings - Form Handlers
 // Handles form submissions and data processing
 
+import { ApiClient } from '../core/api-client.js';
+
 export const FormHandlers = {
   // Handle form submissions with data-action attributes
   init() {
@@ -121,15 +123,7 @@ export const FormHandlers = {
 
   async saveDashboardConfig(data) {
     try {
-      const response = await fetch('/api/dashboard_sections.php?action=update_sections', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
+      const result = await ApiClient.post('/api/dashboard_sections.php?action=update_sections', data);
       if (result.success) {
         this.showFormMessage(null, 'Dashboard configuration saved successfully!', 'success');
         // Refresh the modal data
@@ -147,18 +141,10 @@ export const FormHandlers = {
 
   async saveBusinessInfo(data) {
     try {
-      const response = await fetch('/api/business_settings.php?action=upsert_settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          category: 'business',
-          settings: data
-        })
+      const result = await ApiClient.post('/api/business_settings.php?action=upsert_settings', {
+        category: 'business',
+        settings: data
       });
-
-      const result = await response.json();
       if (result.success) {
         this.showFormMessage(null, 'Business information saved successfully!', 'success');
         // Update the preview if visible
@@ -176,18 +162,10 @@ export const FormHandlers = {
 
   async saveBusinessBranding(data) {
     try {
-      const response = await fetch('/api/business_settings.php?action=upsert_settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          category: 'branding',
-          settings: data
-        })
+      const result = await ApiClient.post('/api/business_settings.php?action=upsert_settings', {
+        category: 'branding',
+        settings: data
       });
-
-      const result = await response.json();
       if (result.success) {
         this.showFormMessage(null, 'Business branding saved successfully!', 'success');
         // Update the preview immediately
@@ -205,15 +183,7 @@ export const FormHandlers = {
 
   async saveSquareSettings(data) {
     try {
-      const response = await fetch('/api/square_config.php?action=save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
+      const result = await ApiClient.post('/api/square_config.php?action=save', data);
       if (result.success) {
         this.showFormMessage(null, 'Square settings saved successfully!', 'success');
         // Update connection status
@@ -232,17 +202,7 @@ export const FormHandlers = {
   async saveSecrets(data) {
     try {
       const csrfToken = document.getElementById('secretsCsrf')?.value || '';
-
-      const response = await fetch('/api/secrets.php?action=save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
+      const result = await ApiClient.post('/api/secrets.php?action=save', data, { headers: { 'X-CSRF-Token': csrfToken } });
       if (result.success) {
         this.showFormMessage(null, 'Secrets saved successfully!', 'success');
         // Clear the form
@@ -261,15 +221,7 @@ export const FormHandlers = {
 
   async saveAttributeOrder(data) {
     try {
-      const response = await fetch('/api/global_color_size_management.php?action=update_order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
+      const result = await ApiClient.post('/api/global_color_size_management.php?action=update_order', data);
       if (result.success) {
         this.showFormMessage(null, 'Attribute order saved successfully!', 'success');
       } else {
@@ -283,15 +235,7 @@ export const FormHandlers = {
 
   async sendTestEmail(data) {
     try {
-      const response = await fetch('/api/email_test.php?action=send_test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
+      const result = await ApiClient.post('/api/email_test.php?action=send_test', data);
       if (result.success) {
         this.showFormMessage(null, 'Test email sent successfully to ' + data.testRecipient + '!', 'success');
       } else {
@@ -305,15 +249,7 @@ export const FormHandlers = {
 
   async saveAISettings(data) {
     try {
-      const response = await fetch('/api/ai_settings.php?action=save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
-
-      const result = await response.json();
+      const result = await ApiClient.post('/api/ai_settings.php?action=save', data);
       if (result.success) {
         this.showFormMessage(null, 'AI settings saved successfully!', 'success');
       } else {

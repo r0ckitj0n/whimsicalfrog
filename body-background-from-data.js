@@ -29,8 +29,8 @@
       }
       if (!roomNum) return null;
       // Fetch background info and return an absolute URL with cache-busting
-      const res = await fetch(`/api/get_background.php?room=${encodeURIComponent(roomNum)}`, { credentials: 'include' }).catch(()=>null);
-      const data = res ? await res.json().catch(()=>null) : null;
+      if (!window.ApiClient || typeof window.ApiClient.request !== 'function') return null;
+      const data = await window.ApiClient.request(`/api/get_background.php?room=${encodeURIComponent(roomNum)}`, { method: 'GET' }).catch(() => null);
       const bg = data && data.background ? (data.background.webp_filename || data.background.image_filename) : null;
       if (!bg) return null;
       let fname = String(bg);

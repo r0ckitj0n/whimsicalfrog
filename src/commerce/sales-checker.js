@@ -1,10 +1,10 @@
 // src/commerce/salesChecker.js
 // Modern ES-module replacement for legacy sales-checker.js
-import { apiGet } from '../core/api-client.js';
+import ApiClient from '../core/api-client.js';
 
 export async function checkItemSale(sku) {
   try {
-    const data = await apiGet('sales.php', { action: 'get_active_sales', item_sku: sku });
+    const data = await ApiClient.get('sales.php', { action: 'get_active_sales', item_sku: sku });
     if (data.success && data.sale) {
       return { isOnSale: true, discountPercentage: parseFloat(data.sale.discount_percentage) };
     }
@@ -42,7 +42,7 @@ async function getSaleBadgeText() {
   if (saleBadgeCache) return saleBadgeCache;
 
   try {
-    const data = await apiGet('/api/badge_content_manager.php', { action: 'get_all', badge_type: 'sale' });
+    const data = await ApiClient.get('/api/badge_content_manager.php', { action: 'get_all', badge_type: 'sale' });
 
     if (data.success && data.badges && data.badges.length > 0) {
       // Get a weighted random badge text

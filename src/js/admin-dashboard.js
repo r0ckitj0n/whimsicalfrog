@@ -1,4 +1,5 @@
 import { buildAdminUrl } from '../core/admin-url-builder.js';
+import { ApiClient } from '../core/api-client.js';
 import '../styles/admin-dashboard.css';
 
 // --- Dashboard Event Handlers ---
@@ -41,11 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('value', newValue);
             formData.append('action', 'updateField');
 
-            const response = await fetch('/api/fulfill_order.php', {
+            const result = await ApiClient.request('/api/fulfill_order.php', {
                 method: 'POST',
                 body: formData,
             });
-            const result = await response.json();
 
             if (result && result.success) {
                 el.classList.remove('wf-field-updating');
@@ -99,8 +99,7 @@ async function openOrderDetailsModal(orderId) {
     }
 
     try {
-        const response = await fetch(`/api/orders/${orderId}`);
-        const result = await response.json();
+        const result = await ApiClient.get(`/api/orders/${orderId}`);
 
         if (result.success && result.order) {
             updateOrderModalContent(result.order, result.items || []);

@@ -48,10 +48,14 @@ section() {
 
 # 2) Live backup (best effort)
 section "Backup: triggering live website backup"
-if curl -s -X POST "${BASE_URL}/api/backup_website.php" >/dev/null; then
-  echo -e "${GREEN}✅ Live backup API triggered successfully${NC}"
+if [[ "${WF_DRY_RUN:-0}" == "1" ]]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping live backup API call${NC}"
 else
-  echo -e "${YELLOW}⚠️  Live backup API call failed (continuing)${NC}"
+  if curl -s -X POST "${BASE_URL}/api/backup_website.php" >/dev/null; then
+    echo -e "${GREEN}✅ Live backup API triggered successfully${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Live backup API call failed (continuing)${NC}"
+  fi
 fi
 
 # 3) Dump LOCAL dev database (gzipped)
@@ -95,6 +99,10 @@ restore_via_api() {
     return 2
   fi
   echo -e "${GREEN}☁️  Attempting API DB restore upload (multipart)${NC}"
+  if [[ "${WF_DRY_RUN:-0}" == "1" ]]; then
+    echo -e "${YELLOW}DRY-RUN: Skipping API DB restore upload${NC}"
+    return 2
+  fi
   # API expects multipart field name 'backup_file'; only accepts .sql or .txt
   # If we have a .gz, decompress to a temp .sql first
   local upload_file="${dump_file}"
@@ -175,6 +183,10 @@ EOL
 restore_via_mysql() {
   local dump_file="$1"
   echo -e "${GREEN}🛠️  Restoring DB via direct MySQL client (fallback)${NC}"
+  if [[ "${WF_DRY_RUN:-0}" == "1" ]]; then
+    echo -e "${YELLOW}DRY-RUN: Skipping direct MySQL restore${NC}"
+    return 0
+  fi
   # Ensure mysql client is on PATH for the subshell
   ( export PATH="/opt/homebrew/opt/mysql-client/bin:/usr/local/opt/mysql-client/bin:$PATH"; bash scripts/db/restore_live_db.sh "${dump_file}" )
   if [ $? -eq 0 ]; then
@@ -199,7 +211,7 @@ fi
 
 # 5) Deploy files (reuses existing fast deploy which builds and mirrors files)
 section "Files: deploying site files to LIVE via scripts/deploy.sh"
-if bash scripts/deploy.sh; then
+if WF_DRY_RUN=${WF_DRY_RUN:-0} bash scripts/deploy.sh; then
   echo -e "${GREEN}✅ File deployment completed${NC}"
 else
   echo -e "${RED}❌ File deployment failed${NC}"

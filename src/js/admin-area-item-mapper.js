@@ -1,3 +1,4 @@
+import { ApiClient } from '../core/api-client.js';
 (function(){
   const byId = (id) => document.getElementById(id);
   const qs = (sel) => document.querySelector(sel);
@@ -22,14 +23,13 @@
 
   async function fetchJSON(url, opts){
     try {
-      const res = await fetch(url, opts);
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errorText}`);
-      }
-      return await res.json();
+      const method = (opts && opts.method) || 'GET';
+      const headers = (opts && opts.headers) || {};
+      const body = (opts && opts.body) || undefined;
+      const data = await ApiClient.request(url, { method, headers, body });
+      return data;
     } catch (e) {
-      console.error(`[AreaItem] Fetch failed for ${url}:`, e);
+      console.error(`[AreaItem] API failed for ${url}:`, e);
       setMsg(`Network error fetching data from ${url}.`, 'error');
       return null;
     }

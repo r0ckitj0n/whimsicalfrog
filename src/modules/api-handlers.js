@@ -29,16 +29,10 @@ export const APIHandlers = {
   // Fetch global attributes (genders, sizes, colors)
   async fetchGlobalAttributes() {
     try {
-      const [gendersRes, sizesRes, colorsRes] = await Promise.all([
-        fetch('/api/global_color_size_management.php?action=get_global_genders&admin_token=whimsical_admin_2024'),
-        fetch('/api/global_color_size_management.php?action=get_global_sizes&admin_token=whimsical_admin_2024'),
-        fetch('/api/global_color_size_management.php?action=get_global_colors&admin_token=whimsical_admin_2024')
-      ]);
-
       const [genders, sizes, colors] = await Promise.all([
-        gendersRes.json(),
-        sizesRes.json(),
-        colorsRes.json()
+        ApiClient.get('/api/global_color_size_management.php?action=get_global_genders&admin_token=whimsical_admin_2024'),
+        ApiClient.get('/api/global_color_size_management.php?action=get_global_sizes&admin_token=whimsical_admin_2024'),
+        ApiClient.get('/api/global_color_size_management.php?action=get_global_colors&admin_token=whimsical_admin_2024')
       ]);
 
       return {

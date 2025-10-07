@@ -1,6 +1,7 @@
 // Login page handler for /login
 // Wires the standalone login form to the session-based endpoint and handles redirect
 
+import { ApiClient } from '../src/core/api-client.js';
 
 (function initLoginPage() {
   try {
@@ -52,18 +53,11 @@
       }
 
       try {
-        const res = await fetch(loginUrl, {
+        const data = await ApiClient.request(loginUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ username, password })
         });
-
-        const data = await res.json().catch(() => null);
-        if (!res.ok) {
-          showError(data?.error || 'Invalid username or password.');
-          return;
-        }
 
         // Update body attrs immediately
         const userId = Number(data?.userId);
@@ -81,7 +75,7 @@
 
         // Attempt whoami to ensure session is set
         try {
-          await fetch(whoUrl, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          await ApiClient.request(whoUrl, { method: 'GET' }).catch(() => null);
         } catch {}
 
         // Redirect back to prior page if provided, otherwise /payment if coming from checkout, else home

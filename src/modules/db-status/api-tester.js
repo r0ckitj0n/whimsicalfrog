@@ -3,6 +3,8 @@
  * Handles API testing logic for database status operations
  */
 
+import { ApiClient } from '../../core/api-client.js';
+
 export class DbStatusApiTester {
   constructor() {
     this.baseUrl = '/api/db_tools.php';
@@ -26,23 +28,14 @@ export class DbStatusApiTester {
 
     try {
       // First attempt without CSRF token
-      let response = await fetch(`${this.baseUrl}?${queryString}`, {
-        credentials: 'include'
-      });
-
-      // If we get a 428, we need a CSRF token
-      if (response.status === 428) {
+      let data = await ApiClient.get(`${this.baseUrl}?${queryString}`);
+      // If API returns a structure indicating CSRF required, try with token
+      if (data && data.success === false && /csrf/i.test(data.message || data.error || '')) {
         const token = await this.getCsrfToken();
         if (token) {
-          // Retry with CSRF token
-          response = await fetch(`${this.baseUrl}?${queryString}`, {
-            headers: { 'X-CSRF-Token': token },
-            credentials: 'include'
-          });
+          data = await ApiClient.get(`${this.baseUrl}?${queryString}`, {}, { headers: { 'X-CSRF-Token': token } });
         }
       }
-
-      const data = await response.json();
 
       // Store parameters for future use
       this.lastParams = params;
@@ -60,12 +53,8 @@ export class DbStatusApiTester {
    */
   async getCsrfToken() {
     try {
-      const response = await fetch(`${this.baseUrl}?action=csrf_token`, {
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      return data.data?.csrf_token || response.headers.get('X-CSRF-Token') || null;
+      const data = await ApiClient.get(`${this.baseUrl}?action=csrf_token`);
+      return data?.data?.csrf_token || null;
     } catch (error) {
       console.error('Error getting CSRF token:', error);
       return null;

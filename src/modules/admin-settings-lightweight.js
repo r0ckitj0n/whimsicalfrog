@@ -112,6 +112,8 @@ const __wfEnsureCssCatalogModal = () => {
 import '../styles/main.css';
 import '../styles/components/components-base.css';
 import '../styles/components/admin-nav.css';
+// Ensure help chip overrides load after nav styles in this entry
+import '../styles/admin-help-bubble.css';
 import '../styles/admin-modals.css';
 import '../styles/components/modal.css';
 import '../styles/admin-settings.css';

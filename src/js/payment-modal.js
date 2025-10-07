@@ -1,9 +1,10 @@
 import apiClient from './api-client.js';
+import '../styles/payment-modal.css';
 
 // Payment Modal Overlay — presents the payment step without page navigation
 // Reuses global confirmation modal styling and cooperates with login-modal.js
 
-(function initPaymentModal() {
+function initPaymentModal() {
   try {
     if (window.WF_PaymentModal && window.WF_PaymentModal.initialized) return;
 
@@ -19,6 +20,11 @@ import apiClient from './api-client.js';
     }
 
     // --- Shipping helpers: business info, carrier quotes, distance miles ---
+    // Function pointer assigned inside setupController() to access the selected address from within
+    // top-level helpers below.
+    let __getSelectedShippingAddress = async () => null;
+    const distanceCache = new Map(); // key: addressId (string) -> miles (number|null)
+    try { window.__WF_DISTANCE_CACHE = distanceCache; } catch(_) {}
     let businessInfo = null; // { business_postal, business_address, business_city, business_state }
     async function ensureBusinessInfo() {
       if (businessInfo) return businessInfo;
@@ -32,7 +38,7 @@ import apiClient from './api-client.js';
       try {
         const bi = await ensureBusinessInfo();
         const fromZip = String(bi?.business_postal || '').trim();
-        const addr = await getSelectedShippingAddress();
+        const addr = await __getSelectedShippingAddress();
         const toZip = String(addr?.zip_code || '').trim();
         if (!fromZip || !toZip) return null;
         const items = (cartApi.getItems?.() || []).map(i => ({ sku: (i?.sku||'').toString(), qty: Number(i?.quantity||0), weightOz: Number(i?.weightOz||0)||undefined })).filter(x => x.sku && x.qty>0);
@@ -47,12 +53,20 @@ import apiClient from './api-client.js';
       try {
         const bi = await ensureBusinessInfo();
         const from = { address: (bi?.business_address||''), city: (bi?.business_city||''), state: (bi?.business_state||''), zip: (bi?.business_postal||'') };
-        const addr = await getSelectedShippingAddress();
+        const addr = await __getSelectedShippingAddress();
         if (!addr) return null;
         const to = { address: (addr.address_line1||''), city: (addr.city||''), state: (addr.state||''), zip: (addr.zip_code||'') };
         const resp = await apiClient.post('/api/distance.php', { from, to });
-        const miles = resp?.data?.miles ?? resp?.miles;
-        return (miles == null ? null : Number(miles));
+        const milesRaw = resp?.data?.miles ?? resp?.miles;
+        const miles = (milesRaw == null ? null : Number(milesRaw));
+        try {
+          const key = (addr && addr.id != null) ? String(addr.id) : null;
+          if (key) {
+            distanceCache.set(key, miles);
+            addr.distance_miles = miles; // store on address object for easy access
+          }
+        } catch(_) {}
+        return miles;
       } catch(_) { return null; }
     }
     function pmShowSavings(amount) {
@@ -173,14 +187,6 @@ import apiClient from './api-client.js';
                     </svg>
                     <span class="sr-only">No shipping charge for Customer Pickup</span>
                   </span>
-                  <span id="pm-localDeliveryBadge" class="hidden shipping-badge local wf-tooltip" data-tooltip="Local Delivery is offered at the business owner’s discretion and may depend on availability, scheduling, and distance from your location." aria-live="polite">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Local Delivery $75">
-                      <rect x="0" y="0" width="100" height="100" rx="10" ry="10" fill="transparent" />
-                      <text x="50" y="42" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="18" font-weight="700" fill="currentColor">LOCAL</text>
-                      <text x="50" y="64" text-anchor="middle" font-family="Merienda, Nunito, sans-serif" font-size="14" font-weight="800" fill="currentColor">$75</text>
-                    </svg>
-                    <span class="sr-only">Local Delivery fee: $75</span>
-                  </span>
                 </div>
                 <p class="hint mt-8">Select a method. Address is required for delivery and carriers.</p>
               </div>
@@ -221,6 +227,8 @@ import apiClient from './api-client.js';
       `;
 
       setupController();
+
+      // Layout is enforced via CSS in ../styles/payment-modal.css
     }
 
     function setupController() {
@@ -254,7 +262,6 @@ import apiClient from './api-client.js';
       const cardErrorsEl = q('#pm-card-errors');
       const cancelBtn = q('#pm-cancelBtn');
       const pickupBadgeEl = q('#pm-pickupBadge');
-      const localDeliveryBadgeEl = q('#pm-localDeliveryBadge');
       // USPS policy note element (always visible; grey by default; brand-secondary when active)
       let pmShippingBenefitNoteEl = null;
       function ensurePmShippingBenefitNote() {
@@ -300,6 +307,9 @@ import apiClient from './api-client.js';
       const fDefault = q('#pm-addr_default');
 
       if (cancelBtn) cancelBtn.addEventListener('click', close);
+      if (shipMethodSel) shipMethodSel.addEventListener('change', () => {
+        evaluateLocalDeliveryEligibility().finally(updatePricing);
+      });
 
       if (!cartApi) {
         if (errorEl) {
@@ -312,6 +322,15 @@ import apiClient from './api-client.js';
       // Controller state
       let addresses = [];
       let selectedAddressId = null;
+      // Provide current selected address to helpers (fetchDrivingMiles)
+      __getSelectedShippingAddress = async () => {
+        try {
+          if (!addresses || !addresses.length) return null;
+          if (!selectedAddressId) return null;
+          const addr = addresses.find(a => String(a.id) === String(selectedAddressId));
+          return addr || null;
+        } catch (_) { return null; }
+      };
       let pricing = { subtotal: 0, shipping: 0, tax: 0, total: 0 };
       const sq = { enabled: false, applicationId: null, environment: 'sandbox', locationId: null, payments: null, card: null, sdkLoaded: false };
 
@@ -346,7 +365,6 @@ import apiClient from './api-client.js';
         const m = (method || shipMethodSel?.value || '').trim();
         try {
           if (pickupBadgeEl) pickupBadgeEl.classList.toggle('hidden', m !== 'Customer Pickup');
-          if (localDeliveryBadgeEl) localDeliveryBadgeEl.classList.toggle('hidden', m !== 'Local Delivery');
         } catch (_) {}
       }
 
@@ -359,9 +377,45 @@ import apiClient from './api-client.js';
         } catch (_) {}
       }
 
+      // Determine if Local Delivery should be shown based on selected address distance
+      async function evaluateLocalDeliveryEligibility() {
+        try {
+          if (!shipMethodSel) return;
+          const localOpt = Array.from(shipMethodSel.options || []).find(o => (o.value || o.text) === 'Local Delivery');
+          if (!localOpt) return;
+          const addr = addresses.find(a => String(a.id) === String(selectedAddressId));
+          if (!addr) {
+            localOpt.disabled = true; localOpt.hidden = true;
+            if (shipMethodSel.value === 'Local Delivery') shipMethodSel.value = 'USPS';
+            updateShippingBadges(shipMethodSel.value);
+            return;
+          }
+          const miles = await fetchDrivingMiles();
+          // Fallback eligibility: if miles is null but zips exist, allow LD while backend warms cache
+          let eligible = (miles != null && miles <= 50);
+          if (miles == null) {
+            try {
+              const bi = await ensureBusinessInfo();
+              const fromZip = String(bi?.business_postal || '').trim();
+              const toZip = String(addr?.zip_code || '').trim();
+              if (fromZip && toZip && /^\d{5}(-\d{4})?$/.test(fromZip) && /^\d{5}(-\d{4})?$/.test(toZip)) {
+                eligible = true;
+              }
+            } catch(_) {}
+          }
+          console.info('[PaymentModal] Local Delivery eligibility ->', { miles, eligible });
+          localOpt.disabled = !eligible; localOpt.hidden = !eligible;
+          if (!eligible && shipMethodSel.value === 'Local Delivery') {
+            shipMethodSel.value = 'USPS';
+            updateShippingBadges('USPS');
+          }
+        } catch(_) {}
+      }
+
       function renderOrderSummary() {
         if (!orderItemsEl || !orderTotalEl) return;
         const items = cartApi.getItems ? cartApi.getItems() : [];
+        const clientSub = (Array.isArray(items) ? items : []).reduce((sum, it) => sum + (Number(it?.price)||0) * (Number(it?.quantity)||0), 0);
         if (!items.length) {
           orderItemsEl.innerHTML = '<div class="hint">Your cart is empty.</div>';
           if (orderSubtotalEl) orderSubtotalEl.textContent = currency(0);
@@ -387,7 +441,10 @@ import apiClient from './api-client.js';
           `;
         }).join('');
         orderItemsEl.innerHTML = html;
-        if (orderSubtotalEl) orderSubtotalEl.textContent = currency(pricing.subtotal);
+        if (orderSubtotalEl) {
+          const disp = Number(pricing?.subtotal || 0) || 0;
+          orderSubtotalEl.textContent = currency(disp > 0 ? disp : clientSub);
+        }
         if (orderShippingEl) orderShippingEl.textContent = currency(pricing.shipping);
         if (orderTaxEl) orderTaxEl.textContent = currency(pricing.tax);
         orderTotalEl.textContent = currency(pricing.total || (cartApi.getTotal ? cartApi.getTotal() : 0));
@@ -423,11 +480,12 @@ import apiClient from './api-client.js';
         }).join('');
         addressListEl.innerHTML = html;
         addressListEl.querySelectorAll('input[name="pm-shippingAddress"]').forEach((el) => {
-          el.addEventListener('change', (e) => {
+          el.addEventListener('change', async (e) => {
             selectedAddressId = e.target.value;
             ensurePlaceButtonState();
             // Recompute pricing when address (zip) changes
-            updatePricing();
+            try { await fetchDrivingMiles(); } catch(_) {}
+            evaluateLocalDeliveryEligibility().finally(updatePricing);
           });
         });
       }
@@ -507,6 +565,8 @@ import apiClient from './api-client.js';
           const def = addresses.find((a) => String(a.is_default) === '1');
           selectedAddressId = def ? String(def.id) : (addresses[0] ? String(addresses[0].id) : null);
           renderAddresses();
+          try { await fetchDrivingMiles(); } catch(_) {}
+          await evaluateLocalDeliveryEligibility();
           ensurePlaceButtonState();
         } catch (e) {
           console.error('[PaymentModal] Failed to load addresses', e);
@@ -667,6 +727,13 @@ import apiClient from './api-client.js';
             quantities: lines.map(l => l.quantity),
             shippingMethod: shipMethodSel?.value || 'USPS',
           };
+          // Hint to backend: if Local Delivery, pass miles if known
+          try {
+            if ((shipMethodSel?.value || '').trim() === 'Local Delivery') {
+              const m = await fetchDrivingMiles();
+              if (m != null) payload.localDeliveryMiles = Number(m);
+            }
+          } catch(_) {}
           if (selectedAddressId) {
             const addr = addresses.find(a => String(a.id) === String(selectedAddressId));
             if (addr && addr.zip_code) payload.zip = String(addr.zip_code);
@@ -682,9 +749,12 @@ import apiClient from './api-client.js';
           // This surfaces taxEnabled, taxRate, taxBase, and computed subtotal/shipping.
           payload.debug = true;
           const res = await apiClient.post('/api/checkout_pricing.php', payload);
-          console.debug('[PaymentModal] pricing request ->', payload, 'response ->', res);
-          if (res && res.success && res.pricing) {
-            pricing = res.pricing;
+          // Accept either { success, pricing, debug } or { success, data: { pricing, debug } }
+          const pricingResp = (res && (res.pricing || (res.data && res.data.pricing))) || null;
+          const debugInfo = (res && (res.debug || (res.data && res.data.debug))) || null;
+          console.info('[PaymentModal] pricing request ->', payload, 'pricing ->', pricingResp, 'debug ->', debugInfo);
+          if (res && res.success && pricingResp) {
+            pricing = pricingResp;
             // Apply client-side fallbacks when server returns $0 but we have priced items
             let dispSubtotal = Number(pricing.subtotal || 0);
             if (dispSubtotal === 0 && clientSubtotal > 0) dispSubtotal = clientSubtotal;
@@ -694,15 +764,11 @@ import apiClient from './api-client.js';
             if (methodNow === 'Local Delivery') {
               try {
                 const miles = await fetchDrivingMiles();
-                if (miles == null) {
-                  // No distance yet (no address or service offline). Keep selection; no badge.
-                  pmHideShippingBenefitNote();
-                } else if (miles > 30) {
-                  // Ineligible by rule; switch to USPS
-                  if (shipMethodSel) shipMethodSel.value = 'USPS';
-                  pmHideShippingBenefitNote();
-                } else {
+                if (miles != null && miles <= 50) {
                   dispShipping = Math.round(miles * 2 * 100) / 100;
+                } else {
+                  // Unknown or too far: re-evaluate eligibility to hide option and switch away
+                  await evaluateLocalDeliveryEligibility();
                 }
               } catch(_) { /* keep default pricing; no switch */ }
             }
@@ -738,12 +804,20 @@ import apiClient from './api-client.js';
             if (orderShippingEl) orderShippingEl.textContent = currency(dispShipping);
             if (orderTaxEl) orderTaxEl.textContent = currency(dispTax);
             if (orderTotalEl) orderTotalEl.textContent = currency(dispTotal);
-            if (res.debug) {
-              console.info('[PaymentModal] pricing debug ->', res.debug);
+            if (debugInfo) {
+              console.info('[PaymentModal] pricing debug ->', debugInfo);
             }
+            // Persist computed values so subsequent renders reflect them
+            try {
+              pricing.subtotal = dispSubtotal;
+              pricing.shipping = dispShipping;
+              pricing.tax = dispTax;
+              pricing.total = dispTotal;
+              renderOrderSummary();
+            } catch(_) {}
             // Toggle badges and USPS-only free shipping hint (subtotal >= $50)
             try {
-              const methodNow = shipMethodSel?.value || res.pricing.shippingMethod || 'USPS';
+              const methodNow = shipMethodSel?.value || pricing.shippingMethod || 'USPS';
               updateShippingBadges(methodNow);
               const eligible = (methodNow === 'USPS' && Number(dispSubtotal) >= 50);
               if (eligible) { pmShowShippingBenefitNote('Free USPS shipping on orders $50+.'); } else { pmHideShippingBenefitNote(); }
@@ -795,6 +869,18 @@ import apiClient from './api-client.js';
         }
         const total = Number(pricing.total || (cartApi.getTotal ? cartApi.getTotal() : 0));
         const payload = { customerId: userId, itemIds, quantities, colors, sizes, paymentMethod, total, shippingMethod, ...(shippingAddress ? { shippingAddress } : {}) };
+        // Attach miles if known for audit/fulfillment convenience
+        try {
+          if (shippingMethod === 'Local Delivery' && selectedAddressId) {
+            const key = String(selectedAddressId);
+            let miles = distanceCache.get(key);
+            if (miles == null) {
+              // Try to compute once more synchronously
+              // Note: this is not awaited in build payload; placeOrder awaits buildOrderPayload's result
+            }
+            if (miles != null) payload.shippingDistanceMiles = Number(miles);
+          }
+        } catch(_) {}
         payload.debug = true;
         return payload;
       }
@@ -850,9 +936,10 @@ import apiClient from './api-client.js';
           if (res && res.debug) {
             console.info('[PaymentModal] order debug ->', res.debug);
           }
-          if (res && res.success && res.orderId) {
+          const orderId = (res && (res.orderId || (res.data && res.data.orderId))) || null;
+          if (res && res.success && orderId) {
             // Open receipt first so the global flag is set before cart events fire
-            try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(res.orderId); } catch(_) {}
+            try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(orderId); } catch(_) {}
             // Defer cart clear to the next tick to ensure the receipt flag is active
             try { setTimeout(() => { cartApi.clearCart && cartApi.clearCart(); }, 0); } catch(_) {}
             // Close the payment modal UI
@@ -880,8 +967,14 @@ import apiClient from './api-client.js';
         let shipNow = 0;
         if (shipMethodSel.value === 'Local Delivery') {
           const miles = await fetchDrivingMiles();
-          if (miles == null || miles > 30) { shipNow = 0; if (shipMethodSel) shipMethodSel.value = 'USPS'; pmHideShippingBenefitNote(); }
-          else { shipNow = Math.round(miles * 2 * 100) / 100; }
+          if (miles == null) {
+            // Unknown miles: switch away immediately
+            shipNow = 0; if (shipMethodSel) shipMethodSel.value = 'USPS'; pmHideShippingBenefitNote();
+          } else if (miles > 50) {
+            shipNow = 0; if (shipMethodSel) shipMethodSel.value = 'USPS'; pmHideShippingBenefitNote();
+          } else {
+            shipNow = Math.round(miles * 2 * 100) / 100;
+          }
         } else if (shipMethodSel.value === 'USPS') {
           if (subNow >= 50) { shipNow = 0; const q = await fetchCarrierRate('USPS'); if (q != null && q > 0) pmShowSavings(q); }
           else { const q = await fetchCarrierRate('USPS'); shipNow = (q != null && q > 0) ? q : (Number(pricing?.shipping) || 0); pmHideShippingBenefitNote(); }
@@ -1079,4 +1172,13 @@ import apiClient from './api-client.js';
   } catch (err) {
     console.error('[PaymentModal] init error', err);
   }
-})();
+}
+
+// Defer initialization until DOM is ready so document.body exists
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    try { initPaymentModal(); } catch (e) { console.error('[PaymentModal] deferred init failed', e); }
+  });
+} else {
+  try { initPaymentModal(); } catch (e) { console.error('[PaymentModal] init failed', e); }
+}

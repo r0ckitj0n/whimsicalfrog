@@ -33,20 +33,21 @@ function createBackup($downloadToComputer = true, $keepOnServer = true)
         // Clean up old backups before creating new one
         $cleanupInfo = cleanupOldBackups();
 
-        // Files and directories to exclude from backup
+        // Files and directories to exclude from backup (GNU tar syntax)
+        // Note: Exclude flags must appear BEFORE the file list (".")
         $excludes = [
-            '-exclude=backups',
-            '-exclude=node_modules',
-            '-exclude=.git',
-            '-exclude=.DS_Store',
-            '-exclude=logs', // Exclude the entire logs directory
-            '-exclude=*.log'   // Exclude any stray .log files in root
+            '--exclude=backups',
+            '--exclude=node_modules',
+            '--exclude=.git',
+            '--exclude=.DS_Store',
+            '--exclude=logs', // Exclude the entire logs directory
+            '--exclude=*.log',   // Exclude any stray .log files in root
         ];
 
         $excludeString = implode(' ', $excludes);
 
-        // Create tar.gz archive
-        $command = "tar -czf $backupPath $excludeString .";
+        // Create tar.gz archive (use escapeshellarg for safety)
+        $command = 'tar -czf ' . escapeshellarg($backupPath) . ' ' . $excludeString . ' .';
 
         exec($command, $output, $returnCode);
 

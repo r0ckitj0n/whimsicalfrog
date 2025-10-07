@@ -1,13 +1,14 @@
 // Room Page Module
 // Handles room-specific initialization previously inlined in sections/room_template.php
 
-(function initRoomPage() {
+import { ApiClient } from '../../core/api-client.js';
+
+(function initRoomPage(){
   try {
     const body = document.body;
     if (!body) return;
 
     const page = (body.dataset && body.dataset.page) || (window.WF_PAGE_INFO && window.WF_PAGE_INFO.page) || '';
-    const m = /^room(\d+)$/.exec(String(page || '').toLowerCase());
     if (!m) {
       // Not a room page; do nothing
       return;
@@ -102,8 +103,7 @@
       const sku = current.sku || current.id;
       if (!sku) return;
       try {
-        const res = await fetch(`/api/get_item_details.php?sku=${encodeURIComponent(sku)}`);
-        const data = await res.json();
+        const data = await ApiClient.get('/api/get_item_details.php', { sku });
         if (!data.success || !data.item) throw new Error(data.error || 'Unknown error');
 
         // Remove existing detailed modal if any
@@ -150,8 +150,7 @@
     window.showProductDetails = async function showProductDetails(sku) {
       if (!sku) return;
       try {
-        const res = await fetch(`/api/get_item_details.php?sku=${encodeURIComponent(sku)}`);
-        const data = await res.json();
+        const data = await ApiClient.get('/api/get_item_details.php', { sku });
         if (!data.success || !data.item) throw new Error(data.error || 'Unknown error');
 
         const existing = document.getElementById('detailedItemModal');

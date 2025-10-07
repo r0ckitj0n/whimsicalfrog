@@ -32,6 +32,23 @@ jobs:
       - name: Run z-index guard
         run: npm run guard:z-index
 
+      - name: Run no-raw-fetch guard (enforce ApiClient usage)
+        run: npm run guard:no-raw-fetch
+
+      - name: Fail on stray backup files outside backups/
+        run: |
+          set -e
+          echo "Checking for stray backups outside backups/ ..."
+          # Find *.bak, *.backup, *.backup.* and files with a trailing numeric suffix like "name 2.ext"
+          offenders=$(find . -path './backups' -prune -o -type f \
+            \( -name '*.bak' -o -name '*.backup' -o -name '*.backup.*' -o -regex '.* [0-9]+\..*' \) -print)
+          if [ -n "$offenders" ]; then
+            echo "Found backup-like files outside backups/:"
+            echo "$offenders"
+            echo "::error ::Stray backup files detected outside backups/"
+            exit 1
+          fi
+
       - name: Lint JS
         run: npm run lint
 

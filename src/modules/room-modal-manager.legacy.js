@@ -10,7 +10,8 @@
  * Handles responsive modal overlays for room content - Vite compatible
  * Recovered and consolidated from legacy files
  */
- 
+
+import { ApiClient } from '../core/api-client.js';
 
 // Runtime-injected style classes (no inline styles or element-level CSS var writes)
 const ROOM_MODAL_STYLE_ID = 'room-modal-runtime-classes';
@@ -200,13 +201,7 @@ class RoomModalManager {
             let roomContent = this.roomCache.get(roomNumber);
             if (!roomContent) {
                 try { performance.mark('wf:legacyRoom:fetch:start'); } catch(_) {}
-                const response = await fetch(`/api/load_room_content.php?room=${encodeURIComponent(roomNumber)}&modal=1&perf=1`, {
-                    // No custom headers to keep this a simple CORS GET when cross-origin
-                    // mode: 'cors' is implicit; do not send credentials for wildcard CORS
-                    cache: 'no-store'
-                });
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                const json = await response.json();
+                const json = await ApiClient.get('/api/load_room_content.php', { room: roomNumber, modal: 1, perf: 1 });
                 if (!json.success) throw new Error(json.message || 'Failed to load room content');
                 roomContent = json.content;
                 if (json.metadata) this.updateHeader(json.metadata);
@@ -376,9 +371,8 @@ class RoomModalManager {
             try {
                 let bg = this._bgMetaCache.get(String(rn));
                 if (!bg) {
-                    const response = await fetch(`/api/get_background.php?room=${encodeURIComponent(rn)}`, { cache: 'no-store' });
-                    const data = await response.json();
-                    if (!data.success || !data.background) return;
+                    const data = await ApiClient.get('/api/get_background.php', { room: rn }).catch(() => null);
+                    if (!data || !data.success || !data.background) return;
                     bg = data.background;
                     this._bgMetaCache.set(String(rn), bg);
                 }

@@ -1,6 +1,8 @@
 // Cost Breakdown Manager - Vite module
 // Migrated from admin/cost_breakdown_manager.php inline script
 
+import { ApiClient } from '../core/api-client.js';
+
 (function () {
   const qs = (sel, root = document) => root.querySelector(sel);
   const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -126,9 +128,10 @@
     async loadCostBreakdown(itemId) {
       this.showLoading();
       try {
-        const res = await fetch(`functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(itemId)}&costType=all`);
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
+        const data = await ApiClient.get('/functions/process_cost_breakdown.php', {
+          inventoryId: itemId,
+          costType: 'all'
+        });
         if (data.success) {
           this.costBreakdown = data.data || this.costBreakdown;
           this.displayCostBreakdown();
@@ -324,15 +327,13 @@
       const isEdit = id !== '';
       const method = isEdit ? 'PUT' : 'POST';
       const url = isEdit
-        ? `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}&costType=materials&id=${encodeURIComponent(id)}`
-        : `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
+        ? `/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}&costType=materials&id=${encodeURIComponent(id)}`
+        : `/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
       const data = { costType: 'materials', name, cost: parseFloat(cost) };
 
       this.showFormLoading('material');
       try {
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (result.success) {
           this.closeModal('materialModal');
           showSuccess(result.message || 'Saved');
@@ -356,15 +357,13 @@
       const isEdit = id !== '';
       const method = isEdit ? 'PUT' : 'POST';
       const url = isEdit
-        ? `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}&costType=labor&id=${encodeURIComponent(id)}`
-        : `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
+        ? `/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}&costType=labor&id=${encodeURIComponent(id)}`
+        : `/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
       const data = { costType: 'labor', description, cost: parseFloat(cost) };
 
       this.showFormLoading('labor');
       try {
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (result.success) {
           this.closeModal('laborModal');
           showSuccess(result.message || 'Saved');
@@ -388,15 +387,13 @@
       const isEdit = id !== '';
       const method = isEdit ? 'PUT' : 'POST';
       const url = isEdit
-        ? `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}&costType=energy&id=${encodeURIComponent(id)}`
-        : `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
+        ? `/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}&costType=energy&id=${encodeURIComponent(id)}`
+        : `/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
       const data = { costType: 'energy', description, cost: parseFloat(cost) };
 
       this.showFormLoading('energy');
       try {
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (result.success) {
           this.closeModal('energyModal');
           showSuccess(result.message || 'Saved');
@@ -413,12 +410,10 @@
     },
 
     async deleteItem(id, type) {
-      const url = `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(this.currentItemId || '')}&costType=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
+      const url = `/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(this.currentItemId || '')}&costType=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
       this.showFormLoading('delete');
       try {
-        const res = await fetch(url, { method: 'DELETE' });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await ApiClient.request(url, { method: 'DELETE' });
         if (result.success) {
           this.closeModal('deleteModal');
           showSuccess(result.message || 'Deleted');
@@ -438,13 +433,11 @@
       const suggestedCost = this.costBreakdown?.totals?.suggestedCost || 0;
       this.showFormLoading('updateCost');
       try {
-        const res = await fetch('functions/process_inventory_update.php', {
+        const result = await ApiClient.request('/functions/process_inventory_update.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: this.currentItemId, costPrice: suggestedCost }),
         });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
         if (result.success) {
           this.closeModal('updateCostModal');
           showSuccess('Cost price updated successfully');

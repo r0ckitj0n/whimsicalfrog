@@ -18,6 +18,66 @@ function getCartApi() {
   return window.WF_Cart || null;
 }
 
+// --- Business info + distance helpers for Local Delivery eligibility ---
+let __wf_business_info = null;
+async function ensureBusinessInfo() {
+  if (__wf_business_info) return __wf_business_info;
+  try {
+    const res = await apiClient.get('/api/business_settings.php', { action: 'get_business_info' });
+    __wf_business_info = res?.data || res || {};
+  } catch (_) {
+    __wf_business_info = {};
+  }
+
+  // Determine if Local Delivery should be shown based on selected address distance
+  async function evaluateLocalDeliveryEligibilityPaymentPage() {
+    try {
+      if (!shipMethodSel) return;
+      const localOpt = Array.from(shipMethodSel.options || []).find(o => (o.value || o.text) === 'Local Delivery');
+      if (!localOpt) return;
+      const addr = addresses.find(a => String(a.id) === String(selectedAddressId));
+      if (!addr) {
+        localOpt.disabled = true; localOpt.hidden = true;
+        if (shipMethodSel.value === 'Local Delivery') shipMethodSel.value = 'USPS';
+        updateShippingBadges();
+        return;
+      }
+      const miles = await fetchDrivingMilesPaymentPage(addr);
+      const eligible = (miles != null && miles <= 50);
+      console.info('[PaymentPage] Local Delivery eligibility ->', { miles, eligible });
+      localOpt.disabled = !eligible; localOpt.hidden = !eligible;
+      if (!eligible && shipMethodSel.value === 'Local Delivery') {
+        shipMethodSel.value = 'USPS';
+        updateShippingBadges('USPS');
+      }
+    } catch (_) {}
+  }
+  return __wf_business_info;
+}
+
+async function fetchDrivingMilesPaymentPage(selectedAddress) {
+  try {
+    const bi = await ensureBusinessInfo();
+    const from = {
+      address: (bi?.business_address || ''),
+      city: (bi?.business_city || ''),
+      state: (bi?.business_state || ''),
+      zip: (bi?.business_postal || ''),
+    };
+    const a = selectedAddress || null;
+    if (!a) return null;
+    const to = {
+      address: (a.address_line1 || ''),
+      city: (a.city || ''),
+      state: (a.state || ''),
+      zip: (a.zip_code || ''),
+    };
+    const resp = await apiClient.post('/api/distance.php', { from, to });
+    const milesRaw = resp?.data?.miles ?? resp?.miles;
+    return (milesRaw == null ? null : Number(milesRaw));
+  } catch (_) { return null; }
+}
+
 // Wait until the unified cart is initialized and ready
 async function waitForCartReady(timeout = 1500) {
   const start = Date.now();
@@ -382,8 +442,8 @@ ready(() => {
       el.addEventListener('change', (e) => {
         selectedAddressId = e.target.value;
         ensurePlaceButtonState();
-        // Recalculate pricing when address (zip) changes
-        updatePricing();
+        // Re-evaluate Local Delivery eligibility, then recalc pricing
+        evaluateLocalDeliveryEligibilityPaymentPage().finally(updatePricing);
       });
     });
   }
@@ -402,6 +462,7 @@ ready(() => {
       const def = addresses.find((a) => String(a.is_default) === '1');
       selectedAddressId = def ? String(def.id) : (addresses[0] ? String(addresses[0].id) : null);
       renderAddresses();
+      await evaluateLocalDeliveryEligibilityPaymentPage();
       ensurePlaceButtonState();
     } catch (e) {
       console.error('[PaymentPage] Failed to load addresses', e);

@@ -4,20 +4,13 @@
 (function () {
   'use strict';
 
-  async function apiGet(url) {
-    const res = await fetch(url, { credentials: 'same-origin' });
-    if (!res.ok) throw new Error(`GET failed ${res.status}`);
-    return res.json();
+  const { ApiClient } = window || {};
+
+  async function apiGet(url, params) {
+    return ApiClient.get(url, params);
   }
   async function apiPost(url, data) {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'same-origin',
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error(`POST failed ${res.status}`);
-    return res.json();
+    return ApiClient.post(url, data);
   }
 
   function readPanelValues(panel) {
@@ -71,7 +64,7 @@
     const status = panel.querySelector('#optionSettingsStatus');
     try {
       if (status) status.textContent = 'Loading settings…';
-      const data = await apiGet(`/api/item_options.php?action=get_settings&item_sku=${encodeURIComponent(sku)}&wf_dev_admin=1`);
+      const data = await apiGet('/api/item_options.php', { action: 'get_settings', item_sku: sku, wf_dev_admin: 1 });
       applyPanelValues(panel, data?.settings || {});
       if (status) status.textContent = 'Settings loaded';
     } catch (e) {

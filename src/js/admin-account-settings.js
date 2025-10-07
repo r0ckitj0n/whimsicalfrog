@@ -1,5 +1,6 @@
 // Admin Account Settings Vite module
 // Consumes #account-settings-data and wires form submission to existing backend endpoint.
+import { ApiClient } from '../core/api-client.js';
 (function(){
   const payloadEl = document.getElementById('account-settings-data');
   const form = document.getElementById('accountSettingsForm');
@@ -18,9 +19,8 @@
     const fd = new FormData(form);
     // Expect server to authenticate current user and validate currentPassword
     try {
-      const res = await fetch('/functions/process_account_update.php', { method: 'POST', body: fd, credentials: 'same-origin' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data?.success === false) {
+      const data = await ApiClient.upload('/functions/process_account_update.php', fd);
+      if (!data || data?.success === false) {
         if (errorEl) errorEl.textContent = data?.message || 'Failed to update account. Please verify your current password and try again.';
         show(errorEl);
       } else {

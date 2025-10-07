@@ -9,10 +9,10 @@
   }
 
   async function fetchJSON(url, opts){
-    const res = await fetch(url, opts);
-    const text = await res.text();
+    const res = await window.ApiClient.request(url, opts || {});
+    const text = (typeof res === 'string') ? res : JSON.stringify(res);
     let data = null;
-    try { data = JSON.parse(text); }
+    try { data = (typeof res === 'string') ? JSON.parse(res) : res; }
     catch(e){
       try { console.error('[RoomMaps] Invalid JSON from', url, '\nRaw:', text); } catch(_) {}
     }

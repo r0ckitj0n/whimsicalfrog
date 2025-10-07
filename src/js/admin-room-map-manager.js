@@ -1,4 +1,5 @@
 // Admin: Room Map Manager UI logic
+import { ApiClient } from '../core/api-client.js';
 (function(){
   const byId = (id) => document.getElementById(id);
 
@@ -9,14 +10,17 @@
   }
 
   async function fetchJSON(url, opts){
-    const res = await fetch(url, opts);
-    const text = await res.text();
-    let data = null;
-    try { data = JSON.parse(text); }
-    catch(e){
-      try { console.error('[RoomMaps] Invalid JSON from', url, '\nRaw:', text); } catch(_) {}
+    try {
+      const result = await ApiClient.request(url, opts || {});
+      if (typeof result === 'string') {
+        return { res: null, data: null, text: result };
+      }
+      return { res: null, data: result, text: JSON.stringify(result) };
+    } catch (e) {
+      const msg = String(e && e.message ? e.message : e);
+      try { console.error('[RoomMaps] API error', url, msg); } catch(_) {}
+      return { res: null, data: null, text: msg };
     }
-    return {res, data, text};
   }
 
   async function loadMaps(){

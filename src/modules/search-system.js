@@ -4,6 +4,8 @@
  * Recovered and consolidated from legacy files
  */
 
+import { ApiClient } from '../core/api-client.js';
+
 class SearchSystem {
     constructor() {
         this.modal = null;
@@ -120,20 +122,7 @@ class SearchSystem {
 
         try {
             // Build search API URL - using working search_items.php API
-            const searchUrl = `/api/search_items.php?q=${encodeURIComponent(searchTerm)}`;
-            
-            const response = await fetch(searchUrl, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error(`Search request failed: ${response.status}`);
-            }
-
-            const results = await response.json();
+            const results = await ApiClient.get('/api/search_items.php', { q: searchTerm });
             this.currentResults = results;
             this.displayResults(results, searchTerm);
 

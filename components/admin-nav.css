@@ -39,7 +39,8 @@
 .admin-tab-navigation > .tabs-row { justify-content: center !important; align-items: center !important; gap: 12px; }
 
 /* Base tab: big colored pill with white text */
-.admin-tab-navigation .admin-nav-tab {
+.admin-tab-navigation .admin-nav-tab,
+.wf-admin-nav-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -64,20 +65,27 @@
 }
 
 /* Do not change colors on hover; keep only subtle elevation if needed */
-.admin-tab-navigation .admin-nav-tab:hover { filter: none; }
+.admin-tab-navigation .admin-nav-tab:hover,
+.wf-admin-nav-button:hover { filter: none; }
 
 /* Lock background/text/border across all states to prevent color shifts */
 .admin-tab-navigation .admin-nav-tab,
 .admin-tab-navigation .admin-nav-tab:hover,
 .admin-tab-navigation .admin-nav-tab:active,
 .admin-tab-navigation .admin-nav-tab:focus,
-.admin-tab-navigation .admin-nav-tab.active {
+.admin-tab-navigation .admin-nav-tab.active,
+.wf-admin-nav-button,
+.wf-admin-nav-button:hover,
+.wf-admin-nav-button:active,
+.wf-admin-nav-button:focus,
+.wf-admin-nav-button.active {
   background: var(--tab-bg, var(--brand-primary, #87ac3a)) !important;
   color: #ffffff !important;
   border: 1px solid color-mix(in srgb, var(--tab-bg, var(--brand-primary, #87ac3a)) 80%, #000 20%) !important;
 }
 
-.admin-tab-navigation .admin-nav-tab:active {
+.admin-tab-navigation .admin-nav-tab:active,
+.wf-admin-nav-button:active {
   transform: translateY(0.5px);
 }
 /* Active tab: slightly darker same color */

@@ -198,6 +198,313 @@ body[data-page="admin/settings"] .settings-grid {
     <div class="admin-alert alert-warning">
       JavaScript is required to use the Settings page.
     </div>
+  </noscript>
+
+  <script>
+    // Ensure API calls hit the same origin/port as this page in local dev
+    try { window.__WF_BACKEND_ORIGIN = window.location.origin; } catch(_) {}
+  </script>
+
+
+  <!-- STATIC: Shipping & Distance Settings Modal (outside <noscript>) -->
+  <div id="shippingSettingsModal" class="admin-modal-overlay wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shippingSettingsTitle" style="z-index:10110">
+    <div class="admin-modal admin-modal-content">
+      <div class="modal-header">
+        <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">×</button>
+        <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"></span>
+      </div>
+      <div class="modal-body">
+        <form id="shippingSettingsFormStatic" data-action="prevent-submit" class="space-y-4">
+          <fieldset class="border rounded p-3">
+            <legend class="text-sm font-semibold">USPS</legend>
+            <label class="block text-sm font-medium mb-1" for="uspsUserId">USPS Web Tools USERID</label>
+            <input id="uspsUserId" type="text" class="form-input w-full" placeholder="(required for USPS live rates)" />
+          </fieldset>
+          <fieldset class="border rounded p-3">
+            <legend class="text-sm font-semibold">UPS</legend>
+            <div class="grid gap-3 md:grid-cols-2">
+              <div>
+                <label class="block text-sm font-medium mb-1" for="upsAccessKey">UPS Access Key</label>
+                <input id="upsAccessKey" type="text" class="form-input w-full" placeholder="optional" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1" for="upsSecret">UPS Secret</label>
+                <input id="upsSecret" type="password" class="form-input w-full" placeholder="optional" />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="border rounded p-3">
+            <legend class="text-sm font-semibold">FedEx</legend>
+            <div class="grid gap-3 md:grid-cols-2">
+              <div>
+                <label class="block text-sm font-medium mb-1" for="fedexKey">FedEx Key</label>
+                <input id="fedexKey" type="text" class="form-input w-full" placeholder="optional" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium mb-1" for="fedexSecret">FedEx Secret</label>
+                <input id="fedexSecret" type="password" class="form-input w-full" placeholder="optional" />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="border rounded p-3">
+            <legend class="text-sm font-semibold">Driving Distance</legend>
+            <label class="block text-sm font-medium mb-1" for="orsKey">OpenRouteService API Key</label>
+            <input id="orsKey" type="text" class="form-input w-full" placeholder="optional (used for driving miles)" />
+          </fieldset>
+          <div class="flex items-center justify-between pt-2">
+            <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
+            <div class="flex gap-2">
+              <button type="button" class="btn-secondary wf-admin-nav-button" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">Close</button>
+              <button type="button" class="btn-brand wf-admin-nav-button" id="shippingSettingsSaveBtn">Save Settings</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATIC: Address Diagnostics Modal (outside <noscript>) -->
+  <div id="addressDiagnosticsModal" class="admin-modal-overlay wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="addressDiagnosticsTitle" style="z-index:10110">
+    <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+      <div class="modal-header">
+        <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">×</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="addressDiagnosticsFrame" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  </div>
+
+    <!-- Hardening: ensure settings modals are clickable and above any stray overlays -->
+    <style id="wf-settings-modal-hardening">
+      .admin-modal-overlay { z-index: 10100 !important; pointer-events: auto !important; }
+      #addressDiagnosticsModal { z-index: 10110 !important; }
+      #shippingSettingsModal { z-index: 10110 !important; }
+      #deployManagerModal { z-index: 10110 !important; }
+      #dbSchemaAuditModal { z-index: 10110 !important; }
+    </style>
+
+    <script>
+    (function(){
+      try {
+        // Kill any lingering room overlay that could steal clicks
+        var ro = document.getElementById('roomModalOverlay');
+        if (ro) { ro.style.display = 'none'; ro.classList.remove('show'); ro.style.pointerEvents = 'none'; }
+
+        // Delegated close handler for settings modals (X buttons and dedicated close triggers)
+        document.addEventListener('click', function(ev){
+          var btn = ev.target && ev.target.closest ? ev.target.closest('.admin-modal-close,[data-action="close-admin-modal"]') : null;
+          if (!btn) return;
+          ev.preventDefault(); ev.stopPropagation();
+          var overlay = btn.closest('.admin-modal-overlay');
+          if (overlay) { overlay.classList.remove('show'); overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden','true'); }
+        }, true);
+
+        // MutationObserver: auto-tag any inserted overlays as closable
+        try {
+          var __wfOverlayObserver = new MutationObserver(function(muts){
+            muts.forEach(function(m){
+              m.addedNodes && m.addedNodes.forEach(function(n){
+                if (!(n instanceof Element)) return;
+                if (n.matches && n.matches('.admin-modal-overlay') && !n.classList.contains('wf-modal-closable')) {
+                  n.classList.add('wf-modal-closable');
+                }
+                // Also scan descendants
+                n.querySelectorAll && n.querySelectorAll('.admin-modal-overlay').forEach(function(el){
+                  if (!el.classList.contains('wf-modal-closable')) el.classList.add('wf-modal-closable');
+                });
+              });
+            });
+          });
+          __wfOverlayObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
+        } catch(_){}
+
+        // Backdrop click-to-close for modal overlays marked as closable
+        document.addEventListener('click', function(ev){
+          try {
+            var target = ev.target;
+            // Only close when the backdrop itself is clicked (not inner content)
+            if (target && target.classList && target.classList.contains('wf-modal-closable') && target.classList.contains('admin-modal-overlay')){
+              ev.preventDefault(); ev.stopPropagation();
+              target.classList.remove('show');
+              target.classList.add('hidden');
+              target.setAttribute('aria-hidden','true');
+            }
+          } catch(_){}
+        }, true);
+
+        // ESC key closes the topmost visible closable modal
+        document.addEventListener('keydown', function(ev){
+          if (ev.key !== 'Escape') return;
+          try {
+            var overlays = Array.from(document.querySelectorAll('.admin-modal-overlay.wf-modal-closable'))
+              .filter(function(el){ return !el.classList.contains('hidden'); });
+            if (!overlays.length) return;
+            var top = overlays[overlays.length - 1];
+            top.classList.remove('show');
+            top.classList.add('hidden');
+            top.setAttribute('aria-hidden','true');
+            ev.preventDefault(); ev.stopPropagation();
+          } catch(_){}
+        }, true);
+
+        // Fallback opener: Address Diagnostics
+        var diagBtn = document.getElementById('addressDiagBtn');
+        if (diagBtn && !diagBtn.__wfBound) {
+          diagBtn.__wfBound = true;
+          diagBtn.addEventListener('click', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            try {
+              var frame = document.getElementById('addressDiagnosticsFrame');
+              if (frame && !frame.getAttribute('src')) {
+                var ds = frame.getAttribute('data-src') || '/sections/tools/address_diagnostics.php?modal=1';
+                frame.setAttribute('src', ds);
+              }
+              var m = document.getElementById('addressDiagnosticsModal');
+              if (m) { m.classList.remove('hidden'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents = 'auto'; }
+            } catch(_){ }
+          });
+        }
+
+        // Fallback opener: Shipping Settings
+        var shipBtn = document.getElementById('shippingSettingsBtn');
+        if (shipBtn && !shipBtn.__wfBound) {
+          shipBtn.__wfBound = true;
+          shipBtn.addEventListener('click', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            try {
+              var m = document.getElementById('shippingSettingsModal');
+              if (m) { m.classList.remove('hidden'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents = 'auto'; }
+            } catch(_){ }
+          });
+        }
+      } catch(_){ }
+    })();
+    </script>
+
+  <!-- Delegated click handler so buttons work regardless of when they are rendered -->
+  <script>
+  (function(){
+    try {
+      document.addEventListener('click', function(ev){
+        var t = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-address-diagnostics"], #addressDiagBtn') : null;
+        if (t) { ev.preventDefault(); ev.stopPropagation(); if (window.__wfEnsureAddressDiagnosticsModal) window.__wfEnsureAddressDiagnosticsModal(); return; }
+        var s = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-shipping-settings"], #shippingSettingsBtn') : null;
+        if (s) { ev.preventDefault(); ev.stopPropagation(); if (window.__wfEnsureShippingSettingsModal) window.__wfEnsureShippingSettingsModal(); return; }
+        var d = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-deploy-manager"], #deployManagerBtn') : null;
+        if (d) {
+          ev.preventDefault(); ev.stopPropagation();
+          var m = document.getElementById('deployManagerModal');
+          if (m) {
+            try {
+              // Ensure overlay is at top-level to avoid ancestor stacking contexts
+              if (m.parentElement && m.parentElement !== document.body) {
+                document.body.appendChild(m);
+              }
+              // Guarantee over-header behavior
+              m.classList.add('over-header');
+              m.style.removeProperty('z-index'); // allow CSS !important to apply
+            } catch(_) {}
+            m.classList.remove('hidden');
+            m.classList.add('show');
+            m.setAttribute('aria-hidden','false');
+            m.style.pointerEvents = 'auto';
+          }
+          return;
+        }
+        var rc = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-repo-cleanup"], #repoCleanupBtn') : null;
+        if (rc) {
+          ev.preventDefault(); ev.stopPropagation();
+          var m = document.getElementById('repoCleanupModal');
+          if (m) {
+            try {
+              if (m.parentElement && m.parentElement !== document.body) {
+                document.body.appendChild(m);
+              }
+              m.classList.add('over-header');
+              m.style.removeProperty('z-index');
+            } catch(_) {}
+            m.classList.remove('hidden');
+            m.classList.add('show');
+            m.setAttribute('aria-hidden','false');
+            m.style.pointerEvents = 'auto';
+          }
+          return;
+        }
+        var db = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-db-schema-audit"], #dbSchemaAuditBtn') : null;
+        if (db) {
+          ev.preventDefault(); ev.stopPropagation();
+          var m = document.getElementById('dbSchemaAuditModal');
+          if (m) {
+            try {
+              if (m.parentElement && m.parentElement !== document.body) {
+                document.body.appendChild(m);
+              }
+              m.classList.add('over-header');
+              m.style.removeProperty('z-index');
+              var f = m.querySelector('#dbSchemaAuditFrame');
+              if (f && !f.getAttribute('src')) {
+                f.setAttribute('src', f.getAttribute('data-src') || '/sections/tools/db_schema_audit.php?modal=1');
+              }
+            } catch(_) {}
+            m.classList.remove('hidden');
+            m.classList.add('show');
+            m.setAttribute('aria-hidden','false');
+            m.style.pointerEvents = 'auto';
+          }
+          return;
+        }
+        var dbs = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-db-schema-audit"], #dbSchemaAuditBtn') : null;
+        if (dbs) {
+          ev.preventDefault(); ev.stopPropagation();
+          var m = document.getElementById('dbSchemaAuditModal');
+          if (m) {
+            try {
+              if (m.parentElement && m.parentElement !== document.body) {
+                document.body.appendChild(m);
+              }
+              m.classList.add('over-header');
+              m.style.removeProperty('z-index');
+            } catch(_) {}
+            m.classList.remove('hidden');
+            m.classList.add('show');
+            m.setAttribute('aria-hidden','false');
+            m.style.pointerEvents = 'auto';
+          }
+          return;
+        }
+      }, true);
+    } catch(_){ }
+  })();
+  </script>
+
+    <script>
+    // Fallback: open Address Diagnostics modal if bridge hasn't loaded yet
+    (function(){
+      try {
+        const btn = document.getElementById('addressDiagBtn');
+        if (btn && !btn.__wfBound) {
+          btn.__wfBound = true;
+          btn.addEventListener('click', function(ev){
+            ev.preventDefault(); ev.stopPropagation();
+            try {
+              var modal = document.getElementById('addressDiagnosticsModal');
+              var frame = document.getElementById('addressDiagnosticsFrame');
+              if (frame && !frame.getAttribute('src')) {
+                var ds = frame.getAttribute('data-src') || '/sections/tools/address_diagnostics.php?modal=1';
+                frame.setAttribute('src', ds);
+              }
+              if (modal) modal.classList.remove('hidden');
+            } catch (e) {}
+          });
+        }
+      } catch (_) {}
+    })();
+    </script>
+
+    
 
     <script>
     (function(){
@@ -271,78 +578,146 @@ body[data-page="admin/settings"] .settings-grid {
     })();
     </script>
 
-    <!-- Shipping & Distance Settings Modal -->
-    <div id="shippingSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shippingSettingsTitle">
-      <div class="admin-modal admin-modal-content">
-        <div class="modal-header">
-          <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings</h2>
-          <button type="button" class="admin-modal-close" data-action="close-shipping-settings" aria-label="Close">×</button>
-          <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"></span>
-        </div>
-        <div class="modal-body">
-          <div class="text-sm text-gray-600 mb-3">Configure carrier API keys and distance service. These enable live USPS/UPS/FedEx rates and local delivery eligibility by driving miles. Optional keys fall back safely if unset.</div>
-          <form id="shippingSettingsForm" data-action="prevent-submit" class="space-y-4">
-            <fieldset class="border rounded p-3">
-              <legend class="text-sm font-semibold">USPS</legend>
-              <label class="block text-sm font-medium mb-1" for="uspsUserId">USPS Web Tools USERID</label>
-              <input id="uspsUserId" type="text" class="form-input w-full" placeholder="(required for USPS live rates)" />
-            </fieldset>
-            <fieldset class="border rounded p-3">
-              <legend class="text-sm font-semibold">UPS</legend>
-              <div class="grid gap-3 md:grid-cols-2">
-                <div>
-                  <label class="block text-sm font-medium mb-1" for="upsAccessKey">UPS Access Key</label>
-                  <input id="upsAccessKey" type="text" class="form-input w-full" placeholder="optional" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-1" for="upsSecret">UPS Secret</label>
-                  <input id="upsSecret" type="password" class="form-input w-full" placeholder="optional" />
-                </div>
-              </div>
-            </fieldset>
-            <fieldset class="border rounded p-3">
-              <legend class="text-sm font-semibold">FedEx</legend>
-              <div class="grid gap-3 md:grid-cols-2">
-                <div>
-                  <label class="block text-sm font-medium mb-1" for="fedexKey">FedEx Key</label>
-                  <input id="fedexKey" type="text" class="form-input w-full" placeholder="optional" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-1" for="fedexSecret">FedEx Secret</label>
-                  <input id="fedexSecret" type="password" class="form-input w-full" placeholder="optional" />
-                </div>
-              </div>
-            </fieldset>
-            <fieldset class="border rounded p-3">
-              <legend class="text-sm font-semibold">Driving Distance</legend>
-              <label class="block text-sm font-medium mb-1" for="orsKey">OpenRouteService API Key</label>
-              <input id="orsKey" type="text" class="form-input w-full" placeholder="optional (used for driving miles)" />
-            </fieldset>
-            <div class="flex items-center justify-between pt-2">
-              <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
-              <div class="flex gap-2">
-                <button type="button" class="btn-secondary" data-action="close-shipping-settings">Close</button>
-                <button type="button" class="btn-brand" id="shippingSettingsSaveBtn">Save Settings</button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Dev Status Dashboard Modal (iframe embed) -->
-    <div id="devStatusModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
+    <div id="devStatusModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
       <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
         <div class="modal-header">
           <h2 id="devStatusTitle" class="admin-card-title">🧪 Dev Status Dashboard</h2>
-          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <iframe id="devStatusFrame" title="Dev Status" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/dev/status.php" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
-  </noscript>
+
+    <!-- Deploy Manager Modal (iframe embed) -->
+    <div id="deployManagerModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="deployManagerTitle">
+      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+        <div class="modal-header">
+          <h2 id="deployManagerTitle" class="admin-card-title">🚀 Deploy Manager</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <iframe id="deployManagerFrame" title="Deploy Manager" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/deploy_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- DB Schema Audit Modal (iframe embed) -->
+    <div id="dbSchemaAuditModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="dbSchemaAuditTitle">
+      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+        <div class="modal-header">
+          <h2 id="dbSchemaAuditTitle" class="admin-card-title">🗃️ DB Schema Audit</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <iframe id="dbSchemaAuditFrame" title="DB Schema Audit" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/db_schema_audit.php?modal=1" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repository Cleanup Modal (iframe embed) -->
+    <div id="repoCleanupModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="repoCleanupTitle">
+      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+        <div class="modal-header">
+          <h2 id="repoCleanupTitle" class="admin-card-title">🧹 Repository Cleanup</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <iframe id="repoCleanupFrame" title="Repository Cleanup" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/repo_cleanup.php?modal=1" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+  <!-- Runtime hardening + modal creators (outside <noscript>) -->
+  <style id="wf-settings-runtime-hardening">
+    .admin-modal-overlay { z-index: 10100 !important; pointer-events: auto !important; }
+    #addressDiagnosticsModal { z-index: 10110 !important; }
+    #shippingSettingsModal { z-index: 10110 !important; }
+  </style>
+  <script>
+  (function(){
+    function $(id){ return document.getElementById(id); }
+    function ensureContainer(){ return document.body || document.documentElement; }
+    function createEl(tag, attrs, html){ const el = document.createElement(tag); if (attrs) Object.keys(attrs).forEach(k=>el.setAttribute(k, attrs[k])); if (html!=null) el.innerHTML = html; return el; }
+    function openOverlay(el){ try { el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); } catch(_){} }
+    function closeOverlay(el){ try { el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); } catch(_){} }
+
+    function ensureAddressDiagnosticsModal(){
+      var modal = $('addressDiagnosticsModal');
+      if (!modal){
+        var html = '\n      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">\n        <div class="modal-header">\n          <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics<\/h2>\n          <button type="button" class="admin-modal-close" aria-label="Close">×<\/button>\n        <\/div>\n        <div class="modal-body">\n          <iframe id="addressDiagnosticsFrame" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"><\/iframe>\n        <\/div>\n      <\/div>';
+        modal = createEl('div', { id:'addressDiagnosticsModal', class:'admin-modal-overlay wf-modal-closable hidden', role:'dialog', 'aria-modal':'true', tabindex:'-1', 'aria-labelledby':'addressDiagnosticsTitle' }, html);
+        ensureContainer().appendChild(modal);
+        try { modal.querySelector('.admin-modal-close').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}
+      }
+      var frame = $('addressDiagnosticsFrame');
+      if (frame && !frame.getAttribute('src')){ frame.setAttribute('src', frame.getAttribute('data-src') || '/sections/tools/address_diagnostics.php?modal=1'); }
+      openOverlay(modal);
+    }
+
+    function ensureShippingSettingsModal(){
+      var modal = $('shippingSettingsModal');
+      if (!modal){
+        var html = '\n      <div class="admin-modal admin-modal-content">\n        <div class="modal-header">\n          <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings<\/h2>\n          <button type="button" class="admin-modal-close" aria-label="Close">×<\/button>\n          <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"><\/span>\n        <\/div>\n        <div class="modal-body">\n          <form id="shippingSettingsForm" data-action="prevent-submit" class="space-y-4">\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">USPS<\/legend>\n              <label class="block text-sm font-medium mb-1" for="uspsUserId">USPS Web Tools USERID<\/label>\n              <input id="uspsUserId" type="text" class="form-input w-full" placeholder="(required for USPS live rates)" \/>\n            <\/fieldset>\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">UPS<\/legend>\n              <div class="grid gap-3 md:grid-cols-2">\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="upsAccessKey">UPS Access Key<\/label>\n                  <input id="upsAccessKey" type="text" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="upsSecret">UPS Secret<\/label>\n                  <input id="upsSecret" type="password" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n              <\/div>\n            <\/fieldset>\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">FedEx<\/legend>\n              <div class="grid gap-3 md:grid-cols-2">\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="fedexKey">FedEx Key<\/label>\n                  <input id="fedexKey" type="text" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="fedexSecret">FedEx Secret<\/label>\n                  <input id="fedexSecret" type="password" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n              <\/div>\n            <\/fieldset>\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">Driving Distance<\/legend>\n              <label class="block text-sm font-medium mb-1" for="orsKey">OpenRouteService API Key<\/label>\n              <input id="orsKey" type="text" class="form-input w-full" placeholder="optional (used for driving miles)" \/>\n            <\/fieldset>\n            <div class="flex items-center justify-between pt-2">\n              <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.<\/div>\n              <div class="flex gap-2">\n                <button type="button" class="btn-secondary" data-action="close-shipping-settings">Close<\/button>\n                <button type="button" class="btn-brand" id="shippingSettingsSaveBtn">Save Settings<\/button>\n              <\/div>\n            <\/div>\n          <\/form>\n        <\/div>\n      <\/div>';
+        modal = createEl('div', { id:'shippingSettingsModal', class:'admin-modal-overlay wf-modal-closable hidden', role:'dialog', 'aria-modal':'true', tabindex:'-1', 'aria-labelledby':'shippingSettingsTitle' }, html);
+        ensureContainer().appendChild(modal);
+        try { modal.querySelector('.admin-modal-close').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}
+        try { modal.querySelector('[data-action="close-shipping-settings"]').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}
+      }
+      // Load settings values
+      (async function(){
+        var status = $('shippingSettingsStatus'); if (status) status.textContent = 'Loading…';
+        try {
+          const r = await fetch('/api/business_settings.php?action=get_by_category&category=shipping', { credentials:'include' });
+          const j = r.ok ? await r.json() : null;
+          const list = (j && j.success && Array.isArray(j.data?.settings)) ? j.data.settings : (j?.data?.settings || []);
+          const map = {}; (list||[]).forEach(row => { if (row && row.setting_key) map[row.setting_key] = row.setting_value; });
+          const set = (id, v) => { var el=$(id); if (el) el.value = v || ''; };
+          set('uspsUserId', map['usps_webtools_userid'] || '');
+          set('upsAccessKey', map['ups_access_key'] || '');
+          set('upsSecret', map['ups_secret'] || '');
+          set('fedexKey', map['fedex_key'] || '');
+          set('fedexSecret', map['fedex_secret'] || '');
+          set('orsKey', map['ors_api_key'] || '');
+          if (status) { status.textContent = 'Loaded'; status.className = 'modal-status-chip text-green-700'; }
+        } catch(e){ if (status) { status.textContent = 'Load failed'; status.className = 'modal-status-chip'; } }
+      })();
+      // Wire save
+      (function(){
+        var btn = $('shippingSettingsSaveBtn'); if (!btn || btn.__wfBound) return; btn.__wfBound = true;
+        btn.addEventListener('click', async function(){
+          var status = $('shippingSettingsStatus'); if (status) status.textContent = 'Saving…';
+          const get = (id)=>($(id)?$(id).value.trim():'');
+          const payload = { action:'upsert_settings', category:'shipping', settings:{ usps_webtools_userid:get('uspsUserId'), ups_access_key:get('upsAccessKey'), ups_secret:get('upsSecret'), fedex_key:get('fedexKey'), fedex_secret:get('fedexSecret'), ors_api_key:get('orsKey') } };
+          try {
+            const res = await fetch('/api/business_settings.php?action=upsert_settings', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+            const j = res.ok ? await res.json() : null;
+            if (j && j.success) { if (status) { status.textContent='Saved'; status.className='modal-status-chip text-green-700'; } setTimeout(function(){ closeOverlay($('shippingSettingsModal')); }, 600); }
+            else { if (status) { status.textContent='Save failed'; status.className='modal-status-chip'; } }
+          } catch(e){ if (status) { status.textContent='Save failed'; status.className='modal-status-chip'; } }
+        });
+      })();
+      openOverlay(modal);
+    }
+
+    // Expose creators globally for delegated handlers added later
+    try { window.__wfEnsureAddressDiagnosticsModal = ensureAddressDiagnosticsModal; } catch(_){}
+    try { window.__wfEnsureShippingSettingsModal = ensureShippingSettingsModal; } catch(_){}
+
+    // Bind buttons
+    try {
+      var diagBtn = $('addressDiagBtn'); if (diagBtn && !diagBtn.__wfClickBound){ diagBtn.__wfClickBound = true; diagBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); ensureAddressDiagnosticsModal(); }); }
+      var shipBtn = $('shippingSettingsBtn'); if (shipBtn && !shipBtn.__wfClickBound){ shipBtn.__wfClickBound = true; shipBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); ensureShippingSettingsModal(); }); }
+    } catch(_){}
+
+    // Kill any stray room modal overlay that might steal clicks
+    try { var ro = $('roomModalOverlay'); if (ro) { ro.style.display='none'; ro.classList.remove('show'); ro.style.pointerEvents='none'; } } catch(_){}
+  })();
+  </script>
 
   <!-- Root containers the JS module can enhance -->
   <div id="adminSettingsRoot" class="admin-settings-root">
@@ -350,64 +725,68 @@ body[data-page="admin/settings"] .settings-grid {
     <div class="settings-grid">
       <?php // Content Management ?>
       <?php ob_start(); ?>
-        <button type="button" id="dashboardConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
         <button type="button" id="categoriesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-categories">Category Management</button>
+        <button type="button" id="dashboardConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
         <button type="button" id="attributesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-attributes">Genders, Sizes, &amp; Colors</button>
         <button type="button" id="templateManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-template-manager">Template Manager</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-blue', 'Content Management', 'Organize products, categories, and room content', $__content); ?>
 
       <?php // Visual & Design ?>
       <?php ob_start(); ?>
-        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-css-catalog">CSS Catalog</button>
-        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-background-manager">Background Manager</button>
-        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-editor">Room Map Editor</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-area-item-mapper">Area-Item Mapper</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-background-manager">Background Manager</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-css-catalog">CSS Catalog</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-editor">Room Map Editor</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-purple', 'Visual & Design', 'Customize appearance and interactive elements', $__content); ?>
 
       <?php // Business & Analytics ?>
       <?php ob_start(); ?>
+        <button type="button" id="addressDiagBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-address-diagnostics" onclick="try{if(window.__wfEnsureAddressDiagnosticsModal){window.__wfEnsureAddressDiagnosticsModal(); return false;}}catch(e){} var m=document.getElementById('addressDiagnosticsModal'); if(m){m.style.display='flex'; m.classList.remove('hidden'); m.classList.add('show'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents='auto';} return false;">Address Diagnostics</button>
+        <button type="button" id="aiToolsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-tools">AI &amp; Automation Tools</button>
+        <button type="button" id="aiSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-settings">AI Provider</button>
         <button type="button" id="businessInfoBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-business-info">Business Information</button>
         <button type="button" id="squareSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-square-settings">Configure Square</button>
-        <button type="button" id="aiSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-settings">AI Provider</button>
-        <button type="button" id="aiToolsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-tools">AI &amp; Automation Tools</button>
-        <button type="button" id="shippingSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shipping-settings">Shipping &amp; Distance Settings</button>
+        <button type="button" id="shippingSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shipping-settings" onclick="try{if(window.__wfEnsureShippingSettingsModal){window.__wfEnsureShippingSettingsModal(); return false;}}catch(e){} var m=document.getElementById('shippingSettingsModal'); if(m){m.style.display='flex'; m.classList.remove('hidden'); m.classList.add('show'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents='auto';} return false;">Shipping &amp; Distance Settings</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-emerald', 'Business & Analytics', 'Manage sales, promotions, and business insights', $__content); ?>
 
       <?php // Communication ?>
       <?php ob_start(); ?>
         <button type="button" id="emailConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-settings">Email Configuration</button>
         <button type="button" id="emailHistoryBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-history">Email History</button>
-        <button type="button" id="emailTestBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-test">Send Sample Email</button>
         <button type="button" id="loggingStatusBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-logging-status">Logging Status</button>
         <a class="admin-settings-button btn-primary btn-full-width" href="/receipt.php">Receipt Messages</a>
+        <button type="button" id="emailTestBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-test">Send Sample Email</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-orange', 'Communication', 'Email configuration and customer messaging', $__content); ?>
 
       <?php // Technical & System ?>
       <?php ob_start(); ?>
         <button type="button" id="accountSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-account-settings">Account Settings</button>
-        <button type="button" id="secretsManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-secrets-modal">Secrets Manager</button>
-        <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Health & Diagnostics</button>
         <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=cost-breakdown-manager">Cost Breakdown Manager</a>
-        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=customers">User Manager</a>
+        <button type="button" id="deployManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-deploy-manager">Deploy Manager</button>
+        <button type="button" id="dbSchemaAuditBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-db-schema-audit">DB Schema Audit</button>
+        <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Health & Diagnostics</button>
         <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=reports-browser">Reports &amp; Documentation Browser</a>
+        <button type="button" id="repoCleanupBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-repo-cleanup">Repository Cleanup</button>
+        <button type="button" id="secretsManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-secrets-modal">Secrets Manager</button>
+        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=customers">User Manager</a>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-red', 'Technical & System', 'System tools and advanced configuration', $__content); ?>
     </div>
 
     <!-- Health & Diagnostics Modal (hidden by default) -->
-    <div id="healthModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="healthTitle">
+    <div id="healthModal" class="admin-modal-overlay wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="healthTitle">
       <div class="admin-modal admin-modal-content">
         <div class="modal-header">
           <h2 id="healthTitle" class="admin-card-title">🩺 Health &amp; Diagnostics</h2>
-          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
           <span class="modal-status-chip" aria-live="polite"></span>
         </div>
         <div class="modal-body">
           <div class="flex items-center justify-between mb-3">
             <div id="healthStatus" class="text-sm text-gray-600">Loading…</div>
             <div class="flex items-center gap-2">
-              <button type="button" class="btn-secondary" data-action="health-refresh">Refresh</button>
-              <a class="btn" href="/sections/admin_router.php?section=dashboard#background">Background Manager</a>
-              <a class="btn" href="/sections/admin_router.php?section=inventory">Inventory</a>
+              <button type="button" class="btn-secondary wf-admin-nav-button" data-action="health-refresh">Refresh</button>
+              <a class="btn wf-admin-nav-button" href="/sections/admin_router.php?section=dashboard#background">Background Manager</a>
+              <a class="btn wf-admin-nav-button" href="/sections/admin_router.php?section=inventory">Inventory</a>
             </div>
           </div>
           <div class="grid gap-4 md:grid-cols-2">

@@ -1,3 +1,4 @@
+import { ApiClient } from '../src/core/api-client.js';
 // Background Manager module (Vite-managed)
 // Provides a lightweight UI to preview and set global backgrounds.
 // This is an initial implementation that can be expanded.
@@ -19,9 +20,7 @@ function h(tag, attrs = {}, children = []) {
 
 async function fetchBackgrounds() {
   try {
-    const res = await fetch('/api/backgrounds/list.php');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json().catch(() => ({}));
+    const data = await ApiClient.get('/api/backgrounds/list.php');
     // Expect {success, items:[{id, name, url, previewUrl}]}
     return data?.items || [];
   } catch (_) {
@@ -34,10 +33,7 @@ async function fetchBackgrounds() {
 
 async function setActiveBackground(id) {
   try {
-    const res = await fetch('/api/backgrounds/set_active.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
-    });
-    const data = await res.json().catch(() => ({}));
+    const data = await ApiClient.post('/api/backgrounds/set_active.php', { id });
     return !!(data && data.success);
   } catch (_) { return false; }
 }

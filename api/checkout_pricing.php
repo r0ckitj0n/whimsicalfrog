@@ -157,10 +157,9 @@ try {
     $taxShipping = (bool)$taxCfg['taxShipping'];
     $settingsEnabled = (bool)$taxCfg['enabled'];
     $settingsRate = (float)$taxCfg['rate'];
-    // Prefer Business Info postal code; fallback to legacy business_zip
-    $bizPostal = (string) BusinessSettings::get('business_postal', '');
-    $bizZipLegacy = (string) BusinessSettings::get('business_zip', '');
-    $zipForTax = $zip ?: ($bizPostal !== '' ? $bizPostal : $bizZipLegacy);
+    // Canonical postal from helper (no legacy fallback)
+    $bizPostal = (string) BusinessSettings::getBusinessPostal();
+    $zipForTax = $zip ?: $bizPostal;
     $zipState = null;
     $zipRate = null;
     $taxSource = 'settings';

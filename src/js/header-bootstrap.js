@@ -2,10 +2,25 @@
 // Minimal side-effect imports to activate delegated handlers.
 import '../styles/login-modal.css';
 import '../styles/admin-modals.css';
-import '../styles/admin-help-bubble.css';
 import '../styles/admin-nav.css';
+// Import help-bubble last to override nav tab pill styles
+import '../styles/admin-help-bubble.css';
 import './login-modal.js';
 import './header-auth-sync.js';
+
+// Ensure tooltip manager is initialized on admin pages even if other entries don't run yet
+(function ensureAdminTooltipsInit(){
+  const isAdmin = (() => {
+    try { return (/^\/?admin(\/|$)/i.test(location.pathname)) || (/^\/?sections\/admin_router\.php$/i.test(location.pathname)); } catch(_) { return false; }
+  })();
+  if (!isAdmin) return;
+  const init = () => {
+    try { import('../modules/tooltip-manager.js').then(mod => { try { (mod && typeof mod.default === 'function') && mod.default(); } catch(_) {} }).catch(() => {}); } catch(_) {}
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else { init(); }
+})();
 
 // Global Help & Hints toggle (admin header)
 function __wfGetHintsEnabled() {
@@ -89,17 +104,21 @@ document.addEventListener('click', (e) => {
           if (overlay.parentNode !== document.body) {
             document.body.appendChild(overlay);
           }
-          overlay.classList.add('topmost');
           overlay.classList.remove('hidden');
+          // Ensure visibility on admin pages where overlays require .show
+          overlay.classList.add('show');
         } catch(_) {}
       }
-      if (frame && !frame.src) {
-        // Load the new interactive help documentation
-        const dataSrc = frame.getAttribute('data-src');
-        if (dataSrc) {
-          frame.src = dataSrc;
-        } else {
-          frame.src = '/help.php';
+      if (frame) {
+        const srcNow = (frame.getAttribute('src') || '').trim();
+        const isBlank = !srcNow || srcNow === 'about:blank' || srcNow.endsWith('about:blank');
+        if (isBlank) {
+          // Load the new interactive help documentation
+          const dataSrc = frame.getAttribute('data-src');
+          if (dataSrc) {
+            frame.src = dataSrc;
+          } else {
+            frame.src = '/help.php';
         }
       }
       if (window.WFModals && typeof window.WFModals.lockScroll === 'function') window.WFModals.lockScroll();
@@ -107,13 +126,17 @@ document.addEventListener('click', (e) => {
     }
     if (closeBtn) {
       e.preventDefault();
-      if (overlay) overlay.classList.add('hidden');
+      if (overlay) {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('show');
+      }
       if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') window.WFModals.unlockScrollIfNoneOpen();
       return;
     }
     // Click outside to close when clicking the overlay backdrop
     if (overlay && e.target === overlay) {
       overlay.classList.add('hidden');
+      overlay.classList.remove('show');
       if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') window.WFModals.unlockScrollIfNoneOpen();
       return;
     }

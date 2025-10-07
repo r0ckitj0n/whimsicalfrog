@@ -26,7 +26,8 @@ try {
         ['ecommerce', 'tax_enabled', 'true', 'boolean', 'Tax Enabled', 'Enable applying sales tax.'],
         ['ecommerce', 'tax_rate', '0.065', 'number', 'Default Tax Rate', 'Default sales tax rate when ZIP lookup not available.'],
         ['ecommerce', 'tax_shipping', 'true', 'boolean', 'Tax Shipping', 'Whether shipping is taxable.'],
-        ['ecommerce', 'business_zip', '15301', 'text', 'Business ZIP', 'Business ZIP used for default tax lookup.'],
+        // Canonical postal/ZIP lives under business_info; do not seed legacy business_zip
+        ['business_info', 'business_postal', '15301', 'text', 'Business Postal Code', 'Postal/ZIP code for the business address.'],
 
         // Currency (ecommerce)
         ['ecommerce', 'currency_code', 'USD', 'text', 'Currency Code', 'ISO currency code for pricing.'],

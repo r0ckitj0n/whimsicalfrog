@@ -1,0 +1,15 @@
+#!/bin/sh
+# Optional pre-commit hook to mirror CI/lint-staged checks.
+# Enable with:
+#   git config core.hooksPath .githooks
+# Disable with:
+#   git config --unset core.hooksPath
+
+set -e
+
+# Run lint-staged (this will run backup guard and linters on staged files)
+if command -v npx >/dev/null 2>&1; then
+  npx lint-staged
+else
+  echo "lint-staged not available (npx missing). Skipping staged checks."
+fi

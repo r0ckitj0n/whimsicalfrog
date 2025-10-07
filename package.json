@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "printf 'http://localhost:5180' > hot && vite --host localhost --port 5180 --strictPort",
-    "dev:5180": "VITE_DEV_PORT=5180 VITE_HMR_PORT=5180 printf 'http://localhost:5180' > hot && vite --host localhost --port 5180 --strictPort",
+    "dev": "VITE_DEV_PORT=5176 VITE_HMR_PORT=5176 printf 'http://localhost:5176' > hot && vite --host localhost --port 5176 --strictPort",
+    "dev:5176": "VITE_DEV_PORT=5176 VITE_HMR_PORT=5176 printf 'http://localhost:5176' > hot && vite --host localhost --port 5176 --strictPort",
     "stop": "rm hot",
     "quarantine:dupes": "bash scripts/dev/quarantine_duplicates.sh",
     "prebuild": "bash scripts/dev/quarantine_duplicates.sh",
@@ -18,27 +18,24 @@
     "lint:all": "npm run lint && npm run lint:css",
     "guard:styles": "node scripts/disallow-inline-styles.mjs",
     "guard:admin-router": "node scripts/dev/guard-admin-router.mjs",
-    "guard:docs": "node scripts/dev/guard-docs-structure.mjs",
     "guard:docs:filenames": "node scripts/dev/guard-docs-filenames.mjs",
     "guard:docs:filenames:staged": "node scripts/dev/guard-docs-filenames.mjs --staged",
     "guard:images": "node scripts/guard-images.mjs",
     "guard:templates:css": "node scripts/guard-templates-css.mjs",
     "guard:z-index": "node scripts/guard-z-index.mjs",
-    "guard:brand-colors": "rg -n \"#6b8e23|#789a34\" --glob '!**/backups/**' --glob '!**/*.backup*' --glob '!**/site-base.css.backup'",
-    "guard:fonts": "rg -n \"font-family\\s*:\\s*[^;]+;\" src/ css/ | grep -vF 'var(--font-' | grep -v email-styles.css | grep -v core/utilities.css | grep -v site-base.css.backup",
-    "guard:brand-and-fonts": "npm run guard:brand-colors && npm run guard:fonts",
+    "guard:no-raw-fetch": "node scripts/guards/no-raw-fetch.mjs",
+  "guard:brand-colors": "rg -n \"#6b8e23|#789a34\" --glob '!**/backups/**' --glob '!**/*.backup*' --glob '!**/site-base.css.backup'",
+  "guard:fonts": "rg -n \"font-family\\s*:\\s*[^;]+;\" src/ css/ | grep -vF 'var(--font-' | grep -v email-styles.css | grep -v core/utilities.css | grep -v site-base.css.backup",
     "zindex:migrate": "node scripts/dev/zindex-migration.mjs",
     "zindex:migrate:write": "node scripts/dev/zindex-migration.mjs --write",
     "guard:duplicates": "node scripts/dev/guard-duplicates.mjs",
     "guard:legacy": "node scripts/dev/legacy-scan.mjs",
     "guard:legacy:write": "node scripts/dev/legacy-scan.mjs --write",
-    "audit:images:code": "node scripts/dev/audit-code-image-refs.mjs",
     "audit:images:db": "node scripts/dev/audit-db-images.mjs",
     "check:css:orphans": "node scripts/check-orphaned-css.mjs",
     "check:css:orphans:write": "node scripts/check-orphaned-css.mjs --write",
     "check:css:inventory": "node scripts/css-inventory.mjs",
     "prefix-unused": "node scripts/auto-prefix-unused.mjs --run-eslint",
-    "prefix-unused:write": "node scripts/auto-prefix-unused.mjs --run-eslint --write",
     "prepare": "echo 'Use: npm run precommit (lint-staged) — Husky not required'",
     "tooltips:export": "node scripts/dev/export-admin-tooltips.mjs",
     "tooltips:audit": "node scripts/dev/audit-tooltips.mjs",
@@ -77,8 +74,12 @@
   },
   "lint-staged": {
     "**/*.{js,mjs,cjs}": [
+      "node scripts/guards/no-raw-fetch.mjs",
       "node scripts/disallow-inline-styles.mjs",
       "eslint --no-warn-ignored --max-warnings=0 --cache --cache-location .cache/eslint/ --format json"
+    ],
+    "**/*": [
+      "node scripts/dev/guard-backups-staged.mjs"
     ],
     "src/styles/**/*.css": [
       "stylelint --fix"

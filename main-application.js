@@ -64,17 +64,11 @@ const MainApplication = {
             if (errorMessage) errorMessage.classList.add('hidden');
 
             try {
-                // Use direct fetch with safe JSON handling to avoid parse errors on empty bodies
-                const res = await fetch('/functions/process_login.php', {
+                const data = await window.ApiClient.request('/functions/process_login.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                if (!res.ok) {
-                    const err = await this.safeJson(res);
-                    throw new Error(err?.error || 'Login failed.');
-                }
-                const data = await this.safeJsonOk(res);
                 sessionStorage.setItem('user', JSON.stringify((data && (data.user || data)) || {}));
 
                 // Determine redirect target

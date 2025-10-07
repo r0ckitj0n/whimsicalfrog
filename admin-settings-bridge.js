@@ -365,14 +365,9 @@ const globalAttributes = { genders: [], sizes: [], colors: [] };
 
 async function fetchGlobalAttributes() {
   try {
-    const response = await fetch('/api/global_color_size_management.php?action=get_global_genders&admin_token=whimsical_admin_2024');
-    const gendersResult = await response.json();
-
-    const response2 = await fetch('/api/global_color_size_management.php?action=get_global_sizes&admin_token=whimsical_admin_2024');
-    const sizesResult = await response2.json();
-
-    const response3 = await fetch('/api/global_color_size_management.php?action=get_global_colors&admin_token=whimsical_admin_2024');
-    const colorsResult = await response3.json();
+    const gendersResult = await window.ApiClient.request('/api/global_color_size_management.php?action=get_global_genders&admin_token=whimsical_admin_2024', { method: 'GET' });
+    const sizesResult = await window.ApiClient.request('/api/global_color_size_management.php?action=get_global_sizes&admin_token=whimsical_admin_2024', { method: 'GET' });
+    const colorsResult = await window.ApiClient.request('/api/global_color_size_management.php?action=get_global_colors&admin_token=whimsical_admin_2024', { method: 'GET' });
 
     if (gendersResult.success) {
       globalAttributes.genders = gendersResult.genders || [];
@@ -463,20 +458,17 @@ async function addAttribute(type, name, code = null) {
       payload = { color_name: name, color_code: '#000000' };
     }
 
-    const response = await fetch('/api/global_color_size_management.php', {
+    const result = await window.ApiClient.request('/api/global_color_size_management.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, ...payload, admin_token: 'whimsical_admin_2024' })
     });
-
-    const result = await response.json();
 
     if (result.success) {
       // Refresh the data and repopulate
       await fetchGlobalAttributes();
       const modal = document.getElementById('attributesModal');
       if (modal) populateAttributesModal(modal);
-
       if (resultDiv) resultDiv.textContent = `${type} added successfully`;
       setTimeout(() => { if (resultDiv) resultDiv.textContent = ''; }, 2000);
     } else {
@@ -488,84 +480,12 @@ async function addAttribute(type, name, code = null) {
   }
 }
 
-async function editAttribute(type, id) {
-  const modal = document.getElementById('attributesModal');
-  if (!modal) return;
-
-  // Find the current item
-  let currentItem = null;
-  if (type === 'gender') {
-    currentItem = globalAttributes.genders.find(g => g.id == id);
-  } else if (type === 'size') {
-    currentItem = globalAttributes.sizes.find(s => s.id == id);
-  } else if (type === 'color') {
-    currentItem = globalAttributes.colors.find(c => c.id == id);
-  }
-
-  if (!currentItem) {
-    alert('Item not found');
-    return;
-  }
-
-  // Create edit form
-  const newValue = prompt(`Edit ${type}:`, type === 'size' ? `${currentItem.size_name} ${currentItem.size_code}` : currentItem[type + '_name']);
-  if (newValue === null) return; // User cancelled
-
-  const resultDiv = modal.querySelector('#attributesResult');
-  if (resultDiv) resultDiv.textContent = `Updating ${type}...`;
-
-  try {
-    let action, payload;
-
-    if (type === 'gender') {
-      action = 'update_global_gender';
-      payload = { gender_id: id, gender_name: newValue };
-    } else if (type === 'size') {
-      const parts = newValue.split(' ');
-      if (parts.length < 2) {
-        alert('Please enter size as "Name Code" (e.g., "Extra Large XL")');
-        return;
-      }
-      const sizeName = parts.slice(0, -1).join(' ');
-      const sizeCode = parts[parts.length - 1];
-
-      action = 'update_global_size';
-      payload = { size_id: id, size_name: sizeName, size_code: sizeCode };
-    } else if (type === 'color') {
-      action = 'update_global_color';
-      payload = { color_id: id, color_name: newValue };
-    }
-
-    const response = await fetch('/api/global_color_size_management.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...payload, admin_token: 'whimsical_admin_2024' })
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      // Refresh the data and repopulate
-      await fetchGlobalAttributes();
-      populateAttributesModal(modal);
-
-      if (resultDiv) resultDiv.textContent = `${type} updated successfully`;
-      setTimeout(() => { if (resultDiv) resultDiv.textContent = ''; }, 2000);
-    } else {
-      throw new Error(result.message || 'Failed to update attribute');
-    }
-  } catch (error) {
-    console.error('Failed to update attribute:', error);
-    if (resultDiv) resultDiv.textContent = `Failed to update ${type}: ${error.message}`;
-  }
-}
-
 async function deleteAttribute(type, id) {
   const resultDiv = document.getElementById('attributesResult');
   if (resultDiv) resultDiv.textContent = `Deleting ${type}...`;
 
   try {
-    let action;
+    let action, payload;
 
     if (type === 'gender') {
       action = 'delete_global_gender';
@@ -575,20 +495,17 @@ async function deleteAttribute(type, id) {
       action = 'delete_global_color';
     }
 
-    const response = await fetch('/api/global_color_size_management.php', {
+    const result = await window.ApiClient.request('/api/global_color_size_management.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action, [`${type}_id`]: id, admin_token: 'whimsical_admin_2024' })
     });
-
-    const result = await response.json();
 
     if (result.success) {
       // Refresh the data and repopulate
       await fetchGlobalAttributes();
       const modal = document.getElementById('attributesModal');
       if (modal) populateAttributesModal(modal);
-
       if (resultDiv) resultDiv.textContent = `${type} deleted successfully`;
       setTimeout(() => { if (resultDiv) resultDiv.textContent = ''; }, 2000);
     } else {
@@ -600,21 +517,70 @@ async function deleteAttribute(type, id) {
   }
 }
 
-async function saveAttributeOrder() {
-  const resultDiv = document.getElementById('attributesResult');
-  if (resultDiv) resultDiv.textContent = 'Saving order...';
+async function editAttribute(type, id) {
+  const modal = document.getElementById('attributesModal');
+  if (!modal) return;
+
+  // Locate existing item details to inform prompts/defaults if needed
+  let currentItem = null;
+  if (type === 'gender') currentItem = (globalAttributes.genders || []).find(g => String(g.id) === String(id));
+  if (type === 'size') currentItem = (globalAttributes.sizes || []).find(s => String(s.id) === String(id));
+  if (type === 'color') currentItem = (globalAttributes.colors || []).find(c => String(c.id) === String(id));
+
+  // Prompt for new value (maintain previous UX)
+  const defaultValue = (function(){
+    if (!currentItem) return '';
+    if (type === 'size') return `${currentItem.size_name} ${currentItem.size_code}`.trim();
+    if (type === 'gender') return currentItem.gender_name || '';
+    if (type === 'color') return currentItem.color_name || '';
+    return '';
+  })();
+  const newValue = prompt(`Edit ${type}:`, defaultValue);
+  if (newValue === null) return; // cancelled
+
+  const resultDiv = modal.querySelector('#attributesResult') || document.getElementById('attributesResult');
+  if (resultDiv) resultDiv.textContent = `Updating ${type}...`;
 
   try {
-    // For now, just refresh the display since the API doesn't have an order update endpoint
-    await fetchGlobalAttributes();
-    const modal = document.getElementById('attributesModal');
-    if (modal) populateAttributesModal(modal);
+    let action, payload;
+    if (type === 'gender') {
+      action = 'update_global_gender';
+      payload = { gender_id: id, gender_name: newValue };
+    } else if (type === 'size') {
+      const parts = String(newValue).trim().split(/\s+/);
+      if (parts.length < 2) {
+        alert('Please enter size as "Name Code" (e.g., "Extra Large XL")');
+        if (resultDiv) resultDiv.textContent = '';
+        return;
+      }
+      const sizeName = parts.slice(0, -1).join(' ');
+      const sizeCode = parts[parts.length - 1];
+      action = 'update_global_size';
+      payload = { size_id: id, size_name: sizeName, size_code: sizeCode };
+    } else if (type === 'color') {
+      action = 'update_global_color';
+      payload = { color_id: id, color_name: newValue };
+    } else {
+      throw new Error('Unknown attribute type');
+    }
 
-    if (resultDiv) resultDiv.textContent = 'Order saved successfully';
-    setTimeout(() => { if (resultDiv) resultDiv.textContent = ''; }, 2000);
+    const result = await window.ApiClient.request('/api/global_color_size_management.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...payload, admin_token: 'whimsical_admin_2024' })
+    });
+
+    if (result && result.success) {
+      await fetchGlobalAttributes();
+      populateAttributesModal(modal);
+      if (resultDiv) resultDiv.textContent = `${type} updated successfully`;
+      setTimeout(() => { if (resultDiv) resultDiv.textContent = ''; }, 2000);
+    } else {
+      throw new Error(result?.message || 'Failed to update attribute');
+    }
   } catch (error) {
-    console.error('Failed to save order:', error);
-    if (resultDiv) resultDiv.textContent = 'Failed to save order';
+    console.error('Failed to update attribute:', error);
+    if (resultDiv) resultDiv.textContent = `Failed to update ${type}: ${error.message}`;
   }
 }
 

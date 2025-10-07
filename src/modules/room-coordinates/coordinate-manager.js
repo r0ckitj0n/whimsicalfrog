@@ -1,3 +1,4 @@
+import { ApiClient } from '../../core/api-client.js';
 /**
  * Room Coordinates Manager
  * Handles door positioning and coordinate-based functionality for room pages
@@ -46,12 +47,7 @@ export class RoomCoordinateManager {
         return true;
       }
       try { performance.mark('wf:coords:load:start'); } catch(_) {}
-      const response = await fetch(`/api/get_room_coordinates.php?room=${encodeURIComponent(roomType)}`);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await ApiClient.get('/api/get_room_coordinates.php', { room: roomType });
       if (data.success && Array.isArray(data.coordinates) && data.coordinates.length) {
         this.config.doorCoordinates = data.coordinates.map((coord) => ({
           ...coord,

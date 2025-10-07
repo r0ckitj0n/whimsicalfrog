@@ -2,7 +2,7 @@
 // Dynamically loads page/room backgrounds using the unified ApiClient.
 // Exported as an async function so callers can await completion if needed.
 
-import { apiGet } from './api-client.js';
+import ApiClient from './api-client.js';
 
 // Runtime-injected CSS classes for background images
 const DYNBG_STYLE_ID = 'wf-dynbg-runtime';
@@ -34,7 +34,7 @@ function ensureDynBgClass(imageUrl){
  */
 async function generatePageRoomMap() {
   try {
-    const data = await apiGet('/api/get_room_data.php');
+    const data = await ApiClient.request('/api/get_room_data.php', { method: 'GET' });
     if (data.success) {
       const map = {
         // Only include explicit mappings returned by API; do not invent defaults
@@ -66,13 +66,13 @@ export async function loadDynamicBackground() {
     }
 
     const rn = Number(String(roomNumberStr).replace(/^room/i, ''));
-    const bgRes = await apiGet(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
-    if (!bgRes.success || !bgRes.background) return;
+    const bgRes = await ApiClient.request(`/api/get_background.php?room=${encodeURIComponent(rn)}`, { method: 'GET' });
+    const bg = (bgRes && (bgRes.data?.background || bgRes.background)) || null;
+    if (!bg) return;
 
-    const { image_filename, webp_filename } = bgRes.background;
+    const { image_filename, webp_filename } = bg;
     const supportsWebP = document.documentElement.classList.contains('webp');
     const filename = supportsWebP && webp_filename ? webp_filename : image_filename;
-
     let imageUrl = `/images/backgrounds/${filename}`;
     if (!imageUrl.includes('/backgrounds/') && !filename.startsWith('backgrounds/')) {
       imageUrl = `images/${filename}`;

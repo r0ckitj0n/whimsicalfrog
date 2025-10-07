@@ -8,6 +8,9 @@ require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
 $orderId = htmlspecialchars($order['id'] ?? 'N/A');
 $customerEmail = htmlspecialchars($customer['email'] ?? '');
 $businessName = BusinessSettings::getBusinessName();
+$businessAddressBlock = BusinessSettings::getBusinessAddressBlock();
+$businessPhone = BusinessSettings::get('business_phone', '');
+$businessUrl = BusinessSettings::getSiteUrl('');
 ?>
 <!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
@@ -21,6 +24,15 @@ $businessName = BusinessSettings::getBusinessName();
   <div class="header">
     <h1 class="h1"><?= htmlspecialchars($businessName) ?></h1>
     <p>Admin Notification</p>
+    <?php if (!empty($businessAddressBlock) || !empty($businessPhone) || !empty($businessUrl)): ?>
+      <p class="muted" style="white-space: pre-line;">
+        <?php if (!empty($businessAddressBlock)): ?><?= nl2br(htmlspecialchars($businessAddressBlock)) ?><?php endif; ?>
+        <?php if (!empty($businessPhone) || !empty($businessUrl)): ?><br><?php endif; ?>
+        <?php if (!empty($businessPhone)): ?><?= htmlspecialchars($businessPhone) ?><?php endif; ?>
+        <?php if (!empty($businessPhone) && !empty($businessUrl)): ?> | <?php endif; ?>
+        <?php if (!empty($businessUrl)): ?><?= htmlspecialchars($businessUrl) ?><?php endif; ?>
+      </p>
+    <?php endif; ?>
   </div>
   <div class="wrapper">
     <p>A new order <strong>#<?= $orderId ?></strong> was placed.</p>

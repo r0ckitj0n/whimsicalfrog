@@ -57,6 +57,15 @@
   background: #f3f4f6; /* gray-100 */
 }
 
+/* Cart items panel: scrollable in all viewports */
+#cartModalOverlay #cartModalItems {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0; /* allow child to shrink and scroll inside flex parent */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
 /* Make modal more usable on mobile */
 @media (max-width: 640px) {
   #cartModalOverlay .confirmation-modal {
@@ -72,20 +81,14 @@
     background: #fff;
     z-index: var(--z-index-modal-content, 420);
   }
-  #cartModalOverlay #cartModalItems {
-    /* allow scrolling when content exceeds available space */
-    flex: 1 1 auto;
-    overflow-y: auto;
-    min-height: 0; /* critical in flex containers to allow child to shrink and scroll */
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
+  /* retain behavior on mobile (already set globally) */
+  #cartModalOverlay #cartModalItems { }
   }
   /* Tighten spacing for cart rows on small screens */
   #cartModalOverlay .cart-item {
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-{{ ... }}
+  }
   #cartModalOverlay .cart-item-title {
     font-size: 0.95rem;
     line-height: 1.2;
@@ -102,7 +105,6 @@
     padding: 10px 12px;
     font-size: 0.95rem;
   }
-}
 
 /* Respect bottom safe area when modal is full-height */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {

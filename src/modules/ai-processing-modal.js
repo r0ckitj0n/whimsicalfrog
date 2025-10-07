@@ -1,3 +1,4 @@
+import { ApiClient } from '../../core/api-client.js';
 // AI Processing Modal Module (Vite-managed)
 // Initializes the AIProcessingModal class if the modal exists on the page
 // Runtime-injected width classes for AI progress bar (no inline styles)
@@ -200,25 +201,12 @@ class AIProcessingModal {
       this.updateStep(1, 'Analyzing image with AI...', false, false);
       this.updateProgress(10);
 
-      const response = await fetch('/api/process_image_ai.php', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({
-          action: 'process_image',
-          imagePath: imagePath,
-          sku: sku,
-          options: options
-        })
+      const data = await ApiClient.post('/api/process_image_ai.php', {
+        action: 'process_image',
+        imagePath: imagePath,
+        sku: sku,
+        options: options
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
 
       if (!data.success) {
         throw new Error(data.error || 'Processing failed');

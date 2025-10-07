@@ -1,11 +1,8 @@
 // Quick check of shipping rates in database
 // This will show us what shipping rates are currently configured
 
-fetch('/api/business_settings.php?action=get_settings&category=ecommerce', {
-  method: 'GET',
-  headers: { 'X-Requested-With': 'XMLHttpRequest' },
-  credentials: 'same-origin'
-}).then(r => r.json()).then(data => {
+window.ApiClient.request('/api/business_settings.php?action=get_settings&category=ecommerce', { method: 'GET' })
+.then(data => {
   console.log('Business settings response:', data);
 
   if (data.success && data.settings) {
@@ -34,6 +31,7 @@ fetch('/api/business_settings.php?action=get_settings&category=ecommerce', {
   } else {
     console.error('Failed to get business settings:', data);
   }
-}).catch(err => {
+})
+.catch(err => {
   console.error('Error checking business settings:', err);
 });

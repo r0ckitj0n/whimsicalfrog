@@ -1,3 +1,4 @@
+import { ApiClient } from '../core/api-client.js';
 /* Receipt Modal: loads receipt.php content into a modal and provides print-friendly styling */
 (function() {
   const state = {
@@ -56,9 +57,7 @@
   async function loadReceipt(orderId) {
     // Use canonical router path with bare=1 so the server suppresses header/footer
     const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
-    const res = await fetch(url, { credentials: 'include' });
-    if (!res.ok) throw new Error(`Failed to load receipt (${res.status})`);
-    const html = await res.text();
+    const html = await ApiClient.get(url);
     // Parse and extract only the receipt container to avoid any stray layout wrappers
     try {
       const parser = new DOMParser();

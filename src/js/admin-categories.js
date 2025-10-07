@@ -1,3 +1,5 @@
+import { ApiClient } from '../core/api-client.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const categoryTableBody = document.getElementById('categoryTableBody');
     const addCategoryForm = document.getElementById('addCategoryForm');
@@ -20,12 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                const res = await fetch('/api/categories', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'create', category })
-                });
-                const data = await res.json();
+                const data = await ApiClient.post('/api/categories', { action: 'create', category });
 
                 if (data.success) {
                     location.reload(); // Easiest way to show the new category and its data
@@ -63,12 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         try {
-            const res = await fetch('/api/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'delete', category })
-            });
-            const data = await res.json();
+            const data = await ApiClient.post('/api/categories', { action: 'delete', category });
 
             if (data.success) {
                 btn.closest('tr').remove();
@@ -128,12 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryDiv.innerHTML = 'Saving...';
 
         try {
-            const res = await fetch('/api/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'rename', category: originalName, newCategory: newName })
-            });
-            const data = await res.json();
+            const data = await ApiClient.post('/api/categories', { action: 'rename', category: originalName, newCategory: newName });
 
             if (data.success) {
                 // Just reload the page to reflect all changes, including updated SKUs

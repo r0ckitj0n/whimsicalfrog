@@ -5,6 +5,7 @@
  * - Lightweight, no external deps
  */
 
+import { ApiClient } from '../core/api-client.js';
 const API_URL = '/api/help_tooltips.php';
 const LS_KEY_ENABLED = 'wf_tooltips_enabled';
 const SS_KEY_SESSION_ENABLE = 'wf_tooltips_session_enabled';
@@ -208,8 +209,7 @@ async function loadTooltips() {
     let allTooltips = [];
     for (const context of contexts) {
       const url = `${API_URL}?action=get&page_context=${encodeURIComponent(context)}`;
-      const res = await fetch(url, { credentials: 'same-origin' });
-      const json = await res.json();
+      const json = await ApiClient.get(url);
       if (json?.success && json.tooltips) {
         allTooltips = allTooltips.concat(json.tooltips);
       }

@@ -19,8 +19,12 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${GREEN}🚀 Starting fast file deployment...${NC}"
-echo -e "${GREEN}💾 Backing up website...${NC}"
-curl -s -X POST https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing deployment...${NC}"
+if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping live website backup API call${NC}"
+else
+  echo -e "${GREEN}💾 Backing up website...${NC}"
+  curl -s -X POST https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing deployment...${NC}"
+fi
 echo -e "${YELLOW}⏭️  Skipping database updates in fast deploy (use deploy_full.sh for DB restore)${NC}"
 
 # Quarantine duplicate/backup files before build/upload
@@ -33,77 +37,89 @@ if [ -f .git/index.lock ]; then
   rm -f .git/index.lock
 fi
 
-# Always attempt to synchronize with GitHub and push local changes
-echo -e "${GREEN}🔄 Syncing with GitHub...${NC}"
-if command -v git >/dev/null 2>&1; then
-  # Remove any stale lock first (already handled above, but keep it defensive)
-  [ -f .git/index.lock ] && rm -f .git/index.lock || true
+# Always attempt to synchronize with GitHub and push local changes (unless WF_SKIP_GIT=1)
+if [ "${WF_SKIP_GIT:-0}" = "1" ]; then
+  echo -e "${YELLOW}⏭️  Skipping GitHub sync due to WF_SKIP_GIT=1${NC}"
+else
+  echo -e "${GREEN}🔄 Syncing with GitHub...${NC}"
+  if command -v git >/dev/null 2>&1; then
+    # Remove any stale lock first (already handled above, but keep it defensive)
+    [ -f .git/index.lock ] && rm -f .git/index.lock || true
 
-  # Ensure git identity is set locally to avoid commit failures
-  if ! git config user.email >/dev/null 2>&1; then
-    git config user.email "deploy@whimsicalfrog.us" || true
-  fi
-  if ! git config user.name >/dev/null 2>&1; then
-    git config user.name "WF Deploy Bot" || true
-  fi
-
-  # Ensure we are in a git repo and have an origin
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git remote get-url origin >/dev/null 2>&1; then
-    # Derive branch name robustly (prefer upstream, fallback to HEAD, then main)
-    BRANCH=$(git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>/dev/null | sed 's#.*/##' | tr -d '\n' )
-    if [ -z "$BRANCH" ]; then
-      BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -d '\n' | sed 's/[[:space:]]*$//')
+    # Ensure git identity is set locally to avoid commit failures
+    if ! git config user.email >/dev/null 2>&1; then
+      git config user.email "deploy@whimsicalfrog.us" || true
     fi
-    [ -z "$BRANCH" ] && BRANCH="main"
-
-    # Ensure upstream tracking exists for the current branch
-    if ! git rev-parse --abbrev-ref --symbolic-full-name "@{u}" >/dev/null 2>&1; then
-      git fetch origin "$BRANCH" || true
-      git branch --set-upstream-to="origin/$BRANCH" "$BRANCH" 2>/dev/null || true
+    if ! git config user.name >/dev/null 2>&1; then
+      git config user.name "WF Deploy Bot" || true
     fi
 
-    # Rebase on top of remote to avoid non-fast-forward push failures
-    git fetch origin || true
-    # If working tree is dirty, stash changes before rebase
-    NEED_STASH=false
-    if [ -n "$(git status --porcelain)" ]; then NEED_STASH=true; fi
-    if [ "$NEED_STASH" = true ]; then
-      echo -e "${YELLOW}⚠️  Working tree not clean. Stashing changes before rebase...${NC}"
-      git stash push -u -k -m "deploy-autostash $(date +'%Y-%m-%d %H:%M:%S')" || true
-    fi
-    git pull --rebase origin "$BRANCH" || echo -e "${YELLOW}⚠️  Git pull --rebase encountered issues; continuing...${NC}"
-    # Try to restore stashed changes
-    if [ "$NEED_STASH" = true ]; then
-      git stash list | grep -q 'deploy-autostash' && git stash pop || true
-    fi
-
-    # Commit any pending changes (if any)
-    if [ -n "$(git status --porcelain)" ]; then
-      echo -e "${GREEN}📝 Committing changes to GitHub...${NC}"
-      git add -A
-      # Disable husky hooks for automated commits
-      HUSKY=0 git commit --no-verify -m "Auto-commit before deployment ($(date +'%Y-%m-%d %H:%M:%S'))" || true
-    else
-      echo -e "${GREEN}✅ No local changes to commit${NC}"
-    fi
-
-    # Push with a retry after another rebase if needed
-    if HUSKY=0 git push origin "$BRANCH"; then
-      echo -e "${GREEN}✅ Successfully pushed to GitHub${NC}"
-    else
-      echo -e "${YELLOW}⚠️  Initial push failed; attempting rebase and retry...${NC}"
-      git pull --rebase origin "$BRANCH" || true
-      if HUSKY=0 git push origin "$BRANCH"; then
-        echo -e "${GREEN}✅ Push succeeded after rebase${NC}"
-      else
-        echo -e "${YELLOW}⚠️  GitHub push failed even after rebase. Continuing with deployment...${NC}"
+    # Ensure we are in a git repo and have an origin
+    if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git remote get-url origin >/dev/null 2>&1; then
+      # Derive branch name robustly (prefer upstream, fallback to HEAD, then main)
+      BRANCH=$(git rev-parse --abbrev-ref --symbolic-full-name "@{u}" 2>/dev/null | sed 's#.*/##' | tr -d '\n' )
+      if [ -z "$BRANCH" ]; then
+        BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -d '\n' | sed 's/[[:space:]]*$//')
       fi
+      [ -z "$BRANCH" ] && BRANCH="main"
+
+      # Ensure upstream tracking exists for the current branch
+      if ! git rev-parse --abbrev-ref --symbolic-full-name "@{u}" >/dev/null 2>&1; then
+        git fetch origin "$BRANCH" || true
+        git branch --set-upstream-to="origin/$BRANCH" "$BRANCH" 2>/dev/null || true
+      fi
+
+      # Rebase on top of remote to avoid non-fast-forward push failures
+      git fetch origin || true
+      # If working tree is dirty, stash changes before rebase
+      NEED_STASH=false
+      if [ -n "$(git status --porcelain)" ]; then NEED_STASH=true; fi
+      if [ "$NEED_STASH" = true ]; then
+        echo -e "${YELLOW}⚠️  Working tree not clean. Stashing changes before rebase...${NC}"
+        git stash push -u -k -m "deploy-autostash $(date +'%Y-%m-%d %H:%M:%S')" || true
+      fi
+      git pull --rebase origin "$BRANCH" || echo -e "${YELLOW}⚠️  Git pull --rebase encountered issues; continuing...${NC}"
+      # Try to restore stashed changes
+      if [ "$NEED_STASH" = true ]; then
+        git stash list | grep -q 'deploy-autostash' && git stash pop || true
+      fi
+
+      # Commit any pending changes (if any)
+      if [ -n "$(git status --porcelain)" ]; then
+        if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+          echo -e "${YELLOW}DRY-RUN: Changes detected but skipping git add/commit${NC}"
+        else
+          echo -e "${GREEN}📝 Committing changes to GitHub...${NC}"
+          git add -A
+          # Disable husky hooks for automated commits
+          HUSKY=0 git commit --no-verify -m "Auto-commit before deployment ($(date +'%Y-%m-%d %H:%M:%S'))" || true
+        fi
+      else
+        echo -e "${GREEN}✅ No local changes to commit${NC}"
+      fi
+
+      # Push with a retry after another rebase if needed
+      if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+        echo -e "${YELLOW}DRY-RUN: Skipping git push to origin/${BRANCH}${NC}"
+      else
+        if HUSKY=0 git push origin "$BRANCH"; then
+          echo -e "${GREEN}✅ Successfully pushed to GitHub${NC}"
+        else
+          echo -e "${YELLOW}⚠️  Initial push failed; attempting rebase and retry...${NC}"
+          git pull --rebase origin "$BRANCH" || true
+          if HUSKY=0 git push origin "$BRANCH"; then
+            echo -e "${GREEN}✅ Push succeeded after rebase${NC}"
+          else
+            echo -e "${YELLOW}⚠️  GitHub push failed even after rebase. Continuing with deployment...${NC}"
+          fi
+        fi
+      fi
+    else
+      echo -e "${YELLOW}⚠️  No git repository or 'origin' remote not configured. Skipping GitHub sync.${NC}"
     fi
   else
-    echo -e "${YELLOW}⚠️  No git repository or 'origin' remote not configured. Skipping GitHub sync.${NC}"
+    echo -e "${YELLOW}⚠️  'git' not available on PATH; skipping GitHub sync.${NC}"
   fi
-else
-  echo -e "${YELLOW}⚠️  'git' not available on PATH; skipping GitHub sync.${NC}"
 fi
 
 # Ensure frontend build artifacts exist
@@ -175,8 +191,13 @@ cd / || true
 bye
 EOL
 
-lftp -f preclean_remote.txt || true
-rm -f preclean_remote.txt
+if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping lftp pre-clean step${NC}"
+  rm -f preclean_remote.txt
+else
+  lftp -f preclean_remote.txt || true
+  rm -f preclean_remote.txt
+fi
 
 # Quarantine any new duplicate files created during build
 echo -e "${GREEN}🧹 Quarantining any duplicate files created during build...${NC}"
@@ -237,7 +258,17 @@ EOL
 
 # Run lftp with the commands
 echo -e "${GREEN}🌐 Deploying files to server...${NC}"
-if lftp -f deploy_commands.txt; then
+if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping lftp mirror (file deployment)${NC}"
+  DRY_DEPLOY_SUCCESS=1
+else
+  if lftp -f deploy_commands.txt; then
+    DRY_DEPLOY_SUCCESS=1
+  else
+    DRY_DEPLOY_SUCCESS=0
+  fi
+fi
+if [ "${DRY_DEPLOY_SUCCESS}" = "1" ]; then
   echo -e "${GREEN}✅ Files deployed successfully${NC}"
   # Optional: Upload maintenance utility (disabled by default to avoid mkdir errors on some hosts)
   if [ "${WF_UPLOAD_MAINTENANCE:-0}" = "1" ]; then
@@ -276,7 +307,9 @@ mirror --reverse --delete --verbose --only-newer --no-perms \
   images/backgrounds images/backgrounds
 bye
 EOL
-  if lftp -f deploy_backgrounds.txt; then
+  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+    echo -e "${YELLOW}DRY-RUN: Skipping backgrounds sync (mtime-based)${NC}"
+  elif lftp -f deploy_backgrounds.txt; then
     echo -e "${GREEN}✅ Background images synced (mtime-based)${NC}"
   else
     echo -e "${YELLOW}⚠️  Background image sync failed; continuing${NC}"
@@ -301,7 +334,11 @@ rm -f hot
 bye
 EOL
 
-lftp -f cleanup_hot.txt > /dev/null 2>&1 || true
+if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping remote hot file cleanup${NC}"
+else
+  lftp -f cleanup_hot.txt > /dev/null 2>&1 || true
+fi
 rm cleanup_hot.txt
 
 # Verify deployment (HTTP-based, avoids dotfile visibility issues)
@@ -350,7 +387,11 @@ chmod 644 images/items/*
 bye
 EOL
 
-lftp -f fix_permissions.txt > /dev/null 2>&1 || true
+if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping remote permissions fix${NC}"
+else
+  lftp -f fix_permissions.txt > /dev/null 2>&1 || true
+fi
 rm fix_permissions.txt
 
 # List duplicate-suffixed files on server (for visibility)
@@ -373,7 +414,11 @@ cls -1 images/signs/*\\ 2.* || true
 cls -1 images/signs/*\\ 3.* || true
 bye
 EOL
-lftp -f list_server_duplicates.txt || true
+if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate listing${NC}"
+else
+  lftp -f list_server_duplicates.txt || true
+fi
 rm list_server_duplicates.txt
 
 # Delete duplicate-suffixed files on server
@@ -394,7 +439,11 @@ rm -f images/signs/*\\ 2.* || true
 rm -f images/signs/*\\ 3.* || true
 bye
 EOL
-lftp -f delete_server_duplicates.txt || true
+if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+  echo -e "${YELLOW}DRY-RUN: Skipping remote duplicate deletion${NC}"
+else
+  lftp -f delete_server_duplicates.txt || true
+fi
 rm delete_server_duplicates.txt
 
 # Test image accessibility (use a stable, non-legacy asset)

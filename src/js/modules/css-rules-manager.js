@@ -2,6 +2,8 @@
 // Minimal UI to view and add site-level CSS rules stored server-side.
 // Expands later to support scoping by page/section and priority policies.
 
+import { ApiClient } from '../../core/api-client.js';
+
 function h(tag, attrs = {}, children = []) {
   const el = document.createElement(tag);
   Object.entries(attrs || {}).forEach(([k, v]) => {
@@ -19,9 +21,7 @@ function h(tag, attrs = {}, children = []) {
 
 async function fetchRules() {
   try {
-    const res = await fetch('/api/css_rules/list.php');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json().catch(() => ({}));
+    const data = await ApiClient.get('/api/css_rules/list.php');
     // Expect { success, rules: [ { id, selector, property, value, important, note } ] }
     return data?.rules || [];
   } catch (_) {
@@ -31,10 +31,7 @@ async function fetchRules() {
 
 async function addRule(rule) {
   try {
-    const res = await fetch('/api/css_rules/add.php', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rule)
-    });
-    const data = await res.json().catch(() => ({}));
+    const data = await ApiClient.post('/api/css_rules/add.php', rule);
     return !!data?.success;
   } catch (_) { return false; }
 }

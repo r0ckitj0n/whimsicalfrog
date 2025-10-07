@@ -23,7 +23,8 @@ $title = BusinessSettings::get('contact_page_title', 'Contact Us');
 $intro = BusinessSettings::get('contact_page_intro', "<p>Have a question or special request?<br>Send us a message and we'll get back to you soon.</p>");
 $businessEmail = BusinessSettings::getBusinessEmail();
 $businessPhone = BusinessSettings::get('business_phone', '');
-$businessAddress = BusinessSettings::get('business_address', '');
+// Canonical multi-line address block
+$businessAddress = BusinessSettings::getBusinessAddressBlock();
 // Owner name (if available)
 $businessOwner = BusinessSettings::get('business_owner', '');
 // Extras for modal details

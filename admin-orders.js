@@ -206,7 +206,7 @@ class AdminOrdersModule {
                 if (!form) break;
                 const fd = new FormData(form);
                 const id = (fd.get('orderId') || fd.get('id') || '').toString();
-                fetch('/functions/process_order_update.php', { method: 'POST', credentials: 'include', body: fd })
+                window.ApiClient.request('/functions/process_order_update.php', { method: 'POST', body: fd })
                     .then(r => r.json().catch(() => ({})))
                     .then(data => {
                         if (data && data.success) {
@@ -249,7 +249,7 @@ class AdminOrdersModule {
                 url.searchParams.delete('edit');
                 url.searchParams.set(action, requestedId);
 
-                fetch(url.toString(), { credentials: 'include' })
+                window.ApiClient.request(url.toString(), { method: 'GET' })
                     .then(r => r.text())
                     .then(html => {
                         const tmp = document.createElement('div');

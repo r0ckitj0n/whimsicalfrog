@@ -179,9 +179,11 @@ import '../styles/admin-room-map-editor.css';
   }
 
   async function fetchJSON(url, opts){
-    const res = await fetch(url, opts);
-    const text = await res.text();
-    let data = null; try { data = JSON.parse(text); } catch(_){ console.error('[MapEditor] Invalid JSON', text); }
+    const res = await window.ApiClient.request(url, opts || {});
+    const text = (typeof res === 'string') ? res : JSON.stringify(res);
+    let data = null; 
+    try { data = (typeof res === 'string') ? JSON.parse(res) : res; } 
+    catch(_){ console.error('[MapEditor] Invalid JSON', text); }
     return { res, data, text };
   }
 
@@ -266,9 +268,9 @@ import '../styles/admin-room-map-editor.css';
     if (!select) return;
 
     try {
-      const response = await fetch('/api/get_rooms.php');
-      if (!response.ok) throw new Error('API request failed');
-      const rooms = await response.json();
+      const response = await window.ApiClient.request('/api/get_rooms.php', { method: 'GET' });
+      if (!response || response.error) throw new Error('API request failed');
+      const rooms = response;
 
       if (Array.isArray(rooms)) {
         rooms.forEach(room => {

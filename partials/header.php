@@ -116,6 +116,10 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>WhimsicalFrog</title>
+    <script>
+      // Force API client to use the current origin/port (important for localhost dev)
+      try { window.__WF_BACKEND_ORIGIN = window.location.origin; } catch(_) {}
+    </script>
     <?php
     // Debug breadcrumb: emit a one-time header version marker and currently attached <script> srcs
     $header_ts = date('c');
@@ -128,6 +132,36 @@ echo "<script>(function(){try{console.log('[WF-Header] version ', '" . addslashe
 echo vite('js/app.js');
 // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
 echo vite('js/header-bootstrap.js');
+// Final inline override to guarantee help chips are 36x36 with primary brand color
+echo <<<'STYLE'
+<style id="wf-help-chip-override">
+  .admin-tab-navigation #adminHelpDocsBtn,
+  .admin-tab-navigation #adminHelpToggleBtn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    border-radius: 9999px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    background-color: var(--brand-primary, #22c55e) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .admin-tab-navigation #adminHelpDocsBtn:hover,
+  .admin-tab-navigation #adminHelpToggleBtn:hover {
+    filter: brightness(0.95) !important;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.08) !important;
+  }
+  .admin-tab-navigation #adminHelpDocsBtn .help-q { font-size: 18px; line-height: 1; font-weight: 700; transform: translateY(-1px); }
+  .admin-tab-navigation #adminHelpToggleBtn .wf-toggle { width: 22px; height: 12px; }
+</style>
+STYLE;
 // Expose strict fail-fast flag to client (default true unless explicitly disabled)
 try {
     $strictRaw = getenv('WF_STRICT_FAILFAST');
@@ -208,7 +242,7 @@ echo <<<'STYLE'
   #databaseTablesModal {
     padding-top: var(--wf-overlay-offset) !important;
     align-items: flex-start !important;
-    z-index: 10050 !important; /* above header and nav */
+    z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important; /* above header and nav using unified token */
     display: flex !important;             /* ensure flex context */
     justify-content: center !important;   /* center horizontally */
   }
@@ -311,10 +345,16 @@ echo <<<'SCRIPT'
   function offsetOverlay(el){
     try{
       if(!el||el.__wfOffsetApplied) return; // idempotent
-      var hh=headerHeight();
-      el.style.paddingTop = (hh+12)+"px";
-      el.style.alignItems = 'flex-start';
-      el.style.zIndex = '10050';
+      var isOverHeader = !!(el.classList && el.classList.contains('over-header'));
+      if (!isOverHeader) {
+        var hh=headerHeight();
+        el.style.paddingTop = (hh+12)+"px";
+        el.style.alignItems = 'flex-start';
+      }
+      // JS fallback z-index; do NOT downgrade explicit over-header overlays
+      if (!isOverHeader && !el.hasAttribute('data-z-lock')) {
+        el.style.zIndex = '10100';
+      }
       var dlg = el.querySelector('.admin-modal,.modal,[role="document"],[role="dialog"]');
       if (dlg) { dlg.style.marginTop='0'; }
       el.__wfOffsetApplied = true;

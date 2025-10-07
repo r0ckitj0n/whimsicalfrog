@@ -1,0 +1,136 @@
+{
+  "success": true,
+  "action": "audit",
+  "timestamp": "20251006_072818",
+  "root": "/Users/jongraves/Documents/Websites/WhimsicalFrog",
+  "summary": {
+    "A": {
+      "count": 0,
+      "bytes": 0
+    },
+    "B": {
+      "count": 12,
+      "bytes": 106544
+    },
+    "C": {
+      "count": 7,
+      "bytes": 24169
+    },
+    "D": {
+      "count": 0,
+      "bytes": 0
+    },
+    "E": {
+      "count": 1,
+      "bytes": 2990
+    },
+    "F": {
+      "count": 3,
+      "bytes": 1215
+    }
+  },
+  "categories": {
+    "A": [],
+    "B": [
+      {
+        "path": ".DS_Store",
+        "size": 34820
+      },
+      {
+        "path": "data/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "images/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "reports/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "scripts/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "sections/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "sessions/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "src/.DS_Store",
+        "size": 8196
+      },
+      {
+        "path": "src/js/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "src/modules/.DS_Store",
+        "size": 8196
+      },
+      {
+        "path": "src/styles/.DS_Store",
+        "size": 6148
+      },
+      {
+        "path": "templates/.DS_Store",
+        "size": 6148
+      }
+    ],
+    "C": [
+      {
+        "path": ".htaccess.broken.20250924_205538",
+        "size": 137
+      },
+      {
+        "path": ".htaccess.fixed",
+        "size": 4780
+      },
+      {
+        "path": ".htaccess.hotfix_backup.20250924_212345",
+        "size": 4780
+      },
+      {
+        "path": ".htaccess.new",
+        "size": 0
+      },
+      {
+        "path": ".htaccess.preclean.20250924_212519",
+        "size": 5040
+      },
+      {
+        "path": ".htaccess.preminimal.20250924_212634",
+        "size": 4603
+      },
+      {
+        "path": ".htaccess.working",
+        "size": 4829
+      }
+    ],
+    "D": [],
+    "E": [
+      {
+        "path": "api/css_generator.php",
+        "size": 2990
+      }
+    ],
+    "F": [
+      {
+        "path": ".phpunit.result.cache",
+        "size": 325
+      },
+      {
+        "path": ".replit",
+        "size": 890
+      },
+      {
+        "path": ".tmp2",
+        "size": 0
+      }
+    ]
+  }
+}

@@ -291,7 +291,24 @@ function upsertSettings($pdo)
         Response::error('Settings map is required', null, 400);
     }
 
-    $pdo->beginTransaction();
+    // Ensure table exists (first run/dev safety)
+    try {
+        Database::execute("CREATE TABLE IF NOT EXISTS business_settings (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            category VARCHAR(64) NOT NULL,
+            setting_key VARCHAR(128) NOT NULL,
+            setting_value TEXT,
+            setting_type VARCHAR(32) DEFAULT 'text',
+            display_name VARCHAR(255) DEFAULT NULL,
+            description TEXT,
+            display_order INT DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY uniq_cat_key (category, setting_key)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    } catch (Exception $e) {}
+
+    // Begin transaction using Database helper
+    Database::beginTransaction();
 
     try {
         $sql = "INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description)
@@ -385,11 +402,13 @@ function getBusinessInfo()
         'business_email' => BusinessSettings::getBusinessEmail(),
         'business_phone' => $get('business_phone'),
         'business_hours' => $get('business_hours'),
-        'business_address' => $get('business_address'),
-        'business_address2' => $get('business_address2'),
-        'business_city' => $get('business_city'),
-        'business_state' => $get('business_state'),
-        'business_postal' => $get('business_postal'),
+        // Canonical address pieces + composed block from helper
+        'business_address' => BusinessSettings::getBusinessAddressLine1(),
+        'business_address2' => BusinessSettings::getBusinessAddressLine2(),
+        'business_city' => BusinessSettings::getBusinessCity(),
+        'business_state' => BusinessSettings::getBusinessState(),
+        'business_postal' => BusinessSettings::getBusinessPostal(),
+        'business_address_block' => BusinessSettings::getBusinessAddressBlock(),
         'business_country' => $get('business_country'),
         'business_website' => $get('business_website', BusinessSettings::getSiteUrl()),
         'business_logo_url' => $get('business_logo_url'),

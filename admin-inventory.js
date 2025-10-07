@@ -557,8 +557,8 @@ class AdminInventoryModule {
             colorsLoading.classList.remove('hidden');
         }
         try {
-            const res = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
-            const data = await res.json();
+            const res = await window.ApiClient.request(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
+            const data = res;
             if (data.success) {
                 this.renderColors(data.colors);
             } else {
@@ -779,8 +779,8 @@ class AdminInventoryModule {
     async loadAvailableImages() {
         if (!this.currentItemSku) return;
         try {
-            const response = await fetch(`/api/get_item_images.php?sku=${this.currentItemSku}`);
-            const data = await response.json();
+            const response = await window.ApiClient.request(`/api/get_item_images.php?sku=${this.currentItemSku}`);
+            const data = response;
             const availableImagesGrid = document.getElementById('availableImagesGrid');
             if (!availableImagesGrid) return;
             const gridContainer = availableImagesGrid.querySelector('.grid');
@@ -883,8 +883,8 @@ class AdminInventoryModule {
 
     async loadGlobalColorsForSelection() {
         try {
-            const response = await fetch('/api/global_color_size_management.php?action=get_global_colors');
-            const data = await response.json();
+            const response = await window.ApiClient.request('/api/global_color_size_management.php?action=get_global_colors');
+            const data = response;
             const select = document.getElementById('globalColorSelect');
             if (!select) return;
             select.innerHTML = '<option value="">Choose a color...</option>';
@@ -943,8 +943,8 @@ class AdminInventoryModule {
             if (genderFilter && genderFilter.value) {
                 url += `&gender=${encodeURIComponent(genderFilter.value)}`;
             }
-            const response = await fetch(url);
-            const data = await response.json();
+            const response = await window.ApiClient.request(url);
+            const data = response;
             if (data.success) {
                 this.renderSizes(data.sizes);
             } else {
@@ -1059,8 +1059,8 @@ class AdminInventoryModule {
     async loadColorOptions() {
         if (!this.currentItemSku) return;
         try {
-            const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
-            const data = await response.json();
+            const response = await window.ApiClient.request(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
+            const data = response;
             const colorFilter = document.getElementById('sizeColorFilter');
             if (!colorFilter) return;
             colorFilter.innerHTML = '<option value="general">General Sizes (No Color)</option>';
@@ -1082,8 +1082,8 @@ class AdminInventoryModule {
     async populateSizeColorSelect() {
         // Populate the size modal color association select (#sizeColorId)
         try {
-            const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
-            const data = await response.json();
+            const response = await window.ApiClient.request(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
+            const data = response;
             const select = document.getElementById('sizeColorId');
             if (!select) return;
             select.innerHTML = '<option value="">General Size (No specific color)</option>';
@@ -1670,14 +1670,13 @@ class AdminInventoryModule {
             const original = btn ? btn.textContent : '';
             if (btn) { btn.disabled = true; btn.textContent = isAdd ? 'Creating…' : 'Saving…'; btn.setAttribute('aria-busy', 'true'); }
 
-            const res = await fetch(url, {
+            const data = await window.ApiClient.request(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok || !data || data.success !== true) {
-                const msg = data && (data.error || data.message) ? (data.error || data.message) : `HTTP ${res.status}`;
+            }).catch(() => ({}));
+            if (!data || data.success !== true) {
+                const msg = data && (data.error || data.message) ? (data.error || data.message) : 'Request failed';
                 this.showError(`Failed to ${isAdd ? 'create' : 'update'} item: ${msg}`);
                 if (btn) { btn.disabled = false; btn.textContent = original; btn.removeAttribute('aria-busy'); }
                 return;
@@ -1811,12 +1810,12 @@ class AdminInventoryModule {
             return;
         }
         try {
-            const response = await fetch('/api/item_sizes.php?action=sync_stock', {
+            const response = await window.ApiClient.request('/api/item_sizes.php?action=sync_stock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_sku: this.currentItemSku })
             });
-            const data = await response.json();
+            const data = response;
             if (data.success) {
                 this.showSuccess(`Stock synchronized - Total: ${data.new_total_stock}`);
                 const stockField = document.getElementById('stockLevel');
@@ -1857,12 +1856,12 @@ class AdminInventoryModule {
             colorData.color_id = parseInt(colorId, 10);
         }
         try {
-            const response = await fetch(`/api/item_colors.php?action=${isEdit ? 'update_color' : 'add_color'}`, {
+            const response = await window.ApiClient.request(`/api/item_colors.php?action=${isEdit ? 'update_color' : 'add_color'}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(colorData)
             });
-            const data = await response.json();
+            const data = response;
             if (data.success) {
                 this.showSuccess(`Color ${isEdit ? 'updated' : 'added'} successfully${data.new_total_stock ? ` - Total stock: ${data.new_total_stock}` : ''}`);
                 this.closeColorModal();
@@ -1951,8 +1950,8 @@ class AdminInventoryModule {
 
     async loadColorTemplates() {
         try {
-            const response = await fetch('/api/color_templates.php?action=get_all');
-            const data = await response.json();
+            const response = await window.ApiClient.request('/api/color_templates.php?action=get_all');
+            const data = response;
             if (data.success) {
                 this.colorTemplates = data.templates || [];
                 this.renderColorTemplates();
@@ -2016,8 +2015,8 @@ class AdminInventoryModule {
 
     async loadColorTemplatePreview(templateId) {
         try {
-            const response = await fetch(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
-            const data = await response.json();
+            const response = await window.ApiClient.request(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
+            const data = response;
             if (data.success && data.template && Array.isArray(data.template.colors)) {
                 const previewContainer = document.getElementById(`colorPreview${templateId}`);
                 if (previewContainer) {
@@ -2086,7 +2085,7 @@ class AdminInventoryModule {
         const defaultStock = parseInt(document.getElementById('defaultColorStock')?.value, 10) || 0;
         try {
             if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = 'Applying...'; }
-            const response = await fetch('/api/color_templates.php?action=apply_to_item', {
+            const response = await window.ApiClient.request('/api/color_templates.php?action=apply_to_item', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2096,7 +2095,7 @@ class AdminInventoryModule {
                     default_stock: defaultStock
                 })
             });
-            const data = await response.json();
+            const data = response;
             if (data.success) {
                 this.showSuccess(`Template applied successfully! Added ${data.colors_added} colors.`);
                 this.closeColorTemplateModal();
@@ -2205,8 +2204,8 @@ class AdminInventoryModule {
 
     async loadSizeTemplates() {
         try {
-            const response = await fetch('/api/size_templates.php?action=get_all');
-            const data = await response.json();
+            const response = await window.ApiClient.request('/api/size_templates.php?action=get_all');
+            const data = response;
             if (data.success) {
                 this.sizeTemplates = data.templates || [];
                 this.renderSizeTemplates();
@@ -2270,8 +2269,8 @@ class AdminInventoryModule {
 
     async loadSizeTemplatePreview(templateId) {
         try {
-            const response = await fetch(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
-            const data = await response.json();
+            const response = await window.ApiClient.request(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
+            const data = response;
             if (data.success && data.template && Array.isArray(data.template.sizes)) {
                 const previewContainer = document.getElementById(`sizePreview${templateId}`);
                 if (previewContainer) {
@@ -2305,8 +2304,8 @@ class AdminInventoryModule {
     async loadColorsForSizeTemplate() {
         if (!this.currentItemSku) return;
         try {
-            const response = await fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
-            const data = await response.json();
+            const response = await window.ApiClient.request(`/api/item_colors.php?action=get_all_colors&item_sku=${this.currentItemSku}`);
+            const data = response;
             const colorSelect = document.getElementById('sizeTemplateColorId');
             if (!colorSelect) return;
             colorSelect.innerHTML = '<option value="">Select a color...</option>';
@@ -2347,7 +2346,7 @@ class AdminInventoryModule {
         }
         try {
             if (applyBtn) { applyBtn.disabled = true; applyBtn.textContent = 'Applying...'; }
-            const response = await fetch('/api/size_templates.php?action=apply_to_item', {
+            const response = await window.ApiClient.request('/api/size_templates.php?action=apply_to_item', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -2359,7 +2358,7 @@ class AdminInventoryModule {
                     default_stock: defaultStock
                 })
             });
-            const data = await response.json();
+            const data = response;
             if (data.success) {
                 this.showSuccess(`Template applied successfully! Added ${data.sizes_added} sizes.`);
                 this.closeSizeTemplateModal();
@@ -2422,12 +2421,12 @@ class AdminInventoryModule {
                     restoreElement();
                     return;
                 }
-                const response = await fetch(apiUrl, {
+                const response = await window.ApiClient.request(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updateData)
                 });
-                const data = await response.json();
+                const data = response;
                 if (data.success) {
                     element.setAttribute('data-value', newValue);
                     element.classList.remove('editing');
@@ -2472,12 +2471,12 @@ class AdminInventoryModule {
             'Are you sure you want to delete this color? This action cannot be undone.',
             async () => {
                 try {
-                    const response = await fetch('/api/item_colors.php?action=delete_color', {
+                    const response = await window.ApiClient.request('/api/item_colors.php?action=delete_color', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ color_id: colorId })
                     });
-                    const data = await response.json();
+                    const data = response;
                     if (data.success) {
                         this.showSuccess('Color deleted successfully');
                         if (typeof window.loadItemColors === 'function') window.loadItemColors();
@@ -2517,12 +2516,12 @@ class AdminInventoryModule {
         const isEdit = !!(sizeId && sizeId !== '');
         if (isEdit) sizeData.size_id = parseInt(sizeId, 10);
         try {
-            const response = await fetch(`/api/item_sizes.php?action=${isEdit ? 'update_size' : 'add_size'}`, {
+            const response = await window.ApiClient.request(`/api/item_sizes.php?action=${isEdit ? 'update_size' : 'add_size'}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(sizeData)
             });
-            const data = await response.json();
+            const data = response;
             if (data.success) {
                 this.showSuccess(`Size ${isEdit ? 'updated' : 'added'} successfully${data.new_total_stock ? ` - Total stock: ${data.new_total_stock}` : ''}`);
                 this.closeSizeModal();
@@ -2547,12 +2546,12 @@ class AdminInventoryModule {
             'Are you sure you want to delete this size? This action cannot be undone.',
             async () => {
                 try {
-                    const response = await fetch('/api/item_sizes.php?action=delete_size', {
+                    const response = await window.ApiClient.request('/api/item_sizes.php?action=delete_size', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ size_id: sizeId })
                     });
-                    const data = await response.json();
+                    const data = response;
                     if (data.success) {
                         this.showSuccess('Size deleted successfully');
                         if (typeof window.loadItemSizes === 'function') window.loadItemSizes();
@@ -2606,8 +2605,8 @@ class AdminInventoryModule {
     async getPricingExplanation(reasoningText) {
         try {
             const url = `/api/get_pricing_explanation.php?text=${encodeURIComponent(reasoningText)}`;
-            const response = await fetch(url);
-            const data = await response.json();
+            const response = await window.ApiClient.request(url);
+            const data = response;
             if (data.success) {
                 return { title: data.title, explanation: data.explanation };
             }
@@ -2964,8 +2963,8 @@ class AdminInventoryModule {
             return;
         }
         try {
-            const response = await fetch(`/api/get_item_images.php?sku=${encodeURIComponent(targetSku)}`);
-            const data = await response.json();
+            const response = await window.ApiClient.request(`/api/get_item_images.php?sku=${encodeURIComponent(targetSku)}`);
+            const data = response;
             console.log('[AdminInventory] Image API response:', data);
             if (data.success) {
                 this.displayCurrentImages(data.images, isViewModal);
@@ -3035,12 +3034,12 @@ class AdminInventoryModule {
             return;
         }
         try {
-            const response = await fetch('/api/set_primary_image.php', {
+            const response = await window.ApiClient.request('/api/set_primary_image.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ imageId, sku })
             });
-            const data = await response.json();
+            const data = response;
             if (data.success) {
                 this.showSuccess('Primary image updated');
                 await this.loadCurrentImages(sku, false);
@@ -3055,12 +3054,12 @@ class AdminInventoryModule {
 
     async deleteImage(imageId) {
         try {
-            const response = await fetch('/api/delete_item_image.php', {
+            const response = await window.ApiClient.request('/api/delete_item_image.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ imageId })
             });
-            const data = await response.json();
+            const data = response;
             if (data.success) {
                 this.showSuccess(data.message || 'Image deleted');
                 const sku = this.currentItemSku || (document.getElementById('skuEdit')?.value || document.getElementById('skuDisplay')?.value || '');
@@ -3115,14 +3114,9 @@ class AdminInventoryModule {
                     }
                 }
 
-                const response = await fetch(`/api/run_image_analysis.php?sku=${encodeURIComponent(sku)}`, {
-                    method: 'GET',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                const result = await window.ApiClient.request(`/api/run_image_analysis.php?sku=${encodeURIComponent(sku)}`, {
+                    method: 'GET'
                 });
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                const result = await response.json();
                 if (!result.success) {
                     throw new Error(result.error || 'AI processing failed.');
                 }
@@ -3205,12 +3199,12 @@ class AdminInventoryModule {
         try {
             const isUpdate = !!id;
             const q = `inventoryId=${encodeURIComponent(this.currentItemSku)}&costType=${encodeURIComponent(category)}` + (isUpdate ? `&id=${encodeURIComponent(id)}` : '');
-            const response = await fetch(`/functions/process_cost_breakdown.php?${q}`, {
+            const response = await window.ApiClient.request(`/functions/process_cost_breakdown.php?${q}`, {
                 method: isUpdate ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
-            const result = await response.json();
+            const result = response;
             if (result && result.success) {
                 // Ensure local map uses server id for subsequent edits/deletes
                 const serverId = (result.data && (result.data.id || result.data.ID || result.data.Id)) || id;
@@ -3252,8 +3246,8 @@ class AdminInventoryModule {
         }
         try {
             const q = `inventoryId=${encodeURIComponent(this.currentItemSku)}&costType=${encodeURIComponent(category)}&id=${encodeURIComponent(itemId)}`;
-            const response = await fetch(`/functions/process_cost_breakdown.php?${q}`, { method: 'DELETE' });
-            const result = await response.json();
+            const response = await window.ApiClient.request(`/functions/process_cost_breakdown.php?${q}`, { method: 'DELETE' });
+            const result = response;
             if (!result.success) {
                 this.showError('Failed to delete item from server.');
             }
@@ -3270,11 +3264,10 @@ class AdminInventoryModule {
             // Close modal immediately for responsiveness
             const modal = document.getElementById('deleteConfirmModal');
             if (modal) modal.classList.remove('show');
-            const res = await fetch(`/functions/process_inventory_update.php?action=delete&sku=${encodeURIComponent(sku)}`, {
-                method: 'DELETE',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            const res = await window.ApiClient.request(`/functions/process_inventory_update.php?action=delete&sku=${encodeURIComponent(sku)}`, {
+                method: 'DELETE'
             });
-            const data = await res.json();
+            const data = res;
             if (data && data.success) {
                 this.showSuccess(data.message || 'Item deleted');
                 setTimeout(() => { window.location.href = '?page=admin&section=inventory'; }, 1000);
@@ -3344,12 +3337,12 @@ class AdminInventoryModule {
         ['materials', 'labor', 'energy', 'equipment'].forEach(cat => this.renderCostList(cat));
         this.updateTotalsDisplay();
         try {
-            const response = await fetch(`/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(this.currentItemSku)}`, {
+            const response = await window.ApiClient.request(`/functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(this.currentItemSku)}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'clear_all' })
             });
-            const result = await response.json();
+            const result = response;
             if (result.success) {
                 this.showSuccess('Cost breakdown cleared.');
             } else {
@@ -4659,8 +4652,8 @@ class AdminInventoryModule {
 
     async refreshCategoryDropdown() {
         try {
-            const response = await fetch('/api/get_categories.php');
-            const newCategories = await response.json();
+            const response = await window.ApiClient.request('/api/get_categories.php');
+            const newCategories = response;
             this.categories = newCategories;
             this.updateCategoryDropdown();
             this.showSuccess('Categories updated!');
@@ -4725,8 +4718,8 @@ class AdminInventoryModule {
             if (!sku) continue;
 
             try {
-                const response = await fetch(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`);
-                const data = await response.json();
+                const response = await window.ApiClient.request(`/api/get_item_images.php?sku=${encodeURIComponent(sku)}`);
+                const data = response;
                 
                 if (data.success && data.images && data.images.length > 0) {
                     const primaryImage = data.images.find(img => img.is_primary) || data.images[0];
@@ -4924,7 +4917,7 @@ class AdminInventoryModule {
 
     async saveInlineEdit(sku, field, value) {
         try {
-            const response = await fetch('/api/update_item_field.php', {
+            const response = await window.ApiClient.request('/api/update_item_field.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -4936,7 +4929,7 @@ class AdminInventoryModule {
                 })
             });
             
-            const result = await response.json();
+            const result = response;
             
             if (result.success) {
                 this.showSuccess(`${field} updated successfully`);

@@ -1,6 +1,9 @@
 // Enhances the nested inventory editor with color swatches and a hex color picker
 // without modifying the large admin-inventory.js directly.
 
+(function(){})();
+import { ApiClient } from '../core/api-client.js';
+
 (function () {
   const NESTED_ID = 'nestedInventoryEditor';
 
@@ -49,14 +52,8 @@
           input.addEventListener('change', async () => {
             const value = input.value;
             try {
-              const res = await fetch('/api/item_colors.php?action=update_color_code', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ color_id: colorId, color_code: value })
-              });
-              const data = await res.json().catch(() => ({}));
-              if (!res.ok || !data?.success) throw new Error(data?.message || 'Failed to update color');
+              const data = await ApiClient.post('/api/item_colors.php?action=update_color_code', { color_id: colorId, color_code: value });
+              if (!data?.success) throw new Error(data?.message || 'Failed to update color');
               // Update label and swatch
               if (codeSpan) codeSpan.textContent = value;
               const swatch = headerTitleRow.querySelector('.wf-inline-swatch');
@@ -96,12 +93,8 @@
               const currentName = (nameEl && nameEl.textContent) ? nameEl.textContent.trim() : '';
               const newName = window.prompt('Enter new color name:', currentName);
               if (!newName || newName.trim() === '' || newName === currentName) return;
-              const res = await fetch('/api/item_colors.php?action=update_color_name', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-                body: JSON.stringify({ color_id: colorId, color_name: newName.trim() })
-              });
-              const data = await res.json().catch(() => ({}));
-              if (!res.ok || !data?.success) throw new Error(data?.message || 'Failed to rename color');
+              const data = await ApiClient.post('/api/item_colors.php?action=update_color_name', { color_id: colorId, color_name: newName.trim() });
+              if (!data?.success) throw new Error(data?.message || 'Failed to rename color');
               if (nameEl) nameEl.textContent = newName.trim();
               if (typeof window.showNotification === 'function') window.showNotification('Color renamed', 'success');
             } catch (err) {
@@ -116,12 +109,8 @@
           deleteBtn.addEventListener('click', async () => {
             try {
               if (!window.confirm('Delete this color and its size rows? This cannot be undone.')) return;
-              const res = await fetch('/api/item_colors.php?action=delete_color', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
-                body: JSON.stringify({ color_id: colorId })
-              });
-              const data = await res.json().catch(() => ({}));
-              if (!res.ok || !data?.success) throw new Error(data?.message || 'Failed to delete color');
+              const data = await ApiClient.post('/api/item_colors.php?action=delete_color', { color_id: colorId });
+              if (!data?.success) throw new Error(data?.message || 'Failed to delete color');
               // Remove block from DOM; nested editor will be refreshed by the admin module later
               block.remove();
               if (typeof window.showNotification === 'function') window.showNotification('Color deleted', 'success');
@@ -186,13 +175,21 @@
         const sku = root.dataset && root.dataset.sku ? root.dataset.sku : '';
         if (!sku) return;
         // Fetch raw data
-        const [cTxt, sTxt] = await Promise.all([
-          fetch(`/api/item_colors.php?action=get_all_colors&item_sku=${encodeURIComponent(sku)}&wf_dev_admin=1`, { credentials: 'same-origin' }).then(r=>r.text()),
-          fetch(`/api/item_sizes.php?action=get_all_sizes&item_sku=${encodeURIComponent(sku)}&wf_dev_admin=1`, { credentials: 'same-origin' }).then(r=>r.text()),
+        const [cRes, sRes] = await Promise.all([
+          ApiClient.get('/api/item_colors.php', { action: 'get_all_colors', item_sku: sku, wf_dev_admin: 1 }),
+          ApiClient.get('/api/item_sizes.php', { action: 'get_all_sizes', item_sku: sku, wf_dev_admin: 1 }),
         ]);
         let colors = []; let sizes = [];
-        try { const j = JSON.parse(cTxt); if (Array.isArray(j?.colors)) colors = j.colors; } catch(_) {}
-        try { const j = JSON.parse(sTxt); if (Array.isArray(j?.sizes)) sizes = j.sizes; } catch(_) {}
+        if (cRes && typeof cRes === 'object' && Array.isArray(cRes.colors)) {
+          colors = cRes.colors;
+        } else if (typeof cRes === 'string') {
+          try { const j = JSON.parse(cRes); if (Array.isArray(j?.colors)) colors = j.colors; } catch(_) {}
+        }
+        if (sRes && typeof sRes === 'object' && Array.isArray(sRes.sizes)) {
+          sizes = sRes.sizes;
+        } else if (typeof sRes === 'string') {
+          try { const j = JSON.parse(sRes); if (Array.isArray(j?.sizes)) sizes = j.sizes; } catch(_) {}
+        }
         if (!Array.isArray(sizes)) sizes = [];
         const toGender = (g) => (!g || g === '') ? 'Unisex' : String(g);
         const genders = Array.from(new Set(sizes.map(s => toGender(s.gender))));

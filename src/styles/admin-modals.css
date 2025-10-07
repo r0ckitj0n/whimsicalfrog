@@ -18,7 +18,7 @@
   opacity: 1;
   visibility: visible;
   transition: all 0.3s ease;
-  z-index: var(--z-admin-overlay,  var(--wf-overlay-z, 10050));
+  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100));
 }
 
 .admin-modal-overlay.hidden {

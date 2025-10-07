@@ -93,11 +93,7 @@
 
   // Data loading
   function loadCostBreakdown(itemId) {
-    fetch('functions/process_cost_breakdown.php?inventoryId=' + encodeURIComponent(itemId) + '&costType=all')
-      .then((r) => {
-        if (!r.ok) throw new Error('Network error');
-        return r.json();
-      })
+    window.ApiClient.request('functions/process_cost_breakdown.php?inventoryId=' + encodeURIComponent(itemId) + '&costType=all', { method: 'GET' })
       .then((data) => {
         if (data && data.success) {
           costBreakdown = data.data;
@@ -286,8 +282,7 @@
       : `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
     const data = { costType: 'materials', name, cost: parseFloat(cost) };
     showFormLoading('material');
-    fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-      .then((r) => { if (!r.ok) throw new Error('Network'); return r.json(); })
+    window.ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
       .then((res) => {
         if (res.success) {
           closeModal('materialModal');
@@ -312,8 +307,7 @@
       : `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
     const data = { costType: 'labor', description, cost: parseFloat(cost) };
     showFormLoading('labor');
-    fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-      .then((r) => { if (!r.ok) throw new Error('Network'); return r.json(); })
+    window.ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
       .then((res) => {
         if (res.success) {
           closeModal('laborModal');
@@ -338,8 +332,7 @@
       : `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(inventoryId)}`;
     const data = { costType: 'energy', description, cost: parseFloat(cost) };
     showFormLoading('energy');
-    fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-      .then((r) => { if (!r.ok) throw new Error('Network'); return r.json(); })
+    window.ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
       .then((res) => {
         if (res.success) {
           closeModal('energyModal');
@@ -355,8 +348,7 @@
   function deleteItem(id, type) {
     const url = `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(currentItemId)}&costType=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
     showFormLoading('delete');
-    fetch(url, { method: 'DELETE' })
-      .then((r) => { if (!r.ok) throw new Error('Network'); return r.json(); })
+    window.ApiClient.request(url, { method: 'DELETE' })
       .then((res) => {
         if (res.success) {
           closeModal('deleteModal');
@@ -372,12 +364,11 @@
   function updateCostPrice() {
     const suggested = Number(costBreakdown.totals?.suggestedCost || 0);
     showFormLoading('updateCost');
-    fetch('functions/process_inventory_update.php', {
+    window.ApiClient.request('functions/process_inventory_update.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: currentItemId, costPrice: suggested }),
     })
-      .then((r) => { if (!r.ok) throw new Error('Network'); return r.json(); })
       .then((res) => {
         if (res.success) {
           closeModal('updateCostModal');

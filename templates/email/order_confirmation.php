@@ -9,6 +9,9 @@ $orderId = htmlspecialchars($order['id'] ?? 'N/A');
 $fullName = htmlspecialchars(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? ''));
 $total = htmlspecialchars(number_format((float)($order['total'] ?? 0), 2));
 $businessName = BusinessSettings::getBusinessName();
+$businessAddressBlock = BusinessSettings::getBusinessAddressBlock();
+$businessPhone = BusinessSettings::get('business_phone', '');
+$businessUrl = BusinessSettings::getSiteUrl('');
 ?>
 <!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
@@ -22,6 +25,15 @@ $businessName = BusinessSettings::getBusinessName();
   <div class="header">
     <h1 class="h1"><?= htmlspecialchars($businessName) ?></h1>
     <p>Order Confirmation</p>
+    <?php if (!empty($businessAddressBlock) || !empty($businessPhone) || !empty($businessUrl)): ?>
+      <p class="muted" style="white-space: pre-line;">
+        <?php if (!empty($businessAddressBlock)): ?><?= nl2br(htmlspecialchars($businessAddressBlock)) ?><?php endif; ?>
+        <?php if (!empty($businessPhone) || !empty($businessUrl)): ?><br><?php endif; ?>
+        <?php if (!empty($businessPhone)): ?><?= htmlspecialchars($businessPhone) ?><?php endif; ?>
+        <?php if (!empty($businessPhone) && !empty($businessUrl)): ?> | <?php endif; ?>
+        <?php if (!empty($businessUrl)): ?><?= htmlspecialchars($businessUrl) ?><?php endif; ?>
+      </p>
+    <?php endif; ?>
   </div>
   <div class="wrapper">
     <p>Hi <?= $fullName ?>,</p>

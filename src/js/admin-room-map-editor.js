@@ -1,5 +1,6 @@
 // Admin: Room Map Editor (SVG polygon drawing over background)
 import '../styles/admin-room-map-editor.css';
+import { ApiClient } from '../core/api-client.js';
 (function(){
   const byId = (id) => document.getElementById(id);
 
@@ -179,10 +180,15 @@ import '../styles/admin-room-map-editor.css';
   }
 
   async function fetchJSON(url, opts){
-    const res = await fetch(url, opts);
-    const text = await res.text();
-    let data = null; try { data = JSON.parse(text); } catch(_){ console.error('[MapEditor] Invalid JSON', text); }
-    return { res, data, text };
+    try {
+      const result = await ApiClient.request(url, opts || {});
+      if (typeof result === 'string') {
+        return { res: null, data: null, text: result };
+      }
+      return { res: null, data: result, text: JSON.stringify(result) };
+    } catch (e) {
+      return { res: null, data: null, text: String(e && e.message ? e.message : e) };
+    }
   }
 
   async function loadActive(){
@@ -266,9 +272,7 @@ import '../styles/admin-room-map-editor.css';
     if (!select) return;
 
     try {
-      const response = await fetch('/api/get_rooms.php');
-      if (!response.ok) throw new Error('API request failed');
-      const rooms = await response.json();
+      const rooms = await ApiClient.get('/api/get_rooms.php');
 
       if (Array.isArray(rooms)) {
         rooms.forEach(room => {

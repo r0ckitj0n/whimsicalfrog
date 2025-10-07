@@ -1,6 +1,8 @@
 // Admin Settings - Delegated Click Handlers
 // Handles all click events with data-action attributes
 
+import { ApiClient } from '../core/api-client.js';
+
 document.addEventListener('click', async (e) => {
   const t = e.target;
   const closest = (sel) => t && t.closest ? t.closest(sel) : null;
@@ -94,8 +96,7 @@ document.addEventListener('click', async (e) => {
     e.stopPropagation();
     try {
       // Load email configuration data
-      const response = await fetch('/api/email_config.php?action=get');
-      const data = await response.json();
+      const data = await ApiClient.get('/api/email_config.php?action=get');
       console.log('Email config data:', data);
 
       // Show modal
@@ -114,8 +115,7 @@ document.addEventListener('click', async (e) => {
     e.stopPropagation();
     try {
       // Load Square configuration data
-      const response = await fetch('/api/square_config.php?action=get');
-      const data = await response.json();
+      const data = await ApiClient.get('/api/square_config.php?action=get');
       console.log('Square config data:', data);
 
       // Show modal
@@ -134,8 +134,7 @@ document.addEventListener('click', async (e) => {
     e.stopPropagation();
     try {
       // Load AI configuration data
-      const response = await fetch('/api/ai_settings.php?action=get');
-      const data = await response.json();
+      const data = await ApiClient.get('/api/ai_settings.php?action=get');
       console.log('AI settings data:', data);
 
       // Show modal
@@ -519,8 +518,7 @@ document.addEventListener('click', async (e) => {
     e.stopPropagation();
     try {
       // Load CSS rules data
-      const response = await fetch('/api/css_rules.php?action=list');
-      const data = await response.json();
+      const data = await ApiClient.get('/api/css_rules.php?action=list');
       console.log('CSS rules data:', data);
 
       // Show modal
@@ -620,14 +618,13 @@ document.addEventListener('click', async (e) => {
 const DelegatedHandlers = {
   async loadEmailHistory(filters = {}, page = 1) {
     try {
-      const params = new URLSearchParams({
+      const params = {
         page: page,
         limit: 20,
         ...filters
-      });
+      };
 
-      const response = await fetch(`/api/email_history.php?action=list&${params}`);
-      const result = await response.json();
+      const result = await ApiClient.get('/api/email_history.php?action=list', params);
 
       if (result.success) {
         this.populateEmailHistory(result.data);
@@ -687,9 +684,9 @@ const DelegatedHandlers = {
 
   async downloadEmailHistory(filters = {}) {
     try {
-      const params = new URLSearchParams(filters);
-      const response = await fetch(`/api/email_history.php?action=export&${params}`);
-      const blob = await response.blob();
+      // Request CSV via ApiClient (returns text for non-JSON). Convert to Blob for download.
+      const csvText = await ApiClient.get('/api/email_history.php?action=export', { ...filters });
+      const blob = new Blob([csvText || ''], { type: 'text/csv' });
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -717,8 +714,7 @@ const DelegatedHandlers = {
 
   async showEmailHistoryDetails(emailId) {
     try {
-      const response = await fetch(`/api/email_history.php?action=get&id=${emailId}`);
-      const result = await response.json();
+      const result = await ApiClient.get('/api/email_history.php?action=get', { id: emailId });
 
       if (result.success) {
         const email = result.data;
@@ -809,8 +805,7 @@ const DelegatedHandlers = {
   // Dashboard configuration methods
   async loadDashboardConfig() {
     try {
-      const response = await fetch('/api/dashboard_sections.php?action=get_sections');
-      const data = await response.json();
+      const data = await ApiClient.get('/api/dashboard_sections.php?action=get_sections');
 
       if (data.success) {
         this.populateDashboardConfig(data.data);

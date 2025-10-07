@@ -1,3 +1,4 @@
+import { ApiClient } from '../core/api-client.js';
 function __unusedDelegatedPreamble(e, closest, target) {
         // Deprecated: legacy delegated preamble is no longer used
         // note: deprecated; kept for backward compatibility (no early return to satisfy ESLint no-unreachable)
@@ -590,8 +591,7 @@ let brandVoiceOriginalIds = new Set();
 // ---- Content Tone ----
 async function loadContentToneOptions() {
   try {
-    const response = await fetch('/api/content_tone_options.php?action=get_active&admin_token=whimsical_admin_2024');
-    const result = await response.json();
+    const result = await ApiClient.get('/api/content_tone_options.php?action=get_active&admin_token=whimsical_admin_2024');
     if (result.success && Array.isArray(result.options) && result.options.length > 0) {
       contentToneOptions = result.options.map(o => ({ id: o.value, name: o.label, description: o.description }));
       contentToneOriginalIds = new Set(contentToneOptions.map(o => o.id));
@@ -607,8 +607,7 @@ async function loadContentToneOptions() {
 
 async function initializeDefaultContentToneOptions() {
   try {
-    const response = await fetch('/api/content_tone_options.php?action=initialize_defaults&admin_token=whimsical_admin_2024', { method: 'POST' });
-    const result = await response.json();
+    const result = await ApiClient.get('/api/content_tone_options.php?action=initialize_defaults&admin_token=whimsical_admin_2024', { method: 'POST' });
     if (result.success) {
       await loadContentToneOptions();
     } else {
@@ -777,11 +776,12 @@ async function saveContentToneOptions() {
 async function saveContentToneOption(option, isNew = false) {
   try {
     const action = isNew ? 'add' : 'update';
-    const response = await fetch(`/api/content_tone_options.php?action=${action}&admin_token=whimsical_admin_2024`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: option.id, value: option.value || option.id, label: option.name, description: option.description })
+    const result = await ApiClient.post(`/api/content_tone_options.php?action=${action}&admin_token=whimsical_admin_2024`, {
+      id: option.id,
+      value: option.value || option.id,
+      label: option.name,
+      description: option.description
     });
-    const result = await response.json();
     try { wfToast(result); } catch(_) {}
     if (!result.success) { try { /* keep legacy */ showNotification('Content Tone Options', 'Failed to save option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
@@ -793,8 +793,7 @@ async function saveContentToneOption(option, isNew = false) {
 
 async function deleteContentToneOptionFromDB(optionId) {
   try {
-    const response = await fetch(`/api/content_tone_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, { method: 'DELETE' });
-    const result = await response.json();
+    const result = await ApiClient.get(`/api/content_tone_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, { method: 'DELETE' });
     try { wfToast(result); } catch(_) {}
     if (!result.success) { try { showNotification('Content Tone Options', 'Failed to delete option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
@@ -807,8 +806,7 @@ async function deleteContentToneOptionFromDB(optionId) {
 // ---- Brand Voice ----
 async function loadBrandVoiceOptions() {
   try {
-    const response = await fetch('/api/brand_voice_options.php?action=get_active&admin_token=whimsical_admin_2024');
-    const result = await response.json();
+    const result = await ApiClient.get('/api/brand_voice_options.php?action=get_active&admin_token=whimsical_admin_2024');
     if (result.success && Array.isArray(result.options) && result.options.length > 0) {
       brandVoiceOptions = result.options.map(o => ({ id: o.value, name: o.label, description: o.description }));
       brandVoiceOriginalIds = new Set(brandVoiceOptions.map(o => o.id));
@@ -824,8 +822,7 @@ async function loadBrandVoiceOptions() {
 
 async function initializeDefaultBrandVoiceOptions() {
   try {
-    const response = await fetch('/api/brand_voice_options.php?action=initialize_defaults&admin_token=whimsical_admin_2024', { method: 'POST' });
-    const result = await response.json();
+    const result = await ApiClient.get('/api/brand_voice_options.php?action=initialize_defaults&admin_token=whimsical_admin_2024', { method: 'POST' });
     if (result.success) {
       await loadBrandVoiceOptions();
     } else {
@@ -988,11 +985,12 @@ async function saveBrandVoiceOptions() {
 async function saveBrandVoiceOption(option, isNew = false) {
   try {
     const action = isNew ? 'add' : 'update';
-    const response = await fetch(`/api/brand_voice_options.php?action=${action}&admin_token=whimsical_admin_2024`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: option.id, value: option.value || option.id, label: option.name, description: option.description })
+    const result = await ApiClient.post(`/api/brand_voice_options.php?action=${action}&admin_token=whimsical_admin_2024`, {
+      id: option.id,
+      value: option.value || option.id,
+      label: option.name,
+      description: option.description
     });
-    const result = await response.json();
     try { wfToast(result); } catch(_) {}
     if (!result.success) { try { showNotification('Brand Voice Options', 'Failed to save option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
@@ -1004,8 +1002,7 @@ async function saveBrandVoiceOption(option, isNew = false) {
 
 async function deleteBrandVoiceOptionFromDB(optionId) {
   try {
-    const response = await fetch(`/api/brand_voice_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, { method: 'DELETE' });
-    const result = await response.json();
+    const result = await ApiClient.get(`/api/brand_voice_options.php?action=delete&id=${optionId}&admin_token=whimsical_admin_2024`, { method: 'DELETE' });
     try { wfToast(result); } catch(_) {}
     if (!result.success) { try { showNotification('Brand Voice Options', 'Failed to delete option: ' + (result.error||result.message||''), 'error'); } catch (_) {} }
     return !!result.success;
@@ -1038,8 +1035,7 @@ function closeAISettingsModal() {
 
 async function loadAIProviders() {
   try {
-    const response = await fetch('/api/ai_settings.php?action=get_providers');
-    const data = await response.json();
+    const data = await ApiClient.get('/api/ai_settings.php?action=get_providers');
     if (data.success) {
       displayAIProviders(data.providers);
     } else {
@@ -1139,12 +1135,7 @@ async function saveAISettings() {
   };
 
   try {
-    const response = await fetch('/api/ai_settings.php?action=update_settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(settings)
-    });
-    const result = await response.json();
+    const result = await ApiClient.post('/api/ai_settings.php?action=update_settings', settings);
     if (result.success) {
       showAISettingsSuccess('AI settings saved successfully!');
     } else {
@@ -1169,8 +1160,7 @@ async function testAIProvider() {
   const selectedProvider = (_sp && _sp.value) || getDefaultAIProvider();
   try {
     try { showNotification('Testing AI Provider', `Testing ${selectedProvider} provider...`, 'info'); } catch (_) {}
-    const response = await fetch(`/api/ai_settings.php?action=test_provider&provider=${selectedProvider}`);
-    const result = await response.json();
+    const result = await ApiClient.get(`/api/ai_settings.php?action=test_provider&provider=${selectedProvider}`);
     if (result.success) {
       try { showNotification('AI Provider Test', `✅ ${selectedProvider} provider test successful!`, 'success'); } catch (_) {}
     } else {
@@ -1186,8 +1176,7 @@ let availableModels = {};
 
 async function loadAllModels() {
   try {
-    const response = await fetch('/api/get_ai_models.php?provider=all');
-    const result = await response.json();
+    const result = await ApiClient.get('/api/get_ai_models.php?provider=all');
     if (result.success) {
       availableModels = result.models;
       populateModelDropdown('openai', availableModels.openai);
@@ -1206,8 +1195,7 @@ async function loadAllModels() {
 
 async function loadAllModelsWithSelection(settings) {
   try {
-    const response = await fetch('/api/get_ai_models.php?provider=all');
-    const result = await response.json();
+    const result = await ApiClient.get('/api/get_ai_models.php?provider=all');
     if (result.success) {
       availableModels = result.models;
       populateModelDropdownWithSelection('openai', availableModels.openai, settings.openai_model);
@@ -1238,8 +1226,7 @@ async function loadModelsForCurrentProvider(settings) {
   const selectedProvider = settings.ai_provider || getDefaultAIProvider();
   if (selectedProvider === 'jons_ai') return;
   try {
-    const response = await fetch(`/api/get_ai_models.php?provider=${selectedProvider}&admin_token=whimsical_admin_2024`);
-    const result = await response.json();
+    const result = await ApiClient.get(`/api/get_ai_models.php?provider=${selectedProvider}&admin_token=whimsical_admin_2024`);
     if (result.success) {
       availableModels[selectedProvider] = result.models;
       const modelKey = `${selectedProvider}_model`;
@@ -1257,8 +1244,7 @@ async function loadModelsForCurrentProvider(settings) {
 async function refreshModels(provider) {
   try {
     try { showNotification('Refreshing Models', `Loading ${provider} models...`, 'info'); } catch (_) {}
-    const response = await fetch(`/api/get_ai_models.php?provider=${provider}&admin_token=whimsical_admin_2024`);
-    const result = await response.json();
+    const result = await ApiClient.get(`/api/get_ai_models.php?provider=${provider}&admin_token=whimsical_admin_2024`);
     if (result.success) {
       availableModels[provider] = result.models;
       populateModelDropdown(provider, result.models);
@@ -1461,8 +1447,7 @@ async function loadSystemConfiguration() {
     if (loadingDiv && loadingDiv.classList) loadingDiv.classList.remove('hidden');
     
     try {
-        const response = await fetch('/api/get_system_config.php');
-        const result = await response.json();
+        const result = await ApiClient.get('/api/get_system_config.php');
         
         if (result.success) {
             const data = result.data;
@@ -1801,8 +1786,7 @@ async function _loadDatabaseInformation() {
     if (loadingDiv && loadingDiv.classList) loadingDiv.classList.remove('hidden');
     
     try {
-        const response = await fetch('/api/get_database_info.php');
-        const result = await response.json();
+        const result = await ApiClient.get('/api/get_database_info.php');
         
         if (result.success) {
             const data = result.data;
@@ -1905,8 +1889,7 @@ async function scanDatabaseConnections(e) {
         resultsDiv.classList.remove('hidden');
     }
     try {
-        const response = await fetch('/api/convert_to_centralized_db.php?action=scan&format=json&admin_token=whimsical_admin_2024');
-        const result = await response.json();
+        const result = await ApiClient.get('/api/convert_to_centralized_db.php?action=scan&format=json&admin_token=whimsical_admin_2024');
         if (result.success) {
             if (result.needs_conversion > 0) {
                 if (resultsDiv) {
@@ -1967,8 +1950,7 @@ async function convertDatabaseConnections(e) {
         resultsDiv.classList.remove('hidden');
     }
     try {
-        const response = await fetch('/api/convert_to_centralized_db.php?action=convert&format=json&admin_token=whimsical_admin_2024');
-        const result = await response.json();
+        const result = await ApiClient.get('/api/convert_to_centralized_db.php?action=convert&format=json&admin_token=whimsical_admin_2024');
         if (result.success) {
             if (result.converted > 0) {
                 if (resultsDiv) {
@@ -2049,17 +2031,7 @@ async function viewTable(tableName) {
             modal.classList.add('show');
         }
 
-        const response = await fetch('/api/db_manager.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                action: 'query',
-                sql: `SELECT * FROM \`${tableName}\` LIMIT 100`
-            })
-        });
-        const data = await response.json();
+        const data = await ApiClient.post('/api/db_manager.php', { action: 'query', sql: `SELECT * FROM \`${tableName}\` LIMIT 100` });
         if (data.success && data.data) {
             if (title) title.textContent = `Table: ${tableName} (${data.row_count} records shown, max 100)`;
             if (!Array.isArray(data.data) || data.data.length === 0) {
@@ -2115,8 +2087,7 @@ function closeTableViewModal() {
 
 async function getDatabaseTableCount() {
     try {
-        const response = await fetch('/api/get_database_info.php');
-        const result = await response.json();
+        const result = await ApiClient.get('/api/get_database_info.php');
         if (result.success && result.data) {
             return result.data.total_active || 'several';
         }
@@ -2173,12 +2144,7 @@ async function compactRepairDatabase() {
                 </div>
             `;
         }
-        const backupResponse = await fetch('/api/backup_database.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ destination: 'cloud' })
-        });
-        const backupResult = await backupResponse.json();
+        const backupResult = await ApiClient.post('/api/backup_database.php', { destination: 'cloud' });
         if (!backupResult.success) {
             throw new Error('Failed to create safety backup: ' + (backupResult.error || 'Unknown error'));
         }
@@ -2211,12 +2177,7 @@ async function compactRepairDatabase() {
                 </div>
             `;
         }
-        const repairResponse = await fetch('/api/compact_repair_database.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({})
-        });
-        const repairResult = await repairResponse.json();
+        const repairResult = await ApiClient.post('/api/compact_repair_database.php', {});
         if (!repairResult.success) {
             throw new Error('Database optimization failed: ' + (repairResult.error || 'Unknown error'));
         }
@@ -2320,12 +2281,7 @@ async function updateDatabaseConfig(ev) {
                 resultDiv.classList.remove('hidden');
             }
             try {
-                const response = await fetch('/api/database_maintenance.php?action=update_config&admin_token=whimsical_admin_2024', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updateData)
-                });
-                const result = await response.json();
+                const result = await ApiClient.post('/api/database_maintenance.php?action=update_config&admin_token=whimsical_admin_2024', updateData);
                 if (result.success) {
                     renderResult(resultDiv, true, `
                         <div class="font-medium text-green-800">✅ Configuration Updated!</div>
@@ -2386,12 +2342,7 @@ async function testSSLConnection(ev) {
         }
 
         try {
-            const response = await fetch('/api/database_maintenance.php?action=test_connection&admin_token=whimsical_admin_2024', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(sslData)
-            });
-            const result = await response.json();
+            const result = await ApiClient.post('/api/database_maintenance.php?action=test_connection&admin_token=whimsical_admin_2024', sslData);
             if (result.success) {
                 renderResult(resultDiv, true, `
                     <div class="font-medium text-green-800">🔒 SSL Connection Successful!</div>
@@ -2501,8 +2452,7 @@ function switchTemplateTab(tabName) {
  async function previewEmailTemplate(templateId) {
      try {
          const id = encodeURIComponent(templateId);
-         const response = await fetch(`/api/email_templates.php?action=preview&template_id=${id}`);
-         const data = await response.json();
+         const data = await ApiClient.get(`/api/email_templates.php?action=preview&template_id=${id}`);
          if (data && data.success) {
              showEmailTemplatePreviewModal(data.preview);
          } else {
@@ -2683,12 +2633,7 @@ function showTestEmailModal(templateId) {
           const prevText = btn ? btn.textContent : '';
           if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); btn.textContent = 'Sending...'; }
           if (input) input.disabled = true;
-          const res = await fetch('/api/email_templates.php?action=send_test', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ template_id: id, test_email: testEmail })
-          });
-          const data = await res.json();
+          const data = await ApiClient.post('/api/email_templates.php?action=send_test', { template_id: id, test_email: testEmail });
           if (data && data.success) {
               if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
                   window.wfNotifications.show(data.message || 'Test email sent successfully.', 'success', { title: 'Test Email' });
@@ -2874,8 +2819,7 @@ function showTestEmailModal(templateId) {
       try {
           const id = String(templateId || '').trim();
           if (!id) { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Missing template id'); return; }
-          const res = await fetch(`/api/email_templates.php?action=get_template&template_id=${encodeURIComponent(id)}`);
-          const data = await res.json();
+          const data = await ApiClient.get('/api/email_templates.php', { action: 'get_template', template_id: id });
           if (data && data.success && data.template) {
               showEmailTemplateEditModal(data.template);
           } else {
@@ -2949,12 +2893,7 @@ function showTestEmailModal(templateId) {
               is_active: isActive ? 1 : 0
           };
           const action = id ? 'update' : 'create';
-          const res = await fetch(`/api/email_templates.php?action=${encodeURIComponent(action)}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-          });
-          const data = await res.json();
+          const data = await ApiClient.post(`/api/email_templates.php?action=${encodeURIComponent(action)}`, payload);
           if (data && data.success) {
               if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(id ? 'Template updated' : 'Template created');
               closeEmailTemplateEditModal();
@@ -2981,12 +2920,7 @@ function showTestEmailModal(templateId) {
       try {
           const id = String(templateId || '').trim();
           if (!id) return;
-          const res = await fetch('/api/email_templates.php', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: `action=delete&template_id=${encodeURIComponent(id)}`
-          });
-          const data = await res.json();
+          const data = await ApiClient.post('/api/email_templates.php?action=delete', { template_id: id });
           if (data && data.success) {
               if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Template deleted');
               try { if (typeof loadEmailTemplates === 'function') loadEmailTemplates(); else if (typeof window !== 'undefined' && typeof window.loadEmailTemplates === 'function') window.loadEmailTemplates(); } catch (_) {}
@@ -3065,12 +2999,10 @@ function showTestEmailModal(templateId) {
       if (!select) return;
       select.innerHTML = '<option value="">Loading...</option>';
       try {
-          const [tplRes, asgRes] = await Promise.all([
-              fetch('/api/email_templates.php?action=get_all'),
-              fetch('/api/email_templates.php?action=get_assignments')
+          const [tplData, asgData] = await Promise.all([
+              ApiClient.get('/api/email_templates.php', { action: 'get_all' }),
+              ApiClient.get('/api/email_templates.php', { action: 'get_assignments' })
           ]);
-          const tplData = await tplRes.json();
-          const asgData = await asgRes.json();
           const templates = (tplData && tplData.templates) || [];
           const assignments = (asgData && (asgData.assignments || asgData.data || {})) || {};
           const currentId = assignments[emailType] || '';
@@ -3125,12 +3057,7 @@ function showTestEmailModal(templateId) {
           const saveBtn = overlay.querySelector('[data-action="save-template-assignment"]');
           const prevText = saveBtn ? saveBtn.textContent : '';
           if (saveBtn) { saveBtn.disabled = true; saveBtn.setAttribute('aria-busy', 'true'); saveBtn.textContent = 'Saving...'; }
-          const response = await fetch('/api/email_templates.php?action=set_assignment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email_type: emailType, template_id: templateId })
-          });
-          const data = await response.json();
+          const data = await ApiClient.post('/api/email_templates.php?action=set_assignment', { email_type: emailType, template_id: templateId });
           if (data && data.success) {
               if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Template assignment updated successfully!');
               closeTemplateAssignmentModal();
@@ -3252,8 +3179,7 @@ function showTestEmailModal(templateId) {
      if (loading.classList) loading.classList.remove('hidden');
      if (list.classList) list.classList.add('hidden');
      try {
-         const response = await fetch('/api/color_templates.php?action=get_all');
-         const data = await response.json();
+         const data = await ApiClient.get('/api/color_templates.php?action=get_all');
          if (data.success) {
              renderColorTemplates(data.templates);
              loadColorTemplateCategories(data.templates);
@@ -3330,8 +3256,7 @@ function showTestEmailModal(templateId) {
  
  async function loadColorTemplatePreview(templateId) {
      try {
-         const response = await fetch(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
-         const data = await response.json();
+         const data = await ApiClient.get(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
          if (data.success && data.template.colors) {
              const el = document.getElementById(`colorPreview${templateId}`);
              if (el) {
@@ -3358,8 +3283,7 @@ function showTestEmailModal(templateId) {
  
  async function editColorTemplate(templateId) {
      try {
-         const response = await fetch(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
-         const data = await response.json();
+         const data = await ApiClient.get(`/api/color_templates.php?action=get_template&template_id=${templateId}`);
          if (data.success) {
              showColorTemplateEditModal(data.template);
          } else {
@@ -3375,12 +3299,11 @@ function showTestEmailModal(templateId) {
  async function deleteColorTemplate(templateId) {
      if (!confirm('Are you sure you want to delete this color template? This action cannot be undone.')) return;
      try {
-         const response = await fetch('/api/color_templates.php', {
+         const data = await ApiClient.get('/api/color_templates.php', {
              method: 'POST',
              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
              body: `action=delete_template&template_id=${templateId}`
          });
-         const data = await response.json();
          if (data.success) {
              try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Color template deleted successfully!'); } catch (_) {}
              loadColorTemplates();
@@ -3568,10 +3491,7 @@ function showTestEmailModal(templateId) {
      if (isEdit) payload.template_id = parseInt(templateId);
      try {
          const action = isEdit ? 'update_template' : 'create_template';
-         const response = await fetch(`/api/color_templates.php?action=${action}`, {
-             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-         });
-         const data = await response.json();
+         const data = await ApiClient.post(`/api/color_templates.php?action=${action}`, payload);
          if (data.success) {
              try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(isEdit ? 'Color template updated successfully!' : 'Color template created successfully!'); } catch (_) {}
              closeColorTemplateEditModal();
@@ -3596,8 +3516,7 @@ function showTestEmailModal(templateId) {
      if (loading.classList) loading.classList.remove('hidden');
      if (list.classList) list.classList.add('hidden');
      try {
-         const response = await fetch('/api/size_templates.php?action=get_all');
-         const data = await response.json();
+         const data = await ApiClient.get('/api/size_templates.php?action=get_all');
          if (data.success) {
              renderSizeTemplates(data.templates);
              loadSizeTemplateCategories(data.templates);
@@ -3672,8 +3591,7 @@ function showTestEmailModal(templateId) {
  
  async function loadSizeTemplatePreview(templateId) {
      try {
-         const response = await fetch(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
-         const data = await response.json();
+         const data = await ApiClient.get(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
          if (data.success && data.template.sizes) {
              const el = document.getElementById(`sizePreview${templateId}`);
              if (el) {
@@ -3697,8 +3615,7 @@ function showTestEmailModal(templateId) {
  
  async function editSizeTemplate(templateId) {
      try {
-         const response = await fetch(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
-         const data = await response.json();
+         const data = await ApiClient.get(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
          if (data.success) {
              showSizeTemplateEditModal(data.template);
          } else {
@@ -3713,10 +3630,9 @@ function showTestEmailModal(templateId) {
  async function deleteSizeTemplate(templateId) {
      if (!confirm('Are you sure you want to delete this size template? This action cannot be undone.')) return;
      try {
-         const response = await fetch('/api/size_templates.php', {
+         const data = await ApiClient.get('/api/size_templates.php', {
              method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `action=delete_template&template_id=${templateId}`
          });
-         const data = await response.json();
          if (data.success) {
              try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Size template deleted successfully!'); } catch (_) {}
              loadSizeTemplates();
@@ -3889,10 +3805,7 @@ function showTestEmailModal(templateId) {
      if (isEdit) payload.template_id = parseInt(templateId);
      try {
          const action = isEdit ? 'update_template' : 'create_template';
-         const response = await fetch(`/api/size_templates.php?action=${action}`, {
-             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
-         });
-         const data = await response.json();
+         const data = await ApiClient.post(`/api/size_templates.php?action=${action}`, payload);
          if (data.success) {
              try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(isEdit ? 'Size template updated successfully!' : 'Size template created successfully!'); } catch (_) {}
              closeSizeTemplateEditModal();
@@ -4495,8 +4408,7 @@ function initAdminSettingsDelegatedListeners() {
         const { roomSelect } = bgEls();
         if (!roomSelect) return;
         try {
-            const res = await fetch('/api/get_room_data.php');
-            const data = await res.json();
+            const data = await ApiClient.get('/api/get_room_data.php');
             const roomNumberMapping = (data && data.data && (data.data.roomTypeMapping || data.data.validRooms)) || {};
             const seen = new Set(Array.from(roomSelect.options).map(o => String(o.value)));
             const entries = Array.isArray(roomNumberMapping) ? roomNumberMapping.map(v => [v, v]) : Object.entries(roomNumberMapping);
@@ -4515,12 +4427,10 @@ function initAdminSettingsDelegatedListeners() {
     }
     
     async function fetchBackgrounds(room) {
-        const res = await fetch(`/api/backgrounds.php?room=${encodeURIComponent(room)}`);
-        return res.json();
+        return ApiClient.get('/api/backgrounds.php', { room });
     }
     async function fetchActiveBackground(room) {
-        const res = await fetch(`/api/backgrounds.php?room=${encodeURIComponent(room)}&active_only=true`);
-        return res.json();
+        return ApiClient.get('/api/backgrounds.php', { room, active_only: true });
     }
     
     function renderBackgroundList(room, items) {
@@ -4611,12 +4521,7 @@ function initAdminSettingsDelegatedListeners() {
         if (!room || backgroundId == null) return;
         if (!confirm('Apply this background?')) return;
         try {
-            const res = await fetch('/api/backgrounds.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'apply', room: room, background_id: backgroundId })
-            });
-            const data = await res.json();
+            const data = await ApiClient.post('/api/backgrounds.php', { action: 'apply', room, background_id: backgroundId });
             if (data && data.success) {
                 bgNotify.ok(data.message || 'Background applied');
                 refreshBackgroundsUI(room);
@@ -4632,12 +4537,7 @@ function initAdminSettingsDelegatedListeners() {
         if (backgroundId == null) return;
         if (!confirm(`Delete background "${name || '#'+backgroundId}"? This cannot be undone.`)) return;
         try {
-            const res = await fetch('/api/backgrounds.php', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ background_id: backgroundId })
-            });
-            const data = await res.json();
+            const data = await ApiClient.post('/api/backgrounds.php?action=delete', { background_id: backgroundId });
             if (data && data.success) {
                 bgNotify.ok(data.message || 'Background deleted');
                 const { roomSelect } = bgEls();
@@ -4675,7 +4575,7 @@ function initAdminSettingsDelegatedListeners() {
             fd.append('room', room);
             fd.append('background_name', name);
             fd.append('background_image', file);
-            const res = await fetch('/api/upload_background.php', { method: 'POST', body: fd });
+            const res = await ApiClient.upload('/api/upload_background.php', fd);
             const data = await res.json().catch(() => ({}));
             if (data && data.success) {
                 bgNotify.ok(data.message || 'Upload successful');
@@ -4713,8 +4613,7 @@ function initAdminSettingsDelegatedListeners() {
     
     async function loadRoomData() {
         try {
-            const res = await fetch('/api/get_room_data.php');
-            const data = await res.json();
+            const data = await ApiClient.get('/api/get_room_data.php');
             if (data && data.success && data.data) {
                 coreRooms = Array.isArray(data.data.coreRooms) ? data.data.coreRooms : [];
             } else {
@@ -4742,12 +4641,10 @@ function initAdminSettingsDelegatedListeners() {
     
     async function loadRoomSettings() {
         try {
-            const [roomDataRes, roomSettingsRes] = await Promise.all([
-                fetch('/api/get_room_data.php'),
-                fetch('/api/room_settings.php?action=get_all')
+            const [roomData, roomSettings] = await Promise.all([
+                ApiClient.get('/api/get_room_data.php'),
+                ApiClient.get('/api/room_settings.php', { action: 'get_all' })
             ]);
-            const roomData = await roomDataRes.json().catch(() => ({}));
-            const roomSettings = await roomSettingsRes.json().catch(() => ({}));
             if (roomData && roomData.success && roomData.data && Array.isArray(roomData.data.coreRooms)) {
                 coreRooms = roomData.data.coreRooms;
             } else {
@@ -4854,8 +4751,7 @@ function initAdminSettingsDelegatedListeners() {
     
     async function initializeRoomSettings() {
         try {
-            const res = await fetch('/api/room_settings.php?action=initialize', { method: 'POST' });
-            const data = await res.json().catch(() => ({}));
+            const data = await ApiClient.post('/api/room_settings.php', { action: 'initialize' }).catch(() => ({}));
             if (data && data.success) {
                 await loadRoomSettings();
             } else {
@@ -4886,12 +4782,7 @@ function initAdminSettingsDelegatedListeners() {
                 display_order: Number(document.getElementById('editDisplayOrder')?.value || 0),
                 show_search_bar: !!document.getElementById('editShowSearchBar')?.checked,
             };
-            const res = await fetch('/api/room_settings.php?action=save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json().catch(() => ({}));
+            const data = await ApiClient.post('/api/room_settings.php', { action: 'save', ...payload }).catch(() => ({}));
             if (data && data.success) {
                 try {
                     if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
@@ -4994,8 +4885,7 @@ function initAdminSettingsDelegatedListeners() {
     
     async function loadDirectory(path = '') {
         try {
-            const res = await fetch(`/api/file_manager.php?action=list&path=${encodeURIComponent(path)}`);
-            const result = await res.json();
+            const result = await ApiClient.get("/api/file_manager.php", { action: "list", path });
             if (result && result.success) {
                 currentDirectory = result.path || '';
                 fileExplorerData = result;
@@ -5080,8 +4970,7 @@ function initAdminSettingsDelegatedListeners() {
     
     async function viewFile(path) {
         try {
-            const res = await fetch(`/api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
-            const result = await res.json();
+            const result = await ApiClient.get("/api/file_manager.php", { action: "read", path });
             if (result && result.success) {
                 currentFile = { path: result.path, content: result.content, editable: result.editable, readonly: true };
                 displayFileInEditor(result);
@@ -5094,8 +4983,7 @@ function initAdminSettingsDelegatedListeners() {
     }
     async function editFile(path) {
         try {
-            const res = await fetch(`/api/file_manager.php?action=read&path=${encodeURIComponent(path)}`);
-            const result = await res.json();
+            const result = await ApiClient.get('/api/file_manager.php', { action: 'read', path }).catch(() => ({}));
             if (result && result.success) {
                 currentFile = { path: result.path, content: result.content, editable: result.editable, readonly: false };
                 displayFileInEditor(result);
@@ -5159,11 +5047,7 @@ function initAdminSettingsDelegatedListeners() {
         }
         const content = (document.getElementById('fileContent')||{}).value || '';
         try {
-            const res = await fetch('/api/file_manager.php?action=write', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ path: currentFile.path, content })
-            });
-            const result = await res.json();
+            const result = await ApiClient.post('/api/file_manager.php?action=write', { path: currentFile.path, content });
             if (result && result.success) {
                 try { if (typeof window.showSuccess === 'function') window.showSuccess('File saved successfully'); } catch(_) {}
                 currentFile.content = content;
@@ -5194,7 +5078,7 @@ function initAdminSettingsDelegatedListeners() {
         const itemType = type === 'directory' ? 'folder' : 'file';
         if (!confirm(`Are you sure you want to delete this ${itemType}?\n\n${path}`)) return;
         try {
-            const res = await fetch(`/api/file_manager.php?action=delete&path=${encodeURIComponent(path)}`, { method: 'DELETE' });
+            const res = await ApiClient.delete(`/api/file_manager.php?action=delete&path=${encodeURIComponent(path)}`);
             const result = await res.json();
             if (result && result.success) {
                 try { if (typeof window.showSuccess === 'function') window.showSuccess(`${itemType[0].toUpperCase()+itemType.slice(1)} deleted successfully`); } catch(_) {}
@@ -5218,8 +5102,7 @@ function initAdminSettingsDelegatedListeners() {
     async function createFolder(name) {
         const path = currentDirectory ? `${currentDirectory}/${name}` : name;
         try {
-            const res = await fetch('/api/file_manager.php?action=mkdir', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path }) });
-            const result = await res.json();
+            const result = await ApiClient.post('/api/file_manager.php?action=mkdir', { path });
             if (result && result.success) { try { if (typeof window.showSuccess === 'function') window.showSuccess('Folder created successfully'); } catch(_) {} refreshDirectory(); }
             else { try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to create folder'); } catch(_) {} }
         } catch (err) { console.warn('[FileExplorer] createFolder error', err); }
@@ -5227,8 +5110,7 @@ function initAdminSettingsDelegatedListeners() {
     async function createFile(name) {
         const path = currentDirectory ? `${currentDirectory}/${name}` : name;
         try {
-            const res = await fetch('/api/file_manager.php?action=write', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path, content: '' }) });
-            const result = await res.json();
+            const result = await ApiClient.post('/api/file_manager.php?action=write', { path, content: '' });
             if (result && result.success) { try { if (typeof window.showSuccess === 'function') window.showSuccess('File created successfully'); } catch(_) {} refreshDirectory(); }
             else { try { if (typeof window.showError === 'function') window.showError(result?.error || 'Failed to create file'); } catch(_) {} }
         } catch (err) { console.warn('[FileExplorer] createFile error', err); }
@@ -7363,8 +7245,7 @@ function initAdminSettingsDelegatedListeners() {
                     window.editEmailTemplate(id);
                 } else if (typeof window !== 'undefined' && typeof window.showEmailTemplateEditModal === 'function') {
                     // Fallback: fetch template then open editor
-                    fetch(`/api/email_templates.php?action=get_template&template_id=${encodeURIComponent(id)}`)
-                        .then(r => r.json())
+                    ApiClient.get('/api/email_templates.php', { action: 'get_template', template_id: id })
                         .then(data => {
                             if (data && data.success) window.showEmailTemplateEditModal(data.template);
                             else if (typeof window.showError === 'function') window.showError('Failed to load template');

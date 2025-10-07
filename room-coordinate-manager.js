@@ -44,12 +44,13 @@ function simpleCoordinateSystem(roomNumber) {
     
     // Fetch coordinates from database
     console.log(`📡 Fetching coordinates from /api/get_room_coordinates.php?room=${roomNumber}`);
-    fetch(`/api/get_room_coordinates.php?room=${encodeURIComponent(roomNumber)}`)
-        .then(response => {
-            console.log('📡 Response received:', response.status, response.statusText);
-            return response.json();
-        })
-        .then(data => {
+    const url = `/api/get_room_coordinates.php?room=${encodeURIComponent(roomNumber)}`;
+    if (!window.ApiClient || typeof window.ApiClient.request !== 'function') {
+        console.error('❌ ApiClient is not available to load coordinates');
+        return;
+    }
+    window.ApiClient.request(url, { method: 'GET' })
+        .then((data) => {
             console.log('📡 Data received:', data);
             if (data.success && data.coordinates) {
                 console.log('✅ Coordinates loaded:', data.coordinates);

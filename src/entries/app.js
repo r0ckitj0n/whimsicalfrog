@@ -269,6 +269,13 @@ import '../styles/main.css';
     // Admin settings bridged features often needed in admin routes
     if (page.startsWith('admin/')) {
       try { await import('../js/admin-settings-bridge.js'); } catch (_) {}
+    } else {
+      // Fallback: when routed via admin_router.php?section=settings and data-page is missing
+      const params = new URLSearchParams(location.search || '');
+      const isAdminRouterSettings = path.includes('/sections/admin_router.php') && (params.get('section') === 'settings');
+      if (isAdminRouterSettings) {
+        try { await import('../js/admin-settings-bridge.js'); } catch (_) {}
+      }
     }
 
     console.log('[Vite] app.js entry loaded for page:', page || path);
@@ -276,3 +283,27 @@ import '../styles/main.css';
     console.warn('[Vite] app.js router error', e);
   }
 })();
+
+// Global delegated handler: remove-from-cart buttons
+// Works for any dynamically rendered cart list using the same class and data-sku
+try {
+  document.addEventListener('click', (e) => {
+    const btn = e.target && e.target.closest && (e.target.closest('.remove-from-cart') || e.target.closest('.cart-item-remove') || e.target.closest('[data-action="remove-from-cart"]'));
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    let sku = btn.getAttribute('data-sku')
+      || (btn.dataset && btn.dataset.sku)
+      || (btn.parentElement && btn.parentElement.getAttribute && btn.parentElement.getAttribute('data-sku'));
+    if (!sku) {
+      try {
+        const itemEl = btn.closest('.cart-item');
+        if (itemEl) sku = itemEl.getAttribute('data-sku');
+      } catch(_) {}
+    }
+    if (sku && window.WF_Cart && typeof window.WF_Cart.removeItem === 'function') {
+      try { window.WF_Cart.removeItem(sku); } catch(_) {}
+      try { window.WF_Cart.renderCart && window.WF_Cart.renderCart(); } catch(_) {}
+    }
+  }, true);
+} catch (_) {}

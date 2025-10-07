@@ -94,25 +94,17 @@
     try {
       const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : window.location.origin;
       const loginUrl = new URL('/functions/process_login.php', backendOrigin).toString();
-      const res = await fetch(loginUrl, {
+      const data = await window.ApiClient.request(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include'
+        body: JSON.stringify({ username, password })
       });
-
-      if (!res.ok) {
-        const err = await safeJson(res);
-        throw new Error(err?.error || 'Login failed.');
-      }
-
-      const data = await safeJsonOk(res);
       let resolvedUserId = (data && data.userId != null) ? data.userId : undefined;
       // Fallback: if login response had no userId (e.g., proxy/content-type issues), query session
       if (resolvedUserId == null) {
         try {
           const whoUrl = new URL('/api/whoami.php', backendOrigin).toString();
-          const who = await fetch(whoUrl, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          const who = await window.ApiClient.request(whoUrl, { method: 'GET' }).catch(() => null);
           const sid = who?.userId;
           if (sid != null) resolvedUserId = sid;
         } catch (_) {}
@@ -268,19 +260,11 @@
       try {
         const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : window.location.origin;
         const loginUrl = new URL('/functions/process_login.php', backendOrigin).toString();
-        const res = await fetch(loginUrl, {
+        const data = await window.ApiClient.request(loginUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-          credentials: 'include'
+          body: JSON.stringify({ username, password })
         });
-
-        if (!res.ok) {
-          const err = await safeJson(res);
-          throw new Error(err?.error || 'Login failed.');
-        }
-
-        const data = await safeJsonOk(res);
         const serverRedirect = data?.redirectUrl;
         let target = serverRedirect;
         if (!target) {
@@ -311,7 +295,7 @@
         try {
           if (data?.userId == null) {
             const whoUrl = new URL('/api/whoami.php', backendOrigin).toString();
-            const who = await fetch(whoUrl, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+            const who = await window.ApiClient.request(whoUrl, { method: 'GET' }).catch(() => null);
             const sid = who?.userId;
             const n = Number(sid);
             if (Number.isFinite(n) && n > 0) {

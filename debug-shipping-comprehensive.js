@@ -44,25 +44,14 @@
         console.log('[SHIPPING-DEBUG] API response:', response);
         return response;
       } else {
-        console.warn('[SHIPPING-DEBUG] apiClient not available, using fetch directly');
-        const response = await fetch('/api/checkout_pricing.php', {
+        console.warn('[SHIPPING-DEBUG] apiClient not available, using ApiClient.request');
+        const data = await window.ApiClient.request('/api/checkout_pricing.php', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('[SHIPPING-DEBUG] Direct fetch response:', data);
-          return data;
-        } else {
-          console.error('[SHIPPING-DEBUG] API call failed with status:', response.status);
-          return null;
-        }
+        console.log('[SHIPPING-DEBUG] ApiClient response:', data);
+        return data;
       }
     } catch (error) {
       console.error('[SHIPPING-DEBUG] API call error:', error);

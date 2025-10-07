@@ -80,7 +80,7 @@ export async function loadRoomBackground(roomNumberStr) {
             console.log('[DBG] Not a numeric room; skipping background API fetch');
             return;
         }
-        const data = await apiGet(`/api/get_background.php?room=${encodeURIComponent(rn)}`);
+        const data = await ApiClient.get('/api/get_background.php', { room: encodeURIComponent(rn) });
         
         
         if (data.success && data.background) {

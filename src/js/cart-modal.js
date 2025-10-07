@@ -2,7 +2,7 @@
 // Creates a site-wide modal for the cart and wires header cart link to open it
 import '../styles/cart-modal.css';
 
-(function initCartModal() {
+function initCartModal() {
   try {
     // Avoid double init
     if (window.WF_CartModal && window.WF_CartModal.initialized) return;
@@ -67,6 +67,29 @@ import '../styles/cart-modal.css';
       // Close on overlay click (outside modal content)
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) close();
+      });
+
+      // Delegated item removal inside modal
+      overlay.addEventListener('click', (e) => {
+        const btn = e.target && e.target.closest && (e.target.closest('.remove-from-cart') || e.target.closest('.cart-item-remove'));
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        let sku = btn.getAttribute('data-sku')
+          || (btn.dataset && btn.dataset.sku)
+          || (btn.parentElement && btn.parentElement.getAttribute && btn.parentElement.getAttribute('data-sku'));
+        if (!sku) {
+          try {
+            const itemEl = btn.closest('.cart-item');
+            if (itemEl) sku = itemEl.getAttribute('data-sku');
+          } catch(_) {}
+        }
+        if (sku && window.WF_Cart && typeof window.WF_Cart.removeItem === 'function') {
+          try { window.WF_Cart.removeItem(sku); } catch(_) {}
+          try { window.WF_Cart.renderCart && window.WF_Cart.renderCart(); } catch(_) {}
+          // Update the modal immediately if open
+          try { window.dispatchEvent(new Event('cartUpdated')); } catch(_) {}
+        }
       });
 
       // Close button
@@ -289,4 +312,13 @@ import '../styles/cart-modal.css';
   } catch (err) {
     console.error('[CartModal] init error', err);
   }
-})();
+}
+
+// Defer initialization until DOM is ready so document.body exists
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    try { initCartModal(); } catch (e) { console.error('[CartModal] deferred init failed', e); }
+  });
+} else {
+  try { initCartModal(); } catch (e) { console.error('[CartModal] init failed', e); }
+}

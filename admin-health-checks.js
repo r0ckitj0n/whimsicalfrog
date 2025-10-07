@@ -31,9 +31,7 @@ function showToast(type, title, message) {
 
 async function checkBackgrounds() {
   try {
-    const res = await fetch('/api/health_backgrounds.php', { credentials: 'include', headers: { 'X-Requested-With':'XMLHttpRequest' } });
-    if (!res.ok) return;
-    const data = await res.json().catch(() => null);
+    const data = await window.ApiClient.request('/api/health_backgrounds.php', { method: 'GET' }).catch(() => null);
     if (!data || data.success !== true || !data.data) return;
     const missingActive = Array.isArray(data.data.missingActive) ? data.data.missingActive : [];
     const missingFiles  = Array.isArray(data.data.missingFiles)  ? data.data.missingFiles  : [];
@@ -48,9 +46,7 @@ async function checkBackgrounds() {
 
 async function checkItems() {
   try {
-    const res = await fetch('/api/health_items.php', { credentials: 'include', headers: { 'X-Requested-With':'XMLHttpRequest' } });
-    if (!res.ok) return;
-    const data = await res.json().catch(() => null);
+    const data = await window.ApiClient.request('/api/health_items.php', { method: 'GET' }).catch(() => null);
     if (!data || data.success !== true || !data.data) return;
     const counts = data.data.counts || {};
     const noPrimary = counts.noPrimary || 0;

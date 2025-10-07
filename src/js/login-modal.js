@@ -4,6 +4,8 @@
 // - Shows success notification and redirects to the page user started from
 // - Also intercepts existing /login page form for consistent UX
 
+import { ApiClient } from '../core/api-client.js';
+
 (function initLoginModal() {
   try { console.log('[LoginModal] init'); } catch(_) {}
   let overlay = null;
@@ -94,25 +96,17 @@
     try {
       const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : window.location.origin;
       const loginUrl = new URL('/functions/process_login.php', backendOrigin).toString();
-      const res = await fetch(loginUrl, {
+      const data = await ApiClient.request(loginUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
-        credentials: 'include'
       });
-
-      if (!res.ok) {
-        const err = await safeJson(res);
-        throw new Error(err?.error || 'Login failed.');
-      }
-
-      const data = await safeJsonOk(res);
       let resolvedUserId = (data && data.userId != null) ? data.userId : undefined;
       // Fallback: if login response had no userId (e.g., proxy/content-type issues), query session
       if (resolvedUserId == null) {
         try {
           const whoUrl = new URL('/api/whoami.php', backendOrigin).toString();
-          const who = await fetch(whoUrl, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+          const who = await ApiClient.request(whoUrl, { method: 'GET' }).catch(() => null);
           const sid = who?.userId;
           if (sid != null) resolvedUserId = sid;
         } catch (_) {}
@@ -188,13 +182,13 @@
         if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
         // Emit a login-success event so the header safety listener can also trigger sealing
         try {
-          window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: result.userId || null, username: result.username || null, role: result.role || null } }));
+          window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: (resolvedUserId != null) ? resolvedUserId : null } }));
         } catch(_){ /* noop */ }
         closeModal();
         // Redirect through sealing endpoint so cookies are set on a full-page response
         try {
-          const origin = (typeof window.__WF_BACKEND_ORIGIN === 'string' && window.__WF_BACKEND_ORIGIN) ? window.__WF_BACKEND_ORIGIN : window.location.origin;
-          const seal = new URL('/api/seal_login.php', origin);
+          const backendOrigin = (typeof window.__WF_BACKEND_ORIGIN === 'string' && window.__WF_BACKEND_ORIGIN) ? window.__WF_BACKEND_ORIGIN : window.location.origin;
+          const seal = new URL('/api/seal_login.php', backendOrigin);
           seal.searchParams.set('to', target || '/');
           setTimeout(() => { window.location.assign(seal.toString()); }, 300);
         } catch (_) {
@@ -209,23 +203,7 @@
     }
   }
 
-  async function safeJson(res) {
-    try { return await res.json(); } catch (_) { return null; }
-  }
-
-  // Parse JSON safely on success responses. Tolerates empty body or non-JSON content.
-  async function safeJsonOk(res) {
-    try {
-      const ct = (res.headers && res.headers.get && res.headers.get('content-type')) || '';
-      const text = await res.text();
-      const trimmed = (text || '').trim();
-      if (!ct.includes('application/json')) return {};
-      if (!trimmed) return {};
-      try { return JSON.parse(trimmed); } catch (_) { return {}; }
-    } catch (_) {
-      return {};
-    }
-  }
+  // (Former safeJson/safeJsonOk helpers removed after migrating to ApiClient)
 
   // Delegated listener for header login links (capture phase)
   document.addEventListener('click', (e) => {
@@ -268,19 +246,11 @@
       try {
         const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : window.location.origin;
         const loginUrl = new URL('/functions/process_login.php', backendOrigin).toString();
-        const res = await fetch(loginUrl, {
+        const data = await ApiClient.request(loginUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password }),
-          credentials: 'include'
         });
-
-        if (!res.ok) {
-          const err = await safeJson(res);
-          throw new Error(err?.error || 'Login failed.');
-        }
-
-        const data = await safeJsonOk(res);
         const serverRedirect = data?.redirectUrl;
         let target = serverRedirect;
         if (!target) {
@@ -311,7 +281,7 @@
         try {
           if (data?.userId == null) {
             const whoUrl = new URL('/api/whoami.php', backendOrigin).toString();
-            const who = await fetch(whoUrl, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+            const who = await ApiClient.request(whoUrl, { method: 'GET' }).catch(() => null);
             const sid = who?.userId;
             const n = Number(sid);
             if (Number.isFinite(n) && n > 0) {

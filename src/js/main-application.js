@@ -3,6 +3,7 @@
  * Initializes core UI components and functionality.
  */
 import WF from './whimsical-frog-core.js';
+import { ApiClient } from '../core/api-client.js';
 
 const MainApplication = {
     init() {
@@ -64,17 +65,12 @@ const MainApplication = {
             if (errorMessage) errorMessage.classList.add('hidden');
 
             try {
-                // Use direct fetch with safe JSON handling to avoid parse errors on empty bodies
-                const res = await fetch('/functions/process_login.php', {
+                // Use ApiClient for consistent credentials and error handling
+                const data = await ApiClient.request('/functions/process_login.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-                if (!res.ok) {
-                    const err = await this.safeJson(res);
-                    throw new Error(err?.error || 'Login failed.');
-                }
-                const data = await this.safeJsonOk(res);
                 sessionStorage.setItem('user', JSON.stringify((data && (data.user || data)) || {}));
 
                 // Determine redirect target

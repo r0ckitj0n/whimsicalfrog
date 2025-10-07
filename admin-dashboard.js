@@ -41,11 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('value', newValue);
             formData.append('action', 'updateField');
 
-            const response = await fetch('/api/fulfill_order.php', {
+            const result = await window.ApiClient.request('/api/fulfill_order.php', {
                 method: 'POST',
                 body: formData,
             });
-            const result = await response.json();
 
             if (result && result.success) {
                 el.classList.remove('wf-field-updating');
@@ -99,8 +98,7 @@ async function openOrderDetailsModal(orderId) {
     }
 
     try {
-        const response = await fetch(`/api/orders/${orderId}`);
-        const result = await response.json();
+        const result = await window.ApiClient.request(`/api/orders/${orderId}`, { method: 'GET' });
 
         if (result.success && result.order) {
             updateOrderModalContent(result.order, result.items || []);

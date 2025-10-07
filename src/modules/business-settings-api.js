@@ -12,6 +12,10 @@ function toQuery(params) {
 }
 
 export const BusinessSettingsAPI = {
+  async getBusinessInfo() {
+    // Backend provides a consolidated map with canonical fields
+    return ApiClient.get('/api/business_settings.php?action=get_business_info');
+  },
   async getByCategory(category) {
     if (!category) throw new Error('category is required');
     // Backend expects get_by_category

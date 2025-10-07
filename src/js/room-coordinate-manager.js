@@ -1,3 +1,4 @@
+import { ApiClient } from '../core/api-client.js';
 /**
  * WhimsicalFrog Room Coordinate and Area Management
  * Centralized room functions to eliminate duplication across room files
@@ -44,11 +45,7 @@ function simpleCoordinateSystem(roomNumber) {
     
     // Fetch coordinates from database
     console.log(`📡 Fetching coordinates from /api/get_room_coordinates.php?room=${roomNumber}`);
-    fetch(`/api/get_room_coordinates.php?room=${encodeURIComponent(roomNumber)}`)
-        .then(response => {
-            console.log('📡 Response received:', response.status, response.statusText);
-            return response.json();
-        })
+    ApiClient.get('/api/get_room_coordinates.php', { room: roomNumber })
         .then(data => {
             console.log('📡 Data received:', data);
             if (data.success && data.coordinates) {

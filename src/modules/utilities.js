@@ -3,77 +3,7 @@
  * Enhanced utility functions recovered and consolidated from legacy systems
  * Vite compatible ES6 module
  */
-
-class ApiClient {
-    /**
-     * Make an authenticated API request
-     * @param {string} url - The API endpoint URL
-     * @param {Object} options - Fetch options
-     * @returns {Promise<Object>} - The response data
-     */
-    static async request(url, options = {}) {
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        };
-
-        const config = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers
-            }
-        };
-
-        try {
-            const response = await fetch(url, config);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success === false) {
-                throw new Error(data.error || 'API request failed');
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('[API] Request failed:', error);
-            throw error;
-        }
-    }
-
-    // Convenience methods
-    static async get(url, options = {}) {
-        return this.request(url, { ...options, method: 'GET' });
-    }
-
-    static async post(url, data = null, options = {}) {
-        const config = { ...options, method: 'POST' };
-        if (data) {
-            config.body = JSON.stringify(data);
-        }
-        return this.request(url, config);
-    }
-
-    static async put(url, data = null, options = {}) {
-        const config = { ...options, method: 'PUT' };
-        if (data) {
-            config.body = JSON.stringify(data);
-        }
-        return this.request(url, config);
-    }
-
-    static async delete(url, options = {}) {
-        return this.request(url, { ...options, method: 'DELETE' });
-    }
-}
+import { ApiClient } from '../core/api-client.js';
 
 class DOMUtils {
     /**

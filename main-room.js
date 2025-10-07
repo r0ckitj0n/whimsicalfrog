@@ -1,4 +1,5 @@
 import '../styles/room-main.css';
+import { ApiClient } from '../src/core/api-client.js';
 
 // Configuration for coordinate-based door positioning
 const MainRoomConfig = {
@@ -151,10 +152,8 @@ const EnhancedRoomSettings = {
   },
   async loadRoomSettings() {
     try {
-      const roomsResponse = await fetch('/api/room_settings.php?action=get_all&admin_token=whimsical_admin_2024');
-      const roomsData = await roomsResponse.json();
-      const businessResponse = await fetch('/api/business_settings.php?action=get_by_category&category=rooms&admin_token=whimsical_admin_2024');
-      const businessData = await businessResponse.json();
+      const roomsData = await ApiClient.get('/api/room_settings.php', { action: 'get_all', admin_token: 'whimsical_admin_2024' });
+      const businessData = await ApiClient.get('/api/business_settings.php', { action: 'get_by_category', category: 'rooms', admin_token: 'whimsical_admin_2024' });
       this.populateRoomsTab(roomsData.rooms || []);
       this.populateDisplayTab(businessData.settings || []);
       this.modal.querySelector('.loading-message')?.classList.add('hidden');
@@ -216,24 +215,12 @@ const EnhancedRoomSettings = {
         roomUpdates[roomNumber][field] = value;
       });
       for (const roomData of Object.values(roomUpdates)) {
-        await fetch('/api/room_settings.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ admin_token: 'whimsical_admin_2024', action: 'update_room', ...roomData }),
-        });
+        await ApiClient.post('/api/room_settings.php', { admin_token: 'whimsical_admin_2024', action: 'update_room', ...roomData });
       }
       const fullScreenMode = this.modal.querySelector('#fullScreenMode')?.checked ? 'true' : 'false';
-      await fetch('/api/business_settings.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ admin_token: 'whimsical_admin_2024', action: 'update_setting', key: 'main_room_fullscreen', value: fullScreenMode }),
-      });
+      await ApiClient.post('/api/business_settings.php', { admin_token: 'whimsical_admin_2024', action: 'update_setting', key: 'main_room_fullscreen', value: fullScreenMode });
       const showMainRoomTitle = this.modal.querySelector('#showMainRoomTitle')?.checked ? 'true' : 'false';
-      await fetch('/api/business_settings.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ admin_token: 'whimsical_admin_2024', action: 'update_setting', key: 'main_room_show_title', value: showMainRoomTitle }),
-      });
+      await ApiClient.post('/api/business_settings.php', { admin_token: 'whimsical_admin_2024', action: 'update_setting', key: 'main_room_show_title', value: showMainRoomTitle });
       // success toast
       const n = document.createElement('div');
       n.className = 'wf-toast success';

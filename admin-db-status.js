@@ -31,8 +31,8 @@ import '../styles/admin-db-status.css';
   }
   function endpointExists(url){
     try {
-      return fetch(url, { method: 'HEAD', credentials: 'same-origin' })
-        .then(function(r){ return r.ok; })
+      return window.ApiClient.request(url, { method: 'GET' })
+        .then(function(){ return true; })
         .catch(function(){ return false; });
     } catch(e){ return Promise.resolve(false); }
   }
@@ -57,8 +57,7 @@ import '../styles/admin-db-status.css';
           if (parsed) parsed.innerHTML = '<div class="error">❌ Smoke test endpoint not available</div>';
           return;
         }
-        fetch(url, { credentials: 'same-origin' })
-          .then(function(r){ return r.json().catch(function(){ return { ok:false, error:'Invalid JSON', status:r.status }; }); })
+        window.ApiClient.request(url, { method: 'GET' })
           .then(function(data){
             if (raw) raw.textContent = JSON.stringify(data, null, 2);
             renderParsed(parsed, data);

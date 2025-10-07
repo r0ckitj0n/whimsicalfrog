@@ -20,12 +20,11 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
 
             try {
-                const res = await fetch('/api/categories', {
+                const data = await window.ApiClient.request('/api/categories', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'create', category })
                 });
-                const data = await res.json();
 
                 if (data.success) {
                     location.reload(); // Easiest way to show the new category and its data
@@ -63,12 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
 
         try {
-            const res = await fetch('/api/categories', {
+            const data = await window.ApiClient.request('/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'delete', category })
             });
-            const data = await res.json();
 
             if (data.success) {
                 btn.closest('tr').remove();
@@ -128,12 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryDiv.innerHTML = 'Saving...';
 
         try {
-            const res = await fetch('/api/categories', {
+            const data = await window.ApiClient.request('/api/categories', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'rename', category: originalName, newCategory: newName })
             });
-            const data = await res.json();
 
             if (data.success) {
                 // Just reload the page to reflect all changes, including updated SKUs

@@ -1,6 +1,8 @@
 // Admin Settings - Initialization
 // Handles system initialization and setup
 
+import { ApiClient } from '../core/api-client.js';
+
 export const Initialization = {
   // Main initialization function
   init() {
@@ -134,16 +136,10 @@ export const Initialization = {
   async fetchGlobalAttributes() {
     try {
       console.log('fetchGlobalAttributes called');
-      const [gendersRes, sizesRes, colorsRes] = await Promise.all([
-        fetch('/api/global_color_size_management.php?action=get_global_genders&admin_token=whimsical_admin_2024'),
-        fetch('/api/global_color_size_management.php?action=get_global_sizes&admin_token=whimsical_admin_2024'),
-        fetch('/api/global_color_size_management.php?action=get_global_colors&admin_token=whimsical_admin_2024')
-      ]);
-
       const [genders, sizes, colors] = await Promise.all([
-        gendersRes.json(),
-        sizesRes.json(),
-        colorsRes.json()
+        ApiClient.get('/api/global_color_size_management.php?action=get_global_genders&admin_token=whimsical_admin_2024'),
+        ApiClient.get('/api/global_color_size_management.php?action=get_global_sizes&admin_token=whimsical_admin_2024'),
+        ApiClient.get('/api/global_color_size_management.php?action=get_global_colors&admin_token=whimsical_admin_2024')
       ]);
 
       if (typeof window !== 'undefined') {
@@ -245,8 +241,7 @@ export const Initialization = {
     try {
       console.log('loadBusinessInfo called');
       // Load business information from API
-      const response = await fetch('/api/business_settings.php?action=get');
-      const data = await response.json();
+      const data = await ApiClient.get('/api/business_settings.php?action=get');
 
       if (data.success && data.data) {
         this.applyBusinessInfo(data.data);
@@ -285,19 +280,10 @@ export const Initialization = {
     try {
       console.log('saveBusinessInfo called');
       const businessData = this.collectBusinessInfo();
-
-      const response = await fetch('/api/business_settings.php?action=upsert_settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          category: 'business',
-          settings: businessData
-        })
+      const result = await ApiClient.post('/api/business_settings.php?action=upsert_settings', {
+        category: 'business',
+        settings: businessData
       });
-
-      const result = await response.json();
       if (result.success) {
         console.log('Business info saved successfully');
       } else {

@@ -1,1 +1,0 @@
-{"version":1,"defects":{"LandingBackgroundTest::testLandingBackgroundPathExists":1},"times":{"LandingBackgroundTest::testLandingBackgroundPathExists":0.001,"EmailCampaignFilterTest::testSqlForAllAudience":0,"EmailCampaignFilterTest::testSqlForCustomersAudience":0,"EmailCampaignFilterTest::testSqlForNonCustomersAudience":0}}

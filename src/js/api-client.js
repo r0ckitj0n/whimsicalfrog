@@ -34,11 +34,22 @@ async function request(method, path, data = null, options = {}) {
 }
 
 function get(path, options = {}) {
-    // If caller passes options (headers, etc.), go through request to preserve them
-    if (options && Object.keys(options).length > 0) {
-        return request('GET', path, null, options);
+    // Support both (path) and (path, params) signatures.
+    if (!options || Object.keys(options).length === 0) {
+        return ApiClient.get(path);
     }
-    return ApiClient.get(path);
+    // If options.params provided explicitly, treat as query params
+    if (options && typeof options === 'object' && options.params && typeof options.params === 'object') {
+        return ApiClient.get(path, options.params);
+    }
+    // Heuristic: if options doesn't contain common fetch config keys, treat it as params
+    const fetchKeys = ['headers','credentials','mode','cache','redirect','referrer','referrerPolicy','integrity','keepalive','signal','method','body'];
+    const looksLikeFetchOpts = Object.keys(options).some(k => fetchKeys.includes(k));
+    if (!looksLikeFetchOpts) {
+        return ApiClient.get(path, options);
+    }
+    // Otherwise, forward as fetch options
+    return request('GET', path, null, options);
 }
 
 function post(path, data = null, options = {}) {

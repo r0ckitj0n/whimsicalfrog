@@ -1,3 +1,4 @@
+import { ApiClient } from '../../core/api-client.js';
 /**
  * Room Settings Manager
  * Handles room configuration and settings modal functionality
@@ -144,13 +145,10 @@ export class RoomSettingsManager {
    */
   async loadRoomSettings() {
     try {
-      const [roomsResponse, businessResponse] = await Promise.all([
-        fetch('/api/room_settings.php?action=get_all&admin_token=whimsical_admin_2024'),
-        fetch('/api/business_settings.php?action=get_by_category&category=rooms&admin_token=whimsical_admin_2024')
+      const [roomsData, businessData] = await Promise.all([
+        ApiClient.get('/api/room_settings.php', { action: 'get_all', admin_token: 'whimsical_admin_2024' }),
+        ApiClient.get('/api/business_settings.php', { action: 'get_by_category', category: 'rooms', admin_token: 'whimsical_admin_2024' })
       ]);
-
-      const roomsData = await roomsResponse.json();
-      const businessData = await businessResponse.json();
 
       this.populateRoomsTab(roomsData.rooms || []);
       this.populateDisplayTab(businessData.settings || []);
@@ -290,14 +288,9 @@ export class RoomSettingsManager {
     });
 
     for (const roomData of Object.values(roomUpdates)) {
-      await fetch('/api/room_settings.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          admin_token: 'whimsical_admin_2024',
-          action: 'update_room',
-          ...roomData
-        })
+      await ApiClient.post('/api/room_settings.php?action=update_room', {
+        admin_token: 'whimsical_admin_2024',
+        ...roomData
       });
     }
   }
@@ -310,25 +303,15 @@ export class RoomSettingsManager {
     const showMainRoomTitle = this.modal.querySelector('#showMainRoomTitle')?.checked ? 'true' : 'false';
 
     await Promise.all([
-      fetch('/api/business_settings.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          admin_token: 'whimsical_admin_2024',
-          action: 'update_setting',
-          key: 'main_room_fullscreen',
-          value: fullScreenMode
-        })
+      ApiClient.post('/api/business_settings.php?action=update_setting', {
+        admin_token: 'whimsical_admin_2024',
+        key: 'main_room_fullscreen',
+        value: fullScreenMode
       }),
-      fetch('/api/business_settings.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          admin_token: 'whimsical_admin_2024',
-          action: 'update_setting',
-          key: 'main_room_show_title',
-          value: showMainRoomTitle
-        })
+      ApiClient.post('/api/business_settings.php?action=update_setting', {
+        admin_token: 'whimsical_admin_2024',
+        key: 'main_room_show_title',
+        value: showMainRoomTitle
       })
     ]);
   }

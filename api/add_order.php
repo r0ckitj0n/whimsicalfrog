@@ -420,8 +420,8 @@ try {
         $zipForTax = trim((string)($shippingAddress['zip_code'] ?? ''));
     }
     if (!$zipForTax) {
-        // Optional fallback to a configured business zip
-        $zipForTax = (string) BusinessSettings::get('business_zip', '');
+        // Fallback to canonical business postal/ZIP
+        $zipForTax = (string) BusinessSettings::getBusinessPostal();
     }
     $zipState = null;
     $zipRate = null;

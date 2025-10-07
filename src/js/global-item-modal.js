@@ -2,6 +2,7 @@
  * Global Item Details Modal System
  * Unified modal system for displaying detailed item information across shop and room pages
  */
+import { ApiClient } from '../core/api-client.js';
 
 (function() {
     'use strict';
@@ -155,19 +156,20 @@
         }
     }
     async function apiGetLocal(url) {
-        const res = await fetch(url, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+        // Delegate to ApiClient to enforce headers/credentials
+        try {
+            const data = await ApiClient.get(url);
+            return data;
+        } catch (e) {
+            throw e;
+        }
     }
     async function apiPost(url, data) {
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(data)
-        });
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.text();
+        try {
+            return await ApiClient.post(url, data);
+        } catch (e) {
+            throw e;
+        }
     }
     function setBtnEnabled(modal, enabled) {
         const btn = qs('[data-action="addDetailedToCart"]', modal);

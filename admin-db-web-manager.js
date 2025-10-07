@@ -14,12 +14,11 @@
   }
 
   function loadStatus() {
-    fetch('', {
+    window.ApiClient.request('', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'action=status',
     })
-      .then((r) => r.json())
       .then((data) => {
         const el = byId('status');
         if (!el) return;
@@ -54,12 +53,11 @@
 
     resEl.innerHTML = '<div class="loading">Executing query...</div>';
 
-    fetch('', {
+    window.ApiClient.request('', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `action=query&sql=${encodeURIComponent(sql)}`,
     })
-      .then((r) => r.json())
       .then((data) => {
         if (data.success) {
           if (data.type === 'select' && data.data.length > 0) {
@@ -100,12 +98,11 @@
     if (!resEl) return;
     resEl.innerHTML = '<div class="loading">Loading tables...</div>';
 
-    fetch('', {
+    window.ApiClient.request('', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'action=tables',
     })
-      .then((r) => r.json())
       .then((data) => {
         if (data.success) {
           let html = '<table><thead><tr><th>Table Name</th><th>Row Count</th><th>Actions</th></tr></thead><tbody>';
@@ -138,12 +135,11 @@
     }
     resEl.innerHTML = '<div class="loading">Loading table structure...</div>';
 
-    fetch('', {
+    window.ApiClient.request('', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: `action=describe&table=${encodeURIComponent(tableName)}`,
     })
-      .then((r) => r.json())
       .then((data) => {
         if (data.success) {
           let html = '<table><thead><tr><th>Field</th><th>Type</th><th>Null</th><th>Key</th><th>Default</th><th>Extra</th></tr></thead><tbody>';

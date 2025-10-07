@@ -1,6 +1,8 @@
 // Admin Room Config Manager module
 // Migrates inline JS from admin/room_config_manager.php to a Vite-managed module
 
+import { ApiClient } from '../core/api-client.js';
+
 (function initRoomConfigManager() {
   let currentRoomConfig = {};
 
@@ -70,8 +72,7 @@
     }
 
     try {
-      const res = await fetch(`/api/room_config.php?action=get&room=${encodeURIComponent(roomNumber)}`);
-      const data = await res.json();
+      const data = await ApiClient.get('/api/room_config.php?action=get', { room: roomNumber });
       if (data && data.success) {
         currentRoomConfig = data.config || {};
         populateForm(currentRoomConfig);
@@ -119,16 +120,11 @@
     });
 
     try {
-      const res = await fetch('/api/room_config.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'save',
-          room: config.room_number,
-          config,
-        }),
+      const data = await ApiClient.post('/api/room_config.php', {
+        action: 'save',
+        room: config.room_number,
+        config,
       });
-      const data = await res.json();
       if (data.success) {
         showMessage('Room configuration saved successfully!', 'success');
         currentRoomConfig = config;

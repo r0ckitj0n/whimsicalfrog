@@ -1,3 +1,4 @@
+import { ApiClient } from '../core/api-client.js';
 function byId(id){ return document.getElementById(id); }
 
 // --- Health & Diagnostics ---
@@ -122,8 +123,9 @@ async function loadBusinessInfo() {
         const mod = await import('../modules/business-settings-api.js');
         const BusinessSettingsAPI = mod?.default || mod?.BusinessSettingsAPI;
         const info = await BusinessSettingsAPI.getBusinessInfo();
-        applyBusinessInfo(info.data || {});
-        applyBusinessCssToRoot(info.data || {});
+        const data = (info && (info.data || info)) || {};
+        applyBusinessInfo(data);
+        applyBusinessCssToRoot(data);
         if(status) status.textContent = 'Loaded.';
     } catch (e) {
         if(status) status.textContent = `Error: ${e.message}`;
@@ -134,7 +136,20 @@ function applyBusinessInfo(s) {
     const set = (id, v) => { const el = byId(id); if (el) el.value = v ?? ''; };
     set('bizName', s.business_name || '');
     set('bizEmail', s.business_email || '');
-    // ... (set all other business info fields) ...
+    // Canonical business address fields
+    set('bizAddress', s.business_address || '');
+    set('bizAddress2', s.business_address2 || '');
+    set('bizCity', s.business_city || '');
+    set('bizState', s.business_state || '');
+    set('bizPostal', s.business_postal || '');
+    set('bizCountry', s.business_country || '');
+    // Other business info
+    set('bizPhone', s.business_phone || '');
+    set('bizHours', s.business_hours || '');
+    set('bizWebsite', s.business_website || '');
+    set('bizLogoUrl', s.business_logo_url || '');
+    set('bizTagline', s.business_tagline || '');
+    set('bizDescription', s.business_description || '');
     set('brandPrimary', s.business_brand_primary || '#0ea5e9');
     set('brandSecondary', s.business_brand_secondary || '#6366f1');
     set('brandAccent', s.business_brand_accent || '#22c55e');
@@ -156,7 +171,20 @@ function collectBusinessInfo() {
     return {
         business_name: get('bizName'),
         business_email: get('bizEmail'),
-        // ... (collect all other business info fields) ...
+        // Canonical business address fields
+        business_address: get('bizAddress'),
+        business_address2: get('bizAddress2'),
+        business_city: get('bizCity'),
+        business_state: get('bizState'),
+        business_postal: get('bizPostal'),
+        business_country: get('bizCountry'),
+        // Other business info
+        business_phone: get('bizPhone'),
+        business_hours: get('bizHours'),
+        business_website: get('bizWebsite'),
+        business_logo_url: get('bizLogoUrl'),
+        business_tagline: get('bizTagline'),
+        business_description: get('bizDescription'),
         business_brand_primary: get('brandPrimary'),
         business_brand_secondary: get('brandSecondary'),
         business_brand_accent: get('brandAccent'),
@@ -174,7 +202,8 @@ async function saveBusinessInfo() {
     try {
         const mod = await import('../modules/business-settings-api.js');
         const BusinessSettingsAPI = mod?.default || mod?.BusinessSettingsAPI;
-        await BusinessSettingsAPI.upsertSettings(payload, 'business');
+        // Save all fields under the 'business_info' category as our canonical source
+        await BusinessSettingsAPI.upsert('business_info', payload);
         if(status) status.textContent = 'Saved successfully!';
         setTimeout(() => { if(status && status.textContent === 'Saved successfully!') status.textContent = ''; }, 2000);
     } catch (e) {
@@ -197,6 +226,22 @@ document.addEventListener('click', async (e) => {
         try { wireBrandingLivePreview(); } catch(err){ console.error('Error wiring branding live preview', err); }
       }, 0);
     });
+    return;
+  }
+  // Address Diagnostics
+  if (closest('[data-action="open-address-diagnostics"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const modal = document.getElementById('addressDiagnosticsModal');
+      const frame = document.getElementById('addressDiagnosticsFrame');
+      if (frame && frame.getAttribute('src') === null) {
+        const ds = frame.getAttribute('data-src') || '/sections/tools/address_diagnostics.php?modal=1';
+        frame.setAttribute('src', ds);
+      }
+      if (typeof window.showModal === 'function' && modal) window.showModal('addressDiagnosticsModal');
+      else if (modal) modal.classList.remove('hidden');
+    } catch (err) { console.warn('Failed to open Address Diagnostics', err); }
     return;
   }
   if (closest('[data-action="close-business-info"]')) {
@@ -365,14 +410,9 @@ const globalAttributes = { genders: [], sizes: [], colors: [] };
 
 async function fetchGlobalAttributes() {
   try {
-    const response = await fetch('/api/global_color_size_management.php?action=get_global_genders&admin_token=whimsical_admin_2024');
-    const gendersResult = await response.json();
-
-    const response2 = await fetch('/api/global_color_size_management.php?action=get_global_sizes&admin_token=whimsical_admin_2024');
-    const sizesResult = await response2.json();
-
-    const response3 = await fetch('/api/global_color_size_management.php?action=get_global_colors&admin_token=whimsical_admin_2024');
-    const colorsResult = await response3.json();
+    const gendersResult = await ApiClient.get('/api/global_color_size_management.php', { action: 'get_global_genders', admin_token: 'whimsical_admin_2024' });
+    const sizesResult = await ApiClient.get('/api/global_color_size_management.php', { action: 'get_global_sizes', admin_token: 'whimsical_admin_2024' });
+    const colorsResult = await ApiClient.get('/api/global_color_size_management.php', { action: 'get_global_colors', admin_token: 'whimsical_admin_2024' });
 
     if (gendersResult.success) {
       globalAttributes.genders = gendersResult.genders || [];
@@ -463,13 +503,7 @@ async function addAttribute(type, name, code = null) {
       payload = { color_name: name, color_code: '#000000' };
     }
 
-    const response = await fetch('/api/global_color_size_management.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...payload, admin_token: 'whimsical_admin_2024' })
-    });
-
-    const result = await response.json();
+    const result = await ApiClient.post('/api/global_color_size_management.php', { action, ...payload, admin_token: 'whimsical_admin_2024' });
 
     if (result.success) {
       // Refresh the data and repopulate
@@ -536,13 +570,7 @@ async function editAttribute(type, id) {
       payload = { color_id: id, color_name: newValue };
     }
 
-    const response = await fetch('/api/global_color_size_management.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, ...payload, admin_token: 'whimsical_admin_2024' })
-    });
-
-    const result = await response.json();
+    const result = await ApiClient.post('/api/global_color_size_management.php', { action, ...payload, admin_token: 'whimsical_admin_2024' });
 
     if (result.success) {
       // Refresh the data and repopulate
@@ -575,13 +603,7 @@ async function deleteAttribute(type, id) {
       action = 'delete_global_color';
     }
 
-    const response = await fetch('/api/global_color_size_management.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, [`${type}_id`]: id, admin_token: 'whimsical_admin_2024' })
-    });
-
-    const result = await response.json();
+    const result = await ApiClient.post('/api/global_color_size_management.php', { action, [`${type}_id`]: id, admin_token: 'whimsical_admin_2024' });
 
     if (result.success) {
       // Refresh the data and repopulate

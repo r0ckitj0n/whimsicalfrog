@@ -7,13 +7,7 @@
   try {
     // First, check the current shipping rates
     console.log('[SHIPPING-FIX] 1. Checking current shipping rates...');
-    const checkResponse = await fetch('/api/business_settings.php?action=get_settings&category=ecommerce', {
-      method: 'GET',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      credentials: 'same-origin'
-    });
-
-    const checkData = await checkResponse.json();
+    const checkData = await window.ApiClient.request('/api/business_settings.php?action=get_settings&category=ecommerce', { method: 'GET' });
     console.log('[SHIPPING-FIX] Current business settings:', checkData);
 
     if (checkData.success && checkData.settings) {
@@ -34,13 +28,9 @@
         console.log('[SHIPPING-FIX] 2. Updating shipping rates...');
 
         // Update the rates
-        const updateResponse = await fetch('/api/business_settings.php?action=upsert_settings', {
+        const updateData = await window.ApiClient.request('/api/business_settings.php?action=upsert_settings', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             settings: {
               shipping_rate_usps: 8.99,
@@ -51,8 +41,6 @@
             category: 'ecommerce'
           })
         });
-
-        const updateData = await updateResponse.json();
         console.log('[SHIPPING-FIX] Update response:', updateData);
 
         if (updateData.success) {
@@ -60,13 +48,9 @@
 
           // Test with a direct API call
           console.log('[SHIPPING-FIX] 3. Testing updated rates...');
-          const testResponse = await fetch('/api/checkout_pricing.php', {
+          const testData = await window.ApiClient.request('/api/checkout_pricing.php', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               itemIds: ['WF-TS-002'],
               quantities: [1],
@@ -74,8 +58,6 @@
               debug: true
             })
           });
-
-          const testData = await testResponse.json();
           console.log('[SHIPPING-FIX] Test API response:', testData);
 
           if (testData.success && testData.pricing) {
@@ -99,13 +81,9 @@
         console.log('[SHIPPING-FIX] The issue might be elsewhere. Let me check...');
 
         // Test with current rates
-        const testResponse = await fetch('/api/checkout_pricing.php', {
+        const testData = await window.ApiClient.request('/api/checkout_pricing.php', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             itemIds: ['WF-TS-002'],
             quantities: [1],
@@ -113,8 +91,6 @@
             debug: true
           })
         });
-
-        const testData = await testResponse.json();
         console.log('[SHIPPING-FIX] Test with current rates:', testData);
 
         if (testData.pricing?.shipping > 0) {

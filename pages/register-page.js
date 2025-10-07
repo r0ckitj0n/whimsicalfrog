@@ -1,6 +1,8 @@
 // Public page module: register
 // Handles register form submission and success/redirect flow
 
+import { ApiClient } from '../src/core/api-client.js';
+
 console.log('[Page] register-page.js loaded');
 
 function ready(fn) {
@@ -40,7 +42,7 @@ ready(() => {
 
     const registerUrl = '/process_register.php';
     try {
-      const response = await fetch(registerUrl, {
+      const data = await ApiClient.request(registerUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -57,9 +59,6 @@ ready(() => {
           zipCode
         })
       });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Registration failed');
 
       if (data.success && data.autoLogin && data.userData) {
         sessionStorage.setItem('user', JSON.stringify(data.userData));

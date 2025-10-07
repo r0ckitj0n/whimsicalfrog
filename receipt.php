@@ -252,7 +252,7 @@ if (abs($shippingAmount) < 0.00001 && abs($taxAmount) < 0.00001) {
             $zipForTax = trim((string)($shippingAddress['zip_code'] ?? $shippingAddress['postal_code'] ?? ''));
         }
         if ($zipForTax === '') {
-            $zipForTax = (string) BusinessSettings::get('business_zip', '');
+            $zipForTax = (string) BusinessSettings::getBusinessPostal();
         }
 
         // Optional ZIP-based tax rate via TaxService (if available)
@@ -309,7 +309,8 @@ $businessName     = BusinessSettings::getBusinessName();
 $businessDomain   = BusinessSettings::getBusinessDomain();
 $businessOwner    = BusinessSettings::get('business_owner', '');
 $businessPhone    = BusinessSettings::get('business_phone', '');
-$businessAddress  = BusinessSettings::get('business_address', '');
+// Canonical address block for receipt
+$businessAddress  = BusinessSettings::getBusinessAddressBlock();
 $businessUrl      = BusinessSettings::getSiteUrl('');
 $businessTagline  = BusinessSettings::get('business_tagline', 'Custom Crafts & Personalized Gifts');
 
@@ -378,24 +379,8 @@ try {
 } catch (\Throwable $e) { /* noop */ }
 ?>
 <?php
-// Build a remit address where the last two lines "City, ST" and "ZIP" are on the same line
-// e.g., [street], [city, ST], [ZIP] -> [street], [city, ST ZIP]
-$remitAddressRaw = trim((string)$businessAddress);
-$remitAddressFormatted = $remitAddressRaw;
-if ($remitAddressRaw !== '') {
-    $lines = preg_split('/\r?\n+/', $remitAddressRaw);
-    $count = is_array($lines) ? count($lines) : 0;
-    if ($count >= 2) {
-        $last = trim($lines[$count - 1]);
-        $secondLast = trim($lines[$count - 2]);
-        // If last line is a ZIP code, merge into the previous line
-        if (preg_match('/^\d{5}(?:-\d{4})?$/', $last)) {
-            $lines[$count - 2] = rtrim($secondLast . ' ' . $last);
-            array_pop($lines);
-        }
-        $remitAddressFormatted = implode("\n", $lines);
-    }
-}
+// Canonical remit address already composed as a block
+$remitAddressFormatted = trim((string)$businessAddress);
 ?>
 
 <style>

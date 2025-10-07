@@ -64,8 +64,8 @@ const AdminMarketingModule = {
 
     async loadSocialAccounts() {
         try {
-            const response = await fetch('/api/get_social_accounts.php');
-            const data = await response.json();
+            const response = await window.ApiClient.request('/api/get_social_accounts.php', { method: 'GET' });
+            const data = response;
             
             const container = document.getElementById('social-accounts-list');
             if (data.success && data.accounts) {

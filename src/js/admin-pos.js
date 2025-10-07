@@ -1,4 +1,5 @@
 import { buildAdminUrl } from '../core/admin-url-builder.js';
+import { ApiClient } from '../core/api-client.js';
 
 const POSModule = {
     cart: [],
@@ -274,15 +275,8 @@ const POSModule = {
                 shippingMethod: 'Customer Pickup', order_status: 'Delivered'
             };
 
-            const response = await fetch('/api/orders', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
+            const result = await ApiClient.post('/api/orders', orderData);
+            if (result && result.success) {
                 // Open the canonical receipt page so POS uses the same template as checkout/admin
                 this.openReceiptPage(result.orderId);
             } else {
@@ -353,13 +347,8 @@ const POSModule = {
         this.showPOSModal('Sending Receipt...', 'Please wait...', 'info');
 
         try {
-            const response = await fetch('/api/receipts/email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ orderId, customerEmail: email, orderData: this.lastSaleData })
-            });
-            const data = await response.json();
-            if (data.success) {
+            const data = await ApiClient.post('/api/receipts/email', { orderId, customerEmail: email, orderData: this.lastSaleData });
+            if (data && data.success) {
                 this.showPOSModal('Email Sent!', data.message || `Receipt sent to ${email}`, 'success');
             } else {
                 throw new Error(data.error || 'Unknown error');

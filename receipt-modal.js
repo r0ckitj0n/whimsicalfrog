@@ -56,9 +56,10 @@
   async function loadReceipt(orderId) {
     // Use canonical router path with bare=1 so the server suppresses header/footer
     const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
-    const res = await fetch(url, { credentials: 'include' });
-    if (!res.ok) throw new Error(`Failed to load receipt (${res.status})`);
-    const html = await res.text();
+    if (!window.ApiClient || typeof window.ApiClient.request !== 'function') {
+      throw new Error('ApiClient is not available');
+    }
+    const html = await window.ApiClient.request(url, { method: 'GET' });
     // Parse and extract only the receipt container to avoid any stray layout wrappers
     try {
       const parser = new DOMParser();

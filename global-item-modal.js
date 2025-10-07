@@ -75,19 +75,17 @@
         }
     }
     async function apiGetLocal(url) {
-        const res = await fetch(url, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.json();
+        if (!window.ApiClient || typeof window.ApiClient.request !== 'function') throw new Error('ApiClient unavailable');
+        const data = await window.ApiClient.request(url, { method: 'GET' });
+        return data;
     }
     async function apiPost(url, data) {
-        const res = await fetch(url, {
+        if (!window.ApiClient || typeof window.ApiClient.request !== 'function') throw new Error('ApiClient unavailable');
+        return window.ApiClient.request(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
             body: JSON.stringify(data)
         });
-        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        return res.text();
     }
     function setBtnEnabled(modal, enabled) {
         const btn = qs('[data-action="addDetailedToCart"]', modal);

@@ -136,6 +136,59 @@ class BusinessSettings
         return self::get('business_email', 'orders@whimsicalfrog.us');
     }
 
+    /**
+     * Canonical business address components and composed block
+     */
+    public static function getBusinessAddressLine1()
+    {
+        return trim((string) self::get('business_address', ''));
+    }
+
+    public static function getBusinessAddressLine2()
+    {
+        return trim((string) self::get('business_address2', ''));
+    }
+
+    public static function getBusinessCity()
+    {
+        return trim((string) self::get('business_city', ''));
+    }
+
+    public static function getBusinessState()
+    {
+        return trim((string) self::get('business_state', ''));
+    }
+
+    public static function getBusinessPostal()
+    {
+        // Canonical postal/ZIP; legacy business_zip is deprecated and not used
+        return trim((string) self::get('business_postal', ''));
+    }
+
+    public static function getBusinessAddressBlock()
+    {
+        // Compose address for display: line1, optional line2, and City ST ZIP on one line
+        $l1 = self::getBusinessAddressLine1();
+        $l2 = self::getBusinessAddressLine2();
+        $city = self::getBusinessCity();
+        $state = self::getBusinessState();
+        $zip = self::getBusinessPostal();
+
+        $parts = [];
+        if ($l1 !== '') { $parts[] = $l1; }
+        if ($l2 !== '') { $parts[] = $l2; }
+        $cityLine = trim($city . ($city !== '' && $state !== '' ? ', ' : '')) . $state;
+        $cityZip = trim($cityLine . ($zip !== '' ? ' ' . $zip : ''));
+        if ($cityZip !== '') { $parts[] = $cityZip; }
+
+        // If components are largely missing, fall back to legacy multi-line blob
+        if (empty($parts)) {
+            $blob = trim((string) self::get('business_address', ''));
+            return $blob;
+        }
+        return implode("\n", $parts);
+    }
+
     public static function getAdminEmail()
     {
         return self::get('admin_email', 'admin@whimsicalfrog.us');

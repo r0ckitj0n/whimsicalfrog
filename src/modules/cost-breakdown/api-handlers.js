@@ -3,6 +3,8 @@
  * Handles all API interactions for cost breakdown functionality
  */
 
+import { ApiClient } from '../../core/api-client.js';
+
 export class CostBreakdownApiHandlers {
   constructor() {
     this.baseUrl = '/functions/process_cost_breakdown.php';
@@ -15,11 +17,7 @@ export class CostBreakdownApiHandlers {
    */
   async loadCostBreakdown(itemId) {
     try {
-      const response = await fetch(`${this.baseUrl}?inventoryId=${encodeURIComponent(itemId)}&costType=all`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
+      const data = await ApiClient.get(`${this.baseUrl}`, { inventoryId: itemId, costType: 'all' });
       if (!data.success) {
         throw new Error('Failed to load cost breakdown');
       }
@@ -44,23 +42,15 @@ export class CostBreakdownApiHandlers {
    */
   async saveMaterial(inventoryId, materialData, id = '') {
     const isEdit = id !== '';
-    const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit
       ? `${this.baseUrl}?inventoryId=${encodeURIComponent(inventoryId)}&costType=materials&id=${encodeURIComponent(id)}`
       : `${this.baseUrl}?inventoryId=${encodeURIComponent(inventoryId)}`;
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ costType: 'materials', ...materialData })
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
+      const payload = { costType: 'materials', ...materialData };
+      const result = isEdit
+        ? await ApiClient.put(url, payload)
+        : await ApiClient.post(url, payload);
       if (!result.success) {
         throw new Error(result.error || 'Failed to save material');
       }
@@ -81,23 +71,15 @@ export class CostBreakdownApiHandlers {
    */
   async saveLabor(inventoryId, laborData, id = '') {
     const isEdit = id !== '';
-    const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit
       ? `${this.baseUrl}?inventoryId=${encodeURIComponent(inventoryId)}&costType=labor&id=${encodeURIComponent(id)}`
       : `${this.baseUrl}?inventoryId=${encodeURIComponent(inventoryId)}`;
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ costType: 'labor', ...laborData })
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
+      const payload = { costType: 'labor', ...laborData };
+      const result = isEdit
+        ? await ApiClient.put(url, payload)
+        : await ApiClient.post(url, payload);
       if (!result.success) {
         throw new Error(result.error || 'Failed to save labor');
       }
@@ -118,23 +100,15 @@ export class CostBreakdownApiHandlers {
    */
   async saveEnergy(inventoryId, energyData, id = '') {
     const isEdit = id !== '';
-    const method = isEdit ? 'PUT' : 'POST';
     const url = isEdit
       ? `${this.baseUrl}?inventoryId=${encodeURIComponent(inventoryId)}&costType=energy&id=${encodeURIComponent(id)}`
       : `${this.baseUrl}?inventoryId=${encodeURIComponent(inventoryId)}`;
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ costType: 'energy', ...energyData })
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
+      const payload = { costType: 'energy', ...energyData };
+      const result = isEdit
+        ? await ApiClient.put(url, payload)
+        : await ApiClient.post(url, payload);
       if (!result.success) {
         throw new Error(result.error || 'Failed to save energy');
       }
@@ -157,12 +131,7 @@ export class CostBreakdownApiHandlers {
     const url = `${this.baseUrl}?inventoryId=${encodeURIComponent(inventoryId)}&costType=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
 
     try {
-      const response = await fetch(url, { method: 'DELETE' });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
+      const result = await ApiClient.delete(url);
       if (!result.success) {
         throw new Error(result.error || 'Failed to delete item');
       }
@@ -182,17 +151,7 @@ export class CostBreakdownApiHandlers {
    */
   async updateInventoryCostPrice(inventoryId, costPrice) {
     try {
-      const response = await fetch('/functions/process_inventory_update.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: inventoryId, costPrice })
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
+      const result = await ApiClient.post('/functions/process_inventory_update.php', { id: inventoryId, costPrice });
       if (!result.success) {
         throw new Error(result.error || 'Failed to update cost price');
       }

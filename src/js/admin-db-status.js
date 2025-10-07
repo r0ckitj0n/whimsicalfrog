@@ -1,4 +1,5 @@
 // Admin DB Status page module
+import { ApiClient } from '../core/api-client.js';
 (function AdminDbStatus() {
   function handleRunCommandClick(e) {
     const btn = e.target.closest('[data-action="runCommand"]');
@@ -22,23 +23,22 @@
     if (active.env) qs.set('env', active.env);
     if (active.table) qs.set('table', active.table);
 
-    const doFetch = (withCsrfToken) => fetch(`/api/db_tools.php?${qs.toString()}`, {
-      headers: withCsrfToken ? { 'X-CSRF-Token': withCsrfToken } : undefined,
-      credentials: 'include'
-    });
+    const doRequest = async (withCsrfToken) => {
+      const headers = withCsrfToken ? { 'X-CSRF-Token': withCsrfToken } : undefined;
+      return ApiClient.request(`/api/db_tools.php?${qs.toString()}`, { headers });
+    };
 
-    doFetch()
-      .then(async (res) => {
-        if (res.status === 428) {
-          // Need CSRF token; try to fetch and retry once
-          const tokenRes = await fetch('/api/db_tools.php?action=csrf_token', { credentials: 'include' });
-          const token = tokenRes.headers.get('X-CSRF-Token') || (await tokenRes.json().catch(()=>({}))).data?.csrf_token;
+    doRequest()
+      .then(async (data) => {
+        if (data && data.status === 428) {
+          // Fallback if server returns 428 in JSON form
+          const tokenResp = await ApiClient.get('/api/db_tools.php', { action: 'csrf_token' }).catch(()=>null);
+          const token = tokenResp?.headers?.get?.('X-CSRF-Token') || tokenResp?.data?.csrf_token || tokenResp?.csrf_token;
           if (token) {
-            const retry = await doFetch(token);
-            return retry.json();
+            return doRequest(token);
           }
         }
-        return res.json();
+        return data;
       })
       .then((data) => {
         if (!data) return;

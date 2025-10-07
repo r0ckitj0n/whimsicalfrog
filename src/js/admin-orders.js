@@ -1,4 +1,5 @@
 import { buildAdminUrl } from '../core/admin-url-builder.js';
+import { ApiClient } from '../core/api-client.js';
 import '../styles/admin-modals.css';
 import '../styles/admin/admin-legacy-modals.css';
 console.log('[AdminOrders] module evaluated');
@@ -207,8 +208,7 @@ class AdminOrdersModule {
                 if (!form) break;
                 const fd = new FormData(form);
                 const id = (fd.get('orderId') || fd.get('id') || '').toString();
-                fetch('/functions/process_order_update.php', { method: 'POST', credentials: 'include', body: fd })
-                    .then(r => r.json().catch(() => ({})))
+                ApiClient.request('/functions/process_order_update.php', { method: 'POST', body: fd })
                     .then(data => {
                         if (data && data.success) {
                             try { window.showNotification && window.showNotification('Order saved', 'success', { title: 'Saved' }); } catch(_) {}
@@ -250,8 +250,7 @@ class AdminOrdersModule {
                 url.searchParams.delete('edit');
                 url.searchParams.set(action, requestedId);
 
-                fetch(url.toString(), { credentials: 'include' })
-                    .then(r => r.text())
+                ApiClient.get(url.toString())
                     .then(html => {
                         const tmp = document.createElement('div');
                         tmp.innerHTML = html;
@@ -463,14 +462,8 @@ class AdminOrdersModule {
                 payload[apiKey] = newValue;
 
                 try {
-                    const r = await fetch('/api/update_order.php', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                    });
-                    const data = await r.json().catch(() => ({}));
-                    if (r.ok && data && (data.success || data.orderId)) {
+                    const data = await ApiClient.post('/api/update_order.php', payload);
+                    if (data && (data.success || data.orderId)) {
                         // Update UI
                         if (field === 'order_status') {
                             const span = cell.querySelector('.status-badge') || document.createElement('span');

@@ -126,9 +126,7 @@
     async loadCostBreakdown(itemId) {
       this.showLoading();
       try {
-        const res = await fetch(`functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(itemId)}&costType=all`);
-        if (!res.ok) throw new Error('Network response was not ok');
-        const data = await res.json();
+        const data = await window.ApiClient.request(`functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(itemId)}&costType=all`, { method: 'GET' });
         if (data.success) {
           this.costBreakdown = data.data || this.costBreakdown;
           this.displayCostBreakdown();
@@ -330,9 +328,7 @@
 
       this.showFormLoading('material');
       try {
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await window.ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (result.success) {
           this.closeModal('materialModal');
           showSuccess(result.message || 'Saved');
@@ -362,9 +358,7 @@
 
       this.showFormLoading('labor');
       try {
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await window.ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (result.success) {
           this.closeModal('laborModal');
           showSuccess(result.message || 'Saved');
@@ -394,9 +388,7 @@
 
       this.showFormLoading('energy');
       try {
-        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await window.ApiClient.request(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (result.success) {
           this.closeModal('energyModal');
           showSuccess(result.message || 'Saved');
@@ -416,9 +408,7 @@
       const url = `functions/process_cost_breakdown.php?inventoryId=${encodeURIComponent(this.currentItemId || '')}&costType=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
       this.showFormLoading('delete');
       try {
-        const res = await fetch(url, { method: 'DELETE' });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
+        const result = await window.ApiClient.request(url, { method: 'DELETE' });
         if (result.success) {
           this.closeModal('deleteModal');
           showSuccess(result.message || 'Deleted');
@@ -438,13 +428,11 @@
       const suggestedCost = this.costBreakdown?.totals?.suggestedCost || 0;
       this.showFormLoading('updateCost');
       try {
-        const res = await fetch('functions/process_inventory_update.php', {
+        const result = await window.ApiClient.request('functions/process_inventory_update.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: this.currentItemId, costPrice: suggestedCost }),
         });
-        if (!res.ok) throw new Error('Network response was not ok');
-        const result = await res.json();
         if (result.success) {
           this.closeModal('updateCostModal');
           showSuccess('Cost price updated successfully');

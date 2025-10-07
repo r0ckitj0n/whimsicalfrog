@@ -1,5 +1,7 @@
 // Footer Newsletter Module (Vite-managed)
-// Attaches AJAX submit handlers to .footer-newsletter-form instances
+// Attaches AJAX submit handlers to
+import { ApiClient } from '../core/api-client.js';
+
 (function initFooterNewsletter() {
   if (window.__WF_FOOTER_NEWSLETTER_INIT__) return;
   window.__WF_FOOTER_NEWSLETTER_INIT__ = true;
@@ -21,12 +23,7 @@
       button.textContent = 'Subscribing...';
       button.disabled = true;
 
-      fetch('/api/newsletter_signup.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'email=' + encodeURIComponent(email)
-      })
-        .then(r => r.json())
+      ApiClient.post('/api/newsletter_signup.php', { email })
         .then(data => {
           if (data && data.success) {
             button.textContent = 'Subscribed!';

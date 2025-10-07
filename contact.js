@@ -161,9 +161,12 @@
       disable(true);
 
       try {
-        const res = await fetch('/api/contact_submit.php', {
+        if (!window.ApiClient || typeof window.ApiClient.request !== 'function') {
+          throw new Error('ApiClient unavailable');
+        }
+        const json = await window.ApiClient.request('/api/contact_submit.php', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
           body: JSON.stringify({
             csrf: data.csrf,
             website: data.website || '', // Honeypot passthrough
@@ -174,20 +177,11 @@
           }),
         });
 
-        const raw = await res.text();
-        let json;
-        try {
-          json = JSON.parse(raw);
-        } catch (_) {
-          console.error('[Contact] Non-JSON response from server:', raw);
-          json = { success: false, error: 'Invalid server response' };
-        }
-
-        if (res.ok && json.success) {
+        if (json && json.success) {
           setStatus(json.message || 'Thanks! Your message has been sent.', 'success');
           form.reset();
         } else {
-          setStatus(json.error || 'Failed to send your message. Please try again later.', 'error');
+          setStatus((json && json.error) || 'Failed to send your message. Please try again later.', 'error');
         }
       } catch (err) {
         setStatus('Network error. Please check your connection and try again.', 'error');

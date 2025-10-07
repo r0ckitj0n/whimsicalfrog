@@ -373,18 +373,10 @@ const AdminCustomersModule = {
         const id = (fd.get('customerId') || '').toString();
         console.log('[AdminCustomers] Customer ID:', id);
 
-        fetch('/functions/process_customer_update.php', {
+        window.ApiClient.request('/functions/process_customer_update.php', {
             method: 'POST',
-            credentials: 'include',
             body: fd,
         })
-            .then(r => {
-                console.log('[AdminCustomers] Fetch response status:', r.status, r.statusText);
-                return r.json().catch(() => {
-                    console.error('[AdminCustomers] Failed to parse JSON response');
-                    return {};
-                });
-            })
             .then(data => {
                 console.log('[AdminCustomers] Response data:', data);
 

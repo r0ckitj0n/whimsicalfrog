@@ -11,6 +11,7 @@ import './body-background-from-data.js';
 import initializeTooltipManager from '../modules/tooltip-manager.js';
 import { buildAdminUrl } from '../core/admin-url-builder.js';
 import RoomModalManager from '../modules/room-modal-manager.js';
+import { ApiClient } from '../src/core/api-client.js';
 
 // TEMP: detect duplicate module evaluations during dev or unexpected reloads
 try {
@@ -561,8 +562,7 @@ if (__WF_IS_ADMIN) {
 
                                 quickShow('businessInfoModal');
                                 try {
-                                    fetch('/api/business_settings.php?action=get_business_info')
-                                        .then(r => r.ok ? r.json() : Promise.reject('Network response was not ok.'))
+                                    ApiClient.get('/api/business_settings.php', { action: 'get_business_info' })
                                         .then(j => {
                                             if (!j || !j.success) return;
                                             const s = j.data || {};
@@ -626,11 +626,7 @@ if (__WF_IS_ADMIN) {
                                     },
                                     category: 'branding'
                                 };
-                                fetch('/api/business_settings.php?action=upsert_settings', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(payload)
-                                }).then(r => r.json()).then(res => {
+                                ApiClient.post('/api/business_settings.php', { action: 'upsert_settings', ...payload }).then(res => {
                                     if (typeof window.showNotification === 'function') {
                                         if (res.success) {
                                             window.showNotification('Branding colors saved!', 'success');
@@ -699,8 +695,8 @@ if (__WF_IS_ADMIN) {
                                     (arr || []).forEach(v => { const li = document.createElement('li'); li.textContent = String(v); ul.appendChild(li); });
                                 };
                                 // Backgrounds
-                                fetch('/api/health_backgrounds.php', { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} })
-                                   .then(r => r.ok ? r.json() : null).then(j => {
+                                ApiClient.get('/api/health_backgrounds.php')
+                                   .then(j => {
                                        if (!j || j.success !== true || !j.data) return;
                                        const d = j.data;
                                        setText('bgMissingActiveCount', (d.missingActive||[]).length);
@@ -709,8 +705,8 @@ if (__WF_IS_ADMIN) {
                                        fillList('bgMissingFilesList', d.missingFiles||[]);
                                    }).catch(()=>{});
                                 // Items
-                                fetch('/api/health_items.php', { credentials:'include', headers:{'X-Requested-With':'XMLHttpRequest'} })
-                                   .then(r => r.ok ? r.json() : null).then(j => {
+                                ApiClient.get('/api/health_items.php')
+                                   .then(j => {
                                        if (!j || j.success !== true || !j.data) return;
                                        const d = j.data;
                                        const counts = d.counts || {};
@@ -746,8 +742,7 @@ if (__WF_IS_ADMIN) {
                             if (closest('[data-action="run-health-check"]')) {
                                 e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
                                 const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = 'Running /health.php...';
-                                fetch('/health.php', { credentials:'include' })
-                                  .then(r => r.text())
+                                ApiClient.request('/health.php', { method: 'GET' })
                                   .then(t => { const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = t; })
                                   .catch(err => { const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = String(err); });
                                 return;
@@ -757,18 +752,18 @@ if (__WF_IS_ADMIN) {
                             if (closest('[data-action="scan-item-images"]')) {
                                 e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
                                 const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = 'Scanning item images...';
-                                fetch('/api/dev_scan_images.php', { credentials:'include' })
-                                  .then(r => r.json().catch(()=>null).then(j => j || r.text()))
+                                ApiClient.get('/api/dev_scan_images.php')
                                   .then(res => {
                                      const out = document.getElementById('advancedHealthOutput');
                                      if (!out) return;
-                                     out.textContent = (typeof res === 'string') ? res : JSON.stringify(res, null, 2);
+                                     if (typeof res === 'string') { out.textContent = res; }
+                                     else { out.textContent = JSON.stringify(res, null, 2); }
                                   })
                                   .catch(err => { const out = document.getElementById('advancedHealthOutput'); if (out) out.textContent = String(err); });
                                 return;
                             }
                             if (closest('[data-action="open-attributes"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); if (quickShow('attributesModal')) { try { if (typeof window.initAttributesModal === 'function') window.initAttributesModal(document.getElementById('attributesModal')); } catch(_) {} } return; }
-                        } catch(_) {}
+                        } catch (err) { /* non-fatal */ }
                     });
                 } catch (miniErr) { /* non-fatal */ }
             }

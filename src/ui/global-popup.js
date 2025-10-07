@@ -2,6 +2,8 @@
 // Extracted from legacy js/global-popup.js for Vite build.
 // Only the public API (show/hide) and minimal implementation retained.
 
+import { ApiClient } from '../core/api-client.js';
+
 const BIND_VERSION = 'v2';
 
 class UnifiedPopupSystem {
@@ -364,9 +366,7 @@ class UnifiedPopupSystem {
     try {
       if (!sku) return;
       if (!this._badgeCache.has(sku)) {
-        const res = await fetch(`/api/get_badge_scores.php?sku=${encodeURIComponent(sku)}`, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
+        const data = await ApiClient.get(`/api/get_badge_scores.php?sku=${encodeURIComponent(sku)}`);
         if (data && data.success && Array.isArray(data.badges)) {
           this._badgeCache.set(sku, data.badges);
         } else {

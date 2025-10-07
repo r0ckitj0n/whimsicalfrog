@@ -3,7 +3,7 @@
  * Handles responsive modal overlays for room content - Vite compatible
  * Recovered and consolidated from legacy files
  */
- 
+import { ApiClient } from '../core/api-client.js';
 
 // Runtime-injected style classes (no inline styles or element-level CSS var writes)
 const ROOM_MODAL_STYLE_ID = 'room-modal-runtime-classes';
@@ -174,7 +174,7 @@ class RoomModalManager {
             if (this._inflightByUrl.has(url)) {
                 return this._inflightByUrl.get(url);
             }
-            const p = fetch(url, opts).finally(() => { this._inflightByUrl.delete(url); });
+            const p = ApiClient.request(url, opts || {}).finally(() => { this._inflightByUrl.delete(url); });
             this._inflightByUrl.set(url, p);
             return p;
         };
@@ -184,8 +184,8 @@ class RoomModalManager {
                 if (!roomNumber) return;
                 if (this._prefetchedRooms.has(String(roomNumber))) return;
                 // Fetch metadata and warm the image cache
-                const r = await _coalescedFetch(`/api/get_background.php?room=${encodeURIComponent(roomNumber)}`, { cache: 'no-store' });
-                const j = await r.json().catch(() => null);
+                const j = await _coalescedFetch(`/api/get_background.php?room=${encodeURIComponent(roomNumber)}`)
+                  .catch(() => null);
                 if (!j || !j.success || !j.background) return;
                 this._bgMetaCache.set(String(roomNumber), j.background);
                 let filename = j.background.webp_filename || j.background.image_filename;
@@ -208,8 +208,7 @@ class RoomModalManager {
                 if (this.roomCache.has(String(roomNumber))) return;
                 if (this._inflightContent.has(String(roomNumber))) return;
                 const p = (async () => {
-                    const resp = await fetch(`/api/load_room_content.php?room=${encodeURIComponent(roomNumber)}&modal=1&perf=1`, { cache: 'no-store' });
-                    const j = await resp.json().catch(() => null);
+                    const j = await ApiClient.get('/api/load_room_content.php', { room: roomNumber, modal: 1, perf: 1 }).catch(() => null);
                     if (j && j.success && j.content) {
                         this.roomCache.set(String(roomNumber), j.content);
                     }
@@ -298,12 +297,9 @@ class RoomModalManager {
             let roomContent = this.roomCache.get(key);
             if (!roomContent && !this.__diag_no_content) {
                 try { performance.mark('wf:roomModal:fetch:start'); } catch(_) {}
-                const url = `/api/load_room_content.php?room=${encodeURIComponent(key)}&modal=1&perf=1`;
                 const tNavStart = performance.timeOrigin || (performance.timing && performance.timing.navigationStart) || 0;
                 const tFetchStart = performance.now();
-                const response = await fetch(url, { cache: 'no-store' });
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                const json = await response.json();
+                const json = await ApiClient.get('/api/load_room_content.php', { room: key, modal: 1, perf: 1 });
                 if (!json.success) throw new Error(json.message || 'Failed to load room content');
                 roomContent = json.content;
                 if (json.metadata) this.updateHeader(json.metadata);
@@ -472,10 +468,8 @@ class RoomModalManager {
                 if (this.__diag_no_bg) { console.warn('[RoomModalManager][DIAG] wf_diag_no_bg=1 active: skipping background API'); return; }
                 let bg = this._bgMetaCache.get(String(rn));
                 if (!bg) {
-                    const bgUrl = `/api/get_background.php?room=${encodeURIComponent(rn)}`;
-                    const response = await fetch(bgUrl, { cache: 'no-store' });
-                    const data = await response.json();
-                    if (!data.success || !data.background) return;
+                    const data = await ApiClient.get('/api/get_background.php', { room: rn }).catch(() => null);
+                    if (!data || !data.success || !data.background) return;
                     bg = data.background;
                     this._bgMetaCache.set(String(rn), bg);
                 }

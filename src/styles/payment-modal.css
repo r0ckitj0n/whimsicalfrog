@@ -1,0 +1,57 @@
+/* Payment Modal layout constraints */
+#paymentModalOverlay .confirmation-modal.payment-modal {
+  height: calc(90dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  max-height: calc(90dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  width: min(1000px, 95vw) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+#paymentModalOverlay .payment-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important; /* allow child to shrink */
+  overflow: auto !important; /* internal scroll area */
+}
+
+#paymentModalOverlay .payment-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+  height: 100%;
+}
+
+/* Make the right column (order summary) scrollable so footer stays visible */
+#paymentModalOverlay .right-col {
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent left sections from forcing modal to grow; allow page to scroll their own content if long */
+#paymentModalOverlay .left-col {
+  min-height: 0;
+  overflow: hidden;
+}
+#paymentModalOverlay .left-col .section-card {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+/* Footer pinned inside modal */
+#paymentModalOverlay .payment-footer {
+  flex: 0 0 auto !important;
+  background: #fff !important;
+  position: sticky !important;
+  bottom: 0 !important;
+}
+
+/* Small screens: stack columns and still allow summary to scroll */
+@media (max-width: 640px) {
+  #paymentModalOverlay .payment-grid {
+    grid-template-columns: 1fr;
+  }
+  #paymentModalOverlay .right-col {
+    max-height: 45dvh;
+  }
+}

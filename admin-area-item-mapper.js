@@ -22,12 +22,8 @@
 
   async function fetchJSON(url, opts){
     try {
-      const res = await fetch(url, opts);
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`HTTP ${res.status}: ${errorText}`);
-      }
-      return await res.json();
+      const data = await window.ApiClient.request(url, opts || {});
+      return data;
     } catch (e) {
       console.error(`[AreaItem] Fetch failed for ${url}:`, e);
       setMsg(`Network error fetching data from ${url}.`, 'error');

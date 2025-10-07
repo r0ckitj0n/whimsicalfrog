@@ -40,8 +40,19 @@ export const cart = {
   load() {
     try {
       const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      if (Array.isArray(data.items)) state.items = data.items; else state.items = [];
+      if (Array.isArray(data.items)) {
+        state.items = data.items.map((it) => {
+          const sku = String(it?.sku ?? it?.id ?? '');
+          const qty = Math.max(1, Number(it?.quantity ?? 1) || 1);
+          const price = Number(it?.price ?? it?.retailPrice ?? 0) || 0;
+          return { ...it, sku, quantity: qty, price };
+        });
+      } else {
+        state.items = [];
+      }
       recalc();
+      // Save back normalized structure
+      persist();
     } catch {
       state.items = [];
     }
@@ -50,18 +61,22 @@ export const cart = {
 
   /* CRUD operations */
   add(itemIn, qty = 1) {
-    const existing = state.items.find(i => i.sku === itemIn.sku);
+    const normSku = String(itemIn.sku ?? itemIn.id ?? '');
+    const normPrice = Number(itemIn.price ?? itemIn.retailPrice ?? 0);
+    const existing = state.items.find(i => String(i.sku) === normSku);
     if (existing) {
       existing.quantity += qty;
+      if (!Number.isFinite(existing.price) || existing.price <= 0) existing.price = normPrice;
     } else {
-      state.items.push({ ...itemIn, quantity: qty });
+      state.items.push({ ...itemIn, sku: normSku, price: normPrice, quantity: qty });
     }
     recalc();
     persist();
     notify('success', `Added ${itemIn.name || itemIn.sku} (x${qty})`, '✅ Added to Cart');
   },
   remove(sku) {
-    const idx = state.items.findIndex(i => i.sku === sku);
+    const key = String(sku);
+    const idx = state.items.findIndex(i => String(i.sku) === key);
     if (idx !== -1) {
       const [removed] = state.items.splice(idx, 1);
       recalc();
@@ -71,7 +86,8 @@ export const cart = {
   },
   updateQuantity(sku, qty) {
     if (qty <= 0) return this.remove(sku);
-    const itm = state.items.find(i => i.sku === sku);
+    const key = String(sku);
+    const itm = state.items.find(i => String(i.sku) === key);
     if (itm) {
       itm.quantity = qty;
       recalc();

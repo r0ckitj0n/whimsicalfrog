@@ -70,8 +70,7 @@
     }
 
     try {
-      const res = await fetch(`/api/room_config.php?action=get&room=${encodeURIComponent(roomNumber)}`);
-      const data = await res.json();
+      const data = await window.ApiClient.request(`/api/room_config.php?action=get&room=${encodeURIComponent(roomNumber)}`, { method: 'GET' });
       if (data && data.success) {
         currentRoomConfig = data.config || {};
         populateForm(currentRoomConfig);
@@ -119,7 +118,7 @@
     });
 
     try {
-      const res = await fetch('/api/room_config.php', {
+      const res = await window.ApiClient.request('/api/room_config.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -128,7 +127,7 @@
           config,
         }),
       });
-      const data = await res.json();
+      const data = res;
       if (data.success) {
         showMessage('Room configuration saved successfully!', 'success');
         currentRoomConfig = config;

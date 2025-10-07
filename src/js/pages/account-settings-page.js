@@ -1,3 +1,4 @@
+import { ApiClient } from '../../core/api-client.js';
 // Account Settings Page module
 (function AccountSettingsPage() {
   function getPageData() {
@@ -13,12 +14,7 @@
 
   async function updatePhpSession(updatedUser) {
     try {
-      await fetch('/set_session.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify(updatedUser),
-      });
+      await ApiClient.post('/set_session.php', updatedUser);
     } catch (e) {
       console.warn('[AccountSettings] Failed to update PHP session', e);
     }
@@ -49,15 +45,9 @@
       };
 
       try {
-        const res = await fetch('/functions/process_account_update.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to update account');
+        const data = await ApiClient.post('/functions/process_account_update.php', payload);
+        if (!data || data.success === false) {
+          throw new Error((data && data.error) || 'Failed to update account');
         }
 
         // Show success

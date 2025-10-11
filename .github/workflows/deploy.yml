@@ -94,3 +94,29 @@ jobs:
             'bye' > deploy_sftp.txt
           lftp -f deploy_sftp.txt
           rm -f deploy_sftp.txt
+
+      - name: Deploy backgrounds (mtime-based SFTP sync)
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PASS:?Missing DEPLOY_PASS}"
+          : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+          test -d images/backgrounds || exit 0
+          printf '%s\n' \
+            'set sftp:auto-confirm yes' \
+            'set ssl:verify-certificate no' \
+            'set cmd:fail-exit yes' \
+            "open sftp://$DEPLOY_USER:$DEPLOY_PASS@$DEPLOY_HOST" \
+            "mkdir -p $DEPLOY_PATH/images/backgrounds || true" \
+            # mtime-based sync (no --ignore-time) so same-size file changes propagate \
+            "mirror --reverse --delete --verbose --only-newer --no-perms images/backgrounds $DEPLOY_PATH/images/backgrounds" \
+            'bye' > deploy_backgrounds.txt
+          lftp -f deploy_backgrounds.txt
+          rm -f deploy_backgrounds.txt

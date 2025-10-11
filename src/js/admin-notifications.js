@@ -103,7 +103,7 @@ const adminNotificationCSS = `
 }
 
 .admin-success-notification {
-    border: 1px solid #6b8e23 !important;
+    border: 1px solid var(--brand-secondary, #BF5700) !important;
     background: #87ac3a !important;
 }
 
@@ -363,7 +363,7 @@ class AdminNotifications {
         const colors = {
             success: {
                 background: '#87ac3a',
-                border: '#6b8e23'
+                border: 'var(--brand-secondary, #BF5700)'
             },
             error: {
                 background: '#dc2626',

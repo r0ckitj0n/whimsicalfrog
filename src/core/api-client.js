@@ -22,7 +22,9 @@ export class ApiClient {
   static async request(url, options = {}) {
     const defaultHeaders = {
       'Content-Type': 'application/json',
-      'X-Requested-With': 'XMLHttpRequest'
+      'X-Requested-With': 'XMLHttpRequest',
+      // Mark requests as originating from ApiClient to suppress dev warnings
+      'X-WF-ApiClient': '1'
     };
     // Decide credentials policy based on target origin
     let credentials = options.credentials;
@@ -45,8 +47,12 @@ export class ApiClient {
       credentials,
       ...options,
     };
+    // Mark as ApiClient-originated for dev wrapper to detect
+    try { Object.defineProperty(config, '_wfFromApiClient', { value: true }); } catch(_) { config._wfFromApiClient = true; }
 
-    const response = await fetch(url, config);
+    // Prefer original, unwrapped fetch if wrapper installed
+    const _fetch = (typeof window !== 'undefined' && window.__wfOriginalFetch) ? window.__wfOriginalFetch : fetch;
+    const response = await _fetch(url, config);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -133,11 +139,34 @@ export default ApiClient;
 // During development we still warn when direct fetch is used instead of ApiClient.
 if (window?.location?.hostname === 'localhost' || window?.location?.hostname.includes('dev')) {
   const originalFetch = window.fetch;
+  // Expose original for ApiClient to bypass wrapper
+  try { window.__wfOriginalFetch = originalFetch; } catch(_) {}
+  function hasApiClientHeader(h) {
+    try {
+      if (!h) return false;
+      if (h instanceof Headers) return h.has('X-WF-ApiClient');
+      if (Array.isArray(h)) return h.some(([k]) => String(k).toLowerCase() === 'x-wf-apiclient');
+      if (typeof h === 'object') return Object.keys(h).some(k => String(k).toLowerCase() === 'x-wf-apiclient');
+    } catch(_) {}
+    return false;
+  }
   window.fetch = function (...args) {
-    if (typeof args[0] === 'string' && args[0].includes('/api/')) {
-      console.warn('⚠️  Consider using ApiClient instead of direct fetch for API calls:', args[0]);
-      console.warn(`Example: apiGet("${args[0]}") or apiPost("${args[0]}", data)`);
-    }
+    try {
+      const url = args[0];
+      const opts = args[1] || {};
+      const headers = opts.headers;
+      // Skip warnings for ApiClient-tagged requests
+      if (hasApiClientHeader(headers) || opts._wfFromApiClient) {
+        return originalFetch.apply(this, args);
+      }
+      // Normalize URL and path check
+      let path = '';
+      try { const u = new URL(url, window.location.origin); path = u.pathname || ''; } catch(_) { path = (typeof url === 'string') ? url : ''; }
+      if (typeof path === 'string' && path.includes('/api/')) {
+        console.warn('⚠️  Consider using ApiClient instead of direct fetch for API calls:', url);
+        console.warn(`Example: apiGet("${url}") or apiPost("${url}", data)`);
+      }
+    } catch(_) { /* noop */ }
     return originalFetch.apply(this, args);
   };
 }

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/functions.php';
 
 header('Content-Type: application/json');
@@ -12,17 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Check authentication with fallback token support like cleanup_system.php
-if (session_status() === PHP_SESSION_NONE) {
-
-}
-
-// Check if user is admin or has valid admin token
-if (!isAdminWithToken()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Admin access required']);
-    exit;
-}
+// Centralized admin check
+AuthHelper::requireAdmin();
 
 try {
     // Create database connection using centralized Database class

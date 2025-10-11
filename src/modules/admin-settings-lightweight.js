@@ -25,6 +25,59 @@ const __wfEnsureBackgroundManagerModal = () => {
   return el;
 };
 
+// Lazy modal factory: Email Settings (iframe to standalone settings page)
+const __wfEnsureEmailSettingsModal = () => {
+  let el = document.getElementById('emailSettingsModal');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'emailSettingsModal';
+  el.className = 'admin-modal-overlay hidden';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'emailSettingsTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+      <div class="modal-header">
+        <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
+        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="emailSettingsFrame" title="Email Settings" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_settings.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  return el;
+};
+
+// Lazy modal factory: Receipt Messages (iframe to receipt page)
+const __wfEnsureReceiptMessagesModal = () => {
+  let el = document.getElementById('receiptMessagesModal');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'receiptMessagesModal';
+  el.className = 'admin-modal-overlay hidden';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'receiptMessagesTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+      <div class="modal-header">
+        <h2 id="receiptMessagesTitle" class="admin-card-title">🧾 Receipt Messages</h2>
+        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="receiptMessagesFrame" title="Receipt Messages" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/receipt.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  return el;
+};
 // Lazy modal factory: Template Manager (reports/doc browser)
 const __wfEnsureTemplateManagerModal = () => {
   let el = document.getElementById('templateManagerModal');
@@ -176,11 +229,47 @@ const __wfHideModal = (id) => {
         return;
       }
 
+      // Open Email Settings modal (iframe)
+      if (closest('[data-action="open-email-settings"]')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfEnsureEmailSettingsModal();
+        __wfShowModal('emailSettingsModal');
+        const iframe = document.getElementById('emailSettingsFrame');
+        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
+          iframe.src = iframe.dataset.src;
+        }
+        return;
+      }
+
+      // Open Receipt Messages modal (iframe)
+      if (closest('[data-action="open-receipt-messages"]')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfEnsureReceiptMessagesModal();
+        __wfShowModal('receiptMessagesModal');
+        const iframe = document.getElementById('receiptMessagesFrame');
+        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
+          iframe.src = iframe.dataset.src;
+        }
+        return;
+      }
+
       // Open Template Manager modal
       if (closest('[data-action="open-template-manager"]')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfEnsureTemplateManagerModal();
+        const el = __wfEnsureTemplateManagerModal();
+        // Ensure overlay is at top-level and above header
+        try {
+          if (el && el.parentElement && el.parentElement !== document.body) {
+            document.body.appendChild(el);
+          }
+          // Add helper classes; CSS should define these behaviors
+          el.classList.add('over-header');
+          el.classList.add('pointer-events-auto');
+          // z-index and pointer-events are controlled via CSS classes rather than inline styles
+        } catch (_) {}
         __wfShowModal('templateManagerModal');
         const iframe = document.getElementById('templateManagerFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
@@ -206,7 +295,9 @@ const __wfHideModal = (id) => {
       if (closest('[data-action="open-account-settings"]')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        try { window.location.assign('/account_settings.php'); } catch(_) { window.location.href = '/account_settings.php'; }
+        // Navigate to the actual sections template (no root /account_settings.php exists)
+        const target = '/sections/account_settings.php';
+        try { window.location.assign(target); } catch(_) { window.location.href = target; }
         return;
       }
 
@@ -268,8 +359,18 @@ const __wfHideModal = (id) => {
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfShowModal('areaItemMapperModal');
         const iframe = document.getElementById('areaItemMapperFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe && iframe.dataset) {
+          // Debounce/race-proof: if another handler already primed it, skip
+          if (iframe.dataset.loaded === '1' || iframe.dataset.loading === '1') {
+            return;
+          }
+          const needsSrc = (!iframe.src || iframe.src === 'about:blank');
+          const ds = iframe.dataset.src;
+          if (needsSrc && ds) {
+            iframe.dataset.loading = '1';
+            iframe.addEventListener('load', () => { try { iframe.dataset.loaded = '1'; iframe.dataset.loading = '0'; } catch(_) {} }, { once: true });
+            iframe.src = ds;
+          }
         }
         return;
       }

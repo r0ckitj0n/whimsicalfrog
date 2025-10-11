@@ -10,6 +10,8 @@ This README serves as a consolidated entry point for project documentation. It r
 - [Admin Guide](./ADMIN_GUIDE.md) — [Current]
 - [Modal Conventions & Upgrade Guide](./technical/MODAL_CONVENTIONS_AND_UPGRADE_GUIDE.md) — [Current]
 - [Database Helper Adoption Guide](./includes/DB_HELPER_ADOPTION.md) — [Current]
+- [WF Engineering Guidelines](./WF_ENGINEERING_GUIDELINES.md) — [Canonical]
+- [Frontend CSS Reorg Plan](./frontend/CSS_REORG_PLAN.md) — [Active]
 
 ### Historical & Deep Technical (Archived or Context)
 - No archived items currently listed. Refer to Git history if needed.

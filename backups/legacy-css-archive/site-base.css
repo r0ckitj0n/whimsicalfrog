@@ -110,21 +110,22 @@ body[data-page^='admin'] .admin-filter-form {
 
 /* Shop Container *//* Shop Navigation Area */
 .shop-navigation-area {
-    position: fixed;
     top: var(--header-height, 80px);
     left: 0;
     right: 0;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
-    z-index: var(--z-navigation);
+    z-index: var(--z-shop-filters, 2600) !important;
     padding: 1rem 0; /* remove horizontal padding so content can hug viewport edges */
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}/* Navigation Bar */
+}
+/* Navigation Bar */
 .shop-navigation-area .navigation-bar {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     gap: 1rem;
+{{ ... }}
     width: 100%;
     max-width: none; /* allow full-bleed */
     margin: 0; /* prevent centering constraints */

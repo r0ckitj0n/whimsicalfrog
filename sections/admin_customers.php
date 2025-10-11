@@ -833,14 +833,13 @@ if (!isset($adminSection) || $adminSection !== 'customers'):
 
         const notification = document.createElement('div');
         notification.className = 'wf-notification wf-success-notification';
-        notification.style.cssText = 'pointer-events: auto; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #6b8e23; background: linear-gradient(135deg, #87ac3a, #6b8e23); color: white; padding: 16px; position: relative; z-index: 999999;';
         notification.innerHTML = `
-            <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
-                <div class="wf-notification-icon" style="font-size: 20px; line-height: 1;">✅</div>
-                <div class="wf-notification-body" style="flex: 1;">
-                    <div class="wf-notification-message" style="font-size: 14px; line-height: 1.4;">🎯 Direct DOM notification test!</div>
+            <div class="wf-notification-content">
+                <div class="wf-notification-icon">✅</div>
+                <div class="wf-notification-body">
+                    <div class="wf-notification-message">🎯 Direct DOM notification test!</div>
                 </div>
-                <button class="wf-notification-close" style="position: absolute; top: 8px; right: 8px; background: none; border: none; color: rgba(255,255,255,0.8); font-size: 18px; cursor: pointer;">&times;</button>
+                <button class="wf-notification-close">&times;</button>
             </div>
         `;
 
@@ -1060,15 +1059,14 @@ function simpleNotificationTest() {
         })();
 
         const notification = document.createElement('div');
-        notification.className = 'wf-notification wf-success-notification';
-        notification.style.cssText = 'pointer-events: auto; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #6b8e23; background: #87ac3a; color: white; padding: 16px; position: relative; z-index: 999999; transform: translateX(120%); opacity: 0; transition: all 0.4s ease;';
+        notification.className = 'wf-notification wf-success-notification wf-toast-enter wf-toast-enter-active';
         notification.innerHTML = `
-            <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
-                <div class="wf-notification-icon" style="font-size: 20px; line-height: 1;">🎉</div>
-                <div class="wf-notification-body" style="flex: 1;">
-                    <div class="wf-notification-message" style="font-size: 14px; line-height: 1.4;">💯 DIRECT DOM TEST - This should definitely appear!</div>
+            <div class="wf-notification-content">
+                <div class="wf-notification-icon">🎉</div>
+                <div class="wf-notification-body">
+                    <div class="wf-notification-message">💯 DIRECT DOM TEST - This should definitely appear!</div>
                 </div>
-                <button class="wf-notification-close" style="position: absolute; top: 8px; right: 8px; background: none; border: none; color: rgba(255,255,255,0.8); font-size: 18px; cursor: pointer;">&times;</button>
+                <button class="wf-notification-close">&times;</button>
             </div>
         `;
 

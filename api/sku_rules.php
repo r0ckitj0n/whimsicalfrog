@@ -3,8 +3,9 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 
-if (!isLoggedIn()) {
+if (!(class_exists('AuthHelper') ? AuthHelper::isLoggedIn() : (function_exists('isLoggedIn') && isLoggedIn()))) {
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Access denied.']);
     exit;

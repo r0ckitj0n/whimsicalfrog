@@ -3,7 +3,7 @@
   Visual Smoke Test
   - Captures screenshots for key admin modals and room pages
   - Configure via env:
-    - BASE_URL (default http://127.0.0.1:5180)
+    - BASE_URL (default http://localhost:8080)
     - ADMIN_USER / ADMIN_PASS (optional; if provided, script will try to log in)
   - Outputs to logs/screenshots/<timestamp>/
 */
@@ -29,7 +29,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..', '..');
 
-const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:5180';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:8080';
 const ADMIN_USER = process.env.ADMIN_USER || '';
 const ADMIN_PASS = process.env.ADMIN_PASS || '';
 

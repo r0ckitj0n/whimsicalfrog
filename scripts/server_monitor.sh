@@ -63,30 +63,59 @@ start_php_server() {
 
 # ===================== VITE DEV SERVER FUNCTIONS =====================
 
-# Start Vite dev server
+# Start Vite dev server via PM2 (wf-vite)
 start_vite_server() {
   cd "$WEBSITE_DIR"
-  log "${BLUE}Starting Vite dev server on port $VITE_PORT...${NC}"
-  # Ensure node_modules are installed; skip if already done
+  log "${BLUE}Starting Vite dev server via PM2 on port $VITE_PORT...${NC}"
+
+  # Standardize on localhost:5176
+  export VITE_DEV_PORT=5176
+  export VITE_HMR_PORT=5176
+  export WF_VITE_ORIGIN="http://localhost:5176"
+
+  # Ensure logs dir exists
+  mkdir -p logs
+
+  # Ensure node_modules are installed
   if [ ! -d "node_modules" ]; then
     log "${YELLOW}node_modules not found – installing dependencies (this may take a while)...${NC}"
-    npm install --silent
+    npm ci --include=optional --silent || npm install --include=optional --silent
   fi
-  # Start vite (npm run dev) in background; vite.config.js sets port and package.json writes the hot file
-  npm run dev > logs/vite_server.log 2>&1 &
-  sleep 3
-  if is_port_in_use $VITE_PORT; then
-    log "${GREEN}Vite dev server started successfully${NC}"
-    return 0
+
+  # Write hot file explicitly
+  echo "http://localhost:5176" > hot
+
+  # Start/Restart PM2 app
+  if command -v npx >/dev/null 2>&1; then
+    npx pm2 start pm2.config.cjs >/dev/null 2>&1 || true
+    npx pm2 restart wf-vite >/dev/null 2>&1 || npx pm2 start pm2.config.cjs >/dev/null 2>&1 || true
+    npx pm2 save >/dev/null 2>&1 || true
   else
-    log "${RED}Failed to start Vite dev server${NC}"
-    return 1
+    log "${RED}npx not found; cannot manage Vite via PM2${NC}"
   fi
+
+  # Wait up to ~8 seconds for @vite/client to respond
+  local tries=0
+  while [ $tries -lt 16 ]; do
+    if curl -sI "http://localhost:5176/@vite/client" | grep -q "200"; then
+      log "${GREEN}Vite dev server started successfully via PM2${NC}"
+      return 0
+    fi
+    sleep 0.5
+    tries=$((tries+1))
+  done
+
+  log "${RED}Failed to start Vite dev server via PM2 – see logs/vite_server.log or 'npx pm2 logs wf-vite'${NC}"
+  return 1
 }
 
 # Stop Vite dev server
 stop_vite_server() {
-  log "${BLUE}Stopping Vite dev server...${NC}"
+  log "${BLUE}Stopping Vite dev server (PM2)...${NC}"
+  if command -v npx >/dev/null 2>&1; then
+    npx pm2 stop wf-vite >/dev/null 2>&1 || true
+  fi
+  # Also kill any stray listeners
   pkill -f "vite" || true
   pkill -f "npm run dev" || true
   sleep 2
@@ -101,13 +130,12 @@ stop_vite_server() {
 
 # Check & restart Vite server if needed
 check_and_restart_vite() {
-  if ! is_port_in_use $VITE_PORT; then
-    log "${YELLOW}Vite dev server is not running. Restarting...${NC}"
-    start_vite_server
-  elif ! is_server_responding "http://localhost:$VITE_PORT"; then
-    log "${YELLOW}Vite dev server not responding. Restarting...${NC}"
-    stop_vite_server
-    start_vite_server
+  if ! is_server_responding "http://localhost:$VITE_PORT/@vite/client"; then
+    log "${YELLOW}Vite dev server not responding; restarting via PM2...${NC}"
+    if command -v npx >/dev/null 2>&1; then
+      npx pm2 restart wf-vite >/dev/null 2>&1 || npx pm2 start pm2.config.cjs >/dev/null 2>&1 || true
+      npx pm2 save >/dev/null 2>&1 || true
+    fi
   else
     log "${GREEN}Vite dev server is running correctly${NC}"
   fi
@@ -149,7 +177,7 @@ check_and_restart_php() {
 start_all() {
   log "${BLUE}Starting WhimsicalFrog PHP server...${NC}"
   start_php_server
-  log "${BLUE}Starting Vite dev server...${NC}"
+  log "${BLUE}Starting Vite dev server (PM2)...${NC}"
   start_vite_server
   show_access_info
 }

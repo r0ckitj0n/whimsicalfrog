@@ -217,22 +217,10 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false, $withPerf = fa
 
     $p['metadata_ms'] = (int)round((microtime(true) - $tm0) * 1000);
 
-    // Per-room UI config (JSON) for display options (legacy override)
-    $roomConfig = [];
-    $configPath = dirname(__DIR__) . '/data/room_configs/' . $roomNumber . '.json';
-    if (is_file($configPath)) {
-        $cfgRaw = @file_get_contents($configPath);
-        if ($cfgRaw !== false) {
-            $cfgJson = json_decode($cfgRaw, true);
-            if (is_array($cfgJson)) { $roomConfig = $cfgJson; }
-        }
-    }
-    // Determine icon background behavior (DB first, then JSON fallback, then default)
-    // Use DB flag if we successfully read it above
+    // Determine icon background behavior
+    // Prefer the DB flag when available; otherwise use sensible default
     if ($dbFlag !== null) {
         $iconsWhiteBg = (bool)$dbFlag;
-    } elseif (array_key_exists('icons_white_background', $roomConfig)) {
-        $iconsWhiteBg = (bool)$roomConfig['icons_white_background'];
     } else {
         $iconsWhiteBg = ($roomNumber === '1') ? false : true;
     }

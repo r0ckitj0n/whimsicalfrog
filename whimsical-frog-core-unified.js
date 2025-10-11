@@ -191,6 +191,8 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
                 credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
+                    // Mark as ApiClient-originated to avoid dev warnings
+                    'X-WF-ApiClient': '1',
                     ...options.headers
                 }
             };

@@ -10,13 +10,10 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 require_once dirname(__DIR__, 2) . '/api/config.php';
 require_once dirname(__DIR__, 2) . '/includes/functions.php';
 require_once dirname(__DIR__, 2) . '/includes/auth.php';
+require_once dirname(__DIR__, 2) . '/includes/auth_helper.php';
 
-// Basic access guard (reuse token-based admin detection if available)
-if (!function_exists('isAdminWithToken') || !isAdminWithToken()) {
-    http_response_code(403);
-    echo '<div class="wf-access-denied">Access denied.</div>';
-    exit;
-}
+// Basic access guard via centralized helper
+AuthHelper::requireAdmin();
 
 // Bootstrap layout so Vite-managed CSS/JS load, but hide header/nav inside the iframe for a clean embed
 $page = 'admin';

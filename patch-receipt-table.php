@@ -40,10 +40,7 @@ if ($needsClass || $needsColgroup) {
     $replacement = <<<'REPL'
 $1<table class="receipt-table w-full text-sm border-collapse mt-6">
         <colgroup>
-            <col style="width:20%;">
-            <col style="width:50%;">
-            <col style="width:10%;">
-            <col style="width:20%;">
+            <col><col><col><col>
         </colgroup>
         <thead>
             <tr class="bg-brand-light border-b-2 border-gray-300">

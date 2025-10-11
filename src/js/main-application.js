@@ -2,7 +2,8 @@
  * WhimsicalFrog Main Application Module
  * Initializes core UI components and functionality.
  */
-import WF from './whimsical-frog-core.js';
+import './whimsical-frog-core-unified.js';
+const WF = window.WF;
 import { ApiClient } from '../core/api-client.js';
 
 const MainApplication = {

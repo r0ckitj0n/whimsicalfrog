@@ -11,8 +11,9 @@ require_once __DIR__ . '/../includes/response.php';
 
 // Authentication check
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 
-if (!isLoggedIn()) {
+if (!(class_exists('AuthHelper') ? AuthHelper::isLoggedIn() : (function_exists('isLoggedIn') && isLoggedIn()))) {
     Response::forbidden('Access denied. Please log in.');
 }
 
@@ -72,12 +73,15 @@ function getAllAssignments($pdo)
 {
     try {
         $assignments = Database::queryAll(
-             "SELECT rca.*, c.name as category_name, c.description as category_description
+             "SELECT 
+                rca.*, 
+                COALESCE(c.name, CONCAT('Category #', rca.category_id)) as category_name, 
+                c.description as category_description
               FROM room_category_assignments rca 
-              JOIN categories c ON rca.category_id = c.id 
+              LEFT JOIN categories c ON rca.category_id = c.id 
               ORDER BY rca.room_number, rca.display_order"
         );
-        Response::success(['assignments' => $assignments]);
+        Response::json(['success' => true, 'assignments' => $assignments]);
     } catch (PDOException $e) {
         Response::serverError('Database error: ' . $e->getMessage());
     }
@@ -90,15 +94,15 @@ function getSummary($pdo)
             "SELECT 
                 rca.room_number,
                 rca.room_name,
-                GROUP_CONCAT(c.name ORDER BY rca.display_order SEPARATOR ', ') as categories,
+                GROUP_CONCAT(COALESCE(c.name, CONCAT('Category #', rca.category_id)) ORDER BY rca.display_order SEPARATOR ', ') as categories,
                 COUNT(*) as category_count,
-                MAX(CASE WHEN rca.is_primary = 1 THEN c.name END) as primary_category
+                MAX(CASE WHEN rca.is_primary = 1 THEN COALESCE(c.name, CONCAT('Category #', rca.category_id)) END) as primary_category
              FROM room_category_assignments rca 
-             JOIN categories c ON rca.category_id = c.id 
+             LEFT JOIN categories c ON rca.category_id = c.id 
              GROUP BY rca.room_number, rca.room_name
              ORDER BY rca.room_number"
         );
-        Response::success(['summary' => $summary]);
+        Response::json(['success' => true, 'summary' => $summary]);
     } catch (PDOException $e) {
         Response::serverError('Database error: ' . $e->getMessage());
     }
@@ -115,9 +119,12 @@ function getRoomAssignments($pdo)
 
     try {
         $assignments = Database::queryAll(
-            "SELECT rca.*, c.name as category_name, c.description as category_description
+            "SELECT 
+                rca.*, 
+                COALESCE(c.name, CONCAT('Category #', rca.category_id)) as category_name, 
+                c.description as category_description
              FROM room_category_assignments rca 
-             JOIN categories c ON rca.category_id = c.id 
+             LEFT JOIN categories c ON rca.category_id = c.id 
              WHERE rca.room_number = ?
              ORDER BY rca.display_order",
             [$roomNumber]

@@ -19,7 +19,7 @@ if (!AuthHelper::isLoggedIn()) {
 }
 
 // Minimal user data (replace with your own user fetch if available)
-$userData = AuthHelper::currentUser() ?: [];
+$userData = AuthHelper::getCurrentUser() ?: [];
 ?>
 <section id="accountSettingsPage" class="max-w-md bg-white rounded-lg shadow-xl">
     <h2 class="text-3xl font-merienda text-center text-[#556B2F]">Account Settings</h2>

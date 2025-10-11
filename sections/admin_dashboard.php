@@ -359,6 +359,94 @@ if (empty($dashboardConfig)) {
                             </div>
                         </div>
                         
+                    <?php elseif ($config['section_key'] === 'reports_summary'): ?>
+                        <!-- Reports Summary Section -->
+                        <?php
+                        $since7  = date('Y-m-d', strtotime('-7 days'));
+                        $since30 = date('Y-m-d', strtotime('-30 days'));
+
+                        // Overall totals
+                        $totalsAll = Database::queryOne('SELECT COUNT(*) AS orders_count, COALESCE(SUM(total),0) AS revenue FROM orders');
+                        // Recent performance
+                        $totals7  = Database::queryOne('SELECT COUNT(*) AS orders_count, COALESCE(SUM(total),0) AS revenue FROM orders WHERE DATE(date) >= ?', [$since7]);
+                        $totals30 = Database::queryOne('SELECT COUNT(*) AS orders_count, COALESCE(SUM(total),0) AS revenue FROM orders WHERE DATE(date) >= ?', [$since30]);
+
+                        // Payment method breakdown (top 4)
+                        $paymentBreakdown = Database::queryAll(
+                            "SELECT paymentMethod AS method, COUNT(*) AS cnt
+                             FROM orders
+                             WHERE paymentMethod IS NOT NULL AND paymentMethod != ''
+                             GROUP BY paymentMethod
+                             ORDER BY cnt DESC, method ASC
+                             LIMIT 4"
+                        );
+
+                        // 7-day daily sales for mini sparkline
+                        $dailyRows = Database::queryAll(
+                            "SELECT DATE(date) AS d, COALESCE(SUM(total),0) AS revenue
+                             FROM orders
+                             WHERE DATE(date) >= ?
+                             GROUP BY DATE(date)
+                             ORDER BY d ASC",
+                            [$since7]
+                        );
+                        ?>
+                        <div class="space-y-3">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div class="bg-purple-50 rounded text-center p-3">
+                                    <div class="text-sm text-purple-700">Total Revenue</div>
+                                    <div class="text-lg font-bold text-purple-800">$<?= number_format((float)($totalsAll['revenue'] ?? 0), 2) ?></div>
+                                </div>
+                                <div class="bg-blue-50 rounded text-center p-3">
+                                    <div class="text-sm text-blue-700">Last 7d Revenue</div>
+                                    <div class="text-lg font-bold text-blue-800">$<?= number_format((float)($totals7['revenue'] ?? 0), 2) ?></div>
+                                </div>
+                                <div class="bg-green-50 rounded text-center p-3">
+                                    <div class="text-sm text-green-700">Last 7d Orders</div>
+                                    <div class="text-lg font-bold text-green-800"><?= (int)($totals7['orders_count'] ?? 0) ?></div>
+                                </div>
+                                <div class="bg-amber-50 rounded text-center p-3">
+                                    <div class="text-sm text-amber-700">Last 30d Orders</div>
+                                    <div class="text-lg font-bold text-amber-800"><?= (int)($totals30['orders_count'] ?? 0) ?></div>
+                                </div>
+                            </div>
+
+                            <?php if (!empty($dailyRows)): ?>
+                                <div class="bg-white border border-gray-200 rounded p-2">
+                                    <div class="text-xs text-gray-600 mb-1">Recent Daily Sales (7d)</div>
+                                    <div class="flex gap-2 items-end">
+                                        <?php $max = 0; foreach ($dailyRows as $r) { $max = max($max, (float)$r['revenue']); } $max = $max ?: 1; ?>
+                                        <?php foreach ($dailyRows as $r): ?>
+                                            <?php $h = max(6, (int)round(((float)$r['revenue'] / $max) * 36)); ?>
+                                            <svg width="10" height="<?= $h ?>" aria-hidden="true" focusable="false" role="img" title="<?= htmlspecialchars($r['d']) ?>: $<?= number_format((float)$r['revenue'],2) ?>">
+                                                <rect width="10" height="<?= $h ?>" fill="#A78BFA" />
+                                            </svg>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="bg-white border border-gray-200 rounded">
+                                <div class="p-2 text-xs font-medium text-gray-700">Top Payment Methods</div>
+                                <?php if (!empty($paymentBreakdown)): ?>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 p-2">
+                                        <?php foreach ($paymentBreakdown as $pm): ?>
+                                            <div class="bg-gray-50 rounded p-2 text-center">
+                                                <div class="text-xs text-gray-600"><?= htmlspecialchars($pm['method']) ?></div>
+                                                <div class="text-sm font-semibold text-gray-800"><?= (int)$pm['cnt'] ?> orders</div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="p-3 text-center text-gray-500 text-sm">No payment data</div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="text-center">
+                                <a href="/admin/reports" class="text-purple-600 hover:text-purple-800 text-sm">Open Full Reports →</a>
+                            </div>
+                        </div>
+
                     <?php elseif ($config['section_key'] === 'order_fulfillment'): ?>
                         <!-- Updated Order Fulfillment Interface Embedded -->
                         <?php
@@ -489,6 +577,8 @@ if (empty($dashboardConfig)) {
                                         <button type="submit" class="bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors">Filter</button>
                                         <a href="/admin" class="bg-gray-500 hover:bg-gray-600 text-white text-xs rounded transition-colors">Clear</a>
                                     </div>
+                                </form>
+                            </div>
 
                             <!-- Orders Table -->
                             <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">

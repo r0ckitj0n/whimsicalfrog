@@ -5779,7 +5779,59 @@ function initAdminSettingsDelegatedListeners() {
                     window.openSquareSettingsModal();
                 } else {
                     const modal = document.getElementById('squareSettingsModal');
-                    if (modal) modal.classList.remove('hidden');
+                    if (modal) {
+                        try {
+                            if (modal.parentElement && modal.parentElement !== document.body) {
+                                document.body.appendChild(modal);
+                            }
+                            modal.classList.add('over-header');
+                        } catch (_) {}
+                        modal.classList.remove('hidden');
+                        modal.classList.add('show');
+                        modal.setAttribute('aria-hidden', 'false');
+                    }
+                }
+                if (typeof updateModalScrollLock === 'function') updateModalScrollLock();
+            } catch (_) {}
+            return;
+        }
+
+        // AI Provider (AI Settings): open modal
+        if (closest('[data-action="open-ai-settings"], #aiSettingsBtn')) {
+            e.preventDefault();
+            try {
+                const modal = document.getElementById('aiSettingsModal');
+                if (modal) {
+                    try {
+                        if (modal.parentElement && modal.parentElement !== document.body) {
+                            document.body.appendChild(modal);
+                        }
+                        modal.classList.add('over-header');
+                    } catch (_) {}
+                    modal.classList.remove('hidden');
+                    modal.classList.add('show');
+                    modal.setAttribute('aria-hidden', 'false');
+                }
+                if (typeof updateModalScrollLock === 'function') updateModalScrollLock();
+            } catch (_) {}
+            return;
+        }
+
+        // AI & Automation Tools: open modal
+        if (closest('[data-action="open-ai-tools"], #aiToolsBtn')) {
+            e.preventDefault();
+            try {
+                const modal = document.getElementById('aiToolsModal');
+                if (modal) {
+                    try {
+                        if (modal.parentElement && modal.parentElement !== document.body) {
+                            document.body.appendChild(modal);
+                        }
+                        modal.classList.add('over-header');
+                    } catch (_) {}
+                    modal.classList.remove('hidden');
+                    modal.classList.add('show');
+                    modal.setAttribute('aria-hidden', 'false');
                 }
                 if (typeof updateModalScrollLock === 'function') updateModalScrollLock();
             } catch (_) {}
@@ -8043,6 +8095,14 @@ if (typeof window !== 'undefined') {
             window.__wfModalUserInteracted = true;
             try { el.classList.remove('hidden'); } catch (_) {}
             try { el.classList.add('show'); } catch (_) {}
+            // Ensure only the topmost modal scrolls
+            try {
+                document.documentElement.classList.add('wf-modal-scroll-lock');
+                document.body.classList.add('wf-modal-scroll-lock');
+                document.querySelectorAll('.admin-modal-overlay, .modal-overlay, .room-modal-overlay')
+                  .forEach(n => n.classList.remove('wf-topmost'));
+                el.classList.add('wf-topmost');
+            } catch (_) {}
             // Unhide any nested hidden panels that should be visible by default
             try {
                 el.querySelectorAll(':scope .hidden[data-default-visible], :scope [data-unhide-on-open]')
@@ -8077,9 +8137,22 @@ if (typeof window !== 'undefined') {
             if (!el) return;
             try { el.classList.remove('show'); } catch (_) {}
             try { el.classList.add('hidden'); } catch (_) {}
+            try { el.classList.remove('wf-topmost'); } catch (_) {}
             if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
                 window.WFModals.unlockScrollIfNoneOpen();
             }
+            // If none visible, unlock; else, assign topmost to the last visible overlay
+            try {
+                const overlays = Array.from(document.querySelectorAll('.admin-modal-overlay, .modal-overlay, .room-modal-overlay'));
+                const visible = overlays.filter(n => !n.classList.contains('hidden'));
+                if (visible.length === 0) {
+                    document.documentElement.classList.remove('wf-modal-scroll-lock');
+                    document.body.classList.remove('wf-modal-scroll-lock');
+                } else {
+                    overlays.forEach(n => n.classList.remove('wf-topmost'));
+                    visible[visible.length - 1].classList.add('wf-topmost');
+                }
+            } catch (_) {}
         };
 
         root.addEventListener('click', (ev) => {

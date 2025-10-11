@@ -9,7 +9,11 @@ import '../styles/admin-hints.css';
 import '../core/action-registry.js';
 import './body-background-from-data.js';
 import initializeTooltipManager from '../modules/tooltip-manager.js';
+// Load curator early so WF_TooltipCurator is available when needed
+import '../modules/tooltip-curator.js';
 import { buildAdminUrl } from '../core/admin-url-builder.js';
+// Install delegated hover popup behavior early to avoid double-binding later
+import '../room/event-manager.js';
 import RoomModalManager from '../modules/room-modal-manager.js';
 import { ApiClient } from '../core/api-client.js';
 
@@ -85,38 +89,39 @@ async function initializeCoreSystemsApp() {
     defer(() => {
         // Defer the rest of the ecosystem, including background utilities and UI enhancers
         Promise.all([
-            import('./dynamic-background-loader.js'),
-            import('./room-coordinate-manager.js'),
-            import('./wait-for-function.js'),
-            import('./global-item-modal.js'),
-            import('./global-modals.js'),
-            import('./cart-modal.js'),
-            import('../ui/global-popup.js'),
-            import('../modules/room-coordinator.js').then(m => { try { new m.RoomCoordinator().init(); } catch(_) {} }),
-            import('./login-modal.js'),
-            import('./header-auth-sync.js'),
-            import('./header-offset.js'),
-            import('./main-application.js'),
-            import('./room-icons-init.js'),
-            // Non-critical UX/analytics
-            import('./analytics.js'),
-            import('./payment-modal.js'),
-            import('./receipt-modal.js'),
-            import('./contact.js'),
-            import('./reveal-company-modal.js'),
-            import('../modules/image-carousel.js'),
-            import('../modules/footer-newsletter.js'),
-            import('../modules/ai-processing-modal.js'),
-        ]).catch(err => console.warn('[App] Deferred modules failed', err));
+                import('./dynamic-background-loader.js'),
+                import('./room-coordinate-manager.js'),
+                import('./wait-for-function.js'),
+                import('./detailed-item-modal.js'),
+                import('./global-modals.js'),
+                import('./cart-modal.js'),
+                // global-popup is now loaded via entries/app.js to avoid duplicate/stale chunks
+                import('../modules/room-coordinator.js').then(m => { try { new m.RoomCoordinator().init(); } catch(_) {} }),
+                import('./login-modal.js'),
+                import('./header-auth-sync.js'),
+                import('./header-offset.js'),
+                import('./main-application.js'),
+                import('./room-icons-init.js'),
+                // Non-critical UX/analytics
+                import('./analytics.js'),
+                import('./payment-modal.js'),
+                import('./receipt-modal.js'),
+                import('./account-settings-modal.js'),
+                import('./contact.js'),
+                import('./reveal-company-modal.js'),
+                import('../modules/image-carousel.js'),
+                import('../modules/footer-newsletter.js'),
+                import('../modules/ai-processing-modal.js'),
+            ]).catch(err => console.warn('[App] Deferred modules failed', err));
     });
-
+    
     // Initialize cart system
     const cartSystem = new CartSystem();
     window.WF_Cart = cartSystem;
     if (window.WhimsicalFrog && WhimsicalFrog.registerModule) {
         WhimsicalFrog.registerModule('cart-system', cartSystem);
     }
-    // Legacy bridge: expose/augment global `window.cart` for legacy callers (e.g., global-item-modal.js)
+    // Legacy bridge: expose/augment global `window.cart` for legacy callers (e.g., detailed-item-modal.js)
     try {
         const ensureAdapter = () => {
             const target = (window.cart = window.cart || {});
@@ -359,6 +364,8 @@ if (__WF_IS_ADMIN) {
             try { import('./admin-health-checks.js').catch(() => {}); } catch (_) {}
             // Enable dynamic admin tooltips (DB-driven)
             try { import('../modules/tooltip-manager.js').catch(() => {}); } catch (_) {}
+            // Curate tooltip copy (helpful + snarky, unique) and upsert via API
+            try { import('../modules/tooltip-curator.js').catch(() => {}); } catch (_) {}
             // Ensure notification system exists for toasts on admin
             try { import('./global-notifications.js').catch(() => {}); } catch (_) {}
             // Load admin-specific notification system for persistent toasts with actions
@@ -517,7 +524,7 @@ if (__WF_IS_ADMIN) {
                 'customers': () => import('./admin-customers.js'),
                 'inventory': () => import('./admin-inventory.js'),
                 'orders': () => import('./admin-orders.js'),
-                'pos': () => import('./admin-pos.js'),
+                'pos': () => import('./pos.js'),
                 'reports': () => import('./admin-reports.js'),
                 'marketing': () => import('./admin-marketing.js'),
                 // Use the lightweight admin-settings entry that loads the bridge first

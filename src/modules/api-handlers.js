@@ -7,8 +7,9 @@ export const APIHandlers = {
   // Fetch business settings
   async fetchBusinessSettings() {
     try {
-      const response = await ApiClient.get('/api/business_settings.php?action=get');
-      return response.data || {};
+      const response = await ApiClient.get('/api/business_settings.php?action=get_business_info');
+      // Endpoint returns { success, data } or flat object; normalize to object
+      return (response && (response.data || response)) || {};
     } catch (error) {
       console.error('Failed to fetch business settings:', error);
       return {};

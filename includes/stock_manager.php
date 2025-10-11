@@ -286,7 +286,20 @@ function getStockLevel($pdo, $itemSku, $colorName = null, $sizeCode = null)
             }
         }
 
-        // General item stock
+        // Aggregated stock across sizes (active rows only)
+        $agg = Database::queryOne(
+            "SELECT COALESCE(SUM(stock_level), 0) AS total FROM item_sizes WHERE item_sku = ? AND is_active = 1",
+            [$itemSku]
+        );
+        if ($agg && isset($agg['total'])) {
+            $total = (int)$agg['total'];
+            // Prefer aggregate when it shows real availability; otherwise defer to legacy
+            if ($total > 0) {
+                return $total;
+            }
+        }
+
+        // General item stock fallback
         $row = Database::queryOne("SELECT stockLevel FROM items WHERE sku = ?", [$itemSku]);
         $result = $row !== null ? $row['stockLevel'] : false;
         return $result !== false ? (int)$result : 0;

@@ -1,4 +1,5 @@
 <?php
+// WF_GUARD_TEMPLATES_CSS_IGNORE
 
 /**
  * Minimal Vite helper for dev/prod asset injection.

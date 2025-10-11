@@ -6,11 +6,8 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 require_once dirname(__DIR__, 2) . '/api/config.php';
 require_once dirname(__DIR__, 2) . '/includes/functions.php';
 require_once dirname(__DIR__, 2) . '/includes/auth.php';
-if (!function_exists('isAdminWithToken') || !isAdminWithToken()) {
-    http_response_code(403);
-    echo '<div class="wf-access-denied">Access denied.</div>';
-    exit;
-}
+require_once dirname(__DIR__, 2) . '/includes/auth_helper.php';
+AuthHelper::requireAdmin();
 $page = 'admin';
 include dirname(__DIR__, 2) . '/partials/header.php';
 ?>

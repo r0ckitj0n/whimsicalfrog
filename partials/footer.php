@@ -13,6 +13,11 @@ if (function_exists('renderGlobalPopup')) {
         echo renderGlobalPopupCSS();
     }
 }
+// Ensure the Account Settings modal markup is available site-wide
+require_once __DIR__ . '/../components/account_settings_modal.php';
+if (function_exists('renderAccountSettingsModal')) {
+    echo renderAccountSettingsModal();
+}
 ?>
 </body>
 </html>

@@ -844,7 +844,7 @@ if (!isset($adminSection) || $adminSection !== 'customers'):
 
         const notification = document.createElement('div');
         notification.className = 'wf-notification wf-success-notification';
-        notification.style.cssText = 'pointer-events: auto; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #6b8e23; background: linear-gradient(135deg, #87ac3a, #6b8e23); color: white; padding: 16px; position: relative; z-index: 999999;';
+        notification.style.cssText = 'pointer-events: auto; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #BF5700; background: linear-gradient(135deg, #87ac3a, #BF5700); color: white; padding: 16px; position: relative; z-index: 999999;';
         notification.innerHTML = `
             <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
                 <div class="wf-notification-icon" style="font-size: 20px; line-height: 1;">✅</div>
@@ -1072,7 +1072,7 @@ function simpleNotificationTest() {
 
         const notification = document.createElement('div');
         notification.className = 'wf-notification wf-success-notification';
-        notification.style.cssText = 'pointer-events: auto; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #6b8e23; background: #87ac3a; color: white; padding: 16px; position: relative; z-index: 999999; transform: translateX(120%); opacity: 0; transition: all 0.4s ease;';
+        notification.style.cssText = 'pointer-events: auto; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #BF5700; background: #87ac3a; color: white; padding: 16px; position: relative; z-index: 999999; transform: translateX(120%); opacity: 0; transition: all 0.4s ease;';
         notification.innerHTML = `
             <div class="wf-notification-content" style="display: flex; align-items: flex-start; gap: 12px;">
                 <div class="wf-notification-icon" style="font-size: 20px; line-height: 1;">🎉</div>

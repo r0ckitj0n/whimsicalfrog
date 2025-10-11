@@ -162,11 +162,19 @@ function handleGet()
                     return;
                 }
                 try {
-                    $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
+                    $debugMode = isset($_GET['debug']) && $_GET['debug'] == '1';
+                    $dbg = [ 'room' => $roomNumber ];
+                    // Build room_maps query tolerant of missing is_active column
+                    $rmWhere = 'room_number = ?';
+                    if (wf_has_column('room_maps', 'is_active')) {
+                        $rmWhere .= ' AND is_active = 1';
+                    }
+                    $coordsRow = Database::queryOne("SELECT coordinates FROM room_maps WHERE $rmWhere ORDER BY updated_at DESC LIMIT 1", [$roomNumber]);
                     $coords = $coordsRow ? json_decode($coordsRow['coordinates'] ?? '[]', true) : [];
                     if (!is_array($coords)) {
                         $coords = [];
                     }
+                    if ($debugMode) { $dbg['coords_count'] = is_array($coords) ? count($coords) : 0; }
 
                     $catRow = Database::queryOne("SELECT c.id AS category_id, c.name AS category_name FROM room_category_assignments rca JOIN categories c ON rca.category_id = c.id WHERE rca.room_number = ? AND rca.is_primary = 1 LIMIT 1", [$roomNumber]);
                     $categoryId = $catRow['category_id'] ?? null;
@@ -185,13 +193,25 @@ function handleGet()
                             }
                         }
                     }
+                    if ($debugMode) { $dbg['category_resolved'] = [ 'id' => $categoryId, 'name' => $categoryName ]; }
 
                     $items = [];
+                    // Build items filters tolerant of missing is_active/display_order columns
+                    $itemsHasActive = wf_has_column('items', 'is_active');
+                    $itemsHasDisplayOrder = wf_has_column('items', 'display_order');
+                    $orderExpr = $itemsHasDisplayOrder ? 'display_order, sku ASC' : 'sku ASC';
+                    if ($debugMode) { $dbg['items_schema'] = [ 'has_is_active' => $itemsHasActive, 'has_display_order' => $itemsHasDisplayOrder, 'order' => $orderExpr ]; }
                     if ($categoryId) {
-                        $items = Database::queryAll("SELECT sku, name, category FROM items WHERE category_id = ? AND is_active = 1 ORDER BY display_order, sku ASC", [$categoryId]);
+                        $where = 'category_id = ?';
+                        if ($itemsHasActive) { $where .= ' AND is_active = 1'; }
+                        $items = Database::queryAll("SELECT sku, name, category FROM items WHERE $where ORDER BY $orderExpr", [$categoryId]);
+                        if ($debugMode) { $dbg['items_by_category_id_count'] = is_array($items) ? count($items) : 0; }
                     }
                     if (empty($items) && $categoryName) {
-                        $items = Database::queryAll("SELECT sku, name, category FROM items WHERE category = ? AND is_active = 1 ORDER BY display_order, sku ASC", [$categoryName]);
+                        $where = 'category = ?';
+                        if ($itemsHasActive) { $where .= ' AND is_active = 1'; }
+                        $items = Database::queryAll("SELECT sku, name, category FROM items WHERE $where ORDER BY $orderExpr", [$categoryName]);
+                        if ($debugMode) { $dbg['items_by_category_name_count'] = is_array($items) ? count($items) : 0; }
                     }
 
                     $derived = [];
@@ -203,7 +223,9 @@ function handleGet()
                         ];
                     }
 
-                    Response::success(['mappings' => $derived, 'category' => $categoryName, 'coordinates_count' => count($coords)]);
+                    $payload = ['mappings' => $derived, 'category' => $categoryName, 'coordinates_count' => count($coords)];
+                    if ($debugMode) { $payload['debug'] = $dbg; }
+                    Response::success($payload);
                 } catch (Exception $e) {
                     Response::serverError('get_live_view failed: ' . $e->getMessage());
                 }

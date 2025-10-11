@@ -712,9 +712,10 @@ body[data-page^='admin'] {
 
 /* Settings page needs more padding due to different layout structure */
 body[data-page='admin/settings'] {
-  /* Reserve space: header + equal gaps (24px above/below) + navbar height */
-  /* padding-top = header(64px) + gap(24px) + navbar(var --admin-tabs-height, default 44px) + gap(24px) */
-  padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 44px) + 48px) !important;
+  /* Reserve space for header + navbar; target ~160px overall to clear both */
+  /* Use fixed fallback of 160px to avoid under-padding when variables misreport */
+  padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 44px) + 52px) !important;
+  padding-top: 160px !important; /* hard fallback to guarantee spacing */
 }
 
 
@@ -774,13 +775,29 @@ body[data-page^='admin'] .admin-tab-navigation {
 
 /* Settings page: add more space between header and navbar */
 body[data-page='admin/settings'] .admin-tab-navigation {
-  top: 76px !important; /* 64px header + 12px gap (even closer to header) */
-  z-index: var(--z-admin-nav, 2000) !important;
+  top: 76px !important; /* 64px header + 12px gap */
+  z-index: 10000 !important; /* above page content, below overlays (10100) */
   margin: 0 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure tabs themselves can always receive clicks */
+body[data-page='admin/settings'] .admin-tab-navigation .admin-nav-tab {
+  pointer-events: auto !important;
 }
 
 /* All admin pages have consistent header styling */
 body[data-page^='admin'] .admin-header {
   margin-top: 0 !important;
   padding-top: 0.5rem !important;
+}
+
+/* FINAL: ensure the visible settings wrapper is offset from the top of the screen */
+/* This targets the actual DOM structure and overrides any Tailwind pt-128/padding resets */
+body[data-page='admin/settings'] #admin-section-content > .settings-page {
+  margin-top: 130px !important;  /* push the whole block down */
+  padding-top: 0 !important;     /* neutralize pt-128 so spacing is external, not internal */
 }

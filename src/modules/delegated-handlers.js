@@ -53,9 +53,41 @@ document.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      // Show modal
-      if (window.showModal) {
-        window.showModal('categoriesModal');
+      const id = 'categoriesModal';
+      // Prime iframe inside the target modal
+      try {
+        const modal = document.getElementById(id);
+        if (modal) {
+          const frame = modal.querySelector('iframe');
+          if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
+            const ds = frame.getAttribute('data-src') || frame.getAttribute('src') || '/sections/admin_categories.php?modal=1';
+            if (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank') {
+              frame.setAttribute('src', ds);
+            }
+          }
+          // Ensure overlay is attached to body and above header
+          try {
+            if (modal.parentElement && modal.parentElement !== document.body) {
+              document.body.appendChild(modal);
+            }
+            modal.classList.add('over-header');
+          } catch (_) {}
+        }
+      } catch (_) {}
+
+      // Show modal (prefer standardized utils)
+      if (window.WFModalUtils && typeof window.WFModalUtils.showModalById === 'function') {
+        window.WFModalUtils.showModalById(id);
+      } else if (typeof window.showModal === 'function') {
+        window.showModal(id);
+      } else {
+        const el = document.getElementById(id);
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          el.classList.remove('hidden');
+          el.classList.add('show');
+          try { el.setAttribute('aria-hidden', 'false'); } catch(_) {}
+        }
       }
     } catch (error) {
       console.error('Error opening categories modal:', error);
@@ -63,29 +95,32 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // Attributes Management Modal (Genders, Sizes, Colors)
+  // Attributes Management Modal (iframe embed)
   if (closest('[data-action="open-attributes"]')) {
     e.preventDefault();
     e.stopPropagation();
     try {
-      // Load global attributes data
-      if (window.fetchGlobalAttributes) {
-        await window.fetchGlobalAttributes();
-      }
-
-      // Show modal
-      if (window.showModal) {
-        window.showModal('attributesModal');
-
-        // Initialize modal after it's shown
-        setTimeout(() => {
-          if (window.initAttributesModal) {
-            window.initAttributesModal('attributesModal');
+      const modal = document.getElementById('attributesModal');
+      if (modal) {
+        // Ensure the iframe src is set once
+        const frame = modal.querySelector('#attributesFrame');
+        if (frame && !frame.getAttribute('src')) {
+          const ds = frame.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
+          frame.setAttribute('src', ds);
+        }
+        // Bring modal to front and show
+        try {
+          if (modal.parentElement && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
           }
-        }, 100);
+          modal.classList.add('over-header');
+        } catch (_) {}
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
       }
     } catch (error) {
-      console.error('Error loading attributes modal:', error);
+      console.error('Error opening attributes modal:', error);
     }
     return;
   }

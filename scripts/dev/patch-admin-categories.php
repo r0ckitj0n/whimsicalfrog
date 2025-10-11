@@ -28,8 +28,8 @@ echo "SUCCESS: Backup created at {$backupFile}\n";
 
 $tabsNavigationAndPanelStart = <<<'HTML'
     <!-- Tabs Navigation -->
-    <div class="admin-card" style="margin: 8px 0;">
-      <div class="admin-form-inline" role="tablist" aria-label="Category Management Tabs" style="gap: 8px;">
+    <div class="admin-card my-2">
+      <div class="admin-form-inline gap-2" role="tablist" aria-label="Category Management Tabs">
         <button type="button" id="tabBtnCategories" class="btn btn-primary" aria-selected="true" aria-controls="tabPanelCategories">Categories</button>
         <button type="button" id="tabBtnAssignments" class="btn" aria-selected="false" aria-controls="tabPanelAssignments">Assignments</button>
         <button type="button" id="tabBtnOverview" class="btn" aria-selected="false" aria-controls="tabPanelOverview">Overview</button>
@@ -44,7 +44,7 @@ $panelsEndAndScript = <<<'HTML'
     </div> <!-- end of tabPanelCategories -->
 
     <!-- Assignments Panel (initially hidden) -->
-    <div id="tabPanelAssignments" role="tabpanel" aria-labelledby="tabBtnAssignments" style="display:none">
+    <div id="tabPanelAssignments" role="tabpanel" aria-labelledby="tabBtnAssignments" class="is-hidden">
       <div class="admin-card">
         <h3 class="admin-card-title">Room-Category Assignments</h3>
         <div id="rcAssignmentsContainer" class="admin-table-wrapper">
@@ -54,7 +54,7 @@ $panelsEndAndScript = <<<'HTML'
     </div>
 
     <!-- Overview Panel (per-room summary) -->
-    <div id="tabPanelOverview" role="tabpanel" aria-labelledby="tabBtnOverview" style="display:none">
+    <div id="tabPanelOverview" role="tabpanel" aria-labelledby="tabBtnOverview" class="is-hidden">
       <div class="admin-card">
         <h3 class="admin-card-title">Per-Room Overview</h3>
         <div id="rcOverviewContainer" class="space-y-2">

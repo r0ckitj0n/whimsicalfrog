@@ -32,6 +32,7 @@
 require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 try {
     ensureSessionStarted();
 } catch (\Throwable $e) {
@@ -73,18 +74,11 @@ if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
     }
 }
 
-// User information - use auth functions if available
-if (function_exists('isLoggedIn') && function_exists('getUsername')) {
-    $is_logged_in = isLoggedIn();
-    $username = $is_logged_in ? getUsername() : null;
-    // Determine admin role using centralized helper if available
-    if (function_exists('isAdmin')) {
-        $is_admin = isAdmin();
-    } else {
-        // Fallback to session-based role check
-        $is_admin = isset($_SESSION['user']) && is_array($_SESSION['user']) &&
-                    isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
-    }
+// User information - prefer AuthHelper, fallback to globals/session
+if (class_exists('AuthHelper')) {
+    $is_logged_in = AuthHelper::isLoggedIn();
+    $username = $is_logged_in && function_exists('getUsername') ? getUsername() : null;
+    $is_admin = AuthHelper::isAdmin();
 } else {
     // Fallback to session-based detection
     $is_logged_in = isset($_SESSION['user_id']) || isset($_SESSION['user']);
@@ -241,8 +235,9 @@ try {
                 <?php if ($config['show_user_menu']): ?>
                     <?php if ($is_logged_in): ?>
                         <span class="welcome-message">
-                            <a href="/account_settings" class="nav-link"><?php echo htmlspecialchars((string)$username); ?></a>
+                            <a href="#" class="nav-link" data-action="open-account-settings"><?php echo htmlspecialchars((string)$username); ?></a>
                         </span>
+                        <a href="#" class="nav-link" data-action="open-account-settings">Account Settings</a>
                         <?php if (!empty($is_admin)): ?>
                             <a href="/sections/admin_router.php?section=settings" class="nav-link">Settings</a>
                         <?php endif; ?>
@@ -301,7 +296,7 @@ try {
                             <?php if (!empty($is_admin)): ?>
                                 <a href="/sections/admin_router.php?section=settings" class="mobile-nav-link">Settings</a>
                             <?php endif; ?>
-                            <a href="/profile" class="mobile-nav-link">Profile</a>
+                            <a href="#" class="mobile-nav-link" data-action="open-account-settings">Account Settings</a>
                             <a href="/logout.php" class="mobile-nav-link">Logout</a>
                         <?php else: ?>
                             <a href="/login" class="mobile-nav-link" data-action="open-login-modal">Login</a>

@@ -1,26 +1,11 @@
 <?php
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/config.php';
 
-// Use centralized authentication
-// Admin authentication with token fallback for API access
-$isAdmin = false;
-
-// Check session authentication first
-require_once __DIR__ . '/../includes/auth.php';
-if (isAdminWithToken()) {
-    $isAdmin = true;
-}
-
-// Admin token fallback for API access
-if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-    $isAdmin = true;
-}
-
-if (!$isAdmin) {
-    Response::forbidden('Admin access required');
-}
+// Centralized admin check
+AuthHelper::requireAdmin();
 
 // Check if SKU parameter is provided
 if (!isset($_GET['sku']) || empty($_GET['sku'])) {

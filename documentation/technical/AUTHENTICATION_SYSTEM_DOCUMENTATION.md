@@ -3,7 +3,7 @@
 # WhimsicalFrog Authentication System Documentation
 
 ## Overview
-WhimsicalFrog uses a centralized, multi-layered authentication system that supports both session-based authentication for users and token-based authentication for APIs. The system has been standardized to use consistent password hashing and centralized database connections.
+WhimsicalFrog uses a centralized, multi-layered authentication system based on session authentication. The system has been standardized to use consistent password hashing and centralized database connections. Admin token fallbacks have been deprecated in favor of centralized helpers.
 
 ## Core Components
 
@@ -29,7 +29,7 @@ WhimsicalFrog uses a centralized, multi-layered authentication system that suppo
 - `logoutUser()`: Clear user session
 - `requireAuth()`: Force authentication or redirect
 - `requireAdmin()`: Force admin privileges or error
-- `isAdminWithToken()`: Check admin with fallback token support
+- `isAdminWithToken()` (deprecated): Now delegates to `isAdmin()` only. Token fallback has been removed.
 
 **Session Management:**
 - Stores user data in `$_SESSION['user']` array
@@ -42,13 +42,9 @@ WhimsicalFrog uses a centralized, multi-layered authentication system that suppo
 - `AuthHelper::isAdmin()`: Multi-source admin checking
 - `AuthHelper::requireAdmin()`: Force admin or exit with JSON error
 - `AuthHelper::getCurrentUser()`: Get current user data
-- `AuthHelper::getAdminToken()`: Extract admin token from requests
 - `AuthHelper::hasRole($role)`: Check specific user roles
 
-**Token Sources Supported:**
-- JSON request body: `{"admin_token": "whimsical_admin_2024"}`
-- GET parameters: `?admin_token=whimsical_admin_2024`
-- POST parameters: `admin_token=whimsical_admin_2024`
+Deprecated: token sources are no longer supported for admin authorization.
 
 ## Authentication Endpoints
 
@@ -96,11 +92,8 @@ curl -X POST "http://localhost:8000/process_login.php" \
 - **Verification**: Login uses `password_verify()` for secure comparison
 - **No Plain Text**: Passwords never stored or compared in plain text
 
-### 2. Admin Token System
-- **Development Token**: `whimsical_admin_2024` for API access
-- **Multiple Sources**: Supports JSON, GET, and POST parameters
-- **Fallback Authentication**: When session auth fails, token auth can succeed
-- **API Consistency**: All admin APIs support token-based authentication
+### 2. Admin Token System (deprecated)
+- Token-based admin fallback has been removed. Use session-based auth with `AuthHelper::requireAdmin()`.
 
 ### 3. Session Security
 - **Session Validation**: Automatic session format validation
@@ -191,7 +184,7 @@ fetch('/process_login.php', {
 ### Changes Made
 1. **Replaced Plain Text Passwords**: Updated all login endpoints to use `password_verify()`
 2. **Centralized Database**: All authentication uses `Database::getInstance()`
-3. **Unified Token System**: Consistent admin token handling across all APIs
+3. **Unified Admin Gate**: Centralized admin checks via `AuthHelper::requireAdmin()`
 4. **Error Standardization**: Consistent error responses and logging
 5. **Session Normalization**: Automatic session format validation and cleanup
 
@@ -222,11 +215,6 @@ curl -X POST "http://localhost:8000/process_login.php" \
 curl -X POST "http://localhost:8000/api/dashboard_sections.php" \
   -H "Content-Type: application/json" \
   -d '{"action":"get_sections"}'
-
-# Test with admin token
-curl -X POST "http://localhost:8000/api/dashboard_sections.php" \
-  -H "Content-Type: application/json" \
-  -d '{"action":"get_sections","admin_token":"whimsical_admin_2024"}'
 ```
 
 ## Troubleshooting
@@ -249,14 +237,12 @@ error_log(print_r($debug, true));
 
 ### 1. API Development
 - Always use `AuthHelper::requireAdmin()` for admin endpoints
-- Include admin token support in all admin APIs
 - Use centralized database connection via `Database::getInstance()`
 - Implement proper error handling and logging
 
 ### 2. Security
 - Never store passwords in plain text
 - Always use `password_verify()` for login checks
-- Validate admin tokens server-side
 - Clear sessions on logout
 - Log authentication failures for monitoring
 
@@ -269,10 +255,9 @@ error_log(print_r($debug, true));
 ## Configuration Summary
 
 **Login Endpoint**: `/process_login.php` (primary) or `/api/login.php` (alternative)
-**Admin Token**: `whimsical_admin_2024`
 **Database**: Centralized via `Database::getInstance()`
 **Password Security**: bcrypt hashing via `password_hash()`/`password_verify()`
 **Session Management**: Centralized via `includes/auth.php`
-**API Authentication**: Multi-source token support via `AuthHelper`
+**API Authentication**: Centralized via `AuthHelper`
 
 The system is now fully standardized, secure, and consistent across all components. 

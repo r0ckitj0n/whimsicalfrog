@@ -77,7 +77,8 @@ body.modal-open #itemPopup.in-room-modal {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: var(--z-index-room-modal, 2400);
+  /* Ensure overlay sits above room doors (doors use ~10060) */
+  z-index: var(--z-index-room-modal, 11000);
   opacity: 0;
   visibility: hidden;
   transition: all 0.3s ease;
@@ -520,4 +521,10 @@ body.modal-open #quantityModal {
   transform: scale(0);
   visibility: hidden;
   z-index: var(--z-index-behind);
+}
+
+/* While any modal is open, prevent room doors from intercepting clicks */
+body.modal-open .door-area,
+body.room-modal-open .door-area {
+  pointer-events: none !important;
 }

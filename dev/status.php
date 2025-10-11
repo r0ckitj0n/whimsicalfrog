@@ -147,7 +147,7 @@ try {
       </table>
     </div>
 
-    <div class="card" style="grid-column: 1 / -1;">
+    <div class="card grid-col-all">
       <h2>Items (first 20, image columns)</h2>
       <?php if (empty($imgCols)): ?>
         <div class="warn">No image-like columns (image/img/thumb/picture) found in <code>items</code> table.</div>

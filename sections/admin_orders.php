@@ -614,7 +614,7 @@ function getPaymentStatusBadgeClass($status)
 
 <!-- Receipt Modal -->
 <div id="receiptModal" class="modal-overlay hidden">
-    <div class="modal-content" style="max-width: 800px;">
+    <div class="modal-content max-w-800">
         <div class="modal-header">
             <h3>Order Receipt</h3>
             <button data-action="close-receipt-modal">×</button>
@@ -654,11 +654,19 @@ function getPaymentStatusBadgeClass($status)
     const ensure = () => {
       try {
         if (!window.__WF_ADMIN_ORDERS_READY) {
-          import('/src/js/admin-orders.js')
-            .then(() => console.log('[OrdersPage] admin-orders module imported via guard'))
-            .catch(err => {
-              console.error('[OrdersPage] guard failed to import admin-orders.js', err);
-            });
+          const hasViteClient = !!document.querySelector('script[src*="/@vite/client"]');
+          const doImport = () => import('/src/js/admin-orders.js');
+          if (hasViteClient) {
+            doImport()
+              .then(() => console.log('[OrdersPage] admin-orders module imported via guard (dev)'))
+              .catch(err => {
+                console.error('[OrdersPage] guard failed to import admin-orders.js (dev)', err);
+              });
+          } else {
+            // In production (no Vite client), rely on app.js dynamic import.
+            // If that somehow failed, we'll install a robust inline fallback below.
+            console.warn('[OrdersPage] Skipping /src import because Vite dev client not detected; relying on bundled app loader.');
+          }
         }
       } catch (e) {
         console.error('[OrdersPage] guard error', e);
@@ -666,7 +674,7 @@ function getPaymentStatusBadgeClass($status)
     };
     // First attempt shortly after DOM ready
     setTimeout(ensure, 200);
-    // Second pass: if still not ready after 1s, install a minimal inline editor as a last resort
+    // Second pass: if still not ready after 1s, install a robust inline fallback (editor + receipt/delete handlers)
     setTimeout(() => {
       try {
         if (!window.__WF_ADMIN_ORDERS_READY && !window.__WF_ORDERS_INLINE_EDITOR) {
@@ -714,7 +722,60 @@ function getPaymentStatusBadgeClass($status)
             const cell = e.target && e.target.closest ? e.target.closest('.editable-field') : null;
             if (!cell) return; if (e.target.closest('input,select,textarea,button,a')) return; buildEditor(cell);
           }, true);
-          console.warn('[OrdersPage] Minimal inline editor installed as fallback');
+
+          // Additional fallback: wire up receipt and delete actions so the page remains functional
+          const showModal = (el) => { try{ el.classList.remove('hidden'); el.classList.add('show'); }catch(_){}}
+          const hideModal = (el) => { try{ el.classList.add('hidden'); el.classList.remove('show'); }catch(_){}}
+          let __lastReceiptId = '';
+          document.addEventListener('click', (ev) => {
+            const t = ev.target.closest && ev.target.closest('[data-action]');
+            if (!t) return;
+            const action = t.getAttribute('data-action');
+            if (action === 'show-receipt') {
+              ev.preventDefault();
+              const orderId = t.getAttribute('data-order-id') || '';
+              __lastReceiptId = orderId || __lastReceiptId;
+              const modal = document.getElementById('receiptModal');
+              const content = document.getElementById('receiptContent');
+              if (modal && content) {
+                content.innerHTML = '<div class="p-4">Loading...</div>';
+                showModal(modal);
+                // Load receipt in an iframe for parity with checkout
+                const url = '/receipt?orderId=' + encodeURIComponent(orderId) + '&bare=1';
+                const iframe = document.createElement('iframe');
+                iframe.src = url; iframe.title = 'Receipt'; iframe.className = 'receipt-iframe';
+                iframe.addEventListener('load', () => { try { content.innerHTML=''; content.appendChild(iframe);} catch(_){} }, { once:true });
+                setTimeout(() => { if (!content.contains(iframe)) { try { content.innerHTML=''; content.appendChild(iframe);} catch(_){} } }, 800);
+              }
+            } else if (action === 'close-receipt-modal') {
+              ev.preventDefault();
+              const modal = document.getElementById('receiptModal'); if (modal) hideModal(modal);
+            } else if (action === 'print-receipt') {
+              ev.preventDefault();
+              const id = __lastReceiptId || (t.getAttribute('data-order-id') || '');
+              if (id) {
+                const url = '/receipt?orderId=' + encodeURIComponent(id) + '&bare=1';
+                try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
+              }
+            } else if (action === 'confirm-delete') {
+              ev.preventDefault();
+              const id = t.getAttribute('data-order-id') || '';
+              const modal = document.getElementById('deleteModal');
+              const target = document.getElementById('deleteOrderId');
+              if (target) target.textContent = id;
+              if (modal) showModal(modal);
+            } else if (action === 'close-delete-modal') {
+              ev.preventDefault();
+              const modal = document.getElementById('deleteModal'); if (modal) hideModal(modal);
+            } else if (action === 'delete-order') {
+              ev.preventDefault();
+              // Placeholder: close modal; server-side delete can be wired later
+              const modal = document.getElementById('deleteModal'); if (modal) hideModal(modal);
+              try { window.showNotification && window.showNotification('Delete action not yet implemented', 'info'); } catch(_) {}
+            }
+          });
+
+          console.warn('[OrdersPage] Inline fallback installed (editor + receipt/delete handlers)');
         }
       } catch (e) {
         console.error('[OrdersPage] fallback install error', e);

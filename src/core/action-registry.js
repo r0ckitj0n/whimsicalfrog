@@ -12,6 +12,30 @@ export const centralFunctions = {
   runCommand: (el, p) => window.runCommand?.(p.command),
   loadRoomConfig: () => window.loadRoomConfig?.(),
   resetForm: () => window.resetForm?.(),
+  // Open detailed item modal for room/shop items
+  openQuantityModal: async (el, p = {}) => {
+    try {
+      // Close popup first to avoid overlap/focus issues
+      try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
+      const data = p.itemData || p.item || {};
+      const sku = data.sku || el?.dataset?.sku || el?.dataset?.productId;
+      // Ensure modal function exists
+      if (typeof window.showGlobalItemModal !== 'function') {
+        try { await import('../js/detailed-item-modal.js'); } catch(_) {}
+      }
+      // Prefer parent (top window) if available (e.g., when running inside room iframe)
+      const opener = (typeof parent !== 'undefined' && parent !== window && typeof parent.showGlobalItemModal === 'function')
+        ? parent.showGlobalItemModal
+        : window.showGlobalItemModal;
+      if (typeof opener === 'function' && sku) {
+        opener(sku, data);
+        return;
+      }
+      if (typeof window.showItemDetailsModal === 'function' && sku) {
+        window.showItemDetailsModal(sku, data);
+      }
+    } catch (_) { /* no-op */ }
+  },
   // Generic confirmation handler to replace inline onclick="return confirm(...)"
   confirm: (el, p = {}) => {
     const message = p.message || el.getAttribute('data-confirm') || 'Are you sure?';

@@ -2,7 +2,8 @@
  * Shop Page Functionality
  * Handles category filtering and product card layout for the shop page.
  */
-import WF from './whimsical-frog-core.js';
+import './whimsical-frog-core-unified.js';
+const WF = window.WF;
 import { debounce } from './utils.js';
 
 // Runtime helpers for height equalization without inline styles
@@ -32,11 +33,18 @@ const ShopPage = {
         this.productCards = document.querySelectorAll('.product-card');
         this.productsGrid = document.getElementById('productsGrid');
         this.shopNavArea = document.querySelector('#shopPage .shop-navigation-area');
+        this.categoryNav = document.querySelector('#shopPage .category-navigation');
 
         if (!this.productsGrid || this.categoryButtons.length === 0) {
             // Don't run shop-specific logic if the main components aren't on the page
             return;
         }
+
+        // If filters not present, build from product cards
+        this.ensureFilters();
+
+        // Refresh categoryButtons reference in case we generated them
+        this.categoryButtons = document.querySelectorAll('.category-navigation .category-btn');
 
         this.setupEventListeners();
         // Ensure nav height is reflected in CSS variable before layout calc
@@ -48,10 +56,67 @@ const ShopPage = {
         WF.log('Shop Page module initialized.');
     },
 
+    ensureFilters() {
+        // If there is no category container, create one in the middle column
+        if (!this.categoryNav) {
+            const middle = document.querySelector('#shopPage .navigation-bar');
+            if (middle) {
+                const nav = document.createElement('div');
+                nav.className = 'category-navigation';
+                // Insert after left column if present, else append
+                middle.appendChild(nav);
+                this.categoryNav = nav;
+            }
+        }
+        if (!this.categoryNav) return;
+
+        const existing = this.categoryNav.querySelectorAll('.category-btn');
+        if (existing.length > 0) return; // Server rendered; keep as-is
+
+        // Build a unique ordered category list from product cards
+        const seen = new Map(); // slug -> label
+        Array.from(this.productCards).forEach(card => {
+            const slug = card.dataset.category;
+            if (!slug) return;
+            if (!seen.has(slug)) {
+                const label = card.dataset.categoryLabel || slug;
+                seen.set(slug, label);
+            }
+        });
+
+        // Always include All Products first
+        const frag = document.createDocumentFragment();
+        const mkBtn = (slug, label, isActive=false) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'category-btn btn-chip shop-filter-btn' + (isActive ? ' active' : '');
+            b.dataset.category = slug;
+            b.textContent = label;
+            return b;
+        };
+        frag.appendChild(mkBtn('all', 'All Products', true));
+        for (const [slug, label] of seen.entries()) {
+            frag.appendChild(mkBtn(slug, label, false));
+        }
+        this.categoryNav.appendChild(frag);
+    },
+
     setupEventListeners() {
+        // Direct listeners on each button
         this.categoryButtons.forEach(btn => {
             btn.addEventListener('click', (e) => this.filterByCategory(e));
         });
+
+        // Delegated listener on the nav area (resilient to reflows/reinits)
+        if (this.shopNavArea) {
+            this.shopNavArea.addEventListener('click', (e) => {
+                const btn = e.target && e.target.closest && e.target.closest('.category-navigation .category-btn');
+                if (btn) {
+                    e.preventDefault();
+                    this.filterByCategory(btn);
+                }
+            });
+        }
 
         window.addEventListener('resize', debounce(() => {
             this.measureNavHeight();
@@ -200,8 +265,11 @@ const ShopPage = {
         }
     },
 
-    filterByCategory(event) {
-        const button = event.currentTarget;
+    filterByCategory(eventOrButton) {
+        const button = (eventOrButton && eventOrButton.currentTarget)
+            ? eventOrButton.currentTarget
+            : (eventOrButton && eventOrButton.dataset ? eventOrButton : null);
+        if (!button) return;
         const category = button.dataset.category;
         WF.log(`Filtering by category: ${category}`);
 

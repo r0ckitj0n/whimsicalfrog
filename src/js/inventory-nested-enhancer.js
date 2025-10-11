@@ -36,6 +36,7 @@ import { ApiClient } from '../core/api-client.js';
           const sw = document.createElement('span');
           sw.className = 'wf-inline-swatch inline-block w-4 h-4 rounded border';
           sw.title = hex;
+          // eslint-disable-next-line no-restricted-syntax
           sw.style.background = hex;
           headerTitleRow.insertBefore(sw, headerTitleRow.children[1] || null);
         }
@@ -57,6 +58,7 @@ import { ApiClient } from '../core/api-client.js';
               // Update label and swatch
               if (codeSpan) codeSpan.textContent = value;
               const swatch = headerTitleRow.querySelector('.wf-inline-swatch');
+              // eslint-disable-next-line no-restricted-syntax
               if (swatch) swatch.style.background = value;
               if (typeof window.showNotification === 'function') {
                 window.showNotification('Color updated', 'success');
@@ -201,7 +203,7 @@ import { ApiClient } from '../core/api-client.js';
         let html = '';
         for (const g of genders) {
           const keys = Object.keys(byKey).filter(k => k.startsWith(`${g}::`));
-          let genderTotal = 0; let blocks = [];
+          let genderTotal = 0; const blocks = [];
           for (const k of keys) {
             const list = byKey[k] || [];
             const cid = k.split('::')[1];

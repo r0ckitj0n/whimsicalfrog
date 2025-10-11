@@ -1,7 +1,7 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
-const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5180);
+const devPort = Number(process.env.VITE_DEV_PORT || process.env.PORT || 5176);
 const hmrPort = Number(process.env.VITE_HMR_PORT || devPort);
 
 export default defineConfig({
@@ -50,7 +50,7 @@ export default defineConfig({
         'js/admin-customers.js': resolve(__dirname, 'src/entries/admin-customers.js'),
         'js/admin-account-settings.js': resolve(__dirname, 'src/entries/admin-account-settings.js'),
         'js/admin-orders.js': resolve(__dirname, 'src/entries/admin-orders.js'),
-        'js/admin-pos.js': resolve(__dirname, 'src/entries/admin-pos.js'),
+        'js/pos.js': resolve(__dirname, 'src/entries/pos.js'),
         'js/admin-cost-breakdown.js': resolve(__dirname, 'src/entries/admin-cost-breakdown.js'),
         'js/help-documentation.js': resolve(__dirname, 'src/entries/help-documentation.js'),
       },

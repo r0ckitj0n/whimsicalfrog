@@ -84,6 +84,8 @@
   /* -- Header/Nav & Inline UI (non-overlay) -- */
   --z-index-header-ink: 200;            /* header text and links */
   --z-index-nav: 300;                   /* navigation links/items */
+  /* Shop filters should sit above header (3000) and room modal (~2400), below overlays */
+  --z-shop-filters: 3500;
   --z-inline-popup: 1000;               /* product hover popups, small tips */
   --z-inline-popup-high: 1100;          /* slightly above default inline popups */
   --z-index-toast: 10000;               /* global toasts/notifications */
@@ -100,7 +102,7 @@
   --z-index-flat: 0;                    /* neutral stack */
   --z-content-2: 2;                     /* small content elevation */
   --z-content-3: 3;                     /* small content elevation */
-  --z-admin-nav: 2000;                  /* admin navigation bar */
+  --z-admin-nav: 500;                   /* admin navigation bar (below overlays) */
   --z-header-over-room-modal: 3000;     /* keep header above room modal overlay when needed */
 }
 

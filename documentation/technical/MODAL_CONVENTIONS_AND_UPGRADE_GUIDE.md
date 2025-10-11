@@ -100,7 +100,7 @@ Also available globally via `window.WFModalUtils.*` for use without imports in l
   - `src/js/payment-modal.js`
   - `src/js/receipt-modal.js`
 - Item Modals
-  - `src/js/global-item-modal.js`
+  - `src/js/detailed-item-modal.js`
   - `api/render_detailed_modal.php` (bootstrapped to shared config)
   - `components/detailed_item_modal.php` (markup already Vite-friendly)
 - AI Modal

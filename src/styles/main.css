@@ -9,19 +9,28 @@
 /* Main site styles - this contains all the site styles */
 @import url('./site-base.css');
 
-/* Legacy modal styles - include the comprehensive modal system */
-@import url('../../css/global-modals.css');
+/* Modal styles - migrated into Vite-managed components */
+@import url('./components/global-modals.css');
 
 /* Room main (consolidated) */
 @import url('./components/room-main.css');
 /* Room page layout helpers (background scaling, overlay positioning) */
 @import url('./room-page.css');
+/* Room iframe/background classes (migrated from legacy /css/room-iframe.css) */
+@import url('./components/room-iframe.css');
+
+/* Admin tools shared styles (used by sections/tools/*.php) */
+@import url('./components/admin-tools.css');
 
 /* Comprehensive quantity button fix to eliminate horizontal scrollbar */
 @import url('./components/qty-button.css');
 
+/* POS component styles */
+@import url('./components/pos.css');
+
 /* Additional styles previously imported directly in js/app.js */
 @import url('./components/components-base.css');
+@import url('./components/landing.css');
 @import url('./components/aux-styles.css');
 @import url('./components/admin-nav.css');
 @import url('./admin-help-bubble.css');
@@ -634,16 +643,19 @@ body[data-page='contact'] .content { color: #fff !important; }
   --shop-nav-gap: 12px;
   /* Ensure fixed nav spans the full viewport width */
   position: fixed;
+  /* Stable position: just under header with a small gap */
   top: calc(var(--wf-header-height, var(--header-height, 80px)) + var(--shop-nav-gap, 12px));
   left: 0;
   right: 0;
   padding: 0; /* no extra vertical padding so content aligns tightly */
-  height: calc(var(--shop-nav-height, 36px) + var(--shop-nav-gap, 12px)); /* include bottom gap */
+  /* Let container fit actual bar height; still reserve minimum expected size */
+  min-height: calc(var(--shop-nav-height, 36px) + var(--shop-nav-gap, 12px));
   display: flex;
   align-items: center; /* vertically center buttons within the fixed height */
   margin: 0;
   width: auto;
-  z-index: var(--z-navigation, 120);
+  /* Ensure filters render above product cards and other content using dedicated token */
+  z-index: var(--z-shop-filters, 2600) !important;
   /* Request: make this element transparent */
   background: transparent !important;
   background-image: none !important;
@@ -656,6 +668,12 @@ body[data-page='contact'] .content { color: #fff !important; }
   content: none !important;
 }
 
+/* Prevent outer page scroll on shop; only internal content area should scroll */
+body[data-page='shop'] { overflow: hidden; }
+
+/* Shop page: additional top offset tuned so total ≈ 80px */
+body[data-page='shop'] { --shop-extra-offset: -48px; }
+
 /* Make the shop page span full width with no side padding so left edge hugs viewport */
 body[data-page='shop'] .page-content#shopPage {
   padding-left: 0 !important;
@@ -664,9 +682,16 @@ body[data-page='shop'] .page-content#shopPage {
   margin-right: 0 !important;
   max-width: none !important;
   width: 100% !important;
-  /* Neutralize global .page-content top margin/padding for shop layout */
+  /* Place content below measured chrome (header/admin) + nav height + nav gap */
   margin-top: 0 !important;
-  padding-top: 0 !important;
+  padding-top: calc(
+    var(--shop-chrome-height, (
+      var(--wf-header-height, var(--header-height, 80px))
+      + var(--wf-admin-tabs-height, 0px)
+    ))
+    + var(--shop-nav-height, 36px)
+    + var(--shop-nav-gap, 12px)
+  ) !important;
 }
 
 /* Also target the ID directly to defeat media query rules like #shopPage { padding: 0 15px } */
@@ -678,9 +703,8 @@ body[data-page='shop'] #shopPage {
   /* Use full container width (avoid 100vw to prevent horizontal overflow) */
   width: 100% !important;
   max-width: none !important;
-  /* Override global .page-content margin/padding so no extra 90px gap leaks in */
+  /* Override global .page-content margin so no extra gap leaks in */
   margin-top: 0 !important;
-  padding-top: 0 !important;
 }
 
 /* Three-column grid to center the middle filter row */
@@ -773,10 +797,14 @@ body[data-page='shop'] #shopPage .content-wrapper {
 /* Scrollable content area (internal scrollbar while nav stays fixed) */
 #shopPage .shop-content-area {
   margin-top: 0;
-  /* Below-nav padding equals nav height + the same gap used above nav */
-  padding-top: calc(var(--shop-nav-height, 36px) + var(--shop-nav-gap, 12px));
+  /* Section already reserves space for header/admin/nav; avoid double-counting here */
+  padding-top: 0;
   /* Viewport fit: subtract only the fixed header; nav is fixed and accounted via padding-top */
-  height: calc(100vh - var(--wf-header-height, var(--header-height, 80px)));
+  height: calc(
+    100vh
+    - (var(--wf-header-height, var(--header-height, 80px))
+    + var(--wf-admin-tabs-height, 0px))
+  );
   min-height: 0; /* defeat any global min-height */
   overflow-y: auto; /* vertical scroll within product list area */
   width: 100%;

@@ -1,5 +1,9 @@
 import { ApiClient } from '../core/api-client.js';
 (function(){
+  try {
+    if (window.__AIM_LOADED === '1') { console.info('[AIM] Already loaded, skipping duplicate init'); return; }
+    window.__AIM_LOADED = '1';
+  } catch(_) {}
   const byId = (id) => document.getElementById(id);
   const qs = (sel) => document.querySelector(sel);
   const qsa = (sel) => document.querySelectorAll(sel);
@@ -31,12 +35,21 @@ import { ApiClient } from '../core/api-client.js';
     } catch (e) {
       console.error(`[AreaItem] API failed for ${url}:`, e);
       setMsg(`Network error fetching data from ${url}.`, 'error');
-      return null;
+      throw e; // escalate so callers can handle uniformly
     }
   }
 
   // --- Render Functions ---
   function renderMappings(){
+    const classicContainer = byId('aimMappingsList');
+    if (classicContainer) {
+      const explicitHtml = renderExplicitTable(state.lastExplicit || []);
+      const derivedHtml = renderDerivedTable(state.lastDerived || []);
+      const header = state.lastDerivedCategory ? `<div class="mb-2 text-sm text-gray-600">Derived category: <strong>${state.lastDerivedCategory}</strong></div>` : '';
+      classicContainer.innerHTML = `${header}${explicitHtml}${derivedHtml}`;
+      return;
+    }
+
     const container = byId('aimMappingsContainer');
     if (!container) return;
 
@@ -103,20 +116,37 @@ import { ApiClient } from '../core/api-client.js';
 
   // --- Data Loading ---
   async function loadMappings(){
-    const room = byId('aimRoomSelect').value;
-    const container = byId('aimMappingsContainer');
-    if(!room) { container.innerHTML = '<div class="p-3 text-gray-500">Select a room to view mappings.</div>'; container.classList.remove('hidden'); return; }
-    container.innerHTML = '<div class="p-3 text-gray-500">Loading...</div>';
-    container.classList.remove('hidden');
+    const roomSelEl = byId('aimRoomSelect');
+    const room = roomSelEl ? roomSelEl.value : '';
+    const classic = byId('aimMappingsList');
+    const tabbed = byId('aimMappingsContainer');
+    const target = classic || tabbed;
+    if (!target) return;
+    if(!room) {
+      target.innerHTML = '<div class="p-3 text-gray-500">Select a room to view mappings.</div>';
+      if (tabbed) tabbed.classList.remove('hidden');
+      return;
+    }
+    target.innerHTML = '<div class="p-3 text-gray-500">Loading...</div>';
+    if (tabbed) tabbed.classList.remove('hidden');
 
-    const [exp, live] = await Promise.all([
-      fetchJSON(`/api/area_mappings.php?action=get_mappings&room=${encodeURIComponent(room)}`),
-      fetchJSON(`/api/area_mappings.php?action=get_live_view&room=${encodeURIComponent(room)}`)
-    ]);
+    try {
+      const [exp, live] = await Promise.all([
+        fetchJSON(`/api/area_mappings.php?action=get_mappings&room=${encodeURIComponent(room)}`),
+        fetchJSON(`/api/area_mappings.php?action=get_live_view&room=${encodeURIComponent(room)}`)
+      ]);
 
-    state.lastExplicit = (exp && exp.success) ? exp.mappings : [];
-    state.lastDerived = (live && live.success) ? live.mappings : [];
-    state.lastDerivedCategory = (live && live.success) ? live.category : '';
+      state.lastExplicit = (exp && exp.success) ? exp.mappings : [];
+      state.lastDerived = (live && live.success) ? live.mappings : [];
+      state.lastDerivedCategory = (live && live.success) ? live.category : '';
+      if ((!exp || exp.success === false) || (!live || live.success === false)) {
+        setMsg('Loaded with limited data. Some endpoints returned no data.', 'error');
+      }
+    } catch (err) {
+      console.error('[AIM] loadMappings failed', err);
+      setMsg('Failed to load mappings. See console for details.', 'error');
+      return;
+    }
 
     renderMappings();
   }
@@ -222,10 +252,16 @@ import { ApiClient } from '../core/api-client.js';
 
   async function addMapping(prefill = {}) {
     const room = byId('aimRoomSelect').value;
-    const area = prefill.area_selector || byId('aimNewArea').value.trim();
-    const type = prefill.mapping_type || byId('aimNewType').value;
-    const target = prefill.target || byId('aimNewTarget').value.trim();
-    const order = byId('aimNewOrder') ? byId('aimNewOrder').value : 0;
+    // Support both tabbed (new*) and classic (aimAreaSelector/aimMappingType/aimTargetId) inputs
+    const areaInput = byId('aimNewArea') || byId('aimAreaSelector');
+    const typeInput = byId('aimNewType') || byId('aimMappingType');
+    const targetInput = byId('aimNewTarget') || byId('aimTargetId');
+    const orderInput = byId('aimNewOrder');
+
+    const area = prefill.area_selector || (areaInput ? areaInput.value.trim() : '');
+    const type = prefill.mapping_type || (typeInput ? typeInput.value : 'item');
+    const target = prefill.target || (targetInput ? String(targetInput.value).trim() : '');
+    const order = orderInput ? orderInput.value : 0;
 
     if (!room || !area || !target) {
       setMsg('Room, Area, and Target are required to add a mapping.', 'error');
@@ -239,8 +275,8 @@ import { ApiClient } from '../core/api-client.js';
     if (result && result.success) {
       setMsg('Mapping added successfully.', 'ok');
       await loadMappings();
-      if (byId('aimNewArea')) byId('aimNewArea').value = '';
-      if (byId('aimNewTarget')) byId('aimNewTarget').value = '';
+      if (areaInput) areaInput.value = '';
+      if (targetInput) targetInput.value = '';
     } else {
       setMsg(result ? result.message : 'Failed to add mapping.', 'error');
     }
@@ -302,11 +338,34 @@ import { ApiClient } from '../core/api-client.js';
   }
 
   function run(){
+    console.info('[AIM] Module initialized');
     document.addEventListener('click', (e) => {
       handleTabClick(e);
       handleAction(e);
+      // Classic layout add button
+      const addBtn = e.target.closest('#aimAddBtn');
+      if (addBtn) {
+        e.preventDefault();
+        addMapping();
+      }
     });
-    byId('aimRoomSelect').addEventListener('change', loadMappings);
+    const roomSel = byId('aimRoomSelect');
+    if (roomSel) {
+      roomSel.addEventListener('change', () => {
+        setMsg('Loading room data...', 'ok');
+        loadMappings();
+      });
+      // Auto-load if a value is present (e.g., preselected by server)
+      if (roomSel.value) {
+        loadMappings();
+      }
+    }
+    // Delegate change as a fallback in case direct binding misses
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.id === 'aimRoomSelect') {
+        loadMappings();
+      }
+    });
     document.addEventListener('input', (e) => {
         if (e.target.id === 'unrepItemSearch' || e.target.id === 'unrepCategorySearch') {
             handleSearch(e);

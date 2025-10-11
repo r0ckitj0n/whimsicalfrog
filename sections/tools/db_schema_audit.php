@@ -1,4 +1,6 @@
-  const diffA = $('diffA');
+  
+ <!--
+ const diffA = $('diffA');
   const diffB = $('diffB');
   const btnRunDiff = $('btnRunDiff');
   const diffResults = $('diffResults');
@@ -14,13 +16,13 @@
       const toRow = (arr, map)=> arr.map(map).map(li=>`<li class="mono">${li}</li>`).join('');
       el.innerHTML = `
         <div>Tables: <strong>${s.tables||0}</strong> · Columns: <strong>${s.columns||0}</strong> · Candidate drops: <strong>${s.candidates||0}</strong></div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top:8px;">
+        <div class="adm-grid adm-grid--2 mt-2">
           <div>
-            <div class="muted" style="margin-bottom:4px;">Top candidate columns</div>
+            <div class="muted mb-1">Top candidate columns</div>
             <ol>${toRow(topCols, c=>`${escape(c.table)}.${escape(c.column)} (refs:${c.ref_files||0})`) || '<li class="muted">None</li>'}</ol>
           </div>
           <div>
-            <div class="muted" style="margin-bottom:4px;">Top candidate tables</div>
+            <div class="muted mb-1">Top candidate tables</div>
             <ol>${toRow(topTables, t=>`${escape(t.table)} (rows:${t.row_estimate||0}, refs:${t.ref_files||0})`) || '<li class="muted">None</li>'}</ol>
           </div>
         </div>`;
@@ -195,11 +197,7 @@
   // Persist and react to admin token
   try { const saved = localStorage.getItem('wf_admin_token'); if (saved) { adminToken = saved; if (adminTokenInput) adminTokenInput.value = saved; } } catch(_){ }
   if (adminTokenInput) adminTokenInput.addEventListener('input', ()=>{ adminToken = adminTokenInput.value.trim(); try { localStorage.setItem('wf_admin_token', adminToken); } catch(_){ } });
-<?php
-// DB Schema Audit Tool (modal-friendly)
-// Provides a UI to run a dry run scan of DB columns used in code, generate SQL to drop unused columns,
-// and optionally execute drops in local dev only.
-?>
+-->
 <!DOCTYPE html>
 <html>
 <head>
@@ -227,15 +225,30 @@
   <div class="card">
     <h2>DB Schema Audit</h2>
     <p class="muted">Scans current database schema and cross-references this repository to find columns not referenced by the code. Always review suggestions carefully.</p>
-    <div class="row" style="margin-top:8px;">
+    <div class="muted mt-1">
+      <strong>How to use</strong>
+      <ol class="mt-1 ml-3">
+        <li>Configure scan options (excludes, file extensions).</li>
+        <li>Click <em>Run Dry Run Scan</em> to analyze usage.</li>
+        <li>Review <em>Columns</em> and <em>Unused Tables</em>. Use filters and Ignore to hide false positives.</li>
+        <li>Export CSV or <em>Save Report</em> for auditing; optionally <em>Download SQL</em>.</li>
+        <li>Only on localhost, confirm and <em>Execute Drops</em> when you’re certain.</li>
+      </ol>
+    </div>
+    <div class="muted mt-2">
+      <strong>Legend</strong>: 
+      <span class="pill green">candidate</span> = safe to drop (heuristic)
+      · <span class="pill red">no</span> = not safe (has keys, FKs, refs, or reserved)
+    </div>
+    <div class="row mt-2">
       <div>
         <label class="muted">Excluded directories (one per line)</label>
-        <textarea id="excludes" class="mono" style="width:100%; height:84px; padding:8px; border:1px solid #d1d5db; border-radius:6px;" placeholder="backups\ndist\nnode_modules"></textarea>
+        <textarea id="excludes" class="mono adm-textarea w-full" placeholder="backups\ndist\nnode_modules"></textarea>
       </div>
 
   <div class="card">
     <h3>Saved Reports</h3>
-    <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
+    <div class="flex-row mt-2 mb-2">
       <button id="btnRefreshReports" class="btn secondary">Refresh</button>
       <span class="muted">List of saved reports in <code>reports/db_schema_audit/</code></span>
     </div>
@@ -249,12 +262,12 @@
 
   <div class="card">
     <h3>Inline Full Report</h3>
-    <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
+    <div class="flex-row mt-2 mb-2">
       <button id="btnToggleInline" class="btn secondary">Show Inline</button>
       <span class="muted">Displays currently loaded or latest scan in read-only tables</span>
     </div>
-    <div id="inlineReportWrap" style="display:none;">
-      <div style="display:grid; grid-template-columns: 1fr; gap: 12px;">
+    <div id="inlineReportWrap" class="is-hidden">
+      <div class="adm-grid adm-grid--1">
         <div>
           <h4>Columns (read-only)</h4>
           <table>
@@ -276,17 +289,17 @@
   <div class="card">
     <h3>Reserved Lists (Config)</h3>
     <div class="muted">Items listed here will never be suggested as candidates. Columns may be specified as <code>table.column</code> or just the column name.</div>
-    <div class="row" style="margin-top:8px;">
+    <div class="row mt-2">
       <div>
         <label class="muted">Reserved Tables (one per line)</label>
-        <textarea id="reservedTables" class="mono" style="width:100%; height:120px; padding:8px; border:1px solid #d1d5db; border-radius:6px;"></textarea>
+        <textarea id="reservedTables" class="mono adm-textarea adm-textarea--lg w-full"></textarea>
       </div>
       <div>
         <label class="muted">Reserved Columns (one per line or comma-separated)</label>
-        <textarea id="reservedColumns" class="mono" style="width:100%; height:120px; padding:8px; border:1px solid #d1d5db; border-radius:6px;"></textarea>
+        <textarea id="reservedColumns" class="mono adm-textarea adm-textarea--lg w-full"></textarea>
       </div>
     </div>
-    <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+    <div class="flex-row mt-2">
       <button id="btnLoadConfig" class="btn secondary">Load Config</button>
       <button id="btnSaveConfig" class="btn secondary">Save Config</button>
       <button id="btnPresetStrict" class="btn secondary">Preset: Strict</button>
@@ -297,28 +310,29 @@
 
   <div class="card">
     <h3>Diff Two Reports</h3>
-    <div style="display:flex; gap:8px; align-items:center; margin:8px 0; flex-wrap:wrap;">
-      <select id="diffA" style="padding:6px 8px; border:1px solid #d1d5db; border-radius:6px;"></select>
+    <div class="flex-row mt-2 mb-2 flex-wrap">
+      <select id="diffA" class="adm-select"></select>
       <span class="muted">vs</span>
-      <select id="diffB" style="padding:6px 8px; border:1px solid #d1d5db; border-radius:6px;"></select>
+      <select id="diffB" class="adm-select"></select>
       <button id="btnRunDiff" class="btn">Run Diff</button>
     </div>
     <div id="diffResults" class="muted">No diff yet.</div>
   </div>
       <div>
         <label class="muted">Extensions to scan (comma-separated)</label>
-        <div class="muted" id="scanConfigNote" style="margin-top:6px;"></div>
+        <div class="muted mt-1" id="scanConfigNote"></div>
+        <input id="exts" class="mono adm-input mt-1 w-full" placeholder="php, js, mjs, ts, css, html" />
       </div>
     </div>
-    <div style="display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap;">
-      <button id="btnScan" class="btn">Run Dry Run Scan</button>
-      <button id="btnSaveReport" class="btn secondary" disabled>Save Report</button>
-      <button id="btnCopySQL" class="btn secondary" disabled>Copy SQL</button>
-      <button id="btnDownloadSQL" class="btn secondary" disabled>Download SQL</button>
-      <button id="btnExecute" class="btn danger" disabled>Execute Drops (Local Only)</button>
-      <button id="btnLoadIgnores" class="btn secondary">Load Ignores</button>
-      <button id="btnSaveIgnores" class="btn secondary">Save Ignores</button>
-      <span id="authBadge" class="muted" style="margin-left:auto;">Auth: checking…</span>
+    <div class="flex-row mt-2 flex-wrap">
+      <button id="btnScan" class="btn" title="Analyze DB schema vs code references using the options above">Run Dry Run Scan</button>
+      <button id="btnSaveReport" class="btn secondary" disabled title="Save the current scan results to reports/db_schema_audit/">Save Report</button>
+      <button id="btnCopySQL" class="btn secondary" disabled title="Copy the generated DROP statements to clipboard">Copy SQL</button>
+      <button id="btnDownloadSQL" class="btn secondary" disabled title="Download the generated DROP statements as a .sql file">Download SQL</button>
+      <button id="btnExecute" class="btn danger" disabled title="Only on localhost. Requires confirming DROP and backup acknowledgement.">Execute Drops (Local Only)</button>
+      <button id="btnLoadIgnores" class="btn secondary" title="Merge server-side ignore lists into your local ignores">Load Ignores</button>
+      <button id="btnSaveIgnores" class="btn secondary" title="Save your local ignores (columns/tables) to the server">Save Ignores</button>
+      <span id="authBadge" class="muted ml-auto">Auth: checking…</span>
       <span id="status" class="muted"></span>
     </div>
   </div>
@@ -332,15 +346,15 @@
   <div class="card">
     <h3>Columns</h3>
     <div class="muted">Select columns you wish to include in the drop plan. Non-candidates are disabled.</div>
-    <div style="display:flex; gap:8px; align-items:center; margin:8px 0;">
-      <input id="filterTable" placeholder="Filter by table (contains)" style="flex:1; padding:6px 8px; border:1px solid #d1d5db; border-radius:6px;" />
+    <div class="flex-row mb-2">
+      <input id="filterTable" placeholder="Filter by table (contains)" class="adm-input flex-1" />
       <label class="muted"><input type="checkbox" id="onlyCandidates" /> Only candidates</label>
     </div>
-    <div style="overflow:auto; max-height: 55vh; border:1px solid #e5e7eb; border-radius:8px; margin-top:8px;">
+    <div class="scroll-area mt-2">
       <table>
         <thead>
           <tr>
-            <th style="width:22px;"><input type="checkbox" id="chkAll" /></th>
+            <th class="w-22"><input type="checkbox" id="chkAll" /></th>
             <th>Table</th>
             <th>Column</th>
             <th>Type</th>
@@ -361,11 +375,11 @@
   <div class="card">
     <h3>Unused Tables (heuristic)</h3>
     <div class="muted">Tables with no code references and no FK links are suggested as candidates. Review cautiously.</div>
-    <div style="overflow:auto; max-height: 35vh; border:1px solid #e5e7eb; border-radius:8px; margin-top:8px;">
+    <div class="scroll-area scroll-area--sm mt-2">
       <table>
         <thead>
           <tr>
-            <th style="width:22px;"><input type="checkbox" id="chkAllTables" /></th>
+            <th class="w-22"><input type="checkbox" id="chkAllTables" /></th>
             <th>Table</th>
             <th>Rows</th>
             <th>Size</th>
@@ -391,21 +405,21 @@
     </details>
     <details>
       <summary>Warnings</summary>
-      <ul id="sqlWarnings" class="muted" style="margin:6px 0 0 12px; list-style:disc;"></ul>
+      <ul id="sqlWarnings" class="muted list-disc ml-3 mt-1"></ul>
     </details>
   </div>
 
   <div class="card">
     <h3>Execution</h3>
     <div class="muted">Execution is permitted only on localhost and requires explicit confirmation.</div>
-    <div class="row" style="margin-top:8px;">
+    <div class="row mt-2">
       <div>
         <label class="muted">Type <strong>DROP</strong> to confirm</label>
-        <input id="confirmText" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px;" placeholder="DROP" />
+        <input id="confirmText" class="adm-input w-full" placeholder="DROP" />
       </div>
       <div>
         <label class="muted"><input type="checkbox" id="backupAck" /> I confirm I have a recent database backup</label>
-        <div id="warnAckWrap" style="margin-top:8px; display:none;">
+        <div id="warnAckWrap" class="mt-2 is-hidden">
           <label class="muted"><input type="checkbox" id="warnAck" /> I acknowledge the warnings above</label>
         </div>
       </div>
@@ -415,6 +429,11 @@
 <script>
 (function(){
   const $ = (id)=>document.getElementById(id);
+  // Elements used across features
+  const diffA = $('diffA');
+  const diffB = $('diffB');
+  const btnRunDiff = $('btnRunDiff');
+  const diffResults = $('diffResults');
   const status = $('status');
   const rows = $('rows');
   const summary = $('summary');
@@ -441,6 +460,7 @@
   const backupAck = $('backupAck');
   const warnAck = $('warnAck');
   const warnAckWrap = $('warnAckWrap');
+  const btnBackup = $('btnBackup');
   const toggleGroup = $('toggleGroup');
   const toggleHideIgnored = $('toggleHideIgnored');
   const btnSelectAllCandidates = $('btnSelectAllCandidates');
@@ -468,6 +488,64 @@
   let adminToken = '';
   let hasWarnings = false;
   let currentSQL = '';
+
+  // Utilities migrated from stray block
+  function escape(s){ return String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+  function shortPath(p){ if(!p) return ''; try{ const parts = p.split('/'); return escape(parts.slice(-3).join('/')); }catch(_){ return escape(p); } }
+  function formatSize(bytes){ try{ const b = parseInt(bytes||0,10); if(!b||b<=0) return ''; const units=['B','KB','MB','GB','TB']; let i=0; let v=b; while(v>=1024&&i<units.length-1){ v/=1024; i++; } return v.toFixed(i?1:0)+' '+units[i]; }catch(_){ return ''; } }
+
+  function renderReportPreviewData(data){
+    try {
+      const s = data && data.summary || {};
+      const cols = data && Array.isArray(data.columns) ? data.columns : [];
+      const tables = data && Array.isArray(data.unused_tables) ? data.unused_tables : [];
+      const topCols = cols.filter(c=>c.safe_candidate).slice(0, 10);
+      const topTables = tables.filter(t=>t.safe_candidate).slice(0, 10);
+      const el = document.getElementById('reportPreview');
+      if (!el) return;
+      const toRow = (arr, map)=> arr.map(map).map(li=>`<li class="mono">${li}</li>`).join('');
+      el.innerHTML = `
+        <div>Tables: <strong>${s.tables||0}</strong> · Columns: <strong>${s.columns||0}</strong> · Candidate drops: <strong>${s.candidates||0}</strong></div>
+        <div class="adm-grid adm-grid--2 mt-2">
+          <div>
+            <div class="muted mb-1">Top candidate columns</div>
+            <ol>${toRow(topCols, c=>`${escape(c.table)}.${escape(c.column)} (refs:${c.ref_files||0})`) || '<li class="muted">None</li>'}</ol>
+          </div>
+          <div>
+            <div class="muted mb-1">Top candidate tables</div>
+            <ol>${toRow(topTables, t=>`${escape(t.table)} (rows:${t.row_estimate||0}, refs:${t.ref_files||0})`) || '<li class="muted">None</li>'}</ol>
+          </div>
+        </div>`;
+    } catch(_) { /* noop */ }
+  }
+
+  function renderInline(data){
+    try {
+      const cols = (data && data.columns) || [];
+      const tabs = (data && data.unused_tables) || [];
+      inlineCols.innerHTML = '';
+      inlineTabs.innerHTML = '';
+      const fragC = document.createDocumentFragment();
+      cols.forEach(c=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="mono">${escape(c.table)}</td><td class="mono">${escape(c.column)}</td><td>${escape(c.data_type||'')}</td><td>${c.ref_files||0}</td><td>${c.safe_candidate?'<span class="pill green">Yes</span>':'<span class="pill red">No</span>'}</td>`;
+        fragC.appendChild(tr);
+      });
+      inlineCols.appendChild(fragC);
+      const fragT = document.createDocumentFragment();
+      tabs.forEach(t=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td class="mono">${escape(t.table)}</td><td>${t.row_estimate||''}</td><td>${formatSize(t.size_bytes)}</td><td>${t.ref_files||0}</td><td>${t.fk_inbound||0}</td><td>${t.fk_outbound||0}</td><td>${t.safe_candidate?'<span class=\"pill green\">Yes</span>':'<span class=\"pill red\">No</span>'}</td>`;
+        fragT.appendChild(tr);
+      });
+      inlineTabs.appendChild(fragT);
+    } catch(_){ /* noop */ }
+  }
+
+  function populateDiffSelects(list){
+    function setOpts(sel){ sel.innerHTML=''; list.forEach(it=>{ const opt=document.createElement('option'); opt.value=it.path; opt.textContent=it.timestamp; sel.appendChild(opt); }); }
+    if (Array.isArray(list) && list.length){ if (diffA) setOpts(diffA); if (diffB) setOpts(diffB); }
+  }
 
   const LS_IGNORE_COLS = 'wf_db_audit_ignore_columns';
   const LS_IGNORE_TABLES = 'wf_db_audit_ignore_tables';
@@ -532,7 +610,7 @@
       filtered.forEach((c, idx) => { (byTable[c.table] = byTable[c.table] || []).push({ c, idx }); });
       Object.keys(byTable).sort().forEach(table => {
         const header = document.createElement('tr');
-        header.innerHTML = `<td></td><td colspan="10" class="mono" style="background:#f9fafb;font-weight:600;">${escape(table)}</td>`;
+        header.innerHTML = `<td></td><td colspan="10" class="mono table-group-header">${escape(table)}</td>`;
         rows.appendChild(header);
         byTable[table].forEach(({c, idx}) => addColumnRow(c, idx));
       });
@@ -563,24 +641,7 @@
       `;
       rows.appendChild(tr);
   }
-      const disable = !c.safe_candidate;
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input type="checkbox" data-idx="${idx}" ${disable?'disabled':''}></td>
-        <td class="mono">${escape(c.table)}</td>
-        <td class="mono">${escape(c.column)}</td>
-        <td>${escape(c.data_type||'')}</td>
-        <td>${escape(c.key||'')}</td>
-        <td>${c.index_count||0}</td>
-        <td>${c.fk_count||0}</td>
-        <td>${c.ref_files||0}</td>
-        <td class="mono">${(c.examples||[]).map(e=>shortPath(e)).join('<br>')}</td>
-        <td>${c.safe_candidate?'<span class="pill green">candidate</span>':'<span class="pill red" title="'+escape((c.not_safe_reasons||[]).join(', '))+'">no</span>'}</td>
-      `;
-      rows.appendChild(tr);
-    });
-    updateSql();
-  }
+  
 
   function renderTables(tables){
     const tbody = document.getElementById('rowsTables');
@@ -609,9 +670,12 @@
     });
   }
 
-  function escape(s){ return String(s||'').replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
-  function shortPath(p){ if(!p) return ''; try{ const parts = p.split('/'); return escape(parts.slice(-3).join('/')); }catch(_){ return escape(p); } }
-  function formatSize(bytes){ try{ const b = parseInt(bytes||0,10); if(!b||b<=0) return ''; const units=['B','KB','MB','GB','TB']; let i=0; let v=b; while(v>=1024&&i<units.length-1){ v/=1024; i++; } return v.toFixed(i?1:0)+' '+units[i]; }catch(_){ return ''; } }
+  // getAuthPayload used by multiple requests
+  function getAuthPayload(extra){
+    const base = extra && typeof extra === 'object' ? extra : {};
+    if (adminToken) base.admin_token = adminToken;
+    return base;
+  }
 
   function selected(){
     const out = [];
@@ -717,7 +781,7 @@
   });
 
   // Backup now
-  btnBackup.addEventListener('click', async ()=>{
+  if (btnBackup) btnBackup.addEventListener('click', async ()=>{
     setStatus('Creating backup…');
     try {
       const r = await fetch('/api/backup_website.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ download_to_computer: false, keep_on_server: true }) });
@@ -796,6 +860,89 @@
   document.getElementById('onlyCandidates').addEventListener('change', ()=>renderTable(lastColumns));
   toggleGroup.addEventListener('change', ()=>{ grouped = !!toggleGroup.checked; renderTable(lastColumns); });
   toggleHideIgnored.addEventListener('change', ()=>{ renderTable(lastColumns); renderTables(lastTables); });
+
+  // Reports browser and auth (migrated from stray block)
+  async function refreshReports(){
+    try {
+      const r = await fetch('/api/db_schema_audit.php?action=list_reports', { credentials:'include' });
+      const j = await r.json();
+      reportsList.innerHTML = '';
+      if (!(j && j.success && Array.isArray(j.data))) { reportsList.textContent = 'No reports'; return; }
+      const frag = document.createDocumentFragment();
+      j.data.forEach(it=>{
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        const link = document.createElement('a'); link.href = it.path; link.textContent = it.timestamp; link.target = '_blank';
+        const meta = document.createElement('span'); meta.className = 'muted'; meta.textContent = ` ${it.bytes||0} bytes, ${it.modified||''}`;
+        const left = document.createElement('span'); left.appendChild(link); left.appendChild(meta);
+        const actions = document.createElement('span'); actions.style.marginLeft = 'auto'; actions.style.display = 'flex'; actions.style.gap = '6px';
+        const btnLoad = document.createElement('button'); btnLoad.className = 'btn secondary'; btnLoad.textContent = 'Load'; btnLoad.addEventListener('click', ()=>loadReport(it.path));
+        const btnPreview = document.createElement('a'); btnPreview.className = 'btn secondary'; btnPreview.textContent = 'Preview'; btnPreview.href = it.path; btnPreview.target = '_blank';
+        actions.appendChild(btnLoad); actions.appendChild(btnPreview);
+        div.appendChild(left);
+        div.appendChild(actions);
+        frag.appendChild(div);
+      });
+      reportsList.appendChild(frag);
+      populateDiffSelects(j.data);
+    } catch(_){ reportsList.textContent = 'Error loading reports'; }
+  }
+  if (btnRefreshReports) btnRefreshReports.addEventListener('click', refreshReports);
+  refreshReports();
+
+  async function loadReport(path){
+    try {
+      setStatus('Loading report…');
+      const r = await fetch(path, { credentials:'include' });
+      const j = await r.json();
+      const d = j || {};
+      // Support both flat payloads and {data:{...}}
+      const data = d.data || d;
+      lastColumns = data.columns || [];
+      lastTables = data.unused_tables || [];
+      lastSummary = data.summary || null;
+      lastScanConfig = data.scan_config || null;
+      renderTable(lastColumns);
+      renderTables(lastTables);
+      summary.innerHTML = `Tables: <strong>${(lastSummary&&lastSummary.tables)||0}</strong> · Columns: <strong>${(lastSummary&&lastSummary.columns)||0}</strong> · Candidate drops: <strong>${(lastSummary&&lastSummary.candidates)||0}</strong>`;
+      renderReportPreviewData(data);
+      // Apply saved selections if present
+      applySelectedColumns(data.selected_columns||[]);
+      applySelectedTables(data.selected_tables||[]);
+      // Apply saved UI state if present
+      try {
+        const u = data.ui_state||{};
+        const ft = document.getElementById('filterTable'); if (ft) ft.value = u.filter_table||'';
+        const oc = document.getElementById('onlyCandidates'); if (oc) oc.checked = !!u.only_candidates;
+        const otc = document.getElementById('onlyTableCandidates'); if (otc) otc.checked = !!u.only_table_candidates;
+        toggleHideIgnored.checked = !!u.hide_ignored;
+        toggleGroup.checked = !!u.grouped; grouped = !!u.grouped;
+      } catch(_){ }
+      await updateSql();
+      // If inline is visible, render it too
+      if (inlineReportWrap && inlineReportWrap.style.display !== 'none') renderInline(data);
+      setStatus('Report loaded');
+      btnSaveReport.disabled = !isAdmin; // leave disabled state based on auth
+    } catch(_){ setStatus('Failed to load report'); }
+  }
+
+  // Check auth status and toggle controls
+  (async function checkAuth(){
+    try {
+      const r = await fetch('/api/db_schema_audit.php?action=whoami', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(getAuthPayload({ action:'whoami' })) });
+      const j = await r.json();
+      isAdmin = !!(j && j.success && j.data && j.data.admin);
+      adminVia = (j && j.data && j.data.via) || 'unknown';
+      if (authBadge) authBadge.textContent = 'Auth: ' + (isAdmin ? ('admin (' + adminVia + ')') : 'not admin');
+      // Disable actions requiring admin if not admin
+      btnExecute.disabled = !isAdmin;
+      btnSaveReport.disabled = !isAdmin;
+    } catch(_){ if (authBadge) authBadge.textContent = 'Auth: error'; }
+  })();
+
+  // Persist and react to admin token
+  try { const saved = localStorage.getItem('wf_admin_token'); if (saved) { adminToken = saved; if (adminTokenInput) adminTokenInput.value = saved; } } catch(_){ }
+  if (adminTokenInput) adminTokenInput.addEventListener('input', ()=>{ adminToken = adminTokenInput.value.trim(); try { localStorage.setItem('wf_admin_token', adminToken); } catch(_){ } });
 
   // Export CSV
   btnExportCsv.addEventListener('click', ()=>{

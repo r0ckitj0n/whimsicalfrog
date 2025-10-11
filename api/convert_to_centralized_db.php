@@ -7,27 +7,12 @@
  */
 
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Security check
-if (!isset($_SESSION)) {
-
-}
-
-$isAdmin = false;
-if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
-    require_once __DIR__ . '/../includes/auth.php';
-    $isAdmin = isAdminWithToken();
-}
-
-// Allow admin token for CLI/API access
-if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-    $isAdmin = true;
-}
-
-if (!$isAdmin && PHP_SAPI !== 'cli') {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+// Security check: require admin for web requests; allow CLI
+if (PHP_SAPI !== 'cli') {
+    AuthHelper::requireAdmin();
 }
 
 // Get project root directory

@@ -1,9 +1,15 @@
 // Vite entry: admin-settings.js
+// Ensure lightweight handlers and modal factories are available immediately
+import '../modules/admin-settings-lightweight.js';
 try {
   await import('../js/admin-settings.js');
 } catch (e) {
   console.warn('[Vite] admin-settings.js module not found under src/js. Entry stub loaded.');
 }
+
+// Lightweight helpers are imported once above. They provide delegated click handlers for:
+// - [data-action="open-area-item-mapper"], [data-action="open-background-manager"], [data-action="open-css-catalog"], [data-action="open-room-map-editor"]
+// and lazy modal factories.
 
 // Ensure buttons inside each settings card are sorted alphabetically by label
 (function(){
@@ -58,4 +64,24 @@ try {
   } catch(_) {
     try { window.__wfSortSettingsButtons = sortSettingsCardButtons; } catch(_) {}
   }
+})();
+
+// Delegated handler: open Site Deployment modal (migrated from inline PHP script)
+(function(){
+  if (window.__wfBoundSiteDeploymentOpen) return;
+  window.__wfBoundSiteDeploymentOpen = true;
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target && ev.target.closest && ev.target.closest('#siteDeploymentBtn, [data-action="open-site-deployment"]');
+    if (!btn) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    try {
+      const modal = document.getElementById('siteDeploymentModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        // rely on CSS to enable pointer events when visible
+      }
+    } catch (_) {}
+  }, true);
 })();

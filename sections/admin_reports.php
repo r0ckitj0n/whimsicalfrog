@@ -161,11 +161,11 @@ body[data-page='admin/reports'] #admin-section-content {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="admin-card">
             <h3 class="admin-card-title">📈 Sales Performance</h3>
-            <div style="height: 300px;"><canvas id="salesChart"></canvas></div>
+            <div class="h-300"><canvas id="salesChart"></canvas></div>
         </div>
         <div class="admin-card">
             <h3 class="admin-card-title">💳 Payment Methods</h3>
-            <div style="height: 300px;"><canvas id="paymentMethodChart"></canvas></div>
+            <div class="h-300"><canvas id="paymentMethodChart"></canvas></div>
         </div>
     </div>
 

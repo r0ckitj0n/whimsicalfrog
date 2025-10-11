@@ -3,6 +3,7 @@
  * Consolidated from recovered JavaScript files for Vite compatibility
  * Combines: whimsical-frog-core.js, central-functions.js, and key utilities
  */
+import { ApiClient } from '../core/api-client.js';
 
 // Prevent duplicate loading
 if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
@@ -184,59 +185,20 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
         }
     };
 
-    // API client
+    // API client – delegate to canonical ApiClient to avoid raw fetch
     const api = {
         async request(url, options = {}) {
-            const defaultOptions = {
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                }
-            };
-
             try {
-                const response = await fetch(url, { ...defaultOptions, ...options });
-                
-                if (!response.ok) {
-                    throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-                }
-
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return await response.json();
-                }
-                
-                return await response.text();
+                return await ApiClient.request(url, options);
             } catch (error) {
                 log(`API request error: ${error.message}`, 'error');
                 throw error;
             }
         },
-
-        get(url, options = {}) {
-            return this.request(url, { ...options, method: 'GET' });
-        },
-
-        post(url, data = null, options = {}) {
-            return this.request(url, {
-                ...options,
-                method: 'POST',
-                body: data ? JSON.stringify(data) : null
-            });
-        },
-
-        put(url, data = null, options = {}) {
-            return this.request(url, {
-                ...options,
-                method: 'PUT',
-                body: data ? JSON.stringify(data) : null
-            });
-        },
-
-        delete(url, options = {}) {
-            return this.request(url, { ...options, method: 'DELETE' });
-        }
+        get(url, params = {}) { return ApiClient.get(url, params); },
+        post(url, data = {}, options = {}) { return ApiClient.post(url, data, options); },
+        put(url, data = {}, options = {}) { return ApiClient.put(url, data, options); },
+        delete(url, options = {}) { return ApiClient.delete(url, options); }
     };
 
     // Core initialization

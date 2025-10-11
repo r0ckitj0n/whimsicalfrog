@@ -4,7 +4,8 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     exit;
 }
 
-if (function_exists('isLoggedIn') && !isLoggedIn()) {
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
+if (class_exists('AuthHelper') ? !AuthHelper::isLoggedIn() : (function_exists('isLoggedIn') && !isLoggedIn())) {
     echo '<div class="text-center"><h1 class="text-2xl font-bold text-red-600">Please login</h1></div>';
     return;
 }

@@ -9,25 +9,11 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Start session for authentication
-
-
-// Authentication check
-$isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
-$isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
-
-// Admin token bypass for development
-$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
-if ($adminToken === 'whimsical_admin_2024') {
-    $isAdmin = true;
-}
-
-if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
-}
+// Require admin
+AuthHelper::requireAdmin();
 
 try {
     try {
@@ -254,6 +240,7 @@ try {
             $itemSku = $data['item_sku'] ?? '';
             $newStructure = $data['new_structure'] ?? $data['structure'] ?? [];
             $preserveStock = $data['preserve_stock'] ?? true;
+            $dryRun = !empty($data['dry_run']);
 
             if (empty($itemSku) || empty($newStructure)) {
                 throw new Exception('Item SKU and new structure are required');
@@ -356,11 +343,17 @@ try {
                 // Step 4: Update main item stock
                 Database::execute("UPDATE items SET stockLevel = ? WHERE sku = ?", [$totalStock, $itemSku]);
 
-                Database::commit();
+                if ($dryRun) {
+                    // Roll back changes if dry-run requested
+                    Database::rollBack();
+                } else {
+                    Database::commit();
+                }
 
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Item structure migrated successfully',
+                    'message' => $dryRun ? 'Dry run completed (no changes committed)' : 'Item structure migrated successfully',
+                    'dry_run' => (bool)$dryRun,
                     'new_total_stock' => $totalStock,
                     'structure_created' => count($newStructure) . ' sizes with colors'
                 ]);

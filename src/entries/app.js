@@ -1,6 +1,19 @@
 // Vite entry: app.js
 // Import global CSS so Vite serves and bundles styles in dev and prod
 import '../styles/main.css';
+// Install global delegated hover/click listeners for item icons across pages
+import '../room/event-manager.js';
+
+// Fallback CSS neutralizer in case legacy bundle overrides coordinates or pointer-events
+try {
+  const __wfFallbackStyle = document.createElement('style');
+  __wfFallbackStyle.id = 'wf-fallback-globalpopup-style';
+  __wfFallbackStyle.innerHTML = `
+    .item-popup{pointer-events:auto !important;}
+    .item-popup.positioned{left:auto !important; top:auto !important;}
+  `;
+  document.head.appendChild(__wfFallbackStyle);
+} catch (_) {}
 
 // Page router: conditionally load modules for each page
 (async () => {
@@ -13,8 +26,78 @@ import '../styles/main.css';
     try { await import('../core/ui-helpers.js'); } catch (_) {}
     // Global item popup (used by room modal hovers)
     try { await import('../ui/global-popup.js'); } catch (_) {}
+
+    // Fallback: enforce popup persistence when modern popup is not available
+    (function installPopupFallbackPersistence(){
+      const ENABLE_POPUP_FALLBACK = false; // keep code for reference, disabled by default
+      // Skip entirely when flag disabled or modern popup is present
+      if (!ENABLE_POPUP_FALLBACK || window.__WF_MODERN_POPUP) return;
+      if (window.__WF_POPUP_FALLBACK_INSTALLED) return;
+      window.__WF_POPUP_FALLBACK_INSTALLED = true;
+      const log = (...args) => { try { console.log('[ViteEntry/Fallback]', ...args); } catch(_) {} };
+
+      // Handlers are defined here so we can uninstall later if needed
+      const cancel = () => { try { window.cancelHideGlobalPopup && window.cancelHideGlobalPopup(); } catch(_) {} };
+      const schedule = () => { try { window.scheduleHideGlobalPopup && window.scheduleHideGlobalPopup(500); } catch(_) {} };
+      const delayHide = () => { try { window.scheduleHideGlobalPopup && window.scheduleHideGlobalPopup(500); } catch(_) {} };
+
+      const bindOnce = () => {
+        const popup = document.getElementById('itemPopup') || document.querySelector('.item-popup');
+        if (!popup) return false;
+        if (popup.__wfFallbackBound) return true;
+        popup.__wfFallbackBound = true;
+        popup.addEventListener('mouseenter', cancel);
+        popup.addEventListener('mouseleave', schedule);
+        // Also mark positioned in case the runtime relies on it to neutralize legacy absolute CSS
+        try { popup.classList.add('positioned'); } catch(_) {}
+        log('Popup fallback persistence bound');
+        return true;
+      };
+
+      const bindIframeBoundaries = () => {
+        document.querySelectorAll('.room-modal-overlay iframe, iframe[data-room], .room-modal-overlay [data-role="room-frame"]').forEach(ifr => {
+          if (ifr.__wfPopupBoundaryFallback) return;
+          ifr.addEventListener('mouseover', cancel);
+          ifr.addEventListener('mouseout', delayHide);
+          ifr.__wfPopupBoundaryFallback = true;
+          log('Iframe boundary fallback bound', ifr);
+        });
+      };
+
+      const uninstall = () => {
+        try {
+          const popup = document.getElementById('itemPopup') || document.querySelector('.item-popup');
+          if (popup && popup.__wfFallbackBound) {
+            popup.removeEventListener('mouseenter', cancel);
+            popup.removeEventListener('mouseleave', schedule);
+            popup.__wfFallbackBound = false;
+            log('Popup fallback persistence uninstalled');
+          }
+          document.querySelectorAll('.room-modal-overlay iframe, iframe[data-room], .room-modal-overlay [data-role="room-frame"]').forEach(ifr => {
+            if (ifr.__wfPopupBoundaryFallback) {
+              ifr.removeEventListener('mouseover', cancel);
+              ifr.removeEventListener('mouseout', delayHide);
+              ifr.__wfPopupBoundaryFallback = false;
+            }
+          });
+        } catch (_) {}
+      };
+
+      // If modern popup becomes ready later, uninstall fallback
+      try { window.addEventListener('wf:modern-popup-ready', uninstall, { once: true }); } catch(_) {}
+
+      // Try immediately, then on DOM ready, then periodically for dynamically inserted DOM
+      const tryBind = () => { const ok = bindOnce(); bindIframeBoundaries(); return ok; };
+      if (!tryBind()) {
+        document.addEventListener('DOMContentLoaded', tryBind, { once: true });
+        window.addEventListener('load', tryBind, { once: true });
+        // Poll briefly to catch late-inserted popups/iframes during modal open
+        let tries = 0; const maxTries = 40; // ~4s total
+        const t = setInterval(() => { if (tryBind() || ++tries >= maxTries) clearInterval(t); }, 100);
+      }
+    })();
     // Global item details modal (opened from popup or product icon clicks)
-    try { await import('../js/global-item-modal.js'); } catch (_) {}
+    try { await import('../js/detailed-item-modal.js'); } catch (_) {}
 
     // Ensure cart modal is available on all pages (header cart button should open a modal)
     try { await import('../js/cart-modal.js'); } catch (_) {}

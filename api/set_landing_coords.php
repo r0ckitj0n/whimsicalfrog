@@ -8,27 +8,8 @@ header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 
-function is_authorized(): bool
-{
-    if (AuthHelper::isAdmin()) {
-        return true;
-    }
-    $token = $_GET['admin_token'] ?? $_POST['admin_token'] ?? null;
-    if ($token && hash_equals(AuthHelper::ADMIN_TOKEN, (string)$token)) {
-        return true;
-    }
-    $input = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (!empty($input['admin_token']) && hash_equals(AuthHelper::ADMIN_TOKEN, (string)$input['admin_token'])) {
-        return true;
-    }
-    return false;
-}
-
-if (!is_authorized()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'forbidden']);
-    exit;
-}
+// Require admin
+AuthHelper::requireAdmin();
 
 try {
     $input = json_decode(file_get_contents('php://input'), true);

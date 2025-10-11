@@ -52,13 +52,13 @@ require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
         <input id="toZip" class="input" placeholder="30534" />
       </div>
     </div>
-    <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+    <div class="flex-row mt-10">
       <button id="btnCompute" class="btn">Compute Miles</button>
       <button id="btnUseSample" class="btn secondary">Use Sample Address</button>
       <span id="status" class="muted"></span>
     </div>
-    <div id="result" style="margin-top:10px;"></div>
-    <details style="margin-top:8px;">
+    <div id="result" class="mt-10"></div>
+    <details class="mt-2">
       <summary>Debug</summary>
       <pre id="debugOut"></pre>
     </details>

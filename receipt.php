@@ -442,7 +442,7 @@ $remitAddressFormatted = trim((string)$businessAddress);
     <!-- Company Header -->
     <div class="text-center receipt-message-center">
         <div class="brand-header-row wf-brand-font">
-            <img src="/images/logos/logo-whimsicalfrog.webp" alt="<?php echo htmlspecialchars($businessName); ?> Logo" class="header-logo" style="max-height: 3.5rem; width: auto;" 
+            <img src="/images/logos/logo-whimsicalfrog.webp" alt="<?php echo htmlspecialchars($businessName); ?> Logo" class="header-logo receipt-logo" 
                  data-fallback-src="/images/logos/logo-whimsicalfrog.png">
             <div>
                 <h1 class="text-brand-primary wf-brand-font brand-title"><?php echo htmlspecialchars($businessName); ?></h1>
@@ -475,11 +475,11 @@ $remitAddressFormatted = trim((string)$businessAddress);
     <!-- Items Table -->
     <table class="receipt-table w-full text-sm border-collapse mt-6">
         <colgroup>
-            <col style="width: 18%;">  <!-- Item ID -->
-            <col style="width: 50%;">  <!-- Item Name -->
-            <col style="width: 8%;">   <!-- Qty -->
-            <col style="width: 12%;">  <!-- Unit Price -->
-            <col style="width: 12%;">  <!-- Ext. Price -->
+            <col>  <!-- Item ID -->
+            <col>  <!-- Item Name -->
+            <col>   <!-- Qty -->
+            <col>  <!-- Unit Price -->
+            <col>  <!-- Ext. Price -->
         </colgroup>
         <thead>
             <tr class="bg-brand-light border-b-2 border-gray-300">

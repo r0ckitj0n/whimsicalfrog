@@ -4,28 +4,11 @@
 // Usage: /api/next_sku.php?cat=Tumblers&gender=Male&size=L&color=Black
 
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/../includes/functions.php';
 
-// Use centralized authentication
-// Admin authentication with token fallback for API access
-$isAdmin = false;
-
-// Check session authentication first
-require_once __DIR__ . '/../includes/auth.php';
-if (isAdminWithToken()) {
-    $isAdmin = true;
-}
-
-// Admin token fallback for API access
-if (!$isAdmin && isset($_GET['admin_token']) && $_GET['admin_token'] === 'whimsical_admin_2024') {
-    $isAdmin = true;
-}
-
-if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
-}
+// Centralized admin check
+AuthHelper::requireAdmin();
 
 try {
     // Validate required parameter

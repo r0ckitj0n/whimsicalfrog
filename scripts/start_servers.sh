@@ -33,6 +33,13 @@ chmod +x ./scripts/server_monitor.sh
 echo -e "\n${BLUE}Starting servers if needed...${NC}"
 ./scripts/server_monitor.sh start
 
+# Ensure PM2-managed Vite app is started and show status
+if command -v npx >/dev/null 2>&1; then
+  npx pm2 start pm2.config.cjs >/dev/null 2>&1 || true
+  echo -e "\n${BLUE}PM2 status for wf-vite:${NC}"
+  npx pm2 status wf-vite || true
+fi
+
 # Check if monitor daemon is already running
 MONITOR_PID=$(pgrep -f "scripts/server_monitor.sh daemon")
 
@@ -58,6 +65,7 @@ fi
 
 echo -e "\n${GREEN}=== WhimsicalFrog Website is Ready! ===${NC}"
 echo -e "${GREEN}You can now access your website at:${NC} http://localhost:8080"
+echo -e "${GREEN}Vite (HMR) is at:${NC} http://localhost:5176"
 echo -e "\n${BLUE}Active Monitoring:${NC}"
 echo -e "  • Server monitor daemon is running in the background"
 echo -e "  • Your server will automatically restart if it crashes"

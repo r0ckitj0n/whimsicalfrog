@@ -7,6 +7,7 @@
 require_once __DIR__ . '/api_bootstrap.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -17,11 +18,11 @@ function respond($arr, $code = 200)
     exit;
 }
 
-// Basic admin guard
+// Basic admin guard (prefer AuthHelper)
 $IS_ADMIN = false;
 try {
-    if (class_exists('Auth')) {
-        $IS_ADMIN = Auth::isAdmin();
+    if (class_exists('AuthHelper')) {
+        $IS_ADMIN = AuthHelper::isAdmin();
     } elseif (function_exists('isAdmin')) {
         $IS_ADMIN = isAdmin();
     }

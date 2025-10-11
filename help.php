@@ -68,34 +68,32 @@ if (isset($_GET['docs'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Help Documentation</title>
     <?php vite('js/help-documentation.js'); ?>
 </head>
-<body style="margin:0;padding:20px;font-family:system-ui;background:#fff">
+<body class="help-body">
     <div class="help-documentation-container" data-page="help-documentation">
-        <div style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;padding:24px;border-radius:8px;margin-bottom:24px">
-            <h1 style="margin:0 0 8px 0;font-size:24px">📚 Help Documentation</h1>
-            <p style="margin:0;opacity:0.9">Guide to using your e-commerce platform</p>
+        <div class="help-hero">
+            <h1 class="help-hero__title">📚 Help Documentation</h1>
+            <p class="help-hero__subtitle">Guide to using your e-commerce platform</p>
+            
+
+        <div class="help-search">
+            <input type="text" id="helpSearch" placeholder="Search documentation..." class="help-search__input">
         </div>
 
-        <div style="margin-bottom:24px">
-            <input type="text" id="helpSearch" placeholder="Search documentation..." 
-                   style="width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-size:16px;box-sizing:border-box">
-        </div>
-
-        <div style="display:grid;grid-template-columns:200px 1fr;gap:24px;min-height:600px">
-            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px">
-                <h3 style="margin:0 0 16px 0">📋 Contents</h3>
-                <nav id="docsList" style="display:flex;flex-direction:column;gap:4px"></nav>
+        <div class="help-grid">
+            <div class="help-sidebar">
+                <h3>📋 Contents</h3>
+                <nav id="docsList" class="help-sidebar__nav"></nav>
             </div>
-            <div id="helpContent" style="background:white;border:1px solid #e5e7eb;border-radius:8px;padding:24px;min-height:500px;overflow-y:auto">
-                <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:16px;margin-bottom:24px;border-radius:4px">
-                    <h3 style="margin:0 0 8px 0;color:#1e40af;font-weight:600">🚀 Getting Started</h3>
-                    <p style="margin:0;color:#1e40af">Welcome to your e-commerce platform! Click on the sections in the sidebar to navigate through the documentation.</p>
+            <div id="helpContent" class="help-content">
+                <div class="help-callout help-callout--info">
+                    <h3>🚀 Getting Started</h3>
+                    <p>Welcome to your e-commerce platform! Click on the sections in the sidebar to navigate through the documentation.</p>
                 </div>
             </div>
         </div>
@@ -107,16 +105,16 @@ async function loadDocsList(){
     const j = await r.json();
     if (!j.success) throw new Error(j.error||'Failed');
     const items = (j.documents||[]).map(d => `
-      <li style="margin:6px 0">
-        <a href="javascript:void(0)" onclick="loadDoc('${d.filename||''}')" style="color:#2563eb;text-decoration:none">${d.title||d.filename}</a>
-        <div style="font-size:12px;color:#6b7280">${d.category||''}</div>
+      <li class="help-docs__item">
+        <a href="javascript:void(0)" onclick="loadDoc('${d.filename||''}')" class="help-docs__link">${d.title||d.filename}</a>
+        <div class="help-docs__category">${d.category||''}</div>
       </li>
     `).join('');
     document.getElementById('helpContent').innerHTML =
-      `<h2 style="margin:0 0 12px 0">📚 All Documentation</h2><ul style="padding-left:16px">${items}</ul>`;
+      `<h2 class="help-content__title">📚 All Documentation</h2><ul class="help-docs__list">${items}</ul>`;
   } catch(e) {
     document.getElementById('helpContent').innerHTML =
-      `<div style="color:#b91c1c">Failed to load docs: ${e.message}</div>`;
+      `<div class="help-error">Failed to load docs: ${e.message}</div>`;
   }
 }
 
@@ -128,10 +126,10 @@ async function loadDoc(file){
     const md = (j.document && j.document.content) || '';
     const title = (j.document && j.document.title) || file;
     document.getElementById('helpContent').innerHTML =
-      `<h2 style="margin:0 0 12px 0">${title}</h2><div>${renderMarkdown(md)}</div>`;
+      `<h2 class="help-content__title">${title}</h2><div>${renderMarkdown(md)}</div>`;
   } catch(e) {
     document.getElementById('helpContent').innerHTML =
-      `<div style="color:#b91c1c">Failed to load document: ${e.message}</div>`;
+      `<div class="help-error">Failed to load document: ${e.message}</div>`;
   }
 }
 
@@ -144,8 +142,8 @@ function renderMarkdown(md){
        .replace(/^###\s*(.*)$/gm,'<h3>$1</h3>')
        .replace(/^##\s*(.*)$/gm,'<h2>$1</h2>')
        .replace(/^#\s*(.*)$/gm,'<h1>$1</h1>');
-  h = h.replace(/```([\s\S]*?)```/g, (m, code) => `<pre style="background:#f3f4f6;padding:12px;border-radius:6px;overflow:auto"><code>${code.replace(/</g,'&lt;')}</code></pre>`);
-  h = h.replace(/^\s*\*\s+(.*)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g, m => `<ul style="padding-left:20px;line-height:1.6">${m}</ul>`);
+  h = h.replace(/```([\s\S]*?)```/g, (m, code) => `<pre class=\"help-code\"><code>${code.replace(/</g,'&lt;')}</code></pre>`);
+  h = h.replace(/^\s*\*\s+(.*)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g, m => `<ul class=\"help-list\">${m}</ul>`);
   h = h.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*]+)\*/g,'<em>$1</em>');
   h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
   return h;
@@ -167,21 +165,21 @@ function renderMarkdown(md){
             // Load content
             const content = {
                 'getting-started': `
-                    <h2 style="font-size:24px;font-weight:bold;margin:0 0 20px 0;color:#1f2937">🚀 Getting Started</h2>
-                    <div style="background:#eff6ff;border-left:4px solid #3b82f6;padding:16px;margin:20px 0;border-radius:8px">
-                        <p style="margin:0;color:#1e40af;line-height:1.6">Welcome! This platform manages your complete online store from inventory to customer orders.</p>
+                    <h2 class=\"help-h2\">🚀 Getting Started</h2>
+                    <div class=\"help-callout help-callout--info\">
+                        <p>Welcome! This platform manages your complete online store from inventory to customer orders.</p>
                     </div>
-                    <h3 style="font-size:18px;font-weight:600;margin:24px 0 12px 0;color:#374151">First Steps:</h3>
-                    <ol style="padding-left:20px;line-height:1.8;color:#6b7280">
-                        <li style="margin-bottom:8px">Set up business info in <strong style="color:#374151">Settings → Business Information</strong></li>
-                        <li style="margin-bottom:8px">Configure payments in <strong style="color:#374151">Settings → Configure Square</strong></li>
-                        <li style="margin-bottom:8px">Add products in <strong style="color:#374151">Admin → Inventory</strong></li>
-                        <li style="margin-bottom:8px">Set up categories in <strong style="color:#374151">Admin → Categories</strong></li>
-                        <li style="margin-bottom:8px">Configure room layouts in <strong style="color:#374151">Settings → Room Settings</strong></li>
+                    <h3 class=\"help-section-title\">First Steps:</h3>
+                    <ol class=\"help-ol\">
+                        <li class=\"help-ol__item\">Set up business info in <strong>Settings → Business Information</strong></li>
+                        <li class=\"help-ol__item\">Configure payments in <strong>Settings → Configure Square</strong></li>
+                        <li class=\"help-ol__item\">Add products in <strong>Admin → Inventory</strong></li>
+                        <li class=\"help-ol__item\">Set up categories in <strong>Admin → Categories</strong></li>
+                        <li class=\"help-ol__item\">Configure room layouts in <strong>Settings → Room Settings</strong></li>
                     </ol>
-                    <div style="background:#fffbeb;border-left:4px solid #f59e0b;padding:16px;margin:20px 0;border-radius:8px">
-                        <h4 style="margin:0 0 8px 0;font-weight:600;color:#92400e">💡 Pro Tip</h4>
-                        <p style="margin:0;color:#92400e;line-height:1.6">Use the tooltips throughout the admin interface for contextual help. Toggle them on/off in Settings → Help & Hints.</p>
+                    <div class=\"help-callout help-callout--tip\">
+                        <h4>💡 Pro Tip</h4>
+                        <p>Use the tooltips throughout the admin interface for contextual help. Toggle them on/off in Settings → Help & Hints.</p>
                     </div>
                 `,
                 'inventory': `<h2>📦 Inventory</h2><p><strong>Route:</strong> /admin/?section=inventory</p><h3>Features:</h3><ul><li>Product management with variants</li><li>Stock tracking and alerts</li><li>AI pricing suggestions</li><li>Categories management</li><li>Image optimization</li></ul>`,

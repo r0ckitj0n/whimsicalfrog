@@ -66,7 +66,7 @@ ready(() => {
           successMessage.innerHTML = `
             <strong>Welcome ${data.userData.firstName || data.userData.username}!</strong><br>
             Registration successful! Redirecting you to the ${destinationName} in 5 seconds...<br><br>
-            <a href="${redirectUrl}" class="inline-block bg-[#6B8E23] hover:bg-[#556B2F] text-black font-bold rounded-md focus:outline-none focus:shadow-outline transition duration-150">
+            <a href="${redirectUrl}" class="inline-block bg-[#87ac3a] hover:bg-[#BF5700] text-black font-bold rounded-md focus:outline-none focus:shadow-outline transition duration-150">
               Go to ${destinationName} now →
             </a>
           `;

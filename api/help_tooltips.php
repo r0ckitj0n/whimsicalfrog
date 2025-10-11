@@ -9,6 +9,8 @@ header('Access-Control-Allow-Headers: Content-Type');
 // Centralized environment and DB config (includes Database class)
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
 // Get the action first to determine if authentication is needed
 $action = $_GET['action'] ?? 'get';
@@ -16,28 +18,10 @@ $action = $_GET['action'] ?? 'get';
 // Define actions that require admin authentication
 $adminOnlyActions = ['update', 'create', 'delete', 'list_all', 'set_global_enabled'];
 
-// Check if user is logged in and is admin (only for admin-only actions)
-
-$isAdmin = false;
-
-// Check session authentication first (standardized pattern)
-require_once __DIR__ . '/../includes/auth.php';
-if (isAdminWithToken()) {
-    $isAdmin = true;
+// If this is an admin-only action, check authentication via centralized helper
+if (in_array($action, $adminOnlyActions)) {
+    AuthHelper::requireAdmin();
 }
-
-// Admin token fallback for API access (check both GET and POST/JSON)
-$input = json_decode(file_get_contents('php://input'), true) ?? [];
-if (!$isAdmin && $adminToken === 'whimsical_admin_2024') {
-    $isAdmin = true;
-}
-
-// If this is an admin-only action, check authentication
-    if (in_array($action, $adminOnlyActions)) {
-        if (!$isAdmin) {
-            Response::forbidden();
-        }
-    }
 
 try {
     try {

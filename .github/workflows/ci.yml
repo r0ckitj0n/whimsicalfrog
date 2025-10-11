@@ -23,6 +23,16 @@ jobs:
         run: |
           npm ci || npm install
 
+      - name: Quarantine duplicate/backup files (CI enforcement)
+        run: |
+          chmod +x scripts/maintenance/quarantine_duplicates.sh || true
+          scripts/maintenance/quarantine_duplicates.sh || true
+          if ! git diff --quiet; then
+            echo "::error ::Quarantine moved duplicate/backup files. Commit these changes locally before pushing."
+            git status --porcelain
+            exit 1
+          fi
+
       - name: Run style guard (no inline styles)
         run: npm run guard:styles
 
@@ -33,7 +43,10 @@ jobs:
         run: npm run guard:z-index
 
       - name: Run no-raw-fetch guard (enforce ApiClient usage)
-        run: npm run guard:no-raw-fetch
+        run: npm run guard:fetch
+
+      - name: Smoke test API client usage
+        run: npm run smoke:api-client
 
       - name: Fail on stray backup files outside backups/
         run: |

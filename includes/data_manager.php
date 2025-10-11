@@ -56,7 +56,7 @@ function resetToDefaults($pdo)
             ['site_favicon_url', 'url', '/favicon.ico', 'branding', 'Favicon URL'],
             ['brand_primary_color', 'color', '#87ac3a', 'branding', 'Primary brand color'],
             ['brand_secondary_color', 'color', '#556B2F', 'branding', 'Secondary brand color'],
-            ['brand_accent_color', 'color', '#6B8E23', 'branding', 'Accent brand color'],
+            ['brand_accent_color', 'color', '#BF5700', 'branding', 'Accent brand color'],
 
             // Business Information
             ['business_name', 'text', 'Whimsical Frog LLC', 'business_info', 'Legal business name'],

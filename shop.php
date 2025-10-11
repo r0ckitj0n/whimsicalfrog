@@ -59,12 +59,7 @@ if (!empty($categories)) {
 }
 ?>
 
-<section id="shopPage" class="page-content" data-shop-fixed-padding="1">
-    <style>
-        /* Temporary fixed offset per request */
-        #shopPage { padding-top: 160px !important; }
-        #shopPage .shop-content-area { padding-top: 0; margin-top: 0; }
-    </style>
+<section id="shopPage" class="page-content">
 
     <!-- Fixed Navigation Area - Stays at top, doesn't scroll -->
     <div class="shop-navigation-area">
@@ -104,11 +99,8 @@ if (!empty($categories)) {
     </div>
     </div> <!-- End shop-navigation-area -->
 
-    <!-- Spacer that matches the navigation bar height to push content below it (must be OUTSIDE fixed container) -->
-    <div id="shopNavSpacer" class="shop-nav-spacer" aria-hidden="true" style="height:0"></div>
-
     <!-- Scrollable Content Area - Only this area scrolls -->
-    <div class="shop-content-area" style="margin-top:160px !important; padding-top:0 !important;">
+    <div class="shop-content-area">
         <!-- Products Grid - CSS Grid Layout for Equal Heights -->
     <div id="productsGrid">
         <?php
@@ -150,7 +142,7 @@ foreach ($categories as $slug => $catData):
         // Simple formatting
         $formattedPrice = '$' . number_format((float)$price, 2);
         ?>
-        <div class="product-card<?php echo ($stock <= 0 ? ' is-out-of-stock' : ''); ?>" data-category="<?php echo htmlspecialchars($slug); ?>" data-sku="<?php echo $sku; ?>" data-name="<?php echo $productName; ?>" data-price="<?php echo $price; ?>" data-stock="<?php echo $stock; ?>">
+        <div class="product-card<?php echo ($stock <= 0 ? ' is-out-of-stock' : ''); ?>" data-category="<?php echo htmlspecialchars($slug); ?>" data-category-label="<?php echo htmlspecialchars($categoryLabel); ?>" data-sku="<?php echo $sku; ?>" data-name="<?php echo $productName; ?>" data-price="<?php echo $price; ?>" data-stock="<?php echo $stock; ?>">
             <!-- Product Image -->
             <div class="product-image-container">
                 <div class="product-image-container" id="image-container-<?php echo $sku; ?>">
@@ -241,8 +233,15 @@ endforeach;
                     if (!rect || rect.height === 0 || rect.width === 0) continue;
                     var cs = getComputedStyle(el);
                     if (!cs) continue;
+                    // Skip elements that are effectively hidden
+                    var op = parseFloat(cs.opacity || '1');
+                    if (cs.display === 'none' || cs.visibility === 'hidden' || op < 0.05) continue;
                     var pos = cs.position;
                     if (pos !== 'fixed' && pos !== 'sticky') continue;
+                    // Explicitly ignore non-visible room modal overlays
+                    var hasRoomOverlayClass = false;
+                    try { hasRoomOverlayClass = (el.classList && el.classList.contains('room-modal-overlay')); } catch(_) {}
+                    if (hasRoomOverlayClass && !(el.classList && el.classList.contains('show'))) continue;
                     // Elements anchored to the top (<= 4px to account for subpixel)
                     var top = rect.top;
                     if (top > 4) continue;
@@ -252,42 +251,57 @@ endforeach;
             } catch(_) {}
             return maxBottom;
         }
-        var __wfShopLast = { chrome: -1, nav: -1 };
+        var __wfShopLast = { chrome: -1, admin: -1, nav: -1 };
         var __wfShopStabilizeUntil = 0;
-        function applyIfChanged(chrome, navH){
-            var changed = (chrome !== __wfShopLast.chrome) || (navH !== __wfShopLast.nav);
+        function applyIfChanged(chrome, adminH, navH){
+            var changed = (chrome !== __wfShopLast.chrome) || (adminH !== __wfShopLast.admin) || (navH !== __wfShopLast.nav);
             if (!changed) return false;
-            __wfShopLast.chrome = chrome; __wfShopLast.nav = navH;
+            __wfShopLast.chrome = chrome; __wfShopLast.admin = adminH; __wfShopLast.nav = navH;
             document.documentElement.style.setProperty('--shop-chrome-height', chrome + 'px');
+            document.documentElement.style.setProperty('--wf-admin-tabs-height', adminH + 'px');
             document.documentElement.style.setProperty('--shop-nav-height', navH + 'px');
-            // Section padding = header + filter height so cards start exactly below filters
-            var total = (chrome|0) + (navH|0);
-            var section = document.getElementById('shopPage'); if (section) section.style.paddingTop = total + 'px';
-            // Neutralize spacer/margins to avoid double offsets
-            var spacer = document.getElementById('shopNavSpacer'); if (spacer) spacer.style.height = '0px';
+            // Do not set inline paddingTop; CSS computes padding via --shop-chrome-height + nav tokens.
+            // Neutralize margins to avoid double offsets
             var content = document.querySelector('#shopPage .shop-content-area'); if (content) { content.style.marginTop = '0px'; content.style.paddingTop = '0px'; }
             return true;
         }
         function setShopNavHeight(){
             try {
                 var sec = document.getElementById('shopPage');
-                if (sec && sec.getAttribute('data-shop-fixed-padding') === '1') return; // honor fixed padding
                 var nav = document.querySelector('#shopPage .navigation-bar');
-                if (!nav) return;
+                var navContainer = document.querySelector('#shopPage .shop-navigation-area');
+                if (!nav || !navContainer) return;
                 // Header height = actual header element height (preferred), fallback to CSS var/body padding
                 var headerEl = document.querySelector('.site-header, .universal-page-header, header.site-header, header.universal-page-header, .header-content, header .header-content');
                 var headerH = 0;
                 if (headerEl && headerEl.getBoundingClientRect) headerH = Math.max(0, Math.round(headerEl.getBoundingClientRect().height));
                 if (!headerH) headerH = cssPx(getComputedStyle(document.documentElement).getPropertyValue('--wf-header-height'));
                 if (!headerH) headerH = cssPx(getComputedStyle(document.body).paddingTop);
+                // Reflect measured header height back to CSS variable for consistency
+                document.documentElement.style.setProperty('--wf-header-height', (headerH|0) + 'px');
+
+                // Admin tabs navbar height (if present on admin pages)
+                var adminTabsEl = document.querySelector('.admin-tab-navigation');
+                var adminH = 0;
+                if (adminTabsEl) {
+                    adminH = adminTabsEl.offsetHeight || 0;
+                    if (adminH <= 0 && adminTabsEl.getBoundingClientRect) adminH = Math.round(adminTabsEl.getBoundingClientRect().height) || 0;
+                }
+                document.documentElement.style.setProperty('--wf-admin-tabs-height', (adminH|0) + 'px');
 
                 // Filter/navigation height
                 var navH = nav.offsetHeight || 0;
                 if (navH <= 0 && nav.getBoundingClientRect) navH = Math.round(nav.getBoundingClientRect().height) || 0;
                 if (navH <= 0) navH = 96; // sensible fallback
 
-                // Apply exactly: section padding = header height; content padding = nav height
-                applyIfChanged(headerH, navH);
+                // Rely on CSS variables for stacking; no inline overrides
+
+                // Effective chrome height: max of (header+admin) and actual fixed-top bottom
+                var safety = 4; // small buffer to avoid overlaps from subpixel rounding
+                var chromeH = Math.max((headerH|0) + (adminH|0), topChromeBottom()) + safety;
+
+                // Apply measured chrome only (header + admin + safety). Extra offset handled purely in CSS if needed.
+                applyIfChanged(chromeH, adminH, navH);
             } catch(e) { /* no-op */ }
         }
         function stabilizeLoop(){

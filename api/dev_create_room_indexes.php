@@ -9,8 +9,9 @@ header('Content-Type: text/plain; charset=utf-8');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-if (!isLoggedIn() || !isAdmin()) {
+if (!(class_exists('AuthHelper') ? (AuthHelper::isLoggedIn() && AuthHelper::isAdmin()) : (function_exists('isLoggedIn') && isLoggedIn() && function_exists('isAdmin') && isAdmin()))) {
     http_response_code(403);
     echo "Forbidden: admin login required.\n";
     exit;

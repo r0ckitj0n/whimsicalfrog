@@ -1,5 +1,33 @@
 import { ApiClient } from '../core/api-client.js';
+// Ensure lightweight modal open handlers (Area-Item Mapper, Background Manager, CSS Catalog, Room Map Editor)
+// are installed whenever the bridge loads on admin routes.
+// This module sets up delegated click handlers and lazy modal factories used by settings cards.
+import '../modules/admin-settings-lightweight.js';
 function byId(id){ return document.getElementById(id); }
+
+// Ensure a clean Background Manager modal shell (no iframe)
+function ensureBackgroundManagerModal() {
+  let el = document.getElementById('backgroundManagerModal');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'backgroundManagerModal';
+  el.className = 'admin-modal-overlay hidden';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'backgroundManagerTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+      <div class="modal-header">
+        <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>
+        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body"></div>
+    </div>`;
+  try { document.body.appendChild(el); } catch(_) {}
+  return el;
+}
 
 // --- Health & Diagnostics ---
 // ... (existing health check functions) ...
@@ -228,6 +256,29 @@ document.addEventListener('click', async (e) => {
     });
     return;
   }
+
+  // Background Manager (no iframe; Vite-managed module)
+  if (closest('[data-action="open-background-manager"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const modal = ensureBackgroundManagerModal();
+    try {
+      const mod = await import('./modules/background-manager.js');
+      const api = mod?.default || mod;
+      if (api && typeof api.init === 'function') {
+        api.init(modal);
+      }
+    } catch (err) {
+      console.error('Failed to load Background Manager module', err);
+    }
+    if (typeof window.showModal === 'function') window.showModal('backgroundManagerModal');
+    else {
+      modal.classList.remove('hidden');
+      modal.classList.add('show');
+      try { modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
+    }
+    return;
+  }
   // Address Diagnostics
   if (closest('[data-action="open-address-diagnostics"]')) {
     e.preventDefault();
@@ -399,10 +450,23 @@ window.__WF_ADMIN_SETTINGS_BRIDGE_INIT = true;
 
 // Dummy modal functions if they don't exist globally
 if (typeof window.showModal === 'undefined') {
-    window.showModal = (id) => { const el = byId(id); if(el) el.classList.remove('hidden'); };
+    window.showModal = (id) => {
+      const el = byId(id);
+      if (!el) return;
+      try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+      el.classList.remove('hidden');
+      el.classList.add('show');
+      try { el.setAttribute('aria-hidden', 'false'); } catch(_) {}
+    };
 }
 if (typeof window.hideModal === 'undefined') {
-    window.hideModal = (id) => { const el = byId(id); if(el) el.classList.add('hidden'); };
+    window.hideModal = (id) => {
+      const el = byId(id);
+      if (!el) return;
+      el.classList.remove('show');
+      el.classList.add('hidden');
+      try { el.setAttribute('aria-hidden', 'true'); } catch(_) {}
+    };
 }
 
 // --- Attributes Management ---

@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/includes/session.php';
 // Ensure DB + env are initialized before attempting auth reconstruction
 require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 // Reconstruct from WF_AUTH if needed before rendering login state
 try {
     ensureSessionStarted();
@@ -761,9 +762,11 @@ if ($pageSlug === 'admin' || strpos($pageSlug, 'admin/') === 0) {
 // Page metadata for JS routing (isAdmin already computed)
 ?>
 <?php
-// Determine login status for data attribute
+// Determine login status for data attribute (prefer AuthHelper)
 $__wf_is_logged_in = false;
-if (function_exists('isLoggedIn')) {
+if (class_exists('AuthHelper')) {
+    $__wf_is_logged_in = AuthHelper::isLoggedIn();
+} elseif (function_exists('isLoggedIn')) {
     $__wf_is_logged_in = isLoggedIn();
 } else {
     $__wf_is_logged_in = isset($_SESSION['user']) || isset($_SESSION['user_id']);

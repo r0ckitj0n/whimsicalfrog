@@ -240,12 +240,11 @@ export const Initialization = {
   async loadBusinessInfo() {
     try {
       console.log('loadBusinessInfo called');
-      // Load business information from API
-      const data = await ApiClient.get('/api/business_settings.php?action=get');
+      // Load business information from API (backend supports get_business_info)
+      const data = await ApiClient.get('/api/business_settings.php?action=get_business_info');
 
-      if (data.success && data.data) {
-        this.applyBusinessInfo(data.data);
-      }
+      const settings = (data && (data.data || data)) || null;
+      if (settings) this.applyBusinessInfo(settings);
     } catch (error) {
       console.error('Failed to load business info:', error);
     }

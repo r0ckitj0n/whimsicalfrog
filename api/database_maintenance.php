@@ -6,29 +6,11 @@
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Start session first
-
-
-// Admin authentication check
-$isAdmin = false;
-if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
-    require_once __DIR__ . '/../includes/auth.php';
-    $isAdmin = isAdminWithToken();
-}
-
-// Admin token fallback for API access (check both GET, POST, and JSON)
-$input = json_decode(file_get_contents('php://input'), true) ?? [];
-$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? $input['admin_token'] ?? null;
-if (!$isAdmin && $adminToken === 'whimsical_admin_2024') {
-    $isAdmin = true;
-}
-
-if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
-}
+// Require admin for all database maintenance actions
+AuthHelper::requireAdmin();
 
 header('Content-Type: application/json');
 

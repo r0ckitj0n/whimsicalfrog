@@ -873,7 +873,7 @@ function initPaymentModal() {
         try {
           if (shippingMethod === 'Local Delivery' && selectedAddressId) {
             const key = String(selectedAddressId);
-            let miles = distanceCache.get(key);
+            const miles = distanceCache.get(key);
             if (miles == null) {
               // Try to compute once more synchronously
               // Note: this is not awaited in build payload; placeOrder awaits buildOrderPayload's result
@@ -938,8 +938,47 @@ function initPaymentModal() {
           }
           const orderId = (res && (res.orderId || (res.data && res.data.orderId))) || null;
           if (res && res.success && orderId) {
+            // Ensure receipt modal exists even if the deferred import hasn't run yet
+            try {
+              if (!window.WF_ReceiptModal || typeof window.WF_ReceiptModal.open !== 'function') {
+                await import('./receipt-modal.js');
+              }
+            } catch(_) { /* proceed regardless; guarded open below */ }
             // Open receipt first so the global flag is set before cart events fire
             try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(orderId); } catch(_) {}
+            // As a hard fallback, if modal is still unavailable, try to build a minimal inline receipt modal
+            try {
+              if (!window.WF_ReceiptModal || typeof window.WF_ReceiptModal.open !== 'function') {
+                const buildInlineReceiptModal = async (id) => {
+                  try {
+                    const overlay = document.createElement('div');
+                    overlay.id = 'receiptModalOverlay';
+                    overlay.className = 'confirmation-modal-overlay checkout-overlay receipt-overlay show';
+                    const modal = document.createElement('div');
+                    modal.className = 'confirmation-modal receipt-modal';
+                    const header = document.createElement('div');
+                    header.className = 'confirmation-modal-header receipt-modal-header';
+                    header.innerHTML = '<div class="left"><h3 class="title">Order Receipt</h3></div><div class="right actions"><button type="button" class="btn-secondary btn-close" aria-label="Close receipt">Close</button></div>';
+                    const content = document.createElement('div');
+                    content.className = 'confirmation-modal-content receipt-modal-content';
+                    modal.appendChild(header);
+                    modal.appendChild(content);
+                    overlay.appendChild(modal);
+                    document.body.appendChild(overlay);
+                    header.querySelector('.btn-close')?.addEventListener('click', () => { try { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); } catch(_) {} });
+                    const resp = await fetch(`/receipt?orderId=${encodeURIComponent(id)}&bare=1`, { credentials: 'include', headers: { 'X-WF-ApiClient':'1' } });
+                    const html = await resp.text();
+                    content.innerHTML = `<div class="receipt-print-root">${html}</div>`;
+                    return true;
+                  } catch (e) { return false; }
+                };
+                const ok = await buildInlineReceiptModal(orderId);
+                if (!ok) {
+                  const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
+                  window.open(url, '_blank', 'noopener');
+                }
+              }
+            } catch(_) {}
             // Defer cart clear to the next tick to ensure the receipt flag is active
             try { setTimeout(() => { cartApi.clearCart && cartApi.clearCart(); }, 0); } catch(_) {}
             // Close the payment modal UI

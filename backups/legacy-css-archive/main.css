@@ -634,16 +634,19 @@ body[data-page='contact'] .content { color: #fff !important; }
   --shop-nav-gap: 12px;
   /* Ensure fixed nav spans the full viewport width */
   position: fixed;
-  top: calc(var(--wf-header-height, var(--header-height, 80px)) + var(--shop-nav-gap, 12px));
+  /* Place nav directly below the measured chrome bottom (header/admin bars) plus small gap */
+  top: calc(var(--shop-chrome-height, var(--wf-header-height, var(--header-height, 80px))) + var(--shop-nav-gap, 12px));
   left: 0;
   right: 0;
   padding: 0; /* no extra vertical padding so content aligns tightly */
-  height: calc(var(--shop-nav-height, 36px) + var(--shop-nav-gap, 12px)); /* include bottom gap */
+  /* Let container fit actual bar height; still reserve minimum expected size */
+  min-height: calc(var(--shop-nav-height, 36px) + var(--shop-nav-gap, 12px));
   display: flex;
   align-items: center; /* vertically center buttons within the fixed height */
   margin: 0;
   width: auto;
-  z-index: var(--z-navigation, 120);
+  /* Ensure filters render above product cards and other content using dedicated token */
+  z-index: var(--z-shop-filters, 2600);
   /* Request: make this element transparent */
   background: transparent !important;
   background-image: none !important;
@@ -664,9 +667,16 @@ body[data-page='shop'] .page-content#shopPage {
   margin-right: 0 !important;
   max-width: none !important;
   width: 100% !important;
-  /* Neutralize global .page-content top margin/padding for shop layout */
+  /* Place content below measured chrome (header/admin) + nav height + nav gap */
   margin-top: 0 !important;
-  padding-top: 0 !important;
+  padding-top: calc(
+    var(--shop-chrome-height, (
+      var(--wf-header-height, var(--header-height, 80px))
+      + var(--wf-admin-tabs-height, 0px)
+    ))
+    + var(--shop-nav-height, 36px)
+    + var(--shop-nav-gap, 12px)
+  ) !important;
 }
 
 /* Also target the ID directly to defeat media query rules like #shopPage { padding: 0 15px } */
@@ -773,10 +783,14 @@ body[data-page='shop'] #shopPage .content-wrapper {
 /* Scrollable content area (internal scrollbar while nav stays fixed) */
 #shopPage .shop-content-area {
   margin-top: 0;
-  /* Below-nav padding equals nav height + the same gap used above nav */
-  padding-top: calc(var(--shop-nav-height, 36px) + var(--shop-nav-gap, 12px));
-  /* Viewport fit: subtract only the fixed header; nav is fixed and accounted via padding-top */
-  height: calc(100vh - var(--wf-header-height, var(--header-height, 80px)));
+  /* Section already reserves space for header/admin/nav; avoid double-counting here */
+  padding-top: 0;
+  /* Viewport fit: subtract header+admin only; nav is fixed and accounted via section padding */
+  height: calc(
+    100vh
+    - (var(--wf-header-height, var(--header-height, 80px))
+    + var(--wf-admin-tabs-height, 0px))
+  );
   min-height: 0; /* defeat any global min-height */
   overflow-y: auto; /* vertical scroll within product list area */
   width: 100%;

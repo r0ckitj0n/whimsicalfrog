@@ -1,3 +1,35 @@
+## How to run Vite (Dev and Build)
+
+Use the Vite pipeline for all CSS/JS during development and production.
+
+### Development
+
+```bash
+npm install           # first-time setup
+npm run dev -- --host # start Vite dev server (network-visible)
+# Local:   http://localhost:5176/
+# Network: http://<your-ip>:5176/
+```
+
+- Launch your app via the normal PHP host (nginx/apache/php -S). Vite injects assets when `partials/header.php` calls `vite('js/app.js')`.
+- Hot Module Replacement (HMR) will live-reload CSS/JS changes in `src/styles/` and `src/js/`.
+
+### Linting / Guards
+
+```bash
+npm run guard:templates:css  # ensure no inline style= or legacy CSS links in live templates
+npm run guard:brand-colors   # no legacy green hexes remaining
+npm run guard:fonts          # prefer CSS variables for font-family
+```
+
+### Production build
+
+```bash
+npm run build
+```
+
+This writes versioned assets to `.vite/` and configures injection through the PHP Vite helper. Avoid committing raw CSS/JS outside `src/` and avoid `<link rel="stylesheet">` in templates.
+
 # WhimsicalFrog Engineering Guidelines (Reusable for New Projects)
 
 This document consolidates the standards and preferences established on WhimsicalFrog into a single, reusable guide. Use this as the baseline for new projects to ensure consistent architecture, tooling, and conventions.

@@ -113,12 +113,12 @@ document.addEventListener('click', (e) => {
         const srcNow = (frame.getAttribute('src') || '').trim();
         const isBlank = !srcNow || srcNow === 'about:blank' || srcNow.endsWith('about:blank');
         if (isBlank) {
-          // Load the new interactive help documentation
           const dataSrc = frame.getAttribute('data-src');
           if (dataSrc) {
             frame.src = dataSrc;
           } else {
             frame.src = '/help.php';
+          }
         }
       }
       if (window.WFModals && typeof window.WFModals.lockScroll === 'function') window.WFModals.lockScroll();

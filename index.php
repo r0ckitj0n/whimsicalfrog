@@ -52,6 +52,8 @@ require_once __DIR__ . '/includes/functions.php';
 error_log('DEBUG: index.php - after functions.php');
 require_once __DIR__ . '/includes/auth.php';
 error_log('DEBUG: index.php - after auth.php');
+require_once __DIR__ . '/includes/auth_helper.php';
+error_log('DEBUG: index.php - after auth_helper.php');
 // Reconstruct session from WF_AUTH (if present) before rendering anything
 try {
     ensureSessionStarted();
@@ -87,7 +89,7 @@ if (isset($_GET['page'])) {
 // DEVELOPMENT BYPASS: Temporarily disable auth for localhost
 $isDev = strpos($_SERVER['HTTP_HOST'] ?? '', 'localhost') !== false;
 if (!$isDev && ((strpos($page, 'admin_') === 0) || (strpos($requestUri, '/admin') === 0))) {
-    if (!function_exists('isLoggedIn') || !isLoggedIn()) {
+    if (!AuthHelper::isLoggedIn()) {
         header('Location: /login?redirect_to=' . urlencode($requestUri));
         exit;
     }

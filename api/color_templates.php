@@ -3,19 +3,11 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Start session for authentication
-
-
-// Authentication check
-$isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
-$isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
-
-if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
-}
+// Enforce admin auth using centralized helper
+AuthHelper::requireAdmin();
 
 try {
     try {

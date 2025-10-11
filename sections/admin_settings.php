@@ -13,8 +13,9 @@ try {
     $__secrets_csrf = '';
 }
 
-// Current user for account prefill
-$userData = function_exists('getCurrentUser') ? (getCurrentUser() ?? []) : [];
+// Current user for account prefill (prefer AuthHelper)
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
+$userData = class_exists('AuthHelper') ? (AuthHelper::getCurrentUser() ?? []) : (function_exists('getCurrentUser') ? (getCurrentUser() ?? []) : []);
 $uid = $userData['id'] ?? ($userData['userId'] ?? '');
 $firstNamePrefill = $userData['firstName'] ?? ($userData['first_name'] ?? '');
 $lastNamePrefill = $userData['lastName'] ?? ($userData['last_name'] ?? '');
@@ -31,6 +32,8 @@ if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
         {
             @include __DIR__ . '/../partials/footer.php';
         }
+
+        // Fallback opener: Site Deployment (migrated to Vite entry handler)
     }
     register_shutdown_function('__wf_admin_settings_footer_shutdown');
 }
@@ -113,9 +116,9 @@ echo '<style id="admin-settings-content-spacing">
 body[data-page="admin/settings"] #admin-section-content {
     padding-top: 0 !important;
 }
-/* Remove padding-top from settings page container */
+/* Ensure settings page clears fixed header + admin tabs */
 body[data-page="admin/settings"] > .settings-page {
-    padding-top: 0 !important;
+    padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 8px) !important;
 }
 /* Reduce margin/padding on settings grid */
 body[data-page="admin/settings"] .settings-grid {
@@ -193,7 +196,7 @@ body[data-page="admin/settings"] .settings-grid {
 <div class="admin-dashboard page-content">
     <div id="admin-section-content">
 <!-- WF: SETTINGS WRAPPER START -->
-<div class="settings-page container mx-auto px-4" data-page="admin-settings" data-user-id="<?= htmlspecialchars((string)$uid) ?>" style="padding-top: 128px !important; margin-top: 0 !important;">
+<div class="settings-page container mx-auto px-4 pt-128 mt-0" data-page="admin-settings" data-user-id="<?= htmlspecialchars((string)$uid) ?>">
   <noscript>
     <div class="admin-alert alert-warning">
       JavaScript is required to use the Settings page.
@@ -204,10 +207,33 @@ body[data-page="admin/settings"] .settings-grid {
     // Ensure API calls hit the same origin/port as this page in local dev
     try { window.__WF_BACKEND_ORIGIN = window.location.origin; } catch(_) {}
   </script>
+  <!-- STATIC: Site Deployment Modal -->
+  <div id="siteDeploymentModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="siteDeploymentTitle">
+    <div class="admin-modal admin-modal-content w-[95vw] h-[85vh]">
+      <div class="modal-header">
+        <h2 id="siteDeploymentTitle" class="admin-card-title">🚀 Site Deployment</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="siteDeploymentFrame" title="Site Deployment" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/deploy_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <?php
+  // Cart & Checkout settings moved into Shopping Cart modal (see modal section below)
+  try {
+      require_once dirname(__DIR__) . '/api/business_settings_helper.php';
+  } catch (Throwable $____e) {}
+  $ecomm = class_exists('BusinessSettings') ? (BusinessSettings::getByCategory('ecommerce') ?? []) : [];
+  ?>
+
+  <!-- Tools: Size/Color Redesign quick access -->
+  
 
 
   <!-- STATIC: Shipping & Distance Settings Modal (outside <noscript>) -->
-  <div id="shippingSettingsModal" class="admin-modal-overlay wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shippingSettingsTitle" style="z-index:10110">
+  <div id="shippingSettingsModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shippingSettingsTitle">
     <div class="admin-modal admin-modal-content">
       <div class="modal-header">
         <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings</h2>
@@ -264,8 +290,158 @@ body[data-page="admin/settings"] .settings-grid {
     </div>
   </div>
 
+  <!-- STATIC: Shopping Cart Settings Modal -->
+  <?php
+    $openOnAdd = strtolower((string)($ecomm['ecommerce_open_cart_on_add'] ?? 'false'));
+    $mergeDupes = strtolower((string)($ecomm['ecommerce_cart_merge_duplicates'] ?? 'true'));
+    $showUpsells = strtolower((string)($ecomm['ecommerce_cart_show_upsells'] ?? 'false'));
+    $confirmClear = strtolower((string)($ecomm['ecommerce_cart_confirm_clear'] ?? 'true'));
+    $minTotal = (string)($ecomm['ecommerce_cart_minimum_total'] ?? '0');
+  ?>
+  <div id="shoppingCartModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shoppingCartSettingsTitle">
+    <div class="admin-modal admin-modal-content">
+      <div class="modal-header">
+        <h2 id="shoppingCartSettingsTitle" class="admin-card-title">🛒 Shopping Cart Settings</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="shoppingCartSettingsForm" data-action="prevent-submit" class="space-y-4">
+          <div class="form-control">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="openCartOnAddCheckbox" class="form-checkbox" value="1" <?php echo ($openOnAdd === '1' || $openOnAdd === 'true') ? 'checked' : ''; ?> />
+              <span>Open cart after adding an item</span>
+            </label>
+            <p class="text-sm text-gray-600 mt-1">If enabled, the cart modal opens automatically after an item is added to the cart.</p>
+          </div>
+          <div class="form-control">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="mergeDuplicatesCheckbox" class="form-checkbox" value="1" <?php echo ($mergeDupes === '1' || $mergeDupes === 'true') ? 'checked' : ''; ?> />
+              <span>Merge duplicate items into a single line</span>
+            </label>
+            <p class="text-sm text-gray-600 mt-1">When enabled, adding the same SKU increases quantity instead of creating a new line.</p>
+          </div>
+          <div class="form-control">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="showUpsellsCheckbox" class="form-checkbox" value="1" <?php echo ($showUpsells === '1' || $showUpsells === 'true') ? 'checked' : ''; ?> />
+              <span>Show upsell recommendations in cart</span>
+            </label>
+            <p class="text-sm text-gray-600 mt-1">Display related items or accessories below the cart items list.</p>
+          </div>
+          <div class="form-control">
+            <label class="flex items-center gap-2">
+              <input type="checkbox" id="confirmClearCheckbox" class="form-checkbox" value="1" <?php echo ($confirmClear === '1' || $confirmClear === 'true') ? 'checked' : ''; ?> />
+              <span>Confirm before clearing the cart</span>
+            </label>
+            <p class="text-sm text-gray-600 mt-1">Prevent accidental clears by requiring a confirmation dialog.</p>
+          </div>
+          <div class="form-control">
+            <label class="block text-sm font-medium mb-1" for="minimumTotalInput">Minimum order total required to checkout ($)</label>
+            <input id="minimumTotalInput" type="number" step="0.01" min="0" class="form-input w-full" value="<?php echo htmlspecialchars($minTotal, ENT_QUOTES); ?>" />
+            <p class="text-sm text-gray-600 mt-1">Set to 0 to disable minimum total enforcement.</p>
+          </div>
+          <div class="form-control">
+            <label class="block text-sm font-medium mb-1" for="upsellRulesInput">Upsell Rules (JSON)</label>
+            <textarea id="upsellRulesInput" class="form-textarea w-full" rows="6" placeholder='{"map":{"SKU1":["SKU_A","SKU_B"],"_default":["SKU_X"]},"products":{"SKU_A":{"name":"Extra Lid","price":4.99,"image":"/images/items/lid.png"}}}'></textarea>
+            <p class="text-sm text-gray-600 mt-1">Optional. Provide JSON to drive cart upsells. See example below.</p>
+            <details class="mt-2">
+              <summary class="text-sm text-gray-700 cursor-pointer">Example schema</summary>
+              <pre class="text-xs bg-gray-50 p-2 rounded overflow-x-auto">{
+  "map": {
+    "WF-TMB-001": ["WF-LID-001", "WF-STRAW-002"],
+    "_default": ["WF-STICKER-PACK"]
+  },
+  "products": {
+    "WF-LID-001": { "name": "Tumbler Lid", "price": 4.99, "image": "/images/items/WF-LID-001.webp" },
+    "WF-STRAW-002": { "name": "Steel Straw", "price": 2.49, "image": "/images/items/WF-STRAW-002.webp" },
+    "WF-STICKER-PACK": { "name": "Sticker Pack", "price": 3.00, "image": "/images/items/WF-STICKER-PACK.webp" }
+  }
+}</pre>
+            </details>
+          </div>
+          <div class="mt-3 flex items-center justify-end gap-2">
+            <button type="button" class="btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal">Close</button>
+            <button type="button" class="btn-brand wf-admin-nav-button" id="saveCartSettingsBtn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    try {
+      var btn = document.getElementById('saveCartSettingsBtn');
+      if (btn && !btn.__wfBound) {
+        btn.__wfBound = true;
+        btn.addEventListener('click', async function(){
+          try {
+            var openAdd = !!(document.getElementById('openCartOnAddCheckbox') && document.getElementById('openCartOnAddCheckbox').checked);
+            var mergeDupes = !!(document.getElementById('mergeDuplicatesCheckbox') && document.getElementById('mergeDuplicatesCheckbox').checked);
+            var showUpsells = !!(document.getElementById('showUpsellsCheckbox') && document.getElementById('showUpsellsCheckbox').checked);
+            var confirmClear = !!(document.getElementById('confirmClearCheckbox') && document.getElementById('confirmClearCheckbox').checked);
+            var minTotalEl = document.getElementById('minimumTotalInput');
+            var minTotal = minTotalEl ? parseFloat(minTotalEl.value) : 0;
+            if (!isFinite(minTotal) || minTotal < 0) minTotal = 0;
+
+            var upsellText = (document.getElementById('upsellRulesInput') && document.getElementById('upsellRulesInput').value || '').trim();
+            var upsellRules = null;
+            if (upsellText) {
+              try {
+                upsellRules = JSON.parse(upsellText);
+                if (typeof upsellRules !== 'object' || upsellRules === null) throw new Error('Invalid JSON root');
+              } catch (jsonErr) {
+                if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Upsell Rules JSON is invalid');
+                else alert('Upsell Rules JSON is invalid');
+                return;
+              }
+            }
+
+            var payload = {
+              category: 'ecommerce',
+              settings: {
+                ecommerce_open_cart_on_add: openAdd,
+                ecommerce_cart_merge_duplicates: mergeDupes,
+                ecommerce_cart_show_upsells: showUpsells,
+                ecommerce_cart_confirm_clear: confirmClear,
+                ecommerce_cart_minimum_total: minTotal
+              }
+            };
+            if (upsellRules) payload.settings.ecommerce_upsell_rules = upsellRules; // send as JSON type
+            var origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
+            var res = await fetch(origin.replace(/\/$/, '') + '/api/business_settings.php?action=upsert_settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              credentials: 'include'
+            });
+            if (res.ok) {
+              if (window.wfNotifications && typeof window.wfNotifications.success === 'function') window.wfNotifications.success('Cart settings saved');
+              else if (typeof window.showNotification === 'function') window.showNotification('Cart settings saved', 'success');
+              else alert('Cart settings saved');
+              try {
+                window.__WF_OPEN_CART_ON_ADD = openAdd;
+                window.__WF_CART_MERGE_DUPES = mergeDupes;
+                window.__WF_CART_SHOW_UPSELLS = showUpsells;
+                window.__WF_CART_CONFIRM_CLEAR = confirmClear;
+                window.__WF_CART_MIN_TOTAL = minTotal;
+                if (upsellRules) window.__WF_UPSELL_RULES = upsellRules;
+              } catch(_){ }
+            } else {
+              if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Failed to save settings');
+              else if (typeof window.showNotification === 'function') window.showNotification('Failed to save settings', 'error');
+              else alert('Failed to save settings');
+            }
+          } catch (e) {
+            if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Error saving settings');
+            else alert('Error saving settings');
+          }
+        });
+      }
+    } catch(_) {}
+  })();
+  </script>
   <!-- STATIC: Address Diagnostics Modal (outside <noscript>) -->
-  <div id="addressDiagnosticsModal" class="admin-modal-overlay wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="addressDiagnosticsTitle" style="z-index:10110">
+  <div id="addressDiagnosticsModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="addressDiagnosticsTitle">
     <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
       <div class="modal-header">
         <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics</h2>
@@ -277,13 +453,28 @@ body[data-page="admin/settings"] .settings-grid {
     </div>
   </div>
 
+  <!-- STATIC: Size/Color Redesign Tool Modal -->
+  <div id="sizeColorRedesignModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="sizeColorRedesignTitle">
+    <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+      <div class="modal-header">
+        <h2 id="sizeColorRedesignTitle" class="admin-card-title">🧩 Size/Color System Redesign</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">×</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="sizeColorRedesignFrame" title="Size/Color Redesign" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/size_color_redesign.php?modal=1" src="about:blank" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  </div>
+
     <!-- Hardening: ensure settings modals are clickable and above any stray overlays -->
     <style id="wf-settings-modal-hardening">
       .admin-modal-overlay { z-index: 10100 !important; pointer-events: auto !important; }
       #addressDiagnosticsModal { z-index: 10110 !important; }
       #shippingSettingsModal { z-index: 10110 !important; }
       #deployManagerModal { z-index: 10110 !important; }
+      #siteDeploymentModal { z-index: 10110 !important; }
       #dbSchemaAuditModal { z-index: 10110 !important; }
+      #shoppingCartModal { z-index: 10110 !important; }
     </style>
 
     <script>
@@ -384,6 +575,192 @@ body[data-page="admin/settings"] .settings-grid {
     })();
     </script>
 
+    <!-- Auto-size all settings modals to content -->
+    <script>
+    (function(){
+      function applyAutoSize(root){
+        var scope = root || document;
+        var panels = scope.querySelectorAll('.admin-modal.admin-modal-content');
+        panels.forEach(function(p){
+          if (p.closest('[data-size="fixed"]')) return; // allow opt-out
+          // Remove hardcoded Tailwind utility sizes if present
+          p.classList.remove('w-[90vw]', 'h-[85vh]');
+          // Apply auto-size class (CSS uses !important caps)
+          if (!p.classList.contains('wf-modal-auto')) p.classList.add('wf-modal-auto');
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){ applyAutoSize(document); });
+      } else {
+        applyAutoSize(document);
+      }
+      // Observe future inserts (modals created/attached later)
+      try {
+        var mo = new MutationObserver(function(muts){
+          muts.forEach(function(m){
+            m.addedNodes && m.addedNodes.forEach(function(n){
+              if (!(n instanceof Element)) return;
+              if (n.matches && n.matches('.admin-modal.admin-modal-content')) applyAutoSize(n.parentNode || n);
+              if (n.querySelectorAll) applyAutoSize(n);
+            });
+          });
+        });
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+      } catch(_){ }
+    })();
+    </script>
+
+    <!-- Auto-resize same-origin iframes inside modals (e.g., Categories) -->
+    <script>
+    (function(){
+      function sizeIframe(iframe){
+        try {
+          if (!iframe || !iframe.contentDocument) return;
+          var doc = iframe.contentDocument;
+          var body = doc.body;
+          var html = doc.documentElement;
+          var h = Math.max(
+            body ? body.scrollHeight : 0,
+            body ? body.offsetHeight : 0,
+            html ? html.scrollHeight : 0,
+            html ? html.offsetHeight : 0
+          );
+          iframe.style.height = Math.max(260, Math.min(h + 12, Math.floor(window.innerHeight * 0.85))) + 'px';
+        } catch(_) {}
+      }
+      function bindAutoResize(iframe){
+        if (!iframe || iframe.__wfAutoSized) return;
+        iframe.__wfAutoSized = true;
+        var onLoad = function(){
+          sizeIframe(iframe);
+          try {
+            var body = iframe.contentDocument && iframe.contentDocument.body;
+            if (body && 'ResizeObserver' in window) {
+              var ro = new ResizeObserver(function(){ sizeIframe(iframe); });
+              ro.observe(body);
+              iframe.__wfResizeObserver = ro;
+            }
+          } catch(_) {}
+        };
+        iframe.addEventListener('load', onLoad);
+        setTimeout(function(){ sizeIframe(iframe); }, 100);
+      }
+      function init(){
+        document.querySelectorAll('iframe[data-auto-resize="true"]').forEach(bindAutoResize);
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+      try {
+        var mo = new MutationObserver(function(muts){
+          muts.forEach(function(m){
+            m.addedNodes && m.addedNodes.forEach(function(n){
+              if (!(n instanceof Element)) return;
+              if (n.matches && n.matches('iframe[data-auto-resize="true"]')) bindAutoResize(n);
+              if (n.querySelectorAll) n.querySelectorAll('iframe[data-auto-resize="true"]').forEach(bindAutoResize);
+            });
+          });
+        });
+        mo.observe(document.documentElement, { childList: true, subtree: true });
+      } catch(_) {}
+
+      // Cross-iframe messaging: exact sizing from child when available
+      window.addEventListener('message', function(ev){
+        try {
+          var d = ev.data || {};
+          if (d && d.type === 'wf-iframe-size' && typeof d.height === 'number') {
+            if (d.key === 'categories') {
+              var f = document.getElementById('categoriesFrame');
+              if (f) {
+                f.style.height = Math.max(160, Math.min(d.height + 12, Math.floor(window.innerHeight * 0.85))) + 'px';
+                // Nudge panel auto-size in case height decreased
+                try {
+                  var p = f.closest('.admin-modal.admin-modal-content');
+                  if (p && !p.classList.contains('wf-modal-auto')) p.classList.add('wf-modal-auto');
+                } catch(_) {}
+              }
+            }
+          }
+        } catch(_) {}
+      });
+    })();
+    </script>
+
+    <!-- Fallback delegated handlers: ensure core buttons work even if bundles lag -->
+    <script>
+    (function(){
+      try {
+        if (window.__wfSettingsFallbackBound) return; // idempotent
+        window.__wfSettingsFallbackBound = true;
+        var onClick = function(ev){
+          try {
+            var t = ev.target && ev.target.closest ? ev.target.closest('[data-action]') : null;
+            if (!t) return;
+            // Health & Diagnostics
+            if (t.matches('[data-action="open-health-diagnostics"]')) {
+              ev.preventDefault(); ev.stopPropagation();
+              var m = document.getElementById('healthModal');
+              if (m) {
+                // bring to top and ensure over-header
+                try { if (m.parentElement && m.parentElement !== document.body) document.body.appendChild(m); } catch(_){ }
+                try { m.classList.add('over-header'); m.style.removeProperty('z-index'); m.style.pointerEvents = 'auto'; } catch(_){ }
+                m.classList.remove('hidden');
+                m.classList.add('show');
+                m.setAttribute('aria-hidden','false');
+              }
+              return;
+            }
+            // Secrets Manager
+            if (t.matches('[data-action="open-secrets-modal"]')) {
+              ev.preventDefault(); ev.stopPropagation();
+              var s = document.getElementById('secretsModal');
+              if (s) {
+                try { if (s.parentElement && s.parentElement !== document.body) document.body.appendChild(s); } catch(_){ }
+                try { s.classList.add('over-header'); s.style.removeProperty('z-index'); s.style.pointerEvents = 'auto'; } catch(_){ }
+                s.classList.remove('hidden');
+                s.classList.add('show');
+                s.setAttribute('aria-hidden','false');
+              }
+              return;
+            }
+            // Account Settings navigation
+            if (t.matches('[data-action="open-account-settings"]')) {
+              ev.preventDefault(); ev.stopPropagation();
+              var target = '/sections/account_settings.php';
+              try { window.location.assign(target); } catch(_) { window.location.href = target; }
+              return;
+            }
+            // Shopping Cart Settings
+            if (t.matches('[data-action="open-shopping-cart"]')) {
+              ev.preventDefault(); ev.stopPropagation();
+              try {
+                var scm = document.getElementById('shoppingCartModal');
+                if (scm) {
+                  try {
+                    if (scm.parentElement && scm.parentElement !== document.body) {
+                      document.body.appendChild(scm);
+                    }
+                    scm.classList.add('over-header');
+                    scm.style.removeProperty('z-index');
+                  } catch(_) {}
+                  scm.classList.remove('hidden');
+                  scm.classList.add('show');
+                  scm.setAttribute('aria-hidden','false');
+                  scm.style.pointerEvents = 'auto';
+                }
+              } catch(_) {}
+              return;
+            }
+          } catch(_){ }
+        };
+        document.addEventListener('click', onClick, true);
+        document.addEventListener('click', onClick);
+      } catch(_){ }
+    })();
+    </script>
+
   <!-- Delegated click handler so buttons work regardless of when they are rendered -->
   <script>
   (function(){
@@ -393,6 +770,112 @@ body[data-page="admin/settings"] .settings-grid {
         if (t) { ev.preventDefault(); ev.stopPropagation(); if (window.__wfEnsureAddressDiagnosticsModal) window.__wfEnsureAddressDiagnosticsModal(); return; }
         var s = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-shipping-settings"], #shippingSettingsBtn') : null;
         if (s) { ev.preventDefault(); ev.stopPropagation(); if (window.__wfEnsureShippingSettingsModal) window.__wfEnsureShippingSettingsModal(); return; }
+        var a = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-attributes"], #attributesBtn') : null;
+        if (a) {
+          ev.preventDefault(); ev.stopPropagation();
+          try {
+            var m = document.getElementById('attributesModal');
+            if (m) {
+              try {
+                if (m.parentElement && m.parentElement !== document.body) {
+                  document.body.appendChild(m);
+                }
+                m.classList.add('over-header');
+                m.style.removeProperty('z-index');
+                var f = m.querySelector('#attributesFrame');
+                if (f && !f.getAttribute('src')) {
+                  f.setAttribute('src', f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1');
+                }
+              } catch(_) {}
+              m.classList.remove('hidden');
+              m.classList.add('show');
+              m.setAttribute('aria-hidden','false');
+              m.style.pointerEvents = 'auto';
+            }
+          } catch(_) {}
+          return;
+        }
+        // Shopping Cart Settings (redundant opener)
+        var sc2 = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-shopping-cart"], #shoppingCartBtn') : null;
+        if (sc2) {
+          ev.preventDefault(); ev.stopPropagation();
+          try {
+            var mm = document.getElementById('shoppingCartModal');
+            if (mm) {
+              try {
+                if (mm.parentElement && mm.parentElement !== document.body) {
+                  document.body.appendChild(mm);
+                }
+                mm.classList.add('over-header');
+                mm.style.removeProperty('z-index');
+              } catch(_) {}
+              mm.classList.remove('hidden');
+              mm.classList.add('show');
+              mm.setAttribute('aria-hidden','false');
+              mm.style.pointerEvents = 'auto';
+            }
+          } catch(_) {}
+          return;
+        }
+        // Categories Management
+        var c = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-categories"], #categoriesBtn') : null;
+        if (c) {
+          ev.preventDefault(); ev.stopPropagation();
+          try {
+            var m = document.getElementById('categoriesModal');
+            if (m) {
+              try {
+                // Ensure overlay is attached to body and above header
+                if (m.parentElement && m.parentElement !== document.body) {
+                  document.body.appendChild(m);
+                }
+                m.classList.add('over-header');
+                m.style.removeProperty('z-index');
+                // Prime iframe src (prefer data-src if present)
+                var f = m.querySelector('iframe');
+                if (f) {
+                  var current = f.getAttribute('src');
+                  if (!current || current === 'about:blank') {
+                    var ds = f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
+                    f.setAttribute('src', ds);
+                  }
+                }
+              } catch(_) {}
+              m.classList.remove('hidden');
+              m.classList.add('show');
+              m.setAttribute('aria-hidden','false');
+              m.style.pointerEvents = 'auto';
+            }
+          } catch(_) {}
+          return;
+        }
+        // Size/Color Redesign Tool
+        var rz = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-size-color-redesign"], #sizeColorRedesignBtn') : null;
+        if (rz) {
+          ev.preventDefault(); ev.stopPropagation();
+          try {
+            var m = document.getElementById('sizeColorRedesignModal');
+            if (m) {
+              try {
+                if (m.parentElement && m.parentElement !== document.body) {
+                  document.body.appendChild(m);
+                }
+                m.classList.add('over-header');
+                m.style.removeProperty('z-index');
+                var f = document.getElementById('sizeColorRedesignFrame');
+                if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+                  var ds = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
+                  f.setAttribute('src', ds);
+                }
+              } catch(_) {}
+              m.classList.remove('hidden');
+              m.classList.add('show');
+              m.setAttribute('aria-hidden','false');
+              m.style.pointerEvents = 'auto';
+            }
+          } catch(_) {}
+          return;
+        }
         var d = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-deploy-manager"], #deployManagerBtn') : null;
         if (d) {
           ev.preventDefault(); ev.stopPropagation();
@@ -475,8 +958,118 @@ body[data-page="admin/settings"] .settings-grid {
           }
           return;
         }
+        var tm = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-template-manager"], #templateManagerBtn') : null;
+        if (tm) {
+          ev.preventDefault(); ev.stopPropagation();
+          try {
+            var el = document.getElementById('templateManagerModal');
+            if (el) {
+              if (el.parentElement && el.parentElement !== document.body) {
+                document.body.appendChild(el);
+              }
+              el.classList.add('over-header');
+              el.classList.add('show');
+              el.classList.remove('hidden');
+              el.setAttribute('aria-hidden','false');
+              el.style.pointerEvents = 'auto';
+              var f = document.getElementById('templateManagerFrame');
+              if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+                var ds = f.getAttribute('data-src') || '/sections/tools/template_manager.php?modal=1';
+                f.setAttribute('src', ds);
+              }
+            }
+          } catch(_) {}
+          return;
+        }
       }, true);
     } catch(_){ }
+  })();
+  </script>
+
+  <!-- Fallback handlers: ensure Visual & Design tool modals open even if JS entry lags -->
+  <script>
+  (function(){
+    try {
+      function showOverlay(el){
+        if (!el) return;
+        try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_){}
+        el.classList.remove('hidden');
+        el.classList.add('show');
+        el.setAttribute('aria-hidden','false');
+        el.style.pointerEvents = 'auto';
+      }
+      function ensureBgManager(){
+        let el = document.getElementById('backgroundManagerModal');
+        if (el) return el;
+        el = document.createElement('div');
+        el.id = 'backgroundManagerModal';
+        el.className = 'admin-modal-overlay hidden';
+        el.setAttribute('aria-hidden','true');
+        el.setAttribute('role','dialog');
+        el.setAttribute('aria-modal','true');
+        el.setAttribute('tabindex','-1');
+        el.setAttribute('aria-labelledby','backgroundManagerTitle');
+        el.innerHTML = '\n      <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">\n        <div class="modal-header">\n          <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body"></div>\n      </div>';
+        try { document.body.appendChild(el); } catch(_){ }
+        return el;
+      }
+      function ensureCssCatalog(){
+        let el = document.getElementById('cssCatalogModal');
+        if (el) return el;
+        el = document.createElement('div');
+        el.id = 'cssCatalogModal';
+        el.className = 'admin-modal-overlay hidden';
+        el.setAttribute('aria-hidden','true');
+        el.setAttribute('role','dialog');
+        el.setAttribute('aria-modal','true');
+        el.setAttribute('tabindex','-1');
+        el.setAttribute('aria-labelledby','cssCatalogTitle');
+        el.innerHTML = '\n      <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">\n        <div class="modal-header">\n          <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body">\n          <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>\n        </div>\n      </div>';
+        try { document.body.appendChild(el); } catch(_){}
+        return el;
+      }
+      function primeIframe(id){
+        try {
+          const f = document.getElementById(id);
+          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+            const ds = f.getAttribute('data-src');
+            if (ds) f.setAttribute('src', ds);
+          }
+        } catch(_){}
+      }
+      document.addEventListener('click', function(ev){
+        const q = (sel) => ev.target && ev.target.closest ? ev.target.closest(sel) : null;
+        // Area-Item Mapper
+        if (q('[data-action="open-area-item-mapper"]')){
+          ev.preventDefault(); ev.stopPropagation();
+          const m = document.getElementById('areaItemMapperModal');
+          if (m) { primeIframe('areaItemMapperFrame'); showOverlay(m); }
+          return;
+        }
+        // Room Map Editor
+        if (q('[data-action="open-room-map-editor"]')){
+          ev.preventDefault(); ev.stopPropagation();
+          const m = document.getElementById('roomMapEditorModal');
+          if (m) { primeIframe('roomMapEditorFrame'); showOverlay(m); }
+          return;
+        }
+        // Background Manager (no iframe; content provided by Vite module)
+        if (q('[data-action="open-background-manager"]')){
+          ev.preventDefault(); ev.stopPropagation();
+          const m = ensureBgManager();
+          showOverlay(m);
+          return;
+        }
+        // CSS Catalog
+        if (q('[data-action="open-css-catalog"]')){
+          ev.preventDefault(); ev.stopPropagation();
+          const m = ensureCssCatalog();
+          primeIframe('cssCatalogFrame');
+          showOverlay(m);
+          return;
+        }
+      }, true);
+    } catch(_) {}
   })();
   </script>
 
@@ -580,6 +1173,62 @@ body[data-page="admin/settings"] .settings-grid {
 
     
 
+    <script>
+    // Fallback openers for AI & Automation Tools, AI Provider, and Square Settings
+    (function(){
+      try {
+        if (window.__wfAIModalFallbackBound) return; // prevent double binding
+        window.__wfAIModalFallbackBound = true;
+        document.addEventListener('click', function(ev){
+          var closest = function(sel){ return ev.target && ev.target.closest ? ev.target.closest(sel) : null; };
+          // AI Tools
+          if (closest('[data-action="open-ai-tools"], #aiToolsBtn')) {
+            ev.preventDefault(); ev.stopPropagation();
+            try {
+              var m = document.getElementById('aiToolsModal');
+              if (m) {
+                try { if (m.parentElement && m.parentElement !== document.body) document.body.appendChild(m); m.classList.add('over-header'); } catch(_){ }
+                m.classList.remove('hidden');
+                m.classList.add('show');
+                m.setAttribute('aria-hidden','false');
+              }
+            } catch(_){ }
+            return;
+          }
+          // AI Provider (AI Settings)
+          if (closest('[data-action="open-ai-settings"], #aiSettingsBtn')) {
+            ev.preventDefault(); ev.stopPropagation();
+            try {
+              var m2 = document.getElementById('aiSettingsModal');
+              if (m2) {
+                try { if (m2.parentElement && m2.parentElement !== document.body) document.body.appendChild(m2); m2.classList.add('over-header'); } catch(_){ }
+                m2.classList.remove('hidden');
+                m2.classList.add('show');
+                m2.setAttribute('aria-hidden','false');
+              }
+            } catch(_){ }
+            return;
+          }
+          // Square Settings
+          if (closest('[data-action="open-square-settings"], #squareSettingsBtn')) {
+            ev.preventDefault(); ev.stopPropagation();
+            try {
+              var m3 = document.getElementById('squareSettingsModal');
+              if (m3) {
+                try { if (m3.parentElement && m3.parentElement !== document.body) document.body.appendChild(m3); m3.classList.add('over-header'); } catch(_){ }
+                m3.classList.remove('hidden');
+                m3.classList.add('show');
+                m3.setAttribute('aria-hidden','false');
+              }
+            } catch(_){ }
+            return;
+          }
+        }, true);
+      } catch(_) {}
+    })();
+    </script>
+
+
     <!-- Dev Status Dashboard Modal (iframe embed) -->
     <div id="devStatusModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
       <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
@@ -628,6 +1277,19 @@ body[data-page="admin/settings"] .settings-grid {
         </div>
         <div class="modal-body">
           <iframe id="repoCleanupFrame" title="Repository Cleanup" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/repo_cleanup.php?modal=1" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attributes Management Modal (iframe embed) -->
+    <div id="attributesModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="attributesTitle">
+      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+        <div class="modal-header">
+          <h2 id="attributesTitle" class="admin-card-title">🧩 Genders, Sizes, &amp; Colors</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <iframe id="attributesFrame" title="Attributes Management" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/components/embeds/attributes_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -729,6 +1391,7 @@ body[data-page="admin/settings"] .settings-grid {
         <button type="button" id="dashboardConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
         <button type="button" id="attributesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-attributes">Genders, Sizes, &amp; Colors</button>
         <button type="button" id="templateManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-template-manager">Template Manager</button>
+        <button type="button" id="shoppingCartBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shopping-cart" onclick="(function(b){try{var m=document.getElementById('shoppingCartModal');if(m){if(m.parentElement&&m.parentElement!==document.body){document.body.appendChild(m);}m.classList.add('over-header');m.classList.remove('hidden');m.classList.add('show');m.setAttribute('aria-hidden','false');m.style.pointerEvents='auto';}}catch(e){}})(this); return false;">Shopping Cart</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-blue', 'Content Management', 'Organize products, categories, and room content', $__content); ?>
 
       <?php // Visual & Design ?>
@@ -754,7 +1417,7 @@ body[data-page="admin/settings"] .settings-grid {
         <button type="button" id="emailConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-settings">Email Configuration</button>
         <button type="button" id="emailHistoryBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-history">Email History</button>
         <button type="button" id="loggingStatusBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-logging-status">Logging Status</button>
-        <a class="admin-settings-button btn-primary btn-full-width" href="/receipt.php">Receipt Messages</a>
+        <button type="button" id="receiptMessagesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-receipt-messages">Receipt Messages</button>
         <button type="button" id="emailTestBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-test">Send Sample Email</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-orange', 'Communication', 'Email configuration and customer messaging', $__content); ?>
 
@@ -762,6 +1425,7 @@ body[data-page="admin/settings"] .settings-grid {
       <?php ob_start(); ?>
         <button type="button" id="accountSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-account-settings">Account Settings</button>
         <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=cost-breakdown-manager">Cost Breakdown Manager</a>
+        <button type="button" id="siteDeploymentBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-site-deployment">Site Deployment</button>
         <button type="button" id="deployManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-deploy-manager">Deploy Manager</button>
         <button type="button" id="dbSchemaAuditBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-db-schema-audit">DB Schema Audit</button>
         <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Health & Diagnostics</button>
@@ -829,7 +1493,7 @@ body[data-page="admin/settings"] .settings-grid {
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
-          <iframe id="areaItemMapperFrame" title="Area-Item Mapper" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
+          <iframe id="areaItemMapperFrame" title="Area-Item Mapper" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/area_item_mapper.php?modal=1&v=20251007a" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -858,7 +1522,7 @@ body[data-page="admin/settings"] .settings-grid {
           <span class="modal-status-chip" aria-live="polite"></span>
         </div>
         <div class="modal-body">
-          <iframe id="templateManagerFrame" title="Template Manager" src="about:blank" data-src="/sections/admin_router.php?section=reports&modal=1" class="wf-admin-embed-frame"></iframe>
+          <iframe id="templateManagerFrame" title="Template Manager" src="about:blank" data-src="/sections/tools/template_manager.php?modal=1" class="wf-admin-embed-frame"></iframe>
         </div>
       </div>
     </div>
@@ -1368,7 +2032,7 @@ body[data-page="admin/settings"] .settings-grid {
           <span class="modal-status-chip" aria-live="polite"></span>
         </div>
         <div class="modal-body">
-          <iframe id="categoriesFrame" title="Category Management" src="about:blank" data-src="/category_management.php" class="wf-admin-embed-frame"></iframe>
+          <iframe id="categoriesFrame" title="Category Management" src="about:blank" data-src="/sections/admin_categories.php?modal=1" class="wf-admin-embed-frame"></iframe>
         </div>
       </div>
     </div>
@@ -1389,62 +2053,22 @@ body[data-page="admin/settings"] .settings-grid {
 
     <!-- Categories Modal (hidden by default) -->
     <div id="categoriesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="categoriesTitle">
-      <div class="admin-modal admin-modal-content" style="max-width: 60rem; max-height: none;">
+      <div class="admin-modal admin-modal-content wf-modal-auto">
         <div class="modal-header">
           <h2 id="categoriesTitle" class="admin-card-title">📂 Category Management</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
           <span class="modal-status-chip" aria-live="polite"></span>
         </div>
-        <div class="modal-body">
-          <div class="space-y-4">
-            <iframe src="/sections/admin_categories.php?modal=1" style="width:100%;height:100%;min-height:250px;border:none;" class="wf-admin-embed-frame"></iframe>
+        <div class="modal-body modal-body--compact">
+          <div>
+            <iframe id="categoriesFrame" src="/sections/admin_categories.php?modal=1" class="wf-admin-embed-frame w-full border-0 min-h-200" data-auto-resize="true"></iframe>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Attributes Management Modal (hidden by default) -->
-    <div id="attributesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="attributesTitle">
-      <div class="admin-modal admin-modal-content">
-        <div class="modal-header">
-          <h2 id="attributesTitle" class="admin-card-title">🧩 Gender, Size &amp; Color Management</h2>
-          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
-          <span class="modal-status-chip" aria-live="polite"></span>
-        </div>
-        <div class="modal-body">
-          <div id="attributesResult" class="text-sm text-gray-500 mb-2"></div>
-          <div class="grid gap-4 md:grid-cols-3">
-            <div class="attr-col">
-              <h3 class="text-base font-semibold mb-2">Gender</h3>
-              <form class="flex gap-2 mb-2" data-action="attr-add-form" data-type="gender">
-                <input type="text" class="attr-input text-sm border border-gray-300 rounded px-2 py-1 flex-1" placeholder="Add gender (e.g., Unisex)" maxlength="64">
-                <button type="submit" class="btn btn-brand" data-action="attr-add" data-type="gender">Add</button>
-              </form>
-              <ul id="attrListGender" class="attr-list space-y-1"></ul>
-            </div>
-            <div class="attr-col">
-              <h3 class="text-base font-semibold mb-2">Size</h3>
-              <form class="flex gap-2 mb-2" data-action="attr-add-form" data-type="size">
-                <input type="text" class="attr-input text-sm border border-gray-300 rounded px-2 py-1 flex-1" placeholder="Add size (e.g., XL)" maxlength="64">
-                <button type="submit" class="btn btn-brand" data-action="attr-add" data-type="size">Add</button>
-              </form>
-              <ul id="attrListSize" class="attr-list space-y-1"></ul>
-            </div>
-            <div class="attr-col">
-              <h3 class="text-base font-semibold mb-2">Color</h3>
-              <form class="flex gap-2 mb-2" data-action="attr-add-form" data-type="color">
-                <input type="text" class="attr-input text-sm border border-gray-300 rounded px-2 py-1 flex-1" placeholder="Add color (e.g., Royal Blue)" maxlength="64">
-                <button type="submit" class="btn btn-brand" data-action="attr-add" data-type="color">Add</button>
-              </form>
-              <ul id="attrListColor" class="attr-list space-y-1"></ul>
-            </div>
-          </div>
-          <div class="attributes-actions flex justify-end mt-4">
-            <button type="button" class="btn btn-secondary" data-action="attr-save-order">Save Order</button>
-          </div>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- CSS Rules Modal (hidden by default) -->
     <div id="cssRulesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="cssRulesTitle">
@@ -1490,7 +2114,10 @@ body[data-page="admin/settings"] .settings-grid {
           <div class="space-y-4">
             <p class="text-sm text-gray-700">Toggle which sections are active on your Dashboard, then click Save.</p>
             <div class="overflow-x-auto">
-              <table class="min-w-full text-sm" id="dashboardSectionsTable">
+              <table class="w-full text-sm" id="dashboardSectionsTable">
+                <colgroup>
+                  <col><col><col><col><col>
+                </colgroup>
                 <thead>
                   <tr class="border-b">
                     <th class="p-2 text-left">Order</th>

@@ -301,26 +301,39 @@ HTML;
             // Get image path with fallbacks
             $imagePath = $this->getItemImagePath($item);
 
-            // Add image information to item data for popup
-            $itemWithImage = $item;
-            $itemWithImage['primaryImageUrl'] = $imagePath;
+            // Normalize item payload for popup/modal
+            $normalized = $item;
+            $normalized['primaryImageUrl'] = $imagePath;
+            // Ensure canonical fields used by JS
+            if (empty($normalized['image'])) { $normalized['image'] = $imagePath; }
+            $normalized['stockLevel'] = $stockLevel;
+            if (!isset($normalized['price'])) {
+                $normalized['price'] = isset($item['price']) ? $item['price'] : (isset($item['currentPrice']) ? $item['currentPrice'] : (isset($item['retailPrice']) ? $item['retailPrice'] : 0));
+            }
 
-            // Generate item icon with basic initial positioning to prevent stacking at 0,0
-            // $initialTop = 50 + ($index * 80); // Spread items vertically initially
-            // $initialLeft = 50 + ($index * 100); // Spread items horizontally initially
-
-            $itemWithImageJson = htmlspecialchars(json_encode($itemWithImage));
-            $itemJson = htmlspecialchars(json_encode($item));
+            // Prepare JSON safely: do not escape quotes so JSON remains parseable in JS
+            $normalizedJson = htmlspecialchars(json_encode($normalized), ENT_NOQUOTES);
             $itemAlt = htmlspecialchars($item['name'] ?? $item['productName'] ?? 'Product');
+            $sku = htmlspecialchars($item['sku'] ?? '');
+            $name = htmlspecialchars($item['name'] ?? $item['productName'] ?? '');
+            $priceAttr = htmlspecialchars((string)($normalized['price'] ?? 0));
+            $imageAttr = htmlspecialchars($imagePath);
+
             $html .= <<<HTML
     <div class="item-icon{$outOfStockClass} room-item room-item-position-{$index}"
          id="item-icon-{$index}"
-         data-product-id="{$item['sku']}"
+         data-product-id="{$sku}"
+         data-sku="{$sku}"
+         data-name="{$name}"
+         data-price="{$priceAttr}"
+         data-image="{$imageAttr}"
          data-stock="{$stockLevel}"
+         data-stock-level="{$stockLevel}"
          data-index="{$index}"
-         data-mouseover-action="showGlobalPopup" data-params='{"itemData":{$itemWithImageJson}}'
+         data-product='{$normalizedJson}'
+         data-mouseover-action="showGlobalPopup" data-params='{"itemData":{$normalizedJson}}'
          data-mouseout-action="hideGlobalPopup"
-         data-action="openQuantityModal" data-params='{"itemData":{$itemJson}}'
+         data-action="openQuantityModal" data-params='{"itemData":{$normalizedJson}}'
          >
         <img src="{$imagePath}" alt="{$itemAlt}" loading="lazy" class="room-item-img">
         {$outOfStockBadge}

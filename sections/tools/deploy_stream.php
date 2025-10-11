@@ -6,9 +6,14 @@ $ROOT = dirname(__DIR__, 2);
 
 // Optional auth
 $authPath = $ROOT . '/includes/auth.php';
+$authHelperPath = $ROOT . '/includes/auth_helper.php';
 if (file_exists($authPath)) {
     require_once $authPath;
-    if (function_exists('isLoggedIn') && !isLoggedIn()) {
+    if (file_exists($authHelperPath)) {
+        require_once $authHelperPath;
+    }
+    $loggedIn = class_exists('AuthHelper') ? AuthHelper::isLoggedIn() : (function_exists('isLoggedIn') ? isLoggedIn() : false);
+    if (!$loggedIn) {
         http_response_code(403);
         header('Content-Type: text/plain');
         echo 'Forbidden';

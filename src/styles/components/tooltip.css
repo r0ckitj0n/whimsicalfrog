@@ -4,11 +4,13 @@
 
 .wf-tooltip {
   position: absolute;
-  /* Elevated above admin navbar (z-index ~2000) */
-  z-index: var(--z-index-tooltip, 3000);
+  /* Above admin overlays (header/nav ~2000, overlays ~10100) */
+  z-index: var(--z-index-tooltip, 12050);
   max-width: min(320px, 90vw);
   color: #fff;
   pointer-events: none;
+  display: block;
+  opacity: 1;
 }
 
 
@@ -31,17 +33,12 @@
   line-height: 1.45;
 }
 
-/* Arrow */
-.wf-tooltip__arrow {
-  width: 0; height: 0;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 8px solid rgba(17, 24, 39, 0.98);
-  margin: 0 auto;
-}
+/* Arrow (hidden) */
+.wf-tooltip__arrow { display: none !important; }
 
-/* Position variants (for future expansion) */
-.wf-tooltip--top .wf-tooltip__arrow { border-top-color: rgba(17, 24, 39, 0.98); }
-.wf-tooltip--bottom .wf-tooltip__arrow { transform: rotate(180deg); }
-.wf-tooltip--left .wf-tooltip__arrow { display: none; }
-.wf-tooltip--right .wf-tooltip__arrow { display: none; }
+/* Position variants ignored when arrow hidden */
+.wf-tooltip--top .wf-tooltip__arrow,
+.wf-tooltip--bottom .wf-tooltip__arrow,
+.wf-tooltip--left .wf-tooltip__arrow,
+.wf-tooltip--right .wf-tooltip__arrow { display: none !important; }
+

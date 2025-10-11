@@ -4,7 +4,7 @@ declare(strict_types=1);
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 header('Content-Type: application/json');
-require_once __DIR__ . '/../../api/config.php';
+require_once __DIR__ . '/api/config.php';
 try {
     Database::getInstance();
     $sql = "SELECT rca.room_number, rca.category_id, rca.is_primary, c.name AS category_name

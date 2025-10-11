@@ -63,16 +63,27 @@ export const cart = {
   add(itemIn, qty = 1) {
     const normSku = String(itemIn.sku ?? itemIn.id ?? '');
     const normPrice = Number(itemIn.price ?? itemIn.retailPrice ?? 0);
-    const existing = state.items.find(i => String(i.sku) === normSku);
-    if (existing) {
-      existing.quantity += qty;
-      if (!Number.isFinite(existing.price) || existing.price <= 0) existing.price = normPrice;
+    const mergeDupes = !(typeof window !== 'undefined' && window.__WF_CART_MERGE_DUPES === false);
+    if (mergeDupes) {
+      const existing = state.items.find(i => String(i.sku) === normSku);
+      if (existing) {
+        existing.quantity += qty;
+        if (!Number.isFinite(existing.price) || existing.price <= 0) existing.price = normPrice;
+      } else {
+        state.items.push({ ...itemIn, sku: normSku, price: normPrice, quantity: qty });
+      }
     } else {
+      // Keep duplicates as separate lines
       state.items.push({ ...itemIn, sku: normSku, price: normPrice, quantity: qty });
     }
     recalc();
     persist();
     notify('success', `Added ${itemIn.name || itemIn.sku} (x${qty})`, '✅ Added to Cart');
+    try {
+      if (typeof window !== 'undefined' && window.__WF_OPEN_CART_ON_ADD === true) {
+        window.WF_CartModal && typeof window.WF_CartModal.open === 'function' && window.WF_CartModal.open();
+      }
+    } catch(_) {}
   },
   remove(sku) {
     const key = String(sku);

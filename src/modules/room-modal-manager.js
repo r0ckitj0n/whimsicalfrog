@@ -252,20 +252,32 @@ class RoomModalManager {
             } catch(_) {}
         };
 
-        // Room door clicks
+        // Room door clicks (capture-phase). Do not rely on defaultPrevented; other listeners may use it.
         document.addEventListener('click', (e) => {
-            const doorLink = e.target.closest('[data-room], .door-link, .room-door, .door-area, [data-room-number]');
-            if (doorLink && !e.defaultPrevented) {
+            try {
+                const doorLink = e.target.closest && e.target.closest('[data-room], .door-link, .room-door, .door-area, [data-room-number]');
+                if (!doorLink) return;
+
+                // Diagnostics
+                try {
+                    const tgt = e.target && (e.target.id || e.target.className || e.target.nodeName);
+                    console.log('[RoomModalManager] Door click detected (delegated)', { target: tgt, prevented: e.defaultPrevented });
+                } catch(_) {}
+
                 e.preventDefault();
-                e.stopPropagation();
+                // Stop propagation to avoid duplicate opens if other handlers exist
+                if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
 
-                const roomNumber = doorLink.dataset.room ||
-                                 doorLink.href?.match(/room=(\d+)/)?.[1] ||
-                                 doorLink.getAttribute('data-room-number');
+                const roomNumber = doorLink.dataset?.room ||
+                                   (doorLink.href && doorLink.href.match(/room=(\d+)/)?.[1]) ||
+                                   doorLink.getAttribute('data-room-number');
 
+                console.log('[RoomModalManager] Resolved room number:', roomNumber, 'from element:', doorLink);
                 if (roomNumber) {
                     this.openRoom(roomNumber);
                 }
+            } catch(err) {
+                console.warn('[RoomModalManager] Delegated door click handler error', err);
             }
         }, true); // Use capture phase to catch events before they bubble
 
@@ -424,21 +436,47 @@ class RoomModalManager {
             if (!icon || !body.contains(icon)) return;
             const data = getIconData(icon);
             if (!data) return;
+            // Cancel any scheduled hide as pointer is back over an icon
+            try {
+                if (typeof window.cancelHideGlobalPopup === 'function') window.cancelHideGlobalPopup();
+                else if (window.parent && typeof window.parent.cancelHideGlobalPopup === 'function') window.parent.cancelHideGlobalPopup();
+            } catch (_) {}
             if (typeof window.showGlobalPopup === 'function') window.showGlobalPopup(icon, data);
             else if (window.parent && typeof window.parent.showGlobalPopup === 'function') window.parent.showGlobalPopup(icon, data);
+            // Keep popup visible when hovering either the icon or the popup
+            try { attachPopupPersistence(icon); } catch (_) {}
         };
         const onOut = (e) => {
             const related = e.relatedTarget;
             const fromIcon = e.target.closest && e.target.closest('.room-product-icon');
-            const stillInside = related && (related === fromIcon || (related.closest && related.closest('.room-product-icon') === fromIcon));
-            if (stillInside) return;
-            if (typeof window.hideGlobalPopup === 'function') window.hideGlobalPopup();
-            else if (window.parent && typeof window.parent.hideGlobalPopup === 'function') window.parent.hideGlobalPopup();
+            const stillInsideIcon = related && (related === fromIcon || (related.closest && related.closest('.room-product-icon') === fromIcon));
+            if (stillInsideIcon) return;
+
+            // If moving towards the popup, allow a longer grace period so popup can cancel the hide on mouseenter
+            const scheduleHide = (win) => {
+                if (win && typeof win.scheduleHideGlobalPopup === 'function') win.scheduleHideGlobalPopup(500);
+                else if (win && typeof win.hideGlobalPopup === 'function') win.hideGlobalPopup();
+            };
+
+            if (typeof window.scheduleHideGlobalPopup === 'function' || typeof window.hideGlobalPopup === 'function') {
+                scheduleHide(window);
+                return;
+            }
+            if (window.parent && (typeof window.parent.scheduleHideGlobalPopup === 'function' || typeof window.parent.hideGlobalPopup === 'function')) {
+                scheduleHide(window.parent);
+                return;
+            }
         };
-        body.addEventListener('mouseover', onOver);
-        body.addEventListener('mouseout', onOut);
-        body.addEventListener('focusin', onOver);
-        body.addEventListener('focusout', onOut);
+        // Avoid double-binding hover popup handlers if the delegated system is active
+        const hasDelegated = !!(document.body && document.body.hasAttribute('data-wf-room-delegated-listeners'));
+        if (!hasDelegated) {
+            body.addEventListener('mouseover', onOver);
+            body.addEventListener('mouseout', onOut);
+            body.addEventListener('focusin', onOver);
+            body.addEventListener('focusout', onOut);
+        } else {
+            console.log('[RoomModalManager] Skipping hover popup listeners; delegated event-manager is active');
+        }
         body.addEventListener('click', (e) => {
             const icon = e.target.closest && e.target.closest('.room-product-icon');
             if (!icon) return;

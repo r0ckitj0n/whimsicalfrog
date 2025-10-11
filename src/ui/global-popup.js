@@ -3,6 +3,13 @@
 // Only the public API (show/hide) and minimal implementation retained.
 
 import { ApiClient } from '../core/api-client.js';
+const __WF_CON = (typeof window !== 'undefined' && window.console) ? window.console : null;
+const console = {
+  log: () => {},
+  warn: () => {},
+  debug: () => {},
+  error: (...args) => { try { __WF_CON && __WF_CON.error && __WF_CON.error(...args); } catch(_) {} }
+};
 
 const BIND_VERSION = 'v2';
 
@@ -14,7 +21,37 @@ class UnifiedPopupSystem {
     this.resizeObserver = null;
     this._anchorViewportRect = null;
     this._badgeCache = new Map();
+    this._graceUntil = 0;
+    this._showing = false;
+    this._mouseMoveHandler = null;
+    this._anchorEl = null;
+    this._lastSwitchTs = 0;
+    this._hideDueAt = 0;
+    this._pendingHide = false;
     this.init();
+  }
+
+  // Replace popup element if fallback shim wrapped classList or attached observers
+  _sanitizePopupEl() {
+    if (!this.popupEl) return;
+    const el = this.popupEl;
+    const cl = el.classList;
+    const hasWrapped = !!(cl && cl.__wfWrapped);
+    const hasMo = !!el.__wfClassMo;
+    if (hasWrapped || hasMo) {
+      const clone = el.cloneNode(true);
+      try {
+        el.replaceWith(clone);
+      } catch (_) {
+        if (el.parentNode) el.parentNode.replaceChild(clone, el);
+      }
+      this.popupEl = clone;
+      try { if (clone.__wfClassMo && clone.__wfClassMo.disconnect) clone.__wfClassMo.disconnect(); } catch(_){}
+      try { delete clone.__wfClassMo; } catch(_){}
+      try { if (clone.classList && clone.classList.__wfWrapped) delete clone.classList.__wfWrapped; } catch(_){}
+      // Remove fallback style if present
+      try { const s = document.getElementById('wf-fallback-globalpopup-style'); if (s && s.parentNode) s.parentNode.removeChild(s); } catch(_){}
+    }
   }
 
   init() {
@@ -27,6 +64,11 @@ class UnifiedPopupSystem {
       .item-popup.positioned{left:auto !important;top:auto !important;}
       /* Neutral background without translucent shade */
       .item-popup{background:transparent !important; box-shadow:none !important;}
+      /* Ensure popup container does not stretch full width; size to its content */
+      .item-popup{display:inline-block !important; width:auto !important; max-width: min(520px, 96vw) !important;}
+      .item-popup .popup-content{display:block !important;}
+      /* Helper: temporarily allow hit-testing through popup */
+      .wf-gp-hitpass{pointer-events:none !important;}
     `;
     document.head.appendChild(styleEl);
     if (this.popupEl) return;
@@ -34,18 +76,19 @@ class UnifiedPopupSystem {
     document.querySelectorAll('.item-popup').forEach(el => {
       if (el.id !== 'itemPopup') el.remove();
     });
-    // Locate existing popup markup from PHP-rendered template
-    this.popupEl = document.getElementById('itemPopup');
+    // Locate existing popup markup from PHP-rendered template (prefer new ID)
+    this.popupEl = document.getElementById('wfItemPopup') || document.getElementById('itemPopup');
     if (!this.popupEl) {
       // Popup not yet in DOM – wait for template insertion
       document.addEventListener('DOMContentLoaded', () => {
-        this.popupEl = document.getElementById('itemPopup');
+        this.popupEl = document.getElementById('wfItemPopup') || document.getElementById('itemPopup');
         if (this.popupEl) this.bindPopupInteractions();
       });
       return; // No popup element right now
     }
 
-    // Popup element found – set up event bindings
+    // Popup element found – sanitize if shim artifacts are present, then bind
+    try { this._sanitizePopupEl(); } catch (_) {}
     this.bindPopupInteractions();
 
     
@@ -75,7 +118,7 @@ class UnifiedPopupSystem {
       console.log('[globalPopup] Popup clicked! SKU:', sku, 'Current item:', this.currentItem);
       try {
         if (typeof window.showGlobalItemModal !== 'function') {
-          await import('../js/global-item-modal.js');
+          await import('../js/detailed-item-modal.js');
         }
       } catch (e2) {
         console.warn('[globalPopup] failed to lazy-load item modal', e2);
@@ -96,7 +139,7 @@ class UnifiedPopupSystem {
     });
     this.popupEl.addEventListener('mouseleave', () => {
       this.isPointerOverPopup = false;
-      this.scheduleHide();
+      this.scheduleHide(500);
     });
 
     // Explicit: Add to Cart button triggers detailed item modal
@@ -113,7 +156,7 @@ class UnifiedPopupSystem {
         const sku = this.currentItem?.sku;
         try {
           if (typeof window.showGlobalItemModal !== 'function') {
-            await import('../js/global-item-modal.js');
+            await import('../js/detailed-item-modal.js');
           }
         } catch (e2) {
           console.warn('[globalPopup] failed to lazy-load item modal (Add)', e2);
@@ -181,16 +224,23 @@ class UnifiedPopupSystem {
     UnifiedPopupSystem._ensureRule(cls, top, left);
     this.popupEl.classList.add(cls);
     this.popupEl.dataset.wfGpPosClass = cls;
+    // Mark as positioned to neutralize legacy absolute rules if present
+    try { this.popupEl.classList.add('positioned'); } catch (_) {}
   }
 
   show(anchorEl, item) {
+    try { this._sanitizePopupEl(); } catch (_) {}
     // Cancel any pending hide when showing
     this.cancelHide();
     // Prevent redundant show calls for the same anchor – avoids flashing
-    if (this.popupEl && this.popupEl.classList.contains('visible') && anchorEl === this._lastAnchor) {
+    if (this.popupEl && (this._showing || this.popupEl.classList.contains('visible')) && anchorEl === this._lastAnchor) {
       return; // already showing for this element
     }
     this._lastAnchor = anchorEl;
+    this._anchorEl = anchorEl;
+    this._showing = true;
+    // Reset pointer state so we can transition between items cleanly
+    this.isPointerOverPopup = false;
     console.log('[globalPopup] show called with:', anchorEl, item);
     this.init();
     if (!this.popupEl) {
@@ -201,6 +251,8 @@ class UnifiedPopupSystem {
       console.warn('[globalPopup] missing anchor or item data:', { anchorEl: !!anchorEl, item: !!item });
       return;
     }
+    // Clear any stale OOS state from previous item before computing new stock
+    try { this.popupEl.classList.remove('oos'); } catch(_) {}
     // Save current item for click handling
     this.currentItem = item;
     // Basic content update
@@ -216,17 +268,31 @@ class UnifiedPopupSystem {
     const stockText = this.popupEl.querySelector('#popupStockText');
     const stockInfo = this.popupEl.querySelector('#popupStock');
     const saleBadge = this.popupEl.querySelector('#popupSaleBadge');
-    const stock = Number(item.stock ?? item.stockLevel ?? 0);
+    // Compute stock robustly: prefer dataset values, then item fields
+    const ds = (anchorEl && anchorEl.dataset) || {};
+    const candidates = [ds.stockLevel, ds.stock, item.stockLevel, item.stock];
+    let stock = 0;
+    for (const c of candidates) {
+      const v = (typeof c === 'string') ? parseInt(c, 10) : Number(c);
+      if (!Number.isNaN(v) && v >= 0) { stock = v; break; }
+    }
     if (stockInfo) {
       stockInfo.textContent = stock > 0 ? `${stock} in stock` : 'Out of stock';
     }
+    // Ensure the item we pass to the detailed modal carries effective stock like the shop card
+    try {
+      if (this.currentItem) {
+        if (typeof this.currentItem.stock === 'undefined' || this.currentItem.stock == null) this.currentItem.stock = stock;
+        if (typeof this.currentItem.stockLevel === 'undefined' || this.currentItem.stockLevel == null) this.currentItem.stockLevel = stock;
+      }
+    } catch (_) {}
     // Configure popup badges for OOS vs in-stock
     if (stock <= 0) {
       // Mark popup state for CSS overrides
       try { this.popupEl.classList.add('oos'); } catch(_) {}
       if (saleBadge) { try { saleBadge.classList.add('hidden'); } catch(_) {} }
-      // Remove any existing stock badge entirely to avoid duplicates
-      try { if (stockBadge && stockBadge.parentNode) stockBadge.parentNode.removeChild(stockBadge); } catch(_) {}
+      // Do not remove stock badge; just hide to allow re-use on next item
+      try { if (stockBadge) stockBadge.classList.add('hidden'); } catch(_) {}
       // Also purge any dynamically rendered badges
       try { const badgeContainer = this.popupEl.querySelector('#popupBadgeContainer'); if (badgeContainer) badgeContainer.innerHTML = ''; } catch(_) {}
       if (stockText) stockText.textContent = 'OUT OF STOCK';
@@ -254,7 +320,7 @@ class UnifiedPopupSystem {
     const currentPriceEl = this.popupEl.querySelector('#popupCurrentPrice');
     const originalPriceEl = this.popupEl.querySelector('#popupOriginalPrice');
     const savingsEl = this.popupEl.querySelector('#popupSavings');
-    if (currentPriceEl) currentPriceEl.textContent = `$${(item.price ?? item.currentPrice ?? 0).toFixed(2)}`;
+    if (currentPriceEl) currentPriceEl.textContent = `$${Number(item.price ?? item.currentPrice ?? 0).toFixed(2)}`;
 
     if (originalPriceEl && savingsEl) {
       const original = Number(item.originalPrice ?? item.retailPrice ?? item.price ?? 0);
@@ -296,10 +362,10 @@ class UnifiedPopupSystem {
       this.popupEl.classList.toggle('in-room-modal', !!inRoomModal);
     }
 
-    // Position: below anchor
+    // Position: below anchor (viewport coordinates for fixed positioning)
     const rect = anchorEl.getBoundingClientRect();
-    let top = rect.bottom + 6 + window.scrollY;
-    let left = rect.left + window.scrollX;
+    let top = rect.bottom + 6; // viewport-relative (no scroll offset for fixed)
+    let left = rect.left;      // viewport-relative (no scroll offset for fixed)
     // Anchor rect relative to the top-window viewport (account for iframe)
     let anchorViewportRect = { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right };
     // If anchor is inside an iframe, adjust coordinates by iframe offset
@@ -308,8 +374,9 @@ class UnifiedPopupSystem {
         const iframe = anchorEl.ownerDocument.defaultView.frameElement;
         if (iframe) {
           const iframeRect = iframe.getBoundingClientRect();
-          top = iframeRect.top + rect.bottom + 6; // rect values are relative to iframe viewport
-          left = iframeRect.left + rect.left;
+          // Adjust to top-window viewport by adding iframe's viewport offset
+          top = iframeRect.top + rect.bottom + 6; // viewport-relative
+          left = iframeRect.left + rect.left;      // viewport-relative
           // Build anchor viewport rect relative to the top window
           anchorViewportRect = {
             top: iframeRect.top + rect.top,
@@ -323,6 +390,12 @@ class UnifiedPopupSystem {
         console.warn('[globalPopup] failed iframe adjustment', err);
       }
     }
+    // Pre-clamp horizontally to reduce initial off-screen flashes before measurement
+    try {
+      const margin = 8;
+      const maxLeft = Math.max(margin, Math.min(left, window.innerWidth - 340));
+      left = maxLeft;
+    } catch (_) {}
     this._applyPosition(top, left);
     // Persist for reclamping on dynamic size changes
     this._anchorViewportRect = anchorViewportRect;
@@ -340,9 +413,17 @@ class UnifiedPopupSystem {
       this.popupEl.classList.add('visible');
       this.popupEl.setAttribute('aria-hidden', 'false');
       console.log('[globalPopup] popup shown');
+      // Grace period to allow pointer to travel from icon/iframe to popup without hiding
+      this._graceUntil = Date.now() + 350;
+      this._showing = false;
+
+      // Document-level mousemove watcher disabled to match backup behavior
+      // (delegated mouseover/mouseout + popup mouseenter/leave + iframe boundary listeners)
 
       // Observe size changes (e.g., image loads) and re-clamp to keep fully visible
       this._ensureResizeObserver();
+      // Install lightweight mousemove watcher to hide when leaving both icon and popup
+      this._installMouseMoveWatcher();
     });
     console.log('[globalPopup] positioned popup at:', { top, left });
 
@@ -403,12 +484,37 @@ class UnifiedPopupSystem {
   }
 
   // Debounced hide: schedule with a short delay to allow pointer to reach the popup
-  scheduleHide(delay = 120) {
-    this.cancelHide();
+  scheduleHide(delay = 500) {
+    const now = Date.now();
+    const remainingGrace = this._graceUntil > now ? (this._graceUntil - now) : 0;
+    const finalDelay = Math.max(delay, remainingGrace + 50);
+    // Throttle correctly:
+    // If a hide is already scheduled sooner than or equal to the requested finalDelay, keep it.
+    // Only reschedule if the requested finalDelay would hide earlier than the existing one.
+    if (this.hideTimer && this._hideDueAt) {
+      const remaining = Math.max(0, this._hideDueAt - now);
+      if (remaining <= finalDelay) {
+        try { console.log('[globalPopup] keep existing hide timer; remaining <= requested', { remaining, requested: finalDelay }); } catch(_) {}
+        return;
+      }
+      // Else: new request is earlier; cancel and reschedule
+      try { console.log('[globalPopup] reschedule earlier hide', { fromMs: remaining, toMs: finalDelay }); } catch(_) {}
+      clearTimeout(this.hideTimer);
+      this.hideTimer = null;
+    }
+    this._pendingHide = true;
+    try { this.popupEl && this.popupEl.classList.add('wf-gp-hitpass'); } catch(_) {}
     this.hideTimer = setTimeout(() => {
-      if (!this.isPointerOverPopup) this.hideImmediate();
-    }, delay);
-    console.log('[globalPopup] hide scheduled in', delay, 'ms');
+      this.hideImmediate();
+    }, finalDelay);
+    this._hideDueAt = now + finalDelay;
+    try {
+      const stack = (new Error()).stack || '';
+      const snippet = stack.split('\n').slice(2, 6).map(s => s.trim()).join(' | ');
+      console.log('[globalPopup] hide scheduled', { requestedMs: delay, finalMs: finalDelay, remainingGraceMs: remainingGrace, from: snippet });
+    } catch (_) {
+      console.log('[globalPopup] hide scheduled in', delay, 'ms');
+    }
   }
 
   cancelHide() {
@@ -416,11 +522,16 @@ class UnifiedPopupSystem {
       clearTimeout(this.hideTimer);
       this.hideTimer = null;
     }
+    this._hideDueAt = 0;
+    this._pendingHide = false;
+    try { this.popupEl && this.popupEl.classList.remove('wf-gp-hitpass'); } catch(_) {}
   }
 
   hideImmediate() {
+    try { this._sanitizePopupEl(); } catch (_) {}
     console.log('[globalPopup] hide immediate');
     if (this.popupEl) {
+      try { this.popupEl.classList.remove('wf-gp-hitpass'); } catch(_) {}
       this.popupEl.classList.remove('visible');
       this.popupEl.classList.add('hidden');
       this.popupEl.classList.remove('in-room-modal');
@@ -430,38 +541,209 @@ class UnifiedPopupSystem {
       console.warn('[globalPopup] no popup element to hide');
     }
     // Cleanup observers/state
+    this._teardownMouseMoveWatcher();
     if (this.resizeObserver) {
       try { this.resizeObserver.disconnect(); } catch (_) {}
     }
     this.resizeObserver = null;
     this._anchorViewportRect = null;
+    this._showing = false;
+    // Allow re-show on same icon: clear last anchor refs
+    this._lastAnchor = null;
+    this._anchorEl = null;
+    try { window.__wfCurrentPopupAnchor = null; } catch(_) {}
+    // Document-level mousemove watcher usage disabled to align with backup behavior
   }
 
   _clampAndApply(anchorViewportRect) {
     if (!this.popupEl || !anchorViewportRect) return;
     const r = this.popupEl.getBoundingClientRect();
     const margin = 8;
-    const spaceBelow = window.innerHeight - anchorViewportRect.bottom - margin;
-    const spaceAbove = anchorViewportRect.top - margin;
-    let targetTopV;
-    if (spaceBelow >= r.height) {
-      targetTopV = anchorViewportRect.bottom + 6;
-    } else if (spaceAbove >= r.height) {
-      targetTopV = anchorViewportRect.top - r.height - 6;
-    } else {
-      const preferBelow = spaceBelow >= spaceAbove;
-      if (preferBelow) {
-        targetTopV = Math.max(margin, Math.min(anchorViewportRect.bottom + 6, window.innerHeight - r.height - margin));
+    const gap = 6;
+
+    // Try side placement first (right/left) to avoid covering nearby icons
+    const spaceRight = window.innerWidth - anchorViewportRect.right - margin;
+    const spaceLeft = anchorViewportRect.left - margin;
+    const canRight = spaceRight >= r.width;
+    const canLeft = spaceLeft >= r.width;
+    let targetTopV, targetLeftV;
+
+    if (canRight || canLeft) {
+      // Align vertically to top of anchor, with clamping
+      targetTopV = Math.max(margin, Math.min(anchorViewportRect.top, window.innerHeight - r.height - margin));
+      if (canRight) {
+        targetLeftV = Math.min(window.innerWidth - r.width - margin, anchorViewportRect.right + gap);
       } else {
-        targetTopV = Math.max(margin, Math.min(anchorViewportRect.top - r.height - 6, window.innerHeight - r.height - margin));
+        targetLeftV = Math.max(margin, anchorViewportRect.left - r.width - gap);
       }
+    } else {
+      // Fall back to vertical placement (below/above) with horizontal clamp
+      const spaceBelow = window.innerHeight - anchorViewportRect.bottom - margin;
+      const spaceAbove = anchorViewportRect.top - margin;
+      if (spaceBelow >= r.height) {
+        targetTopV = anchorViewportRect.bottom + gap;
+      } else if (spaceAbove >= r.height) {
+        targetTopV = anchorViewportRect.top - r.height - gap;
+      } else {
+        const preferBelow = spaceBelow >= spaceAbove;
+        if (preferBelow) {
+          targetTopV = Math.max(margin, Math.min(anchorViewportRect.bottom + gap, window.innerHeight - r.height - margin));
+        } else {
+          targetTopV = Math.max(margin, Math.min(anchorViewportRect.top - r.height - gap, window.innerHeight - r.height - margin));
+        }
+      }
+      targetLeftV = Math.min(Math.max(anchorViewportRect.left, margin), window.innerWidth - r.width - margin);
     }
-    let targetLeftV = Math.min(Math.max(anchorViewportRect.left, margin), window.innerWidth - r.width - margin);
+
+    // Final clamps
     targetLeftV = Math.min(Math.max(targetLeftV, margin), window.innerWidth - r.width - margin);
     targetTopV = Math.min(Math.max(targetTopV, margin), window.innerHeight - r.height - margin);
-    const docLeft = Math.round(targetLeftV + window.scrollX);
-    const docTop = Math.round(targetTopV + window.scrollY);
-    this._applyPosition(docTop, docLeft);
+
+    const fixedLeft = Math.round(targetLeftV);
+    const fixedTop = Math.round(targetTopV);
+    this._applyPosition(fixedTop, fixedLeft);
+    try {
+      console.debug('[globalPopup] clamp', { anchor: anchorViewportRect, popupW: r.width, popupH: r.height, placed: { top: fixedTop, left: fixedLeft }, mode: (canRight||canLeft) ? 'side' : 'vertical' });
+    } catch (_) {}
+  }
+
+  _installMouseMoveWatcher() {
+    if (this._mouseMoveHandler) return;
+    console.debug('[globalPopup] mousemove watcher installed');
+    this._mouseMoveHandler = (e) => {
+      try {
+        const popup = this.popupEl;
+        if (!popup) return;
+        const pr = popup.getBoundingClientRect();
+        const ax = this._anchorEl;
+        const ar = ax ? ax.getBoundingClientRect() : null;
+        const x = e.clientX, y = e.clientY;
+        const pad = 10; // expanded forgiveness to avoid blocking icon transitions
+        const inPopup = (x >= pr.left - pad && x <= pr.right + pad && y >= pr.top - pad && y <= pr.bottom + pad);
+        const inAnchor = ar ? (x >= ar.left - pad && x <= ar.right + pad && y >= ar.top - pad && y <= ar.bottom + pad) : false;
+
+        // Always probe for an underlying icon (bypass popup hitbox) to allow seamless switching
+        const icon = this._findUnderlyingIconAt(x, y);
+        if (icon && icon !== this._lastAnchor) {
+          try {
+            const prevSku = this.currentItem?.sku;
+            const nextSku = icon.dataset?.sku;
+            console.debug('[globalPopup] switching anchor', { from: prevSku, to: nextSku });
+          } catch (_) {}
+          const data = this._extractItemFromIcon(icon);
+          if (data) {
+            // Immediately switch popup to new icon
+            this.show(icon, data);
+            return;
+          }
+        }
+
+        if (inPopup || inAnchor) {
+          this.isPointerOverPopup = true;
+          this.cancelHide();
+        } else {
+          this.isPointerOverPopup = false;
+          // Best practice: schedule hide once on first outside detection; do not extend timer while moving outside
+          if (!this.hideTimer) {
+            try { console.log('[globalPopup] outside detected -> scheduleHide'); } catch(_) {}
+            this.scheduleHide(500);
+          }
+        }
+      } catch (_) {}
+    };
+    document.addEventListener('mousemove', this._mouseMoveHandler, { passive: true });
+  }
+
+  _teardownMouseMoveWatcher() {
+    if (this._mouseMoveHandler) {
+      try { document.removeEventListener('mousemove', this._mouseMoveHandler); } catch (_) {}
+      this._mouseMoveHandler = null;
+      try { console.debug('[globalPopup] mousemove watcher removed'); } catch(_) {}
+    }
+  }
+
+  _findUnderlyingIconAt(x, y) {
+    const popup = this.popupEl;
+    if (!popup) return null;
+    let underlying = null;
+    try {
+      popup.classList.add('wf-gp-hitpass');
+      underlying = document.elementFromPoint(x, y);
+    } catch (_) { underlying = null; }
+    finally {
+      try { popup.classList.remove('wf-gp-hitpass'); } catch(_) {}
+    }
+    // Direct hit in top document
+    const iconTop = underlying && (underlying.closest ? underlying.closest('.item-icon, .room-product-icon') : null);
+    if (iconTop) return iconTop;
+    // If an iframe is under the point, try to resolve inside it (same-origin only)
+    const ifr = (underlying && underlying.tagName === 'IFRAME') ? underlying : null;
+    if (ifr) {
+      try {
+        const rect = ifr.getBoundingClientRect();
+        const ix = x - rect.left;
+        const iy = y - rect.top;
+        const win = ifr.contentWindow;
+        const doc = win && win.document;
+        if (doc && win.location && win.location.origin === window.location.origin) {
+          const innerEl = doc.elementFromPoint(ix, iy);
+          const iconInner = innerEl && (innerEl.closest ? innerEl.closest('.item-icon, .room-product-icon') : null);
+          if (iconInner) return iconInner;
+        }
+      } catch (_) { /* cross-origin or denied */ }
+    }
+    // Also scan any same-origin iframe whose rect contains the point (in case non-iframe element was returned)
+    const iframes = Array.from(document.querySelectorAll('iframe'));
+    for (const f of iframes) {
+      try {
+        const r = f.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+          const ix = x - r.left;
+          const iy = y - r.top;
+          const win = f.contentWindow;
+          const doc = win && win.document;
+          if (doc && win.location && win.location.origin === window.location.origin) {
+            const innerEl = doc.elementFromPoint(ix, iy);
+            const iconInner = innerEl && (innerEl.closest ? innerEl.closest('.item-icon, .room-product-icon') : null);
+            if (iconInner) return iconInner;
+          }
+        }
+      } catch (_) { /* ignore */ }
+    }
+    return null;
+  }
+
+  _extractItemFromIcon(icon) {
+    if (!icon || !icon.dataset) return null;
+    try {
+      if (icon.dataset.product) {
+        try { return JSON.parse(icon.dataset.product); } catch (_) {}
+      }
+      if (icon.dataset.sku) {
+        const stockVal = parseInt(icon.dataset.stock || icon.dataset.stockLevel || '0', 10) || 0;
+        return {
+          sku: icon.dataset.sku,
+          name: icon.dataset.name || icon.dataset.productName || icon.dataset.title || '',
+          price: parseFloat(icon.dataset.price || icon.dataset.cost || icon.dataset.currentPrice || '0') || 0,
+          description: icon.dataset.description || '',
+          stock: stockVal,
+          stockLevel: stockVal,
+          category: icon.dataset.category || '',
+          image: icon.dataset.image || ''
+        };
+      }
+      const attr = icon.getAttribute && icon.getAttribute('onmouseenter');
+      if (attr) {
+        const match = attr.match(/showGlobalPopup\(this,\s*(.+)\)/);
+        if (match) {
+          try {
+            const jsonString = match[1].replace(/&quot;/g, '"').replace(/&#039;/g, "'");
+            return JSON.parse(jsonString);
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   _ensureResizeObserver() {
@@ -494,16 +776,88 @@ window.hideGlobalPopupImmediate = () => unifiedPopup.hideImmediate();
 window.scheduleHideGlobalPopup = (delay) => unifiedPopup.scheduleHide(delay);
 window.cancelHideGlobalPopup = () => unifiedPopup.cancelHide();
 
+// Signal that the modern popup system is present so any server-injected fallback shim can no-op
+try {
+  window.__WF_MODERN_POPUP = BIND_VERSION || 'modern';
+  // Expose the instance for diagnostics/interop
+  window.unifiedPopup = unifiedPopup;
+  // Notify any listeners that modern popup is ready
+  window.dispatchEvent(new CustomEvent('wf:modern-popup-ready'));
+} catch (_) {}
+
+// Cleanup any fallback-shim artifacts and harden APIs against interference
+(function hardenAgainstFallbackShim(){
+  try {
+    // Mark shim disabled globally
+    window.__WF_POPUP_SHIM_DISABLED = true;
+    // Attempt to restore classList methods if the shim wrapped them
+    const popup = document.getElementById('itemPopup') || document.querySelector('.item-popup');
+    if (popup && popup.classList) {
+      const cl = popup.classList;
+      if (cl.__wfWrapped) {
+        try {
+          cl.add = DOMTokenList.prototype.add.bind(cl);
+          cl.remove = DOMTokenList.prototype.remove.bind(cl);
+          delete cl.__wfWrapped;
+        } catch (_) {}
+      }
+      // Disconnect shim MutationObserver if present
+      if (popup.__wfClassMo && typeof popup.__wfClassMo.disconnect === 'function') {
+        try { popup.__wfClassMo.disconnect(); } catch (_) {}
+        try { delete popup.__wfClassMo; } catch (_) {}
+      }
+    }
+
+    // Provide global wrappers that delegate to the class implementation (throttled, robust)
+    window.cancelHideGlobalPopup = () => {
+      try { console.log('[globalPopup] cancelHide requested'); } catch(_) {}
+      try { unifiedPopup.cancelHide(); } catch (_) {}
+    };
+    window.hideGlobalPopupImmediate = () => {
+      try { console.log('[globalPopup] hideImmediate requested'); } catch(_) {}
+      try { unifiedPopup.hideImmediate(); } catch (_) {}
+    };
+    window.scheduleHideGlobalPopup = (delay) => {
+      try { console.log('[globalPopup] scheduleHide requested', delay); } catch(_) {}
+      try { unifiedPopup.scheduleHide(delay); } catch (_) {}
+    };
+  } catch (_) {}
+})();
+
 function propagateToIframes() {
   document.querySelectorAll('iframe').forEach(ifr => {
     try {
       const win = ifr.contentWindow;
       if (win && win.location && win.location.origin === window.location.origin) {
+        // Bridge popup API into same-origin iframes
         win.showGlobalPopup = window.showGlobalPopup;
         win.hideGlobalPopup = window.hideGlobalPopup;
         win.hideGlobalPopupImmediate = window.hideGlobalPopupImmediate;
         win.scheduleHideGlobalPopup = window.scheduleHideGlobalPopup;
         win.cancelHideGlobalPopup = window.cancelHideGlobalPopup;
+
+        // Also attach boundary listeners on the iframe element in the top window
+        // so moving from iframe content to the popup won't prematurely hide it.
+        const cancel = () => { try { window.cancelHideGlobalPopup && window.cancelHideGlobalPopup(); } catch(_) {} };
+        const maybeSchedule = (e) => {
+          try {
+            const popup = document.getElementById('itemPopup');
+            const rt = e && e.relatedTarget;
+            if (popup && (rt === popup || (rt && popup.contains && popup.contains(rt)))) {
+              // Moving into the popup -> cancel hide
+              cancel();
+              return;
+            }
+            // Otherwise, schedule a delayed hide to allow popup to capture mouseenter
+            window.scheduleHideGlobalPopup && window.scheduleHideGlobalPopup(250);
+          } catch(_) {}
+        };
+        // Ensure we don't bind multiple times
+        if (!ifr.__wfPopupBoundaryBound) {
+          ifr.addEventListener('mouseover', cancel);
+          ifr.addEventListener('mouseout', maybeSchedule);
+          ifr.__wfPopupBoundaryBound = true;
+        }
       }
     } catch (_) {
       /* cross-origin – ignore */

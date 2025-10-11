@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/includes/session.php';
 // Ensure DB + env are initialized before attempting auth reconstruction
 require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 // Reconstruct from WF_AUTH if needed before rendering login state
 try {
     ensureSessionStarted();
@@ -129,9 +130,19 @@ echo "<script>(function(){try{console.log('[WF-Header] version ', '" . addslashe
 // Always load the main application bundle so global CSS/JS are available on ALL pages,
 // including admin routes. Previously this was suppressed on admin paths which caused
 // missing CSS for admin pages other than settings.
-echo vite('js/app.js');
-// Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
-echo vite('js/header-bootstrap.js');
+// In dev (localhost) or explicit ?vite=dev, bypass vite() entirely and emit dev scripts directly.
+$__wf_is_localhost = isset($_SERVER['HTTP_HOST']) && (stripos($_SERVER['HTTP_HOST'], 'localhost') !== false);
+if ($__wf_is_localhost || (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'dev')) {
+    $devOrigin = rtrim(getenv('WF_VITE_ORIGIN') ?: 'http://localhost:5176', '/');
+    echo "<script>try{console.log('[Header] DEV mode active', { origin: '" . addslashes($devOrigin) . "' });}catch(_){}</script>\n";
+    echo '<script crossorigin="anonymous" type="module" src="' . $devOrigin . '/@vite/client"></script>' . "\n";
+    echo '<script crossorigin="anonymous" type="module" src="' . $devOrigin . '/src/entries/app.js"></script>' . "\n";
+    echo '<script crossorigin="anonymous" type="module" src="' . $devOrigin . '/src/entries/header-bootstrap.js"></script>' . "\n";
+} else {
+    echo vite('js/app.js');
+    // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
+    echo vite('js/header-bootstrap.js');
+}
 // Final inline override to guarantee help chips are 36x36 with primary brand color
 echo <<<'STYLE'
 <style id="wf-help-chip-override">
@@ -176,7 +187,7 @@ echo <<<'SCRIPT'
   try{
     var origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
     var url = origin.replace(/\/$/,'') + '/api/whoami.php';
-    fetch(url, {credentials:'include'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    fetch(url, {credentials:'include', headers: {'X-WF-ApiClient':'1'}}).then(function(r){return r.ok?r.json():null}).then(function(j){
       if (!j) return;
       if (j && j.userId != null) {
         try { document.body.setAttribute('data-is-logged-in','true'); document.body.setAttribute('data-user-id', String(j.userId)); } catch(_){}
@@ -228,22 +239,30 @@ echo <<<'SCRIPT'
 SCRIPT;
 // Always ensure admin navbar has a horizontal layout on admin ROUTES (fallback before external CSS)
 // Global header offset to keep content and modals clear of the fixed header, site-wide
+// IMPORTANT: Only apply to overlays that are actually visible to avoid blocking clicks
 echo <<<'STYLE'
 <style id="wf-global-header-offset">
   :root{--wf-header-height:64px; --wf-overlay-offset: calc(var(--wf-header-height) + 12px)}
   body{padding-top:var(--wf-header-height)}
-  /* Ensure common overlays/modals are not obscured by the header */
-  .admin-modal-overlay,
-  .modal-overlay,
-  [role="dialog"].overlay,
-  .wf-search-modal,
-  #searchModal,
-  #loggingStatusModal,
-  #databaseTablesModal {
+  /* Ensure common overlays/modals are not obscured by the header (only when visible) */
+  .admin-modal-overlay.show,
+  .modal-overlay.show,
+  [role="dialog"].overlay.show,
+  .wf-search-modal.show,
+  #searchModal.show,
+  #loggingStatusModal.show,
+  #databaseTablesModal.show,
+  .admin-modal-overlay[aria-hidden="false"],
+  .modal-overlay[aria-hidden="false"],
+  [role="dialog"].overlay[aria-hidden="false"],
+  .wf-search-modal[aria-hidden="false"],
+  #searchModal[aria-hidden="false"],
+  #loggingStatusModal[aria-hidden="false"],
+  #databaseTablesModal[aria-hidden="false"] {
     padding-top: var(--wf-overlay-offset) !important;
     align-items: flex-start !important;
     z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important; /* above header and nav using unified token */
-    display: flex !important;             /* ensure flex context */
+    /* Do NOT force display here; let component CSS control visibility */
     justify-content: center !important;   /* center horizontally */
   }
   /* Some frameworks center with margin; neutralize so padding-top is effective */
@@ -304,6 +323,38 @@ try {
     if (!empty($vars) || !empty($customLines)) {
         echo "<style id=\"wf-branding-vars\">:root{\n" . implode("\n", $vars) . (empty($customLines) ? '' : ("\n" . implode("\n", $customLines))) . "\n}</style>\n";
     }
+    // Expose cart behavior toggles from Business Settings (ecommerce)
+    try {
+        $ecomm = BusinessSettings::getByCategory('ecommerce');
+        $raw = isset($ecomm['ecommerce_open_cart_on_add']) ? strtolower((string)$ecomm['ecommerce_open_cart_on_add']) : 'false';
+        $open = ($raw === '1' || $raw === 'true');
+        $showUpsellsRaw = isset($ecomm['ecommerce_cart_show_upsells']) ? strtolower((string)$ecomm['ecommerce_cart_show_upsells']) : 'false';
+        $showUpsells = ($showUpsellsRaw === '1' || $showUpsellsRaw === 'true');
+        $mergeDupesRaw = isset($ecomm['ecommerce_cart_merge_duplicates']) ? strtolower((string)$ecomm['ecommerce_cart_merge_duplicates']) : 'true';
+        $mergeDupes = ($mergeDupesRaw !== '0' && $mergeDupesRaw !== 'false');
+        $confirmClearRaw = isset($ecomm['ecommerce_cart_confirm_clear']) ? strtolower((string)$ecomm['ecommerce_cart_confirm_clear']) : 'true';
+        $confirmClear = ($confirmClearRaw !== '0' && $confirmClearRaw !== 'false');
+        $minTotal = isset($ecomm['ecommerce_cart_minimum_total']) ? (float)$ecomm['ecommerce_cart_minimum_total'] : 0.0;
+        $upsellRulesRaw = isset($ecomm['ecommerce_upsell_rules']) ? (string)$ecomm['ecommerce_upsell_rules'] : '';
+        // Validate JSON; if invalid, fall back to empty object
+        $upsellRulesJson = '{}';
+        if ($upsellRulesRaw !== '') {
+            $tmp = json_decode($upsellRulesRaw, true);
+            if (is_array($tmp)) {
+                $upsellRulesJson = json_encode($tmp);
+            }
+        }
+        echo '<script>'
+          . 'window.__WF_OPEN_CART_ON_ADD=' . ($open ? 'true' : 'false') . ';'
+          . 'window.__WF_CART_SHOW_UPSELLS=' . ($showUpsells ? 'true' : 'false') . ';'
+          . 'window.__WF_CART_MERGE_DUPES=' . ($mergeDupes ? 'true' : 'false') . ';'
+          . 'window.__WF_CART_CONFIRM_CLEAR=' . ($confirmClear ? 'true' : 'false') . ';'
+          . 'window.__WF_CART_MIN_TOTAL=' . json_encode($minTotal) . ';'
+          . 'window.__WF_UPSELL_RULES=' . $upsellRulesJson . ';'
+          . '</script>' . "\n";
+        // Hard override: ensure no cart clear confirm is ever shown (guard against cached bundles)
+        echo '<script>try{window.__WF_CART_CONFIRM_CLEAR=false;}catch(_){};</script>' . "\n";
+    } catch (\Throwable $____e) { /* noop */ }
 } catch (\Throwable $___e) { /* noop */
 }
 // Compute header height on all routes and update CSS variable live
@@ -758,9 +809,11 @@ if ($pageSlug === 'admin' || strpos($pageSlug, 'admin/') === 0) {
 // Page metadata for JS routing (isAdmin already computed)
 ?>
 <?php
-// Determine login status for data attribute
+// Determine login status for data attribute (prefer AuthHelper)
 $__wf_is_logged_in = false;
-if (function_exists('isLoggedIn')) {
+if (class_exists('AuthHelper')) {
+    $__wf_is_logged_in = AuthHelper::isLoggedIn();
+} elseif (function_exists('isLoggedIn')) {
     $__wf_is_logged_in = isLoggedIn();
 } else {
     $__wf_is_logged_in = isset($_SESSION['user']) || isset($_SESSION['user_id']);

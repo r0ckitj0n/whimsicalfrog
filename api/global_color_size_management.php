@@ -2,23 +2,11 @@
 // Global Color and Size Management API
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Start session for authentication
-
-
-// Authentication check
-$isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
-$isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
-
-// Check for admin token as fallback
-$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
-$isValidToken = ($adminToken === 'whimsical_admin_2024');
-
-if (!$isAdmin && !$isValidToken) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
-}
+// Require admin
+AuthHelper::requireAdmin();
 
 try {
     try {

@@ -7,6 +7,11 @@
 
 set -e
 
+# Quarantine duplicate/backup files before checks
+if [ -x "scripts/maintenance/quarantine_duplicates.sh" ]; then
+  scripts/maintenance/quarantine_duplicates.sh || true
+fi
+
 # Run lint-staged (this will run backup guard and linters on staged files)
 if command -v npx >/dev/null 2>&1; then
   npx lint-staged

@@ -56,7 +56,7 @@ if (!$inModal) {
   <div id="admin-section-content">
 <?php endif; ?>
 
-<div class="container mx-auto p-4" style="background:white">
+<div class="container mx-auto p-4 bg-white">
   <div class="flex items-center justify-between mb-4">
     <h1 class="text-2xl font-bold">Email History</h1>
     <form method="get" class="flex items-center gap-2 text-sm">

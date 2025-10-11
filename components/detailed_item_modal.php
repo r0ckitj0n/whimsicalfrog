@@ -138,7 +138,8 @@ function renderDetailedItemModal($item, $images = [])
                                     <span id="detailedOriginalPrice" class="text-sm text-gray-500 line-through hidden"></span>
                                     <span id="detailedSavings" class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hidden"></span>
                                 </div>
-                                <?php if (($item['stockLevel'] ?? 0) <= 0): ?>
+                                <?php $__eff = (isset($item['totalStock']) && (int)$item['totalStock'] > 0) ? (int)$item['totalStock'] : (int)($item['stockLevel'] ?? 0); ?>
+                                <?php if ($__eff <= 0): ?>
                                 <!-- Out of Stock indicator near top when not available -->
                                 <div class="flex items-center space-x-2 mb-3">
                                     <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -219,14 +220,14 @@ function renderDetailedItemModal($item, $images = [])
                             </div>
                             
                             <!-- Quantity and Add to Cart -->
-                            <?php if (($item['stockLevel'] ?? 0) > 0): ?>
+                            <?php if ((isset($item['totalStock']) && (int)$item['totalStock'] > 0) || (isset($item['stockLevel']) && (int)$item['stockLevel'] > 0)): ?>
                             <div class="space-y-3 border-t pt-3">
                                 <!-- Stock Status (simple text above quantity; brand color rules) -->
                                 <div class="text-sm font-medium">
-                                    <?php $__stock = (int)($item['stockLevel'] ?? 0); ?>
-                                    <span class="stock-status-text <?php echo ($__stock < 5) ? 'text-brand-secondary' : 'text-brand-primary'; ?>">
-                                        In stock: <?php echo $__stock; ?>
-                                    </span>
+                                    <?php $__stock = (isset($item['totalStock']) && (int)$item['totalStock'] > 0) ? (int)$item['totalStock'] : (int)($item['stockLevel'] ?? 0); ?>
+                                <span class="stock-status-text <?php echo ($__stock < 5) ? 'text-brand-secondary' : 'text-brand-primary'; ?>">
+                                    In stock: <?php echo $__stock; ?>
+                                </span>
                                 </div>
 
                                 <!-- Qty + Add to Cart inline (button fills remaining space) -->
@@ -244,7 +245,7 @@ function renderDetailedItemModal($item, $images = [])
                                                    id="detailedQuantity" 
                                                    value="1" 
                                                    min="1" 
-                                                   max="<?php echo $item['stockLevel'] ?? 1; ?>"
+                                                   max="<?php echo ($__stock > 0 ? $__stock : 1); ?>"
                                                    class="w-16 text-center border border-gray-300 rounded py-1 text-sm input--qty">
                                             <button data-action="adjustDetailedQuantity" data-params='{"delta":1}' class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 transition-colors btn--qty btn--qty-inc">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

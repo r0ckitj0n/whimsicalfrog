@@ -5,14 +5,11 @@
 // Usage: /api/shop_probe.php?admin_token=whimsical_admin_2024
 header('Content-Type: application/json');
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 
-$token = $_GET['admin_token'] ?? null;
-if ($token !== AuthHelper::ADMIN_TOKEN) {
-    http_response_code(403);
-    echo json_encode(['ok' => false, 'error' => 'Forbidden']);
-    exit;
-}
+// Require admin access
+AuthHelper::requireAdmin();
 
 $out = [ 'ok' => true ];
 try {

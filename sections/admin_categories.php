@@ -13,16 +13,25 @@ if ($isModal) {
     // Modal context - load minimal header for CSS/JS only
     require_once dirname(__DIR__) . '/partials/modal_header.php';
     echo '<style>
+        html, body { height: auto !important; }
         body { 
             background: white !important; 
             margin: 0 !important; 
-            padding: 16px !important; 
+            padding: 10px !important; 
             font-family: system-ui, -apple-system, sans-serif !important;
         }
+        /* Compact spacing inside modal to avoid large empty regions */
         .admin-title { 
             margin-top: 0 !important; 
-            margin-bottom: 1rem !important; 
+            margin-bottom: 0.75rem !important; 
         }
+        .admin-card { 
+            padding: 0.75rem !important; 
+            margin-bottom: 0.75rem !important; 
+        }
+        .admin-card:last-child { margin-bottom: 0 !important; }
+        .admin-form-inline { gap: 6px !important; }
+        .admin-table { margin-bottom: 0 !important; }
     </style>';
 } else {
     // Full page context - load complete admin layout
@@ -49,12 +58,9 @@ if ($isModal) {
 // Authentication check - case insensitive
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 
-if (!isAdminWithToken()) {
-    echo '<div class="p-4 text-danger">Access denied.</div>';
-    echo '</body></html>'; // Close the document
-    return;
-}
+AuthHelper::requireAdmin();
 
 try {
     // Fetch categories from items
@@ -138,8 +144,8 @@ $messageType = $_GET['type'] ?? '';
     <h1 class="admin-title">Category Management</h1>
 
     <!-- Tabs Navigation -->
-    <div class="admin-card" style="margin: 8px 0;">
-      <div class="admin-form-inline" role="tablist" aria-label="Category Management Tabs" style="gap: 8px;">
+    <div class="admin-card my-2">
+      <div class="admin-form-inline gap-2" role="tablist" aria-label="Category Management Tabs">
         <button type="button" id="tabBtnCategories" class="btn btn-brand" aria-selected="true" aria-controls="tabPanelCategories">Categories</button>
         <button type="button" id="tabBtnAssignments" class="btn" aria-selected="false" aria-controls="tabPanelAssignments">Assignments</button>
         <button type="button" id="tabBtnOverview" class="btn" aria-selected="false" aria-controls="tabPanelOverview">Overview</button>
@@ -213,14 +219,14 @@ $messageType = $_GET['type'] ?? '';
     </div> <!-- end of tabPanelCategories -->
 
     <!-- Assignments Panel (initially hidden) -->
-    <div id="tabPanelAssignments" role="tabpanel" aria-labelledby="tabBtnAssignments" style="display:none">
+    <div id="tabPanelAssignments" role="tabpanel" aria-labelledby="tabBtnAssignments" class="is-hidden">
       <div class="admin-card">
         <h3 class="admin-card-title">Room-Category Assignments</h3>
         <div id="rcAssignmentsContainer" class="admin-table-wrapper">
           <div class="text-gray-600 text-sm">Loading assignments…</div>
         </div>
 
-        <div class="admin-card" style="margin-top: 20px;">
+        <div class="admin-card mt-20">
           <h3 class="admin-card-title">Add New Assignment</h3>
           <form id="addAssignmentForm" class="admin-form-inline">
             <select id="roomNumber" name="roomNumber" class="form-input">
@@ -242,7 +248,7 @@ $messageType = $_GET['type'] ?? '';
     </div>
 
     <!-- Overview Panel (per-room summary) -->
-    <div id="tabPanelOverview" role="tabpanel" aria-labelledby="tabBtnOverview" style="display:none">
+    <div id="tabPanelOverview" role="tabpanel" aria-labelledby="tabBtnOverview" class="is-hidden">
       <div class="admin-card">
         <h3 class="admin-card-title">Per-Room Overview</h3>
         <div id="rcOverviewContainer" class="space-y-2">
@@ -251,7 +257,7 @@ $messageType = $_GET['type'] ?? '';
       </div>
     </div>
 
-    <div id="tabPanelSkuRules" role="tabpanel" aria-labelledby="tabBtnSkuRules" style="display:none">
+    <div id="tabPanelSkuRules" role="tabpanel" aria-labelledby="tabBtnSkuRules" class="is-hidden">
       <div class="admin-card">
         <h3 class="admin-card-title">SKU Naming Rules</h3>
         <div id="skuRulesContainer"></div>
@@ -290,22 +296,32 @@ $messageType = $_GET['type'] ?? '';
 
         async function fetchJSON(url, options) {
           const opts = options || {};
-          const init = { credentials: 'same-origin', ...opts };
+          const headers = { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(opts.headers || {}) };
+          const init = { credentials: 'same-origin', headers, ...opts };
           if (opts && opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
-            init.headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+            init.headers = { ...init.headers, 'Content-Type': 'application/json' };
             init.body = JSON.stringify(opts.body);
           }
           const res = await fetch(url, init);
+          const raw = await res.text().catch(() => '');
           if (!res.ok) {
-              const text = await res.text().catch(() => '');
-              let errorMsg = `HTTP error! status: ${res.status}`;
-              try {
-                  const jsonError = JSON.parse(text);
-                  errorMsg = jsonError.message || text;
-              } catch (e) { errorMsg = text || errorMsg; }
-              throw new Error(errorMsg);
+            let errorMsg = `HTTP ${res.status}`;
+            try { const errJson = JSON.parse(raw); errorMsg = errJson.message || errorMsg; } catch(_) { errorMsg = raw || errorMsg; }
+            throw new Error(errorMsg);
           }
-          return res.json();
+          const trimmed = raw.trim();
+          // Try direct parse first
+          try { return JSON.parse(trimmed); } catch(_e) {}
+          // Fallback: handle banners/noise by extracting trailing JSON starting at last { or [
+          const iBrace = trimmed.lastIndexOf('{');
+          const iBracket = trimmed.lastIndexOf('[');
+          const start = Math.max(iBrace, iBracket);
+          if (start >= 0) {
+            try { return JSON.parse(trimmed.slice(start)); } catch(e) {
+              console.warn('[Categories] Invalid JSON payload', { snippet: trimmed.slice(0, 160) });
+            }
+          }
+          throw new Error('Invalid JSON response');
         }
 
         async function loadOverview() {
@@ -573,6 +589,31 @@ $messageType = $_GET['type'] ?? '';
                 }
             };
         });
+      })();
+    </script>
+    <script>
+      // Notify parent of content height so the modal iframe can fit exactly
+      (function(){
+        try {
+          if (window.parent && window.parent !== window) {
+            function sendSize(){
+              try {
+                var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight, document.documentElement.offsetHeight);
+                window.parent.postMessage({ type: 'wf-iframe-size', key: 'categories', height: h }, '*');
+              } catch(_) {}
+            }
+            // Initial and after load
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', sendSize);
+            } else { sendSize(); }
+            window.addEventListener('load', sendSize);
+            // Observe future layout changes
+            if ('ResizeObserver' in window) {
+              try { new ResizeObserver(sendSize).observe(document.body); } catch(_) {}
+            }
+            window.addEventListener('resize', sendSize);
+          }
+        } catch(_) {}
       })();
     </script>
 </div>

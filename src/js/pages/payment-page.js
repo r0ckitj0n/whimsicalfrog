@@ -55,6 +55,24 @@ ready(() => {
 
   console.log('[PaymentPage] init');
 
+  // Ecommerce settings (populated via API)
+  const ecommerce = {
+    minTotal: 0
+  };
+
+  async function loadEcommerceSettings() {
+    try {
+      const res = await apiClient.get('/api/business_settings.php?action=get_settings&category=ecommerce');
+      const s = res?.settings || {};
+      const min = Number(s.ecommerce_cart_minimum_total ?? 0) || 0;
+      ecommerce.minTotal = min;
+      try { window.__WF_CART_MIN_TOTAL = min; } catch (_) {}
+    } catch (e) {
+      // Non-fatal; keep default 0
+      ecommerce.minTotal = 0;
+    }
+  }
+
   // Prefer modal experience for /payment: open the checkout modal on the last visited page
   try {
     // 1) Compute a return URL to go back to when user cancels/finishes
@@ -270,9 +288,26 @@ ready(() => {
     const needsAddress = method !== 'Customer Pickup';
     const okAddress = !needsAddress || !!selectedAddressId;
 
-    const enabled = hasItems && !!pm && okAddress;
+    // Enforce minimum order total if configured
+    const currentTotal = (() => {
+      try {
+        if (typeof pricing?.total === 'number' && pricing.total > 0) return pricing.total;
+      } catch (_) {}
+      try {
+        return api?.getTotal ? api.getTotal() : 0;
+      } catch (_) { return 0; }
+    })();
+    const meetsMin = currentTotal >= (Number(ecommerce.minTotal || 0));
+
+    const enabled = hasItems && !!pm && okAddress && meetsMin;
     if (placeOrderBtn) {
       placeOrderBtn.disabled = !enabled;
+    }
+    // Show inline error if below minimum
+    if (!meetsMin && hasItems && Number(ecommerce.minTotal || 0) > 0) {
+      setError(`Minimum order total is $${Number(ecommerce.minTotal).toFixed(2)}.`);
+    } else if (!hasItems) {
+      setError('');
     }
   }
 
@@ -653,6 +688,14 @@ ready(() => {
         throw new Error('Please choose a shipping address.');
       }
 
+      // Enforce minimum total requirement
+      if (Number(ecommerce.minTotal || 0) > 0) {
+        const totalNow = Number(payload.total || 0);
+        if (totalNow < Number(ecommerce.minTotal)) {
+          throw new Error(`Minimum order total is $${Number(ecommerce.minTotal).toFixed(2)}.`);
+        }
+      }
+
       // If Square selected, tokenize card first
       if (payload.paymentMethod === 'Square') {
         try {
@@ -677,9 +720,24 @@ ready(() => {
       if (res && res.debug) {
         console.info('[PaymentPage] order debug ->', res.debug);
       }
-      if (res && res.success && res.orderId) {
+      const orderId = (res && (res.orderId || (res.data && res.data.orderId))) || null;
+      if (res && res.success && orderId) {
+        // Ensure receipt modal exists even if the deferred import hasn't run yet
+        try {
+          if (!window.WF_ReceiptModal || typeof window.WF_ReceiptModal.open !== 'function') {
+            // Lazy import the module; relative to this file
+            await import('../receipt-modal.js');
+          }
+        } catch (_) { /* continue regardless; open attempt below is guarded */ }
         // Open receipt first so the global flag is set before cart events fire
-        try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(res.orderId); } catch(_) {}
+        try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(orderId); } catch(_) {}
+        // As a hard fallback, if modal is still unavailable, navigate to the bare receipt route directly
+        try {
+          if (!window.WF_ReceiptModal || typeof window.WF_ReceiptModal.open !== 'function') {
+            const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
+            window.open(url, '_blank', 'noopener');
+          }
+        } catch(_) {}
         // Defer cart clear to the next tick to ensure the receipt flag is active
         try { setTimeout(() => { if (cartApi?.clearCart) cartApi.clearCart(); }, 0); } catch(_) {}
         return;
@@ -750,6 +808,7 @@ ready(() => {
   window.addEventListener('pageshow', (e) => { resyncCart(e && e.persisted ? 'pageshow-bfcache' : 'pageshow'); });
 
   // Initial loads
+  loadEcommerceSettings().finally(() => { ensurePlaceButtonState(); });
   resyncCart('initial');
   checkSquareSettings();
   // Resolve user immediately if the page started already logged in

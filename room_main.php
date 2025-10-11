@@ -15,15 +15,16 @@ if (!defined('INCLUDED_FROM_INDEX')) {
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/background_helpers.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/auth_helper.php';
 
 // Add debug mode flag
 $debugMode = isset($_GET['debug']) && $_GET['debug'] === '1';
 
-// Get user authentication status for header
-$isLoggedIn = isLoggedIn();
-$isAdmin = isAdmin();
-$userData = getCurrentUser() ?? [];
-$welcomeMessage = $isLoggedIn ? getUsername() : '';
+// Get user authentication status for header (prefer AuthHelper)
+$isLoggedIn = class_exists('AuthHelper') ? AuthHelper::isLoggedIn() : (function_exists('isLoggedIn') ? isLoggedIn() : false);
+$isAdmin = class_exists('AuthHelper') ? AuthHelper::isAdmin() : (function_exists('isAdmin') ? isAdmin() : false);
+$userData = class_exists('AuthHelper') ? (AuthHelper::getCurrentUser() ?? []) : ((function_exists('getCurrentUser') ? (getCurrentUser() ?? []) : []));
+$welcomeMessage = $isLoggedIn && function_exists('getUsername') ? getUsername() : '';
 
 // Get cart information for header
 $cartCount = 0;
@@ -90,7 +91,7 @@ try {
             $doorLabel = htmlspecialchars((string)($door['door_label'] ?? ''));
             ?>
     <!-- <?php echo $roomName; ?> Door -->
-        <div class="door-area area-<?php echo $roomNumber; ?> room-door" data-category="<?php echo $doorLabel; ?>" data-room="<?php echo $roomNumber; ?>" style="cursor: pointer;">
+        <div class="door-area area-<?php echo $roomNumber; ?> room-door cursor-pointer" data-category="<?php echo $doorLabel; ?>" data-room="<?php echo $roomNumber; ?>">
         <picture class="door-picture">
             <source srcset="images/signs/sign-door-room<?php echo $roomNumber; ?>.webp" type="image/webp">
             <img src="images/signs/sign-door-room<?php echo $roomNumber; ?>.png" alt="<?php echo $doorLabel; ?>" class="door-sign">

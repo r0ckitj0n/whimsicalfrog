@@ -44,6 +44,13 @@ try {
         exit;
     }
 
+    // Compute aggregated total stock from item_sizes (active rows only) and expose as totalStock
+    $stockRow = Database::queryOne(
+        "SELECT COALESCE(SUM(stock_level), 0) AS totalStock FROM item_sizes WHERE item_sku = ? AND is_active = 1",
+        [$sku]
+    );
+    $item['totalStock'] = isset($stockRow['totalStock']) ? (int)$stockRow['totalStock'] : 0;
+
     // Get item images
     $images = Database::queryAll("
         SELECT image_path, alt_text, is_primary, sort_order

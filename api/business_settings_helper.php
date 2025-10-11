@@ -201,7 +201,7 @@ class BusinessSettings
 
     public static function getSecondaryColor()
     {
-        return self::get('secondary_color', '#6b8e23');
+        return self::get('secondary_color', '#BF5700');
     }
 
     public static function getPaymentMethods()

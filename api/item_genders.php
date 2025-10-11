@@ -1,6 +1,8 @@
 <?php
 require_once 'config.php';
 require_once '../includes/functions.php';
+require_once '../includes/auth.php';
+require_once '../includes/auth_helper.php';
 
 // Enable error reporting for debugging
 error_reporting(E_ALL);
@@ -18,17 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// Start session for authentication
-
-
-// Authentication check
-$isLoggedIn = isset($_SESSION['user']) && !empty($_SESSION['user']);
-$isAdmin = $isLoggedIn && isset($_SESSION['user']['role']) && strtolower($_SESSION['user']['role']) === 'admin';
-
-// Check for admin token as fallback
-$adminToken = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
-$isValidToken = ($adminToken === 'whimsical_admin_2024');
-
 // Parse action from GET, POST, or JSON body
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -38,11 +29,9 @@ if (empty($action)) {
     $action = $jsonInput['action'] ?? '';
 }
 
-// Only require authentication for non-read operations
-if ($action !== 'get_all' && !$isAdmin && !$isValidToken) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
+// Allow public read of get_all; require admin for other actions
+if ($action !== 'get_all') {
+    AuthHelper::requireAdmin();
 }
 
 try {

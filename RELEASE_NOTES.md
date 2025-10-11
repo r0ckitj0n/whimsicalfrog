@@ -1,3 +1,28 @@
+# Release Notes - 2025-10-10
+
+## Summary
+- Renamed `src/js/global-item-modal.js` to `src/js/detailed-item-modal.js` as the canonical detailed item modal.
+- Updated all runtime imports and comments to the new name.
+- Removed obsolete patch scripts referencing the old filename.
+- Updated technical documentation references accordingly.
+
+## Key Changes
+- Code:
+  - Canonical module: `src/js/detailed-item-modal.js` (full implementation).
+  - Updated references in `src/entries/pos.js`, `src/js/app.js`, `src/room/event-manager.js`, `src/ui/global-popup.js`, `src/core/action-registry.js`.
+  - Deleted legacy module `src/js/global-item-modal.js`.
+- Docs:
+  - `documentation/technical/MODAL_CONVENTIONS_AND_UPGRADE_GUIDE.md` now lists `src/js/detailed-item-modal.js` under Item Modals.
+- Tooling:
+  - Removed `patch-global-item-modal.sh` and `scripts/dev/patch-global-item-modal.sh`.
+
+## Rationale
+- Standardize naming around “detailed-item-modal” and remove confusion with legacy file name.
+- Eliminate unused scripts tied to the old module.
+
+## Next
+- None. Optional: verify modals on Shop, Rooms, and POS open correctly post-rename.
+
 # Release Notes - 2025-09-06
 
 ## Summary

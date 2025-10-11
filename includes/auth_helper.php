@@ -153,6 +153,24 @@ class AuthHelper
         $userData = self::getCurrentUser();
         return $userData && strtolower($userData['role'] ?? '') === strtolower($role);
     }
+
+    /**
+     * Compatibility: check if a user is logged in via AuthHelper
+     * Delegates to global isLoggedIn() from includes/auth.php
+     */
+    public static function isLoggedIn(): bool
+    {
+        return function_exists('isLoggedIn') ? isLoggedIn() : false;
+    }
+
+    /**
+     * Compatibility: get current user via AuthHelper (alias)
+     * Delegates to getCurrentUser() from this helper, which wraps session access
+     */
+    public static function currentUser(): ?array
+    {
+        return self::getCurrentUser();
+    }
 }
 
 /**

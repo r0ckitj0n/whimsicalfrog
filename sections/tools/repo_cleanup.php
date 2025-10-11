@@ -60,7 +60,7 @@ if (!$isModal) {
         <div class="row">
           <button class="btn btn-brand" id="btnAudit">Run Audit (Dry Run)</button>
           <button class="btn btn-danger" id="btnExecute">Execute Cleanup</button>
-          <input type="text" id="restoreTs" placeholder="Restore timestamp (YYYYMMDD_HHMMSS)" style="flex:1; min-width:220px; padding:.5rem; border:1px solid #bbb; border-radius:6px;">
+          <input type="text" id="restoreTs" placeholder="Restore timestamp (YYYYMMDD_HHMMSS)" class="adm-input flex-1 min-w-220">
           <button class="btn" id="btnRestore">Restore</button>
         </div>
         <p class="muted">Categories: A (duplicates), B (backup/temp), C (.htaccess snapshots), D (migrations>30d), E (deprecated endpoints), F (dev/test caches)</p>
@@ -80,7 +80,7 @@ if (!$isModal) {
       </div>
     </div>
 
-    <div class="card" style="margin-top:1rem;">
+    <div class="card mt-4">
       <h2>Raw Output</h2>
       <pre id="output">Ready.</pre>
     </div>

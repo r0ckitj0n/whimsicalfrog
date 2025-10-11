@@ -50,6 +50,12 @@ function initCartModal() {
           <div id="cartModalItems" class="flex-1 overflow-y-auto cart_column_layout cart_column_direction cart-scrollbar">
             <div class="p-6 text-center text-gray-500">Loading cart...</div>
           </div>
+          <div id="cartUpsells" class="border-t border-gray-200 hidden">
+            <div class="p-4">
+              <div class="text-sm font-semibold mb-3">You may also like</div>
+              <div id="cartUpsellsList" class="grid grid-cols-2 gap-3"></div>
+            </div>
+          </div>
           <div id="cartModalFooter" class="cart-modal-footer"></div>
         </div>
       `;
@@ -137,6 +143,7 @@ function initCartModal() {
         } catch (err) {
           console.error('[CartModal] Failed to render cart in modal:', err);
         }
+        try { maybeRenderUpsells(); } catch(_) {}
       }
     }
 
@@ -307,6 +314,116 @@ function initCartModal() {
 
     // Initialize overlay immediately so it is present for z-index stacking and quick open
     createOverlay();
+
+    function localResolveUpsells(skus){
+      try {
+        const rules = (typeof window.__WF_UPSELL_RULES === 'object' && window.__WF_UPSELL_RULES) ? window.__WF_UPSELL_RULES : null;
+        if (!rules) return [];
+        // Schema A: { map: { SKU1:[A,B], _default:[X] }, products: { A:{sku,name,price,image}, ... } }
+        // Schema B: { SKU1:[A,B], _default:[X], products:{...} }
+        const map = (rules.map && typeof rules.map === 'object') ? rules.map : rules;
+        const products = (rules.products && typeof rules.products === 'object') ? rules.products : {};
+        const seen = new Set(skus.map(s => String(s))); // in-cart SKUs
+        const recSet = new Set();
+        skus.forEach(sku => {
+          const list = map[String(sku)] || [];
+          (Array.isArray(list) ? list : []).forEach(r => { const x = String(r); if (x && !seen.has(x)) recSet.add(x); });
+        });
+        const def = map._default || map.default || [];
+        (Array.isArray(def) ? def : []).forEach(r => { const x = String(r); if (x && !seen.has(x)) recSet.add(x); });
+        const out = [];
+        recSet.forEach(sku => {
+          const meta = products[sku] || {};
+          out.push({
+            sku,
+            name: meta.name || meta.title || sku,
+            price: Number(meta.price || meta.retailPrice || 0) || 0,
+            image: meta.image || meta.thumbnail || ''
+          });
+        });
+        return out;
+      } catch(_) { return []; }
+    }
+
+    function maybeRenderUpsells(){
+      try {
+        const show = !!window.__WF_CART_SHOW_UPSELLS;
+        const wrap = state.overlay && state.overlay.querySelector('#cartUpsells');
+        const list = state.overlay && state.overlay.querySelector('#cartUpsellsList');
+        if (!wrap || !list) return;
+        if (!show) { wrap.classList.add('hidden'); list.innerHTML=''; return; }
+        const items = (window.WF_Cart && typeof window.WF_Cart.getItems === 'function') ? window.WF_Cart.getItems() : [];
+        const skus = Array.isArray(items) ? items.map(i => String(i.sku||'')).filter(Boolean) : [];
+        // If a global provider exists, use it. Otherwise use rules or a simple note.
+        if (typeof window.WF_getUpsells === 'function') {
+          Promise.resolve(window.WF_getUpsells(skus)).then((recs) => {
+            const arr = Array.isArray(recs) ? recs : [];
+            if (!arr.length) { wrap.classList.add('hidden'); list.innerHTML=''; return; }
+            wrap.classList.remove('hidden');
+            list.innerHTML = arr.slice(0,4).map(r => {
+              const name = (r.name || r.title || r.sku || '').toString();
+              const sku = (r.sku || '').toString();
+              const price = Number(r.price || r.retailPrice || 0) || 0;
+              const img = r.image || r.thumbnail || '';
+              return `
+                <div class="border rounded p-2 flex gap-2 items-center">
+                  ${img ? `<img src="${img}" alt="${name}" class="w-12 h-12 object-cover rounded"/>` : ''}
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium truncate">${name}</div>
+                    <div class="text-xs text-brand-secondary">${sku}</div>
+                    <div class="text-sm">$${price.toFixed(2)}</div>
+                  </div>
+                  <button type="button" class="btn btn-xs" data-action="upsell-add" data-sku="${sku}" data-name="${name}" data-price="${price}">Add</button>
+                </div>
+              `;
+            }).join('');
+          }).catch(() => { wrap.classList.add('hidden'); list.innerHTML=''; });
+        } else {
+          const recs = localResolveUpsells(skus);
+          if (recs.length) {
+            wrap.classList.remove('hidden');
+            list.innerHTML = recs.slice(0,4).map(r => {
+              const name = (r.name || r.title || r.sku || '').toString();
+              const sku = (r.sku || '').toString();
+              const price = Number(r.price || r.retailPrice || 0) || 0;
+              const img = r.image || r.thumbnail || '';
+              return `
+                <div class="border rounded p-2 flex gap-2 items-center">
+                  ${img ? `<img src="${img}" alt="${name}" class="w-12 h-12 object-cover rounded"/>` : ''}
+                  <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium truncate">${name}</div>
+                    <div class="text-xs text-brand-secondary">${sku}</div>
+                    <div class="text-sm">$${price.toFixed(2)}</div>
+                  </div>
+                  <button type="button" class="btn btn-xs" data-action="upsell-add" data-sku="${sku}" data-name="${name}" data-price="${price}">Add</button>
+                </div>
+              `;
+            }).join('');
+          } else {
+            // No provider and no rules; show placeholder informational note only once
+            wrap.classList.remove('hidden');
+            list.innerHTML = `<div class=\"text-sm text-brand-secondary\">Upsell recommendations will appear here when configured.</div>`;
+          }
+        }
+      } catch(_) {}
+    }
+
+    // Delegate upsell add
+    document.addEventListener('click', (e) => {
+      const btn = e.target && e.target.closest && e.target.closest('[data-action="upsell-add"]');
+      if (!btn) return;
+      e.preventDefault(); e.stopPropagation();
+      try {
+        const sku = btn.getAttribute('data-sku');
+        const name = btn.getAttribute('data-name');
+        const price = Number(btn.getAttribute('data-price') || '0') || 0;
+        if (window.WF_Cart && typeof window.WF_Cart.addItem === 'function' && sku) {
+          window.WF_Cart.addItem({ sku, name, price }, 1);
+          // Refresh upsells after add
+          setTimeout(() => { try { maybeRenderUpsells(); } catch(_) {} }, 60);
+        }
+      } catch(_) {}
+    });
 
     console.log('[CartModal] initialized');
   } catch (err) {

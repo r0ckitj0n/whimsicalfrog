@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -23,7 +24,7 @@ try {
 
     // Admin check for modification actions
     if (in_array($action, ['create', 'update', 'delete', 'set_default'])) {
-        requireAdmin(true);
+        AuthHelper::requireAdmin();
     }
 
     switch ($action) {
@@ -285,7 +286,7 @@ function handleGetTemplateAssignments($pdo)
 
 function handleSetTemplateAssignment($pdo)
 {
-    requireAdmin(true);
+    AuthHelper::requireAdmin();
 
     $input = json_decode(file_get_contents('php://input'), true);
 
@@ -385,7 +386,7 @@ function html_to_text_basic($html)
 
 function handleSendTestEmail($pdo)
 {
-    requireAdmin(true);
+    AuthHelper::requireAdmin();
 
     $input = json_decode(file_get_contents('php://input'), true);
 

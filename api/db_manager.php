@@ -17,16 +17,10 @@ header('Content-Type: application/json');
 
 // Use centralized authentication functions
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Parse JSON input for admin token fallback
-$input = json_decode(file_get_contents('php://input'), true) ?? [];
-
-// Check authentication using centralized functions
-if (!isAdminWithToken()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Admin access required']);
-    exit;
-}
+// Centralized admin check
+AuthHelper::requireAdmin();
 
 try {
     try {
@@ -36,6 +30,7 @@ try {
         throw $e;
     }
 
+    $input = json_decode(file_get_contents('php://input'), true) ?? [];
     $action = $_POST['action'] ?? $_GET['action'] ?? $input['action'] ?? 'status';
     $result = ['success' => false, 'message' => '', 'data' => null];
 

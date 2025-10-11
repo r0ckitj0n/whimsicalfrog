@@ -10,15 +10,12 @@
 
 header('Content-Type: application/json');
 
+require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 require_once __DIR__ . '/config.php';
 
-$token = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
-if ($token !== AuthHelper::ADMIN_TOKEN) {
-    http_response_code(403);
-    echo json_encode(['ok' => false, 'error' => 'Forbidden']);
-    exit;
-}
+// Require admin (dangerous operation)
+AuthHelper::requireAdmin();
 
 $filename = $_GET['file'] ?? $_POST['file'] ?? '';
 if (!$filename) {

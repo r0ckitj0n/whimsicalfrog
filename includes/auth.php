@@ -281,27 +281,18 @@ function requireAdmin($apiResponse = false)
 
 
 /**
- * Check admin with fallback token (for API endpoints)
- * @param string $validToken Optional admin token for fallback auth
+ * Check if current user is admin (legacy compatibility)
+ *
+ * DEPRECATED: Token-based admin fallback is no longer supported.
+ * This function now simply delegates to session-based `isAdmin()`
+ * to preserve backward compatibility with existing callers.
+ *
+ * @param string $validToken Ignored (kept for signature compatibility)
  * @return bool
  */
 function isAdminWithToken($validToken = 'whimsical_admin_2024')
 {
-    // First check session-based admin
-    if (isAdmin()) {
-        return true;
-    }
-
-    // Check for admin token fallback in POST/GET
-    $providedToken = $_POST['admin_token'] ?? $_GET['admin_token'] ?? '';
-
-    // Also check JSON body
-    if (empty($providedToken)) {
-        $jsonInput = json_decode(file_get_contents('php://input'), true);
-        $providedToken = $jsonInput['admin_token'] ?? '';
-    }
-
-    return $providedToken === $validToken;
+    return isAdmin();
 }
 
 

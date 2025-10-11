@@ -1494,7 +1494,7 @@ class AdminInventoryModule {
                         </div>
                         <div class="flex justify-end space-x-3 border-t border-gray-200">
                             <button type="button" data-action="close-color-modal" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">Cancel</button>
-                            <button type="submit" class="text-white rounded transition-colors bg-[#87ac3a] hover:bg-[#6b8e23]">Save Color</button>
+                            <button type="submit" class="text-white rounded transition-colors bg-[#87ac3a] hover:bg-[#BF5700]">Save Color</button>
                         </div>
                     </form>
                 </div>
@@ -1947,7 +1947,7 @@ class AdminInventoryModule {
                         </div>
                         <div class="flex justify-end space-x-3 border-t border-gray-200">
                             <button type="button" data-action="close-size-modal" class="bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors">Cancel</button>
-                            <button type="submit" class="text-white rounded transition-colors bg-[#87ac3a] hover:bg-[#6b8e23]">Save Size</button>
+                            <button type="submit" class="text-white rounded transition-colors bg-[#87ac3a] hover:bg-[#BF5700]">Save Size</button>
                         </div>
                     </form>
                 </div>

@@ -182,7 +182,7 @@ class WhimsicalFrogNotifications {
         const configs = {
             success: {
                 background: '#87ac3a',
-                border: '#6b8e23',
+                border: 'var(--brand-secondary, #BF5700)',
                 color: 'white',
                 titleColor: 'white',
                 closeColor: 'white',
@@ -289,7 +289,7 @@ class WhimsicalFrogNotifications {
     getFallbackColor(type, property) {
         const fallbacks = {
             success: {
-                background: 'linear-gradient(135deg, #87ac3a, #6b8e23)',
+                background: 'linear-gradient(135deg, #87ac3a, #BF5700)',
                 border: '#556B2F',
                 text: '#ffffff'
             },
@@ -310,7 +310,7 @@ class WhimsicalFrogNotifications {
             },
             validation: {
                 background: 'var(--brand-primary, #87ac3a)',
-                border: '#6b8e23',
+                border: '#87ac3a',
                 text: '#ffffff'
             }
         };

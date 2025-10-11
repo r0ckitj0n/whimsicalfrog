@@ -83,7 +83,7 @@ if (!$isModal) {
   <div id="admin-section-content">
 <?php endif; ?>
 
-<div class="container mx-auto p-4" style="background:white">
+<div class="container mx-auto p-4 bg-white">
   <div class="flex items-center justify-between mb-4">
     <h1 class="text-2xl font-bold">CSS Class Catalog</h1>
     <div class="text-sm text-gray-600">Generated: <?= htmlspecialchars($generatedAt ?: 'n/a') ?></div>

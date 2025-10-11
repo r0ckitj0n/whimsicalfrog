@@ -5,7 +5,16 @@
 function extractProductData(icon) {
   if (icon.dataset.product) {
     try {
-      return JSON.parse(icon.dataset.product);
+      const parsed = JSON.parse(icon.dataset.product);
+      // Prefer dataset stockLevel/stock over JSON (dataset reflects current inventory)
+      const stockFromDs = parseInt((icon.dataset.stockLevel ?? icon.dataset.stock ?? ''), 10);
+      if (!Number.isNaN(stockFromDs)) parsed.stock = stockFromDs;
+      if (parsed.price == null && (icon.dataset.price || icon.dataset.cost)) {
+        parsed.price = parseFloat(icon.dataset.price || icon.dataset.cost || '0');
+      }
+      if (!parsed.image && icon.dataset.image) parsed.image = icon.dataset.image;
+      if (!parsed.category && icon.dataset.category) parsed.category = icon.dataset.category;
+      return parsed;
     } catch (e) {
       console.warn('[eventManager] invalid JSON in data-product', e);
     }
@@ -16,8 +25,9 @@ function extractProductData(icon) {
       name: icon.dataset.name || '',
       price: parseFloat(icon.dataset.price || icon.dataset.cost || '0'),
       description: icon.dataset.description || '',
-      stock: parseInt(icon.dataset.stock || '0', 10),
-      category: icon.dataset.category || ''
+      stock: parseInt((icon.dataset.stockLevel ?? icon.dataset.stock ?? '0'), 10),
+      category: icon.dataset.category || '',
+      image: icon.dataset.image || ''
     };
   }
   const attr = icon.getAttribute('onmouseenter');
@@ -58,17 +68,25 @@ export function attachDelegatedItemEvents() {
 
   // Use mouseover/mouseout (bubbling) with guards – works reliably in iframes
   document.addEventListener('mouseover', e => {
-    // cancel any pending hide since pointer is back over icon or popup
-    const { cancelHide } = getPopupApi();
-    if (typeof cancelHide === 'function') cancelHide();
     // Guard: ensure event.target is an Element that supports closest()
     const targetEl = e.target;
     if (!targetEl || typeof targetEl.closest !== 'function') {
       return;
     }
     console.log('[eventManager] mouseover event detected on:', targetEl);
+    const overPopup = targetEl.closest('.item-popup');
     const icon = targetEl.closest('.item-icon, .room-product-icon');
+    // Only cancel hide if pointer is over an icon or the popup itself
+    if (overPopup || icon) {
+      const { cancelHide } = getPopupApi();
+      if (typeof cancelHide === 'function') cancelHide();
+    }
     if (!icon) {
+      // Pointer not over an icon. If also not over the popup, schedule a hide.
+      if (!overPopup) {
+        const { scheduleHide } = getPopupApi();
+        if (typeof scheduleHide === 'function') scheduleHide(500);
+      }
       console.log('[eventManager] no matching icon found for hover');
       return;
     }
@@ -78,12 +96,9 @@ export function attachDelegatedItemEvents() {
     const { show } = getPopupApi();
     console.log('[eventManager] popup function available:', typeof show);
     if (typeof show === 'function' && data) {
-      if (window.__wfCurrentPopupAnchor !== icon) {
-        window.__wfCurrentPopupAnchor = icon;
-        console.log('[eventManager] calling popup function with:', icon, data);
-        show(icon, data);
-        attachPopupPersistence(icon);
-      }
+      console.log('[eventManager] calling popup function with:', icon, data);
+      show(icon, data);
+      attachPopupPersistence(icon);
     } else {
       console.warn('[eventManager] cannot show popup - function:', typeof show, 'data:', !!data);
     }
@@ -100,24 +115,32 @@ export function attachDelegatedItemEvents() {
     // If moving into another icon or the popup itself, ignore
     if (related && (related.closest?.('.item-icon, .room-product-icon') || related.closest?.('.item-popup'))) return;
     const { scheduleHide } = getPopupApi();
-    if (typeof scheduleHide === 'function') scheduleHide(250);
+    if (typeof scheduleHide === 'function') scheduleHide(500);
   });
 
 
-  document.addEventListener('click', e => {
+  document.addEventListener('click', async e => {
     const targetEl = e.target;
     if (!targetEl || typeof targetEl.closest !== 'function') return;
     const icon = targetEl.closest('.item-icon, .room-product-icon');
     if (!icon) return;
     e.preventDefault();
+    if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
     const data = extractProductData(icon);
-    const detailsFn =
+    let detailsFn =
       (parent && parent.showGlobalItemModal) ||
       window.showGlobalItemModal ||
       window.showItemDetailsModal ||
       window.showItemDetails ||
       (parent && (parent.showItemDetailsModal || parent.showItemDetails));
-    if (typeof detailsFn === 'function' && data) detailsFn(data.sku, data);
+    if (typeof detailsFn !== 'function') {
+      try { await import('../js/detailed-item-modal.js'); } catch(_) {}
+      detailsFn = window.showGlobalItemModal || window.showItemDetailsModal || window.showItemDetails;
+    }
+    if (typeof detailsFn === 'function' && data) {
+      try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
+      detailsFn(data.sku, data);
+    }
   });
 }
 
@@ -143,17 +166,25 @@ export function setupPopupEventsAfterPositioning() {
     });
     icon.addEventListener('mouseleave', () => {
       const { scheduleHide } = getPopupApi();
-      if (typeof scheduleHide === 'function') scheduleHide(250);
+      if (typeof scheduleHide === 'function') scheduleHide(500);
     });
-    icon.addEventListener('click', e => {
+    icon.addEventListener('click', async e => {
       e.preventDefault();
-      const fn =
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+      let fn =
         (parent && parent.showGlobalItemModal) ||
         window.showGlobalItemModal ||
         window.showItemDetailsModal ||
         window.showItemDetails ||
         (parent && (parent.showItemDetailsModal || parent.showItemDetails));
-      if (typeof fn === 'function') fn(data.sku, data);
+      if (typeof fn !== 'function') {
+        try { await import('../js/detailed-item-modal.js'); } catch(_) {}
+        fn = window.showGlobalItemModal || window.showItemDetailsModal || window.showItemDetails;
+      }
+      if (typeof fn === 'function') {
+        try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
+        fn(data.sku, data);
+      }
     });
   });
 }
@@ -171,22 +202,27 @@ function attachPopupPersistence(icon) {
 
   const scheduleHide = () => {
     const { scheduleHide } = getPopupApi();
-    if (typeof scheduleHide === 'function') scheduleHide(250);
+    if (typeof scheduleHide === 'function') scheduleHide(500);
   };
 
   const _detach = () => {
     icon.removeEventListener('mouseenter', clearHide);
     icon.removeEventListener('mouseleave', scheduleHide);
     popup.removeEventListener('mouseenter', clearHide);
-    popup.removeEventListener('mouseleave', scheduleHide);
     popup.__wfBound = false;
   };
 
   // Bind events
   icon.addEventListener('mouseenter', clearHide);
-  icon.addEventListener('mouseleave', scheduleHide);
+  icon.addEventListener('mouseleave', () => {
+    const { scheduleHide } = getPopupApi();
+    if (typeof scheduleHide === 'function') scheduleHide(500);
+  });
   popup.addEventListener('mouseenter', clearHide);
-  popup.addEventListener('mouseleave', scheduleHide);
+  popup.addEventListener('mouseleave', () => {
+    const { scheduleHide } = getPopupApi();
+    if (typeof scheduleHide === 'function') scheduleHide(500);
+  });
 }
 
 // Immediately attach delegated listeners on import

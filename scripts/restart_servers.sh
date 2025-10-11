@@ -23,8 +23,12 @@ echo -e "${YELLOW}WhimsicalFrog Server Restart${NC}"
 # Stop any existing servers
 ########################################
 ########################################
-echo -e "${YELLOW}Stopping any existing PHP servers...${NC}"
-# Kill any Vite dev servers
+echo -e "${YELLOW}Stopping any existing PHP and Vite servers...${NC}"
+# Prefer managed stop via PM2 for Vite
+if command -v npx >/dev/null 2>&1; then
+  npx pm2 stop wf-vite 2>/dev/null || true
+fi
+# Also kill any stray vite listeners as belt-and-suspenders
 pkill -f "vite" 2>/dev/null || true
 pkill -f "npm run dev" 2>/dev/null || true
 # Wait for ports to be released
@@ -63,27 +67,33 @@ else
 fi
 
 ########################################
-# Start Vite dev server on port $VITE_PORT
+# Start Vite dev server with PM2
 ########################################
 
-echo -e "${GREEN}Starting Vite dev server on http://localhost:$VITE_PORT${NC}"
-# Ensure Node modules are installed (skip if already present)
+echo -e "${GREEN}Starting Vite dev server via PM2 on http://localhost:$VITE_PORT${NC}"
+# Ensure logs directory exists
+mkdir -p logs
+# Ensure node_modules are installed (skip if present)
 if [ ! -d "node_modules" ]; then
   echo -e "${YELLOW}node_modules not found – installing dependencies (this may take a while)...${NC}"
-  npm install --silent
+  npm ci --include=optional --silent || npm install --include=optional --silent
 fi
-# Ensure the desired Vite port is free
+# Free desired port just in case
 lsof -ti tcp:$VITE_PORT | xargs kill -9 2>/dev/null || true
-npm run dev > logs/vite_server.log 2>&1 &
-VITE_PID=$!
-# Wait a moment and check if it started successfully
-sleep 3
-if kill -0 $VITE_PID 2>/dev/null; then
-  echo -e "${GREEN}✓ Vite dev server started successfully (PID $VITE_PID)${NC}"
-  echo -e "${GREEN}✓ Frontend hot-reload available at: http://localhost:$VITE_PORT${NC}"
+# Start/Restart pm2 app
+npx pm2 start pm2.config.cjs >/dev/null 2>&1 || true
+npx pm2 restart wf-vite >/dev/null 2>&1 || npx pm2 start pm2.config.cjs >/dev/null 2>&1 || true
+npx pm2 save >/dev/null 2>&1 || true
+# Probe @vite/client up to ~6s
+TRIES=0
+until curl -sI "http://localhost:$VITE_PORT/@vite/client" | grep -q " 200" || [ $TRIES -gt 12 ]; do
+  sleep 0.5
+  TRIES=$((TRIES+1))
+done
+if curl -sI "http://localhost:$VITE_PORT/@vite/client" | grep -q " 200"; then
+  echo -e "${GREEN}✓ Vite dev server is responding on http://localhost:$VITE_PORT${NC}"
 else
-  echo -e "${RED}✗ Failed to start Vite dev server${NC}"
-  echo -e "${RED}Check logs/vite_server.log for details${NC}"
+  echo -e "${RED}✗ Vite dev server did not respond on http://localhost:$VITE_PORT. See logs/vite_server.log or 'npx pm2 logs wf-vite'${NC}"
 fi
 
 ########################################

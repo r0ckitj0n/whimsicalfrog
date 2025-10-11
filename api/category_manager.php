@@ -3,11 +3,10 @@
 // api/category_manager.php
 require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
 require_once dirname(__DIR__) . '/includes/response.php';
 
-if (!isAdminWithToken()) {
-    Response::forbidden('Authentication required.');
-}
+AuthHelper::requireAdmin();
 
 $input = json_decode(file_get_contents('php://input'), true);
 $action = $input['action'] ?? '';

@@ -205,6 +205,61 @@ jobs:
           lftp -f deploy_signs.txt
           rm -f deploy_signs.txt
 
+      - name: Deploy full site (safe mirror with excludes)
+        if: steps.readiness.outputs.ready == 'true'
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PASS:?Missing DEPLOY_PASS}"
+          : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+          # Prepare exclude list to avoid syncing dev/CI/backups and heavy sources
+          cat > excludes.txt << 'EOF'
+          /.git/
+          /.github/
+          /.githooks/
+          /.husky/
+          /.vscode/
+          /backups/
+          /documentation/
+          /docker/
+          /node_modules/
+          /reports/
+          /scripts/
+          /dev/
+          /server/
+          /src/
+          /vendor/
+          /templates/wf-starter/
+          /.DS_Store
+          /.php-cs-fixer.cache
+          /.stylelintignore
+          /.lintstagedignore
+          /.eslintignore
+          /.gitignore
+          /composer.lock
+          /package-lock.json
+          /package.json
+          EOF
+          printf '%s\n' \
+            'set sftp:auto-confirm yes' \
+            'set ssl:verify-certificate no' \
+            'set cmd:fail-exit yes' \
+            "open sftp://$DEPLOY_USER:$DEPLOY_PASS@$DEPLOY_HOST" \
+            "mkdir -p $DEPLOY_PATH || true" \
+            # Mirror repository root to DEPLOY_PATH with excludes; keep permissions simple
+            "mirror --reverse --delete --only-newer --ignore-time --no-perms --verbose --exclude-glob-from=excludes.txt . $DEPLOY_PATH" \
+            'bye' > deploy_full.txt
+          lftp -f deploy_full.txt || true
+          rm -f deploy_full.txt excludes.txt
+
       - name: Remote cleanup (remove Vite hot file)
         if: steps.readiness.outputs.ready == 'true'
         shell: bash

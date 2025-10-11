@@ -47,6 +47,11 @@ try {
                     'stockLevel'  => $stock,
                     'imageUrl'    => $imagePath,
                     'totalStock'  => (int)$totalStock,
+                    // Optional attributes for options/labels; provide safe defaults
+                    'gender'       => isset($p['gender']) ? (string)$p['gender'] : '',
+                    'color_options'=> isset($p['color_options']) ? (string)$p['color_options'] : '',
+                    'size_options' => isset($p['size_options']) ? (string)$p['size_options'] : '',
+                    'status'       => isset($p['status']) ? (string)$p['status'] : '',
                 ];
             }
         }

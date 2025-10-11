@@ -135,8 +135,10 @@ if (empty($dashboardConfig)) {
   $section = 'dashboard';
   include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
 ?>
+<?php if (!defined('WF_ADMIN_SECTION_WRAPPED')): ?>
 <div class="admin-dashboard page-content">
   <div id="admin-section-content">
+<?php endif; ?>
 <?php endif; ?>
 
 <div class="dashboard-container">
@@ -409,7 +411,12 @@ if (empty($dashboardConfig)) {
                                     <div class="text-sm text-amber-700">Last 30d Orders</div>
                                     <div class="text-lg font-bold text-amber-800"><?= (int)($totals30['orders_count'] ?? 0) ?></div>
                                 </div>
-                            </div>
+                            <?php if (!$__wf_is_modal): ?>
+  <?php if (!defined('WF_ADMIN_SECTION_WRAPPED')): ?>
+    </div>
+  </div>
+  <?php endif; ?>
+<?php endif; ?>
 
                             <?php if (!empty($dailyRows)): ?>
                                 <div class="bg-white border border-gray-200 rounded p-2">

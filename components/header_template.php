@@ -54,7 +54,7 @@ $default_config = [
         ['label' => 'About', 'url' => '/about', 'active' => false],
         ['label' => 'Contact', 'url' => '/contact', 'active' => false],
     ],
-    'search_placeholder' => 'Search for items...',
+    'search_placeholder' => 'Search',
     'mobile_breakpoint' => '768px'
 ];
 
@@ -211,7 +211,7 @@ try {
             <?php if ($config['show_search']): ?>
                 <div class="header-center">
                     <div class="search-container">
-                        <form action="/search" method="GET" role="search">
+                        <form action="/shop" method="GET" role="search">
                             <div class="search-input-container">
                                 <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -308,7 +308,7 @@ try {
 
             <?php if ($config['show_search']): ?>
                 <div class="mobile-search">
-                    <form action="/search" method="GET" role="search">
+                    <form action="/shop" method="GET" role="search">
                         <input type="search"
                                name="q"
                                class="search-bar"

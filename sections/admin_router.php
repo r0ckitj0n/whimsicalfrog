@@ -57,6 +57,7 @@ $adminRole = $userData['role'] ?? 'Administrator';
 $currentSection = $adminSection ?: 'dashboard';
 ?>
 
+    <?php if (!defined('WF_ADMIN_SECTION_WRAPPED')) { define('WF_ADMIN_SECTION_WRAPPED', true); } ?>
     <div id="admin-section-content">
         <?php
     switch ($currentSection) {

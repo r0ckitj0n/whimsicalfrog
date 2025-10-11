@@ -45,158 +45,14 @@ include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
 // Reusable settings card renderer
 require_once dirname(__DIR__) . '/components/settings_card.php';
 
-// Ensure admin-specific CSS variables are set
-echo '<style id="admin-settings-navbar-fix">:root{--wf-header-height:64px;--admin-tabs-height:56px;}</style>';
-
-// Reduce spacing between header and admin navbar
-echo '<style id="admin-settings-navbar-spacing">
-.admin-tab-navigation {
-    top: var(--wf-header-height, 64px) !important;
-    margin-top: 0 !important;
-}
-body[data-page="admin/settings"] .admin-tab-navigation {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-/* Ensure navbar sits flush against header */
-.admin-tab-navigation {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-</style>';
-
-// Reduce spacing between header and admin navbar
-echo '<style id="admin-settings-navbar-spacing">
-.admin-tab-navigation {
-    top: var(--wf-header-height, 64px) !important;
-    margin-top: 0 !important;
-}
-body[data-page="admin/settings"] .admin-tab-navigation {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-}
-/* Ensure navbar sits flush against header */
-.admin-tab-navigation {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-</style>';
-
-// Calculate proper content spacing to avoid overlap with fixed navbar
-echo '<style id="admin-settings-content-positioning">
-body[data-page="admin/settings"] .settings-page {
-    padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 8px) !important;
-    margin-top: 0 !important;
-    min-height: calc(100vh - var(--wf-header-height, 64px) - var(--admin-tabs-height, 56px)) !important;
-    overflow-y: visible !important;
-}
-body[data-page="admin/settings"] #adminSettingsRoot {
-    min-height: calc(100vh - var(--wf-header-height, 64px) - var(--admin-tabs-height, 56px) - 2rem) !important;
-    overflow-y: auto !important;
-}
-</style>';
-
-// Ensure admin content area has proper height
-echo '<style id="admin-settings-content-height">
-body[data-page="admin/settings"] #admin-section-content {
-    overflow-y: auto !important;
-    padding-top: 0 !important;
-}
-body[data-page="admin/settings"] .admin-dashboard {
-    overflow-y: auto !important;
-}
-body[data-page="admin/settings"] {
-    overflow-y: auto !important;
-}
-</style>';
-
-// Reduce spacing between admin navbar and settings cards
-echo '<style id="admin-settings-content-spacing">
-/* Remove padding-top from admin content area on settings page */
-body[data-page="admin/settings"] #admin-section-content {
-    padding-top: 0 !important;
-}
-/* Ensure settings page clears fixed header + admin tabs */
-body[data-page="admin/settings"] > .settings-page {
-    padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 8px) !important;
-}
-/* Reduce margin/padding on settings grid */
-body[data-page="admin/settings"] .settings-grid {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-/* Ensure admin dashboard and section content have no spacing */
-body[data-page="admin/settings"] .admin-dashboard,
-body[data-page="admin/settings"] .page-content,
-body[data-page="admin/settings"] #admin-section-content {
-    margin-top: 0 !important;
-    padding-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-/* Remove any inherited spacing from parent containers */
-body[data-page="admin/settings"] .admin-dashboard.page-content {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-/* Ensure no spacing on nested containers */
-body[data-page="admin/settings"] .admin-dashboard,
-body[data-page="admin/settings"] .page-content,
-body[data-page="admin/settings"] #admin-section-content,
-body[data-page="admin/settings"] .settings-page,
-body[data-page="admin/settings"] #adminSettingsRoot {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    padding-bottom: 0 !important;
-    margin-bottom: 0 !important;
-}
-/* Remove any footer spacing */
-body[data-page="admin/settings"] footer,
-body[data-page="admin/settings"] .site-footer,
-body[data-page="admin/settings"] .footer,
-body[data-page="admin/settings"] .footer-container {
-    margin: 0 !important;
-    padding: 0 !important;
-    height: 0 !important;
-    display: none !important;
-}
-/* Remove any residual bottom spacing from last child in content wrapper */
-body[data-page="admin/settings"] #admin-section-content > *:last-child {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-}
-/* Hide generic spacer utility elements if present */
-body[data-page="admin/settings"] .spacer,
-body[data-page="admin/settings"] .content-spacer,
-body[data-page="admin/settings"] .push {
-    display: none !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
-/* Remove any global body margins/padding that might create dead space */
-body[data-page="admin/settings"] {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-/* Ensure no spacing on container classes */
-body[data-page="admin/settings"] .container {
-    margin: 0 !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-}
-/* Remove any admin-specific spacing rules that might create dead space */
-body[data-page="admin/settings"] .settings-grid {
-    margin-top: 0 !important;
-}
-</style>';
+// All navbar positioning, spacing, and content layout for admin settings is controlled by CSS sources.
 ?>
+<?php if (!defined('WF_ADMIN_SECTION_WRAPPED')): ?>
 <div class="admin-dashboard page-content">
     <div id="admin-section-content">
+<?php endif; ?>
 <!-- WF: SETTINGS WRAPPER START -->
-<div class="settings-page container mx-auto px-4 pt-128 mt-0" data-page="admin-settings" data-user-id="<?= htmlspecialchars((string)$uid) ?>">
+<div class="settings-page container mx-auto px-4 mt-0" data-page="admin-settings" data-user-id="<?= htmlspecialchars((string)$uid) ?>">
   <noscript>
     <div class="admin-alert alert-warning">
       JavaScript is required to use the Settings page.
@@ -466,16 +322,7 @@ body[data-page="admin/settings"] .settings-grid {
     </div>
   </div>
 
-    <!-- Hardening: ensure settings modals are clickable and above any stray overlays -->
-    <style id="wf-settings-modal-hardening">
-      .admin-modal-overlay { z-index: 10100 !important; pointer-events: auto !important; }
-      #addressDiagnosticsModal { z-index: 10110 !important; }
-      #shippingSettingsModal { z-index: 10110 !important; }
-      #deployManagerModal { z-index: 10110 !important; }
-      #siteDeploymentModal { z-index: 10110 !important; }
-      #dbSchemaAuditModal { z-index: 10110 !important; }
-      #shoppingCartModal { z-index: 10110 !important; }
-    </style>
+    
 
     <script>
     (function(){
@@ -760,6 +607,115 @@ body[data-page="admin/settings"] .settings-grid {
       } catch(_){ }
     })();
     </script>
+
+  <!-- Customer Messages: Shop Encouragement Phrases -->
+  <section class="admin-card" id="customerMessagesCard" aria-labelledby="customerMessagesTitle">
+    <div class="admin-card-header">
+      <h2 id="customerMessagesTitle" class="admin-card-title">💬 Customer Messages</h2>
+      <p class="admin-card-subtitle">Manage phrases used for shop recommendation badges when a search has no exact matches.</p>
+    </div>
+    <div class="admin-card-body">
+      <div class="form-control">
+        <label for="shopEncouragementPhrases" class="block text-sm font-medium mb-1">Shop Encouragement Phrases</label>
+        <textarea id="shopEncouragementPhrases" class="form-textarea w-full" rows="8" placeholder="One phrase per line (max 50)"></textarea>
+        <p class="text-sm text-gray-600 mt-1">These phrases appear as badges on recommended items in the shop when fuzzy recommendations are shown.</p>
+      </div>
+      <div class="mt-3 flex items-center justify-end gap-2">
+        <span id="customerMessagesStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+        <button type="button" class="btn-secondary wf-admin-nav-button" id="customerMessagesCancelBtn">Cancel</button>
+        <button type="button" class="btn-brand wf-admin-nav-button" id="customerMessagesSaveBtn">Save Phrases</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  (function(){
+    const textarea = document.getElementById('shopEncouragementPhrases');
+    const saveBtn = document.getElementById('customerMessagesSaveBtn');
+    const cancelBtn = document.getElementById('customerMessagesCancelBtn');
+    const statusEl = document.getElementById('customerMessagesStatus');
+
+    if (!textarea || !saveBtn || !cancelBtn) return;
+
+    const setStatus = (msg, ok) => {
+      if (!statusEl) return;
+      statusEl.textContent = msg || '';
+      statusEl.style.color = ok ? '#065f46' : '#b91c1c';
+    };
+
+    async function loadPhrases(){
+      try {
+        setStatus('Loading…', true);
+        const origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
+        const res = await fetch(origin.replace(/\/$/, '') + '/api/encouragements.php', { credentials: 'include' });
+        const data = await res.json();
+        const arr = Array.isArray(data && data.phrases) ? data.phrases : [];
+        textarea.value = arr.join('\n');
+        setStatus('Loaded', true);
+      } catch (e) {
+        setStatus('Load failed', false);
+      }
+    }
+
+    function parseTextarea(){
+      const raw = (textarea.value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const out = [];
+      for (let i = 0; i < raw.length && out.length < 50; i++) {
+        if (!out.includes(raw[i])) out.push(raw[i]);
+      }
+      return out;
+    }
+
+    function validate(arr){
+      if (!arr.length) return { ok:false, err:'Please enter at least one phrase.' };
+      for (const s of arr) { if (s.length > 200) return { ok:false, err:'Phrases must be 200 characters or fewer.' }; }
+      return { ok:true };
+    }
+
+    async function save(){
+      const phrases = parseTextarea();
+      const v = validate(phrases);
+      if (!v.ok) { setStatus(v.err, false); return; }
+      try {
+        setStatus('Saving…', true);
+        const origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
+        const res = await fetch(origin.replace(/\/$/, '') + '/api/save_messages.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phrases }),
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          if (window.wfNotifications && typeof window.wfNotifications.success === 'function') window.wfNotifications.success('Phrases saved');
+          else if (typeof window.showNotification === 'function') window.showNotification('Phrases saved', 'success');
+          else alert('Phrases saved');
+          setStatus('Saved', true);
+        } else {
+          const msg = (data && data.error) ? String(data.error) : 'Failed to save';
+          if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error(msg);
+          else if (typeof window.showNotification === 'function') window.showNotification(msg, 'error');
+          else alert(msg);
+          setStatus('Save failed', false);
+        }
+      } catch (e) {
+        if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Save failed');
+        else alert('Save failed');
+        setStatus('Save failed', false);
+      }
+    }
+
+    saveBtn.addEventListener('click', function(ev){ ev.preventDefault(); save(); });
+    cancelBtn.addEventListener('click', function(ev){ ev.preventDefault(); loadPhrases(); setStatus('Reverted', true); });
+
+    // Initial load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadPhrases, { once: true });
+    } else {
+      loadPhrases();
+    }
+  })();
+  </script>
 
   <!-- Delegated click handler so buttons work regardless of when they are rendered -->
   <script>
@@ -2507,6 +2463,8 @@ body[data-page="admin/settings"] .settings-grid {
 })();
 </script>
 
+<?php if (!defined('WF_ADMIN_SECTION_WRAPPED')): ?>
     </div>
     </div>
 </div>
+<?php endif; ?>

@@ -1,0 +1,60 @@
+name: SSH Alias Check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ssh-alias-check:
+    name: Validate SSH alias github.com-whf
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH with deploy key
+        shell: bash
+        env:
+          WHF_DEPLOY_KEY: ${{ secrets.WHF_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WHF_DEPLOY_KEY:-}" ]; then
+            echo "::error::Missing WHF_DEPLOY_KEY secret. Add repo secret WHF_DEPLOY_KEY containing the private key." >&2
+            exit 1
+          fi
+          mkdir -p ~/.ssh
+          echo "$WHF_DEPLOY_KEY" > ~/.ssh/whf_deploy_key
+          chmod 600 ~/.ssh/whf_deploy_key
+          {
+            echo "Host github.com-whf"
+            echo "  HostName github.com"
+            echo "  User git"
+            echo "  IdentityFile ~/.ssh/whf_deploy_key"
+            echo "  IdentitiesOnly yes"
+          } >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Test SSH connectivity (alias)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -T git@github.com-whf || true
+
+      - name: Verify repo access via alias (ls-remote)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git ls-remote git@github.com-whf:r0ckitj0n/whimsicalfrog.git HEAD | tee /tmp/lsremote.txt
+          if [ ! -s /tmp/lsremote.txt ]; then
+            echo "::error::ls-remote returned no data. Verify deploy key has access and is added to GitHub (Deploy Key or Account SSH Key)." >&2
+            exit 2
+          fi
+
+      - name: Checkout (optional) using actions/checkout
+        uses: actions/checkout@v4
+        with:
+          repository: r0ckitj0n/whimsicalfrog
+          ssh-key: ${{ secrets.WHF_DEPLOY_KEY }}
+          ssh-known-hosts: github.com
+          fetch-depth: 1

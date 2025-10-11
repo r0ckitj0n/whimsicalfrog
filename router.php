@@ -55,7 +55,7 @@ if (preg_match('#^/\.(?!well-known/)#', $requestedPath)) {
     exit;
 }
 // Block sensitive directories from being served directly
-$denyPrefixes = ['/backups/', '/scripts/', '/.git/', '/.github/', '/vendor/'];
+$denyPrefixes = ['/backups/', '/scripts/', '/documentation/', '/.git/', '/.github/', '/vendor/'];
 foreach ($denyPrefixes as $prefix) {
     if (strpos($requestedPath, $prefix) === 0) {
         http_response_code(403);

@@ -120,3 +120,82 @@ jobs:
             'bye' > deploy_backgrounds.txt
           lftp -f deploy_backgrounds.txt
           rm -f deploy_backgrounds.txt
+
+      - name: Remote cleanup (remove Vite hot file)
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PASS:?Missing DEPLOY_PASS}"
+          : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+          printf '%s\n' \
+            'set sftp:auto-confirm yes' \
+            'set ssl:verify-certificate no' \
+            'set cmd:fail-exit yes' \
+            "open sftp://$DEPLOY_USER:$DEPLOY_PASS@$DEPLOY_HOST" \
+            "cd $DEPLOY_PATH" \
+            'rm -f hot' \
+            'bye' > cleanup_hot.txt
+          lftp -f cleanup_hot.txt || true
+          rm -f cleanup_hot.txt
+
+      - name: HTTP verification
+        shell: bash
+        env:
+          BASE_URL: https://whimsicalfrog.us
+        run: |
+          set -euo pipefail
+          # Check manifest in typical locations
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/.vite/manifest.json") || true
+          if [ "$CODE" != "200" ]; then
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/manifest.json") || true
+          fi
+          echo "Manifest HTTP: $CODE"
+          # Fetch homepage and probe for one JS and CSS
+          HTML=$(curl -s "$BASE_URL/") || true
+          APP_JS=$(echo "$HTML" | grep -Eo "/dist/assets/js/app.js-[^\"']+\\.js" | head -n1)
+          MAIN_CSS=$(echo "$HTML" | grep -Eo "/dist/assets/[^\"']+\\.css" | head -n1)
+          if [ -n "$APP_JS" ]; then
+            CJ=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$APP_JS") || true
+            echo "JS $APP_JS -> $CJ"
+          else
+            echo "No app.js asset found in homepage HTML"
+          fi
+          if [ -n "$MAIN_CSS" ]; then
+            CC=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$MAIN_CSS") || true
+            echo "CSS $MAIN_CSS -> $CC"
+          else
+            echo "No CSS asset found in homepage HTML"
+          fi
+
+      - name: Fix image permissions
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PASS:?Missing DEPLOY_PASS}"
+          : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+          printf '%s\n' \
+            'set sftp:auto-confirm yes' \
+            'set ssl:verify-certificate no' \
+            'set cmd:fail-exit yes' \
+            "open sftp://$DEPLOY_USER:$DEPLOY_PASS@$DEPLOY_HOST" \
+            "cd $DEPLOY_PATH" \
+            'chmod 755 images/ || true' \
+            'chmod 755 images/items/ || true' \
+            'chmod 644 images/items/* || true' \
+            'bye' > fix_perms.txt
+          lftp -f fix_perms.txt || true
+          rm -f fix_perms.txt

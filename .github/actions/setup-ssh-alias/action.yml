@@ -1,0 +1,53 @@
+name: "Setup SSH Alias"
+description: "Configure SSH with a provided private key and alias for GitHub access"
+author: "WhimsicalFrog"
+runs:
+  using: "composite"
+  steps:
+    - name: Configure SSH
+      shell: bash
+      env:
+        SSH_PRIVATE_KEY: ${{ inputs.ssh-private-key }}
+        SSH_ALIAS: ${{ inputs.ssh-alias }}
+        SSH_HOST: ${{ inputs.ssh-host }}
+        SSH_KEY_PATH: ${{ inputs.ssh-key-path }}
+      run: |
+        set -euo pipefail
+        if [ -z "${SSH_PRIVATE_KEY:-}" ]; then
+          echo "::error::Missing SSH private key input (ssh-private-key)." >&2
+          exit 1
+        fi
+        : "${SSH_ALIAS:=github.com-whf}"
+        : "${SSH_HOST:=github.com}"
+        : "${SSH_KEY_PATH:=~/.ssh/whf_deploy_key}"
+
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > "$SSH_KEY_PATH"
+        chmod 600 "$SSH_KEY_PATH"
+        {
+          echo "Host ${SSH_ALIAS}"
+          echo "  HostName ${SSH_HOST}"
+          echo "  User git"
+          echo "  IdentityFile ${SSH_KEY_PATH}"
+          echo "  IdentitiesOnly yes"
+        } >> ~/.ssh/config
+        chmod 600 ~/.ssh/config
+        ssh-keyscan -H "${SSH_HOST}" >> ~/.ssh/known_hosts 2>/dev/null || true
+        chmod 644 ~/.ssh/known_hosts
+
+inputs:
+  ssh-private-key:
+    description: "Private key contents used for SSH auth"
+    required: true
+  ssh-alias:
+    description: "SSH host alias to configure"
+    required: false
+    default: "github.com-whf"
+  ssh-host:
+    description: "SSH host to add to known_hosts"
+    required: false
+    default: "github.com"
+  ssh-key-path:
+    description: "Filesystem path to write the private key"
+    required: false
+    default: "~/.ssh/whf_deploy_key"

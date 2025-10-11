@@ -121,6 +121,56 @@ jobs:
           lftp -f deploy_backgrounds.txt
           rm -f deploy_backgrounds.txt
 
+      - name: Deploy item images (mtime-based SFTP sync)
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PASS:?Missing DEPLOY_PASS}"
+          : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+          test -d images/items || exit 0
+          printf '%s\n' \
+            'set sftp:auto-confirm yes' \
+            'set ssl:verify-certificate no' \
+            'set cmd:fail-exit yes' \
+            "open sftp://$DEPLOY_USER:$DEPLOY_PASS@$DEPLOY_HOST" \
+            "mkdir -p $DEPLOY_PATH/images/items || true" \
+            "mirror --reverse --delete --verbose --only-newer --no-perms images/items $DEPLOY_PATH/images/items" \
+            'bye' > deploy_items.txt
+          lftp -f deploy_items.txt
+          rm -f deploy_items.txt
+
+      - name: Deploy signs images (mtime-based SFTP sync)
+        shell: bash
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}"
+          : "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PASS:?Missing DEPLOY_PASS}"
+          : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+          test -d images/signs || exit 0
+          printf '%s\n' \
+            'set sftp:auto-confirm yes' \
+            'set ssl:verify-certificate no' \
+            'set cmd:fail-exit yes' \
+            "open sftp://$DEPLOY_USER:$DEPLOY_PASS@$DEPLOY_HOST" \
+            "mkdir -p $DEPLOY_PATH/images/signs || true" \
+            "mirror --reverse --delete --verbose --only-newer --no-perms images/signs $DEPLOY_PATH/images/signs" \
+            'bye' > deploy_signs.txt
+          lftp -f deploy_signs.txt
+          rm -f deploy_signs.txt
+
       - name: Remote cleanup (remove Vite hot file)
         shell: bash
         env:

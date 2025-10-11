@@ -5,12 +5,18 @@
 - Updated all runtime imports and comments to the new name.
 - Removed obsolete patch scripts referencing the old filename.
 - Updated technical documentation references accordingly.
+- Removed legacy root-level JS/CSS duplicates in favor of canonical `src/` modules.
+- Migrated `src/js/shop.js` and `src/js/main-application.js` to unified core (`whimsical-frog-core-unified.js`).
 
 ## Key Changes
 - Code:
   - Canonical module: `src/js/detailed-item-modal.js` (full implementation).
   - Updated references in `src/entries/pos.js`, `src/js/app.js`, `src/room/event-manager.js`, `src/ui/global-popup.js`, `src/core/action-registry.js`.
   - Deleted legacy module `src/js/global-item-modal.js`.
+  - Removed unreferenced root files: `global-modals.js`, `room-modal.legacy.css`, `whimsical-frog-core.js`, `main-application.js`, `shop.js`, `dynamic-background-loader.js`, `cart-modal.js`, `modal-manager.js`, `admin-under-header-modals.js`.
+  - Removed unimported legacy CSS: `src/styles/room-modal.legacy.css`.
+  - Migrated `shop.js` and `main-application.js` to load `src/js/whimsical-frog-core-unified.js` via side-effect import and use `window.WF`.
+  - Removed deprecated `src/js/whimsical-frog-core.js` after migration.
 - Docs:
   - `documentation/technical/MODAL_CONVENTIONS_AND_UPGRADE_GUIDE.md` now lists `src/js/detailed-item-modal.js` under Item Modals.
 - Tooling:
@@ -19,9 +25,12 @@
 ## Rationale
 - Standardize naming around “detailed-item-modal” and remove confusion with legacy file name.
 - Eliminate unused scripts tied to the old module.
+- Reduce drift by consolidating around Vite-managed `src/` modules; remove legacy root duplicates.
+- Unify core initialization and API surface via the unified core module.
 
 ## Next
-- None. Optional: verify modals on Shop, Rooms, and POS open correctly post-rename.
+- Verify modals on Shop, Rooms, and POS open correctly post-rename.
+- Optional: relocate local deploy keys (`whf_deploy_key*`) to `~/.ssh/` and CI secret storage for hygiene.
 
 # Release Notes - 2025-09-06
 

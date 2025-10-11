@@ -9,6 +9,7 @@ permissions:
 jobs:
   ssh-alias-check:
     name: Validate SSH alias github.com-whf
+    environment: production
     runs-on: ubuntu-latest
     steps:
       - name: Set up SSH with deploy key
@@ -18,7 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${WHF_DEPLOY_KEY:-}" ]; then
-            echo "::error::Missing WHF_DEPLOY_KEY secret. Add repo secret WHF_DEPLOY_KEY containing the private key." >&2
+            echo "::error::Missing WHF_DEPLOY_KEY secret in environment. Add WHF_DEPLOY_KEY to the 'production' environment secrets." >&2
             exit 1
           fi
           mkdir -p ~/.ssh

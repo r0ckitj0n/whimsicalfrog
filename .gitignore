@@ -45,6 +45,8 @@ whf_deploy_key.pub
 backups/
 # Allow quarantined duplicates to be committed
 !backups/duplicates/**
+# Allow a tracked README in backups/debug
+!backups/debug/README.md
 logs/
 logs/*.log
 

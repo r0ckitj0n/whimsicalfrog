@@ -65,41 +65,32 @@ jobs:
           npm ci
           npm run build --if-present
 
-      - name: Setup SSH for deploy host
-        shell: bash
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          WHF_DEPLOY_KEY: ${{ secrets.WHF_DEPLOY_KEY }}
+      - name: Install lftp
         run: |
-          set -euo pipefail
-          : "${DEPLOY_HOST:?Missing DEPLOY_HOST secret}"
-          mkdir -p ~/.ssh
-          # Prefer a dedicated DEPLOY_SSH_KEY if provided, else reuse WHF_DEPLOY_KEY
-          if [ -n "${DEPLOY_SSH_KEY:-}" ]; then
-            echo "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
-          else
-            if [ -z "${WHF_DEPLOY_KEY:-}" ]; then
-              echo "::error::No DEPLOY_SSH_KEY or WHF_DEPLOY_KEY provided for deploy auth" >&2
-              exit 1
-            fi
-            echo "$WHF_DEPLOY_KEY" > ~/.ssh/deploy_key
-          fi
-          chmod 600 ~/.ssh/deploy_key
-          # Add deploy host to known_hosts
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          chmod 644 ~/.ssh/known_hosts
+          sudo apt-get update -y
+          sudo apt-get install -y lftp
 
-      - name: Deploy (rsync over SSH)
+      - name: Deploy (SFTP mirror with lftp)
         shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PASS: ${{ secrets.DEPLOY_PASS }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
           set -euo pipefail
+          : "${DEPLOY_HOST:?Missing DEPLOY_HOST}"
           : "${DEPLOY_USER:?Missing DEPLOY_USER}"
+          : "${DEPLOY_PASS:?Missing DEPLOY_PASS}"
           : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
           test -d dist || { echo "::error::dist/ not found; ensure build step produced artifacts" >&2; exit 1; }
-          RSYNC_RSH='ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes'
-          rsync -az --delete -e "$RSYNC_RSH" dist/ "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/dist/"
+          printf '%s\n' \
+            'set sftp:auto-confirm yes' \
+            'set ssl:verify-certificate no' \
+            'set cmd:fail-exit yes' \
+            "open sftp://$DEPLOY_USER:$DEPLOY_PASS@$DEPLOY_HOST" \
+            "mkdir -p $DEPLOY_PATH/dist || true" \
+            "mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms dist $DEPLOY_PATH/dist" \
+            'bye' > deploy_sftp.txt
+          lftp -f deploy_sftp.txt
+          rm -f deploy_sftp.txt

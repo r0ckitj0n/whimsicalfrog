@@ -1,0 +1,7 @@
+# Deny all direct web access to documentation
+# Apache 2.4+
+Require all denied
+
+# Legacy Apache (ignored on 2.4+, harmless)
+Order allow,deny
+Deny from all

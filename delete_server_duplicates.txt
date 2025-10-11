@@ -1,0 +1,14 @@
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
+rm -f images/*\ 2.* || true
+rm -f images/*\ 3.* || true
+rm -f images/items/*\ 2.* || true
+rm -f images/items/*\ 3.* || true
+rm -f images/backgrounds/*\ 2.* || true
+rm -f images/backgrounds/*\ 3.* || true
+rm -f images/logos/*\ 2.* || true
+rm -f images/logos/*\ 3.* || true
+rm -f images/signs/*\ 2.* || true
+rm -f images/signs/*\ 3.* || true
+bye

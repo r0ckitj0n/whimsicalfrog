@@ -1,0 +1,269 @@
+admin:::adminCustomersTab:::Customers
+admin:::adminDashboardTab:::Dashboard
+admin:::adminHelpDocsBtn:::Adminhelpdocs
+admin:::adminHelpToggleBtn:::Adminhelptoggle
+admin:::adminInventoryTab:::Inventory
+admin:::adminOrdersTab:::Orders
+admin:::adminReportsTab:::Reports
+admin:::confirm-delete:::Confirm Delete
+common:::adminHelpDocsLink:::Adminhelpdocslink
+common:::adminMarketingTab:::Marketing
+common:::adminPosTab:::Point of Sale
+common:::adminSettingsTab:::Settings
+common:::cancel-btn:::Cancel
+common:::closeBtn:::Close
+common:::duplicateBtn:::Duplicate
+common:::helpBtn:::Help
+common:::importBtn:::Import
+common:::previewBtn:::Preview
+common:::resetBtn:::Reset
+common:::save-btn:::Save
+common:::saveBtn:::Save
+customers:::addCustomerBtn:::Add Customer
+customers:::confirmPassword:::Confirmpassword
+customers:::customerOrdersBtn:::Customerorders
+customers:::customerValueBtn:::Customervalue
+customers:::deleteCustomerBtn:::Deletecustomer
+customers:::editCustomerBtn:::Editcustomer
+customers:::emailCustomerBtn:::Email Customer
+customers:::exportCustomersBtn:::Export Customers
+customers:::nextCustomerBtn:::Nextcustomer
+customers:::prevCustomerBtn:::Prevcustomer
+customers:::saveCustomerBtn:::Savecustomer
+customers:::sendEmailBtn:::Sendemail
+customers:::viewCustomerBtn:::Viewcustomer
+customers:::viewOrderHistoryBtn:::View Order
+dashboard:::inventoryAlertsTable:::Low Stock Alert
+dashboard:::open-order-details:::Open Order Details
+inventory:::add-new-item-btn:::Add Product
+inventory:::addNewItemBtn:::Add Product
+inventory:::apply-price-suggestion:::Price Helper
+inventory:::bulkEditBtn:::Bulk Edit
+inventory:::confirm-delete-item:::Delete Product
+inventory:::cost-suggestion-btn:::Cost Suggestion
+inventory:::delete-cost-item:::Delete Product
+inventory:::delete-item:::Delete Product
+inventory:::deleteItemBtn:::Delete Product
+inventory:::duplicateItemBtn:::Copy Product
+inventory:::editItemBtn:::Edit Product
+inventory:::exportInventoryBtn:::Export Products
+inventory:::importInventoryBtn:::Import Products
+inventory:::open-color-template-modal:::Open Color Template
+inventory:::open-cost-modal:::Open Cost
+inventory:::open-global-colors-management:::Open Global Colors Management
+inventory:::open-marketing-manager:::Open Marketing Manager
+inventory:::price-suggestion-btn:::Price Helper
+inventory:::printPackingSlipsBtn:::Printpackingslips
+inventory:::save-cost-item:::Save Cost Item
+inventory:::viewItemBtn:::Viewitem
+marketing:::marketingAnalyticsBtn:::Marketinganalytics
+marketing:::marketingRecentOrdersTable:::Orders
+marketing:::send-test-email:::Send Test Email
+orders:::action:delete-order:::Delete Order
+orders:::bulk-actions-select:::Bulk Actions Select
+orders:::cancelOrderBtn:::Cancelorder
+orders:::delete-order:::Delete Order
+orders:::editOrderBtn:::Editorder
+orders:::exportOrdersBtn:::Exportorders
+orders:::fulfillOrderBtn:::Fulfillorder
+orders:::mark-shipped:::Mark Shipped
+orders:::newOrderBtn:::Neworder
+orders:::printOrderBtn:::Print Order
+orders:::refund-order:::Refund Order
+orders:::refundOrderBtn:::Refund Order
+orders:::shipOrderBtn:::Mark Shipped
+orders:::shippingStatusSelect:::Shippingstatusselect
+orders:::viewOrderBtn:::View Order
+pos:::checkoutBtn:::Checkout
+pos:::toggle-fullscreen:::Toggle Fullscreen
+reports:::export-report:::Export Report
+reports:::popupAddBtn:::Popupadd
+reports:::print-report:::Print Report
+reports:::printReportBtn:::Printreport
+reports:::topProductsTable:::Topproductstable
+settings:::accountSettingsBtn:::Accountsettings
+settings:::action:attr-add:::Add Attribute
+settings:::action:attr-add-form:::Add Attribute
+settings:::action:attr-save-order:::Attr Save Order
+settings:::action:business-info-save:::Business Info Save
+settings:::action:business-reset-branding:::Business Reset Branding
+settings:::action:business-save:::Business Save
+settings:::action:business-save-branding:::Business Save Branding
+settings:::action:close-admin-modal:::Close Admin
+settings:::action:close-ai-settings:::Close Ai Settings
+settings:::action:close-ai-tools:::Close Ai Tools
+settings:::action:close-business-info:::Close Business Info
+settings:::action:close-css-rules:::Style Editor
+settings:::action:close-email-settings:::Close Email Settings
+settings:::action:close-logging-status:::Close Logging Status
+settings:::action:close-secrets-modal:::Close Secrets
+settings:::action:close-square-settings:::Square Settings
+settings:::action:css-rules-save:::Style Editor
+settings:::action:dashboard-config-refresh:::Dashboard Config Refresh
+settings:::action:dashboard-config-reset:::Dashboard Config Reset
+settings:::action:dashboard-config-save:::Dashboard Config Save
+settings:::action:email-history-apply-filters:::Email History
+settings:::action:email-history-clear-filters:::Email History
+settings:::action:email-history-close-drawer:::Email History
+settings:::action:email-history-copy-curl:::Email History
+settings:::action:email-history-copy-headers:::Email History
+settings:::action:email-history-copy-subject:::Email History
+settings:::action:email-history-copy-to:::Email History
+settings:::action:email-history-copy-type:::Email History
+settings:::action:email-history-download:::Email History
+settings:::action:email-history-next:::Email History
+settings:::action:email-history-open-test:::Send Test Email
+settings:::action:email-history-prev:::Email History
+settings:::action:email-history-refresh:::Email History
+settings:::action:email-history-save-endpoint:::Email History
+settings:::action:email-history-search:::Email History
+settings:::action:email-history-toggle-json:::Email History
+settings:::action:email-send-test:::Send Test Email
+settings:::action:health-refresh:::Health Refresh
+settings:::action:logging-clear-logs:::Logging Clear Logs
+settings:::action:logging-open-file:::Logging Open File
+settings:::action:logging-refresh-status:::Logging Refresh Status
+settings:::action:move-down:::Move Down
+settings:::action:move-up:::Move Up
+settings:::action:open-account-settings:::Open Account Settings
+settings:::action:open-ai-settings:::Open Ai Settings
+settings:::action:open-ai-tools:::Open Ai Tools
+settings:::action:open-area-item-mapper:::Open Area Item Mapper
+settings:::action:open-attributes:::Open Attributes
+settings:::action:open-background-manager:::Backgrounds
+settings:::action:open-business-info:::Open Business Info
+settings:::action:open-categories:::Open Categories
+settings:::action:open-css-catalog:::Open Css Catalog
+settings:::action:open-css-rules:::Style Editor
+settings:::action:open-dashboard-config:::Open Dashboard Config
+settings:::action:open-dev-status:::Open Dev Status
+settings:::action:open-email-history:::Email History
+settings:::action:open-email-settings:::Open Email Settings
+settings:::action:open-email-test:::Send Test Email
+settings:::action:open-health-diagnostics:::Open Health Diagnostics
+settings:::action:open-logging-status:::Open Logging Status
+settings:::action:open-room-map-editor:::Room Mapper
+settings:::action:open-secrets-modal:::Open Secrets
+settings:::action:open-square-settings:::Square Settings
+settings:::action:open-template-manager:::Open Template Manager
+settings:::action:prevent-submit:::Prevent Submit
+settings:::action:run-health-check:::Run Health Check
+settings:::action:save-ai-settings:::Save Ai Settings
+settings:::action:scan-item-images:::Scan Item Images
+settings:::action:secrets-export:::Secrets Export
+settings:::action:secrets-rotate:::Secrets Rotate
+settings:::action:secrets-save:::Secrets Save
+settings:::action:square-clear-token:::Clear Square
+settings:::action:square-save-settings:::Square Settings
+settings:::action:square-sync-items:::Sync from Square
+settings:::action:square-test-connection:::Test Square
+settings:::action:test-ai-provider:::Test Ai Provider
+settings:::addressDiagBtn:::Addressdiag
+settings:::aiSettingsBtn:::Aisettings
+settings:::aiSettingsSaveBtn:::Aisettingssave
+settings:::aiSettingsTestBtn:::Aisettingstest
+settings:::aiToolsBtn:::Aitools
+settings:::analyticsBtn:::Analytics
+settings:::areaItemMapperBtn:::Areaitemmapper
+settings:::attr-save-order:::Attr Save Order
+settings:::attributesBtn:::Attributes
+settings:::backgroundManagerBtn:::Backgrounds
+settings:::business-save:::Business Save
+settings:::business-save-branding:::Business Save Branding
+settings:::business-settings-btn:::Business Settings
+settings:::businessInfoBtn:::Business Info
+settings:::businessInfoCloseBtn:::Business Info
+settings:::businessInfoSaveBtn:::Business Info
+settings:::businessReportsBtn:::Businessreports
+settings:::cartButtonTextBtn:::Carttext
+settings:::categoriesBtn:::Categories
+settings:::costBreakdownBtn:::Costbreakdown
+settings:::cssRulesBtn:::Style Editor
+settings:::cssRulesCloseBtn:::Style Editor
+settings:::cssRulesSaveBtn:::Style Editor
+settings:::dashboard-config-save:::Dashboard Config Save
+settings:::dashboardConfigBtn:::Dashboardconfig
+settings:::database-tables-btn:::Database Tables
+settings:::databaseMaintenanceBtn:::Database Cleanup
+settings:::databaseTablesBtn:::Databasetables
+settings:::dbSchemaAuditBtn:::Dbschemaaudit
+settings:::deployManagerBtn:::Deploymanager
+settings:::email-history-apply-filters:::Email History
+settings:::email-history-open-test:::Send Test Email
+settings:::email-history-save-endpoint:::Email History
+settings:::email-history-toggle-json:::Email History
+settings:::email-send-test:::Send Test Email
+settings:::emailConfigBtn:::Email Settings
+settings:::emailHistoryBtn:::Email History
+settings:::emailSettingsCloseBtn:::Emailsettingsclose
+settings:::emailTestBtn:::Send Test Email
+settings:::fileExplorerBtn:::File Browser
+settings:::fixSampleEmailBtn:::Fixsampleemail
+settings:::global-css-btn:::Global Css
+settings:::globalColorSizeBtn:::Globalcolorsize
+settings:::globalCSSBtn:::Globalcss
+settings:::healthDiagnosticsBtn:::Healthdiagnostics
+settings:::help-hints-btn:::Help Hints
+settings:::id:accountSettingsBtn:::Accountsettings
+settings:::id:aiSettingsBtn:::Aisettings
+settings:::id:aiToolsBtn:::Aitools
+settings:::id:attributesBtn:::Attributes
+settings:::id:attributesTitle:::Attributestitle
+settings:::id:autoSync:::Autosync
+settings:::id:bizLinkedIn:::Bizlinkedin
+settings:::id:brandPreviewCard:::Brandpreviewcard
+settings:::id:brandPreviewSwatches:::Brandpreviewswatches
+settings:::id:brandPreviewText:::Brandpreviewtext
+settings:::id:brandPreviewTitle:::Brandpreviewtitle
+settings:::id:businessInfoBtn:::Business Info
+settings:::id:categoriesBtn:::Categories
+settings:::id:dashboardConfigBtn:::Dashboardconfig
+settings:::id:dashboardSectionsTable:::Dashboardsectionstable
+settings:::id:emailConfigBtn:::Email Settings
+settings:::id:emailHistoryBtn:::Email History
+settings:::id:emailTestBtn:::Send Test Email
+settings:::id:healthDiagnosticsBtn:::Healthdiagnostics
+settings:::id:loggingStatusBtn:::Loggingstatus
+settings:::id:saveSquareSettingsBtn:::Square Settings
+settings:::id:secretsManagerBtn:::Secretsmanager
+settings:::id:shippingPolicy:::Shippingpolicy
+settings:::id:squareSettingsBtn:::Square Settings
+settings:::id:syncDescriptions:::Syncdescriptions
+settings:::id:syncInventory:::Syncinventory
+settings:::id:syncPrices:::Syncprices
+settings:::id:templateManagerBtn:::Templatemanager
+settings:::id:testRecipient:::Testrecipient
+settings:::logging-open-file:::Logging Open File
+settings:::loggingStatusBtn:::Loggingstatus
+settings:::receiptMessagesBtn:::Receiptmessages
+settings:::receiptSettingsBtn:::Receiptsettings
+settings:::repoCleanupBtn:::Repocleanup
+settings:::room-category-btn:::Room Category
+settings:::room-mapper-btn:::Room Mapper
+settings:::roomCategoryBtn:::Roomcategory
+settings:::roomCategoryLinksBtn:::Roomcategorylinks
+settings:::roomMapperBtn:::Room Mapper
+settings:::roomsBtn:::Rooms
+settings:::salesAdminBtn:::Salesadmin
+settings:::save-ai-settings:::Save Ai Settings
+settings:::saveSquareSettingsBtn:::Square Settings
+settings:::secrets-export:::Secrets Export
+settings:::secrets-save:::Secrets Save
+settings:::secretsManagerBtn:::Secretsmanager
+settings:::shippingSettingsBtn:::Shippingsettings
+settings:::shippingSettingsFormStatic:::Shippingsettingsformstatic
+settings:::shippingSettingsSaveBtn:::Shippingsettingssave
+settings:::square-sync-items:::Sync from Square
+settings:::square-test-connection:::Test Square
+settings:::squareClearTokenBtn:::Clear Square
+settings:::squareSaveBtn:::Squaresave
+settings:::squareSettingsBtn:::Square Settings
+settings:::squareSyncItemsBtn:::Sync from Square
+settings:::squareTestBtn:::Test Square
+settings:::systemCleanupBtn:::Systemcleanup
+settings:::systemConfigBtn:::Systemconfig
+settings:::systemDocumentationBtn:::Systemdocumentation
+settings:::templateManagerBtn:::Templatemanager
+settings:::test-ai-provider:::Test Ai Provider
+settings:::userManagerBtn:::Usermanager
+settings:::websiteConfigBtn:::Websiteconfig

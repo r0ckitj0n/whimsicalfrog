@@ -1,0 +1,30 @@
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+issue,sku,name,status,category,legacy_stock,total_stock,has_primary_image,primary_image_path
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-AR-001,"Custom Artwork Print",draft,"Fluid Art",6,0,yes,images/items/WF-AR-001A.png
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-GEN-001,"General Custom Item",draft,"Fluid Art",10,0,yes,images/items/WF-GEN-001C.webp
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-SU-002,"Sublimation Print Design",draft,Hats,10,0,yes,images/items/WF-SU-002A.png
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-TS-002,"Be strong and courageous, pink women's t-shirt",live,T-Shirts,372,465,yes,images/items/WF-TS-002A.webp
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-TU-001,"Custom Tumbler Design #1",draft,Tumblers,5,0,yes,images/items/WF-TU-001A.png
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-TU-002,"Custom Tumbler Design #2",draft,Tumblers,5,0,yes,images/items/WF-TU-002A.png
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-TU-003,"Custom Tumbler Design #3",draft,Tumblers,6,0,yes,images/items/WF-TU-003A.webp
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-TU-004,"Custom Tumbler Design #4",draft,Tumblers,3,0,yes,images/items/WF-TU-004A.webp
+
+Deprecated: fputcsv(): the $escape parameter must be provided as its default value will change in /Users/jongraves/Documents/Websites/WhimsicalFrog/scripts/dev/audit_pos_vs_shop.php on line 18
+LEGACY_STOCK_MISMATCH,WF-WW-001,"Custom Window Wrap",draft,Decor,10,0,yes,images/items/WF-WW-001A.png

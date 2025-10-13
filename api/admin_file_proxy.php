@@ -11,6 +11,8 @@ AuthHelper::requireAdmin(403, 'Admin access required');
 $allowedBases = [
     realpath(__DIR__ . '/../documentation'),
     realpath(__DIR__ . '/../reports'),
+    realpath(__DIR__ . '/../backups'),
+    realpath(__DIR__ . '/../logs'),
 ];
 
 $rel = isset($_GET['path']) ? (string)$_GET['path'] : '';

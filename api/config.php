@@ -120,6 +120,17 @@ if (!function_exists('wf_env')) {
     }
 }
 
+// Branding and site configuration (portable defaults)
+if (!defined('SITE_NAME')) {
+    define('SITE_NAME', wf_env('SITE_NAME', 'Your Site'));
+}
+if (!defined('APP_URL')) {
+    define('APP_URL', wf_env('APP_URL', ''));
+}
+if (!defined('BRAND_LOGO_PATH')) {
+    define('BRAND_LOGO_PATH', wf_env('BRAND_LOGO_PATH', '/images/logos/logo-whimsicalfrog.webp'));
+}
+
 // Set error reporting for development
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);

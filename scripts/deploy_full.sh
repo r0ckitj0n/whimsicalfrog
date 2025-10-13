@@ -103,20 +103,20 @@ restore_via_api() {
     echo -e "${YELLOW}DRY-RUN: Skipping API DB restore upload${NC}"
     return 2
   fi
-  # API expects multipart field name 'backup_file'; only accepts .sql or .txt
-  # If we have a .gz, decompress to a temp .sql first
+  # API expects multipart field name 'backup_file'; now accepts .sql, .txt, or .sql.gz
+  # Upload the gzipped file directly to avoid huge payload expansion
   local upload_file="${dump_file}"
-  local tmp_file=""
+  local is_gz="0"
   if [[ "${dump_file}" == *.gz ]]; then
-    tmp_file="/tmp/wf_restore_$(date +%s).sql"
-    echo "Decompressing ${dump_file} -> ${tmp_file}"
-    gzip -dc "${dump_file}" > "${tmp_file}"
-    upload_file="${tmp_file}"
+    is_gz="1"
   fi
 
   # Perform upload
-  HTTP_CODE=$(curl -s -o /tmp/wf_db_restore_api.out -w "%{http_code}" \
-    -F "backup_file=@${upload_file};type=application/sql" \
+  # Choose a reasonable content-type; server checks extension anyway
+  local content_type="application/sql"
+  if [[ "$is_gz" == "1" ]]; then content_type="application/gzip"; fi
+  HTTP_CODE=$(curl --retry 3 --retry-delay 2 --connect-timeout 20 -s -o /tmp/wf_db_restore_api.out -w "%{http_code}" \
+    -F "backup_file=@${upload_file};type=${content_type}" \
     "${BASE_URL}/api/database_maintenance.php?action=restore_database&admin_token=${token}") || true
 
   # Basic validation: HTTP 200 and JSON success true
@@ -127,15 +127,20 @@ restore_via_api() {
     return 0
   fi
 
-  # Fallback: upload SQL to server backups/ via SFTP, then call server_backup_path
+  # Fallback: upload SQL to server via SFTP, then call server_backup_path
   echo -e "${YELLOW}⚠️  Multipart upload failed or not accepted. Trying server file path restore...${NC}"
   # Use same SFTP credentials as scripts/deploy.sh
   HOST="home419172903.1and1-data.host"
   USER="acc899014616"
   PASS="Palz2516!"
-  # Upload inside api/uploads so server can read it as a relative path without needing to create top-level dirs
+  # Upload into api/uploads/ (API accepts server_backup_path under uploads/)
   REMOTE_DIR="api/uploads"
-  REMOTE_SQL="${REMOTE_DIR}/deploy_restore.sql"
+  # Preserve .gz extension if present so server can stream decompress
+  if [[ "$is_gz" == "1" ]]; then
+    REMOTE_SQL="${REMOTE_DIR}/deploy_restore.sql.gz"
+  else
+    REMOTE_SQL="${REMOTE_DIR}/deploy_restore.sql"
+  fi
 
   # Ensure backups directory exists on server via API (it creates ../backups/ if missing)
   curl -s -X POST "${BASE_URL}/api/database_maintenance.php?action=create_backup&admin_token=${token}" >/dev/null || true
@@ -149,6 +154,7 @@ mkdir api
 cd api
 mkdir uploads
 cd /
+set cmd:fail-exit yes
 put ${upload_file} -o ${REMOTE_SQL}
 bye
 EOL
@@ -161,21 +167,17 @@ EOL
   fi
   rm -f /tmp/wf_upload_restore_sql.txt
 
-  # Now call API with server_backup_path relative to api/ (e.g., uploads/deploy_restore.sql)
+  # Now call API with server_backup_path relative to api/ (e.g., uploads/deploy_restore.sql or .sql.gz)
   HTTP_CODE=$(curl -s -o /tmp/wf_db_restore_api.out -w "%{http_code}" \
     -X POST \
     -F "server_backup_path=${REMOTE_SQL#api/}" \
     "${BASE_URL}/api/database_maintenance.php?action=restore_database&admin_token=${token}") || true
   if [[ "${HTTP_CODE}" == "200" ]] && grep -q '"success"\s*:\s*true' /tmp/wf_db_restore_api.out 2>/dev/null; then
     echo -e "${GREEN}✅ API restore reported success via server_backup_path${NC}"
-    # Clean temp on success
-    if [[ -n "${tmp_file}" && -f "${tmp_file}" ]]; then rm -f "${tmp_file}" || true; fi
     return 0
   else
     echo -e "${YELLOW}⚠️  API server_backup_path restore failed (HTTP ${HTTP_CODE})${NC}"
     echo "Response snippet:"; head -c 500 /tmp/wf_db_restore_api.out || true; echo
-    # Clean temp on failure path as well (no longer needed)
-    if [[ -n "${tmp_file}" && -f "${tmp_file}" ]]; then rm -f "${tmp_file}" || true; fi
     return 1
   fi
 }

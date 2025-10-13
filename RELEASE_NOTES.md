@@ -1,3 +1,25 @@
+# Release Notes - 2025-10-13
+
+## Summary
+- Consolidated `src/js/main-application.js` into `src/js/app.js` to simplify boot and reduce surface area without impacting performance.
+- Removed the deferred import of `./main-application.js` from `src/js/app.js`.
+- Archived the old module to `backups/legacy/src/js/main-application.js` for future reference.
+
+## Key Changes
+- Code:
+  - Migrated helpers (navigation dedupe, cart counter updates, inline login handler, modal background loader) into `src/js/app.js`.
+  - Exposed modal background helper as `window.loadModalBackground` for compatibility.
+  - Bound helpers on DOM ready and `WF.ready()`; cart counter listens to `cartUpdated`.
+  - Removed all runtime imports of `main-application.js`; repository search confirms no remaining code references.
+- Docs:
+  - Updated these release notes to reflect consolidation and archive location.
+
+## Rationale
+- Reduce duplicate initialization surfaces; keep a single orchestrator (`app.js`) while preserving behavior.
+
+## Next
+- Monitor cart counter updates on add/remove; no further action expected.
+
 # Release Notes - 2025-10-10
 
 ## Summary

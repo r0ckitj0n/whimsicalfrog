@@ -99,7 +99,7 @@ body[data-page='payment'] #checkoutRoot {
   max-width: 92%;
   box-sizing: border-box;
   overflow-wrap: anywhere;
-  word-break: break-word;
+  word-break: normal;
 }
 
 
@@ -146,7 +146,7 @@ body[data-page='payment'] #checkoutRoot {
   min-width: 110px; /* prevent ultra-narrow vertical stacking */
   box-sizing: border-box;
   overflow-wrap: anywhere;
-  word-break: break-word;
+  word-break: normal;
 }
 
 /* Center title and intro text inside the green contact card */

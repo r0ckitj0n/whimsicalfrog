@@ -266,6 +266,8 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
     // Legacy aliases - MUST be set up before 'core:ready' event
     window.WF = window.WhimsicalFrog;
     window.wf = window.WhimsicalFrog;
+    // Generic alias for portability in unbranded deployments
+    try { window.SiteCore = window.SiteCore || window.WhimsicalFrog; } catch(_) {}
 
     // NOW emit ready event after aliases are established
     if (WF_CORE.initialized) {

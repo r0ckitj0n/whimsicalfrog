@@ -55,3 +55,7 @@ logs/*.log
 # Allow quarantined stale assets to be committed
 !backups/stale/**
 reports/diff_report_20250924_223003.txt
+
+# Allow security tooling to read control files in ignored dirs
+!backups/.htaccess
+!logs/.htaccess

@@ -34,6 +34,142 @@ import './site-core.js';
 
 console.log('app.js loaded');
 
+// --- Lightweight UI helpers migrated from main-application.js ---
+// Dedupe duplicate <nav class="main-nav"> elements that may appear
+function __wfEnsureSingleNavigation() {
+    try {
+        const navs = document.querySelectorAll('nav.main-nav');
+        if (navs.length > 1) {
+            const WF = window.WF || window.WhimsicalFrog || {};
+            if (WF && typeof WF.log === 'function') WF.log(`Found ${navs.length} navigation elements, removing duplicates...`);
+            navs.forEach((el, idx) => { if (idx > 0) el.remove(); });
+        }
+    } catch (_) {}
+}
+
+// Update cart item counter in header
+function __wfUpdateMainCartCounter() {
+    try {
+        const el = document.getElementById('cartCount');
+        if (!el) return;
+        // Prefer modern WF_Cart; fall back to legacy window.cart
+        const count = (window.WF_Cart && typeof window.WF_Cart.getCount === 'function')
+            ? window.WF_Cart.getCount()
+            : (window.cart && typeof window.cart.getCount === 'function') ? window.cart.getCount() : 0;
+        el.textContent = `${count} items`;
+    } catch (_) {}
+}
+
+// Attach a tolerant inline login handler only if dedicated modal is absent
+function __wfHandleInlineLoginForm() {
+    try {
+        if (window.openLoginModal) {
+            const WF = window.WF || window.WhimsicalFrog || {};
+            if (WF && typeof WF.log === 'function') WF.log('Login modal detected; skipping duplicate inline login handler.');
+            return;
+        }
+        const form = document.getElementById('loginForm');
+        if (!form) return;
+        if (form.dataset.wfLoginHandler === 'true') return;
+        form.dataset.wfLoginHandler = 'true';
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = form.querySelector('#username')?.value;
+            const password = form.querySelector('#password')?.value;
+            const errorMessage = form.querySelector('#errorMessage');
+            if (errorMessage) errorMessage.classList.add('hidden');
+            try {
+                const data = await ApiClient.request('/functions/process_login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                try { sessionStorage.setItem('user', JSON.stringify((data && (data.user || data)) || {})); } catch(_) {}
+                let target;
+                if (data && data.redirectUrl) {
+                    target = data.redirectUrl;
+                } else if (localStorage.getItem('pendingCheckout') === 'true') {
+                    localStorage.removeItem('pendingCheckout');
+                    target = '/cart';
+                } else {
+                    target = '/dashboard';
+                }
+                if (typeof window.showSuccess === 'function') window.showSuccess('Login successful. Redirecting…');
+                setTimeout(() => { window.location.href = target; }, 700);
+            } catch (err) {
+                if (errorMessage) {
+                    errorMessage.textContent = err?.message || 'Invalid username or password.';
+                    errorMessage.classList.remove('hidden');
+                }
+                console.error('Login failed:', err);
+            }
+        });
+    } catch (_) {}
+}
+
+// Helper to dynamically load modal background image for a given room
+function __wfLoadModalBackground(roomNumber) {
+    const WF = window.WF || window.WhimsicalFrog || {};
+    if (!roomNumber) {
+        try { if (typeof WF.log === 'function') WF.log('[MainApplication] No room provided for modal background.', 'warn'); } catch(_) {}
+        return;
+    }
+    (async () => {
+        try {
+            const rn = String(roomNumber).match(/^room(\d+)$/i) ? String(roomNumber).replace(/^room/i, '') : String(roomNumber);
+            const data = await (WF.api && typeof WF.api.get === 'function'
+                ? WF.api.get(`/api/get_background.php?room=${encodeURIComponent(rn)}`)
+                : ApiClient.get(`/api/get_background.php?room=${encodeURIComponent(rn)}`));
+            if (data && data.success && data.background) {
+                const { webp_path, png_path } = data.background;
+                const supportsWebP = document.documentElement.classList.contains('webp');
+                let filename = supportsWebP ? webp_path : png_path;
+                if (!filename.startsWith('backgrounds/')) filename = `backgrounds/${filename}`;
+                const imageUrl = `/images/${filename}?v=${Date.now()}`;
+                const STYLE_ID = 'wf-modal-dynbg-classes';
+                function getStyleEl(){ let el = document.getElementById(STYLE_ID); if (!el){ el = document.createElement('style'); el.id = STYLE_ID; document.head.appendChild(el); } return el; }
+                const map = (window.__wfModalBgClassMap ||= new Map());
+                function ensureBgClass(url){ if (!url) return null; if (map.has(url)) return map.get(url); const idx = map.size + 1; const cls = `modalbg-${idx}`; getStyleEl().appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--dynamic-bg-url:url('${url}');background-image:url('${url}');}`)); map.set(url, cls); return cls; }
+                const overlay = document.querySelector('.room-modal-overlay');
+                const container = overlay && (overlay.querySelector('.room-overlay-wrapper') || overlay.querySelector('.room-modal-body'));
+                if (container) {
+                    const bgCls = ensureBgClass(imageUrl);
+                    if (container.dataset.bgClass && container.dataset.bgClass !== bgCls) { container.classList.remove(container.dataset.bgClass); }
+                    if (bgCls) { container.classList.add(bgCls); container.dataset.bgClass = bgCls; }
+                } else {
+                    try { if (typeof WF.log === 'function') WF.log('[MainApplication] Modal background container not found.', 'warn'); } catch(_) {}
+                }
+            } else {
+                try { if (typeof WF.log === 'function') WF.log(`[MainApplication] No background found for room: ${roomNumber}`, 'info'); } catch(_) {}
+            }
+        } catch (error) {
+            try { if (typeof WF.log === 'function') WF.log(`[MainApplication] Error loading modal background: ${error}`, 'error'); } catch(_) {}
+        }
+    })();
+}
+
+// Expose background helper in case other modules call it
+try { window.loadModalBackground = window.loadModalBackground || __wfLoadModalBackground; } catch(_) {}
+
+// Wire lightweight helpers to run on DOM ready and WF.ready
+try {
+    // DOM ready: ensure nav dedupe, login binding, and initial counter update
+    const domReady = () => { try { __wfEnsureSingleNavigation(); __wfHandleInlineLoginForm(); __wfUpdateMainCartCounter(); } catch(_) {} };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', domReady, { once: true });
+    } else {
+        domReady();
+    }
+    // Framework ready: bind to cartUpdated and refresh counter
+    const WF = window.WF || window.WhimsicalFrog;
+    if (WF && typeof WF.ready === 'function') {
+        WF.ready(() => {
+            try { __wfUpdateMainCartCounter(); } catch(_) {}
+            try { WF.eventBus && typeof WF.eventBus.on === 'function' && WF.eventBus.on('cartUpdated', __wfUpdateMainCartCounter); } catch(_) {}
+        });
+    }
+} catch (_) {}
+
 // Admin page detection (path-based, resilient before DOMContentLoaded)
 function __wfIsAdminPage() {
     try {
@@ -100,7 +236,6 @@ async function initializeCoreSystemsApp() {
                 import('./login-modal.js'),
                 import('./header-auth-sync.js'),
                 import('./header-offset.js'),
-                import('./main-application.js'),
                 import('./room-icons-init.js'),
                 // Non-critical UX/analytics
                 import('./analytics.js'),

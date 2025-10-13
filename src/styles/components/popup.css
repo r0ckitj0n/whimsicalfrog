@@ -273,7 +273,7 @@
   font-family: var(--font-secondary, Nunito, system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif);
   font-size: clamp(0.9rem, 2vw, 1.15rem);
   line-height: 1.2; letter-spacing: 1px;
-  text-align: center; white-space: normal; overflow-wrap: anywhere; word-break: break-word;
+  text-align: center; white-space: normal; overflow-wrap: anywhere; word-break: normal;
   width: auto; min-width: 170px; max-width: 96%; box-sizing: border-box; pointer-events: none;
 }
 /* Already hiding badges globally; nothing else needed here */
@@ -304,7 +304,7 @@
   box-sizing: border-box !important;
   overflow: visible !important; /* never clip our own content */
   overflow-wrap: anywhere !important; /* allow long words to wrap */
-  word-break: break-word !important;
+  word-break: normal !important;
   white-space: normal !important; /* allow wrap */
 }
 .item-popup.oos .popup-image-container #popupStockBadge .stock-badge { display: none !important; }
@@ -320,7 +320,7 @@
   white-space: normal !important; /* allow wrap */
   text-align: center !important;
   overflow-wrap: anywhere !important;
-  word-break: break-word !important;
+  word-break: normal !important;
 }
 
 /* Remove residual extra height on popup wrapper */

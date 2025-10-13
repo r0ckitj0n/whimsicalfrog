@@ -2,3 +2,26 @@
 DirectoryIndex index.php
 ErrorDocument 404 /router.php
 ErrorDocument 403 /router.php
+
+# --- Security: deny access to sensitive files ---
+<IfModule mod_authz_core.c>
+  <FilesMatch "^(\.env|composer\.(json|lock)|phpunit\.xml(\.dist)?|.*\.sql)$">
+    Require all denied
+  </FilesMatch>
+  # Explicitly protect filesystem secret key
+  <Files "secret.key">
+    Require all denied
+  </Files>
+</IfModule>
+
+# Legacy Apache (2.2) fallback
+<IfModule !mod_authz_core.c>
+  <FilesMatch "^(\.env|composer\.(json|lock)|phpunit\.xml(\.dist)?|.*\.sql)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+  <Files "secret.key">
+    Order allow,deny
+    Deny from all
+  </Files>
+</IfModule>

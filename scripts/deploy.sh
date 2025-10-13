@@ -10,7 +10,9 @@ PASS="Palz2516!"
 REMOTE_PATH="/"
 # Optional public base for sites under a subdirectory (e.g., /wf)
 PUBLIC_BASE="${WF_PUBLIC_BASE:-}"
-BASE_URL="https://whimsicalfrog.us${PUBLIC_BASE}"
+# Parameterized deployment base URL (protocol+host), fallback to example.com
+DEPLOY_BASE_URL="${DEPLOY_BASE_URL:-https://example.com}"
+BASE_URL="${DEPLOY_BASE_URL}${PUBLIC_BASE}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -23,7 +25,7 @@ if [ "${WF_DRY_RUN:-0}" = "1" ]; then
   echo -e "${YELLOW}DRY-RUN: Skipping live website backup API call${NC}"
 else
   echo -e "${GREEN}💾 Backing up website...${NC}"
-  curl -s -X POST https://whimsicalfrog.us/api/backup_website.php || echo -e "${YELLOW}⚠️  Website backup failed, continuing deployment...${NC}"
+  curl -s -X POST "${BASE_URL}/api/backup_website.php" || echo -e "${YELLOW}⚠️  Website backup failed, continuing deployment...${NC}"
 fi
 echo -e "${YELLOW}⏭️  Skipping database updates in fast deploy (use deploy_full.sh for DB restore)${NC}"
 
@@ -446,9 +448,20 @@ else
 fi
 rm delete_server_duplicates.txt
 
-# Test image accessibility (use a stable, non-legacy asset)
+# Test image accessibility (use a stable asset; path can be overridden)
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/images/logos/logo-whimsicalfrog.webp")
+TEST_LOGO_PATH="${BRAND_LOGO_PATH:-/images/logos/logo-whimsicalfrog.webp}"
+# If TEST_LOGO_PATH is absolute (starts with http), use as-is; otherwise prefix with BASE_URL
+if [[ "$TEST_LOGO_PATH" =~ ^https?:// ]]; then
+  TEST_LOGO_URL="$TEST_LOGO_PATH"
+else
+  # ensure leading slash
+  case "$TEST_LOGO_PATH" in
+    /*) TEST_LOGO_URL="${BASE_URL}${TEST_LOGO_PATH}" ;;
+    *)  TEST_LOGO_URL="${BASE_URL}/$TEST_LOGO_PATH" ;;
+  esac
+fi
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$TEST_LOGO_URL")
 if [ "$HTTP_CODE" = "200" ]; then
   echo -e "${GREEN}✅ Logo image is accessible online!${NC}"
 elif [ "$HTTP_CODE" = "404" ]; then

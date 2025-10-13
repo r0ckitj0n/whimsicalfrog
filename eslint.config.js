@@ -4,11 +4,20 @@ export default [
       "backups/**",
       "node_modules/**",
       "dist/**",
-      "src/recovered/**"
+      "src/recovered/**",
+      // migrated from .eslintignore
+      "vendor/**",
+      "reports/**",
+      ".templates/**",
+      "public/**",
+      "templates/wf-starter/**",
+      "composer/**",
     ],
   },
   {
-    files: ["src/**/*.js", "scripts/**/*.js", "scripts/**/*.cjs"],
+    files: [
+      "src/**/*.js",
+    ],
     ignores: [
       "js/bundle.js", // generated bundle; skip linting
       "js/sales-checker.js" // generated popup duplication; skip linting
@@ -42,6 +51,40 @@ export default [
           message: "Do not set CSS variables on elements via style.setProperty. Use classes and CSS variables at a higher scope.",
         }
       ],
+    },
+  },
+  {
+    files: [
+      "scripts/**/*.mjs",
+      "scripts/**/*.js",
+      "scripts/**/*.cjs",
+    ],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        // Enable Node globals for scripts
+        module: "readonly",
+        require: "readonly",
+        __dirname: "readonly",
+        process: "readonly",
+        console: "readonly",
+      },
+    },
+    rules: {
+      // Relaxed for CLI tooling
+      "no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrors: "none",
+          ignoreRestSiblings: true,
+        },
+      ],
+      "prefer-const": "warn",
+      // Not relevant to Node scripts
+      "no-restricted-syntax": "off",
     },
   },
 ];

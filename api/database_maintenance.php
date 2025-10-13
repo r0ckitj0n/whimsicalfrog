@@ -9,8 +9,25 @@ require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Require admin for all database maintenance actions
-AuthHelper::requireAdmin();
+// Optional admin token bypass for automated deploys
+// If a valid WF_ADMIN_TOKEN is provided, allow access without session auth
+function wf_is_token_valid(): bool {
+    $provided = $_GET['admin_token'] ?? $_POST['admin_token'] ?? '';
+    if ($provided === '') {
+        return false;
+    }
+    $expected = getenv('WF_ADMIN_TOKEN') ?: '';
+    // Also support constant override if defined in config
+    if (defined('WF_ADMIN_TOKEN') && WF_ADMIN_TOKEN) {
+        $expected = WF_ADMIN_TOKEN;
+    }
+    return $expected !== '' && hash_equals($expected, $provided);
+}
+
+// Require admin unless a valid admin token is supplied
+if (!wf_is_token_valid()) {
+    AuthHelper::requireAdmin();
+}
 
 header('Content-Type: application/json');
 
@@ -905,8 +922,9 @@ function restoreDatabase()
     try {
         $pdo = Database::getInstance();
         $ignoreErrors = isset($_POST['ignore_errors']) && $_POST['ignore_errors'] === '1';
-
         $sqlContent = '';
+        $filePath = '';
+        $isGzip = false;
 
         // Handle uploaded file
         if (isset($_FILES['backup_file']) && $_FILES['backup_file']['error'] === UPLOAD_ERR_OK) {
@@ -914,35 +932,68 @@ function restoreDatabase()
 
             // Validate file type
             $filename = $_FILES['backup_file']['name'];
-            if (!preg_match('/\.(sql|txt)$/i', $filename)) {
-                throw new Exception('Invalid file type. Only .sql and .txt files are allowed.');
+            if (!preg_match('/\.(sql|txt|sql\.gz)$/i', $filename)) {
+                throw new Exception('Invalid file type. Only .sql, .txt, or .sql.gz files are allowed.');
             }
 
-            $sqlContent = file_get_contents($uploadedFile);
+            // Prefer streaming from file path to avoid loading large files into memory
+            $filePath = $uploadedFile;
+            $isGzip = (bool)preg_match('/\.gz$/i', $filename);
 
         } elseif (isset($_POST['server_backup_path'])) {
-            // Handle server backup file
-            $backupPath = $_POST['server_backup_path'];
-
-            // Security check - ensure file is in backup directory
-            $backupDir = realpath(__DIR__ . '/../backups/');
-            $requestedPath = realpath($backupPath);
-
-            if (!$requestedPath || strpos($requestedPath, $backupDir) !== 0) {
-                throw new Exception('Invalid backup file path');
+            // Handle server backup file (allow relative paths under backups/ or api/uploads/)
+            $relPath = trim($_POST['server_backup_path']);
+            // Resolve to absolute: prefer paths relative to api/ directory
+            $candidatePaths = [];
+            if ($relPath !== '') {
+                // If absolute given, use as-is; else try under api/ and repo root
+                if ($relPath[0] === '/') {
+                    $candidatePaths[] = $relPath;
+                } else {
+                    $candidatePaths[] = __DIR__ . '/' . $relPath; // e.g., api/uploads/foo.sql.gz
+                    $candidatePaths[] = dirname(__DIR__) . '/' . $relPath; // e.g., backups/foo.sql.gz
+                }
             }
 
-            if (!file_exists($backupPath)) {
+            $resolved = '';
+            foreach ($candidatePaths as $cand) {
+                $rp = realpath($cand);
+                if ($rp && is_file($rp)) {
+                    $resolved = $rp;
+                    break;
+                }
+            }
+            if ($resolved === '') {
                 throw new Exception('Backup file not found');
             }
 
-            $sqlContent = file_get_contents($backupPath);
+            // Security: restrict to backups/ or api/uploads/
+            $backupDir = realpath(__DIR__ . '/../backups/');
+            $uploadsDir = realpath(__DIR__ . '/uploads/');
+            $apiDir = realpath(__DIR__);
+            $requestedPath = realpath($resolved);
+            $allowed = false;
+            if ($backupDir && strpos($requestedPath, $backupDir) === 0) {
+                $allowed = true;
+            } elseif ($uploadsDir && strpos($requestedPath, $uploadsDir) === 0) {
+                $allowed = true;
+            } elseif ($apiDir && strpos($requestedPath, $apiDir) === 0 && strpos($requestedPath, DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR) !== false) {
+                // uploads directory might not resolve separately; allow any path under api/ containing /uploads/
+                $allowed = true;
+            }
+            if (!$allowed) {
+                throw new Exception('Invalid backup file path');
+            }
+
+            $filePath = $resolved;
+            $isGzip = (bool)preg_match('/\.gz$/i', $filePath);
 
         } else {
             throw new Exception('No backup file provided');
         }
 
-        if (empty($sqlContent)) {
+        // If we are not streaming from a file, ensure we have inline SQL content
+        if ($filePath === '' && empty($sqlContent)) {
             throw new Exception('Backup file is empty or could not be read');
         }
 
@@ -952,38 +1003,69 @@ function restoreDatabase()
         $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
         $pdo->exec("SET SQL_MODE = ''");
 
-        // Split SQL into individual statements
-        $statements = preg_split('/;\s*\n/', $sqlContent);
+        // Execute SQL either from in-memory content or by streaming from file
         $executedStatements = 0;
         $errors = [];
         $tablesRestored = 0;
         $recordsRestored = 0;
 
-        foreach ($statements as $statement) {
-            $statement = trim($statement);
-
-            // Skip empty statements and comments
-            if (empty($statement) || substr($statement, 0, 2) === '-') {
-                continue;
+        if ($filePath !== '') {
+            // Stream read (supports .gz)
+            $handle = $isGzip ? @gzopen($filePath, 'rb') : @fopen($filePath, 'rb');
+            if (!$handle) {
+                throw new Exception('Unable to open backup file for reading');
             }
-
-            try {
-                $result = $pdo->exec($statement);
-                $executedStatements++;
-
-                // Count tables and records
-                if (stripos($statement, 'CREATE TABLE') !== false) {
-                    $tablesRestored++;
-                } elseif (stripos($statement, 'INSERT INTO') !== false) {
-                    $recordsRestored += $result ?: 0;
+            $buffer = '';
+            while (!($isGzip ? gzeof($handle) : feof($handle))) {
+                $line = $isGzip ? gzgets($handle) : fgets($handle);
+                if ($line === false) { break; }
+                $trim = ltrim($line);
+                if ($trim === '' || str_starts_with($trim, '--') || str_starts_with($trim, '/*')) {
+                    continue;
                 }
-
-            } catch (PDOException $e) {
-                $error = "Error in statement: " . substr($statement, 0, 100) . "... - " . $e->getMessage();
-                $errors[] = $error;
-
-                if (!$ignoreErrors) {
-                    throw new Exception("SQL execution failed: " . $error);
+                $buffer .= $line;
+                // naive statement boundary: semicolon at end of line
+                if (preg_match('/;\s*$/', rtrim($buffer))) {
+                    $stmt = trim($buffer);
+                    if ($stmt !== '' && !str_starts_with($stmt, '--') && !str_starts_with($stmt, '/*')) {
+                        // drop trailing semicolon for exec
+                        if (substr($stmt, -1) === ';') { $stmt = substr($stmt, 0, -1); }
+                        try {
+                            $result = $pdo->exec($stmt);
+                            $executedStatements++;
+                            if (stripos($stmt, 'CREATE TABLE') !== false) {
+                                $tablesRestored++;
+                            } elseif (stripos($stmt, 'INSERT INTO') !== false) {
+                                $recordsRestored += $result ?: 0;
+                            }
+                        } catch (PDOException $e) {
+                            $err = 'Error in statement: ' . substr($stmt, 0, 100) . '... - ' . $e->getMessage();
+                            $errors[] = $err;
+                            if (!$ignoreErrors) { throw new Exception('SQL execution failed: ' . $err); }
+                        }
+                    }
+                    $buffer = '';
+                }
+            }
+            if ($isGzip) { @gzclose($handle); } else { @fclose($handle); }
+        } else {
+            // Fallback: execute from provided inline content
+            $statements = preg_split('/;\s*\n/', $sqlContent);
+            foreach ($statements as $statement) {
+                $statement = trim($statement);
+                if (empty($statement) || substr($statement, 0, 2) === '-') { continue; }
+                try {
+                    $result = $pdo->exec($statement);
+                    $executedStatements++;
+                    if (stripos($statement, 'CREATE TABLE') !== false) {
+                        $tablesRestored++;
+                    } elseif (stripos($statement, 'INSERT INTO') !== false) {
+                        $recordsRestored += $result ?: 0;
+                    }
+                } catch (PDOException $e) {
+                    $error = 'Error in statement: ' . substr($statement, 0, 100) . '... - ' . $e->getMessage();
+                    $errors[] = $error;
+                    if (!$ignoreErrors) { throw new Exception('SQL execution failed: ' . $error); }
                 }
             }
         }

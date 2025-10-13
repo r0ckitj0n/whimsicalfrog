@@ -465,7 +465,7 @@ body[data-page^='admin'] .page-content {
 
 /* Color chip for attributes */
 .color-chip[data-color] {
-  background-color: attr(data-color);
+  background-color: var(--chip-color, transparent);
 }
 
 /* Help documentation title styling */

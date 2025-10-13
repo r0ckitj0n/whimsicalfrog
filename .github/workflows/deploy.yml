@@ -26,6 +26,7 @@ concurrency:
 env:
   SSH_ALIAS: github.com-whf
   REPO: r0ckitj0n/whimsicalfrog
+  BASE_URL: ${{ vars.DEPLOY_BASE_URL || 'https://example.com' }}
 
 jobs:
   deploy:
@@ -33,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://whimsicalfrog.us/
+      url: ${{ env.BASE_URL }}/
     permissions:
       contents: read
       deployments: write
@@ -288,8 +289,6 @@ jobs:
 
       - name: HTTP verification
         shell: bash
-        env:
-          BASE_URL: https://whimsicalfrog.us
         run: |
           set -euo pipefail
           # Check manifest in typical locations

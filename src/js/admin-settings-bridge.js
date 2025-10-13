@@ -5,6 +5,50 @@ import { ApiClient } from '../core/api-client.js';
 import '../modules/admin-settings-lightweight.js';
 function byId(id){ return document.getElementById(id); }
 
+function ensureColorChipObserver(modal) {
+  try {
+    if (!modal) return;
+    const list = modal.querySelector('#attrListColor');
+    if (!list || list.__wfObserved) return;
+    list.__wfObserved = true;
+    let t = null;
+    const run = () => {
+      const chips = list.querySelectorAll('.color-chip[data-color]');
+      const codes = Array.from(chips).map(c => c.getAttribute('data-color')).filter(Boolean);
+      updateColorChipStyles(codes);
+    };
+    const obs = new MutationObserver(() => {
+      clearTimeout(t);
+      t = setTimeout(run, 10);
+    });
+    obs.observe(list, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-color'] });
+    run();
+  } catch (_) {}
+}
+
+// Generate a stylesheet that assigns background-color to specific color-chip data-color values
+function updateColorChipStyles(colorCodes) {
+  try {
+    const id = 'wf-color-chip-styles';
+    let styleEl = document.getElementById(id);
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = id;
+      document.head.appendChild(styleEl);
+    }
+    const rules = [];
+    // Only include valid hex/rgb/hsl values to be safe
+    const valid = Array.from(new Set(colorCodes)).filter(v => typeof v === 'string' && v.trim());
+    valid.forEach((codeRaw) => {
+      const code = codeRaw.trim();
+      // Escape quotes in attribute selector
+      const selVal = code.replace(/"/g, '\\"');
+      rules.push(`.color-chip[data-color="${selVal}"]{background-color:${code};}`);
+    });
+    styleEl.textContent = rules.join('\n');
+  } catch (_) {}
+}
+
 // Ensure a clean Background Manager modal shell (no iframe)
 function ensureBackgroundManagerModal() {
   let el = document.getElementById('backgroundManagerModal');
@@ -534,6 +578,7 @@ function populateAttributesModal(modal) {
   const colorList = modal.querySelector('#attrListColor');
   if (colorList) {
     colorList.innerHTML = '';
+    const codes = [];
     globalAttributes.colors.forEach(color => {
       const li = document.createElement('li');
       li.className = 'attr-item flex justify-between items-center mb-1 p-2 bg-gray-50 rounded';
@@ -545,7 +590,10 @@ function populateAttributesModal(modal) {
         </div>
       `;
       colorList.appendChild(li);
+      if (color && color.color_code) codes.push(color.color_code);
     });
+    updateColorChipStyles(codes);
+    ensureColorChipObserver(modal);
   }
 }
 

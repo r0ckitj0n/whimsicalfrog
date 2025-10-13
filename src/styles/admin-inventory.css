@@ -76,7 +76,7 @@
   border: 1px solid #e5e7eb; /* gray-200 */
 }
 .wf-folder-icon, .wf-box-icon {
-  width: 14px; height: 14px; display: inline-block; line-height: 0; color: currentColor; fill: currentColor;
+  width: 14px; height: 14px; display: inline-block; line-height: 0; color: currentcolor; fill: currentcolor;
 }
 .wf-size-chip {
   display: inline-flex;

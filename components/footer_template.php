@@ -5,6 +5,8 @@
  * Uses CSS variables from Global CSS Rules system
  */
 
+require_once dirname(__DIR__) . '/api/config.php';
+@require_once dirname(__DIR__) . '/includes/site_settings.php';
 // Load footer settings from database (if available)
 // $footerSettings = getFooterSettings(); // Implement this function as needed
 
@@ -22,23 +24,23 @@ $footerConfig = [
 // Footer content data
 $footerData = [
     'company' => [
-        'name' => 'Whimsical Frog',
+        'name' => (function_exists('wf_site_name') ? wf_site_name() : ((defined('SITE_NAME') ? SITE_NAME : 'Your Site'))),
         'tagline' => 'Custom Crafts & Creative Designs',
-        'logo' => '/images/logos/logo-whimsicalfrog.webp',
+        'logo' => (function_exists('wf_brand_logo_path') ? wf_brand_logo_path() : (defined('BRAND_LOGO_PATH') ? BRAND_LOGO_PATH : '/images/logos/logo-whimsicalfrog.webp')),
         'description' => 'Creating unique, personalized items that bring joy and whimsy to your world.'
     ],
     'contact' => [
         'address' => '123 Craft Lane, Creative City, CC 12345',
         'phone' => '(555) 123-FROG',
-        'email' => 'hello@whimsicalfrog.us',
+        'email' => (function_exists('wf_business_email') ? wf_business_email() : ((defined('APP_URL') && APP_URL ? ('hello@' . parse_url(APP_URL, PHP_URL_HOST)) : 'hello@example.com'))),
         'hours' => 'Mon-Fri 9AM-6PM'
     ],
-    'social' => [
-        'facebook' => 'https://facebook.com/whimsicalfrog',
-        'instagram' => 'https://instagram.com/whimsicalfrog',
-        'twitter' => 'https://twitter.com/whimsicalfrog',
-        'pinterest' => 'https://pinterest.com/whimsicalfrog'
-    ],
+    'social' => (function_exists('wf_social_links') ? wf_social_links() : [
+        'facebook' => (function_exists('wf_env') ? wf_env('SOCIAL_FACEBOOK', '') : ''),
+        'instagram' => (function_exists('wf_env') ? wf_env('SOCIAL_INSTAGRAM', '') : ''),
+        'twitter' => (function_exists('wf_env') ? wf_env('SOCIAL_TWITTER', '') : ''),
+        'pinterest' => (function_exists('wf_env') ? wf_env('SOCIAL_PINTEREST', '') : ''),
+    ]),
     'links' => [
         'About Us' => '/?page=about',
         'Shop' => '/?page=shop',

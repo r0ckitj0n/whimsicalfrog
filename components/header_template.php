@@ -31,6 +31,7 @@
 // Ensure centralized session+auth bootstrap so header reflects login state
 require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/api/config.php';
+@require_once dirname(__DIR__) . '/includes/site_settings.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/auth_helper.php';
 try {
@@ -46,9 +47,9 @@ $default_config = [
     'show_cart' => true,
     'show_user_menu' => true,
     'show_logo' => true,
-    'logo_text' => 'WhimsicalFrog',
+    'logo_text' => (function_exists('wf_site_name') ? wf_site_name() : ((defined('SITE_NAME') ? SITE_NAME : 'Your Site'))),
     'logo_tagline' => 'Enchanted Treasures',
-    'logo_image' => '/images/logos/logo-whimsicalfrog.webp',
+    'logo_image' => (function_exists('wf_brand_logo_path') ? wf_brand_logo_path() : (defined('BRAND_LOGO_PATH') ? BRAND_LOGO_PATH : '/images/logos/logo-whimsicalfrog.webp')),
     'navigation_items' => [
         ['label' => 'Shop', 'url' => '/shop', 'active' => false],
         ['label' => 'About', 'url' => '/about', 'active' => false],

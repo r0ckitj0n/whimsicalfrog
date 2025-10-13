@@ -1,6 +1,0 @@
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
-mkdir -p backups/sql
-put "backups/sql/dev_full_2025-09-10_22-23-38.sql.gz" -o backups/sql/dev_full_2025-09-10_22-23-38.sql.gz
-bye

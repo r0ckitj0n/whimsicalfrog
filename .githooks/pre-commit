@@ -12,6 +12,89 @@ if [ -x "scripts/maintenance/quarantine_duplicates.sh" ]; then
   scripts/maintenance/quarantine_duplicates.sh || true
 fi
 
+# Sweep: relocate any accidental .env backups into backups/env/ (preserves paths)
+if [ -x "scripts/maintenance/sweep_env_backups.sh" ]; then
+  scripts/maintenance/sweep_env_backups.sh || true
+fi
+
+# Sweep: relocate stray .txt files into backups/text/ (preserves paths)
+if [ -x "scripts/maintenance/sweep_txt_files.sh" ]; then
+  scripts/maintenance/sweep_txt_files.sh || true
+fi
+
+# Guard: disallow root-level CSS files (all CSS should live under src/styles/)
+# Check staged files for any *.css at repository root (no slash in path)
+staged_root_css=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^[^/]+\.css$' || true)
+if [ -n "$staged_root_css" ]; then
+  echo "\nERROR: Root-level CSS files are not allowed. Move styles under src/styles/."
+  echo "$staged_root_css" | sed 's/^/ - /'
+  exit 1
+fi
+
+# Guard: .env backup files must be under backups/ (prevent accidental commits of secrets)
+staged_env_backups=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.env(\.backup_.*)?$|\.env\.backup_.*' || true)
+if [ -n "$staged_env_backups" ]; then
+  # Filter any that are NOT under backups/
+  staged_env_backups_outside=$(echo "$staged_env_backups" | grep -v '^backups/' || true)
+  if [ -n "$staged_env_backups_outside" ]; then
+    echo "\nERROR: .env backup files must be stored under backups/. Please move them."
+    echo "$staged_env_backups_outside" | sed 's/^/ - /'
+    echo "\nSuggested fix (example for one file):"
+    echo "  mkdir -p backups/env && git mv .env.backup_YYYYMMDD backups/env/.env.backup_YYYYMMDD"
+    echo "Or run: scripts/maintenance/sweep_env_backups.sh (if available)."
+    exit 1
+  fi
+fi
+
+# Guard: disallow root-level fix scripts (use scripts/ or backups/ instead)
+staged_root_fix=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^(fix[-_].*|.*fix[-_].*\.sh)$' | grep -v '/' || true)
+if [ -n "$staged_root_fix" ]; then
+  echo "\nERROR: Root-level fix scripts are not allowed. Place them under scripts/ or archive under backups/."
+  echo "$staged_root_fix" | sed 's/^/ - /'
+  exit 1
+fi
+
+# Guard: disallow root-level ops scripts (update-/set-/setup-/normalize-/patch-/lint_)
+staged_root_ops=$(git diff --cached --name-only --diff-filter=ACM | \
+  grep -E '^(update-|set-|setup-|normalize-|patch-|lint_).+' | grep -v '/' || true)
+if [ -n "$staged_root_ops" ]; then
+  echo "\nERROR: Root-level ops scripts are not allowed. Place them under scripts/ or archive under backups/."
+  echo "$staged_root_ops" | sed 's/^/ - /'
+  exit 1
+fi
+
+# Guard: .txt files must live under backups/ or root txt/ (policy)
+staged_txt=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.txt$' || true)
+if [ -n "$staged_txt" ]; then
+  # Filter any that are NOT under backups/ or txt/ and not in node_modules/
+  staged_txt_outside=$(echo "$staged_txt" | grep -v '^backups/' | grep -v '^txt/' | grep -v '^node_modules/' | grep -v '^robots\.txt$' || true)
+  if [ -n "$staged_txt_outside" ]; then
+    echo "\nERROR: .txt files must be stored under backups/ or the root txt/ folder."
+    echo "Please move these files:"
+    echo "$staged_txt_outside" | sed 's/^/ - /'
+    echo "\nSuggested fix (example for one file):"
+    echo "  mkdir -p backups/text && git mv FILENAME.txt backups/text/FILENAME.txt"
+    echo "Or, if intentionally keeping text artifacts in repo, place under root txt/:"
+    echo "  mkdir -p txt && git mv FILENAME.txt txt/FILENAME.txt"
+    echo "You can also run: scripts/maintenance/sweep_txt_files.sh --dry-run"
+    exit 1
+  fi
+fi
+
+# Guard: FreeFileSync lock files (*.ffs_lock) must be quarantined under backups/duplicates/
+staged_ffs_lock=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\\.ffs_lock$' || true)
+if [ -n "$staged_ffs_lock" ]; then
+  # Filter any that are NOT under backups/duplicates/
+  staged_ffs_outside=$(echo "$staged_ffs_lock" | grep -v '^backups/duplicates/' || true)
+  if [ -n "$staged_ffs_outside" ]; then
+    echo "\nERROR: FreeFileSync lock files (*.ffs_lock) must be stored under backups/duplicates/. Please move them."
+    echo "$staged_ffs_outside" | sed 's/^/ - /'
+    echo "\nSuggested fix (example for one file):"
+    echo "  mkdir -p backups/duplicates && git mv FILENAME.ffs_lock backups/duplicates/FILENAME.ffs_lock"
+    exit 1
+  fi
+fi
+
 # Run lint-staged (this will run backup guard and linters on staged files)
 if command -v npx >/dev/null 2>&1; then
   npx lint-staged

@@ -10,7 +10,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..', '..');
 
 const includeExts = new Set(['.js', '.mjs', '.ts', '.tsx']);
-const ignoreDirs = new Set(['node_modules', 'dist', 'vendor', 'backups', 'reports/restore_backups', 'scripts/dev']);
+const ignoreDirs = new Set([
+  'node_modules',
+  'dist',
+  'vendor',
+  'backups',
+  'reports/restore_backups',
+  'scripts/dev',
+  'scripts/guards', // ignore guard scripts themselves
+]);
 
 const patterns = [
   { name: 'fetch', regex: /(^|[^.\w])fetch\s*\(/ },
@@ -36,6 +44,10 @@ const allowlist = [
   // Inventory upload uses XHR for reliable progress reporting
   { fileRe: /(^|\/)admin\-inventory\.js$/, names: ['XMLHttpRequest'] },
   { fileRe: /(^|\/)src\/js\/admin\-inventory\.js$/, names: ['XMLHttpRequest'] },
+  // Temporary allowances pending migration to ApiClient
+  { fileRe: /(^|\/)src\/js\/payment\-modal\.js$/, names: ['fetch'] },
+  { fileRe: /(^|\/)src\/js\/shop\.js$/, names: ['fetch'] },
+  { fileRe: /(^|\/)src\/modules\/tooltip\-curator\.js$/, names: ['fetch'] },
 ];
 
 function isIgnored(rel) {

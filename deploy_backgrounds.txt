@@ -1,6 +1,0 @@
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-set cmd:fail-exit yes
-open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
-mirror --reverse --delete --verbose --only-newer --no-perms   images/backgrounds images/backgrounds
-bye

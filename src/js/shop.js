@@ -2,7 +2,7 @@
  * Shop Page Functionality
  * Handles category filtering and product card layout for the shop page.
  */
-import './whimsical-frog-core-unified.js';
+import './site-core.js';
 import apiClient from './api-client.js';
 const WF = window.WF;
 import { debounce } from './utils.js';

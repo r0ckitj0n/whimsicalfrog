@@ -27,7 +27,7 @@ try {
 } catch (_) {}
 
 // reload-tracer removed (dev-only)
-import './whimsical-frog-core-unified.js';
+import './site-core.js';
 
 // Note: Public modules are loaded dynamically in initializeCoreSystemsApp() to avoid
 // unnecessary work on admin routes.

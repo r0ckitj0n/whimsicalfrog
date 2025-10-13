@@ -22,6 +22,11 @@ if [ -x "scripts/maintenance/sweep_txt_files.sh" ]; then
   scripts/maintenance/sweep_txt_files.sh || true
 fi
 
+# Sweep: relocate files with legacy "old" patterns into backups/legacy/ (preserves paths)
+if [ -x "scripts/maintenance/sweep_old_files.sh" ]; then
+  scripts/maintenance/sweep_old_files.sh || true
+fi
+
 # Guard: disallow root-level CSS files (all CSS should live under src/styles/)
 # Check staged files for any *.css at repository root (no slash in path)
 staged_root_css=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^[^/]+\.css$' || true)
@@ -77,6 +82,24 @@ if [ -n "$staged_txt" ]; then
     echo "Or, if intentionally keeping text artifacts in repo, place under root txt/:"
     echo "  mkdir -p txt && git mv FILENAME.txt txt/FILENAME.txt"
     echo "You can also run: scripts/maintenance/sweep_txt_files.sh --dry-run"
+    exit 1
+  fi
+fi
+
+# Guard: files with legacy "old" patterns must be under backups/
+staged_old=$(git diff --cached --name-only --diff-filter=ACM | grep -Ei '(^|/)([^/]*(-old|_old|\.old)[^/]*)$' || true)
+if [ -n "$staged_old" ]; then
+  staged_old_outside=$(echo "$staged_old" | grep -v '^backups/' || true)
+  if [ -n "$staged_old_outside" ]; then
+    echo "\nERROR: Files with legacy '-old', '_old', or '.old' patterns must be stored under backups/."
+    echo "Please move these files (paths preserved under backups/legacy/ recommended):"
+    echo "$staged_old_outside" | sed 's/^/ - /'
+    echo "\nSuggested fixes:"
+    echo "  # Move one file"
+    echo "  mkdir -p backups/legacy && git mv PATH/FILENAME backups/legacy/PATH/FILENAME"
+    echo "  # Or run the sweep to relocate all"
+    echo "  scripts/maintenance/sweep_old_files.sh --dry-run  # review"
+    echo "  scripts/maintenance/sweep_old_files.sh            # apply"
     exit 1
   fi
 fi

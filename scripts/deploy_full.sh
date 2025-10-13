@@ -122,8 +122,6 @@ restore_via_api() {
   # Basic validation: HTTP 200 and JSON success true
   if [[ "${HTTP_CODE}" == "200" ]] && grep -q '"success"\s*:\s*true' /tmp/wf_db_restore_api.out 2>/dev/null; then
     echo -e "${GREEN}✅ API restore reported success${NC}"
-    # Clean temp on success
-    if [[ -n "${tmp_file}" && -f "${tmp_file}" ]]; then rm -f "${tmp_file}" || true; fi
     return 0
   fi
 

@@ -33,6 +33,21 @@ jobs:
             exit 1
           fi
 
+      - name: Sweep '-old' pattern files (CI enforcement)
+        run: |
+          chmod +x scripts/maintenance/sweep_old_files.sh || true
+          scripts/maintenance/sweep_old_files.sh || true
+          if ! git diff --quiet; then
+            echo "::error ::Sweep moved '-old' pattern files. Commit these changes locally before pushing."
+            echo "\n=== Diff (name-status) ==="
+            git --no-pager diff --name-status
+            echo "\n=== Diff (stat) ==="
+            git --no-pager diff --stat
+            echo "\n=== Status (porcelain) ==="
+            git status --porcelain
+            exit 1
+          fi
+
       - name: Run style guard (no inline styles)
         run: npm run guard:styles
 
@@ -59,6 +74,18 @@ jobs:
             echo "Found backup-like files outside backups/:"
             echo "$offenders"
             echo "::error ::Stray backup files detected outside backups/"
+            exit 1
+          fi
+
+      - name: Fail on "-old" pattern files outside backups/ (CI mirror)
+        run: |
+          set -e
+          echo "Checking for '-old' pattern files outside backups/ ..."
+          offenders=$(git ls-files | grep -Ei '(^|/)([^/]*(-old|_old|\.old)[^/]*)$' | grep -Ev '^backups/' || true)
+          if [ -n "$offenders" ]; then
+            echo "Found '-old' pattern files outside backups/:"
+            echo "$offenders"
+            echo "::error ::'-old' pattern files must be stored under backups/"
             exit 1
           fi
 

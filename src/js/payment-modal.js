@@ -14,7 +14,11 @@ function initPaymentModal() {
       keydownHandler: null,
     };
 
-    function currency(v) { return `$${(parseFloat(v) || 0).toFixed(2)}`; }
+    function currency(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n)) return '—';
+      return `$${n.toFixed(2)}`;
+    }
     function isClientLoggedIn() {
       try { return (document && document.body && document.body.getAttribute('data-is-logged-in') === 'true'); } catch (_) { return false; }
     }
@@ -287,6 +291,21 @@ function initPaymentModal() {
         el.classList.remove('is-active');
       }
 
+      // Lightweight listener for carrier-rate failures (e.g., missing weightOz)
+      try {
+        window.addEventListener('wf:api-error', (e) => {
+          const d = e?.detail || {};
+          const url = String(d.url || '');
+          if (url.includes('/api/shipping_rates.php')) {
+            try {
+              if (typeof window.showNotification === 'function') {
+                window.showNotification('Carrier rates unavailable. Ensure item weights are set.', { type: 'info' });
+              }
+            } catch(_) {}
+          }
+        });
+      } catch(_) {}
+
       // Ensure shipping method defaults to USPS on load if not already selected
       try {
         if (shipMethodSel && (!shipMethodSel.value || shipMethodSel.selectedIndex < 0)) {
@@ -353,11 +372,16 @@ function initPaymentModal() {
         const items = cartApi.getItems ? cartApi.getItems() : [];
         const hasItems = Array.isArray(items) && items.length > 0;
         const pm = getSelectedPaymentMethod();
-        const method = shipMethodSel?.value || 'USPS';
-        const needsAddress = method !== 'Customer Pickup';
+        const method = (shipMethodSel?.value || '').trim();
+        const needsAddress = method !== 'Customer Pickup' && method !== '';
         const okAddress = !needsAddress || !!selectedAddressId;
         const hasUser = !!userId;
-        if (placeOrderBtn) placeOrderBtn.disabled = !(hasItems && !!pm && okAddress && hasUser);
+        const itemsValid = Array.isArray(items) ? items.every(it => it && it.sku && Number.isFinite(Number(it.price))) : false;
+        if (!itemsValid && hasItems) {
+          setError('One or more items are missing price or SKU.');
+        }
+        const canPlace = hasItems && !!pm && okAddress && hasUser && !!method && itemsValid;
+        if (placeOrderBtn) placeOrderBtn.disabled = !canPlace;
       }
 
       // Toggle in-modal shipping badges
@@ -426,9 +450,9 @@ function initPaymentModal() {
           return;
         }
         const html = items.map((it) => {
-          const qty = Number(it.quantity || 0);
-          const price = Number(it.price || 0);
-          const line = qty * price;
+          const qty = Number(it.quantity);
+          const price = Number(it.price);
+          const line = (Number.isFinite(qty) && Number.isFinite(price)) ? qty * price : NaN;
           const descBits = [];
           if (it.optionSize) descBits.push(it.optionSize);
           if (it.optionColor) descBits.push(it.optionColor);
@@ -436,7 +460,7 @@ function initPaymentModal() {
           return `
             <div class="summary-line align-start">
               <div class="label flex-1">${(it.name || it.sku || '').toString()}${desc}</div>
-              <div class="value min-w-140 text-right">${qty} × ${currency(price)}<div class="fw-800">${currency(line)}</div></div>
+              <div class="value min-w-140 text-right">${Number.isFinite(qty) ? qty : '—'} × ${currency(price)}<div class="fw-800">${currency(line)}</div></div>
             </div>
           `;
         }).join('');
@@ -708,6 +732,8 @@ function initPaymentModal() {
           return;
         }
         try {
+          const methodVal = (shipMethodSel?.value || '').trim();
+          if (!methodVal) { setError('Select a shipping method.'); return; }
           const items = cartApi.getItems ? cartApi.getItems() : [];
           const clientSubtotal = (Array.isArray(items) ? items : []).reduce((sum, it) => sum + (Number(it?.price)||0) * (Number(it?.quantity)||0), 0);
           // Normalize cart lines to ensure valid sku and positive quantity
@@ -725,7 +751,7 @@ function initPaymentModal() {
           const payload = {
             itemIds: lines.map(l => l.sku),
             quantities: lines.map(l => l.quantity),
-            shippingMethod: shipMethodSel?.value || 'USPS',
+            shippingMethod: methodVal,
           };
           // Hint to backend: if Local Delivery, pass miles if known
           try {
@@ -966,8 +992,7 @@ function initPaymentModal() {
                     overlay.appendChild(modal);
                     document.body.appendChild(overlay);
                     header.querySelector('.btn-close')?.addEventListener('click', () => { try { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); } catch(_) {} });
-                    const resp = await fetch(`/receipt?orderId=${encodeURIComponent(id)}&bare=1`, { credentials: 'include', headers: { 'X-WF-ApiClient':'1' } });
-                    const html = await resp.text();
+                    const html = await apiClient.get(`/receipt?orderId=${encodeURIComponent(id)}&bare=1`);
                     content.innerHTML = `<div class="receipt-print-root">${html}</div>`;
                     return true;
                   } catch (e) { return false; }

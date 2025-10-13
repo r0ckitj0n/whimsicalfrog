@@ -3,6 +3,7 @@
  * Handles category filtering and product card layout for the shop page.
  */
 import './whimsical-frog-core-unified.js';
+import apiClient from './api-client.js';
 const WF = window.WF;
 import { debounce } from './utils.js';
 
@@ -46,13 +47,20 @@ const ShopPage = {
         // Refresh categoryButtons reference in case we generated them
         this.categoryButtons = document.querySelectorAll('.category-navigation .category-btn');
 
+        // Read keyword from URL and initialize state
+        this.keyword = this.getQueryParam('q');
+        this.activeCategory = 'all';
+
         this.setupEventListeners();
         // Ensure nav height is reflected in CSS variable before layout calc
         this.measureNavHeight();
         this.setupMoreToggles();
         this.attachModalHandlers();
         // Use a timeout to ensure images are loaded before calculating heights
-        setTimeout(() => this.equalizeCardHeights(), 300);
+        setTimeout(() => {
+            this.applyFilters();
+            this.equalizeCardHeights();
+        }, 300);
         WF.log('Shop Page module initialized.');
     },
 
@@ -122,6 +130,13 @@ const ShopPage = {
             this.measureNavHeight();
             this.equalizeCardHeights();
         }, 200));
+
+        // React to URL q= changes (e.g., back/forward)
+        window.addEventListener('popstate', () => {
+            this.keyword = this.getQueryParam('q');
+            this.applyFilters();
+            this.equalizeCardHeights();
+        });
     },
 
     measureNavHeight() {
@@ -190,7 +205,8 @@ const ShopPage = {
                 if (!card) return;
                 // Block interaction if out of stock
                 const stockAttr = card.getAttribute('data-stock');
-                const stockLevel = Number.parseInt(stockAttr || card.querySelector('.product-stock')?.getAttribute('data-stock') || '0', 10);
+                const stockSrc = (stockAttr != null ? stockAttr : (card.querySelector('.product-stock')?.getAttribute('data-stock')));
+                const stockLevel = Number.parseInt(stockSrc, 10);
                 if (!Number.isNaN(stockLevel) && stockLevel <= 0) {
                     // Grey the button state defensively
                     btn.setAttribute('aria-disabled', 'true');
@@ -209,7 +225,8 @@ const ShopPage = {
             card.addEventListener('click', (e) => {
                 if (e.target.closest('.product-more-toggle, .add-to-cart-btn')) return;
                 const stockAttr = card.getAttribute('data-stock');
-                const stockLevel = Number.parseInt(stockAttr || card.querySelector('.product-stock')?.getAttribute('data-stock') || '0', 10);
+                const stockSrc = (stockAttr != null ? stockAttr : (card.querySelector('.product-stock')?.getAttribute('data-stock')));
+                const stockLevel = Number.parseInt(stockSrc, 10);
                 if (!Number.isNaN(stockLevel) && stockLevel <= 0) {
                     if (typeof window.showNotification === 'function') {
                         window.showNotification('This item is out of stock.', { type: 'info' });
@@ -227,7 +244,8 @@ const ShopPage = {
 
         // OOS guard
         const stockAttr = card.getAttribute('data-stock');
-        const stockLevel = Number.parseInt(stockAttr || card.querySelector('.product-stock')?.getAttribute('data-stock') || '0', 10);
+        const stockSrc = (stockAttr != null ? stockAttr : (card.querySelector('.product-stock')?.getAttribute('data-stock')));
+        const stockLevel = Number.parseInt(stockSrc, 10);
         if (!Number.isNaN(stockLevel) && stockLevel <= 0) {
             if (typeof window.showNotification === 'function') {
                 window.showNotification('This item is out of stock.', { type: 'info' });
@@ -237,7 +255,8 @@ const ShopPage = {
 
         const name = (card.dataset && card.dataset.name) || (card.querySelector('.product-title')?.textContent || '').trim();
         const priceStr = (card.dataset && card.dataset.price) || '';
-        const price = Number.parseFloat(priceStr) || 0;
+        const p = Number.parseFloat(priceStr);
+        const price = Number.isFinite(p) ? p : null;
         const imgEl = card.querySelector('img.product-image');
         const image = imgEl ? imgEl.getAttribute('src') : '';
         const fullDescEl = card.querySelector('.description-text-full');
@@ -275,13 +294,8 @@ const ShopPage = {
 
         this.categoryButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
-
-        this.productCards.forEach(card => {
-            const cardCategory = card.dataset.category;
-            const isVisible = (category === 'all' || cardCategory === category);
-            card.classList.toggle('hidden', !isVisible);
-        });
-
+        this.activeCategory = category || 'all';
+        this.applyFilters();
         // Recalculate heights after the DOM has updated from filtering
         setTimeout(() => this.equalizeCardHeights(), 50);
     },
@@ -334,6 +348,175 @@ const ShopPage = {
                 delete card.dataset.wfEqhClass;
             }
         });
+    },
+
+    // ==============================
+    // Keyword filter and fuzzy match
+    // ==============================
+    getQueryParam(name) {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            return (params.get(name) || '').trim();
+        } catch { return ''; }
+    },
+
+    applyFilters() {
+        const term = (this.keyword || '').toLowerCase();
+        const hasTerm = term.length > 0;
+
+        // Remove prior recommendation banner
+        this.hideRecommendations();
+
+        // First pass: direct keyword + category filter
+        let visibleCount = 0;
+        this.productCards.forEach(card => {
+            const cat = card.dataset.category || '';
+            const matchesCat = (this.activeCategory === 'all' || cat === this.activeCategory);
+            let matchesTerm = true;
+            if (hasTerm) {
+                const txtName = (card.dataset.name || (card.querySelector('.product-title')?.textContent || '')).toLowerCase();
+                const txtSku = (card.dataset.sku || '').toLowerCase();
+                const txtDesc = (card.querySelector('.description-text-full')?.textContent || card.querySelector('.description-text-short')?.textContent || '').toLowerCase();
+                const txtCatLabel = (card.dataset.categoryLabel || '').toLowerCase();
+                matchesTerm = txtName.includes(term) || txtSku.includes(term) || txtDesc.includes(term) || txtCatLabel.includes(term);
+            }
+            const show = matchesCat && (!hasTerm || matchesTerm);
+            card.classList.toggle('hidden', !show);
+            if (show) visibleCount++;
+        });
+
+        if (visibleCount === 0 && hasTerm) {
+            // No exact matches, compute fuzzy recommendations
+            const recs = this.computeFuzzyRecommendations(term, 6);
+            this.showRecommendations(term, recs);
+        }
+    },
+
+    computeFuzzyRecommendations(term, limit = 6) {
+        const items = Array.from(this.productCards).map(card => {
+            const name = (card.dataset.name || (card.querySelector('.product-title')?.textContent || '')).trim();
+            const sku = (card.dataset.sku || '').trim();
+            const desc = (card.querySelector('.description-text-full')?.textContent || card.querySelector('.description-text-short')?.textContent || '').trim();
+            const text = `${name} ${sku} ${desc}`.toLowerCase();
+            const score = this.fuzzyScore(term, text);
+            return { card, score, name, sku };
+        });
+        items.sort((a, b) => b.score - a.score);
+        return items.filter(x => x.score > 0).slice(0, limit);
+    },
+
+    fuzzyScore(needle, hay) {
+        if (!needle || !hay) return 0;
+        // Quick boosts
+        if (hay.includes(needle)) return 0.9 + Math.min(0.09, needle.length * 0.005);
+        const n = needle.toLowerCase();
+        const h = hay.toLowerCase();
+        // Prefix bonus
+        const tokens = h.split(/[^a-z0-9]+/);
+        let max = 0;
+        for (const t of tokens) {
+            if (!t) continue;
+            if (t.startsWith(n)) max = Math.max(max, 0.6 + Math.min(0.3, n.length * 0.02));
+            // Levenshtein normalized for short tokens
+            const d = this.levenshtein(n, t);
+            const norm = 1 - (d / Math.max(n.length, t.length));
+            if (norm > max) max = norm * 0.8; // dampen
+        }
+        return Math.max(0, Math.min(1, max));
+    },
+
+    levenshtein(a, b) {
+        const m = a.length, n = b.length;
+        if (m === 0) return n; if (n === 0) return m;
+        const dp = new Array(n + 1);
+        for (let j = 0; j <= n; j++) dp[j] = j;
+        for (let i = 1; i <= m; i++) {
+            let prev = i - 1; // dp[i-1][j-1]
+            dp[0] = i;
+            for (let j = 1; j <= n; j++) {
+                const temp = dp[j];
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                dp[j] = Math.min(
+                    dp[j] + 1,        // deletion
+                    dp[j - 1] + 1,    // insertion
+                    prev + cost       // substitution
+                );
+                prev = temp;
+            }
+        }
+        return dp[n];
+    },
+
+    ensureRecommendationsContainer() {
+        let box = document.getElementById('shopRecommendations');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'shopRecommendations';
+            box.className = 'wf-shop-recommendations';
+            if (this.productsGrid && this.productsGrid.parentNode) {
+                this.productsGrid.parentNode.insertBefore(box, this.productsGrid);
+            }
+        }
+        return box;
+    },
+
+    hideRecommendations() {
+        const box = document.getElementById('shopRecommendations');
+        if (box) box.remove();
+    },
+
+    async showRecommendations(term, recs) {
+        const box = this.ensureRecommendationsContainer();
+        if (!recs || recs.length === 0) {
+            box.innerHTML = `<div class="text-gray-600">No items matched "${this.escapeHtml(term)}".</div>`;
+            return;
+        }
+        const explain = `We couldn't find exact matches for "${this.escapeHtml(term)}". Here are some recommended items with similar names, SKUs, or descriptions.`;
+        box.innerHTML = `<div class="wf-rec-explain-bubble">${explain}</div>`;
+
+        // Hide all cards, then reveal only recommended cards
+        const recCards = recs.map(r => r.card);
+        this.productCards.forEach(card => card.classList.add('hidden'));
+        recCards.forEach(card => card.classList.remove('hidden'));
+
+        // Fetch encouragements and annotate badges on the recommended cards
+        const encouragements = await this.loadEncouragements();
+        this.applyEncouragementBadges(recCards, encouragements);
+    },
+
+    async loadEncouragements() {
+        if (this.__encouragements) return this.__encouragements;
+        try {
+            const data = await apiClient.get('/api/encouragements.php');
+            const arr = Array.isArray(data?.phrases) ? data.phrases : [];
+            return (this.__encouragements = arr);
+        } catch (_) {
+            return (this.__encouragements = []);
+        }
+    },
+
+    applyEncouragementBadges(cards, phrases) {
+        if (!cards || cards.length === 0) return;
+        const pool = Array.isArray(phrases) && phrases.length ? phrases : [];
+        let i = 0;
+        cards.forEach(card => {
+            // Remove any previous badge
+            const existing = card.querySelector('.wf-enc-badge');
+            if (existing) existing.remove();
+            const badge = document.createElement('span');
+            badge.className = 'wf-enc-badge badge';
+            const phrase = pool.length ? pool[i++ % pool.length] : '';
+            badge.textContent = phrase || 'Recommended for you';
+            // Prefer a header area within card, else prepend to card body
+            const hook = card.querySelector('.product-card-header') || card.firstElementChild || card;
+            hook.insertAdjacentElement('afterbegin', badge);
+        });
+    },
+
+    escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = String(s ?? '');
+        return d.innerHTML;
     }
 };
 

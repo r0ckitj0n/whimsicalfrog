@@ -10,11 +10,11 @@ import { ApiClient } from '../core/api-client.js';
   const API = {
     async list(page_context){
       const url = `/api/help_tooltips.php?action=get&page_context=${encodeURIComponent(page_context)}`;
-      try { return await ApiClient.get(url); } catch { try { return await (await fetch(url,{credentials:'include'})).json(); } catch { return { success:false, tooltips:[] }; } }
+      return await ApiClient.get(url);
     },
     async upsert(row){
       const url = `/api/help_tooltips.php?action=upsert`;
-      try { return await ApiClient.post(url, row); } catch { try { return await (await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(row)})).json(); } catch { return { success:false }; } }
+      return await ApiClient.post(url, row);
     }
   };
 

@@ -35,8 +35,15 @@ function vite(string $entry): string
         error_log('[VITE ' . strtoupper($level) . '] ' . $payload);
     };
 
-    // Vite manifest location: use dist/.vite/manifest.json (authoritative in production for us)
-    $manifestPath = __DIR__ . '/../dist/.vite/manifest.json';
+    // Vite manifest location: prefer dist/.vite/manifest.json (Vite 5+), fallback to dist/manifest.json
+    $manifestCandidates = [
+        __DIR__ . '/../dist/.vite/manifest.json',
+        __DIR__ . '/../dist/manifest.json',
+    ];
+    $manifestPath = null;
+    foreach ($manifestCandidates as $cand) {
+        if (file_exists($cand)) { $manifestPath = $cand; break; }
+    }
     $hotPath = __DIR__ . '/../hot';
     // Default to production unless explicitly requested via ?vite=dev or cookie
     $forceDev = false;

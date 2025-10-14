@@ -160,7 +160,7 @@ if (!empty($___wf_direct_include)) {
         </div>
         <div id="checkoutError" class="mt-3 text-sm text-red-600 hidden"></div>
         <div class="mt-4 flex gap-3">
-          <a href="/cart" class="btn-secondary w-1/2">Back to Cart</a>
+          <a href="/cart.php" class="btn-secondary w-1/2">Back to Cart</a>
           <button id="placeOrderBtn" type="button" class="btn-brand w-1/2" disabled>Place order</button>
         </div>
       </div>

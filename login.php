@@ -26,7 +26,7 @@
         </form>
         <p class="login-register-link">
             Don't have an account?
-            <a href="/register" class="login-link">
+            <a href="/register.php" class="login-link">
                 Create one here
             </a>
         </p>

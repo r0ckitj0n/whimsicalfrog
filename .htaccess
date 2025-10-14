@@ -1,6 +1,10 @@
 # No rewrites; host-safe routing via ErrorDocument
 # Disable MultiViews so hashed Vite asset filenames (e.g., app.js-<hash>.js) are served exactly
-Options -MultiViews
+<IfModule mod_negotiation.c>
+  Options -MultiViews
+</IfModule>
+# Explicitly redirect common extensionless URLs to .php (works via mod_alias, typically enabled)
+RedirectMatch 302 ^/(shop|about|contact|login|register|cart|room_main)$ /$1.php
 DirectoryIndex index.php
 ErrorDocument 404 /router.php
 ErrorDocument 403 /router.php
@@ -8,6 +12,8 @@ ErrorDocument 403 /router.php
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  # Map common extensionless pages to their PHP counterparts
+  RewriteRule ^(shop|about|contact|login|register|cart|room_main)$ $1.php [L]
   # Serve existing files or directories directly
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d

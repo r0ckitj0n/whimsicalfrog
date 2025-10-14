@@ -317,6 +317,26 @@ EOL
     echo -e "${YELLOW}⚠️  Background image sync failed; continuing${NC}"
   fi
   rm -f deploy_backgrounds.txt
+  # Perform a second, targeted mirror for dist WITHOUT --ignore-time
+  # Rationale: manifest.json and hashed bundles can change without size changes; ensure they upload
+  echo -e "${GREEN}📦 Ensuring dist assets & manifest are updated (mtime-based)...${NC}"
+  cat > deploy_dist.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+mirror --reverse --delete --verbose --only-newer --no-perms \
+  dist dist
+bye
+EOL
+  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+    echo -e "${YELLOW}DRY-RUN: Skipping dist sync (mtime-based)${NC}"
+  elif lftp -f deploy_dist.txt; then
+    echo -e "${GREEN}✅ Dist assets & manifest synced (mtime-based)${NC}"
+  else
+    echo -e "${YELLOW}⚠️  Dist sync failed; continuing${NC}"
+  fi
+  rm -f deploy_dist.txt
 else
   echo -e "${RED}❌ File deployment failed${NC}"
   rm deploy_commands.txt

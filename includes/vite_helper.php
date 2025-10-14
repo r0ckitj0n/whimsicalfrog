@@ -35,10 +35,10 @@ function vite(string $entry): string
         error_log('[VITE ' . strtoupper($level) . '] ' . $payload);
     };
 
-    // Vite manifest location: prefer dist/.vite/manifest.json (Vite 5+), fallback to dist/manifest.json
+    // Vite manifest location: prefer dist/manifest.json (Vite 7 default), fallback to dist/.vite/manifest.json
     $manifestCandidates = [
-        __DIR__ . '/../dist/.vite/manifest.json',
         __DIR__ . '/../dist/manifest.json',
+        __DIR__ . '/../dist/.vite/manifest.json',
     ];
     $manifestPath = null;
     foreach ($manifestCandidates as $cand) {

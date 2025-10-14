@@ -72,7 +72,7 @@ if (!empty($categories)) {
             ?>
         <!-- Left Column: Back to Main Room text button (styled like category filters) -->
         <div class="room-main-nav-container">
-            <a href="/room_main.php" class="category-btn btn-chip shop-filter-btn room-main-nav-link" title="Back to Main Room">
+            <a href="/room_main" class="category-btn btn-chip shop-filter-btn room-main-nav-link" title="Back to Main Room">
                 Back to Main Room
             </a>
         </div>

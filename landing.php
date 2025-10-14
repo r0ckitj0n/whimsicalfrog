@@ -69,7 +69,7 @@ try {
 
 <section id="landingPage" class="relative landing-section" data-coords='<?php echo htmlspecialchars($landingCoordsJson, ENT_NOQUOTES, 'UTF-8'); ?>'>
     <div class="landing-content">
-        <a href="/room_main.php" class="clickable-area area-1 landing-link" title="Enter the Main Room">
+        <a href="/room_main" class="clickable-area area-1 landing-link" title="Enter the Main Room">
             <picture>
                 <source srcset="images/signs/sign-welcome.webp" type="image/webp">
                 <source srcset="images/signs/sign-welcome.png" type="image/png">

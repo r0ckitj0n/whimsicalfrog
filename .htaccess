@@ -3,8 +3,8 @@
 <IfModule mod_negotiation.c>
   Options -MultiViews
 </IfModule>
-# Explicitly redirect common extensionless URLs to .php (works via mod_alias, typically enabled)
-RedirectMatch 302 ^/(shop|about|contact|login|register|cart|room_main)$ /$1.php
+# Canonicalize .php to extensionless for core pages (SEO-friendly)
+RedirectMatch 301 ^/(shop|about|contact|login|register|cart|room_main)\.php$ /$1
 DirectoryIndex index.php
 ErrorDocument 404 /router.php
 ErrorDocument 403 /router.php

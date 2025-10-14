@@ -116,6 +116,17 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <?php
+    try {
+        $proto = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) ? $_SERVER['HTTP_X_FORWARDED_PROTO'] : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
+        $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+        $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        $canon = $path;
+        if (preg_match('#^/(shop|about|contact|login|register|cart|room_main)\\.php$#i', $path, $m)) { $canon = '/' . $m[1]; }
+        $canonUrl = $proto . '://' . $host . $canon;
+        echo '<link rel="canonical" href="' . htmlspecialchars($canonUrl, ENT_QUOTES, 'UTF-8') . '">';
+    } catch (\Throwable $e) { }
+    ?>
     <title>WhimsicalFrog</title>
     <script>
       // Force API client to use the current origin/port (important for localhost dev)

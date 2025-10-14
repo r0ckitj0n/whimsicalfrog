@@ -51,9 +51,9 @@ $default_config = [
     'logo_tagline' => 'Enchanted Treasures',
     'logo_image' => (function_exists('wf_brand_logo_path') ? wf_brand_logo_path() : (defined('BRAND_LOGO_PATH') ? BRAND_LOGO_PATH : '/images/logos/logo-whimsicalfrog.webp')),
     'navigation_items' => [
-        ['label' => 'Shop', 'url' => '/shop.php', 'active' => false],
-        ['label' => 'About', 'url' => '/about.php', 'active' => false],
-        ['label' => 'Contact', 'url' => '/contact.php', 'active' => false],
+        ['label' => 'Shop', 'url' => '/shop', 'active' => false],
+        ['label' => 'About', 'url' => '/about', 'active' => false],
+        ['label' => 'Contact', 'url' => '/contact', 'active' => false],
     ],
     'search_placeholder' => 'Search',
     'mobile_breakpoint' => '768px'
@@ -212,7 +212,7 @@ try {
             <?php if ($config['show_search']): ?>
                 <div class="header-center">
                     <div class="search-container">
-                        <form action="/shop.php" method="GET" role="search">
+                        <form action="/shop" method="GET" role="search">
                             <div class="search-input-container">
                                 <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -243,13 +243,13 @@ try {
                         <?php endif; ?>
                         <a href="/logout.php" class="nav-link">Logout</a>
                     <?php else: ?>
-                        <a href="/login.php" class="nav-link" data-action="open-login-modal">Login</a>
+                        <a href="/login" class="nav-link" data-action="open-login-modal">Login</a>
                     <?php endif; ?>
                 <?php endif; ?>
 
                 <!-- Cart Link -->
                 <?php if ($config['show_cart']): ?>
-                    <a href="/cart.php" class="cart-link" aria-label="Shopping cart with <?php echo $cart_count; ?> items">
+                    <a href="/cart" class="cart-link" aria-label="Shopping cart with <?php echo $cart_count; ?> items">
                         <div class="flex items-center space-x-1 md:space-x-2">
                             <span id="cartCount" class="text-sm font-medium whitespace-nowrap"><?php echo $cart_count; ?> items</span>
                             <svg class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -298,8 +298,8 @@ try {
                             <?php endif; ?>
                             <a href="/logout.php" class="mobile-nav-link">Logout</a>
                         <?php else: ?>
-                            <a href="/login.php" class="mobile-nav-link" data-action="open-login-modal">Login</a>
-                            <a href="/register.php" class="mobile-nav-link">Register</a>
+                            <a href="/login" class="mobile-nav-link" data-action="open-login-modal">Login</a>
+                            <a href="/register" class="mobile-nav-link">Register</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
@@ -307,7 +307,7 @@ try {
 
             <?php if ($config['show_search']): ?>
                 <div class="mobile-search">
-                    <form action="/shop.php" method="GET" role="search">
+                    <form action="/shop" method="GET" role="search">
                         <input type="search"
                                name="q"
                                class="search-bar"

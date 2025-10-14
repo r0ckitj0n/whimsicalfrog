@@ -139,10 +139,6 @@ $currentSection = $adminSection ?: 'dashboard';
         case 'categories':
             include dirname(__DIR__) . '/sections/admin_categories.php';
             break;
-        case 'account-settings':
-        case 'account_settings':
-            include dirname(__DIR__) . '/sections/account_settings.php';
-            break;
         case 'help':
         case 'help-documentation':
         case 'documentation':

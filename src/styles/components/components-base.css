@@ -316,3 +316,11 @@
     color: var(--brand-primary, #87ac3a);
     font-size: 1rem;
 }
+
+/* ==============================================
+   Brand color utilities
+   ============================================== */
+/* Semantic utility: apply secondary brand color (burnt orange) to text */
+.text-brand-secondary {
+  color: var(--brand-secondary);
+}

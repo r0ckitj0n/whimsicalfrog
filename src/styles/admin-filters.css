@@ -14,6 +14,150 @@
   overflow-x: auto; /* allow horizontal scroll instead of wrapping */
 }
 
+/* ===== Sticky filters + sticky table headers (inner scroll) ===== */
+/* Define a top offset for admin pages: header + tabs height */
+body[data-page^='admin'] {
+  --wf-header-height: var(--wf-header-height, 64px);
+  --admin-tabs-height: var(--admin-tabs-height, 44px);
+  --wf-admin-top-offset: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 44px));
+  --wf-admin-filter-height: var(--wf-admin-filter-height, 44px);
+}
+
+/* Do not lock root scroll; confine scrolling to the list container */
+/* Lock page scroll for these three pages so only the list owns scrolling */
+html:has(body[data-page='admin/customers']),
+html:has(body[data-page='admin/orders']),
+html:has(body[data-page='admin/inventory']) {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+body[data-page='admin/customers'],
+body[data-page='admin/orders'],
+body[data-page='admin/inventory'] {
+  overflow: hidden !important;
+  height: 100% !important;
+}
+
+/* Make content area a flex column so list section can scroll independently */
+/* Keep normal document flow; we'll constrain the list itself */
+/* CONTAINERS: fill viewport under admin header+tabs and hide outer overflow */
+body[data-page='admin/orders'] .admin-content-container,
+body[data-page='admin/inventory'] .admin-content-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  /* No extra gap under fixed admin tabs */
+  padding-top: 0;
+  height: calc(100dvh - var(--wf-header-height, 64px) - var(--admin-tabs-height, 44px));
+  overflow: visible; /* allow sticky header to anchor to inner scroller */
+}
+/* Customers page uses #admin-section-content as its container (no .admin-content-container) */
+body[data-page='admin/customers'] #admin-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  /* Reserve space at top for fixed admin tabs without increasing total height */
+  padding-top: var(--admin-tabs-height, 44px);
+  height: calc(100dvh - var(--wf-header-height, 64px) - var(--admin-tabs-height, 44px));
+  overflow: hidden; /* only inner list scrolls */
+}
+
+/* Filters bar sticks under the admin tabs */
+/* Filters remain in the normal flow at the top; no stickiness needed */
+body[data-page='admin/customers'] .admin-filter-section,
+body[data-page='admin/orders'] .admin-filter-section,
+body[data-page='admin/inventory'] .admin-filter-section {
+  position: static;
+  top: auto;
+  z-index: auto;
+  background: transparent;
+  border-bottom: none;
+}
+
+/* List section becomes the inner scroller */
+/* LIST: flex child that owns the scrollbar */
+body[data-page='admin/customers'] .admin-table-section,
+body[data-page='admin/orders'] .admin-table-section,
+body[data-page='admin/inventory'] .admin-table-section {
+  flex: 1 1 auto;
+  min-height: 0; /* critical so flex child can actually shrink */
+  overflow-y: auto; /* inner scroll */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  width: 100%;
+  position: relative; /* establish stacking context for sticky header */
+  background: #fff;
+}
+
+/* Sticky table header inside the scrolling list */
+body[data-page='admin/customers'] .admin-table-section thead th,
+body[data-page='admin/customers'] .admin-table-section thead td,
+body[data-page='admin/orders'] .admin-table-section thead th,
+body[data-page='admin/orders'] .admin-table-section thead td,
+body[data-page='admin/inventory'] .admin-table-section thead th,
+body[data-page='admin/inventory'] .admin-table-section thead td {
+  position: sticky !important;
+  top: 0 !important; /* stick to top of the scroller (below filters) */
+  z-index: 50 !important;
+  background: #fff !important; /* solid to cover rows under */
+}
+
+/* Also pin the thead itself for Safari/table cross-browser reliability */
+body[data-page='admin/customers'] .admin-table-section thead,
+body[data-page='admin/orders'] .admin-table-section thead,
+body[data-page='admin/inventory'] .admin-table-section thead {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 55 !important;
+  background: #fff !important;
+  display: table-header-group !important; /* WebKit-friendly */
+}
+
+/* Pin row as well (Safari/WebKit reliability) */
+body[data-page='admin/customers'] .admin-table-section thead tr,
+body[data-page='admin/orders'] .admin-table-section thead tr,
+body[data-page='admin/inventory'] .admin-table-section thead tr {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 56 !important;
+  background: #fff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+/* Add a subtle divider under the header when stuck */
+body[data-page='admin/customers'] .admin-table-section thead,
+body[data-page='admin/orders'] .admin-table-section thead,
+body[data-page='admin/inventory'] .admin-table-section thead {
+  box-shadow: 0 1px 0 0 #e5e7eb;
+}
+
+/* Improve sticky header visuals in separate scrolling container */
+body[data-page='admin/customers'] .admin-table-section table,
+body[data-page='admin/orders'] .admin-table-section table,
+body[data-page='admin/inventory'] .admin-table-section table {
+  border-collapse: separate !important; /* sticky-friendly */
+  border-spacing: 0;
+  width: 100%;
+  table-layout: fixed; /* predictable column widths for sticky */
+}
+
+/* Remove clipping that can break sticky on the table element itself */
+body[data-page='admin/customers'] .admin-data-table,
+body[data-page='admin/orders'] .admin-data-table,
+body[data-page='admin/inventory'] .admin-data-table {
+  overflow: visible !important;
+}
+
+/* Neutralize legacy inner-scroll clamp on the router wrapper to avoid extra scrollbars */
+body[data-page='admin/customers'] #admin-section-content,
+body[data-page='admin/orders'] #admin-section-content,
+body[data-page='admin/inventory'] #admin-section-content {
+  overflow: visible !important; /* prevent becoming the sticky container */
+  max-height: none !important;
+  height: auto !important;
+}
+
 /* Ensure the form itself lays out horizontally */
 .admin-filters .admin-filter-form {
   display: inline-flex; /* shrink-to-fit so overflow-x works */

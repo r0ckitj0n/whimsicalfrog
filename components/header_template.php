@@ -175,7 +175,7 @@ try {
                         <div class="logo-text-container">
                             <div class="logo-text"><?php echo htmlspecialchars($config['logo_text']); ?></div>
                             <?php if (!empty($config['logo_tagline'])): ?>
-                                <div class="logo-tagline"><?php echo htmlspecialchars($config['logo_tagline']); ?></div>
+                                <div class="logo-tagline text-brand-secondary"><?php echo htmlspecialchars($config['logo_tagline']); ?></div>
                             <?php endif; ?>
                         </div>
                     </a>
@@ -238,7 +238,6 @@ try {
                         <span class="welcome-message">
                             <a href="#" class="nav-link" data-action="open-account-settings"><?php echo htmlspecialchars((string)$username); ?></a>
                         </span>
-                        <a href="#" class="nav-link" data-action="open-account-settings">Account Settings</a>
                         <?php if (!empty($is_admin)): ?>
                             <a href="/sections/admin_router.php?section=settings" class="nav-link">Settings</a>
                         <?php endif; ?>
@@ -297,7 +296,6 @@ try {
                             <?php if (!empty($is_admin)): ?>
                                 <a href="/sections/admin_router.php?section=settings" class="mobile-nav-link">Settings</a>
                             <?php endif; ?>
-                            <a href="#" class="mobile-nav-link" data-action="open-account-settings">Account Settings</a>
                             <a href="/logout.php" class="mobile-nav-link">Logout</a>
                         <?php else: ?>
                             <a href="/login" class="mobile-nav-link" data-action="open-login-modal">Login</a>

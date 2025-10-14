@@ -291,15 +291,7 @@ const __wfHideModal = (id) => {
         return;
       }
 
-      // Open Account Settings: navigate to page (keeps canonical single template)
-      if (closest('[data-action="open-account-settings"]')) {
-        e.preventDefault();
-        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        // Navigate to the actual sections template (no root /account_settings.php exists)
-        const target = '/sections/account_settings.php';
-        try { window.location.assign(target); } catch(_) { window.location.href = target; }
-        return;
-      }
+      // Let global Account Settings modal handler manage [data-action="open-account-settings"] clicks
 
       // Handle close buttons
       if (closest('[data-action="close-admin-modal"]')) {

@@ -1,0 +1,1597 @@
+# Admin Tooltips Audit (v8 FULL)
+
+Generated: 2025-10-13 20:49:47
+
+Total active tooltips: 522
+
+Format per entry:
+- [context:::element_id]
+  - Title: original title from DB (if any)
+  - Tooltip: final content in DB
+
+## admin
+- [admin:::adminCustomersTab]
+  - Title: Customers
+  - Tooltip: Everyone who ever bought (or almost did). Peek histories, send notes, and keep addresses tidy so parcels find homes, not limbo.
+- [admin:::adminDashboardTab]
+  - Title: Dashboard
+  - Tooltip: Your daily pulse check: fresh orders, key totals, and a quick vibe on how things are trending. Skim, smile (or plot), then jump to what needs love.
+- [admin:::adminHelpCombo]
+  - Title: Adminhelpcombo
+  - Tooltip: Quick switches for help: docs, tips, and sanity in one neat cluster.
+- [admin:::adminHelpDocsBtn]
+  - Title: Adminhelpdocs
+  - Tooltip: Open docs with real answers, not vibes. Faster than guessing; kinder than googling. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [admin:::adminHelpToggleBtn]
+  - Title: Adminhelptoggle
+  - Tooltip: Turn tooltips on when learning and off when you’re in flow. Your space, your rules. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [admin:::adminInventoryTab]
+  - Title: Inventory
+  - Tooltip: Where products glow up—photos, prices, and details that make carts fuller. Tidy here, sell more there. It’s connected.
+- [admin:::adminOrdersTab]
+  - Title: Orders
+  - Tooltip: From “paid” to “packed” without melodrama. Print slips, update status, and keep delivery gremlins at bay.
+- [admin:::adminReportsTab]
+  - Title: Reports
+  - Tooltip: Calm, honest charts. Spot winners, fix laggards, and turn gut feelings into “here’s the data.”
+- [admin:::confirm-delete]
+  - Title: Confirm Delete
+  - Tooltip: Final “are you sure?” before something disappears for good. If you wince, step back.
+
+## common
+- [common:::adminHelpDocsLink]
+  - Title: Adminhelpdocslink
+  - Tooltip: Jump to full documentation in a new view. Bookmark when you’re deep in settings.
+- [common:::adminMarketingTab]
+  - Title: Marketing
+  - Tooltip: Give shoppers a gentle nudge: promos, emails, and sparks that turn maybe into yes.
+- [common:::adminPosTab]
+  - Title: Point of Sale
+  - Tooltip: In‑person checkout that behaves. Scan, charge, hand over the goods, and look effortlessly competent.
+- [common:::adminSettingsTab]
+  - Title: Settings
+  - Tooltip: The control room. Change thoughtfully, test quickly, and keep receipts. Calm tweaks beat heroic fixes.
+- [common:::cancel-btn]
+  - Title: Cancel
+  - Tooltip: Close this without saving. A clean exit is still progress. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [common:::closeBtn]
+  - Title: Close
+  - Tooltip: Leave this panel and carry on. Nothing saved, nothing broken. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [common:::duplicateBtn]
+  - Title: Duplicate
+  - Tooltip: Clone a good thing, tweak lightly, ship faster. Smart beats busy. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [common:::helpBtn]
+  - Title: Help
+  - Tooltip: Quick pointers when you want them; respectful silence when you don’t. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [common:::importBtn]
+  - Title: Import
+  - Tooltip: Bring data in, formatted neatly. Templates exist so headaches don’t. Check your CSV formatting twice, import once. Bulk mistakes are the WORST kind of mistakes because they're bulk. One wrong column mapping and you've just renamed 500 products to "undefined." Ask me how I know.
+- [common:::previewBtn]
+  - Title: Preview
+  - Tooltip: See it before you commit. Two seconds here saves ten minutes later. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [common:::resetBtn]
+  - Title: Reset
+  - Tooltip: Back to defaults when experiments get… enthusiastic. No shame in a clean slate. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [common:::save-btn]
+  - Title: Save
+  - Tooltip: Commit changes and keep moving. Small, frequent saves beat heroic rescues. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up.
+- [common:::saveBtn]
+  - Title: Save
+  - Tooltip: Commit changes and keep moving. Small, frequent saves beat heroic rescues. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up.
+
+## customers
+- [customers:::add-customer]
+  - Title: Add Customer
+  - Tooltip: Create a new customer record—names spelled right, emails double‑checked. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::addCustomerBtn]
+  - Title: Add Customer
+  - Tooltip: Create an account for someone who asked nicely—or called you. Keep spellings kind. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::confirmPassword]
+  - Title: Confirmpassword
+  - Tooltip: Type it again so typos don’t become mysteries. Locks are unforgiving. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::customerOrdersBtn]
+  - Title: Customerorders
+  - Tooltip: Jump straight to this customer’s orders. Answers first, detective work later. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::customerSearchInput]
+  - Title: Search Customers
+  - Tooltip: Type a name, email, or clue—find people fast without scrolling. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::customerValueBtn]
+  - Title: Customervalue
+  - Tooltip: Total spend over time. Celebrate VIPs, encourage the curious. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::deleteCustomerBtn]
+  - Title: Deletecustomer
+  - Tooltip: Rarely used and very permanent. Consider deactivate before disappear. This is the nuclear option—once you click, it's gone forever. No undo, no "just kidding," no ctrl+Z to save you from yourself. Triple-check you're deleting the RIGHT thing, not just A thing. We've all been there. Don't be there. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::editCustomerBtn]
+  - Title: Editcustomer
+  - Tooltip: Fix the essentials—emails, addresses, status. Clean data ships better. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::emailCustomerBtn]
+  - Title: Email Customer
+  - Tooltip: Send a note that sounds human. Proofread once; kindness travels. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::exportCustomersBtn]
+  - Title: Export Customers
+  - Tooltip: Download a clean list for email tools or backups. Handle with care—this is people. Download your data before the universe decides to test your backup strategy the hard way. Future you will either thank present you profusely or wonder why you didn't do this sooner. Spoiler: do it now. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::merge-customers]
+  - Title: Merge Customers
+  - Tooltip: Combine duplicates into one clean record—keep the best email, preserve orders, retire the clutter. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::newPassword]
+  - Title: Newpassword
+  - Tooltip: Set a fresh password. Use strong and memorable, not “password123.” Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::nextCustomerBtn]
+  - Title: Nextcustomer
+  - Tooltip: Skip ahead without losing your place. Efficient and oddly soothing. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::prevCustomerBtn]
+  - Title: Prevcustomer
+  - Tooltip: Step back one—graceful recoveries are a core skill. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::saveCustomerBtn]
+  - Title: Savecustomer
+  - Tooltip: Save updates and keep helping. Small, steady edits win. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::search-customers]
+  - Title: Search Customers
+  - Tooltip: Type a few characters—names, emails, anything memorable. Filters beat scroll marathons. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::sendEmailBtn]
+  - Title: Sendemail
+  - Tooltip: Send a note that sounds human. Proofread once; kindness travels. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::viewCustomerBtn]
+  - Title: Viewcustomer
+  - Tooltip: Open full details without guesswork—contact, orders, the whole story. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+- [customers:::viewOrderHistoryBtn]
+  - Title: View Order
+  - Tooltip: Their story in receipts. Spot patterns, answer questions, be helpful fast. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Customers: treat their data like you'd want yours treated—with respect, accuracy, proper backups, and zero weirdness. They trust you with their info. Honor that trust and don't be creepy about it.
+
+## dashboard
+- [dashboard:::analyticsCard]
+  - Title: Analyticscard
+  - Tooltip: Traffic and behavior at a glance—what brought people and what kept them. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk.
+- [dashboard:::discountCodesCard]
+  - Title: Discountcodescard
+  - Tooltip: Active codes and usage—who saved what and how often. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk.
+- [dashboard:::inventoryAlertsTable]
+  - Title: Low Stock Alert
+  - Tooltip: Low‑stock nudges before they become outages. Top up winners first; revenue approves. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk.
+- [dashboard:::marketingSalesChart]
+  - Title: Marketingsaleschart
+  - Tooltip: Sales influenced by campaigns—proof that nudges worked. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk.
+- [dashboard:::open-order-details]
+  - Title: Open Order Details
+  - Tooltip: Peek inside without spawning fifteen tabs. Curiosity, satisfied.
+- [dashboard:::paymentsReceivedCard]
+  - Title: Payments Received
+  - Tooltip: Cash that actually cleared. Sleep‑better numbers live here. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk.
+- [dashboard:::restore-help-hints]
+  - Title: Restore Help Hints
+  - Tooltip: Bring back the tips you dismissed in a brave moment. No judgment.
+
+## inventory
+- [inventory:::add-new-item-btn]
+  - Title: Add Product
+  - Tooltip: Add something new. Name it clearly, price it sanely, photo that earns a click. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::addNewItemBtn]
+  - Title: Add Product
+  - Tooltip: Add something new. Name it clearly, price it sanely, and pick a photo that earns a click. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::apply-price-suggestion]
+  - Title: Price Helper
+  - Tooltip: Accept the AI’s number if it passes your gut check. You own the price. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::bulkEditBtn]
+  - Title: Bulk Edit
+  - Tooltip: Change the many without suffering. Select, adjust, and let monotony cry elsewhere. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::categorySelect]
+  - Title: Categoryselect
+  - Tooltip: Pick the shelf where this belongs so shoppers find it without a scavenger hunt. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::clear-cost-breakdown]
+  - Title: Clear Cost Breakdown
+  - Tooltip: Remove all cost lines and start clean—good before re‑estimating. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::confirm-delete-item]
+  - Title: Delete Product
+  - Tooltip: One last breath before permanent deletion. Precision beats courage. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::cost-suggestion-btn]
+  - Title: Cost Suggestion
+  - Tooltip: Estimate costs before you guess at pricing. Good inputs, better outcomes. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::costPriceInput]
+  - Title: Costprice
+  - Tooltip: What it costs you—be honest so margins aren’t fiction. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::delete-cost-item]
+  - Title: Delete Product
+  - Tooltip: Remove just this cost line—surgical edits for honest totals. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::delete-item]
+  - Title: Delete Product
+  - Tooltip: Permanent means permanent. Triple‑check the target before the dramatic click. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::deleteItemBtn]
+  - Title: Delete Product
+  - Tooltip: Permanent means permanent. Triple‑check the target before the dramatic click. This is the nuclear option—once you click, it's gone forever. No undo, no "just kidding," no ctrl+Z to save you from yourself. Triple-check you're deleting the RIGHT thing, not just A thing. We've all been there. Don't be there. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::duplicateItemBtn]
+  - Title: Copy Product
+  - Tooltip: Copy a winner, tweak the details, save a chunk of time. Efficient is attractive. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::editItemBtn]
+  - Title: Edit Product
+  - Tooltip: Polish the details—typos, images, prices. Small fixes, real impact. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::exportInventoryBtn]
+  - Title: Export Products
+  - Tooltip: Grab a clean CSV for backups, analysis, or bragging rights. Data travels well. Download your data before the universe decides to test your backup strategy the hard way. Future you will either thank present you profusely or wonder why you didn't do this sooner. Spoiler: do it now. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::generate-marketing-copy]
+  - Title: AI Writer
+  - Tooltip: AI drafts the sparkle; you keep the brand voice. Publish only what you’d say. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::get-cost-suggestion]
+  - Title: Get Cost Suggestion
+  - Tooltip: Ask AI for a cost estimate—sanity‑check before trusting. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::get-price-suggestion]
+  - Title: Price Helper
+  - Tooltip: AI offers a starting number; you own the final call. Sanity‑check against costs and demand. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::importInventoryBtn]
+  - Title: Import Products
+  - Tooltip: Feed it a well‑labeled CSV and watch rows become products. Templates save headaches. Check your CSV formatting twice, import once. Bulk mistakes are the WORST kind of mistakes because they're bulk. One wrong column mapping and you've just renamed 500 products to "undefined." Ask me how I know. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::navigate-item]
+  - Title: Navigate Item
+  - Tooltip: Jump to another product without losing your place. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::open-color-template-modal]
+  - Title: Open Color Template
+  - Tooltip: Spin up color variants fast—save the wrist, keep the quality. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::open-cost-modal]
+  - Title: Open Cost
+  - Tooltip: Break down materials, labor, and the sneaky extras. Know your margins. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::open-global-colors-management]
+  - Title: Open Global Colors Management
+  - Tooltip: Edit the master color list once—stop fixing duplicates later. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::open-marketing-manager]
+  - Title: Open Marketing Manager
+  - Tooltip: Open marketing tools for this product—describe, promote, delight. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::price-suggestion-btn]
+  - Title: Price Helper
+  - Tooltip: Ask the AI for a starting point, then make it yours. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::printPackingSlipsBtn]
+  - Title: Printpackingslips
+  - Tooltip: Print slips for many at once. Fewer clicks, faster packing. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::process-images-ai]
+  - Title: Process Images Ai
+  - Tooltip: Let AI help with images—alt text, polish, the works. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::refresh-categories]
+  - Title: Refresh Categories
+  - Tooltip: Reload categories so new ones appear right away. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::reorderPointInput]
+  - Title: Reorderpoint
+  - Tooltip: Stock level where you reorder—future you says thanks. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::retailPriceInput]
+  - Title: Retailprice
+  - Tooltip: Price customers see—match market, protect margin. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::save-cost-item]
+  - Title: Save Cost Item
+  - Tooltip: Save this cost line so totals tell the truth. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::search-items-input]
+  - Title: Search Items
+  - Tooltip: Find products by name, SKU, or vibes—names work best. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::stockLevelInput]
+  - Title: Stocklevel
+  - Tooltip: How many you have on hand—keep this real for fewer apologies. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::tagsInput]
+  - Title: Tags
+  - Tooltip: Add keywords that make finding easier—be specific, not poetic. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+- [inventory:::viewItemBtn]
+  - Title: Viewitem
+  - Tooltip: Open the full product details without hunting. Everything in one place. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Inventory: the razor-thin line between "in stock" and "whoops, we oversold by 47 units and now everyone is mad." Keep it accurate, keep it updated, keep customers happy. The alternative is not fun for anyone.
+
+## marketing
+- [marketing:::create-campaign]
+  - Title: Create Campaign
+  - Tooltip: Start a new campaign—goal, audience, and a small dose of sparkle. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::emailCampaignsCard]
+  - Title: Emailcampaignscard
+  - Tooltip: Recent and scheduled emails—open rates and outcomes included. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::generate-coupons]
+  - Title: Generate Coupons
+  - Tooltip: Spin up unique codes—limits keep generosity strategic. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingAnalyticsBtn]
+  - Title: Marketinganalytics
+  - Tooltip: See which campaigns earned their keep. Wins up top, lessons below. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingPaymentChart]
+  - Title: Marketingpaymentchart
+  - Tooltip: Payments over time tied to marketing—lines that explain outcomes. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingPaymentsPending]
+  - Title: Marketingpaymentspending
+  - Tooltip: Payments promised but not cleared—watch, don’t spend. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingPaymentsReceived]
+  - Title: Payments Received
+  - Tooltip: Payments that actually landed—spendable reality. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingProductsSold]
+  - Title: Marketingproductssold
+  - Tooltip: Units moved thanks to campaigns—what people actually bought. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingRecentOrdersTable]
+  - Title: Orders
+  - Tooltip: Recent orders tied to marketing—proof that persuasion worked. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingTopItemsList]
+  - Title: Marketingtopitemslist
+  - Tooltip: Top sellers from marketing—copy these wins shamelessly. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingTotalCustomers]
+  - Title: Marketingtotalcustomers
+  - Tooltip: New customers added by campaigns—nice growth indicator. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingTotalOrders]
+  - Title: Marketingtotalorders
+  - Tooltip: Orders tied to campaigns—quantity of yeses. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::marketingTotalSales]
+  - Title: Marketingtotalsales
+  - Tooltip: Revenue tied to campaigns—quality of yeses. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::send-test-email]
+  - Title: Send Test Email
+  - Tooltip: Send a test before you blast. Better a small oops than a big one. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+- [marketing:::socialMediaCard]
+  - Title: Socialmediacard
+  - Tooltip: Channels and clicks—post with purpose, not just habit. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Marketing: the delicate art of saying "buy this" without actually saying "buy this." Be helpful, be genuine, be strategic, be human. Spam is for canned meat, not email campaigns. Your unsubscribe rate will thank you.
+
+## orders
+- [orders:::action:delete-order]
+  - Title: Delete Order
+  - Tooltip: For tests and spam only. Real orders should be canceled, not erased—accounting cries otherwise. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::bulk-actions-select]
+  - Title: Bulk Actions Select
+  - Tooltip: Pick a batch action for many orders at once. Time saved is mood saved. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::cancelOrderBtn]
+  - Title: Cancelorder
+  - Tooltip: Cancel cleanly and add a note. Clarity now prevents loops later. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::delete-order]
+  - Title: Delete Order
+  - Tooltip: For tests and spam only. Real orders get canceled, not erased. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::edit-current-address]
+  - Title: Edit Current Address
+  - Tooltip: Fix the address on this order—labels appreciate accuracy. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::editOrderBtn]
+  - Title: Editorder
+  - Tooltip: Fix addresses, adjust items, and keep fulfillment truthful. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::exportOrdersBtn]
+  - Title: Exportorders
+  - Tooltip: Export a clean CSV for accounting or analysis. Future you approves. Download your data before the universe decides to test your backup strategy the hard way. Future you will either thank present you profusely or wonder why you didn't do this sooner. Spoiler: do it now. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::filter-orders]
+  - Title: Filter Orders
+  - Tooltip: Filter by status, date, or payment—cut the noise fast. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::fulfillOrderBtn]
+  - Title: Fulfillorder
+  - Tooltip: Kick off fulfillment without chaos. Print, pack, progress. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::impersonate-customer]
+  - Title: Impersonate Customer
+  - Tooltip: View the store as this customer—debug without guesswork. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::mark-shipped]
+  - Title: Mark Shipped
+  - Tooltip: Set the order to shipped and add tracking—give refresh-happy customers something to see. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::newOrderBtn]
+  - Title: Neworder
+  - Tooltip: Create an order manually when life happens offline. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::order-status-filter]
+  - Title: Order Status Filter
+  - Tooltip: Show only the statuses that matter right now. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::orderSearchInput]
+  - Title: Ordersearch
+  - Tooltip: Find orders by name, email, or number—details beat memory. Type carefully—autocorrect is NOT your friend here, and typos in data fields have a sneaky way of haunting you months later when you're trying to figure out why reports look weird. Precision now saves headaches later. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::orderStatusSelect]
+  - Title: Orderstatusselect
+  - Tooltip: Change the order status—pick truth, then save. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::paymentStatusSelect]
+  - Title: Paymentstatusselect
+  - Tooltip: Mark payment state accurately—paid, pending, refunded. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::printOrderBtn]
+  - Title: Print Order
+  - Tooltip: Print a slip so box‑time feels calm and correct. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::refund-order]
+  - Title: Refund Order
+  - Tooltip: Make it right without drama—choose amount/items, leave a human note, confirm. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::refundOrderBtn]
+  - Title: Refund Order
+  - Tooltip: Make it right without drama. Pick items or amount, leave a human note, confirm, move on. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::shipOrderBtn]
+  - Title: Mark Shipped
+  - Tooltip: Mark it shipped, add tracking, and set expectations. Customers refresh the page; give them something to see. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::shippingStatusSelect]
+  - Title: Shippingstatusselect
+  - Tooltip: Set shipping status in plain terms. Pick what’s true right now. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::show-receipt]
+  - Title: Show Receipt
+  - Tooltip: Open the full receipt—line items, totals, and the fine details. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+- [orders:::viewOrderBtn]
+  - Title: View Order
+  - Tooltip: All the details in one tidy place: items, address, status. Clarity first, actions second. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Orders: where customer expectations meet operational reality. Make it smooth, make it fast, make it feel effortless even when it's absolutely not. They don't need to know about the chaos behind the scenes.
+
+## pos
+- [pos:::browse-items]
+  - Title: Browse Items
+  - Tooltip: Scan your catalog quickly—tap to add, keep the line moving.
+- [pos:::checkout]
+  - Title: Checkout
+  - Tooltip: Proceed to payment—clean totals and fewer awkward silences.
+- [pos:::checkoutBtn]
+  - Title: Checkout
+  - Tooltip: Take the payment, make the moment. Smooth in‑person checkout without drama. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing.
+- [pos:::exit-pos]
+  - Title: Exit Pos
+  - Tooltip: Leave POS mode—finish the sale first if you like happy reports.
+- [pos:::toggle-fullscreen]
+  - Title: Toggle Fullscreen
+  - Tooltip: Fill the screen so the only thing on display is good service.
+
+## reports
+- [reports:::averageOrderCard]
+  - Title: Averageordercard
+  - Tooltip: Average order value—are baskets getting healthier? The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::change-range]
+  - Title: Change Range
+  - Tooltip: Switch the reporting window—week, month, custom. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::export-report]
+  - Title: Export Report
+  - Tooltip: Download a tidy file for sharing or archiving. Data behaves best on the move. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::ordersCard]
+  - Title: Orders Count
+  - Tooltip: Count of orders for the period—volume at a glance. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::paymentMethodChart]
+  - Title: Paymentmethodchart
+  - Tooltip: How people paid—cards, wallets, and other choices. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::paymentsPendingCard]
+  - Title: Paymentspendingcard
+  - Tooltip: Incoming but not settled—watch this line carefully. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::popupAddBtn]
+  - Title: Popupadd
+  - Tooltip: Add a quick note or filter without leaving the view. Lightweight and handy. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::print-report]
+  - Title: Print Report
+  - Tooltip: Print a clean copy for meetings where laptops feel rude. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::printReportBtn]
+  - Title: Printreport
+  - Tooltip: Print a clean copy for meetings where laptops feel rude. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::salesChart]
+  - Title: Saleschart
+  - Tooltip: Revenue over time—lines that reveal stories. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::topProductsTable]
+  - Title: Topproductstable
+  - Tooltip: Your overachievers. Study them, then make more things like them. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::totalCustomersCard]
+  - Title: Totalcustomerscard
+  - Tooltip: Total customers in the period—nice when up and to the right. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+- [reports:::totalRevenueCard]
+  - Title: Total Revenue
+  - Tooltip: Revenue for the period—celebrate, then optimize. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Reports: truth serum for your business. Sometimes refreshing, sometimes sobering, occasionally devastating, always worth looking at even when you really, really don't want to. Knowledge is power, even uncomfortable knowledge.
+
+## settings
+- [settings:::accountSettingsBtn]
+  - Title: Accountsettings
+  - Tooltip: Open admin account settings—names, security, peace. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:attr-add]
+  - Title: Add Attribute
+  - Tooltip: Create a new attribute like size or color. Keep it obvious; everyone wins. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:attr-add-form]
+  - Title: Add Attribute
+  - Tooltip: Add a fresh option—clear names now prevent future detective work. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:attr-save-order]
+  - Title: Attr Save Order
+  - Tooltip: Lock the order so lists read like someone with taste arranged them. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:business-info-save]
+  - Title: Business Info Save
+  - Tooltip: Save business info so receipts and pages stay consistent. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:business-reset-branding]
+  - Title: Business Reset Branding
+  - Tooltip: Reset brand styles to defaults—use sparingly. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:business-save]
+  - Title: Business Save
+  - Tooltip: Save business settings—names, links, details. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:business-save-branding]
+  - Title: Business Save Branding
+  - Tooltip: Save brand styles—colors, fonts, the vibe. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-admin-modal]
+  - Title: Close Admin
+  - Tooltip: Close this window and keep your place. Nothing saved, nothing broken. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-ai-settings]
+  - Title: Close Ai Settings
+  - Tooltip: Exit AI settings gently—changes stay only if you saved. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-ai-tools]
+  - Title: Close Ai Tools
+  - Tooltip: Wrap up the AI tools and return to work—nothing saves unless you did. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-business-info]
+  - Title: Close Business Info
+  - Tooltip: Exit business info without saving. Return when names behave. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-css-rules]
+  - Title: Style Editor
+  - Tooltip: Close the style editor—preview first if you value your pixels. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-email-settings]
+  - Title: Close Email Settings
+  - Tooltip: Leave email settings as they are—save first if you changed anything. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:close-logging-status]
+  - Title: Close Logging Status
+  - Tooltip: Dismiss logging status and get back to work. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-secrets-modal]
+  - Title: Close Secrets
+  - Tooltip: Exit the secrets vault safely—no changes unless you saved. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:close-square-settings]
+  - Title: Square Settings
+  - Tooltip: Close payments config. Keys stay only if you saved. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::action:css-rules-save]
+  - Title: Style Editor
+  - Tooltip: Save style changes—preview first, pixels are precious. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:dashboard-config-refresh]
+  - Title: Dashboard Config Refresh
+  - Tooltip: Reload widget data and layout previews without the full refresh. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:dashboard-config-reset]
+  - Title: Dashboard Config Reset
+  - Tooltip: Start fresh when experiments get…enthusiastic. Clean slate, clean mind. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:dashboard-config-save]
+  - Title: Dashboard Config Save
+  - Tooltip: Commit the layout so tomorrow looks familiar (in a good way). Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:email-history-apply-filters]
+  - Title: Email History
+  - Tooltip: Apply filters so you see the messages that matter. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-clear-filters]
+  - Title: Email History
+  - Tooltip: Clear filters and see the whole story again. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-close-drawer]
+  - Title: Email History
+  - Tooltip: Close the drawer and keep working—context intact. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-copy-curl]
+  - Title: Email History
+  - Tooltip: Copy a curl request for debugging like a gentle pro. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-copy-headers]
+  - Title: Email History
+  - Tooltip: Copy headers when you need the nerdy details fast. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-copy-subject]
+  - Title: Email History
+  - Tooltip: Copy subject to clipboard—tickets and threads love this. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-copy-to]
+  - Title: Email History
+  - Tooltip: Copy recipient addresses without spelunking. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-copy-type]
+  - Title: Email History
+  - Tooltip: Copy message type for quick sorting and triage. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-download]
+  - Title: Email History
+  - Tooltip: Save the raw message for audits or support. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-next]
+  - Title: Email History
+  - Tooltip: Next message in line—faster than the back button. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-open-test]
+  - Title: Send Test Email
+  - Tooltip: Open the test flow and send yourself a rehearsal. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-prev]
+  - Title: Email History
+  - Tooltip: Previous message—context restored. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-refresh]
+  - Title: Email History
+  - Tooltip: Reload the list so fresh mail appears without drama. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-save-endpoint]
+  - Title: Email History
+  - Tooltip: Save the endpoint details for saner debugging later. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-search]
+  - Title: Email History
+  - Tooltip: Search the log without scroll marathons. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-history-toggle-json]
+  - Title: Email History
+  - Tooltip: Switch between friendly and raw views—choose your mood. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:email-send-test]
+  - Title: Send Test Email
+  - Tooltip: Send a test email and fix things before anyone important sees it. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:health-refresh]
+  - Title: Health Refresh
+  - Tooltip: Refresh results so you’re not arguing with yesterday. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:logging-clear-logs]
+  - Title: Logging Clear Logs
+  - Tooltip: Archive or clear old logs so disks stop complaining. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:logging-open-file]
+  - Title: Logging Open File
+  - Tooltip: Open the log file and read the confession in plain text. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:logging-refresh-status]
+  - Title: Logging Refresh Status
+  - Tooltip: Reload logging details—know what’s being captured now. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:move-down]
+  - Title: Move Down
+  - Tooltip: Slide lower. Not everything needs the front row. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:move-up]
+  - Title: Move Up
+  - Tooltip: Nudge upward. Stars deserve the spotlight; let them have it. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-account-settings]
+  - Title: Open Account Settings
+  - Tooltip: Open admin account settings—names, passwords, sanity. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-ai-settings]
+  - Title: Open Ai Settings
+  - Tooltip: Configure AI settings—give the robot rails and limits. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-ai-tools]
+  - Title: Open Ai Tools
+  - Tooltip: Enter the AI tools workspace for helpful drafts and ideas—editor hat stays on. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-area-item-mapper]
+  - Title: Open Area Item Mapper
+  - Tooltip: Open the hotspot‑to‑item linker. Tap here, want that. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-attributes]
+  - Title: Open Attributes
+  - Tooltip: Manage attributes—sizes, colors, sanity. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-background-manager]
+  - Title: Backgrounds
+  - Tooltip: Open background manager—set the mood with taste. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-business-info]
+  - Title: Open Business Info
+  - Tooltip: Name, contact, hours, and brand basics—your storefront’s ID card.
+- [settings:::action:open-categories]
+  - Title: Open Categories
+  - Tooltip: Manage categories so products stop hiding in miscellaneous. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-css-catalog]
+  - Title: Open Css Catalog
+  - Tooltip: Browse the CSS catalog to find and tidy your style rules. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-css-rules]
+  - Title: Style Editor
+  - Tooltip: Open style editor—polish without chaos. Preview first. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-customer-messages]
+  - Title: Customer Messages
+  - Tooltip: Opens the customer’s message thread. Read, reply, and resist the urge to type faster than you can think.
+- [settings:::action:open-dashboard-config]
+  - Title: Open Dashboard Config
+  - Tooltip: Open dashboard layout—drag, drop, done. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-dev-status]
+  - Title: Open Dev Status
+  - Tooltip: Open developer status—behind‑the‑scenes truths. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-email-history]
+  - Title: Email History
+  - Tooltip: Open the email log. Find, filter, and verify what actually went out. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:open-email-settings]
+  - Title: Open Email Settings
+  - Tooltip: Configure email settings—get delivery right before announcements. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:open-email-test]
+  - Title: Send Test Email
+  - Tooltip: Open test email flow—dress rehearsal time. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::action:open-health-diagnostics]
+  - Title: Open Health Diagnostics
+  - Tooltip: Open health checks to spot gremlins before they yodel. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-logging-status]
+  - Title: Open Logging Status
+  - Tooltip: View logging status so you know what’s being recorded. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-room-map-editor]
+  - Title: Room Mapper
+  - Tooltip: Open the room mapper to draw hotspots with precision. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-secrets-modal]
+  - Title: Open Secrets
+  - Tooltip: Launch the secrets manager—keys live here, not in chats. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:open-square-settings]
+  - Title: Square Settings
+  - Tooltip: Open payment settings—keys, checks, confidence. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::action:open-template-manager]
+  - Title: Open Template Manager
+  - Tooltip: Open templates and keep emails consistent and calm. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:prevent-submit]
+  - Title: Prevent Submit
+  - Tooltip: Block saving when something’s not ready yet. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:run-health-check]
+  - Title: Run Health Check
+  - Tooltip: Run diagnostics and catch gremlins before customers do. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:save-ai-settings]
+  - Title: Save Ai Settings
+  - Tooltip: Commit AI settings—limits and keys locked in. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:scan-item-images]
+  - Title: Scan Item Images
+  - Tooltip: Scan product images for issues before shoppers find them. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:secrets-export]
+  - Title: Secrets Export
+  - Tooltip: Export keys carefully and store them like treasure. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:secrets-rotate]
+  - Title: Secrets Rotate
+  - Tooltip: Rotate keys on purpose and sleep better tonight. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:secrets-save]
+  - Title: Secrets Save
+  - Tooltip: Save secret changes and keep the vault neat. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::action:square-clear-token]
+  - Title: Clear Square
+  - Tooltip: Disconnect credentials on purpose, not by accident. You’ll re‑enter keys after. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::action:square-save-settings]
+  - Title: Square Settings
+  - Tooltip: Lock in the settings and carry on. Small, frequent saves beat heroic rescues. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::action:square-sync-items]
+  - Title: Sync from Square
+  - Tooltip: Pull items from Square and stay in step. Large catalogs may request a snack break. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::action:square-test-connection]
+  - Title: Test Square
+  - Tooltip: Quick heartbeat check for payments. Green means go; red means tea, then fixes. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::action:test-ai-provider]
+  - Title: Test Ai Provider
+  - Tooltip: Run a quick check to be sure your AI keys and limits behave. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::addressDiagBtn]
+  - Title: Addressdiag
+  - Tooltip: Check address parsing accuracy before labels go weird. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::aiSettingsBtn]
+  - Title: Aisettings
+  - Tooltip: Give the robot friendly guardrails—use its help, keep your voice. You’re the editor‑in‑chief. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::aiSettingsSaveBtn]
+  - Title: Aisettingssave
+  - Tooltip: Save AI settings—tomorrow will thank you. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::aiSettingsTestBtn]
+  - Title: Aisettingstest
+  - Tooltip: Run an AI test—green check beats guesswork. Run the test, read the results, fix what's broken, repeat until everything is green and happy. Testing in production is technically a lifestyle choice, but not a good one. Do it here first where mistakes are cheap and fixable. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::aiToolsBtn]
+  - Title: Aitools
+  - Tooltip: Open AI tools—helpful drafts, you remain editor‑in‑chief. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::analyticsBtn]
+  - Title: Analytics
+  - Tooltip: Open analytics with charts that tell stories, not riddles. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::areaItemMapperBtn]
+  - Title: Areaitemmapper
+  - Tooltip: Connect click‑areas to real items. Tap a spot, see the thing, want the thing. Delightfully direct. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::attr-save-order]
+  - Title: Attr Save Order
+  - Tooltip: Lock attribute order so lists read like a grown‑up arranged them. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::attributesBtn]
+  - Title: Attributes
+  - Tooltip: Manage options like size and color so products feel organized. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::backgroundManagerBtn]
+  - Title: Backgrounds
+  - Tooltip: Swap backgrounds to set the tone. Crisp images quietly say “we care,” and shoppers quietly believe you. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::business-reset-branding]
+  - Title: Business Reset Branding
+  - Tooltip: Reset brand styles to defaults—use only when experiments got wild. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::business-save]
+  - Title: Business Save
+  - Tooltip: Save business settings so pages and receipts stay consistent. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::business-save-branding]
+  - Title: Business Save Branding
+  - Tooltip: Save brand styles—colors and fonts that look intentional. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::business-settings-btn]
+  - Title: Business Settings
+  - Tooltip: All your business details in one tidy place—stay consistent. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::businessInfoBtn]
+  - Title: Business Info
+  - Tooltip: Your store’s identity: contact details, links, hours. Get these right so receipts look legit and customers can actually reach a human. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::businessInfoCloseBtn]
+  - Title: Business Info
+  - Tooltip: Close business info—changes keep only if saved. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::businessInfoForm]
+  - Title: Businessinfoform
+  - Tooltip: All your business fields—fill cleanly, save calmly. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::businessInfoSaveBtn]
+  - Title: Business Info
+  - Tooltip: Save these details so emails and receipts look legit. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::businessReportsBtn]
+  - Title: Businessreports
+  - Tooltip: Reports focused on operations—boring and vital. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::cartButtonTextBtn]
+  - Title: Carttext
+  - Tooltip: Tiny words, big pressure. Pick phrasing that earns clicks without sounding thirsty. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::cat-add]
+  - Title: Cat Add
+  - Tooltip: Add a new category—clear names pull their weight. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::categoriesBtn]
+  - Title: Categories
+  - Tooltip: Group products into sensible buckets so browsing feels intuitive, not like rummaging a garage sale. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::costBreakdownBtn]
+  - Title: Costbreakdown
+  - Tooltip: Open cost breakdown to see where the pennies hide. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::cssRulesBtn]
+  - Title: Style Editor
+  - Tooltip: A sharper brush for styling. Powerful enough to beautify—or bork—so peek the preview first. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::cssRulesCloseBtn]
+  - Title: Style Editor
+  - Tooltip: Close the style editor—preview first, then peace. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::cssRulesForm]
+  - Title: Style Editor
+  - Tooltip: Edit styles—keep it tidy and readable. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::cssRulesSaveBtn]
+  - Title: Style Editor
+  - Tooltip: Save style changes—small tweaks, big lift. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::dashboard-config-refresh]
+  - Title: Dashboard Config Refresh
+  - Tooltip: Reload the dashboard preview—today’s truth only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::dashboard-config-reset]
+  - Title: Dashboard Config Reset
+  - Tooltip: Reset the layout when experiments get weird. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::dashboard-config-save]
+  - Title: Dashboard Config Save
+  - Tooltip: Save the layout so mornings feel familiar. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::dashboardConfigBtn]
+  - Title: Dashboardconfig
+  - Tooltip: Shuffle widgets until the morning glance tells you exactly what you need. Your layout, your sanity. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::database-tables-btn]
+  - Title: Database Tables
+  - Tooltip: View tables under the hood. Look more than you poke. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::databaseMaintenanceBtn]
+  - Title: Database Cleanup
+  - Tooltip: Sweep up old cruft so the site stops sighing on every click. Routine care beats emergencies. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::databaseTablesBtn]
+  - Title: Databasetables
+  - Tooltip: The engine room. Observe respectfully; only edit if you truly mean it. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::dbSchemaAuditBtn]
+  - Title: Dbschemaaudit
+  - Tooltip: Audit your database schema for drift and oddities. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::deployManagerBtn]
+  - Title: Deploymanager
+  - Tooltip: Manage deploys with fewer sweaty palms. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::email-history-apply-filters]
+  - Title: Email History
+  - Tooltip: Apply filters so you see the messages that matter. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-clear-filters]
+  - Title: Email History
+  - Tooltip: Clear filters and see the whole story again. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-close-drawer]
+  - Title: Email History
+  - Tooltip: Close the drawer and keep working—context intact. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-copy-curl]
+  - Title: Email History
+  - Tooltip: Copy a curl command for polite debugging. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-copy-headers]
+  - Title: Email History
+  - Tooltip: Copy headers when nerdy details are needed now. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-copy-subject]
+  - Title: Email History
+  - Tooltip: Copy subject for tickets and threads. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-copy-to]
+  - Title: Email History
+  - Tooltip: Copy recipients without spelunking. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-copy-type]
+  - Title: Email History
+  - Tooltip: Copy message type for sorting. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-download]
+  - Title: Email History
+  - Tooltip: Save the raw message for debugging, audits, or petty vindication. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-next]
+  - Title: Email History
+  - Tooltip: Next message—faster than back buttons. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-open-test]
+  - Title: Send Test Email
+  - Tooltip: Open test email flow—send yourself a rehearsal. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-prev]
+  - Title: Email History
+  - Tooltip: Previous message—context restored. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-refresh]
+  - Title: Email History
+  - Tooltip: Reload to catch fresh messages without page gymnastics. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-save-endpoint]
+  - Title: Email History
+  - Tooltip: Save the endpoint for saner debugging later. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-search]
+  - Title: Email History
+  - Tooltip: Type a hint; find the needle. Filters spare your scroll finger. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-history-toggle-json]
+  - Title: Email History
+  - Tooltip: Switch between friendly view and nerd view. Both are valid lifestyles. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::email-send-test]
+  - Title: Send Test Email
+  - Tooltip: Send yourself a dress rehearsal. Better here than in front of customers. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::emailConfigBtn]
+  - Title: Email Settings
+  - Tooltip: Route emails to inboxes, not the void. Test first; future you deserves less chaos. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::emailConfigForm]
+  - Title: Email Settings
+  - Tooltip: Your mail server settings—paste from provider, not memory. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::emailHistoryBtn]
+  - Title: Email History
+  - Tooltip: See what went out, who opened, and what got ignored. It’s fine—everyone’s busy. Use filters, find truth. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::emailSettingsCloseBtn]
+  - Title: Emailsettingsclose
+  - Tooltip: Close email settings without saving. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::emailTestBtn]
+  - Title: Send Test Email
+  - Tooltip: Send a test email—catch issues privately. Run the test, read the results, fix what's broken, repeat until everything is green and happy. Testing in production is technically a lifestyle choice, but not a good one. Do it here first where mistakes are cheap and fixable. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::fileExplorerBtn]
+  - Title: File Browser
+  - Tooltip: All your uploads, one place. Rename the chaos, delete the fossils, keep the gems. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::fixSampleEmailBtn]
+  - Title: Fixsampleemail
+  - Tooltip: Repair the sample email template when it goes off‑script. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::global-css-btn]
+  - Title: Global Css
+  - Tooltip: Open style tools to keep visuals tidy without drama. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::globalColorSizeBtn]
+  - Title: Globalcolorsize
+  - Tooltip: Define sizes/colors once and use them everywhere. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::globalCSSBtn]
+  - Title: Globalcss
+  - Tooltip: Open style tools to keep visuals tidy without drama. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::health-refresh]
+  - Title: Health Refresh
+  - Tooltip: Refresh diagnostics—argue with today, not yesterday. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::healthDiagnosticsBtn]
+  - Title: Healthdiagnostics
+  - Tooltip: Run diagnostics to catch issues early. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::help-hints-btn]
+  - Title: Help Hints
+  - Tooltip: Toggle helper banners and tips across the admin. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::hints-disable]
+  - Title: Hints Disable
+  - Tooltip: Turn off helper banners—silence can be golden. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::hints-enable-persist]
+  - Title: Hints Enable Persist
+  - Tooltip: Enable hints and keep them on across sessions. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::hints-enable-session]
+  - Title: Hints Enable Session
+  - Tooltip: Enable hints for this session only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::hints-restore-banners-persist]
+  - Title: Hints Restore Banners Persist
+  - Tooltip: Restore dismissed banners permanently. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::hints-restore-banners-session]
+  - Title: Hints Restore Banners Session
+  - Tooltip: Restore banners for this session only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:accountSettingsBtn]
+  - Title: Accountsettings
+  - Tooltip: Open account settings for the admin side of life. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:accountSettingsFrame]
+  - Title: Accountsettingsframe
+  - Tooltip: Container for account settings—keeps the edit tidy. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:accountSettingsModal]
+  - Title: Accountsettings
+  - Tooltip: Focused window for account edits—safe space for changes. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:accountSettingsTitle]
+  - Title: Accountsettingstitle
+  - Tooltip: Header for account settings—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:admin-section-content]
+  - Title: Admin Section Content
+  - Tooltip: Main content area—where settings actually live. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:admin-settings-content-height]
+  - Title: Admin Settings Content Height
+  - Tooltip: Adjust content height—avoid scroll marathons. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:admin-settings-content-positioning]
+  - Title: Admin Settings Content Positioning
+  - Tooltip: Position the settings area so it feels grounded. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:admin-settings-content-spacing]
+  - Title: Admin Settings Content Spacing
+  - Tooltip: Tweak spacing so things breathe without drifting. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:admin-settings-navbar-fix]
+  - Title: Admin Settings Navbar Fix
+  - Tooltip: Keep the navbar steady while you scroll—a little anchor helps. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:admin-settings-navbar-spacing]
+  - Title: Admin Settings Navbar Spacing
+  - Tooltip: Navbar spacing—just enough room to look calm. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:adminEmail]
+  - Title: Adminemail
+  - Tooltip: Primary admin contact—where system messages actually land. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:adminSettingsRoot]
+  - Title: Adminsettingsroot
+  - Tooltip: Root container for admin settings—don’t overthink it. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:advancedHealthOutput]
+  - Title: Advancedhealthoutput
+  - Tooltip: Detailed results for deep dives—share with tech folks. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiMaxTokens]
+  - Title: Aimaxtokens
+  - Tooltip: Upper limit for responses—bigger costs more, choose wisely. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiProvider]
+  - Title: Aiprovider
+  - Tooltip: Pick your AI provider—match keys to the one you actually pay for. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiProviderSettings]
+  - Title: Aiprovidersettings
+  - Tooltip: Provider‑specific options—match what your vendor expects. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiSettingsBtn]
+  - Title: Aisettings
+  - Tooltip: Open AI settings—set limits, pick a provider, keep control. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiSettingsForm]
+  - Title: Aisettingsform
+  - Tooltip: All AI options in one place—set, test, and save. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiSettingsModal]
+  - Title: Aisettings
+  - Tooltip: Focused space for AI settings—safe edits, calm saves. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiSettingsResult]
+  - Title: Aisettingsresult
+  - Tooltip: Result area for AI test runs—proof over hope. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiSettingsTitle]
+  - Title: Aisettingstitle
+  - Tooltip: Header for AI settings—nothing to tweak here. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiTemperature]
+  - Title: Aitemperature
+  - Tooltip: Creativity dial—lower is focused, higher is chatty. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiTemperatureValue]
+  - Title: Aitemperaturevalue
+  - Tooltip: The exact number for the creativity dial—1.0 is spicy. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiTimeout]
+  - Title: Aitimeout
+  - Tooltip: How long we’ll wait on the model—patience with a ceiling. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiToolsBtn]
+  - Title: Aitools
+  - Tooltip: Open AI helpers for writing and suggestions—editor hat on. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiToolsFrame]
+  - Title: Aitoolsframe
+  - Tooltip: Container for AI helpers—keeps the magic organized. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiToolsModal]
+  - Title: Aitools
+  - Tooltip: Pop‑up workspace for AI drafting—edit before trusting. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:aiToolsTitle]
+  - Title: Aitoolstitle
+  - Tooltip: Header for the AI tools workspace—context only, nothing to click. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:areaItemMapperFrame]
+  - Title: Areaitemmapperframe
+  - Tooltip: Canvas for mapping hotspots—zoom in for precision. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:areaItemMapperModal]
+  - Title: Areaitemmapper
+  - Tooltip: Editing window for hotspots—save often, edges are sneaky. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:areaItemMapperTitle]
+  - Title: Areaitemmappertitle
+  - Tooltip: Header for the area item mapper—context only, no action here. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:attributesBtn]
+  - Title: Attributes
+  - Tooltip: Open attributes and bring order to sizes, colors, and more. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:attributesModal]
+  - Title: Attributes
+  - Tooltip: Editor for product options—add, sort, and save cleanly. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:attributesResult]
+  - Title: Attributesresult
+  - Tooltip: Feedback from saving attributes—victory or fix‑and‑retry. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:attributesTitle]
+  - Title: Attributestitle
+  - Tooltip: Attributes overview—options that make products flexible. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:attrListColor]
+  - Title: Attrlistcolor
+  - Tooltip: Predefined colors used across products—keep names consistent. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:attrListGender]
+  - Title: Attrlistgender
+  - Tooltip: Gender options if your catalog needs them—be thoughtful. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:attrListSize]
+  - Title: Attrlistsize
+  - Tooltip: Size options—clear labels save returns. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:autoSync]
+  - Title: Autosync
+  - Tooltip: Auto-sync on or off—great when you like things current without babysitting. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bccEmail]
+  - Title: Bccemail
+  - Tooltip: Bcc for outgoing mail—use sparingly and ethically. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:bgMissingActiveCount]
+  - Title: Bgmissingactivecount
+  - Tooltip: Count of live pages missing backgrounds—fill the gaps. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bgMissingActiveList]
+  - Title: Bgmissingactivelist
+  - Tooltip: Pages missing backgrounds—quick fix list. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bgMissingFilesCount]
+  - Title: Bgmissingfilescount
+  - Tooltip: Missing files count—uploads that went wandering. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bgMissingFilesList]
+  - Title: Bgmissingfileslist
+  - Tooltip: Which files are missing—time to re‑upload or relink. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizAddress]
+  - Title: Bizaddress
+  - Tooltip: Street address as carriers expect it. No poetic line breaks. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizAddress2]
+  - Title: Bizaddress2
+  - Tooltip: Apt/Suite/Unit—use only if it helps the delivery human. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizCity]
+  - Title: Bizcity
+  - Tooltip: City name spelled the way your postal service prefers. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizCountry]
+  - Title: Bizcountry
+  - Tooltip: Country as a sensible dropdown pick—consistency matters. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizCurrency]
+  - Title: Bizcurrency
+  - Tooltip: Default currency—make totals speak your region’s language. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizDescription]
+  - Title: Bizdescription
+  - Tooltip: One‑paragraph version of who you are. Real words, no buzzword salad. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizEmail]
+  - Title: Bizemail
+  - Tooltip: Public contact email customers can reply to without summoning IT. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:bizFacebook]
+  - Title: Bizfacebook
+  - Tooltip: Your Facebook page URL—optional, but people click it. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizHours]
+  - Title: Bizhours
+  - Tooltip: Business hours in plain text—set expectations up front. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizInstagram]
+  - Title: Bizinstagram
+  - Tooltip: Your Instagram handle/URL—show, don’t just tell. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizLinkedIn]
+  - Title: Bizlinkedin
+  - Tooltip: Company LinkedIn page—nice for B2B vibes. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizLocale]
+  - Title: Bizlocale
+  - Tooltip: Language/region combo for formatting things like dates and money. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizLogoUrl]
+  - Title: Bizlogourl
+  - Tooltip: Logo URL in a format your emails and pages can load without drama. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizName]
+  - Title: Bizname
+  - Tooltip: Your store name as customers see it—keep it clear and consistent everywhere. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizPhone]
+  - Title: Bizphone
+  - Tooltip: Main business number. Format it the way humans expect to dial. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizPostal]
+  - Title: Bizpostal
+  - Tooltip: ZIP/Postal code that actually exists—double‑check this one. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizPrivacyUrl]
+  - Title: Bizprivacyurl
+  - Tooltip: Privacy policy link. Legal folks sleep better when this exists. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizState]
+  - Title: Bizstate
+  - Tooltip: State/Province in a familiar short code (CA, NY, ON). Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizSupportEmail]
+  - Title: Bizsupportemail
+  - Tooltip: Where support requests land. Shared inbox? Even better. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:bizSupportPhone]
+  - Title: Bizsupportphone
+  - Tooltip: Support line for real‑time help. If it rings, answer like a pro. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizTagline]
+  - Title: Biztagline
+  - Tooltip: A short line that sets the tone. Friendly beats clever when space is tight. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizTaxId]
+  - Title: Biztaxid
+  - Tooltip: Tax ID for receipts and grown‑up paperwork. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizTermsUrl]
+  - Title: Biztermsurl
+  - Tooltip: Terms of service link. Short, readable, and discoverable. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizTikTok]
+  - Title: Biztiktok
+  - Tooltip: Your TikTok link—if you dance, we won’t judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizTimezone]
+  - Title: Biztimezone
+  - Tooltip: Where your clock lives. Impacts timestamps and sanity. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizTwitter]
+  - Title: Biztwitter
+  - Tooltip: Your Twitter/X link—keep it current if you use it. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizWebsite]
+  - Title: Bizwebsite
+  - Tooltip: Primary website URL. Paste it once, stop typing it forever. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:bizYouTube]
+  - Title: Bizyoutube
+  - Tooltip: Channel or playlist link—great for demos and launches. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:brandFontPrimary]
+  - Title: Brandfontprimary
+  - Tooltip: Primary font—choose readable first, pretty second. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:brandFontSecondary]
+  - Title: Brandfontsecondary
+  - Tooltip: Secondary font for accents—don’t let it steal the show. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:brandPreviewCard]
+  - Title: Brandpreviewcard
+  - Tooltip: A quick look at brand styles as they actually appear. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:brandPreviewSwatches]
+  - Title: Brandpreviewswatches
+  - Tooltip: Your chosen colors in plain view—useful and satisfying. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:brandPreviewText]
+  - Title: Brandpreviewtext
+  - Tooltip: Sample text to judge readability before it bites you. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:brandPreviewTitle]
+  - Title: Brandpreviewtitle
+  - Tooltip: Title sample with your fonts—pick legible first, pretty second. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:businessInfoBtn]
+  - Title: Business Info
+  - Tooltip: Open business details—names, links, and contact info. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:businessInfoForm]
+  - Title: Businessinfoform
+  - Tooltip: Form with all your business details—fill carefully, save calmly. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:businessInfoModal]
+  - Title: Businessinfo
+  - Tooltip: Focused window for business info—edit without distractions. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:businessInfoStatus]
+  - Title: Businessinfostatus
+  - Tooltip: Status after saving—green check, happy heart. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:businessInfoTitle]
+  - Title: Businessinfotitle
+  - Tooltip: Header for business info—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:categoriesBtn]
+  - Title: Categories
+  - Tooltip: Open categories to keep products findable. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:categoriesFrame]
+  - Title: Categoriesframe
+  - Tooltip: Container for categories—keeps editing tidy. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:categoriesModal]
+  - Title: Categories
+  - Tooltip: Modal for category edits—short, sweet, and focused. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:categoriesTitle]
+  - Title: Categoriestitle
+  - Tooltip: Header for categories—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:connectionIndicator]
+  - Title: Connectionindicator
+  - Tooltip: Live status indicator—green is calm, red is action. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:connectionResult]
+  - Title: Connectionresult
+  - Tooltip: Detailed connection output—read before fixing by vibes. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:connectionText]
+  - Title: Connectiontext
+  - Tooltip: Helpful summary of what the connection is up to. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssCatalogFrame]
+  - Title: Csscatalogframe
+  - Tooltip: Reference panel of your styles—see what exists before adding more. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssCatalogModal]
+  - Title: Csscatalog
+  - Tooltip: Focused catalog view—scan, then refine. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssCatalogTitle]
+  - Title: Csscatalogtitle
+  - Tooltip: Catalog header—context, not a control. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssRulesForm]
+  - Title: Style Editor
+  - Tooltip: Edit styles safely—preview before saving if you value pixels. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssRulesModal]
+  - Title: Style Editor
+  - Tooltip: Focused styling workspace—tweak, preview, save. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssRulesTitle]
+  - Title: Style Editor
+  - Tooltip: Header for the style editor—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssToastBg]
+  - Title: Csstoastbg
+  - Tooltip: Background color for little status toasts—keep it readable. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:cssToastText]
+  - Title: Csstoasttext
+  - Tooltip: Text color for toasts—contrast, then style. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:dashboardConfigBtn]
+  - Title: Dashboardconfig
+  - Tooltip: Open dashboard layout and make mornings friendlier. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:dashboardConfigModal]
+  - Title: Dashboardconfig
+  - Tooltip: Arrange widgets until mornings make sense again. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:dashboardConfigResult]
+  - Title: Dashboardconfigresult
+  - Tooltip: Feedback from the save/preview—sanity check lives here. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:dashboardConfigTitle]
+  - Title: Dashboardconfigtitle
+  - Tooltip: Dashboard layout header—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:dashboardSectionsBody]
+  - Title: Dashboardsectionsbody
+  - Tooltip: The list of widgets in play—drag, drop, done. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:dashboardSectionsTable]
+  - Title: Dashboardsectionstable
+  - Tooltip: Widget layout overview—drag, drop, and declutter. The numbers don't lie, but they might hurt your feelings. Look at them anyway—data-driven decisions beat gut feelings every single time, even when the data is inconvenient or makes you want to hide under your desk. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:devStatusFrame]
+  - Title: Devstatusframe
+  - Tooltip: Developer status container—logs and checks, neatly boxed. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:devStatusModal]
+  - Title: Devstatus
+  - Tooltip: Dev status modal—peek behind the curtain without leaving. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:devStatusTitle]
+  - Title: Devstatustitle
+  - Tooltip: Dev status header—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:ehdEndpoint]
+  - Title: Ehdendpoint
+  - Tooltip: Endpoint that sent this message—useful for debugging. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:ehdSubject]
+  - Title: Ehdsubject
+  - Tooltip: Subject recorded exactly as sent. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:ehdTo]
+  - Title: Ehdto
+  - Tooltip: Recipient list—handle with care. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:ehdType]
+  - Title: Ehdtype
+  - Tooltip: Message type (receipt, alert, invite). Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:emailConfigBtn]
+  - Title: Email Settings
+  - Tooltip: Open email settings so mail lands where it should. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailConfigForm]
+  - Title: Email Settings
+  - Tooltip: Mail server fields—copy from provider docs, not memory. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryBtn]
+  - Title: Email History
+  - Tooltip: Open sent-mail history—filters are your friend. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryDrawer]
+  - Title: Email History
+  - Tooltip: Side panel with message details—skim without losing your place. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryDrawerContent]
+  - Title: Email History
+  - Tooltip: Body of the email preview—headers up top, truth below. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryDrawerMeta]
+  - Title: Email History
+  - Tooltip: Essential metadata—when, who, and whether it was opened. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryDrawerOverlay]
+  - Title: Email History
+  - Tooltip: Click outside to close when you’ve seen enough. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryFrom]
+  - Title: Email History
+  - Tooltip: Sender address recorded for this message. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryList]
+  - Title: Email History
+  - Tooltip: List of sent emails—use filters before scrolling forever. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryModal]
+  - Title: Email History
+  - Tooltip: Modal view of a sent email—headers and body, neatly split. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryPage]
+  - Title: Email History
+  - Tooltip: Pagination—bite‑sized pages beat endless scroll. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistorySearch]
+  - Title: Email History
+  - Tooltip: Search by subject, address, or type—find the needle. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistorySort]
+  - Title: Email History
+  - Tooltip: Sort newest first when speed matters—oldest for archaeology. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryStatus]
+  - Title: Email History
+  - Tooltip: Delivery/read status at a glance—green is the goal. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryStatusFilter]
+  - Title: Email History
+  - Tooltip: Filter by delivered/bounced/opened—truth without clutter. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryTitle]
+  - Title: Email History
+  - Tooltip: Your mail log header—context only, nothing to click. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryTo]
+  - Title: Email History
+  - Tooltip: Recipient address or list—handle with care. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailHistoryType]
+  - Title: Email History
+  - Tooltip: Message type (receipt, alert, etc.)—handy for filtering. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailSettingsModal]
+  - Title: Emailsettings
+  - Tooltip: Email settings window—configure, test, save. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailSettingsTitle]
+  - Title: Emailsettingstitle
+  - Tooltip: Email settings header—context only. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailTestBtn]
+  - Title: Send Test Email
+  - Tooltip: Send a test before anyone important sees it. Run the test, read the results, fix what's broken, repeat until everything is green and happy. Testing in production is technically a lifestyle choice, but not a good one. Do it here first where mistakes are cheap and fixable. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:emailTypeOptions]
+  - Title: Emailtypeoptions
+  - Tooltip: Available types of system emails—know what’s possible. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:fallbackToLocal]
+  - Title: Fallbacktolocal
+  - Tooltip: Use local mail when the provider naps—handy for tests. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:footerHtml]
+  - Title: Footerhtml
+  - Tooltip: Small, tasteful footer content—links, disclaimers, not a novel. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:footerNote]
+  - Title: Footernote
+  - Tooltip: One‑liner below receipts—be helpful, not noisy. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:fromEmail]
+  - Title: Fromemail
+  - Tooltip: Sender address that actually receives replies. No‑reply is a vibe, but not a good one. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:fromName]
+  - Title: Fromname
+  - Tooltip: Sender name customers recognize at a glance—friendly and branded. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:healthDiagnosticsBtn]
+  - Title: Healthdiagnostics
+  - Tooltip: Open health checks to catch problems early. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:healthModal]
+  - Title: Health
+  - Tooltip: Diagnostic window—run tests and read the truth. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:healthStatus]
+  - Title: Healthstatus
+  - Tooltip: Status summary—green is boring in the best way. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:healthTitle]
+  - Title: Healthtitle
+  - Tooltip: Health checks header—nothing to tweak here. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:itemsMissingFilesCount]
+  - Title: Itemsmissingfilescount
+  - Tooltip: How many products reference missing images. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:itemsMissingFilesList]
+  - Title: Itemsmissingfileslist
+  - Tooltip: Products missing images—triage list. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:itemsNoPrimaryCount]
+  - Title: Itemsnoprimarycount
+  - Tooltip: How many products lack a primary photo—ouch. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:itemsNoPrimaryList]
+  - Title: Itemsnoprimarylist
+  - Tooltip: Products missing a primary photo—fix these first. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:loggingStatusBtn]
+  - Title: Loggingstatus
+  - Tooltip: Open logging status—know what the system is recording. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:loggingStatusModal]
+  - Title: Loggingstatus
+  - Tooltip: Logging status window—what’s on, what’s not. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:loggingStatusResult]
+  - Title: Loggingstatusresult
+  - Tooltip: Results from logging checks—answers without spelunking. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:loggingSummary]
+  - Title: Loggingsummary
+  - Tooltip: Snapshot of what’s being logged so debugging isn’t hide‑and‑seek. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:policyUrl]
+  - Title: Policyurl
+  - Tooltip: General policy page link if you roll it all together. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:replyToEmail]
+  - Title: Replytoemail
+  - Tooltip: Where replies go. Helpful when your sender is automated. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:returnPolicy]
+  - Title: Returnpolicy
+  - Tooltip: How returns work in plain words. Clarity prevents meltdowns. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:roomMapEditorFrame]
+  - Title: Room Mapper
+  - Tooltip: Frame for room mapping—zoom helps accuracy. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:roomMapEditorModal]
+  - Title: Room Mapper
+  - Tooltip: Modal to map rooms—save often, edges are sneaky. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:roomMapEditorTitle]
+  - Title: Room Mapper
+  - Tooltip: Header for room mapper—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:saveSquareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Save payment settings so money flows without surprises. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:secretsCsrf]
+  - Title: Secretscsrf
+  - Tooltip: Security token for secrets—keeps impostors out. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:secretsForm]
+  - Title: Secretsform
+  - Tooltip: Secrets editor—add keys carefully, label them clearly. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:secretsManagerBtn]
+  - Title: Secretsmanager
+  - Tooltip: Open secrets manager—store keys, not hopes. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:secretsModal]
+  - Title: Secrets
+  - Tooltip: Vault for sensitive keys—focused and careful. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:secretsPayload]
+  - Title: Secretspayload
+  - Tooltip: Raw secrets payload—only for confident hands. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:secretsResult]
+  - Title: Secretsresult
+  - Tooltip: Feedback after saving—yes or try again. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:shippingPolicy]
+  - Title: Shippingpolicy
+  - Tooltip: How shipping works, costs, and timing. Set expectations, win trust. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:smtpAuth]
+  - Title: Smtpauth
+  - Tooltip: Toggle authentication on when your server requires it (most do). Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpDebug]
+  - Title: Smtpdebug
+  - Tooltip: Extra logs for troubleshooting—use briefly, not forever. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpEnabled]
+  - Title: Smtpenabled
+  - Tooltip: Turn email sending on when you’re ready to talk to customers. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpEncryption]
+  - Title: Smtpencryption
+  - Tooltip: TLS/SSL—pick what your provider says, not what vibes say. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpHost]
+  - Title: Smtphost
+  - Tooltip: SMTP server hostname from your provider—paste, don’t guess. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpPassword]
+  - Title: Smtppassword
+  - Tooltip: Password for the mail server—store safely and don’t reuse. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpPort]
+  - Title: Smtpport
+  - Tooltip: Port that matches encryption—587 (TLS) or 465 (SSL). Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpSettings]
+  - Title: Smtpsettings
+  - Tooltip: Cluster of SMTP fields—change together, then test. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpTimeout]
+  - Title: Smtptimeout
+  - Tooltip: How long we wait before giving up—shorter for sanity. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:smtpUsername]
+  - Title: Smtpusername
+  - Tooltip: Username for the mail server—often the full email address. Email settings: where one typo means nobody gets receipts and you don't find out until someone complains three days later. Test thoroughly, then test again, then maybe test one more time just to be sure.
+- [settings:::id:squareAccessToken]
+  - Title: Squareaccesstoken
+  - Tooltip: Access token—treat like keys to the register. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareAppId]
+  - Title: Squareappid
+  - Tooltip: Square App ID—copy it exactly; typos break payments. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareConfigForm]
+  - Title: Squareconfigform
+  - Tooltip: Square settings form—keys, toggles, and sanity checks. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareConfiguredChip]
+  - Title: Squareconfiguredchip
+  - Tooltip: Little badge that says payments are wired up. Green = smiles. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareConnectionStatus]
+  - Title: Squareconnectionstatus
+  - Tooltip: Live status of Square connection—green is money. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareLocationId]
+  - Title: Squarelocationid
+  - Tooltip: Location ID for the right store—don’t charge the wrong shop. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Open Square payments—keys, locations, tests. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareSettingsModal]
+  - Title: Square Settings
+  - Tooltip: Square setup window—configure then test. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:squareSettingsTitle]
+  - Title: Square Settings
+  - Tooltip: Header for Square settings—no action here. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::id:syncDescriptions]
+  - Title: Syncdescriptions
+  - Tooltip: Sync product descriptions automatically when enabled. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:syncInventory]
+  - Title: Syncinventory
+  - Tooltip: Sync stock levels so counts stay honest. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:syncPrices]
+  - Title: Syncprices
+  - Tooltip: Sync prices across systems to avoid awkward math. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:templateManagerBtn]
+  - Title: Templatemanager
+  - Tooltip: Open templates—emails/pages that feel on‑brand. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:templateManagerFrame]
+  - Title: Templatemanagerframe
+  - Tooltip: Template manager container—keeps editing neat. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:templateManagerModal]
+  - Title: Templatemanager
+  - Tooltip: Template editor window—write, preview, ship. This opens in a focused window so you can edit without distractions (or at least fewer distractions). Close it when you're done, or leave it open and confuse yourself later when you forget what you were doing. We don't judge. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:templateManagerTitle]
+  - Title: Templatemanagertitle
+  - Tooltip: Template manager header—context only. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:testRecipient]
+  - Title: Testrecipient
+  - Tooltip: Test email address—send rehearsals here, not to customers. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::id:warrantyPolicy]
+  - Title: Warrantypolicy
+  - Tooltip: Warranty details if you have them—promise what you can keep. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::logging-clear-logs]
+  - Title: Logging Clear Logs
+  - Tooltip: Clear old logs to free space—archive first if needed. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::logging-open-file]
+  - Title: Logging Open File
+  - Tooltip: Open the log file—plain text truths await. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::logging-refresh-status]
+  - Title: Logging Refresh Status
+  - Tooltip: Refresh logging info—argue with current facts. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::loggingStatusBtn]
+  - Title: Loggingstatus
+  - Tooltip: See current logging settings at a glance. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::receiptMessagesBtn]
+  - Title: Receiptmessages
+  - Tooltip: Edit friendly messages on receipts—useful beats verbose. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::receiptSettingsBtn]
+  - Title: Receiptsettings
+  - Tooltip: Receipts that say “organized adult.” Clear line items, helpful notes, and fewer “where’s my order?” emails. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::repoCleanupBtn]
+  - Title: Repocleanup
+  - Tooltip: Clean repos so releases don’t trip on leftovers. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::room-category-btn]
+  - Title: Room Category
+  - Tooltip: Link categories to rooms so shoppers aren’t lost. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::room-mapper-btn]
+  - Title: Room Mapper
+  - Tooltip: Draw hotspots on images and make exploration fun. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::roomCategoryBtn]
+  - Title: Roomcategory
+  - Tooltip: Connect categories to rooms and guide shoppers naturally. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::roomCategoryLinksBtn]
+  - Title: Roomcategorylinks
+  - Tooltip: Review all room→category links in one place. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::roomMapperBtn]
+  - Title: Room Mapper
+  - Tooltip: Draw precise hotspots so taps reveal products—not dead zones. Zoom in, save often, and keep edges honest. Delight beats guesswork. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::roomsBtn]
+  - Title: Rooms
+  - Tooltip: Dress each room to match its mood. Names, descriptions, and layouts that guide shoppers without yelling. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::run-health-check]
+  - Title: Run Health Check
+  - Tooltip: Run diagnostics and catch gremlins before customers do. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::salesAdminBtn]
+  - Title: Salesadmin
+  - Tooltip: Create discounts that feel smart, not frantic. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::save-ai-settings]
+  - Title: Save Ai Settings
+  - Tooltip: Commit AI settings so the robot behaves tomorrow too. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::saveSquareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Save Square settings—money likes consistency. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::scan-item-images]
+  - Title: Scan Item Images
+  - Tooltip: Check product images for broken links and weirdness. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::secrets-export]
+  - Title: Secrets Export
+  - Tooltip: Export secrets securely—store them like crown jewels. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::secrets-rotate]
+  - Title: Secrets Rotate
+  - Tooltip: Rotate keys on purpose—sleep better tonight. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::secrets-save]
+  - Title: Secrets Save
+  - Tooltip: Save secret updates—organization loves accuracy. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::secretsForm]
+  - Title: Secretsform
+  - Tooltip: Secrets form—label clearly, paste carefully, save once. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::secretsManagerBtn]
+  - Title: Secretsmanager
+  - Tooltip: Open secrets manager—store keys, not hopes. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::shippingSettingsBtn]
+  - Title: Shippingsettings
+  - Tooltip: Set shipping rules that make sense to customers and carriers. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::shippingSettingsFormStatic]
+  - Title: Shippingsettingsformstatic
+  - Tooltip: Fixed settings area for shipping. Clear fields, fewer surprises. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::shippingSettingsSaveBtn]
+  - Title: Shippingsettingssave
+  - Tooltip: Save shipping rules so labels and promises match. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::square-clear-token]
+  - Title: Clear Square
+  - Tooltip: Disconnects credentials on purpose, not by accident. You’ll re‑enter keys after. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::square-sync-items]
+  - Title: Sync from Square
+  - Tooltip: Pull items from Square and stay in step. Large catalogs may request a snack break. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::square-test-connection]
+  - Title: Test Square
+  - Tooltip: Quick heartbeat check for payments. Green means go; red means tea, then fixes. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::squareClearTokenBtn]
+  - Title: Clear Square
+  - Tooltip: Clear stored Square token—only when switching or fixing. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::squareConfigForm]
+  - Title: Squareconfigform
+  - Tooltip: Payment config details—fields that make checkout possible. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::squareSaveBtn]
+  - Title: Squaresave
+  - Tooltip: Save Square details—test after to sleep well. Click it like you mean it, then breathe that sigh of relief when the green checkmark appears. Save early, save often, save before you do something you'll regret. Your future self is counting on present you to not mess this up. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::squareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Open Square settings—keys and checks await. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::squareSyncItemsBtn]
+  - Title: Sync from Square
+  - Tooltip: Sync items from Square—go get what’s already yours. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::squareTestBtn]
+  - Title: Test Square
+  - Tooltip: Run a Square connection test—green check or tea time. Run the test, read the results, fix what's broken, repeat until everything is green and happy. Testing in production is technically a lifestyle choice, but not a good one. Do it here first where mistakes are cheap and fixable. Payment settings: arguably the most important settings in the entire system because MONEY. Get these wrong and checkout breaks. Get them right and revenue flows like a beautiful, digital river straight into your bank account.
+- [settings:::systemCleanupBtn]
+  - Title: Systemcleanup
+  - Tooltip: Clear caches/logs—performance says thanks. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::systemConfigBtn]
+  - Title: Systemconfig
+  - Tooltip: Open system configuration—change gently. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::systemDocumentationBtn]
+  - Title: Systemdocumentation
+  - Tooltip: Open docs—answers instead of vibes. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::templateManagerBtn]
+  - Title: Templatemanager
+  - Tooltip: Open templates for consistent, branded output. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::test-ai-provider]
+  - Title: Test Ai Provider
+  - Tooltip: Run a quick check to be sure your AI keys and limits behave. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::userManagerBtn]
+  - Title: Usermanager
+  - Tooltip: Manage admin users and permissions sensibly. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+- [settings:::websiteConfigBtn]
+  - Title: Websiteconfig
+  - Tooltip: Configure website behavior without a circus. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
+

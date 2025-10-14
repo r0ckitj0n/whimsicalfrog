@@ -1,0 +1,1597 @@
+# Admin Tooltips Audit (v8 FULL)
+
+Generated: 2025-10-14 03:12:36
+
+Total active tooltips: 522
+
+Format per entry:
+- [context:::element_id]
+  - Title: original title from DB (if any)
+  - Tooltip: final content in DB
+
+## admin
+- [admin:::adminCustomersTab]
+  - Title: Customers
+  - Tooltip: Opens the customer list where you see everyone who bought (or browsed). View their orders, update addresses, send emails—basically your rolodex, but digital.
+- [admin:::adminDashboardTab]
+  - Title: Dashboard
+  - Tooltip: Opens your dashboard—the home screen with sales totals, recent orders, and alerts. Think of it as your daily "how's business?" snapshot.
+- [admin:::adminHelpCombo]
+  - Title: Adminhelpcombo
+  - Tooltip: Opens help documentation. Answers live here when guessing gets old.
+- [admin:::adminHelpDocsBtn]
+  - Title: Adminhelpdocs
+  - Tooltip: Opens help documentation. Answers live here when guessing gets old.
+- [admin:::adminHelpToggleBtn]
+  - Title: Adminhelptoggle
+  - Tooltip: Opens help documentation. Answers live here when guessing gets old.
+- [admin:::adminInventoryTab]
+  - Title: Inventory
+  - Tooltip: Opens inventory management where you add products, set prices, upload photos, and write descriptions. This is where you make things look good enough to buy.
+- [admin:::adminOrdersTab]
+  - Title: Orders
+  - Tooltip: Opens order management where you see what people bought, print packing slips, mark items shipped, and process refunds. The "make it happen" zone.
+- [admin:::adminReportsTab]
+  - Title: Reports
+  - Tooltip: Opens reports and charts showing sales trends, best sellers, and revenue. Numbers don't lie—sometimes that's comforting, sometimes it hurts.
+- [admin:::confirm-delete]
+  - Title: Confirm Delete
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+
+## common
+- [common:::adminHelpDocsLink]
+  - Title: Adminhelpdocslink
+  - Tooltip: Opens help documentation. Answers live here when guessing gets old.
+- [common:::adminMarketingTab]
+  - Title: Marketing
+  - Tooltip: Opens marketing tools for discounts, promo codes, and email campaigns. How you nudge browsers into buyers without being pushy.
+- [common:::adminPosTab]
+  - Title: Point of Sale
+  - Tooltip: Opens Point of Sale for in-person checkout. Scan items, take payment, hand over goods. The "cha-ching" button for real-world sales.
+- [common:::adminSettingsTab]
+  - Title: Settings
+  - Tooltip: Opens settings where you configure everything: payment processors, email, shipping, branding. The control room—change carefully.
+- [common:::cancel-btn]
+  - Title: Cancel
+  - Tooltip: Closes this window without saving. Use when you changed your mind or clicked the wrong thing.
+- [common:::closeBtn]
+  - Title: Close
+  - Tooltip: Closes this panel. Nothing gets saved, nothing gets broken. Just a clean exit.
+- [common:::duplicateBtn]
+  - Title: Duplicate
+  - Tooltip: Makes a copy of the selected item so you can tweak it without starting from scratch. Efficiency over repetition.
+- [common:::helpBtn]
+  - Title: Help
+  - Tooltip: Opens contextual help for this page. Quick tips when you need them, invisible when you don't.
+- [common:::importBtn]
+  - Title: Import
+  - Tooltip: Opens file uploader to import data from a CSV spreadsheet. Bulk add products or customers—just format the columns right.
+- [common:::previewBtn]
+  - Title: Preview
+  - Tooltip: Shows a preview of your changes before you commit. Catch mistakes early when they're cheap to fix.
+- [common:::resetBtn]
+  - Title: Reset
+  - Tooltip: Resets everything back to default settings. The "undo all my experiments" button—use when things got weird.
+- [common:::save-btn]
+  - Title: Save
+  - Tooltip: Saves your changes to the database. Click this before you close anything or your work vanishes like it never happened.
+- [common:::saveBtn]
+  - Title: Save
+  - Tooltip: Saves your changes to the database. Click this before you close anything or your work vanishes like it never happened.
+
+## customers
+- [customers:::add-customer]
+  - Title: Add Customer
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [customers:::addCustomerBtn]
+  - Title: Add Customer
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [customers:::confirmPassword]
+  - Title: Confirmpassword
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::customerOrdersBtn]
+  - Title: Customerorders
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::customerSearchInput]
+  - Title: Search Customers
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [customers:::customerValueBtn]
+  - Title: Customervalue
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::deleteCustomerBtn]
+  - Title: Deletecustomer
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+- [customers:::editCustomerBtn]
+  - Title: Editcustomer
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [customers:::emailCustomerBtn]
+  - Title: Email Customer
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::exportCustomersBtn]
+  - Title: Export Customers
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [customers:::merge-customers]
+  - Title: Merge Customers
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::newPassword]
+  - Title: Newpassword
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [customers:::nextCustomerBtn]
+  - Title: Nextcustomer
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::prevCustomerBtn]
+  - Title: Prevcustomer
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::saveCustomerBtn]
+  - Title: Savecustomer
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [customers:::search-customers]
+  - Title: Search Customers
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [customers:::sendEmailBtn]
+  - Title: Sendemail
+  - Tooltip: A customer management tool. View profiles, orders, or send emails.
+- [customers:::viewCustomerBtn]
+  - Title: Viewcustomer
+  - Tooltip: Opens the details in read-only mode. Look around, learn, decide what to do next.
+- [customers:::viewOrderHistoryBtn]
+  - Title: View Order
+  - Tooltip: Opens the details in read-only mode. Look around, learn, decide what to do next.
+
+## dashboard
+- [dashboard:::analyticsCard]
+  - Title: Analyticscard
+  - Tooltip: A dashboard widget. Quick stats or shortcuts to common tasks.
+- [dashboard:::discountCodesCard]
+  - Title: Discountcodescard
+  - Tooltip: A dashboard widget. Quick stats or shortcuts to common tasks.
+- [dashboard:::inventoryAlertsTable]
+  - Title: Low Stock Alert
+  - Tooltip: A dashboard widget. Quick stats or shortcuts to common tasks.
+- [dashboard:::marketingSalesChart]
+  - Title: Marketingsaleschart
+  - Tooltip: A dashboard widget. Quick stats or shortcuts to common tasks.
+- [dashboard:::open-order-details]
+  - Title: Open Order Details
+  - Tooltip: A dashboard widget. Quick stats or shortcuts to common tasks.
+- [dashboard:::paymentsReceivedCard]
+  - Title: Payments Received
+  - Tooltip: A dashboard widget. Quick stats or shortcuts to common tasks.
+- [dashboard:::restore-help-hints]
+  - Title: Restore Help Hints
+  - Tooltip: Opens help documentation. Answers live here when guessing gets old.
+
+## inventory
+- [inventory:::add-new-item-btn]
+  - Title: Add Product
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [inventory:::addNewItemBtn]
+  - Title: Add Product
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [inventory:::apply-price-suggestion]
+  - Title: Price Helper
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::bulkEditBtn]
+  - Title: Bulk Edit
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [inventory:::categorySelect]
+  - Title: Categoryselect
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::clear-cost-breakdown]
+  - Title: Clear Cost Breakdown
+  - Tooltip: Clears the current value or cache. Fresh start, blank slate.
+- [inventory:::confirm-delete-item]
+  - Title: Delete Product
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+- [inventory:::cost-suggestion-btn]
+  - Title: Cost Suggestion
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::costPriceInput]
+  - Title: Costprice
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::delete-cost-item]
+  - Title: Delete Product
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+- [inventory:::delete-item]
+  - Title: Delete Product
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+- [inventory:::deleteItemBtn]
+  - Title: Delete Product
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+- [inventory:::duplicateItemBtn]
+  - Title: Copy Product
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [inventory:::editItemBtn]
+  - Title: Edit Product
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [inventory:::exportInventoryBtn]
+  - Title: Export Products
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [inventory:::generate-marketing-copy]
+  - Title: AI Writer
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [inventory:::get-cost-suggestion]
+  - Title: Get Cost Suggestion
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::get-price-suggestion]
+  - Title: Price Helper
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::importInventoryBtn]
+  - Title: Import Products
+  - Tooltip: Imports data from a file (usually CSV). Bulk operations beat manual entry every time.
+- [inventory:::navigate-item]
+  - Title: Navigate Item
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::open-color-template-modal]
+  - Title: Open Color Template
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::open-cost-modal]
+  - Title: Open Cost
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::open-global-colors-management]
+  - Title: Open Global Colors Management
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::open-marketing-manager]
+  - Title: Open Marketing Manager
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::price-suggestion-btn]
+  - Title: Price Helper
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::printPackingSlipsBtn]
+  - Title: Printpackingslips
+  - Tooltip: Prints the document or packing slip. Old school, but sometimes paper is the answer.
+- [inventory:::process-images-ai]
+  - Title: Process Images Ai
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::refresh-categories]
+  - Title: Refresh Categories
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [inventory:::reorderPointInput]
+  - Title: Reorderpoint
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::retailPriceInput]
+  - Title: Retailprice
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::save-cost-item]
+  - Title: Save Cost Item
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [inventory:::search-items-input]
+  - Title: Search Items
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [inventory:::stockLevelInput]
+  - Title: Stocklevel
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::tagsInput]
+  - Title: Tags
+  - Tooltip: An inventory tool. Manages products, prices, or stock levels.
+- [inventory:::viewItemBtn]
+  - Title: Viewitem
+  - Tooltip: Opens the details in read-only mode. Look around, learn, decide what to do next.
+
+## marketing
+- [marketing:::create-campaign]
+  - Title: Create Campaign
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [marketing:::emailCampaignsCard]
+  - Title: Emailcampaignscard
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::generate-coupons]
+  - Title: Generate Coupons
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingAnalyticsBtn]
+  - Title: Marketinganalytics
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingPaymentChart]
+  - Title: Marketingpaymentchart
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingPaymentsPending]
+  - Title: Marketingpaymentspending
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingPaymentsReceived]
+  - Title: Payments Received
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingProductsSold]
+  - Title: Marketingproductssold
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingRecentOrdersTable]
+  - Title: Orders
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingTopItemsList]
+  - Title: Marketingtopitemslist
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingTotalCustomers]
+  - Title: Marketingtotalcustomers
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingTotalOrders]
+  - Title: Marketingtotalorders
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::marketingTotalSales]
+  - Title: Marketingtotalsales
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+- [marketing:::send-test-email]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [marketing:::socialMediaCard]
+  - Title: Socialmediacard
+  - Tooltip: A marketing control. Manages discounts, promos, or campaigns.
+
+## orders
+- [orders:::action:delete-order]
+  - Title: Delete Order
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+- [orders:::bulk-actions-select]
+  - Title: Bulk Actions Select
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::cancelOrderBtn]
+  - Title: Cancelorder
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [orders:::delete-order]
+  - Title: Delete Order
+  - Tooltip: Permanently deletes this item. Gone means gone—check twice, click once.
+- [orders:::edit-current-address]
+  - Title: Edit Current Address
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [orders:::editOrderBtn]
+  - Title: Editorder
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [orders:::exportOrdersBtn]
+  - Title: Exportorders
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [orders:::filter-orders]
+  - Title: Filter Orders
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [orders:::fulfillOrderBtn]
+  - Title: Fulfillorder
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::impersonate-customer]
+  - Title: Impersonate Customer
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::mark-shipped]
+  - Title: Mark Shipped
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::newOrderBtn]
+  - Title: Neworder
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [orders:::order-status-filter]
+  - Title: Order Status Filter
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [orders:::orderSearchInput]
+  - Title: Ordersearch
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [orders:::orderStatusSelect]
+  - Title: Orderstatusselect
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::paymentStatusSelect]
+  - Title: Paymentstatusselect
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::printOrderBtn]
+  - Title: Print Order
+  - Tooltip: Prints the document or packing slip. Old school, but sometimes paper is the answer.
+- [orders:::refund-order]
+  - Title: Refund Order
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::refundOrderBtn]
+  - Title: Refund Order
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::shipOrderBtn]
+  - Title: Mark Shipped
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::shippingStatusSelect]
+  - Title: Shippingstatusselect
+  - Tooltip: An order management control. Handles fulfillment, shipping, or refunds.
+- [orders:::show-receipt]
+  - Title: Show Receipt
+  - Tooltip: Opens the details in read-only mode. Look around, learn, decide what to do next.
+- [orders:::viewOrderBtn]
+  - Title: View Order
+  - Tooltip: Opens the details in read-only mode. Look around, learn, decide what to do next.
+
+## pos
+- [pos:::browse-items]
+  - Title: Browse Items
+  - Tooltip: A point-of-sale control. For in-person checkout and transactions.
+- [pos:::checkout]
+  - Title: Checkout
+  - Tooltip: A point-of-sale control. For in-person checkout and transactions.
+- [pos:::checkoutBtn]
+  - Title: Checkout
+  - Tooltip: A point-of-sale control. For in-person checkout and transactions.
+- [pos:::exit-pos]
+  - Title: Exit Pos
+  - Tooltip: A point-of-sale control. For in-person checkout and transactions.
+- [pos:::toggle-fullscreen]
+  - Title: Toggle Fullscreen
+  - Tooltip: A point-of-sale control. For in-person checkout and transactions.
+
+## reports
+- [reports:::averageOrderCard]
+  - Title: Averageordercard
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::change-range]
+  - Title: Change Range
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::export-report]
+  - Title: Export Report
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [reports:::ordersCard]
+  - Title: Orders Count
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::paymentMethodChart]
+  - Title: Paymentmethodchart
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::paymentsPendingCard]
+  - Title: Paymentspendingcard
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::popupAddBtn]
+  - Title: Popupadd
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [reports:::print-report]
+  - Title: Print Report
+  - Tooltip: Prints the document or packing slip. Old school, but sometimes paper is the answer.
+- [reports:::printReportBtn]
+  - Title: Printreport
+  - Tooltip: Prints the document or packing slip. Old school, but sometimes paper is the answer.
+- [reports:::salesChart]
+  - Title: Saleschart
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::topProductsTable]
+  - Title: Topproductstable
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::totalCustomersCard]
+  - Title: Totalcustomerscard
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+- [reports:::totalRevenueCard]
+  - Title: Total Revenue
+  - Tooltip: A reporting widget. Shows metrics, trends, or analytics.
+
+## settings
+- [settings:::accountSettingsBtn]
+  - Title: Accountsettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:attr-add]
+  - Title: Add Attribute
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [settings:::action:attr-add-form]
+  - Title: Add Attribute
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [settings:::action:attr-save-order]
+  - Title: Attr Save Order
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:business-info-save]
+  - Title: Business Info Save
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:business-reset-branding]
+  - Title: Business Reset Branding
+  - Tooltip: Resets to default settings. The "start over" button for when experiments go sideways.
+- [settings:::action:business-save]
+  - Title: Business Save
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:business-save-branding]
+  - Title: Business Save Branding
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:close-admin-modal]
+  - Title: Close Admin
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-ai-settings]
+  - Title: Close Ai Settings
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-ai-tools]
+  - Title: Close Ai Tools
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-business-info]
+  - Title: Close Business Info
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-css-rules]
+  - Title: Style Editor
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-email-settings]
+  - Title: Close Email Settings
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-logging-status]
+  - Title: Close Logging Status
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-secrets-modal]
+  - Title: Close Secrets
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:close-square-settings]
+  - Title: Square Settings
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:css-rules-save]
+  - Title: Style Editor
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:dashboard-config-refresh]
+  - Title: Dashboard Config Refresh
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::action:dashboard-config-reset]
+  - Title: Dashboard Config Reset
+  - Tooltip: Resets to default settings. The "start over" button for when experiments go sideways.
+- [settings:::action:dashboard-config-save]
+  - Title: Dashboard Config Save
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:email-history-apply-filters]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::action:email-history-clear-filters]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::action:email-history-close-drawer]
+  - Title: Email History
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::action:email-history-copy-curl]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::action:email-history-copy-headers]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::action:email-history-copy-subject]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::action:email-history-copy-to]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::action:email-history-copy-type]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::action:email-history-download]
+  - Title: Email History
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [settings:::action:email-history-next]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:email-history-open-test]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::action:email-history-prev]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:email-history-refresh]
+  - Title: Email History
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::action:email-history-save-endpoint]
+  - Title: Email History
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:email-history-search]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::action:email-history-toggle-json]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:email-send-test]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::action:health-refresh]
+  - Title: Health Refresh
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::action:logging-clear-logs]
+  - Title: Logging Clear Logs
+  - Tooltip: Clears the current value or cache. Fresh start, blank slate.
+- [settings:::action:logging-open-file]
+  - Title: Logging Open File
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:logging-refresh-status]
+  - Title: Logging Refresh Status
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::action:move-down]
+  - Title: Move Down
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:move-up]
+  - Title: Move Up
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-account-settings]
+  - Title: Open Account Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-ai-settings]
+  - Title: Open Ai Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-ai-tools]
+  - Title: Open Ai Tools
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-area-item-mapper]
+  - Title: Open Area Item Mapper
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-attributes]
+  - Title: Open Attributes
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-background-manager]
+  - Title: Backgrounds
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-business-info]
+  - Title: Open Business Info
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-categories]
+  - Title: Open Categories
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-css-catalog]
+  - Title: Open Css Catalog
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-css-rules]
+  - Title: Style Editor
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-customer-messages]
+  - Title: Customer Messages
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-dashboard-config]
+  - Title: Open Dashboard Config
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-dev-status]
+  - Title: Open Dev Status
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-email-history]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-email-settings]
+  - Title: Open Email Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-email-test]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::action:open-health-diagnostics]
+  - Title: Open Health Diagnostics
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-logging-status]
+  - Title: Open Logging Status
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-room-map-editor]
+  - Title: Room Mapper
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [settings:::action:open-secrets-modal]
+  - Title: Open Secrets
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-square-settings]
+  - Title: Square Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:open-template-manager]
+  - Title: Open Template Manager
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:prevent-submit]
+  - Title: Prevent Submit
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:run-health-check]
+  - Title: Run Health Check
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:save-ai-settings]
+  - Title: Save Ai Settings
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:scan-item-images]
+  - Title: Scan Item Images
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:secrets-export]
+  - Title: Secrets Export
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [settings:::action:secrets-rotate]
+  - Title: Secrets Rotate
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::action:secrets-save]
+  - Title: Secrets Save
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:square-clear-token]
+  - Title: Clear Square
+  - Tooltip: Clears the current value or cache. Fresh start, blank slate.
+- [settings:::action:square-save-settings]
+  - Title: Square Settings
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::action:square-sync-items]
+  - Title: Sync from Square
+  - Tooltip: Syncs data with an external service (like Square). Keeps everything in step automatically.
+- [settings:::action:square-test-connection]
+  - Title: Test Square
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::action:test-ai-provider]
+  - Title: Test Ai Provider
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::addressDiagBtn]
+  - Title: Addressdiag
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [settings:::aiSettingsBtn]
+  - Title: Aisettings
+  - Tooltip: Opens AI settings where you pick your AI provider (OpenAI, Anthropic) and set limits. Let robots help write product descriptions.
+- [settings:::aiSettingsSaveBtn]
+  - Title: Aisettingssave
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::aiSettingsTestBtn]
+  - Title: Aisettingstest
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::aiToolsBtn]
+  - Title: Aitools
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::analyticsBtn]
+  - Title: Analytics
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::areaItemMapperBtn]
+  - Title: Areaitemmapper
+  - Tooltip: Opens area-item mapper where you link hotspots to specific products. Click a lamp in the photo, see the lamp for sale. Magic.
+- [settings:::attr-save-order]
+  - Title: Attr Save Order
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::attributesBtn]
+  - Title: Attributes
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::backgroundManagerBtn]
+  - Title: Backgrounds
+  - Tooltip: Opens background image manager where you upload and assign room backgrounds. Ambiance matters; this is where you set the vibe.
+- [settings:::business-reset-branding]
+  - Title: Business Reset Branding
+  - Tooltip: Resets to default settings. The "start over" button for when experiments go sideways.
+- [settings:::business-save]
+  - Title: Business Save
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::business-save-branding]
+  - Title: Business Save Branding
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::business-settings-btn]
+  - Title: Business Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::businessInfoBtn]
+  - Title: Business Info
+  - Tooltip: Opens business info editor where you set your store name, contact email, phone, address, and hours. What shows on receipts and footer.
+- [settings:::businessInfoCloseBtn]
+  - Title: Business Info
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::businessInfoForm]
+  - Title: Businessinfoform
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::businessInfoSaveBtn]
+  - Title: Business Info
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::businessReportsBtn]
+  - Title: Businessreports
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::cartButtonTextBtn]
+  - Title: Carttext
+  - Tooltip: Opens cart button text editor where you customize "Add to Cart" button labels. Tiny words, big impact on clicks.
+- [settings:::cat-add]
+  - Title: Cat Add
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [settings:::categoriesBtn]
+  - Title: Categories
+  - Tooltip: Opens category manager where you organize products into groups (e.g., "Art," "Decor"). Makes browsing easier than one giant pile.
+- [settings:::costBreakdownBtn]
+  - Title: Costbreakdown
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::cssRulesBtn]
+  - Title: Style Editor
+  - Tooltip: Opens advanced CSS rules editor. More power, more risk. Preview before saving or you'll redecorate in Comic Sans.
+- [settings:::cssRulesCloseBtn]
+  - Title: Style Editor
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::cssRulesForm]
+  - Title: Style Editor
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::cssRulesSaveBtn]
+  - Title: Style Editor
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::dashboard-config-refresh]
+  - Title: Dashboard Config Refresh
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::dashboard-config-reset]
+  - Title: Dashboard Config Reset
+  - Tooltip: Resets to default settings. The "start over" button for when experiments go sideways.
+- [settings:::dashboard-config-save]
+  - Title: Dashboard Config Save
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::dashboardConfigBtn]
+  - Title: Dashboardconfig
+  - Tooltip: Opens dashboard layout editor where you arrange widgets and cards. Customize what you see first thing every morning.
+- [settings:::database-tables-btn]
+  - Title: Database Tables
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::databaseMaintenanceBtn]
+  - Title: Database Cleanup
+  - Tooltip: Opens database cleanup tools for optimizing tables and clearing old logs. Routine maintenance so the site doesn't slow down.
+- [settings:::databaseTablesBtn]
+  - Title: Databasetables
+  - Tooltip: Opens database table viewer where you peek at raw data. For the curious or desperate—tread carefully.
+- [settings:::dbSchemaAuditBtn]
+  - Title: Dbschemaaudit
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::deployManagerBtn]
+  - Title: Deploymanager
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::email-history-apply-filters]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::email-history-clear-filters]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::email-history-close-drawer]
+  - Title: Email History
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::email-history-copy-curl]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::email-history-copy-headers]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::email-history-copy-subject]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::email-history-copy-to]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::email-history-copy-type]
+  - Title: Email History
+  - Tooltip: Makes a copy of this item. Start with something good, tweak it, save time.
+- [settings:::email-history-download]
+  - Title: Email History
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [settings:::email-history-next]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::email-history-open-test]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::email-history-prev]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::email-history-refresh]
+  - Title: Email History
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::email-history-save-endpoint]
+  - Title: Email History
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::email-history-search]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::email-history-toggle-json]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::email-send-test]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::emailConfigBtn]
+  - Title: Email Settings
+  - Tooltip: Opens email server settings (SMTP) where you configure how order confirmations and receipts get sent. Test it or customers won't get emails.
+- [settings:::emailConfigForm]
+  - Title: Email Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::emailHistoryBtn]
+  - Title: Email History
+  - Tooltip: Opens sent email log where you see every email the system sent, who opened it, and delivery status. Your paper trail.
+- [settings:::emailSettingsCloseBtn]
+  - Title: Emailsettingsclose
+  - Tooltip: Closes without saving. Your escape hatch when you change your mind.
+- [settings:::emailTestBtn]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::fileExplorerBtn]
+  - Title: File Browser
+  - Tooltip: Opens file manager where you see all uploaded images and documents. Organize, rename, delete—keep the chaos tidy.
+- [settings:::fixSampleEmailBtn]
+  - Title: Fixsampleemail
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::global-css-btn]
+  - Title: Global Css
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::globalColorSizeBtn]
+  - Title: Globalcolorsize
+  - Tooltip: Opens attribute manager for global options like Size, Color, Material. Define once, reuse everywhere—efficiency is beautiful.
+- [settings:::globalCSSBtn]
+  - Title: Globalcss
+  - Tooltip: Opens CSS editor for site-wide styling tweaks. Colors, fonts, spacing—polish without hiring a designer.
+- [settings:::health-refresh]
+  - Title: Health Refresh
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::healthDiagnosticsBtn]
+  - Title: Healthdiagnostics
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::help-hints-btn]
+  - Title: Help Hints
+  - Tooltip: Opens help documentation. Answers live here when guessing gets old.
+- [settings:::hints-disable]
+  - Title: Hints Disable
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::hints-enable-persist]
+  - Title: Hints Enable Persist
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::hints-enable-session]
+  - Title: Hints Enable Session
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::hints-restore-banners-persist]
+  - Title: Hints Restore Banners Persist
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::hints-restore-banners-session]
+  - Title: Hints Restore Banners Session
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:accountSettingsBtn]
+  - Title: Accountsettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:accountSettingsFrame]
+  - Title: Accountsettingsframe
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:accountSettingsModal]
+  - Title: Accountsettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:accountSettingsTitle]
+  - Title: Accountsettingstitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:admin-section-content]
+  - Title: Admin Section Content
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:admin-settings-content-height]
+  - Title: Admin Settings Content Height
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:admin-settings-content-positioning]
+  - Title: Admin Settings Content Positioning
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:admin-settings-content-spacing]
+  - Title: Admin Settings Content Spacing
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:admin-settings-navbar-fix]
+  - Title: Admin Settings Navbar Fix
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:admin-settings-navbar-spacing]
+  - Title: Admin Settings Navbar Spacing
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:adminEmail]
+  - Title: Adminemail
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:adminSettingsRoot]
+  - Title: Adminsettingsroot
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:advancedHealthOutput]
+  - Title: Advancedhealthoutput
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiMaxTokens]
+  - Title: Aimaxtokens
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiProvider]
+  - Title: Aiprovider
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiProviderSettings]
+  - Title: Aiprovidersettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiSettingsBtn]
+  - Title: Aisettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiSettingsForm]
+  - Title: Aisettingsform
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiSettingsModal]
+  - Title: Aisettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiSettingsResult]
+  - Title: Aisettingsresult
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiSettingsTitle]
+  - Title: Aisettingstitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiTemperature]
+  - Title: Aitemperature
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiTemperatureValue]
+  - Title: Aitemperaturevalue
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiTimeout]
+  - Title: Aitimeout
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiToolsBtn]
+  - Title: Aitools
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiToolsFrame]
+  - Title: Aitoolsframe
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiToolsModal]
+  - Title: Aitools
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:aiToolsTitle]
+  - Title: Aitoolstitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:areaItemMapperFrame]
+  - Title: Areaitemmapperframe
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:areaItemMapperModal]
+  - Title: Areaitemmapper
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:areaItemMapperTitle]
+  - Title: Areaitemmappertitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:attributesBtn]
+  - Title: Attributes
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:attributesModal]
+  - Title: Attributes
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:attributesResult]
+  - Title: Attributesresult
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:attributesTitle]
+  - Title: Attributestitle
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::id:attrListColor]
+  - Title: Attrlistcolor
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:attrListGender]
+  - Title: Attrlistgender
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:attrListSize]
+  - Title: Attrlistsize
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:autoSync]
+  - Title: Autosync
+  - Tooltip: Syncs data with an external service (like Square). Keeps everything in step automatically.
+- [settings:::id:bccEmail]
+  - Title: Bccemail
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bgMissingActiveCount]
+  - Title: Bgmissingactivecount
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bgMissingActiveList]
+  - Title: Bgmissingactivelist
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bgMissingFilesCount]
+  - Title: Bgmissingfilescount
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bgMissingFilesList]
+  - Title: Bgmissingfileslist
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizAddress]
+  - Title: Bizaddress
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [settings:::id:bizAddress2]
+  - Title: Bizaddress2
+  - Tooltip: Creates a new item. Fill in the details, save it, and it joins the collection.
+- [settings:::id:bizCity]
+  - Title: Bizcity
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizCountry]
+  - Title: Bizcountry
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizCurrency]
+  - Title: Bizcurrency
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizDescription]
+  - Title: Bizdescription
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizEmail]
+  - Title: Bizemail
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizFacebook]
+  - Title: Bizfacebook
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizHours]
+  - Title: Bizhours
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizInstagram]
+  - Title: Bizinstagram
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizLinkedIn]
+  - Title: Bizlinkedin
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizLocale]
+  - Title: Bizlocale
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizLogoUrl]
+  - Title: Bizlogourl
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizName]
+  - Title: Bizname
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizPhone]
+  - Title: Bizphone
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizPostal]
+  - Title: Bizpostal
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizPrivacyUrl]
+  - Title: Bizprivacyurl
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizState]
+  - Title: Bizstate
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizSupportEmail]
+  - Title: Bizsupportemail
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizSupportPhone]
+  - Title: Bizsupportphone
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizTagline]
+  - Title: Biztagline
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizTaxId]
+  - Title: Biztaxid
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizTermsUrl]
+  - Title: Biztermsurl
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizTikTok]
+  - Title: Biztiktok
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizTimezone]
+  - Title: Biztimezone
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizTwitter]
+  - Title: Biztwitter
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizWebsite]
+  - Title: Bizwebsite
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:bizYouTube]
+  - Title: Bizyoutube
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:brandFontPrimary]
+  - Title: Brandfontprimary
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:brandFontSecondary]
+  - Title: Brandfontsecondary
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:brandPreviewCard]
+  - Title: Brandpreviewcard
+  - Tooltip: Shows a preview before you commit. Two seconds here saves ten minutes of regret later.
+- [settings:::id:brandPreviewSwatches]
+  - Title: Brandpreviewswatches
+  - Tooltip: Shows a preview before you commit. Two seconds here saves ten minutes of regret later.
+- [settings:::id:brandPreviewText]
+  - Title: Brandpreviewtext
+  - Tooltip: Shows a preview before you commit. Two seconds here saves ten minutes of regret later.
+- [settings:::id:brandPreviewTitle]
+  - Title: Brandpreviewtitle
+  - Tooltip: Shows a preview before you commit. Two seconds here saves ten minutes of regret later.
+- [settings:::id:businessInfoBtn]
+  - Title: Business Info
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:businessInfoForm]
+  - Title: Businessinfoform
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:businessInfoModal]
+  - Title: Businessinfo
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:businessInfoStatus]
+  - Title: Businessinfostatus
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:businessInfoTitle]
+  - Title: Businessinfotitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:categoriesBtn]
+  - Title: Categories
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:categoriesFrame]
+  - Title: Categoriesframe
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:categoriesModal]
+  - Title: Categories
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:categoriesTitle]
+  - Title: Categoriestitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:connectionIndicator]
+  - Title: Connectionindicator
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:connectionResult]
+  - Title: Connectionresult
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:connectionText]
+  - Title: Connectiontext
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssCatalogFrame]
+  - Title: Csscatalogframe
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssCatalogModal]
+  - Title: Csscatalog
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssCatalogTitle]
+  - Title: Csscatalogtitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssRulesForm]
+  - Title: Style Editor
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssRulesModal]
+  - Title: Style Editor
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssRulesTitle]
+  - Title: Style Editor
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssToastBg]
+  - Title: Csstoastbg
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:cssToastText]
+  - Title: Csstoasttext
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:dashboardConfigBtn]
+  - Title: Dashboardconfig
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:dashboardConfigModal]
+  - Title: Dashboardconfig
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:dashboardConfigResult]
+  - Title: Dashboardconfigresult
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:dashboardConfigTitle]
+  - Title: Dashboardconfigtitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:dashboardSectionsBody]
+  - Title: Dashboardsectionsbody
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:dashboardSectionsTable]
+  - Title: Dashboardsectionstable
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:devStatusFrame]
+  - Title: Devstatusframe
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:devStatusModal]
+  - Title: Devstatus
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:devStatusTitle]
+  - Title: Devstatustitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:ehdEndpoint]
+  - Title: Ehdendpoint
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:ehdSubject]
+  - Title: Ehdsubject
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:ehdTo]
+  - Title: Ehdto
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:ehdType]
+  - Title: Ehdtype
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailConfigBtn]
+  - Title: Email Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailConfigForm]
+  - Title: Email Settings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryBtn]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryDrawer]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryDrawerContent]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryDrawerMeta]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryDrawerOverlay]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryFrom]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryList]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryModal]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryPage]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistorySearch]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::id:emailHistorySort]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryStatus]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryStatusFilter]
+  - Title: Email History
+  - Tooltip: Searches or filters the list. Type a few letters, skip the scrolling marathon.
+- [settings:::id:emailHistoryTitle]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryTo]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailHistoryType]
+  - Title: Email History
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailSettingsModal]
+  - Title: Emailsettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailSettingsTitle]
+  - Title: Emailsettingstitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:emailTestBtn]
+  - Title: Send Test Email
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::id:emailTypeOptions]
+  - Title: Emailtypeoptions
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:fallbackToLocal]
+  - Title: Fallbacktolocal
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:footerHtml]
+  - Title: Footerhtml
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:footerNote]
+  - Title: Footernote
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:fromEmail]
+  - Title: Fromemail
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:fromName]
+  - Title: Fromname
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:healthDiagnosticsBtn]
+  - Title: Healthdiagnostics
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:healthModal]
+  - Title: Health
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:healthStatus]
+  - Title: Healthstatus
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:healthTitle]
+  - Title: Healthtitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:itemsMissingFilesCount]
+  - Title: Itemsmissingfilescount
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:itemsMissingFilesList]
+  - Title: Itemsmissingfileslist
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:itemsNoPrimaryCount]
+  - Title: Itemsnoprimarycount
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:itemsNoPrimaryList]
+  - Title: Itemsnoprimarylist
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:loggingStatusBtn]
+  - Title: Loggingstatus
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:loggingStatusModal]
+  - Title: Loggingstatus
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:loggingStatusResult]
+  - Title: Loggingstatusresult
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:loggingSummary]
+  - Title: Loggingsummary
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:policyUrl]
+  - Title: Policyurl
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:replyToEmail]
+  - Title: Replytoemail
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:returnPolicy]
+  - Title: Returnpolicy
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:roomMapEditorFrame]
+  - Title: Room Mapper
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [settings:::id:roomMapEditorModal]
+  - Title: Room Mapper
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [settings:::id:roomMapEditorTitle]
+  - Title: Room Mapper
+  - Tooltip: Opens the editor so you can change details. Fix typos, update prices, polish descriptions.
+- [settings:::id:saveSquareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::id:secretsCsrf]
+  - Title: Secretscsrf
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:secretsForm]
+  - Title: Secretsform
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:secretsManagerBtn]
+  - Title: Secretsmanager
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:secretsModal]
+  - Title: Secrets
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:secretsPayload]
+  - Title: Secretspayload
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:secretsResult]
+  - Title: Secretsresult
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:shippingPolicy]
+  - Title: Shippingpolicy
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpAuth]
+  - Title: Smtpauth
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpDebug]
+  - Title: Smtpdebug
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpEnabled]
+  - Title: Smtpenabled
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpEncryption]
+  - Title: Smtpencryption
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpHost]
+  - Title: Smtphost
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpPassword]
+  - Title: Smtppassword
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpPort]
+  - Title: Smtpport
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpSettings]
+  - Title: Smtpsettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpTimeout]
+  - Title: Smtptimeout
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:smtpUsername]
+  - Title: Smtpusername
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:squareAccessToken]
+  - Title: Squareaccesstoken
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:squareAppId]
+  - Title: Squareappid
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:squareConfigForm]
+  - Title: Squareconfigform
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:squareConfiguredChip]
+  - Title: Squareconfiguredchip
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:squareConnectionStatus]
+  - Title: Squareconnectionstatus
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:squareLocationId]
+  - Title: Squarelocationid
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:squareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Resets to default settings. The "start over" button for when experiments go sideways.
+- [settings:::id:squareSettingsModal]
+  - Title: Square Settings
+  - Tooltip: Resets to default settings. The "start over" button for when experiments go sideways.
+- [settings:::id:squareSettingsTitle]
+  - Title: Square Settings
+  - Tooltip: Resets to default settings. The "start over" button for when experiments go sideways.
+- [settings:::id:syncDescriptions]
+  - Title: Syncdescriptions
+  - Tooltip: Syncs data with an external service (like Square). Keeps everything in step automatically.
+- [settings:::id:syncInventory]
+  - Title: Syncinventory
+  - Tooltip: Syncs data with an external service (like Square). Keeps everything in step automatically.
+- [settings:::id:syncPrices]
+  - Title: Syncprices
+  - Tooltip: Syncs data with an external service (like Square). Keeps everything in step automatically.
+- [settings:::id:templateManagerBtn]
+  - Title: Templatemanager
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:templateManagerFrame]
+  - Title: Templatemanagerframe
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:templateManagerModal]
+  - Title: Templatemanager
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:templateManagerTitle]
+  - Title: Templatemanagertitle
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::id:testRecipient]
+  - Title: Testrecipient
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::id:warrantyPolicy]
+  - Title: Warrantypolicy
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::logging-clear-logs]
+  - Title: Logging Clear Logs
+  - Tooltip: Clears the current value or cache. Fresh start, blank slate.
+- [settings:::logging-open-file]
+  - Title: Logging Open File
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::logging-refresh-status]
+  - Title: Logging Refresh Status
+  - Tooltip: Refreshes the list with latest data. Because stale info leads to stale decisions.
+- [settings:::loggingStatusBtn]
+  - Title: Loggingstatus
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::receiptMessagesBtn]
+  - Title: Receiptmessages
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::receiptSettingsBtn]
+  - Title: Receiptsettings
+  - Tooltip: Opens receipt layout settings where you control what shows on order confirmations. Line items, notes, branding—make it official.
+- [settings:::repoCleanupBtn]
+  - Title: Repocleanup
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::room-category-btn]
+  - Title: Room Category
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::room-mapper-btn]
+  - Title: Room Mapper
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::roomCategoryBtn]
+  - Title: Roomcategory
+  - Tooltip: Opens room-category mapper where you decide which product categories appear in which rooms. Traffic control for shoppers.
+- [settings:::roomCategoryLinksBtn]
+  - Title: Roomcategorylinks
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::roomMapperBtn]
+  - Title: Room Mapper
+  - Tooltip: Opens room hotspot editor where you draw clickable areas on room images. Point shoppers to products visually—like a treasure map.
+- [settings:::roomsBtn]
+  - Title: Rooms
+  - Tooltip: Opens room manager where you name and describe each virtual room in your store. Think of it as interior design for your website.
+- [settings:::run-health-check]
+  - Title: Run Health Check
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::salesAdminBtn]
+  - Title: Salesadmin
+  - Tooltip: Opens discount and promo manager where you create sale prices and coupon codes. How you make people feel like they got a deal.
+- [settings:::save-ai-settings]
+  - Title: Save Ai Settings
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::saveSquareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::scan-item-images]
+  - Title: Scan Item Images
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::secrets-export]
+  - Title: Secrets Export
+  - Tooltip: Exports data to a downloadable file. Backups are boring until you need one.
+- [settings:::secrets-rotate]
+  - Title: Secrets Rotate
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::secrets-save]
+  - Title: Secrets Save
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::secretsForm]
+  - Title: Secretsform
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::secretsManagerBtn]
+  - Title: Secretsmanager
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::shippingSettingsBtn]
+  - Title: Shippingsettings
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::shippingSettingsFormStatic]
+  - Title: Shippingsettingsformstatic
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::shippingSettingsSaveBtn]
+  - Title: Shippingsettingssave
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::square-clear-token]
+  - Title: Clear Square
+  - Tooltip: Clears the current value or cache. Fresh start, blank slate.
+- [settings:::square-sync-items]
+  - Title: Sync from Square
+  - Tooltip: Syncs data with an external service (like Square). Keeps everything in step automatically.
+- [settings:::square-test-connection]
+  - Title: Test Square
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::squareClearTokenBtn]
+  - Title: Clear Square
+  - Tooltip: Clears the current value or cache. Fresh start, blank slate.
+- [settings:::squareConfigForm]
+  - Title: Squareconfigform
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::squareSaveBtn]
+  - Title: Squaresave
+  - Tooltip: Saves your changes to the database. Click before closing or your edits disappear into the void.
+- [settings:::squareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Opens Square payment settings where you enter API keys and test connections. Get this right or checkout breaks—no pressure.
+- [settings:::squareSyncItemsBtn]
+  - Title: Sync from Square
+  - Tooltip: Syncs data with an external service (like Square). Keeps everything in step automatically.
+- [settings:::squareTestBtn]
+  - Title: Test Square
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::systemCleanupBtn]
+  - Title: Systemcleanup
+  - Tooltip: Opens cache and temp file cleaner. Clears cobwebs so pages load faster. A spa day for your server.
+- [settings:::systemConfigBtn]
+  - Title: Systemconfig
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::systemDocumentationBtn]
+  - Title: Systemdocumentation
+  - Tooltip: Opens help documentation in a modal. Guides, tips, and answers when you forget how something works.
+- [settings:::templateManagerBtn]
+  - Title: Templatemanager
+  - Tooltip: Opens email and page template editor. Customize order confirmations, receipts, and marketing emails with your brand voice.
+- [settings:::test-ai-provider]
+  - Title: Test Ai Provider
+  - Tooltip: Tests the connection or settings. Green means go, red means fix it before customers notice.
+- [settings:::userManagerBtn]
+  - Title: Usermanager
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+- [settings:::websiteConfigBtn]
+  - Title: Websiteconfig
+  - Tooltip: A settings control. Hover or click to see what it adjusts.
+

@@ -74,7 +74,8 @@ body[data-page='admin/settings'] {
   min-height: auto; /* Allow natural content height instead of forcing 100vh */
   max-height: none;
   /* Allow root to control scrolling to avoid container-capture */
-  overflow: visible;
+  overflow-x: hidden; /* suppress horizontal overflow */
+  overflow-y: visible;
   position: static;
   /* Remove extra bottom padding that was for sticky bars */
   padding-bottom: 0 !important;
@@ -118,29 +119,18 @@ body[data-page^='admin'] .admin-modal .admin-modal-close:focus {
   outline: none;
 }
 
-/* Admin pages: disable full-page (root) scrollbar; scroll only content area */
-/* Note: Admin pages use an inner scroller, but allow the Settings page to show scrollbars as expected */
-body[data-page^='admin'] { overflow: hidden !important; }
-html:has(body[data-page^='admin']) { overflow: hidden !important; }
-/* On settings route, allow root scroll now that overlays are suppressed */
-body[data-page='admin/settings'] { 
-  overflow: auto !important; 
-  pointer-events: auto; 
-  min-height: auto !important; /* Allow natural height, don't force 100vh */
-  height: auto !important;
-}
-html:has(body[data-page='admin/settings']) { overflow: auto !important; }
-/* Explicitly suppress horizontal scrolling on the settings page */
+/* Settings page: limit root overflow to prevent horizontal scroll artifacts */
 body[data-page='admin/settings'] { overflow-x: hidden !important; }
-html:has(body[data-page='admin/settings']) { overflow-x: clip !important; }
+html:has(body[data-page='admin/settings']) { overflow-x: clip !important; height: 100% !important; }
 
 /* Settings: ensure the background image fills the entire viewport */
 body[data-page='admin/settings'] {
-  min-height: 100vh !important;           /* stretch to viewport height at minimum */
+  min-height: 100% !important;            /* use 100% instead of 100vh to avoid scrollbar issues */
+  height: 100% !important;                /* ensure full height */
   background-size: cover !important;      /* scale background to cover */
   background-position: center !important; /* center background */
   background-repeat: no-repeat !important;/* no tiling */
-  background-attachment: fixed !important;/* keep background fixed on scroll */
+  background-attachment: scroll !important;/* avoid fixed attachment artifacts/gaps */
 }
 
 /* Ensure admin Settings overlays start below the header (site-wide var) */
@@ -222,13 +212,19 @@ body[data-page^='admin'] #admin-section-content {
 
 /* Settings route: ensure no extra height is reserved at the bottom */
 body[data-page='admin/settings'] #admin-section-content {
-  min-height: auto !important; /* Do not force a viewport-sized box */
-  height: auto !important;     /* Let content define height */
-  max-height: none !important; /* Remove global max-height cap (100vh-160px) */
-  padding-bottom: 0 !important;/* No extra bottom padding */
-  margin-bottom: 0 !important; /* Avoid accidental margins from utilities */
-  overflow-y: auto !important; /* Ensure content can scroll if needed */
-  overflow-x: visible !important; /* Avoid clipping */
+  /* Inner scroller: cards-only scroll */
+  overflow-y: auto !important;
+  /* Match viewport minus header + tabs + slightly larger gap to fully clear bars */
+  min-height: calc(100dvh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  /* Fallback for browsers without dvh support */
+  height: auto !important;
+  min-height: calc(100svh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+  overflow-x: hidden !important; /* prevent horizontal scrollbar */
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Admin pages: ensure all overlays/modals are hidden by default unless explicitly shown */
@@ -238,6 +234,23 @@ body[data-page^='admin'] .room-modal-overlay {
   display: none; /* default hidden */
   /* Neutralize legacy animations that can cause shimmer/flicker */
   transition: none !important;
+}
+
+/* Also hide site-wide confirmation overlays (cart/checkout) by default on admin pages */
+body[data-page^='admin'] .confirmation-modal-overlay {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important;
+}
+/* Only show when explicitly marked (framework adds .show or [aria-hidden="false"]) */
+body[data-page^='admin'] .confirmation-modal-overlay.show,
+body[data-page^='admin'] .confirmation-modal-overlay[aria-hidden="false"] {
+  display: flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* Respect aria-hidden for accessibility */
@@ -433,6 +446,8 @@ body[data-page^='admin'] .page-content {
   max-height: none !important; /* Allow natural height */
 }
 
+/* Settings wrappers: keep overflow hidden so #admin-section-content is the scroller */
+
 /* Overlays should not block scroll lock restoration glitches */
 .admin-modal-overlay.hidden { display: none !important; }
 .admin-modal-overlay.show { display: flex; }
@@ -609,7 +624,7 @@ body[data-page^='admin'] #attributesModal .attr-list {
 /* Standard Windows scrollbar styling for all admin pages */
 body[data-page^='admin'] *::-webkit-scrollbar {
   width: 17px; /* Standard Windows scrollbar width */
-  height: 17px;
+  /* Do not force scrollbar height globally to avoid reserving bottom space */
 }
 body[data-page^='admin'] *::-webkit-scrollbar-track {
   background: #f1f1f1; /* Light gray track */
@@ -705,7 +720,7 @@ body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable td {
 /* Admin page spacing - single source of truth (header + navbar only) */
 body[data-page^='admin'] {
   /* Define a global navbar height token for admin pages */
-  --admin-tabs-height: 44px;
+  --admin-tabs-height: 56px;
   /* Reserve minimal space - compact layout as requested */
   padding-top: 20px !important;
 }
@@ -715,7 +730,7 @@ body[data-page='admin/settings'] {
   /* Reserve space for header + navbar; target ~160px overall to clear both */
   /* Use fixed fallback of 160px to avoid under-padding when variables misreport */
   padding-top: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 44px) + 52px) !important;
-  padding-top: 160px !important; /* hard fallback to guarantee spacing */
+  padding-top: 0 !important; /* hard fallback to guarantee spacing */
 }
 
 
@@ -798,6 +813,6 @@ body[data-page^='admin'] .admin-header {
 /* FINAL: ensure the visible settings wrapper is offset from the top of the screen */
 /* This targets the actual DOM structure and overrides any Tailwind pt-128/padding resets */
 body[data-page='admin/settings'] #admin-section-content > .settings-page {
-  margin-top: 130px !important;  /* push the whole block down */
+  margin-top: 0 !important;  /* remove extra push down */
   padding-top: 0 !important;     /* neutralize pt-128 so spacing is external, not internal */
 }

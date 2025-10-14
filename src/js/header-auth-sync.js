@@ -20,7 +20,7 @@
     } catch (_) {}
 
     try {
-      // Replace Login link with Logout link and inject username/account and Settings for admins
+      // Replace Login link with Logout link and inject username link that opens Account Settings modal; add Settings for admins
       const header = document.querySelector('.site-header .header-right');
       const loginLink = header && header.querySelector('a.nav-link[data-action="open-login-modal"]');
       const rightNav = header || document.querySelector('.site-header nav .nav-links');
@@ -30,16 +30,11 @@
         // Username/Account link
         if (username) {
           const userA = document.createElement('a');
-          userA.href = '/account_settings';
+          userA.href = '#';
           userA.className = 'nav-link';
+          userA.setAttribute('data-action', 'open-account-settings');
           userA.textContent = username;
           loginLink.parentNode.insertBefore(userA, loginLink);
-        } else if (rightNav && !rightNav.querySelector('a[href="/account_settings"]')) {
-          const acc = document.createElement('a');
-          acc.href = '/account_settings';
-          acc.className = 'nav-link';
-          acc.textContent = 'Account';
-          loginLink.parentNode.insertBefore(acc, loginLink);
         }
         // Admin Settings link
         if (role && role.toLowerCase() === 'admin' && rightNav && !rightNav.querySelector('a[href="/sections/admin_router.php?section=settings"]')) {

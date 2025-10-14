@@ -29,6 +29,10 @@ try {
 // reload-tracer removed (dev-only)
 import './site-core.js';
 
+// Ensure Account Settings modal handlers are registered early on all pages.
+// Use a dynamic import to avoid blocking startup; the module installs delegated listeners.
+try { import('./account-settings-modal.js').catch(() => {}); } catch (_) {}
+
 // Note: Public modules are loaded dynamically in initializeCoreSystemsApp() to avoid
 // unnecessary work on admin routes.
 
@@ -430,8 +434,6 @@ if (__WF_IS_ADMIN) {
                 'cart': () => import('./pages/cart-page.js'),
                 'login': () => import('./pages/login-page.js'),
                 'register': () => import('./pages/register-page.js'),
-                'account_settings': () => import('./pages/account-settings-page.js'),
-                'account-settings': () => import('./pages/account-settings-page.js'),
                 'payment': () => import('./pages/payment-page.js'),
                 // Only load landing page positioning on the landing page
                 'landing': () => import('./landing-page.js'),
@@ -495,6 +497,8 @@ if (__WF_IS_ADMIN) {
             // Ensure auth-related handlers are active on admin pages too
             try { import('./login-modal.js').catch(() => {}); } catch (_) {}
             try { import('./header-auth-sync.js').catch(() => {}); } catch (_) {}
+            // Ensure Account Settings modal is available on admin pages
+            try { import('./account-settings-modal.js').catch(() => {}); } catch (_) {}
             // Admin health checks (toasts for missing backgrounds/item images)
             try { import('./admin-health-checks.js').catch(() => {}); } catch (_) {}
             // Enable dynamic admin tooltips (DB-driven)

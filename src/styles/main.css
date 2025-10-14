@@ -894,11 +894,10 @@ html:has(body[data-page='contact']) {
 /* =====================
    Admin pages: shop-like scrollbars
    ===================== */
-/* Root scroller (Firefox) */
+/* Root scrollbar styling for admin pages (do not force scrolling on html) */
 html:has(body[data-page^='admin']) {
   scrollbar-width: thin;
   scrollbar-color: var(--brand-secondary) var(--brand-primary);
-  overflow-y: auto;
   /* Avoid reserving gutter globally on admin pages to prevent right-edge gap */
   scrollbar-gutter: auto;
 }

@@ -1,5 +1,10 @@
 <?php
 // Proxy footer partial, render footer component and close HTML document
+// Mark as included to avoid double-includes from header's shutdown fallback
+if (!defined('WF_GLOBAL_FOOTER_INCLUDED')) {
+    define('WF_GLOBAL_FOOTER_INCLUDED', true);
+}
+
 // Footer intentionally left blank or replaced with minimal content as per site requirements.
 // Include a minimal placeholder if desired:
 // echo '<!-- Footer removed -->';

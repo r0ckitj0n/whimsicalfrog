@@ -1,0 +1,1597 @@
+# Admin Tooltips Audit (v8 FULL)
+
+Generated: 2025-10-13 20:51:18
+
+Total active tooltips: 522
+
+Format per entry:
+- [context:::element_id]
+  - Title: original title from DB (if any)
+  - Tooltip: final content in DB
+
+## admin
+- [admin:::adminCustomersTab]
+  - Title: Customers
+  - Tooltip: Admin control. Hover around—each button has a job and an attitude.
+- [admin:::adminDashboardTab]
+  - Title: Dashboard
+  - Tooltip: Admin control. Hover around—each button has a job and an attitude.
+- [admin:::adminHelpCombo]
+  - Title: Adminhelpcombo
+  - Tooltip: Opens contextual help. Quick pointers when you want them; respectful silence when you don't.
+- [admin:::adminHelpDocsBtn]
+  - Title: Adminhelpdocs
+  - Tooltip: Opens the help docs. Faster than pinging a group chat at 11pm.
+- [admin:::adminHelpToggleBtn]
+  - Title: Adminhelptoggle
+  - Tooltip: Opens the help docs. Faster than pinging a group chat at 11pm.
+- [admin:::adminInventoryTab]
+  - Title: Inventory
+  - Tooltip: Admin control. Hover around—each button has a job and an attitude.
+- [admin:::adminOrdersTab]
+  - Title: Orders
+  - Tooltip: Admin control. Hover around—each button has a job and an attitude.
+- [admin:::adminReportsTab]
+  - Title: Reports
+  - Tooltip: Admin control. Hover around—each button has a job and an attitude.
+- [admin:::confirm-delete]
+  - Title: Confirm Delete
+  - Tooltip: Erases the selected item. This is the nuclear option—use with respect.
+
+## common
+- [common:::adminHelpDocsLink]
+  - Title: Adminhelpdocslink
+  - Tooltip: Shows documentation. When guesswork gets old, answers live here.
+- [common:::adminMarketingTab]
+  - Title: Marketing
+  - Tooltip: Common control. Does exactly what the label says, with minimal drama.
+- [common:::adminPosTab]
+  - Title: Point of Sale
+  - Tooltip: Common control. Does exactly what the label says, with minimal drama.
+- [common:::adminSettingsTab]
+  - Title: Settings
+  - Tooltip: Common control. Does exactly what the label says, with minimal drama.
+- [common:::cancel-btn]
+  - Title: Cancel
+  - Tooltip: Closes the panel and carries on. Nothing saved, nothing broken.
+- [common:::closeBtn]
+  - Title: Close
+  - Tooltip: Closes the panel and carries on. Nothing saved, nothing broken.
+- [common:::duplicateBtn]
+  - Title: Duplicate
+  - Tooltip: Copies this thing. Efficient is attractive.
+- [common:::helpBtn]
+  - Title: Help
+  - Tooltip: Opens help. Because everyone needs a hint sometimes.
+- [common:::importBtn]
+  - Title: Import
+  - Tooltip: Brings external data in. Check your columns—spreadsheets are unforgiving.
+- [common:::previewBtn]
+  - Title: Preview
+  - Tooltip: Previews your work. Confidence beats guesswork.
+- [common:::resetBtn]
+  - Title: Reset
+  - Tooltip: Returns to defaults. Sometimes starting over is the fastest path forward.
+- [common:::save-btn]
+  - Title: Save
+  - Tooltip: Locks in your edits. If future-you disagrees, future-you can change it back.
+- [common:::saveBtn]
+  - Title: Save
+  - Tooltip: Locks in your edits. If future-you disagrees, future-you can change it back.
+
+## customers
+- [customers:::add-customer]
+  - Title: Add Customer
+  - Tooltip: Adds a new record. Sensible beats cryptic every time.
+- [customers:::addCustomerBtn]
+  - Title: Add Customer
+  - Tooltip: Creates a new entry. Name it clearly, fill it completely.
+- [customers:::confirmPassword]
+  - Title: Confirmpassword
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::customerOrdersBtn]
+  - Title: Customerorders
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::customerSearchInput]
+  - Title: Search Customers
+  - Tooltip: Type a hint; find the needle. Filters spare your scroll finger.
+- [customers:::customerValueBtn]
+  - Title: Customervalue
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::deleteCustomerBtn]
+  - Title: Deletecustomer
+  - Tooltip: Erases the selected item. This is the nuclear option—use with respect.
+- [customers:::editCustomerBtn]
+  - Title: Editcustomer
+  - Tooltip: Updates the record. Accuracy now prevents confusion later.
+- [customers:::emailCustomerBtn]
+  - Title: Email Customer
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::exportCustomersBtn]
+  - Title: Export Customers
+  - Tooltip: Generates a file. Keep it safe; you'll thank yourself later.
+- [customers:::merge-customers]
+  - Title: Merge Customers
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::newPassword]
+  - Title: Newpassword
+  - Tooltip: Adds a fresh item. Start with good data; finish with fewer headaches.
+- [customers:::nextCustomerBtn]
+  - Title: Nextcustomer
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::prevCustomerBtn]
+  - Title: Prevcustomer
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::saveCustomerBtn]
+  - Title: Savecustomer
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [customers:::search-customers]
+  - Title: Search Customers
+  - Tooltip: Filters results. Find what you need without the treasure hunt.
+- [customers:::sendEmailBtn]
+  - Title: Sendemail
+  - Tooltip: Manages customer data. Treat their info with respect and accuracy.
+- [customers:::viewCustomerBtn]
+  - Title: Viewcustomer
+  - Tooltip: Opens the details. All the info in one tidy place.
+- [customers:::viewOrderHistoryBtn]
+  - Title: View Order
+  - Tooltip: Displays the full record. Clarity first, actions second.
+
+## dashboard
+- [dashboard:::analyticsCard]
+  - Title: Analyticscard
+  - Tooltip: Dashboard widget. Your daily pulse check on what matters.
+- [dashboard:::discountCodesCard]
+  - Title: Discountcodescard
+  - Tooltip: Dashboard widget. Your daily pulse check on what matters.
+- [dashboard:::inventoryAlertsTable]
+  - Title: Low Stock Alert
+  - Tooltip: Dashboard widget. Your daily pulse check on what matters.
+- [dashboard:::marketingSalesChart]
+  - Title: Marketingsaleschart
+  - Tooltip: Dashboard widget. Your daily pulse check on what matters.
+- [dashboard:::open-order-details]
+  - Title: Open Order Details
+  - Tooltip: Dashboard widget. Your daily pulse check on what matters.
+- [dashboard:::paymentsReceivedCard]
+  - Title: Payments Received
+  - Tooltip: Dashboard widget. Your daily pulse check on what matters.
+- [dashboard:::restore-help-hints]
+  - Title: Restore Help Hints
+  - Tooltip: Displays guidance. Tips, patterns, and the occasional pep talk.
+
+## inventory
+- [inventory:::add-new-item-btn]
+  - Title: Add Product
+  - Tooltip: Creates something new. Clear names now prevent future detective work.
+- [inventory:::addNewItemBtn]
+  - Title: Add Product
+  - Tooltip: Adds a new record. Sensible beats cryptic every time.
+- [inventory:::apply-price-suggestion]
+  - Title: Price Helper
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::bulkEditBtn]
+  - Title: Bulk Edit
+  - Tooltip: Updates the record. Accuracy now prevents confusion later.
+- [inventory:::categorySelect]
+  - Title: Categoryselect
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::clear-cost-breakdown]
+  - Title: Clear Cost Breakdown
+  - Tooltip: Empties the current value. Start over without the baggage.
+- [inventory:::confirm-delete-item]
+  - Title: Delete Product
+  - Tooltip: Permanent removal. Consider accounting before wielding this power.
+- [inventory:::cost-suggestion-btn]
+  - Title: Cost Suggestion
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::costPriceInput]
+  - Title: Costprice
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::delete-cost-item]
+  - Title: Delete Product
+  - Tooltip: Removes permanently. Gone means gone—triple-check before clicking.
+- [inventory:::delete-item]
+  - Title: Delete Product
+  - Tooltip: Deletes forever. If your stomach fluttered, pause and double-check.
+- [inventory:::deleteItemBtn]
+  - Title: Delete Product
+  - Tooltip: Erases the selected item. This is the nuclear option—use with respect.
+- [inventory:::duplicateItemBtn]
+  - Title: Copy Product
+  - Tooltip: Clones the selected item. Because doing it twice by hand is a hobby, not a workflow.
+- [inventory:::editItemBtn]
+  - Title: Edit Product
+  - Tooltip: Modifies the selected item. Small fixes, real impact.
+- [inventory:::exportInventoryBtn]
+  - Title: Export Products
+  - Tooltip: Exports to CSV for backups or analysis. Data travels well.
+- [inventory:::generate-marketing-copy]
+  - Title: AI Writer
+  - Tooltip: Copies this thing. Efficient is attractive.
+- [inventory:::get-cost-suggestion]
+  - Title: Get Cost Suggestion
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::get-price-suggestion]
+  - Title: Price Helper
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::importInventoryBtn]
+  - Title: Import Products
+  - Tooltip: Brings external data in. Check your columns—spreadsheets are unforgiving.
+- [inventory:::navigate-item]
+  - Title: Navigate Item
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::open-color-template-modal]
+  - Title: Open Color Template
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::open-cost-modal]
+  - Title: Open Cost
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::open-global-colors-management]
+  - Title: Open Global Colors Management
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::open-marketing-manager]
+  - Title: Open Marketing Manager
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::price-suggestion-btn]
+  - Title: Price Helper
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::printPackingSlipsBtn]
+  - Title: Printpackingslips
+  - Tooltip: Sends to printer. Physical backups for the analog world.
+- [inventory:::process-images-ai]
+  - Title: Process Images Ai
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::refresh-categories]
+  - Title: Refresh Categories
+  - Tooltip: Refreshes the list. Because stale data is nobody's friend.
+- [inventory:::reorderPointInput]
+  - Title: Reorderpoint
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::retailPriceInput]
+  - Title: Retailprice
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::save-cost-item]
+  - Title: Save Cost Item
+  - Tooltip: Persists changes. Small, frequent saves beat heroic rescues every time.
+- [inventory:::search-items-input]
+  - Title: Search Items
+  - Tooltip: Searches by keyword. Your time is valuable; use it.
+- [inventory:::stockLevelInput]
+  - Title: Stocklevel
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::tagsInput]
+  - Title: Tags
+  - Tooltip: Manages product data. Keep it accurate so shoppers see what's real.
+- [inventory:::viewItemBtn]
+  - Title: Viewitem
+  - Tooltip: Displays the item. Look, learn, decide what's next.
+
+## marketing
+- [marketing:::create-campaign]
+  - Title: Create Campaign
+  - Tooltip: Adds a fresh item. Start with good data; finish with fewer headaches.
+- [marketing:::emailCampaignsCard]
+  - Title: Emailcampaignscard
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::generate-coupons]
+  - Title: Generate Coupons
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingAnalyticsBtn]
+  - Title: Marketinganalytics
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingPaymentChart]
+  - Title: Marketingpaymentchart
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingPaymentsPending]
+  - Title: Marketingpaymentspending
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingPaymentsReceived]
+  - Title: Payments Received
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingProductsSold]
+  - Title: Marketingproductssold
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingRecentOrdersTable]
+  - Title: Orders
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingTopItemsList]
+  - Title: Marketingtopitemslist
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingTotalCustomers]
+  - Title: Marketingtotalcustomers
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingTotalOrders]
+  - Title: Marketingtotalorders
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::marketingTotalSales]
+  - Title: Marketingtotalsales
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+- [marketing:::send-test-email]
+  - Title: Send Test Email
+  - Tooltip: Sends a test signal. If it answers with wisdom, you're set.
+- [marketing:::socialMediaCard]
+  - Title: Socialmediacard
+  - Tooltip: Controls marketing tools. Be helpful, be genuine, be strategic.
+
+## orders
+- [orders:::action:delete-order]
+  - Title: Delete Order
+  - Tooltip: Removes permanently. Gone means gone—triple-check before clicking.
+- [orders:::bulk-actions-select]
+  - Title: Bulk Actions Select
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::cancelOrderBtn]
+  - Title: Cancelorder
+  - Tooltip: Shuts this down without committing. A clean exit is still progress.
+- [orders:::delete-order]
+  - Title: Delete Order
+  - Tooltip: Erases the selected item. This is the nuclear option—use with respect.
+- [orders:::edit-current-address]
+  - Title: Edit Current Address
+  - Tooltip: Edits this entry. Change what needs changing, leave the rest.
+- [orders:::editOrderBtn]
+  - Title: Editorder
+  - Tooltip: Modifies the selected item. Small fixes, real impact.
+- [orders:::exportOrdersBtn]
+  - Title: Exportorders
+  - Tooltip: Grabs your data before the universe tests your backup strategy.
+- [orders:::filter-orders]
+  - Title: Filter Orders
+  - Tooltip: Searches the list. A few characters beat endless scrolling.
+- [orders:::fulfillOrderBtn]
+  - Title: Fulfillorder
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::impersonate-customer]
+  - Title: Impersonate Customer
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::mark-shipped]
+  - Title: Mark Shipped
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::newOrderBtn]
+  - Title: Neworder
+  - Tooltip: Adds a fresh item. Start with good data; finish with fewer headaches.
+- [orders:::order-status-filter]
+  - Title: Order Status Filter
+  - Tooltip: Searches the list. A few characters beat endless scrolling.
+- [orders:::orderSearchInput]
+  - Title: Ordersearch
+  - Tooltip: Narrows the list. Precision beats pagination.
+- [orders:::orderStatusSelect]
+  - Title: Orderstatusselect
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::paymentStatusSelect]
+  - Title: Paymentstatusselect
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::printOrderBtn]
+  - Title: Print Order
+  - Tooltip: Sends to printer. Physical backups for the analog world.
+- [orders:::refund-order]
+  - Title: Refund Order
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::refundOrderBtn]
+  - Title: Refund Order
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::shipOrderBtn]
+  - Title: Mark Shipped
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::shippingStatusSelect]
+  - Title: Shippingstatusselect
+  - Tooltip: Handles order processing. Make it smooth, make it fast, make it feel effortless.
+- [orders:::show-receipt]
+  - Title: Show Receipt
+  - Tooltip: Displays the full record. Clarity first, actions second.
+- [orders:::viewOrderBtn]
+  - Title: View Order
+  - Tooltip: Displays the item. Look, learn, decide what's next.
+
+## pos
+- [pos:::browse-items]
+  - Title: Browse Items
+  - Tooltip: Point-of-sale control. In-person checkout that behaves.
+- [pos:::checkout]
+  - Title: Checkout
+  - Tooltip: Point-of-sale control. In-person checkout that behaves.
+- [pos:::checkoutBtn]
+  - Title: Checkout
+  - Tooltip: Point-of-sale control. In-person checkout that behaves.
+- [pos:::exit-pos]
+  - Title: Exit Pos
+  - Tooltip: Point-of-sale control. In-person checkout that behaves.
+- [pos:::toggle-fullscreen]
+  - Title: Toggle Fullscreen
+  - Tooltip: Point-of-sale control. In-person checkout that behaves.
+
+## reports
+- [reports:::averageOrderCard]
+  - Title: Averageordercard
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::change-range]
+  - Title: Change Range
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::export-report]
+  - Title: Export Report
+  - Tooltip: Downloads a clean export. Future you loves this habit.
+- [reports:::ordersCard]
+  - Title: Orders Count
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::paymentMethodChart]
+  - Title: Paymentmethodchart
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::paymentsPendingCard]
+  - Title: Paymentspendingcard
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::popupAddBtn]
+  - Title: Popupadd
+  - Tooltip: Creates something new. Clear names now prevent future detective work.
+- [reports:::print-report]
+  - Title: Print Report
+  - Tooltip: Prints a slip so box-time feels calm and correct.
+- [reports:::printReportBtn]
+  - Title: Printreport
+  - Tooltip: Prints a slip so box-time feels calm and correct.
+- [reports:::salesChart]
+  - Title: Saleschart
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::topProductsTable]
+  - Title: Topproductstable
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::totalCustomersCard]
+  - Title: Totalcustomerscard
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+- [reports:::totalRevenueCard]
+  - Title: Total Revenue
+  - Tooltip: Shows business metrics. The numbers don't lie, but they might hurt your feelings.
+
+## settings
+- [settings:::accountSettingsBtn]
+  - Title: Accountsettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:attr-add]
+  - Title: Add Attribute
+  - Tooltip: Creates a new entry. Name it clearly, fill it completely.
+- [settings:::action:attr-add-form]
+  - Title: Add Attribute
+  - Tooltip: Adds a fresh item. Start with good data; finish with fewer headaches.
+- [settings:::action:attr-save-order]
+  - Title: Attr Save Order
+  - Tooltip: Locks in your edits. If future-you disagrees, future-you can change it back.
+- [settings:::action:business-info-save]
+  - Title: Business Info Save
+  - Tooltip: Stores your work so it survives page refreshes and existential crises.
+- [settings:::action:business-reset-branding]
+  - Title: Business Reset Branding
+  - Tooltip: Restores factory settings. Back to basics when experiments get enthusiastic.
+- [settings:::action:business-save]
+  - Title: Business Save
+  - Tooltip: Locks in your edits. If future-you disagrees, future-you can change it back.
+- [settings:::action:business-save-branding]
+  - Title: Business Save Branding
+  - Tooltip: Writes updates and makes them stick. Drafts are for novels, not admin panels.
+- [settings:::action:close-admin-modal]
+  - Title: Close Admin
+  - Tooltip: Shuts this down without committing. A clean exit is still progress.
+- [settings:::action:close-ai-settings]
+  - Title: Close Ai Settings
+  - Tooltip: Closes without saving. Exit stage left—props stay where they were.
+- [settings:::action:close-ai-tools]
+  - Title: Close Ai Tools
+  - Tooltip: Closes without saving. Exit stage left—props stay where they were.
+- [settings:::action:close-business-info]
+  - Title: Close Business Info
+  - Tooltip: Dismisses the dialog. No hard feelings, no saved changes.
+- [settings:::action:close-css-rules]
+  - Title: Style Editor
+  - Tooltip: Dismisses the dialog. No hard feelings, no saved changes.
+- [settings:::action:close-email-settings]
+  - Title: Close Email Settings
+  - Tooltip: Shuts this down without committing. A clean exit is still progress.
+- [settings:::action:close-logging-status]
+  - Title: Close Logging Status
+  - Tooltip: Closes the panel and carries on. Nothing saved, nothing broken.
+- [settings:::action:close-secrets-modal]
+  - Title: Close Secrets
+  - Tooltip: Backs out gracefully. Changes that didn't meet the Save button won't be invited.
+- [settings:::action:close-square-settings]
+  - Title: Square Settings
+  - Tooltip: Closes without saving. Exit stage left—props stay where they were.
+- [settings:::action:css-rules-save]
+  - Title: Style Editor
+  - Tooltip: Stores your work so it survives page refreshes and existential crises.
+- [settings:::action:dashboard-config-refresh]
+  - Title: Dashboard Config Refresh
+  - Tooltip: Reloads the current view. Catch fresh data without page gymnastics.
+- [settings:::action:dashboard-config-reset]
+  - Title: Dashboard Config Reset
+  - Tooltip: Resets everything. No shame in a clean slate.
+- [settings:::action:dashboard-config-save]
+  - Title: Dashboard Config Save
+  - Tooltip: Writes updates and makes them stick. Drafts are for novels, not admin panels.
+- [settings:::action:email-history-apply-filters]
+  - Title: Email History
+  - Tooltip: Filters results. Find what you need without the treasure hunt.
+- [settings:::action:email-history-clear-filters]
+  - Title: Email History
+  - Tooltip: Narrows the list. Precision beats pagination.
+- [settings:::action:email-history-close-drawer]
+  - Title: Email History
+  - Tooltip: Shuts this down without committing. A clean exit is still progress.
+- [settings:::action:email-history-copy-curl]
+  - Title: Email History
+  - Tooltip: Copies this thing. Efficient is attractive.
+- [settings:::action:email-history-copy-headers]
+  - Title: Email History
+  - Tooltip: Creates a clone. Smart beats busy every time.
+- [settings:::action:email-history-copy-subject]
+  - Title: Email History
+  - Tooltip: Clones the selected item. Because doing it twice by hand is a hobby, not a workflow.
+- [settings:::action:email-history-copy-to]
+  - Title: Email History
+  - Tooltip: Creates a clone. Smart beats busy every time.
+- [settings:::action:email-history-copy-type]
+  - Title: Email History
+  - Tooltip: Copies this thing. Efficient is attractive.
+- [settings:::action:email-history-download]
+  - Title: Email History
+  - Tooltip: Downloads a clean export. Future you loves this habit.
+- [settings:::action:email-history-next]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:email-history-open-test]
+  - Title: Send Test Email
+  - Tooltip: Sends a test signal. If it answers with wisdom, you're set.
+- [settings:::action:email-history-prev]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:email-history-refresh]
+  - Title: Email History
+  - Tooltip: Reloads the current view. Catch fresh data without page gymnastics.
+- [settings:::action:email-history-save-endpoint]
+  - Title: Email History
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [settings:::action:email-history-search]
+  - Title: Email History
+  - Tooltip: Searches the list. A few characters beat endless scrolling.
+- [settings:::action:email-history-toggle-json]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:email-send-test]
+  - Title: Send Test Email
+  - Tooltip: Runs diagnostics. Better to find issues here than in front of customers.
+- [settings:::action:health-refresh]
+  - Title: Health Refresh
+  - Tooltip: Reloads the current view. Catch fresh data without page gymnastics.
+- [settings:::action:logging-clear-logs]
+  - Title: Logging Clear Logs
+  - Tooltip: Removes stored data. Useful for resets, terrifying for typos.
+- [settings:::action:logging-open-file]
+  - Title: Logging Open File
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:logging-refresh-status]
+  - Title: Logging Refresh Status
+  - Tooltip: Reloads the current view. Catch fresh data without page gymnastics.
+- [settings:::action:move-down]
+  - Title: Move Down
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:move-up]
+  - Title: Move Up
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-account-settings]
+  - Title: Open Account Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-ai-settings]
+  - Title: Open Ai Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-ai-tools]
+  - Title: Open Ai Tools
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-area-item-mapper]
+  - Title: Open Area Item Mapper
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-attributes]
+  - Title: Open Attributes
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-background-manager]
+  - Title: Backgrounds
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-business-info]
+  - Title: Open Business Info
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-categories]
+  - Title: Open Categories
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-css-catalog]
+  - Title: Open Css Catalog
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-css-rules]
+  - Title: Style Editor
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-customer-messages]
+  - Title: Customer Messages
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-dashboard-config]
+  - Title: Open Dashboard Config
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-dev-status]
+  - Title: Open Dev Status
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-email-history]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-email-settings]
+  - Title: Open Email Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-email-test]
+  - Title: Send Test Email
+  - Tooltip: Runs diagnostics. Better to find issues here than in front of customers.
+- [settings:::action:open-health-diagnostics]
+  - Title: Open Health Diagnostics
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-logging-status]
+  - Title: Open Logging Status
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-room-map-editor]
+  - Title: Room Mapper
+  - Tooltip: Modifies the selected item. Small fixes, real impact.
+- [settings:::action:open-secrets-modal]
+  - Title: Open Secrets
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-square-settings]
+  - Title: Square Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:open-template-manager]
+  - Title: Open Template Manager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:prevent-submit]
+  - Title: Prevent Submit
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:run-health-check]
+  - Title: Run Health Check
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:save-ai-settings]
+  - Title: Save Ai Settings
+  - Tooltip: Locks in your edits. If future-you disagrees, future-you can change it back.
+- [settings:::action:scan-item-images]
+  - Title: Scan Item Images
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:secrets-export]
+  - Title: Secrets Export
+  - Tooltip: Generates a file. Keep it safe; you'll thank yourself later.
+- [settings:::action:secrets-rotate]
+  - Title: Secrets Rotate
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::action:secrets-save]
+  - Title: Secrets Save
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [settings:::action:square-clear-token]
+  - Title: Clear Square
+  - Tooltip: Removes stored data. Useful for resets, terrifying for typos.
+- [settings:::action:square-save-settings]
+  - Title: Square Settings
+  - Tooltip: Writes updates and makes them stick. Drafts are for novels, not admin panels.
+- [settings:::action:square-sync-items]
+  - Title: Sync from Square
+  - Tooltip: Imports fresh data from the service. Coffee recommended for large catalogs.
+- [settings:::action:square-test-connection]
+  - Title: Test Square
+  - Tooltip: Checks your setup. Green lights mean proceed; red means tea, then fixes.
+- [settings:::action:test-ai-provider]
+  - Title: Test Ai Provider
+  - Tooltip: Pings the service with your settings. If it responds, we're friends.
+- [settings:::addressDiagBtn]
+  - Title: Addressdiag
+  - Tooltip: Creates a new entry. Name it clearly, fill it completely.
+- [settings:::aiSettingsBtn]
+  - Title: Aisettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::aiSettingsSaveBtn]
+  - Title: Aisettingssave
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [settings:::aiSettingsTestBtn]
+  - Title: Aisettingstest
+  - Tooltip: Checks your setup. Green lights mean proceed; red means tea, then fixes.
+- [settings:::aiToolsBtn]
+  - Title: Aitools
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::analyticsBtn]
+  - Title: Analytics
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::areaItemMapperBtn]
+  - Title: Areaitemmapper
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::attr-save-order]
+  - Title: Attr Save Order
+  - Tooltip: Persists changes. Small, frequent saves beat heroic rescues every time.
+- [settings:::attributesBtn]
+  - Title: Attributes
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::backgroundManagerBtn]
+  - Title: Backgrounds
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::business-reset-branding]
+  - Title: Business Reset Branding
+  - Tooltip: Returns to defaults. Sometimes starting over is the fastest path forward.
+- [settings:::business-save]
+  - Title: Business Save
+  - Tooltip: Writes updates and makes them stick. Drafts are for novels, not admin panels.
+- [settings:::business-save-branding]
+  - Title: Business Save Branding
+  - Tooltip: Stores your work so it survives page refreshes and existential crises.
+- [settings:::business-settings-btn]
+  - Title: Business Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::businessInfoBtn]
+  - Title: Business Info
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::businessInfoCloseBtn]
+  - Title: Business Info
+  - Tooltip: Shuts this down without committing. A clean exit is still progress.
+- [settings:::businessInfoForm]
+  - Title: Businessinfoform
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::businessInfoSaveBtn]
+  - Title: Business Info
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [settings:::businessReportsBtn]
+  - Title: Businessreports
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::cartButtonTextBtn]
+  - Title: Carttext
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::cat-add]
+  - Title: Cat Add
+  - Tooltip: Creates something new. Clear names now prevent future detective work.
+- [settings:::categoriesBtn]
+  - Title: Categories
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::costBreakdownBtn]
+  - Title: Costbreakdown
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::cssRulesBtn]
+  - Title: Style Editor
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::cssRulesCloseBtn]
+  - Title: Style Editor
+  - Tooltip: Closes the panel and carries on. Nothing saved, nothing broken.
+- [settings:::cssRulesForm]
+  - Title: Style Editor
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::cssRulesSaveBtn]
+  - Title: Style Editor
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [settings:::dashboard-config-refresh]
+  - Title: Dashboard Config Refresh
+  - Tooltip: Syncs with the server. Fresh data, same spot.
+- [settings:::dashboard-config-reset]
+  - Title: Dashboard Config Reset
+  - Tooltip: Restores factory settings. Back to basics when experiments get enthusiastic.
+- [settings:::dashboard-config-save]
+  - Title: Dashboard Config Save
+  - Tooltip: Locks in your edits. If future-you disagrees, future-you can change it back.
+- [settings:::dashboardConfigBtn]
+  - Title: Dashboardconfig
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::database-tables-btn]
+  - Title: Database Tables
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::databaseMaintenanceBtn]
+  - Title: Database Cleanup
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::databaseTablesBtn]
+  - Title: Databasetables
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::dbSchemaAuditBtn]
+  - Title: Dbschemaaudit
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::deployManagerBtn]
+  - Title: Deploymanager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::email-history-apply-filters]
+  - Title: Email History
+  - Tooltip: Type a hint; find the needle. Filters spare your scroll finger.
+- [settings:::email-history-clear-filters]
+  - Title: Email History
+  - Tooltip: Narrows the list. Precision beats pagination.
+- [settings:::email-history-close-drawer]
+  - Title: Email History
+  - Tooltip: Dismisses the dialog. No hard feelings, no saved changes.
+- [settings:::email-history-copy-curl]
+  - Title: Email History
+  - Tooltip: Creates a clone. Smart beats busy every time.
+- [settings:::email-history-copy-headers]
+  - Title: Email History
+  - Tooltip: Copies this thing. Efficient is attractive.
+- [settings:::email-history-copy-subject]
+  - Title: Email History
+  - Tooltip: Clones the selected item. Because doing it twice by hand is a hobby, not a workflow.
+- [settings:::email-history-copy-to]
+  - Title: Email History
+  - Tooltip: Copies this thing. Efficient is attractive.
+- [settings:::email-history-copy-type]
+  - Title: Email History
+  - Tooltip: Makes a copy so you can tweak without breaking the original. Chaos, but contained.
+- [settings:::email-history-download]
+  - Title: Email History
+  - Tooltip: Grabs your data before the universe tests your backup strategy.
+- [settings:::email-history-next]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::email-history-open-test]
+  - Title: Send Test Email
+  - Tooltip: Pings the service with your settings. If it responds, we're friends.
+- [settings:::email-history-prev]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::email-history-refresh]
+  - Title: Email History
+  - Tooltip: Reloads the current view. Catch fresh data without page gymnastics.
+- [settings:::email-history-save-endpoint]
+  - Title: Email History
+  - Tooltip: Writes updates and makes them stick. Drafts are for novels, not admin panels.
+- [settings:::email-history-search]
+  - Title: Email History
+  - Tooltip: Searches by keyword. Your time is valuable; use it.
+- [settings:::email-history-toggle-json]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::email-send-test]
+  - Title: Send Test Email
+  - Tooltip: Sends a test signal. If it answers with wisdom, you're set.
+- [settings:::emailConfigBtn]
+  - Title: Email Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::emailConfigForm]
+  - Title: Email Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::emailHistoryBtn]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::emailSettingsCloseBtn]
+  - Title: Emailsettingsclose
+  - Tooltip: Dismisses the dialog. No hard feelings, no saved changes.
+- [settings:::emailTestBtn]
+  - Title: Send Test Email
+  - Tooltip: Runs diagnostics. Better to find issues here than in front of customers.
+- [settings:::fileExplorerBtn]
+  - Title: File Browser
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::fixSampleEmailBtn]
+  - Title: Fixsampleemail
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::global-css-btn]
+  - Title: Global Css
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::globalColorSizeBtn]
+  - Title: Globalcolorsize
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::globalCSSBtn]
+  - Title: Globalcss
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::health-refresh]
+  - Title: Health Refresh
+  - Tooltip: Syncs with the server. Fresh data, same spot.
+- [settings:::healthDiagnosticsBtn]
+  - Title: Healthdiagnostics
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::help-hints-btn]
+  - Title: Help Hints
+  - Tooltip: Opens contextual help. Quick pointers when you want them; respectful silence when you don't.
+- [settings:::hints-disable]
+  - Title: Hints Disable
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::hints-enable-persist]
+  - Title: Hints Enable Persist
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::hints-enable-session]
+  - Title: Hints Enable Session
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::hints-restore-banners-persist]
+  - Title: Hints Restore Banners Persist
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::hints-restore-banners-session]
+  - Title: Hints Restore Banners Session
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:accountSettingsBtn]
+  - Title: Accountsettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:accountSettingsFrame]
+  - Title: Accountsettingsframe
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:accountSettingsModal]
+  - Title: Accountsettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:accountSettingsTitle]
+  - Title: Accountsettingstitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:admin-section-content]
+  - Title: Admin Section Content
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:admin-settings-content-height]
+  - Title: Admin Settings Content Height
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:admin-settings-content-positioning]
+  - Title: Admin Settings Content Positioning
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:admin-settings-content-spacing]
+  - Title: Admin Settings Content Spacing
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:admin-settings-navbar-fix]
+  - Title: Admin Settings Navbar Fix
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:admin-settings-navbar-spacing]
+  - Title: Admin Settings Navbar Spacing
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:adminEmail]
+  - Title: Adminemail
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:adminSettingsRoot]
+  - Title: Adminsettingsroot
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:advancedHealthOutput]
+  - Title: Advancedhealthoutput
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiMaxTokens]
+  - Title: Aimaxtokens
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiProvider]
+  - Title: Aiprovider
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiProviderSettings]
+  - Title: Aiprovidersettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiSettingsBtn]
+  - Title: Aisettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiSettingsForm]
+  - Title: Aisettingsform
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiSettingsModal]
+  - Title: Aisettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiSettingsResult]
+  - Title: Aisettingsresult
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiSettingsTitle]
+  - Title: Aisettingstitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiTemperature]
+  - Title: Aitemperature
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiTemperatureValue]
+  - Title: Aitemperaturevalue
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiTimeout]
+  - Title: Aitimeout
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiToolsBtn]
+  - Title: Aitools
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiToolsFrame]
+  - Title: Aitoolsframe
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiToolsModal]
+  - Title: Aitools
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:aiToolsTitle]
+  - Title: Aitoolstitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:areaItemMapperFrame]
+  - Title: Areaitemmapperframe
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:areaItemMapperModal]
+  - Title: Areaitemmapper
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:areaItemMapperTitle]
+  - Title: Areaitemmappertitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:attributesBtn]
+  - Title: Attributes
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:attributesModal]
+  - Title: Attributes
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:attributesResult]
+  - Title: Attributesresult
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:attributesTitle]
+  - Title: Attributestitle
+  - Tooltip: Sends a test signal. If it answers with wisdom, you're set.
+- [settings:::id:attrListColor]
+  - Title: Attrlistcolor
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:attrListGender]
+  - Title: Attrlistgender
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:attrListSize]
+  - Title: Attrlistsize
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:autoSync]
+  - Title: Autosync
+  - Tooltip: Syncs items and updates. Consistency without the copy-paste marathon.
+- [settings:::id:bccEmail]
+  - Title: Bccemail
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bgMissingActiveCount]
+  - Title: Bgmissingactivecount
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bgMissingActiveList]
+  - Title: Bgmissingactivelist
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bgMissingFilesCount]
+  - Title: Bgmissingfilescount
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bgMissingFilesList]
+  - Title: Bgmissingfileslist
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizAddress]
+  - Title: Bizaddress
+  - Tooltip: Adds a fresh item. Start with good data; finish with fewer headaches.
+- [settings:::id:bizAddress2]
+  - Title: Bizaddress2
+  - Tooltip: Creates a new entry. Name it clearly, fill it completely.
+- [settings:::id:bizCity]
+  - Title: Bizcity
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizCountry]
+  - Title: Bizcountry
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizCurrency]
+  - Title: Bizcurrency
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizDescription]
+  - Title: Bizdescription
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizEmail]
+  - Title: Bizemail
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizFacebook]
+  - Title: Bizfacebook
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizHours]
+  - Title: Bizhours
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizInstagram]
+  - Title: Bizinstagram
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizLinkedIn]
+  - Title: Bizlinkedin
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizLocale]
+  - Title: Bizlocale
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizLogoUrl]
+  - Title: Bizlogourl
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizName]
+  - Title: Bizname
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizPhone]
+  - Title: Bizphone
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizPostal]
+  - Title: Bizpostal
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizPrivacyUrl]
+  - Title: Bizprivacyurl
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizState]
+  - Title: Bizstate
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizSupportEmail]
+  - Title: Bizsupportemail
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizSupportPhone]
+  - Title: Bizsupportphone
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizTagline]
+  - Title: Biztagline
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizTaxId]
+  - Title: Biztaxid
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizTermsUrl]
+  - Title: Biztermsurl
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizTikTok]
+  - Title: Biztiktok
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizTimezone]
+  - Title: Biztimezone
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizTwitter]
+  - Title: Biztwitter
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizWebsite]
+  - Title: Bizwebsite
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:bizYouTube]
+  - Title: Bizyoutube
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:brandFontPrimary]
+  - Title: Brandfontprimary
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:brandFontSecondary]
+  - Title: Brandfontsecondary
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:brandPreviewCard]
+  - Title: Brandpreviewcard
+  - Tooltip: Shows the result. Peek, adjust, repeat until it's right.
+- [settings:::id:brandPreviewSwatches]
+  - Title: Brandpreviewswatches
+  - Tooltip: Previews your work. Confidence beats guesswork.
+- [settings:::id:brandPreviewText]
+  - Title: Brandpreviewtext
+  - Tooltip: Shows the result. Peek, adjust, repeat until it's right.
+- [settings:::id:brandPreviewTitle]
+  - Title: Brandpreviewtitle
+  - Tooltip: Renders a preview so you can spot issues before they go live.
+- [settings:::id:businessInfoBtn]
+  - Title: Business Info
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:businessInfoForm]
+  - Title: Businessinfoform
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:businessInfoModal]
+  - Title: Businessinfo
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:businessInfoStatus]
+  - Title: Businessinfostatus
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:businessInfoTitle]
+  - Title: Businessinfotitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:categoriesBtn]
+  - Title: Categories
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:categoriesFrame]
+  - Title: Categoriesframe
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:categoriesModal]
+  - Title: Categories
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:categoriesTitle]
+  - Title: Categoriestitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:connectionIndicator]
+  - Title: Connectionindicator
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:connectionResult]
+  - Title: Connectionresult
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:connectionText]
+  - Title: Connectiontext
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssCatalogFrame]
+  - Title: Csscatalogframe
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssCatalogModal]
+  - Title: Csscatalog
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssCatalogTitle]
+  - Title: Csscatalogtitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssRulesForm]
+  - Title: Style Editor
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssRulesModal]
+  - Title: Style Editor
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssRulesTitle]
+  - Title: Style Editor
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssToastBg]
+  - Title: Csstoastbg
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:cssToastText]
+  - Title: Csstoasttext
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:dashboardConfigBtn]
+  - Title: Dashboardconfig
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:dashboardConfigModal]
+  - Title: Dashboardconfig
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:dashboardConfigResult]
+  - Title: Dashboardconfigresult
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:dashboardConfigTitle]
+  - Title: Dashboardconfigtitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:dashboardSectionsBody]
+  - Title: Dashboardsectionsbody
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:dashboardSectionsTable]
+  - Title: Dashboardsectionstable
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:devStatusFrame]
+  - Title: Devstatusframe
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:devStatusModal]
+  - Title: Devstatus
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:devStatusTitle]
+  - Title: Devstatustitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:ehdEndpoint]
+  - Title: Ehdendpoint
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:ehdSubject]
+  - Title: Ehdsubject
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:ehdTo]
+  - Title: Ehdto
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:ehdType]
+  - Title: Ehdtype
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailConfigBtn]
+  - Title: Email Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailConfigForm]
+  - Title: Email Settings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryBtn]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryDrawer]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryDrawerContent]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryDrawerMeta]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryDrawerOverlay]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryFrom]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryList]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryModal]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryPage]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistorySearch]
+  - Title: Email History
+  - Tooltip: Filters results. Find what you need without the treasure hunt.
+- [settings:::id:emailHistorySort]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryStatus]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryStatusFilter]
+  - Title: Email History
+  - Tooltip: Filters results. Find what you need without the treasure hunt.
+- [settings:::id:emailHistoryTitle]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryTo]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailHistoryType]
+  - Title: Email History
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailSettingsModal]
+  - Title: Emailsettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailSettingsTitle]
+  - Title: Emailsettingstitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:emailTestBtn]
+  - Title: Send Test Email
+  - Tooltip: Runs diagnostics. Better to find issues here than in front of customers.
+- [settings:::id:emailTypeOptions]
+  - Title: Emailtypeoptions
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:fallbackToLocal]
+  - Title: Fallbacktolocal
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:footerHtml]
+  - Title: Footerhtml
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:footerNote]
+  - Title: Footernote
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:fromEmail]
+  - Title: Fromemail
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:fromName]
+  - Title: Fromname
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:healthDiagnosticsBtn]
+  - Title: Healthdiagnostics
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:healthModal]
+  - Title: Health
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:healthStatus]
+  - Title: Healthstatus
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:healthTitle]
+  - Title: Healthtitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:itemsMissingFilesCount]
+  - Title: Itemsmissingfilescount
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:itemsMissingFilesList]
+  - Title: Itemsmissingfileslist
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:itemsNoPrimaryCount]
+  - Title: Itemsnoprimarycount
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:itemsNoPrimaryList]
+  - Title: Itemsnoprimarylist
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:loggingStatusBtn]
+  - Title: Loggingstatus
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:loggingStatusModal]
+  - Title: Loggingstatus
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:loggingStatusResult]
+  - Title: Loggingstatusresult
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:loggingSummary]
+  - Title: Loggingsummary
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:policyUrl]
+  - Title: Policyurl
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:replyToEmail]
+  - Title: Replytoemail
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:returnPolicy]
+  - Title: Returnpolicy
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:roomMapEditorFrame]
+  - Title: Room Mapper
+  - Tooltip: Opens the editor. Polish the details—typos, images, prices.
+- [settings:::id:roomMapEditorModal]
+  - Title: Room Mapper
+  - Tooltip: Edits this entry. Change what needs changing, leave the rest.
+- [settings:::id:roomMapEditorTitle]
+  - Title: Room Mapper
+  - Tooltip: Modifies the selected item. Small fixes, real impact.
+- [settings:::id:saveSquareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Persists changes. Small, frequent saves beat heroic rescues every time.
+- [settings:::id:secretsCsrf]
+  - Title: Secretscsrf
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:secretsForm]
+  - Title: Secretsform
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:secretsManagerBtn]
+  - Title: Secretsmanager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:secretsModal]
+  - Title: Secrets
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:secretsPayload]
+  - Title: Secretspayload
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:secretsResult]
+  - Title: Secretsresult
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:shippingPolicy]
+  - Title: Shippingpolicy
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpAuth]
+  - Title: Smtpauth
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpDebug]
+  - Title: Smtpdebug
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpEnabled]
+  - Title: Smtpenabled
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpEncryption]
+  - Title: Smtpencryption
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpHost]
+  - Title: Smtphost
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpPassword]
+  - Title: Smtppassword
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpPort]
+  - Title: Smtpport
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpSettings]
+  - Title: Smtpsettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpTimeout]
+  - Title: Smtptimeout
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:smtpUsername]
+  - Title: Smtpusername
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:squareAccessToken]
+  - Title: Squareaccesstoken
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:squareAppId]
+  - Title: Squareappid
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:squareConfigForm]
+  - Title: Squareconfigform
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:squareConfiguredChip]
+  - Title: Squareconfiguredchip
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:squareConnectionStatus]
+  - Title: Squareconnectionstatus
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:squareLocationId]
+  - Title: Squarelocationid
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:squareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Resets everything. No shame in a clean slate.
+- [settings:::id:squareSettingsModal]
+  - Title: Square Settings
+  - Tooltip: Resets everything. No shame in a clean slate.
+- [settings:::id:squareSettingsTitle]
+  - Title: Square Settings
+  - Tooltip: Clears customizations. A fresh start for when things got weird.
+- [settings:::id:syncDescriptions]
+  - Title: Syncdescriptions
+  - Tooltip: Syncs with the external service. Stay in step without manual labor.
+- [settings:::id:syncInventory]
+  - Title: Syncinventory
+  - Tooltip: Syncs with the external service. Stay in step without manual labor.
+- [settings:::id:syncPrices]
+  - Title: Syncprices
+  - Tooltip: Synchronizes data. Let the machines do the boring parts.
+- [settings:::id:templateManagerBtn]
+  - Title: Templatemanager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:templateManagerFrame]
+  - Title: Templatemanagerframe
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:templateManagerModal]
+  - Title: Templatemanager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:templateManagerTitle]
+  - Title: Templatemanagertitle
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::id:testRecipient]
+  - Title: Testrecipient
+  - Tooltip: Pings the service with your settings. If it responds, we're friends.
+- [settings:::id:warrantyPolicy]
+  - Title: Warrantypolicy
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::logging-clear-logs]
+  - Title: Logging Clear Logs
+  - Tooltip: Empties the current value. Start over without the baggage.
+- [settings:::logging-open-file]
+  - Title: Logging Open File
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::logging-refresh-status]
+  - Title: Logging Refresh Status
+  - Tooltip: Refreshes the list. Because stale data is nobody's friend.
+- [settings:::loggingStatusBtn]
+  - Title: Loggingstatus
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::receiptMessagesBtn]
+  - Title: Receiptmessages
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::receiptSettingsBtn]
+  - Title: Receiptsettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::repoCleanupBtn]
+  - Title: Repocleanup
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::room-category-btn]
+  - Title: Room Category
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::room-mapper-btn]
+  - Title: Room Mapper
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::roomCategoryBtn]
+  - Title: Roomcategory
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::roomCategoryLinksBtn]
+  - Title: Roomcategorylinks
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::roomMapperBtn]
+  - Title: Room Mapper
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::roomsBtn]
+  - Title: Rooms
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::run-health-check]
+  - Title: Run Health Check
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::salesAdminBtn]
+  - Title: Salesadmin
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::save-ai-settings]
+  - Title: Save Ai Settings
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [settings:::saveSquareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Writes updates and makes them stick. Drafts are for novels, not admin panels.
+- [settings:::scan-item-images]
+  - Title: Scan Item Images
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::secrets-export]
+  - Title: Secrets Export
+  - Tooltip: Exports to CSV for backups or analysis. Data travels well.
+- [settings:::secrets-rotate]
+  - Title: Secrets Rotate
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::secrets-save]
+  - Title: Secrets Save
+  - Tooltip: Commits your changes to the database. Like a seatbelt for settings—click it before things get bumpy.
+- [settings:::secretsForm]
+  - Title: Secretsform
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::secretsManagerBtn]
+  - Title: Secretsmanager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::shippingSettingsBtn]
+  - Title: Shippingsettings
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::shippingSettingsFormStatic]
+  - Title: Shippingsettingsformstatic
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::shippingSettingsSaveBtn]
+  - Title: Shippingsettingssave
+  - Tooltip: Stores your work so it survives page refreshes and existential crises.
+- [settings:::square-clear-token]
+  - Title: Clear Square
+  - Tooltip: Clears the field. A blank slate for fresh input.
+- [settings:::square-sync-items]
+  - Title: Sync from Square
+  - Tooltip: Imports fresh data from the service. Coffee recommended for large catalogs.
+- [settings:::square-test-connection]
+  - Title: Test Square
+  - Tooltip: Validates configuration. Two minutes now saves two hours later.
+- [settings:::squareClearTokenBtn]
+  - Title: Clear Square
+  - Tooltip: Clears the field. A blank slate for fresh input.
+- [settings:::squareConfigForm]
+  - Title: Squareconfigform
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::squareSaveBtn]
+  - Title: Squaresave
+  - Tooltip: Locks in your edits. If future-you disagrees, future-you can change it back.
+- [settings:::squareSettingsBtn]
+  - Title: Square Settings
+  - Tooltip: Clears customizations. A fresh start for when things got weird.
+- [settings:::squareSyncItemsBtn]
+  - Title: Sync from Square
+  - Tooltip: Pulls updates from the source. Automation beats repetition.
+- [settings:::squareTestBtn]
+  - Title: Test Square
+  - Tooltip: Validates configuration. Two minutes now saves two hours later.
+- [settings:::systemCleanupBtn]
+  - Title: Systemcleanup
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::systemConfigBtn]
+  - Title: Systemconfig
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::systemDocumentationBtn]
+  - Title: Systemdocumentation
+  - Tooltip: Opens help. Because everyone needs a hint sometimes.
+- [settings:::templateManagerBtn]
+  - Title: Templatemanager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::test-ai-provider]
+  - Title: Test Ai Provider
+  - Tooltip: Sends a test signal. If it answers with wisdom, you're set.
+- [settings:::userManagerBtn]
+  - Title: Usermanager
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+- [settings:::websiteConfigBtn]
+  - Title: Websiteconfig
+  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
+

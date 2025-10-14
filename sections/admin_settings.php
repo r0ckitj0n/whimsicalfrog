@@ -572,11 +572,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               }
               return;
             }
-            // Account Settings navigation
+            // Account Settings: let global modal handler open the modal (no navigation)
             if (t.matches('[data-action="open-account-settings"]')) {
               ev.preventDefault(); ev.stopPropagation();
-              var target = '/sections/account_settings.php';
-              try { window.location.assign(target); } catch(_) { window.location.href = target; }
               return;
             }
             // Shopping Cart Settings
@@ -608,25 +606,27 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     })();
     </script>
 
-  <!-- Customer Messages: Shop Encouragement Phrases -->
-  <section class="admin-card" id="customerMessagesCard" aria-labelledby="customerMessagesTitle">
-    <div class="admin-card-header">
-      <h2 id="customerMessagesTitle" class="admin-card-title">💬 Customer Messages</h2>
-      <p class="admin-card-subtitle">Manage phrases used for shop recommendation badges when a search has no exact matches.</p>
-    </div>
-    <div class="admin-card-body">
-      <div class="form-control">
-        <label for="shopEncouragementPhrases" class="block text-sm font-medium mb-1">Shop Encouragement Phrases</label>
-        <textarea id="shopEncouragementPhrases" class="form-textarea w-full" rows="8" placeholder="One phrase per line (max 50)"></textarea>
-        <p class="text-sm text-gray-600 mt-1">These phrases appear as badges on recommended items in the shop when fuzzy recommendations are shown.</p>
+  <!-- Customer Messages Modal: Shop Encouragement Phrases -->
+  <div id="customerMessagesModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="customerMessagesTitle">
+    <div class="admin-modal admin-modal-content">
+      <div class="modal-header">
+        <h2 id="customerMessagesTitle" class="admin-card-title">💬 Customer Messages</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="mt-3 flex items-center justify-end gap-2">
-        <span id="customerMessagesStatus" class="text-sm text-gray-600" aria-live="polite"></span>
-        <button type="button" class="btn-secondary wf-admin-nav-button" id="customerMessagesCancelBtn">Cancel</button>
-        <button type="button" class="btn-brand wf-admin-nav-button" id="customerMessagesSaveBtn">Save Phrases</button>
+      <div class="modal-body">
+        <div class="form-control">
+          <label for="shopEncouragementPhrases" class="block text-sm font-medium mb-1">Shop Encouragement Phrases</label>
+          <textarea id="shopEncouragementPhrases" class="form-textarea w-full" rows="8" placeholder="One phrase per line (max 50)"></textarea>
+          <p class="text-sm text-gray-600 mt-1">These phrases appear as badges on recommended items in the shop when fuzzy recommendations are shown.</p>
+        </div>
+        <div class="mt-3 flex items-center justify-end gap-2">
+          <span id="customerMessagesStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+          <button type="button" class="btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal" id="customerMessagesCancelBtn">Cancel</button>
+          <button type="button" class="btn-brand wf-admin-nav-button" id="customerMessagesSaveBtn">Save Phrases</button>
+        </div>
       </div>
     </div>
-  </section>
+  </div>
 
   <script>
   (function(){
@@ -742,6 +742,28 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
                 if (f && !f.getAttribute('src')) {
                   f.setAttribute('src', f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1');
                 }
+              } catch(_) {}
+              m.classList.remove('hidden');
+              m.classList.add('show');
+              m.setAttribute('aria-hidden','false');
+              m.style.pointerEvents = 'auto';
+            }
+          } catch(_) {}
+          return;
+        }
+        // Customer Messages
+        var cm = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-customer-messages"], #customerMessagesBtn') : null;
+        if (cm) {
+          ev.preventDefault(); ev.stopPropagation();
+          try {
+            var m = document.getElementById('customerMessagesModal');
+            if (m) {
+              try {
+                if (m.parentElement && m.parentElement !== document.body) {
+                  document.body.appendChild(m);
+                }
+                m.classList.add('over-header');
+                m.style.removeProperty('z-index');
               } catch(_) {}
               m.classList.remove('hidden');
               m.classList.add('show');
@@ -1370,6 +1392,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
       <?php // Communication ?>
       <?php ob_start(); ?>
+        <button type="button" id="customerMessagesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-customer-messages">Customer Messages</button>
         <button type="button" id="emailConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-settings">Email Configuration</button>
         <button type="button" id="emailHistoryBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-history">Email History</button>
         <button type="button" id="loggingStatusBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-logging-status">Logging Status</button>

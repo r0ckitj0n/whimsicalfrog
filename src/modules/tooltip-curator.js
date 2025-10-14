@@ -216,8 +216,7 @@ import { ApiClient } from '../core/api-client.js';
     // Avoid overly long titles
     if (title.length > 80) title = title.slice(0,77)+'…';
     if (content.length > 280) content = content.slice(0,277)+'…';
-    // Tag for traceability
-    if (!content.includes(CURATION_TAG)) content = `${content} ${CURATION_TAG}`;
+    // Removed curation tag per user preference
 
     return {
       element_id: id,
@@ -290,6 +289,117 @@ import { ApiClient } from '../core/api-client.js';
   };
 
   try { window.WF_TooltipCurator = Curator; } catch(_) {}
+
+  // --- Seeding defaults for missing/common actions ---
+  // Purpose: create witty/snarky, helpful default tooltips for frequently used admin actions
+  // Usage from console: await WF_TooltipCurator.seedCommonDefaultsVerbose();
+  const DEFAULT_SEEDS = [
+    // Settings hub actions
+    { ctx:'settings', id:'action:open-business-info', t:'Open Business Info', c:'Name, contact, hours, and brand basics—your storefront’s ID card.' },
+    { ctx:'settings', id:'action:business-info-save', t:'Save Business Info', c:'Writes your business profile. Accuracy beats mystique here.' },
+    { ctx:'settings', id:'action:open-css-rules', t:'Open CSS Rules', c:'Tweak styles from a safe editor—no spelunking required.' },
+    { ctx:'settings', id:'action:css-rules-save', t:'Save CSS Rules', c:'Applies your CSS updates. If it looks weird, that’s called iteration.' },
+    { ctx:'settings', id:'action:open-room-settings', t:'Open Room Settings', c:'Doors, backgrounds, and the vibe check. Interior design, but clickable.' },
+    { ctx:'settings', id:'action:open-ai-settings', t:'Open AI Settings', c:'Pick your robot overlord and tune its manners. Accuracy with a side of charm.' },
+    { ctx:'settings', id:'action:test-ai-settings', t:'Test AI Settings', c:'Sends a quick ping to your AI setup. If it answers with wisdom, you’re set.' },
+    // Square actions
+    { ctx:'settings', id:'action:square-save-settings', t:'Save Square Settings', c:'Stores your Square credentials/config. Payments prefer precision.' },
+    { ctx:'settings', id:'action:square-test-connection', t:'Test Square Connection', c:'Checks your Square setup. Green lights mean swipe freely.' },
+    { ctx:'settings', id:'action:square-sync-items', t:'Sync Items from Square', c:'Imports/refreshes items from Square. Coffee advised for big catalogs.' },
+    { ctx:'settings', id:'action:square-clear-token', t:'Clear Square Token', c:'Removes stored token—great for resets, unforgiving to typos.' },
+    // Email
+    { ctx:'settings', id:'action:open-email-settings', t:'Open Email Settings', c:'Sender, templates, deliverability—make your emails land like pros.' },
+    { ctx:'settings', id:'action:close-email-settings', t:'Close Email Settings', c:'Shuts the panel without saving. Your SPF records breathe a sigh of relief.' },
+    // Attributes
+    { ctx:'settings', id:'action:open-attributes', t:'Open Attributes', c:'Manage colors, sizes, and more. Taxonomy, but make it friendly.' },
+    { ctx:'settings', id:'action:attr-add', t:'Add Attribute', c:'Create a new attribute (e.g., Color, Size). Pick names a human would admire.' },
+    { ctx:'settings', id:'action:attr-save-order', t:'Save Attribute Order', c:'Locks in this order so options show up like you intended.' },
+    { ctx:'settings', id:'action:move-up', t:'Move Up', c:'Bumps this row higher. Because order matters and ego is real.' },
+    { ctx:'settings', id:'action:move-down', t:'Move Down', c:'Drops this row lower. Sometimes second place builds character.' },
+    // Admin/global common
+    { ctx:'admin', id:'adminHelpToggleBtn', t:'Help Tooltips', c:'Toggle contextual tips across the admin. On for guidance, off for bravery.' },
+    { ctx:'admin', id:'adminHelpDocsBtn', t:'Open Help Docs', c:'Opens documentation in a modal: tips, patterns, and pep talks.' },
+    { ctx:'common', id:'action:save', t:'Save', c:'Writes your changes. Like a seatbelt for settings—click it before things get bumpy.' },
+    { ctx:'common', id:'action:cancel', t:'Cancel', c:'Closes without saving. Exit stage left—props stay where they were.' },
+    { ctx:'common', id:'action:preview', t:'Preview', c:'Shows how changes will look. Try before you buy—no commitment.' },
+    { ctx:'common', id:'action:reset', t:'Reset', c:'Reverts to defaults. The “oops” button—use sparingly, with beverages.' },
+    // Inventory page quick hits
+    { ctx:'inventory', id:'saveBtn', t:'Save Item', c:'Commits changes to this item. Drafts are great, saved drafts are greater.' },
+    { ctx:'inventory', id:'duplicateBtn', t:'Duplicate Item', c:'Make a copy so you can iterate without touching the original.' },
+    { ctx:'inventory', id:'importBtn', t:'Import Items', c:'Bring in a CSV and let the catalog grow—validate columns first.' },
+    // Orders
+    { ctx:'orders', id:'action:delete-order', t:'Delete Order', c:'Removes the order. Consider accounting before wielding this power.' },
+    // POS
+    { ctx:'pos', id:'action:open-detailed-modal', t:'View Item Details', c:'Opens the product’s detail modal. Add to cart with confidence and caffeine.' },
+  ];
+
+  async function seedCommonDefaults({ verbose=false }={}){
+    const byCtx = DEFAULT_SEEDS.reduce((m, r) => { (m[r.ctx] ||= []).push(r); return m; }, {});
+    let created=0, updated=0, skipped=0;
+    for (const [ctx, rows] of Object.entries(byCtx)) {
+      // Load existing rows for this context
+      let existing=[]; try { const res = await API.list(ctx); existing = (res && res.success && res.tooltips) ? res.tooltips : []; } catch(_) {}
+      const map = new Map(existing.map(r => [String(r.element_id), r]));
+      for (const r of rows) {
+        const prev = map.get(r.id);
+        const row = {
+          element_id: r.id,
+          page_context: ctx,
+          title: r.t,
+          content: r.c,
+          position: 'top',
+          is_active: 1,
+        };
+        if (prev && prev.title === row.title && prev.content === row.content) { skipped++; continue; }
+        const res = await API.upsert(row);
+        if (res && res.success) { (prev ? updated++ : created++); }
+        await new Promise(res => setTimeout(res, 10));
+      }
+    }
+    if (verbose) {
+      console.info('[WF Tooltip Curator] Seed defaults:', { created, updated, skipped, total: created+updated+skipped });
+      try { window.__wfDebugTooltips && window.__wfDebugTooltips(); } catch(_) {}
+    }
+    return { created, updated, skipped, total: created+updated+skipped };
+  }
+
+  try {
+    window.WF_TooltipCurator.seedCommonDefaults = () => seedCommonDefaults({ verbose:false });
+    window.WF_TooltipCurator.seedCommonDefaultsVerbose = () => seedCommonDefaults({ verbose:true });
+  } catch(_) {}
+
+  // --- Cleanup utility: remove existing curation tags from DB content ---
+  async function removeCurationTags({ contexts=CONTEXTS_DEFAULT, verbose=false }={}){
+    const strip = (s) => (s || '').replace(new RegExp(`\\s*${CURATION_TAG.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}`, 'g'), '').trim();
+    let scanned=0, updated=0, skipped=0;
+    for (const ctx of contexts) {
+      let list=[]; try { const res = await API.list(ctx); list = (res && res.success && Array.isArray(res.tooltips)) ? res.tooltips : []; } catch(_) {}
+      for (const row of list) {
+        scanned++;
+        const cleaned = strip(row.content);
+        if (cleaned === (row.content || '')) { skipped++; continue; }
+        const payload = {
+          element_id: row.element_id,
+          page_context: row.page_context || ctx,
+          title: row.title,
+          content: cleaned,
+          position: row.position || 'top',
+          is_active: row.is_active ? 1 : 1,
+        };
+        const r = await API.upsert(payload);
+        if (r && r.success) updated++;
+        await new Promise(r => setTimeout(r, 10));
+      }
+    }
+    if (verbose) console.info('[WF Tooltip Curator] Removed curation tags:', { scanned, updated, skipped });
+    try { window.__wfDebugTooltips && window.__wfDebugTooltips(); } catch(_) {}
+    return { scanned, updated, skipped };
+  }
+
+  try {
+    window.WF_TooltipCurator.removeCurationTags = () => removeCurationTags({ verbose:false });
+    window.WF_TooltipCurator.removeCurationTagsVerbose = () => removeCurationTags({ verbose:true });
+  } catch(_) {}
 
   // Auto-run (DISABLED BY DEFAULT). To enable, set: localStorage.wf_tooltip_auto_curate = 'true'
   try {

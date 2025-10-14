@@ -3969,9 +3969,7 @@ body[data-page^='admin'] .admin-nav-tab.active {
     clear: both;
 }
 body[data-page='admin/settings'] #admin-section-content {
-    overflow-y: auto;
-    max-height: calc(100vh - 160px);
-    -webkit-overflow-scrolling: touch;
+    /* Remove legacy inner scroll clamp to avoid double scrollbars */
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -3998,8 +3996,7 @@ body[data-page='admin/customers'],
 body[data-page='admin/inventory'],
 body[data-page='admin/orders'],
 body[data-page='admin/reports'],
-body[data-page='admin/marketing'],
-body[data-page='admin/settings'] {
+body[data-page='admin/marketing'] {
     overflow-y: auto;
 }
 

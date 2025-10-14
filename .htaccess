@@ -1,4 +1,6 @@
 # No rewrites; host-safe routing via ErrorDocument
+# Disable MultiViews so hashed Vite asset filenames (e.g., app.js-<hash>.js) are served exactly
+Options -MultiViews
 DirectoryIndex index.php
 ErrorDocument 404 /router.php
 ErrorDocument 403 /router.php

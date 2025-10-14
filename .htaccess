@@ -5,6 +5,18 @@ DirectoryIndex index.php
 ErrorDocument 404 /router.php
 ErrorDocument 403 /router.php
 
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  # Serve existing files or directories directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  # Route all other requests to index.php (clean URLs like /shop)
+  RewriteRule ^ index.php [L]
+  
+</IfModule>
+
 # --- Security: deny access to sensitive files ---
 <IfModule mod_authz_core.c>
   <FilesMatch "^(\.env|composer\.(json|lock)|phpunit\.xml(\.dist)?|.*\.sql)$">

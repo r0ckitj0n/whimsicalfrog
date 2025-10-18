@@ -68,8 +68,8 @@
           <input type="text" inputmode="numeric" class="wf-revealco-input" aria-label="Answer" />
         </label>
         <div class="wf-revealco-actions">
-          <button type="button" class="wf-btn wf-btn-primary" data-action="reveal">Reveal</button>
-          <button type="button" class="wf-btn" data-action="cancel">Cancel</button>
+          <button type="button" class="btn btn-primary" data-action="reveal">Reveal</button>
+          <button type="button" class="btn btn-secondary" data-action="cancel">Cancel</button>
         </div>
         <p class="wf-revealco-status" aria-live="polite"></p>
       </div>

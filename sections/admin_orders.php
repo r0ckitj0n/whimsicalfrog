@@ -5,9 +5,14 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/components/admin_order_editor.php';
 
+// Detect partial requests (skip header/footer and only output requested fragment)
+if (isset($_GET['wf_partial'])) {
+    define('WF_PARTIAL_REQUEST', true);
+}
+
 
 // Ensure shared layout (header/footer) is bootstrapped so the admin navbar is present
-if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+if (!defined('WF_LAYOUT_BOOTSTRAPPED') && !defined('WF_PARTIAL_REQUEST')) {
     $page = 'admin';
     include dirname(__DIR__) . '/partials/header.php';
     if (!function_exists('__wf_admin_orders_footer_shutdown')) {
@@ -38,6 +43,24 @@ $filters = [
     'shipping_method' => $_GET['filter_shipping_method'] ?? '',
     'payment_status' => $_GET['filter_payment_status'] ?? ''
 ];
+
+// Sorting (whitelisted)
+$sortBy = isset($_GET['sort']) ? strtolower((string)$_GET['sort']) : 'date';
+$sortDir = isset($_GET['dir']) ? strtolower((string)$_GET['dir']) : 'desc';
+$validDir = ($sortDir === 'asc') ? 'ASC' : 'DESC';
+$sortMap = [
+    'id' => 'o.id',
+    'customer' => 'u.username',
+    'date' => 'o.date',
+    'status' => 'o.order_status',
+    'payment' => 'o.paymentMethod',
+    'shipping' => 'o.shippingMethod',
+    'paystatus' => 'o.paymentStatus',
+    'total' => 'o.total',
+    'items' => 'COALESCE(oc.items_count,0)',
+];
+$orderColumn = $sortMap[$sortBy] ?? 'o.date';
+$orderClause = $orderColumn . ' ' . $validDir . ', o.date DESC, o.id DESC';
 
 // Build dynamic WHERE clause
 $conditions = [];
@@ -82,18 +105,30 @@ $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
 // Main orders query with optimized JOIN
 if (!empty($params)) {
-    $stmt = $db->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
+    $stmt = $db->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
+                          COALESCE(oc.items_count, 0) AS items_count
                           FROM orders o 
                           JOIN users u ON o.userId = u.id 
+                          LEFT JOIN (
+                            SELECT orderId, SUM(quantity) AS items_count
+                            FROM order_items
+                            GROUP BY orderId
+                          ) oc ON oc.orderId = o.id
                           {$whereClause} 
-                          ORDER BY o.date DESC");
+                          ORDER BY {$orderClause}");
     $stmt->execute($params);
     $orders = $stmt->fetchAll(); // Database class sets default fetch mode
 } else {
-    $orders = $db->query("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode 
+    $orders = $db->query("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
+                          COALESCE(oc.items_count, 0) AS items_count
                           FROM orders o 
                           JOIN users u ON o.userId = u.id 
-                          ORDER BY o.date DESC")->fetchAll(); // Database class sets default fetch mode
+                          LEFT JOIN (
+                            SELECT orderId, SUM(quantity) AS items_count
+                            FROM order_items
+                            GROUP BY orderId
+                          ) oc ON oc.orderId = o.id
+                          ORDER BY {$orderClause}")->fetchAll(); // Database class sets default fetch mode
 }
 
 // Get filter dropdown options with single queries
@@ -105,10 +140,15 @@ $dropdownOptions = [
 ];
 
 // Modal state management
+$sanitizeKey = static function($v){
+    $raw = (string)($v ?? '');
+    if (($p = stripos($raw, 'debug_nav')) !== false) { $raw = substr($raw, 0, $p); }
+    return trim($raw);
+};
 $modalState = [
     'mode' => '',
-    'view_id' => $_GET['view'] ?? '',
-    'edit_id' => $_GET['edit'] ?? ''
+    'view_id' => $sanitizeKey($_GET['view'] ?? ''),
+    'edit_id' => $sanitizeKey($_GET['edit'] ?? '')
 ];
 
 if ($modalState['view_id']) {
@@ -116,6 +156,123 @@ if ($modalState['view_id']) {
 }
 if ($modalState['edit_id']) {
     $modalState['mode'] = 'edit';
+}
+
+// Handle lightweight partial for order modal to speed up inline opens
+if (defined('WF_PARTIAL_REQUEST') && ($_GET['wf_partial'] ?? '') === 'order_modal') {
+    $orderId = $modalState['view_id'] ?: $modalState['edit_id'];
+    if ($orderId) {
+        $stmt = $db->prepare("SELECT o.*, u.username, u.email, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode FROM orders o LEFT JOIN users u ON o.userId = u.id WHERE o.id = ?");
+        $stmt->execute([$orderId]);
+        $orderData = $stmt->fetch();
+        // Compute prev/next using the same dataset and order as the table ($orders)
+        $prevOrderId = null;
+        $nextOrderId = null;
+        $rawIds = array_map(static fn($o) => (string)($o['id'] ?? ''), $orders ?? []);
+        $norm = static function ($v) { return strtolower(trim((string)$v)); };
+        $idListNorm = array_map($norm, $rawIds);
+        $idx = array_search($norm($orderId), $idListNorm, true);
+        $n = count($rawIds);
+        if ($idx !== false && $n > 0) {
+            $prevOrderId = $rawIds[(($idx - 1 + $n) % $n)];
+            $nextOrderId = $rawIds[(($idx + 1) % $n)];
+        }
+        // debug output removed
+        // Output only the modal HTML fragment
+        ?>
+<div class="admin-modal-overlay topmost over-header order-modal show" id="orderModal" data-action="close-order-editor-on-overlay">
+    <?php 
+        $linkBase = $_GET; unset($linkBase['view'], $linkBase['edit']);
+        $prevTarget = $prevOrderId ?: $orderId;
+        $nextTarget = $nextOrderId ?: $orderId;
+        $prevHref = '/admin/orders?' . http_build_query(array_merge($linkBase, [ $modalState['mode'] => $prevTarget ]));
+        $nextHref = '/admin/orders?' . http_build_query(array_merge($linkBase, [ $modalState['mode'] => $nextTarget ]));
+    ?>
+    <a href="<?= htmlspecialchars($prevHref) ?>" 
+       class="nav-arrow nav-arrow-left wf-nav-arrow wf-nav-left">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </a>
+    <a href="<?= htmlspecialchars($nextHref) ?>" 
+       class="nav-arrow nav-arrow-right wf-nav-arrow wf-nav-right">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+    </a>
+    <div class="admin-modal admin-modal-content wf-admin-panel-visible show">
+        <div class="modal-header">
+            <h2 class="modal-title">
+                <?= $modalState['mode'] === 'view' ? 'View' : 'Edit' ?> Order: <?= htmlspecialchars($orderId) ?>
+            </h2>
+            <?php if ($modalState['mode'] === 'view' && $orderId): ?>
+            <a href="/admin/orders?edit=<?= htmlspecialchars($orderId) ?>" class="btn btn-primary btn-sm modal-action-edit" title="Edit Order">
+                Edit
+            </a>
+            <?php elseif ($orderData && $modalState['mode'] === 'edit'): ?>
+            <button type="submit" form="orderForm" class="btn btn-primary btn-sm" data-action="save-order">Save</button>
+            <?php endif; ?>
+        </div>
+        <div class="modal-body">
+            <?php if ($orderData): ?>
+            <form id="orderForm" class="order-form-grid">
+                <div class="order-details-column">
+                    <div class="modal-section">
+                        <h3 class="form-section-title">Order Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Order ID</label>
+                                <input type="text" value="<?= htmlspecialchars($orderId) ?>" class="form-input" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date</label>
+                                <input type="datetime-local" name="date" 
+                                       value="<?= date('Y-m-d\\TH:i', strtotime($orderData['date'])) ?>" 
+                                       class="form-input" <?= $modalState['mode'] === 'view' ? 'readonly' : '' ?>>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Order Status</label>
+                                <select name="order_status" class="form-select" <?= $modalState['mode'] === 'view' ? 'disabled' : '' ?>>
+                                    <?php foreach (['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] as $status): ?>
+                                    <option value="<?= $status ?>" <?= $orderData['order_status'] === $status ? 'selected' : '' ?>>
+                                        <?= $status ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Total</label>
+                                <input type="number" name="total" step="0.01" 
+                                       value="<?= $orderData['total'] ?>" 
+                                       class="form-input" <?= $modalState['mode'] === 'view' ? 'readonly' : '' ?>>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-section">
+                        <h3 class="form-section-title">Customer Information</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Customer</label>
+                                <input type="text" value="<?= htmlspecialchars($orderData['username']) ?>" class="form-input" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email</label>
+                                <input type="email" value="<?= htmlspecialchars($orderData['email']) ?>" class="form-input" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <?php else: ?>
+                <div class="p-4">Order not found.</div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+        <?php
+    }
+    // Terminate response for partial
+    exit;
 }
 
 // Get all items for modal dropdowns
@@ -177,6 +334,23 @@ function getPaymentStatusBadgeClass($status)
         'failed' => 'badge-payment-failed',
         default => 'badge-payment-default'
     };
+}
+
+// Helpers for sortable header links
+function ordSortUrl($column, $currentSort, $currentDir)
+{
+    $newDir = ($column === $currentSort && $currentDir === 'asc') ? 'desc' : 'asc';
+    $queryParams = $_GET;
+    $queryParams['sort'] = $column;
+    $queryParams['dir'] = $newDir;
+    // Remove modal params on sort
+    unset($queryParams['view'], $queryParams['edit']);
+    return '/admin/orders?' . http_build_query($queryParams);
+}
+function ordSortIndicator($column, $currentSort, $currentDir)
+{
+    if ($column !== $currentSort) return '';
+    return $currentDir === 'asc' ? '↑' : '↓';
 }
 ?>
 
@@ -244,16 +418,36 @@ function getPaymentStatusBadgeClass($status)
         <table class="admin-data-table">
             <thead>
                 <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Items</th>
-                    <th>Order Status</th>
-                    <th>Payment</th>
-                    <th>Shipping</th>
-                    <th>Pay Status</th>
-                    <th>Total</th>
+                    <th>
+                        <a href="<?= ordSortUrl('id', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='id' ? ' is-active' : '' ?>">Order ID <?= ordSortIndicator('id', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('customer', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='customer' ? ' is-active' : '' ?>">Customer <?= ordSortIndicator('customer', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('date', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='date' ? ' is-active' : '' ?>">Date <?= ordSortIndicator('date', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('date', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='date' ? ' is-active' : '' ?>">Time <?= ordSortIndicator('date', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('items', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='items' ? ' is-active' : '' ?>">Items <?= ordSortIndicator('items', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('status', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='status' ? ' is-active' : '' ?>">Order Status <?= ordSortIndicator('status', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('payment', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='payment' ? ' is-active' : '' ?>">Payment <?= ordSortIndicator('payment', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('shipping', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='shipping' ? ' is-active' : '' ?>">Shipping <?= ordSortIndicator('shipping', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('paystatus', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='paystatus' ? ' is-active' : '' ?>">Pay Status <?= ordSortIndicator('paystatus', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('total', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='total' ? ' is-active' : '' ?>">Total <?= ordSortIndicator('total', $sortBy, $sortDir) ?></a>
+                    </th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -347,44 +541,53 @@ function getPaymentStatusBadgeClass($status)
         $stmt->execute([$orderId]);
         $orderItems = $stmt->fetchAll(); // Database class sets default fetch mode
 
-        $allOrderIds = $db->query("SELECT id FROM orders ORDER BY date DESC")->fetchAll(\PDO::FETCH_COLUMN);
-        $currentIndex = array_search($orderId, $allOrderIds);
-        $prevOrderId = $currentIndex > 0 ? $allOrderIds[$currentIndex - 1] : null;
-        $nextOrderId = $currentIndex < count($allOrderIds) - 1 ? $allOrderIds[$currentIndex + 1] : null;
+        $rawIds = array_map(static fn($o) => (string)($o['id'] ?? ''), $orders ?? []);
+        $norm = static function ($v) { return strtolower(trim((string)$v)); };
+        $idListNorm = array_map($norm, $rawIds);
+        $currentIndex = array_search($norm($orderId), $idListNorm, true);
+        $n = count($rawIds);
+        if ($currentIndex !== false && $n > 0) {
+            $prevOrderId = $rawIds[(($currentIndex - 1 + $n) % $n)];
+            $nextOrderId = $rawIds[(($currentIndex + 1) % $n)];
+        }
+        // debug output removed
     }
     ?>
 
-<div class="modal-overlay order-modal show" id="orderModal">
+<div class="admin-modal-overlay topmost over-header order-modal show" id="orderModal" data-action="close-order-editor-on-overlay">
     <!-- Navigation Arrows -->
-    <?php if ($prevOrderId): ?>
-    <a href="/admin/orders?<?= $modalState['mode'] ?>=<?= $prevOrderId ?>" 
-       class="nav-arrow nav-arrow-left">
+    <?php $linkBase = $_GET; unset($linkBase['view'], $linkBase['edit']);
+          $prevTarget = $prevOrderId ?: $orderId;
+          $nextTarget = $nextOrderId ?: $orderId;
+          $prevHref = '/admin/orders?' . http_build_query(array_merge($linkBase, [ $modalState['mode'] => $prevTarget ]));
+          $nextHref = '/admin/orders?' . http_build_query(array_merge($linkBase, [ $modalState['mode'] => $nextTarget ])); ?>
+    <a href="<?= htmlspecialchars($prevHref) ?>" 
+       class="nav-arrow nav-arrow-left wf-nav-arrow wf-nav-left">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
     </a>
-    <?php endif; ?>
     
-    <?php if ($orderData && $nextOrderId): ?>
-    <a href="/admin/orders?<?= $modalState['mode'] ?>=<?= $nextOrderId ?>" 
-       class="nav-arrow nav-arrow-right">
+    <a href="<?= htmlspecialchars($nextHref) ?>" 
+       class="nav-arrow nav-arrow-right wf-nav-arrow wf-nav-right">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
     </a>
-    <?php endif; ?>
 
-    <div class="modal-content order-modal-content">
+    <div class="admin-modal admin-modal-content wf-admin-panel-visible show">
         <!-- Modal Header -->
         <div class="modal-header">
             <h2 class="modal-title">
                 <?= $modalState['mode'] === 'view' ? 'View' : 'Edit' ?> Order: <?= htmlspecialchars($orderId) ?>
             </h2>
-            <a href="/admin/orders" class="modal-close">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+            <?php if ($modalState['mode'] === 'view' && $orderId): ?>
+            <a href="/admin/orders?edit=<?= htmlspecialchars($orderId) ?>" class="btn btn-primary btn-sm modal-action-edit" title="Edit Order">
+                Edit
             </a>
+            <?php elseif ($orderData && $modalState['mode'] === 'edit'): ?>
+            <button type="submit" form="orderForm" class="btn btn-primary btn-sm" data-action="save-order">Save</button>
+            <?php endif; ?>
         </div>
 
         <!-- Modal Body -->
@@ -393,7 +596,7 @@ function getPaymentStatusBadgeClass($status)
             <form id="orderForm" class="order-form-grid">
                 <!-- Order Details Column -->
                 <div class="order-details-column">
-                    <div class="form-section">
+                    <div class="modal-section">
                         <h3 class="form-section-title">Order Information</h3>
                         <div class="form-grid">
                             <div class="form-group">
@@ -425,7 +628,7 @@ function getPaymentStatusBadgeClass($status)
                         </div>
                     </div>
 
-                    <div class="form-section">
+                    <div class="modal-section">
                         <h3 class="form-section-title">Customer Information</h3>
                         <div class="form-grid">
                             <div class="form-group">
@@ -439,7 +642,7 @@ function getPaymentStatusBadgeClass($status)
                         </div>
                     </div>
 
-                    <div class="form-section">
+                    <div class="modal-section">
                         <h3 class="form-section-title">Payment & Shipping</h3>
                         <div class="form-grid">
                             <div class="form-group">
@@ -479,7 +682,7 @@ function getPaymentStatusBadgeClass($status)
 
                 <!-- Order Items Column -->
                 <div class="order-items-column">
-                    <div class="form-section">
+                    <div class="modal-section">
                         <div class="form-section-header">
                             <h3 class="form-section-title">Order Items</h3>
                             <?php if ($modalState['mode'] === 'edit'): ?>
@@ -525,7 +728,7 @@ function getPaymentStatusBadgeClass($status)
                         </div>
                     </div>
 
-                    <div class="form-section">
+                    <div class="modal-section">
                         <div class="form-section-header">
                             <h3 class="form-section-title">Shipping Address</h3>
                             <?php if ($modalState['mode'] === 'edit'): ?>
@@ -554,7 +757,7 @@ function getPaymentStatusBadgeClass($status)
                         <?php endif; ?>
                     </div>
 
-                    <div class="form-section">
+                    <div class="modal-section">
                         <h3 class="form-section-title">Notes</h3>
                         <div class="form-group">
                             <label class="form-label">Order Notes</label>
@@ -580,17 +783,7 @@ function getPaymentStatusBadgeClass($status)
             <?php endif; ?>
         </div>
 
-        <!-- Modal Footer -->
-        <?php if ($orderData && $modalState['mode'] === 'edit'): ?>
-        <div class="modal-footer">
-            <a href="?page=admin&section=orders" class="btn btn-secondary">
-                Cancel
-            </a>
-            <button type="submit" form="orderForm" class="btn btn-primary">
-                Save Changes
-            </button>
-        </div>
-        <?php endif; ?>
+        <!-- Modal Footer intentionally empty for edit mode (no Cancel) -->
     </div>
 </div>
 <?php endif; ?>
@@ -647,141 +840,4 @@ function getPaymentStatusBadgeClass($status)
 ?>
 </script>
 
-<?php // Admin orders script is loaded via app.js per-page imports?>
-<script type="module">
-  // Minimal guard: if the Orders module did not mark itself ready shortly after DOM, import it.
-  document.addEventListener('DOMContentLoaded', () => {
-    const ensure = () => {
-      try {
-        if (!window.__WF_ADMIN_ORDERS_READY) {
-          const hasViteClient = !!document.querySelector('script[src*="/@vite/client"]');
-          const doImport = () => import('/src/js/admin-orders.js');
-          if (hasViteClient) {
-            doImport()
-              .then(() => console.log('[OrdersPage] admin-orders module imported via guard (dev)'))
-              .catch(err => {
-                console.error('[OrdersPage] guard failed to import admin-orders.js (dev)', err);
-              });
-          } else {
-            // In production (no Vite client), rely on app.js dynamic import.
-            // If that somehow failed, we'll install a robust inline fallback below.
-            console.warn('[OrdersPage] Skipping /src import because Vite dev client not detected; relying on bundled app loader.');
-          }
-        }
-      } catch (e) {
-        console.error('[OrdersPage] guard error', e);
-      }
-    };
-    // First attempt shortly after DOM ready
-    setTimeout(ensure, 200);
-    // Second pass: if still not ready after 1s, install a robust inline fallback (editor + receipt/delete handlers)
-    setTimeout(() => {
-      try {
-        if (!window.__WF_ADMIN_ORDERS_READY && !window.__WF_ORDERS_INLINE_EDITOR) {
-          window.__WF_ORDERS_INLINE_EDITOR = true;
-          const fieldToApiKey = (f) => ({ order_status:'status', paymentMethod:'paymentMethod', shippingMethod:'shippingMethod', paymentStatus:'paymentStatus', date:'date' }[f] || f);
-          const badgeStatus = (v) => ({ pending:'badge-status-pending', processing:'badge-status-processing', shipped:'badge-status-shipped', delivered:'badge-status-delivered', cancelled:'badge-status-cancelled' }[(v||'').toLowerCase()] || 'badge-status-default');
-          const badgePay = (v) => ({ pending:'badge-payment-pending', received:'badge-payment-received', processing:'badge-payment-processing', refunded:'badge-payment-refunded', failed:'badge-payment-failed' }[(v||'').toLowerCase()] || 'badge-payment-default');
-          const commit = (cell, key, val) => {
-            const orderId = cell.getAttribute('data-order-id'); if (!orderId || !key) return Promise.resolve({ ok:false, data:{} });
-            const payload = { orderId:String(orderId) }; payload[key] = val;
-            return fetch('/api/update_order.php', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
-              .then(r => r.json().catch(()=>({})).then(j => ({ ok:r.ok, data:j })));
-          };
-          const buildEditor = (cell) => {
-            if (cell.__editing) return; cell.__editing = true;
-            const type = cell.getAttribute('data-type')||'text'; const field = cell.getAttribute('data-field')||''; const apiKey = fieldToApiKey(field);
-            const originalHtml = cell.innerHTML; const originalText = (cell.textContent||'').trim();
-            const cleanup = (restore) => { if (restore) cell.innerHTML = originalHtml; cell.__editing=false; };
-            const onKey = (ev, input) => { if (ev.key==='Enter'){ ev.preventDefault(); doCommit(input.value); } else if (ev.key==='Escape'){ ev.preventDefault(); cleanup(true); } };
-            const doCommit = (val) => commit(cell, apiKey, val).then(res => {
-              const ok = res && res.ok && (res.data && (res.data.success || res.data.orderId));
-              if (ok) {
-                if (field==='order_status') { const s=document.createElement('span'); s.className='status-badge '+badgeStatus(val); s.textContent=val; cell.innerHTML=''; cell.appendChild(s); }
-                else if (field==='paymentStatus') { const s=document.createElement('span'); s.className='payment-status-badge '+badgePay(val); s.textContent=val; cell.innerHTML=''; cell.appendChild(s); }
-                else if (field==='date') { let iso=String(val||'').slice(0,10); cell.setAttribute('data-raw-value', iso); try{ cell.textContent=new Date(iso).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});}catch(_){ cell.textContent=iso||val; } }
-                else { cell.textContent = val; }
-                cleanup(false); try{ window.showNotification && window.showNotification('Saved','success'); }catch(_){}
-              } else { cleanup(true); try{ window.showNotification && window.showNotification((res&&res.data&&(res.data.error||res.data.message))||'Save failed','error'); }catch(_){} }
-            }).catch(()=>{ cleanup(true); try{ window.showNotification && window.showNotification('Network error','error'); }catch(_){} });
-            if (type==='select') {
-              let options=[]; if(field==='order_status') options=['Pending','Processing','Shipped','Delivered','Cancelled'];
-              else if(field==='paymentMethod') options=['Credit Card','Cash','Check','PayPal','Venmo','Other'];
-              else if(field==='shippingMethod') options=['Customer Pickup','Local Delivery','USPS','FedEx','UPS'];
-              else if(field==='paymentStatus') options=['Pending','Received','Processing','Refunded','Failed'];
-              const sel=document.createElement('select'); sel.className='form-select'; options.forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=o; if(o===originalText) opt.selected=true; sel.appendChild(opt); });
-              cell.innerHTML=''; cell.appendChild(sel); sel.focus(); sel.addEventListener('blur',()=>doCommit(sel.value)); sel.addEventListener('keydown',ev=>onKey(ev,sel));
-            } else {
-              const input=document.createElement('input'); input.type=(type==='date'||type==='number'||type==='datetime-local')?type:'text'; input.className='form-input';
-              if(type==='date'){ const rv = cell.getAttribute('data-raw-value'); input.value = (/^\d{4}-\d{2}-\d{2}$/.test(rv||''))?rv:originalText; } else { input.value = originalText; }
-              cell.innerHTML=''; cell.appendChild(input); input.focus(); try{ input.select && input.select(); }catch(_){}
-              input.addEventListener('blur',()=>doCommit((input.value||'').trim())); input.addEventListener('keydown',ev=>onKey(ev,input));
-            }
-          };
-          document.addEventListener('click', (e) => {
-            const cell = e.target && e.target.closest ? e.target.closest('.editable-field') : null;
-            if (!cell) return; if (e.target.closest('input,select,textarea,button,a')) return; buildEditor(cell);
-          }, true);
-
-          // Additional fallback: wire up receipt and delete actions so the page remains functional
-          const showModal = (el) => { try{ el.classList.remove('hidden'); el.classList.add('show'); }catch(_){}}
-          const hideModal = (el) => { try{ el.classList.add('hidden'); el.classList.remove('show'); }catch(_){}}
-          let __lastReceiptId = '';
-          document.addEventListener('click', (ev) => {
-            const t = ev.target.closest && ev.target.closest('[data-action]');
-            if (!t) return;
-            const action = t.getAttribute('data-action');
-            if (action === 'show-receipt') {
-              ev.preventDefault();
-              const orderId = t.getAttribute('data-order-id') || '';
-              __lastReceiptId = orderId || __lastReceiptId;
-              const modal = document.getElementById('receiptModal');
-              const content = document.getElementById('receiptContent');
-              if (modal && content) {
-                content.innerHTML = '<div class="p-4">Loading...</div>';
-                showModal(modal);
-                // Load receipt in an iframe for parity with checkout
-                const url = '/receipt?orderId=' + encodeURIComponent(orderId) + '&bare=1';
-                const iframe = document.createElement('iframe');
-                iframe.src = url; iframe.title = 'Receipt'; iframe.className = 'receipt-iframe';
-                iframe.addEventListener('load', () => { try { content.innerHTML=''; content.appendChild(iframe);} catch(_){} }, { once:true });
-                setTimeout(() => { if (!content.contains(iframe)) { try { content.innerHTML=''; content.appendChild(iframe);} catch(_){} } }, 800);
-              }
-            } else if (action === 'close-receipt-modal') {
-              ev.preventDefault();
-              const modal = document.getElementById('receiptModal'); if (modal) hideModal(modal);
-            } else if (action === 'print-receipt') {
-              ev.preventDefault();
-              const id = __lastReceiptId || (t.getAttribute('data-order-id') || '');
-              if (id) {
-                const url = '/receipt?orderId=' + encodeURIComponent(id) + '&bare=1';
-                try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
-              }
-            } else if (action === 'confirm-delete') {
-              ev.preventDefault();
-              const id = t.getAttribute('data-order-id') || '';
-              const modal = document.getElementById('deleteModal');
-              const target = document.getElementById('deleteOrderId');
-              if (target) target.textContent = id;
-              if (modal) showModal(modal);
-            } else if (action === 'close-delete-modal') {
-              ev.preventDefault();
-              const modal = document.getElementById('deleteModal'); if (modal) hideModal(modal);
-            } else if (action === 'delete-order') {
-              ev.preventDefault();
-              // Placeholder: close modal; server-side delete can be wired later
-              const modal = document.getElementById('deleteModal'); if (modal) hideModal(modal);
-              try { window.showNotification && window.showNotification('Delete action not yet implemented', 'info'); } catch(_) {}
-            }
-          });
-
-          console.warn('[OrdersPage] Inline fallback installed (editor + receipt/delete handlers)');
-        }
-      } catch (e) {
-        console.error('[OrdersPage] fallback install error', e);
-      }
-    }, 1000);
-  });
-  // Hint tokens for resolvers
-  try { const b=document.body; if (b) { if (!b.dataset.page) b.dataset.page='admin/orders'; b.dataset.isAdmin='true'; } } catch(_) {}
-  </script>
+<?php // Admin orders script is loaded via app.js per-page imports ?>

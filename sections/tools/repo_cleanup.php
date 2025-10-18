@@ -37,8 +37,8 @@ if (!$isModal) {
     .row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; }
     .btn { display:inline-flex; align-items:center; justify-content:center; gap:.5rem; padding:.6rem .9rem; border-radius:6px; border:1px solid #bbb; background:#f1f1f1; cursor:pointer; }
     .btn:hover { background:#e7e7e7; }
-    .btn-brand { background:#2563eb; color:#fff; border-color:#1e40af; }
-    .btn-brand:hover { background:#1d4ed8; }
+    .btn-primary { background:#2563eb; color:#fff; border-color:#1e40af; }
+    .btn-primary:hover { background:#1d4ed8; }
     .btn-danger { background:#b91c1c; color:#fff; border-color:#7f1d1d; }
     .muted { color:#666; font-size:.9rem; }
     pre { background:#111; color:#0f0; padding:1rem; border-radius:6px; overflow:auto; max-height:40vh; }
@@ -58,7 +58,7 @@ if (!$isModal) {
       <div class="card">
         <h2>Actions</h2>
         <div class="row">
-          <button class="btn btn-brand" id="btnAudit">Run Audit (Dry Run)</button>
+          <button class="btn btn-primary" id="btnAudit">Run Audit (Dry Run)</button>
           <button class="btn btn-danger" id="btnExecute">Execute Cleanup</button>
           <input type="text" id="restoreTs" placeholder="Restore timestamp (YYYYMMDD_HHMMSS)" class="adm-input flex-1 min-w-220">
           <button class="btn" id="btnRestore">Restore</button>

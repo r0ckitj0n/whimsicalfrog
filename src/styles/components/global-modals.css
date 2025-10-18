@@ -79,7 +79,7 @@
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
-    padding: 24px;
+    padding: 5px;
     transform: scale(1);
     transition: transform 0.3s ease;
     position: relative;
@@ -102,7 +102,7 @@ body:has(#cartPage) { overflow-x: hidden; }
     max-height: calc(100vh - 40px);
     min-height: auto;
     overflow-y: auto;
-    padding: 24px;
+    padding: 5px;
     transform: scale(1);
     transition: transform 0.3s ease;
 }
@@ -142,7 +142,7 @@ body:has(#cartPage) { overflow-x: hidden; }
 /* ==============================================
    MODAL HEADER COMPONENTS
    ============================================== */
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0; padding: 5px 12px; border-bottom: 1px solid #e5e7eb; }
 .modal-title { font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0; }
 .modal-subtitle { font-size: 0.875rem; color: #6b7280; margin: 4px 0 0; }
 .modal-close { background: none; border: none; font-size: var(--modal-close-font-size, 24px); color: var(--modal-close-color, #6b7280); cursor: pointer; padding: 0; width: var(--modal-close-size, 30px); height: var(--modal-close-size, 30px); display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: background-color 0.2s ease, color 0.2s ease; position: absolute; }
@@ -168,7 +168,6 @@ body:has(#cartPage) { overflow-x: hidden; }
 /* ==============================================
    MODAL BODY AND FOOTER
    ============================================== */
-.modal-body { margin-bottom: 24px; }
 .modal-footer { display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #e5e7eb; }
 
 /* ==============================================
@@ -178,7 +177,7 @@ body:has(#cartPage) { overflow-x: hidden; }
 .confirmation-modal-overlay.show { opacity: 1; visibility: visible; }
 .confirmation-modal { background: white; border-radius: 12px; box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%); max-width: 500px; width: 90%; margin: 20px; transform: scale(0.9) translateY(20px); transition: all 0.3s ease; }
 .confirmation-modal-overlay.show .confirmation-modal { transform: scale(1) translateY(0); }
-.confirmation-modal-header { padding: 24px 24px 16px; }
+.confirmation-modal-header { padding: 5px 5px 16px; }
 .confirmation-modal-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
 .confirmation-modal-icon.warning { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
 .confirmation-modal-icon.danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
@@ -186,12 +185,12 @@ body:has(#cartPage) { overflow-x: hidden; }
 .confirmation-modal-icon.success { background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #BF5700)); color: white; }
 .confirmation-modal-title { font-size: 20px; font-weight: 600; color: #1f2937; text-align: center; margin-bottom: 8px; }
 .confirmation-modal-subtitle { font-size: 14px; color: #6b7280; text-align: center; }
-.confirmation-modal-body { padding: 16px 24px; }
+.confirmation-modal-body { padding: 16px 5px; }
 .confirmation-modal-message { color: #374151; line-height: 1.6; font-size: 15px; }
 .confirmation-modal-details { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 14px; }
 .confirmation-modal-details ul { margin: 0; padding-left: 20px; }
 .confirmation-modal-details li { margin: 4px 0; color: #4b5563; }
-.confirmation-modal-footer { padding: 16px 24px 24px; display: flex; gap: 12px; justify-content: flex-end; }
+.confirmation-modal-footer { padding: 16px 5px 5px; display: flex; gap: 12px; justify-content: flex-end; }
 
 /* Buttons */
 .modal-button { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; border: none; outline: none; display: flex; align-items: center; gap: 8px; }
@@ -199,9 +198,9 @@ body:has(#cartPage) { overflow-x: hidden; }
 .modal-button.btn-primary { background: #87ac3a; color: white; border: 1px solid #87ac3a; }
 .modal-button.btn-primary:hover { background: var(--brand-secondary, #BF5700); border-color: var(--brand-secondary, #BF5700); }
 .modal-button.btn-primary:focus { outline-color: #87ac3a; }
-.modal-button.btn-secondary { background: #f3f4f6; color: #374151; border: none; }
-.modal-button.btn-secondary:hover { background: #e5e7eb; }
-.modal-button.btn-secondary:focus { outline-color: #9ca3af; }
+.modal-button.btn-secondary { background: var(--brand-primary, #87ac3a); color: #fff; border: 1px solid var(--brand-primary, #87ac3a); }
+.modal-button.btn-secondary:hover { background: var(--brand-secondary, #BF5700); border-color: var(--brand-secondary, #BF5700); }
+.modal-button.btn-secondary:focus { outline-color: var(--brand-primary, #87ac3a); }
 .modal-button.btn-danger { background: #ef4444; color: white; border: 1px solid #ef4444; }
 .modal-button.btn-danger:hover { background: #dc2626; border-color: #dc2626; }
 .modal-button.btn-danger:focus { outline-color: #ef4444; }
@@ -210,9 +209,9 @@ body:has(#cartPage) { overflow-x: hidden; }
 /* Legacy button classes */
 .confirmation-modal-button { padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; border: none; outline: none; display: flex; align-items: center; gap: 8px; }
 .confirmation-modal-button:focus { outline: 2px solid currentcolor; outline-offset: 2px; }
-.confirmation-modal-button.cancel { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
-.confirmation-modal-button.cancel:hover { background: #e5e7eb; }
-.confirmation-modal-button.cancel:focus { outline-color: #9ca3af; }
+.confirmation-modal-button.cancel { background: var(--brand-primary, #87ac3a); color: #fff; border: 1px solid var(--brand-primary, #87ac3a); }
+.confirmation-modal-button.cancel:hover { background: var(--brand-secondary, #BF5700); border-color: var(--brand-secondary, #BF5700); }
+.confirmation-modal-button.cancel:focus { outline-color: var(--brand-primary, #87ac3a); }
 .confirmation-modal-button.confirm { background: #87ac3a; color: white; }
 .confirmation-modal-button.confirm:hover { background: var(--brand-secondary, #BF5700); }
 .confirmation-modal-button.confirm:focus { outline-color: #87ac3a; }

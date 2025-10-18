@@ -7,64 +7,156 @@ import { ApiClient } from '../core/api-client.js';
 
   const sel = (s, r = document) => r.querySelector(s);
 
-  const overlay = () => sel('#accountSettingsModal');
+  function ensureModalMarkup() {
+    let modal = document.getElementById('accountSettingsModal');
+    if (modal) return modal;
+    const tpl = document.getElementById('accountSettingsModalTemplate');
+    if (tpl && tpl.tagName === 'TEMPLATE') {
+      const fragment = tpl.content.cloneNode(true);
+      document.body.appendChild(fragment);
+      modal = document.getElementById('accountSettingsModal');
+      return modal;
+    }
+    return null;
+  }
+
+  const overlay = () => ensureModalMarkup();
   const successEl = () => sel('#accountSettingsSuccess');
   const errorEl = () => sel('#accountSettingsError');
   const addressesList = () => sel('#accountAddressesList');
 
+  const requireString = (value, label, { allowEmpty = false } = {}) => {
+    const exists = value !== undefined && value !== null;
+    const str = exists ? String(value) : '';
+    if (!allowEmpty && (!exists || str.trim() === '')) {
+      throw new Error(`${label} is required`);
+    }
+    return str;
+  };
+
+  const getInputValue = (selector, label, { allowEmpty = false } = {}) => {
+    const el = sel(selector);
+    if (!el) throw new Error(`${label} field is missing from the DOM`);
+    return requireString(el.value, label, { allowEmpty });
+  };
+
   function getUserId() {
+    const id = document.body?.dataset?.userId;
+    if (id && String(id).trim() !== '') return String(id);
     try {
-      const bid = document.body?.dataset?.userId;
-      if (bid) return bid;
-      // Fallback from sessionStorage
-      const u = JSON.parse(sessionStorage.getItem('user') || '{}');
-      return u.userId || u.id || '';
-    } catch (_) { return ''; }
+      const attrNode = document.querySelector('[data-user-id]');
+      if (attrNode) {
+        const candidate = attrNode.getAttribute('data-user-id');
+        if (candidate && candidate.trim() !== '') {
+          return candidate.trim();
+        }
+      }
+    } catch (err) {
+      console.warn('[AccountSettings] attribute fallback failed', err);
+    }
+    throw new Error('User ID is required. Please refresh or reauthenticate.');
   }
 
   async function fetchUserProfile(userId) {
-    try {
-      if (!userId) return null;
-      const j = await ApiClient.get(`/api/users.php?id=${encodeURIComponent(userId)}`);
-      return j || null;
-    } catch (e) {
-      console.warn('[AccountSettings] fetchUserProfile failed', e);
-      return null;
+    if (!userId) throw new Error('User ID is required to fetch profile');
+    const tryGet = async (id) => {
+      try {
+        return await ApiClient.get(`/api/users.php?id=${encodeURIComponent(id)}`);
+      } catch (_) { return null; }
+    };
+    let j = await tryGet(userId);
+    if (!j || !j.id) {
+      // Fallback: derive numeric id from whoami
+      try {
+        const who = await ApiClient.get('/api/whoami.php');
+        const wid = who && (who.userId || who.userIdRaw || who.wfAuthParsedUserId);
+        if (wid) {
+          j = await tryGet(wid);
+        }
+      } catch (_) { /* noop */ }
     }
+    if (!j || typeof j !== 'object' || !j.id) {
+      throw new Error('Unable to load profile for current user');
+    }
+    return j;
   }
 
   function fillProfile(u) {
-    try {
-      sel('#acc_username').value = u?.username ?? '';
-      sel('#acc_email').value = u?.email ?? '';
-      sel('#acc_firstName').value = u?.firstName ?? '';
-      sel('#acc_lastName').value = u?.lastName ?? '';
-      const pn = sel('#acc_phoneNumber');
-      if (pn) pn.value = u?.phoneNumber ?? '';
-    } catch (_) {}
+    if (!u || typeof u !== 'object') throw new Error('Invalid profile payload');
+    sel('#acc_username').value = requireString(u.username, 'Username');
+    sel('#acc_email').value = requireString(u.email, 'Email');
+    sel('#acc_firstName').value = requireString(u.firstName ?? u.first_name, 'First name', { allowEmpty: true });
+    sel('#acc_lastName').value = requireString(u.lastName ?? u.last_name, 'Last name', { allowEmpty: true });
+    const pn = sel('#acc_phoneNumber');
+    if (pn) pn.value = requireString(u.phoneNumber ?? u.phone_number, 'Phone number', { allowEmpty: true });
   }
 
   function clearAlerts() {
-    try { errorEl()?.classList.add('hidden'); errorEl().textContent=''; } catch(_){ }
-    try { successEl()?.classList.add('hidden'); } catch(_){ }
+    const err = errorEl();
+    if (err) {
+      err.classList.add('hidden');
+      err.textContent = '';
+    }
+    const ok = successEl();
+    if (ok) ok.classList.add('hidden');
   }
 
   function showError(msg) {
-    try { const el = errorEl(); if (!el) return; el.textContent = String(msg || 'An error occurred'); el.classList.remove('hidden'); } catch(_){ }
+    const el = errorEl();
+    if (!el) {
+      console.error('[AccountSettings] Error container missing; message:', msg);
+      return;
+    }
+    try {
+      el.textContent = requireString(msg, 'Error message', { allowEmpty: false });
+    } catch (_) {
+      el.textContent = 'An unexpected error occurred';
+    }
+    el.classList.remove('hidden');
   }
 
   function showSuccess(msg) {
-    try { const el = successEl(); if (!el) return; if (msg) el.textContent = msg; el.classList.remove('hidden'); } catch(_){ }
+    const el = successEl();
+    if (!el) throw new Error('Account settings success container missing');
+    if (msg) el.textContent = requireString(msg, 'Success message');
+    el.classList.remove('hidden');
   }
 
   function openModal() {
-    const o = overlay(); if (!o) return;
+    const o = overlay();
+    if (!o) {
+      console.error('[AccountSettings] Modal markup missing from DOM');
+      return null;
+    }
+    try {
+      if (o.parentElement && o.parentElement !== document.body) {
+        document.body.appendChild(o);
+      }
+    } catch (err) {
+      console.warn('[AccountSettings] Failed to reparent modal to body', err);
+    }
+    try {
+      const isAdmin = (document.body?.getAttribute('data-page') || '').startsWith('admin');
+      if (isAdmin) {
+        o.classList.add('over-header');
+        o.style.removeProperty('z-index');
+      }
+    } catch (_) {}
     o.classList.remove('hidden');
     o.classList.add('show');
     o.setAttribute('aria-hidden','false');
     // Ensure header offset
     // eslint-disable-next-line no-restricted-syntax
     try { o.style.paddingTop = getComputedStyle(document.documentElement).getPropertyValue('--wf-overlay-offset') || ''; } catch(_) {}
+    // If this is the admin Settings variant (iframe-based), prime its src
+    try {
+      const frame = o.querySelector('#accountSettingsFrame');
+      if (frame && (frame.getAttribute('src') === 'about:blank' || !frame.getAttribute('src'))) {
+        const ds = frame.getAttribute('data-src') || '/sections/admin_router.php?section=account-settings&modal=1';
+        frame.setAttribute('src', ds);
+      }
+    } catch (_) {}
+    return o;
   }
 
   function closeModal() {
@@ -79,21 +171,31 @@ import { ApiClient } from '../core/api-client.js';
     list.innerHTML = '<div class="text-sm text-gray-500">Loading addresses…</div>';
     try {
       const j = await ApiClient.get(`/api/customer_addresses.php?action=get_addresses&user_id=${encodeURIComponent(userId)}`);
-      if (!j || j.success !== true) throw new Error(j?.error || 'Failed to load addresses');
+      if (!j || j.success !== true) {
+        throw new Error(requireString(j?.error, 'Address error message'));
+      }
       const tmpl = sel('#accountAddressItemTemplate');
       list.innerHTML = '';
+      if (!tmpl) throw new Error('Address template missing');
       (j.addresses || []).forEach(addr => {
-        if (!tmpl) return;
+        const id = requireString(addr?.id, 'Address id');
+        const name = requireString(addr?.addressName, 'Address name');
+        const line1 = requireString(addr?.addressLine1, 'Address line 1');
+        const city = requireString(addr?.city, 'City');
+        const state = requireString(addr?.state, 'State');
+        const zip = requireString(addr?.zipCode, 'ZIP code');
+        const line2 = addr?.addressLine2 ? requireString(addr.addressLine2, 'Address line 2', { allowEmpty: true }) : '';
+        const defaultBadge = addr?.isDefault ? '(default)' : '';
         const html = tmpl.innerHTML
-          .replace('{{id}}', String(addr.id))
-          .replace('{{address_name}}', escapeHtml(addr.address_name || ''))
-          .replace('{{default_badge}}', addr.is_default ? '(default)' : '')
-          .replace('{{address_line1}}', escapeHtml(addr.address_line1 || ''))
-          .replace('{{address_line2_sep}}', addr.address_line2 ? ', ' : '')
-          .replace('{{address_line2}}', escapeHtml(addr.address_line2 || ''))
-          .replace('{{city}}', escapeHtml(addr.city || ''))
-          .replace('{{state}}', escapeHtml(addr.state || ''))
-          .replace('{{zip_code}}', escapeHtml(addr.zip_code || ''));
+          .replace('{{id}}', escapeHtml(id))
+          .replace('{{address_name}}', escapeHtml(name))
+          .replace('{{default_badge}}', defaultBadge)
+          .replace('{{address_line1}}', escapeHtml(line1))
+          .replace('{{address_line2_sep}}', line2 ? ', ' : '')
+          .replace('{{address_line2}}', line2 ? escapeHtml(line2) : '')
+          .replace('{{city}}', escapeHtml(city))
+          .replace('{{state}}', escapeHtml(state))
+          .replace('{{zip_code}}', escapeHtml(zip));
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
         list.appendChild(wrapper.firstElementChild);
@@ -103,7 +205,8 @@ import { ApiClient } from '../core/api-client.js';
       }
     } catch (e) {
       list.innerHTML = '<div class="text-sm text-red-600">Failed to load addresses.</div>';
-      console.warn('[AccountSettings] loadAddresses failed', e);
+      showError(e.message || 'Failed to load addresses');
+      throw e;
     }
   }
 
@@ -113,15 +216,28 @@ import { ApiClient } from '../core/api-client.js';
     const wrapper = document.createElement('div');
     wrapper.innerHTML = tmpl.innerHTML;
     const editor = wrapper.firstElementChild;
-    const set = (n, v) => { const el = sel(`[name="${n}"]`, editor); if (el) el.value = v ?? ''; };
+    const set = (n, v, opts = {}) => {
+      const el = sel(`[name="${n}"]`, editor);
+      if (!el) throw new Error(`${n} field missing in address editor template`);
+      if (v === undefined || v === null) {
+        if (opts.allowEmpty) {
+          el.value = '';
+          return;
+        }
+        throw new Error(`${n} value is required`);
+      }
+      el.value = String(v);
+    };
     if (initial) {
       set('address_name', initial.address_name);
       set('address_line1', initial.address_line1);
-      set('address_line2', initial.address_line2);
+      set('address_line2', initial.address_line2, { allowEmpty: true });
       set('city', initial.city);
       set('state', initial.state);
       set('zip_code', initial.zip_code);
-      try { const cb = sel('[name="is_default"]', editor); if (cb) cb.checked = !!initial.is_default; } catch(_){ }
+      const cb = sel('[name="is_default"]', editor);
+      if (!cb) throw new Error('is_default checkbox missing in address editor');
+      cb.checked = !!initial.is_default;
     }
     editor.addEventListener('click', (e) => {
       const t = e.target;
@@ -139,12 +255,12 @@ import { ApiClient } from '../core/api-client.js';
 
   async function handleSaveProfile(userId) {
     clearAlerts();
-    const email = sel('#acc_email')?.value || '';
-    const firstName = sel('#acc_firstName')?.value || '';
-    const lastName = sel('#acc_lastName')?.value || '';
-    const phoneNumber = sel('#acc_phoneNumber')?.value || '';
-    const currentPassword = sel('#acc_currentPassword')?.value || '';
-    const newPassword = sel('#acc_newPassword')?.value || '';
+    const email = getInputValue('#acc_email', 'Email');
+    const firstName = getInputValue('#acc_firstName', 'First name', { allowEmpty: true });
+    const lastName = getInputValue('#acc_lastName', 'Last name', { allowEmpty: true });
+    const phoneNumber = getInputValue('#acc_phoneNumber', 'Phone number', { allowEmpty: true });
+    const currentPassword = getInputValue('#acc_currentPassword', 'Current password', { allowEmpty: true });
+    const newPassword = getInputValue('#acc_newPassword', 'New password', { allowEmpty: true });
 
     try {
       // Update profile fields
@@ -153,8 +269,8 @@ import { ApiClient } from '../core/api-client.js';
       if (upd && upd.error) throw new Error(upd.error);
 
       // Password change if provided
-      if (newPassword) {
-        if (!currentPassword) throw new Error('Current password is required to change password');
+      if (newPassword.trim() !== '') {
+        if (currentPassword.trim() === '') throw new Error('Current password is required to change password');
         const pass = await ApiClient.post('/functions/process_account_update.php', {
           userId, email, firstName, lastName,
           currentPassword, newPassword
@@ -164,18 +280,24 @@ import { ApiClient } from '../core/api-client.js';
 
       // Update client cache (best-effort)
       try {
-        const currentUser = JSON.parse(sessionStorage.getItem('user') || '{}');
-        const updatedUser = { ...currentUser, email, firstName, lastName, phoneNumber };
-        sessionStorage.setItem('user', JSON.stringify(updatedUser));
+        const cached = sessionStorage.getItem('user');
+        if (cached) {
+          const currentUser = JSON.parse(cached);
+          const updatedUser = { ...currentUser, email, firstName, lastName, phoneNumber };
+          sessionStorage.setItem('user', JSON.stringify(updatedUser));
+        }
       } catch (_) {}
 
       showSuccess('Saved successfully.');
       window.dispatchEvent(new CustomEvent('wf:account-updated'));
     } catch (e) {
-      showError(e?.message || String(e));
+      showError(e?.message || 'Account update failed');
     } finally {
       // Clear password fields for safety
-      try { sel('#acc_currentPassword').value = ''; sel('#acc_newPassword').value = ''; } catch(_){}
+      const current = sel('#acc_currentPassword');
+      const fresh = sel('#acc_newPassword');
+      if (current) current.value = '';
+      if (fresh) fresh.value = '';
     }
   }
 
@@ -191,13 +313,47 @@ import { ApiClient } from '../core/api-client.js';
   }
 
   async function openAndLoad() {
-    const userId = getUserId();
     clearAlerts();
-    openModal();
-    const u = await fetchUserProfile(userId);
-    fillProfile(u);
-    await loadAddresses(userId);
+    const modalRef = openModal();
+    try {
+      if (!modalRef) {
+        throw new Error('Account Settings modal is unavailable on this page');
+      }
+      // Admin Settings page uses an iframe for account settings; if present, do not run inline form logic
+      const frame = document.getElementById('accountSettingsFrame');
+      if (frame) {
+        if (frame.getAttribute('src') === 'about:blank' || !frame.getAttribute('src')) {
+          const ds = frame.getAttribute('data-src') || '/sections/admin_router.php?section=account-settings&modal=1';
+          frame.setAttribute('src', ds);
+        }
+        return; // no further inline loading needed
+      }
+      const userId = getUserId();
+      const u = await fetchUserProfile(userId);
+      fillProfile(u);
+      await loadAddresses(userId);
+    } catch (e) {
+      console.error('[AccountSettings] openAndLoad failed', e);
+      try {
+        showError(e.message || 'Failed to load account settings');
+      } catch (_) {
+        /* already logged */
+      }
+    }
   }
+
+  // Capture-phase listener to beat page-level delegated handlers that stopPropagation
+  document.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t && (t.closest('[data-action="open-account-settings"]') || t.id === 'accountSettingsBtn')) {
+      e.preventDefault();
+      e.stopPropagation();
+      // Open quickly; async load handled separately
+      openAndLoad();
+    }
+  }, true);
+
+  
 
   // Delegated global click handlers
   document.addEventListener('click', async (e) => {
@@ -261,7 +417,8 @@ import { ApiClient } from '../core/api-client.js';
       if (!id || !item) return;
       // const lines = item.querySelectorAll('div');
       // Render editor above item with best-effort prefill by parsing the template content; ideally we would fetch one record, but API lacks single-get.
-      const initial = { address_name: item.querySelector('.font-medium')?.childNodes?.[0]?.nodeValue?.trim() || '' };
+      const initialName = requireString(item.querySelector('.font-medium')?.childNodes?.[0]?.nodeValue, 'Address name');
+      const initial = { address_name: initialName };
       openAddressEditor(initial, async (data, editorEl) => {
         try {
           const body = { id, ...data };
@@ -278,8 +435,7 @@ import { ApiClient } from '../core/api-client.js';
     if (t.closest('[data-action="address-delete"]')) {
       e.preventDefault();
       const userId = getUserId();
-      const id = t.getAttribute('data-id');
-      if (!id) return;
+      const id = requireString(t.getAttribute('data-id'), 'Address id');
       if (!confirm('Delete this address?')) return;
       try {
         const res = await ApiClient.get(`/api/customer_addresses.php?action=delete_address&id=${encodeURIComponent(id)}`);

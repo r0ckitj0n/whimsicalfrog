@@ -63,8 +63,8 @@ try {
   /* Hide global header and admin tabs inside the iframe */
   .site-header, .universal-page-header, .admin-tab-navigation { display: none !important; }
   html, body { background: #fff !important; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, 'Apple Color Emoji','Segoe UI Emoji'; height: 100%; overflow: hidden; }
-  #admin-section-content { padding: 8px 12px 12px !important; height: 100%; max-height: 100vh; overflow: auto; box-sizing: border-box; }
-  .attributes-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+  #admin-section-content { padding: 8px 12px 0 !important; height: 100%; max-height: 100vh; overflow: auto; box-sizing: border-box; }
+  .attributes-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; padding-bottom: 0; }
   .card { border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
   .card-header { padding: 10px 12px; font-weight: 600; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; gap:8px; }
   .card-body { padding: 10px 12px; max-height: unset; overflow: visible; }
@@ -124,7 +124,7 @@ try {
         <div class="text-sm text-gray-600">Analyze and migrate an item's Size/Color structure.</div>
       </div>
       <div>
-        <button id="sizeColorRedesignBtn" class="btn btn-brand" data-action="open-size-color-redesign">Open Size/Color Redesign</button>
+        <button id="sizeColorRedesignBtn" class="btn btn-primary" data-action="open-size-color-redesign">Open Size/Color Redesign</button>
       </div>
     </div>
   </div>
@@ -401,6 +401,43 @@ try {
     if (!btn) return;
     const action = btn.getAttribute('data-action');
     try {
+      if (action === 'open-size-color-redesign') {
+        ev.preventDefault(); ev.stopPropagation();
+        try {
+          const pd = window.parent && window.parent.document;
+          if (pd) {
+            const m = pd.getElementById('sizeColorRedesignModal');
+            if (m) {
+              try {
+                if (m.parentElement && m.parentElement !== pd.body) {
+                  pd.body.appendChild(m);
+                }
+                m.classList.add('over-header');
+                m.style.removeProperty('z-index');
+              } catch(_) {}
+              try {
+                const f = pd.getElementById('sizeColorRedesignFrame');
+                if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+                  const ds = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
+                  f.setAttribute('src', ds);
+                }
+              } catch(_) {}
+              m.classList.remove('hidden');
+              m.classList.add('show');
+              m.setAttribute('aria-hidden','false');
+              m.style.pointerEvents = 'auto';
+            } else {
+              // Fallback: open tool directly if parent modal not found
+              try { window.open('/sections/tools/size_color_redesign.php?modal=1', '_blank', 'noreferrer'); } catch(__) {}
+            }
+          } else {
+            try { window.open('/sections/tools/size_color_redesign.php?modal=1', '_blank', 'noreferrer'); } catch(__) {}
+          }
+        } catch(_) {
+          try { window.open('/sections/tools/size_color_redesign.php?modal=1', '_blank', 'noreferrer'); } catch(__) {}
+        }
+        return;
+      }
       if (action === 'gender-add') {
         const name = prompt('New gender name:');
         if (!name) return;

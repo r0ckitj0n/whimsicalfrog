@@ -2,19 +2,19 @@
 # Prune old PHP session files in a target sessions directory.
 # Safe-by-default: only deletes files matching the standard PHP session pattern (sess_*).
 # Usage examples:
-#   ./prune_sessions.sh                      # prune default ./sessions older than 2 days
-#   SESSION_DIR=/var/www/html/sessions ./prune_sessions.sh 3  # prune older than 3 days in a custom dir
+#   ./prune_sessions.sh                      # prune default /tmp/whimsicalfrog_sessions older than 2 days
+#   SESSION_DIR=/some/other/path ./prune_sessions.sh 3  # prune older than 3 days in a custom dir
 #   DRY_RUN=1 ./prune_sessions.sh            # show what would be deleted
 #
 # Environment variables:
-#   SESSION_DIR  Directory containing PHP session files (default: ./sessions)
+#   SESSION_DIR  Directory containing PHP session files (default: /tmp/whimsicalfrog_sessions)
 #   DRY_RUN      If set to non-empty, only print files (do not delete)
 #
 # Positional args:
 #   $1           Max age in days (default: 2)
 set -euo pipefail
 
-SESSION_DIR=${SESSION_DIR:-"$(cd "$(dirname "$0")/../.." && pwd)/sessions"}
+SESSION_DIR=${SESSION_DIR:-"/tmp/whimsicalfrog_sessions"}
 MAX_AGE_DAYS=${1:-2}
 
 if [ ! -d "$SESSION_DIR" ]; then

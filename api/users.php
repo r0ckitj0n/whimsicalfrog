@@ -44,21 +44,21 @@ try {
             exit;
         }
 
-        // Format single user data
+        // Format single user data (normalize snake_case -> camelCase)
         $formattedUser = [
-            'id' => $userData['id'],
-            'username' => $userData['username'],
-            'email' => $userData['email'],
-            'role' => $userData['role'],
-            'roleType' => $userData['role'], // For backward compatibility
-            'firstName' => $userData['firstName'] ?? '',
-            'lastName' => $userData['lastName'] ?? '',
-            'phoneNumber' => $userData['phoneNumber'] ?? '',
-            'addressLine1' => $userData['addressLine1'] ?? '',
-            'addressLine2' => $userData['addressLine2'] ?? '',
+            'id' => $userData['id'] ?? null,
+            'username' => $userData['username'] ?? '',
+            'email' => $userData['email'] ?? '',
+            'role' => $userData['role'] ?? '',
+            'roleType' => $userData['role'] ?? '', // Backward compatibility
+            'firstName' => $userData['first_name'] ?? ($userData['firstName'] ?? ''),
+            'lastName' => $userData['last_name'] ?? ($userData['lastName'] ?? ''),
+            'phoneNumber' => $userData['phone_number'] ?? ($userData['phoneNumber'] ?? ''),
+            'addressLine1' => $userData['address_line1'] ?? ($userData['addressLine1'] ?? ''),
+            'addressLine2' => $userData['address_line2'] ?? ($userData['addressLine2'] ?? ''),
             'city' => $userData['city'] ?? '',
             'state' => $userData['state'] ?? '',
-            'zipCode' => $userData['zipCode'] ?? ''
+            'zipCode' => $userData['zip_code'] ?? ($userData['zipCode'] ?? ''),
         ];
 
         // Return single user as JSON
@@ -67,22 +67,22 @@ try {
         // Query for all users
         $users = Database::queryAll('SELECT * FROM users');
 
-        // Map database fields to expected output format
+        // Map database fields to expected output format (normalize snake_case -> camelCase)
         $formattedUsers = array_map(function ($user) {
             return [
-                'id' => $user['id'],
-                'username' => $user['username'],
-                'email' => $user['email'],
-                'role' => $user['role'],
-                'roleType' => $user['role'], // For backward compatibility
-                'firstName' => $user['firstName'] ?? '',
-                'lastName' => $user['lastName'] ?? '',
-                'phoneNumber' => $user['phoneNumber'] ?? '',
-                'addressLine1' => $user['addressLine1'] ?? '',
-                'addressLine2' => $user['addressLine2'] ?? '',
+                'id' => $user['id'] ?? null,
+                'username' => $user['username'] ?? '',
+                'email' => $user['email'] ?? '',
+                'role' => $user['role'] ?? '',
+                'roleType' => $user['role'] ?? '',
+                'firstName' => $user['first_name'] ?? ($user['firstName'] ?? ''),
+                'lastName' => $user['last_name'] ?? ($user['lastName'] ?? ''),
+                'phoneNumber' => $user['phone_number'] ?? ($user['phoneNumber'] ?? ''),
+                'addressLine1' => $user['address_line1'] ?? ($user['addressLine1'] ?? ''),
+                'addressLine2' => $user['address_line2'] ?? ($user['addressLine2'] ?? ''),
                 'city' => $user['city'] ?? '',
                 'state' => $user['state'] ?? '',
-                'zipCode' => $user['zipCode'] ?? ''
+                'zipCode' => $user['zip_code'] ?? ($user['zipCode'] ?? ''),
             ];
         }, $users);
 

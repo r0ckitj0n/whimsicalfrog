@@ -12,17 +12,18 @@ ErrorDocument 403 /router.php
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  # Ensure /dist/* requests are never rewritten to index.php.
+  # This lets Apache 404 missing hashed chunks so ErrorDocument routes to router.php,
+  # which returns a plain-text 404 instead of HTML, avoiding MIME mismatches.
+  RewriteRule ^dist/ - [L]
   # Serve Vite-built assets from /dist/assets when requested at /assets
   RewriteRule ^assets/(.*)$ /dist/assets/$1 [L]
-  # Map common extensionless pages to their PHP counterparts
-  RewriteRule ^(shop|about|contact|login|register|cart|room_main)$ $1.php [L]
   # Serve existing files or directories directly
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
   # Route all other requests to index.php (clean URLs like /shop)
   RewriteRule ^ index.php [L]
-  
 </IfModule>
 
 # --- Security: deny access to sensitive files ---

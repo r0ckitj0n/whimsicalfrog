@@ -99,6 +99,31 @@ export function attachDelegatedItemEvents() {
       console.log('[eventManager] calling popup function with:', icon, data);
       show(icon, data);
       attachPopupPersistence(icon);
+      // Fallback: force-reveal in case popup module's reveal step is delayed/raced
+      const forceReveal = (attempt) => {
+        try {
+          const p = document.getElementById('itemPopup');
+          if (!p) return;
+          // Do not resurrect if suppressed by hideImmediate or if no computed position class exists
+          const suppressed = p.classList.contains('suppress-auto-show') || p.dataset.wfGpSuppress === '1';
+          const posClass = p.dataset.wfGpPosClass;
+          // If a detailed item modal is visible, do not force the popup
+          const detailed = document.getElementById('detailedItemModal');
+          const detailedVisible = !!(detailed && detailed.getAttribute('aria-hidden') !== 'true' && detailed.style.display !== 'none');
+          if (suppressed || !posClass || detailedVisible) return;
+          if (!p.classList.contains('visible')) {
+            try { p.classList.remove('hidden', 'measuring'); } catch(_) {}
+            try { p.classList.add('visible'); } catch(_) {}
+            try { p.setAttribute('aria-hidden', 'false'); } catch(_) {}
+            try { p.classList.add('force-visible'); } catch(_) {}
+            try { console.log('[eventManager] fallback reveal applied (attempt', attempt, ') classes:', p.className); } catch(_) {}
+          }
+        } catch (_) {}
+      };
+      // Apply immediate and a couple of retries to survive rAF/hide races
+      setTimeout(() => forceReveal(1), 0);
+      setTimeout(() => forceReveal(2), 60);
+      setTimeout(() => forceReveal(3), 180);
     } else {
       console.warn('[eventManager] cannot show popup - function:', typeof show, 'data:', !!data);
     }
@@ -122,7 +147,8 @@ export function attachDelegatedItemEvents() {
   document.addEventListener('click', async e => {
     const targetEl = e.target;
     if (!targetEl || typeof targetEl.closest !== 'function') return;
-    const icon = targetEl.closest('.item-icon, .room-product-icon');
+    // Support clicks on standard icons and any element carrying product data
+    const icon = targetEl.closest('.item-icon, .room-product-icon, [data-sku], [data-product]');
     if (!icon) return;
     e.preventDefault();
     if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
@@ -138,7 +164,10 @@ export function attachDelegatedItemEvents() {
       detailsFn = window.showGlobalItemModal || window.showItemDetailsModal || window.showItemDetails;
     }
     if (typeof detailsFn === 'function' && data) {
-      try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
+      try {
+        window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate();
+        if (typeof parent !== 'undefined' && parent !== window && parent.hideGlobalPopupImmediate) parent.hideGlobalPopupImmediate();
+      } catch(_) {}
       detailsFn(data.sku, data);
     }
   });

@@ -24,6 +24,58 @@ const __wfEnsureBackgroundManagerModal = () => {
   document.body.appendChild(el);
   return el;
 };
+// Lazy modal factory: Room Map Editor
+const __wfEnsureRoomMapEditorModal = () => {
+  let el = document.getElementById('roomMapEditorModal');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'roomMapEditorModal';
+  el.className = 'admin-modal-overlay hidden';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'roomMapEditorTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+      <div class="modal-header">
+        <h2 id="roomMapEditorTitle" class="admin-card-title">🗺️ Room Map Editor</h2>
+        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="roomMapEditorFrame" title="Room Map Editor" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/room_map_editor.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  return el;
+};
+// Lazy modal factory: Area-Item Mapper
+const __wfEnsureAreaItemMapperModal = () => {
+  let el = document.getElementById('areaItemMapperModal');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'areaItemMapperModal';
+  el.className = 'admin-modal-overlay hidden';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'areaItemMapperTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+      <div class="modal-header">
+        <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area-Item Mapper</h2>
+        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="areaItemMapperFrame" title="Area-Item Mapper" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  return el;
+};
 
 // Lazy modal factory: Email Settings (iframe to standalone settings page)
 const __wfEnsureEmailSettingsModal = () => {
@@ -291,6 +343,182 @@ const __wfHideModal = (id) => {
         return;
       }
 
+      // Open Shipping Settings modal (static form)
+      if (closest('[data-action="open-shipping-settings"], #shippingSettingsBtn')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('shippingSettingsModal');
+        return;
+      }
+
+      // Open Address Diagnostics modal (iframe)
+      if (closest('[data-action="open-address-diagnostics"], #addressDiagBtn')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('addressDiagnosticsModal');
+        const iframe = document.getElementById('addressDiagnosticsFrame');
+        if (iframe) {
+          const needsSrc = (!iframe.src || iframe.src === 'about:blank');
+          const ds = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : '/sections/tools/address_diagnostics.php?modal=1';
+          if (needsSrc) { iframe.src = ds; }
+        }
+        return;
+      }
+
+      // Open Health & Diagnostics modal
+      if (closest('[data-action="open-health-diagnostics"], #healthDiagnosticsBtn')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('healthModal');
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          __wfShowModal('healthModal');
+        }
+        return;
+      }
+
+      // Open Secrets Manager modal
+      if (closest('[data-action="open-secrets-modal"], #secretsManagerBtn')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('secretsModal');
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          __wfShowModal('secretsModal');
+        }
+        return;
+      }
+
+      // Open Categories Management modal (iframe)
+      if (closest('[data-action="open-categories"], #categoriesBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('categoriesModal');
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          __wfShowModal('categoriesModal');
+          const f = el.querySelector('iframe');
+          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+            const ds = f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
+            f.setAttribute('src', ds);
+          }
+        }
+        return;
+      }
+
+      // Open Attributes Management modal (iframe)
+      if (closest('[data-action="open-attributes"], #attributesBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('attributesModal');
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          __wfShowModal('attributesModal');
+          const f = document.getElementById('attributesFrame');
+          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+            const ds = f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
+            f.setAttribute('src', ds);
+          }
+        }
+        return;
+      }
+
+      // Customer Messages modal (native)
+      if (closest('[data-action="open-customer-messages"], #customerMessagesBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('customerMessagesModal');
+        return;
+      }
+
+      // Shopping Cart Settings modal
+      if (closest('[data-action="open-shopping-cart"], #shoppingCartBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('shoppingCartModal');
+        return;
+      }
+
+      // Size/Color Redesign Tool modal (iframe)
+      if (closest('[data-action="open-size-color-redesign"], #sizeColorRedesignBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('sizeColorRedesignModal');
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          __wfShowModal('sizeColorRedesignModal');
+          const f = document.getElementById('sizeColorRedesignFrame');
+          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+            const ds = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
+            f.setAttribute('src', ds);
+          }
+        }
+        return;
+      }
+
+      // Deploy Manager modal (iframe)
+      if (closest('[data-action="open-deploy-manager"], #deployManagerBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('deployManagerModal');
+        return;
+      }
+
+      // DB Schema Audit modal (iframe)
+      if (closest('[data-action="open-db-schema-audit"], #dbSchemaAuditBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('dbSchemaAuditModal');
+        const f = document.getElementById('dbSchemaAuditFrame');
+        if (f && !f.getAttribute('src')) {
+          const ds = f.getAttribute('data-src') || '/sections/tools/db_schema_audit.php?modal=1';
+          f.setAttribute('src', ds);
+        }
+        return;
+      }
+
+      // Repository Cleanup modal (iframe)
+      if (closest('[data-action="open-repo-cleanup"], #repoCleanupBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('repoCleanupModal');
+        return;
+      }
+
+      // Dashboard Configuration modal (native)
+      if (closest('[data-action="open-dashboard-config"], #dashboardConfigBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('dashboardConfigModal');
+        return;
+      }
+
+      // AI Tools modal (iframe)
+      if (closest('[data-action="open-ai-tools"], #aiToolsBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('aiToolsModal');
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          __wfShowModal('aiToolsModal');
+          const f = document.getElementById('aiToolsFrame');
+          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+            const ds = f.getAttribute('data-src') || '/sections/admin_router.php?section=marketing&modal=1';
+            f.setAttribute('src', ds);
+          }
+        }
+        return;
+      }
+
+      // AI Settings modal (iframe)
+      if (closest('[data-action="open-ai-settings"], #aiSettingsBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('aiSettingsModal');
+        if (el) {
+          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+          __wfShowModal('aiSettingsModal');
+          // Note: aiSettingsModal currently embeds Categories frame per template; leave src priming to data-src
+        }
+        return;
+      }
+
+      // Square Settings modal (native form)
+      if (closest('[data-action="open-square-settings"], #squareSettingsBtn')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfShowModal('squareSettingsModal');
+        return;
+      }
+
       // Let global Account Settings modal handler manage [data-action="open-account-settings"] clicks
 
       // Handle close buttons
@@ -310,16 +538,6 @@ const __wfHideModal = (id) => {
         return;
       }
 
-      // Load specific functionality on-demand
-      if (closest('[data-action="open-business-info"]')) {
-        e.preventDefault();
-        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        import('./delegated-handlers.js').catch(err => {
-          console.error('Failed to load business info handlers:', err);
-        });
-        return;
-      }
-
       // Open CSS Catalog modal
       if (closest('[data-action="open-css-catalog"]')) {
         e.preventDefault();
@@ -333,10 +551,11 @@ const __wfHideModal = (id) => {
         return;
       }
 
-      // Open Room Map Editor modal
+      // Open Room Map Editor modal (ensure + prime)
       if (closest('[data-action="open-room-map-editor"]')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfEnsureRoomMapEditorModal();
         __wfShowModal('roomMapEditorModal');
         const iframe = document.getElementById('roomMapEditorFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
@@ -345,14 +564,14 @@ const __wfHideModal = (id) => {
         return;
       }
 
-      // Open Area-Item Mapper modal
+      // Open Area-Item Mapper modal (ensure + prime)
       if (closest('[data-action="open-area-item-mapper"]')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfEnsureAreaItemMapperModal();
         __wfShowModal('areaItemMapperModal');
         const iframe = document.getElementById('areaItemMapperFrame');
         if (iframe && iframe.dataset) {
-          // Debounce/race-proof: if another handler already primed it, skip
           if (iframe.dataset.loaded === '1' || iframe.dataset.loading === '1') {
             return;
           }

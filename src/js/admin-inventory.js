@@ -21,6 +21,7 @@ class AdminInventoryModule {
         this.modalMode = null;
         // Store current item data for fallback purposes
         this.currentItemData = null;
+        this.itemsBySku = new Map();
 
         this.loadData();
 
@@ -1576,10 +1577,10 @@ class AdminInventoryModule {
         if (!hiddenInput || !imagePreviewContainer) return;
         const selectedImagePath = hiddenInput.value;
         if (selectedImagePath) {
-            const previewSrc = selectedImagePath.startsWith('/images/items/') || selectedImagePath.startsWith('images/items/')
+            const fallbackSrc = selectedImagePath.startsWith('/images/items/') || selectedImagePath.startsWith('images/items/')
                 ? selectedImagePath
                 : `/images/items/${selectedImagePath}`;
-            imagePreview.src = previewSrc;
+            imagePreview.src = fallbackSrc;
             imagePreview.onerror = () => {
                 imagePreview.classList.add('hidden');
                 imagePreview.parentElement.innerHTML = '<div class="u-width-100 u-height-100 u-display-flex u-flex-direction-column u-align-items-center u-justify-content-center u-background-f8f9fa u-color-6c757d u-border-radius-8px"><div class="u-font-size-2rem u-margin-bottom-0-5rem u-opacity-0-7">📷</div><div class="u-font-size-0-8rem u-font-weight-500">No Image Available</div></div>';
@@ -1965,6 +1966,14 @@ class AdminInventoryModule {
                 this.currentItemSku = data.currentItemSku;
                 this.items = data.items || [];
                 this.categories = data.categories || [];
+                if (this.itemsBySku && this.itemsBySku.clear) {
+                    this.itemsBySku.clear();
+                    this.items.forEach((item) => {
+                        if (item && item.sku) {
+                            this.itemsBySku.set(item.sku, item);
+                        }
+                    });
+                }
                 if (data.costBreakdown) {
                     this.costBreakdown = {
                         materials: data.costBreakdown.materials || {},
@@ -1984,14 +1993,33 @@ class AdminInventoryModule {
 
     renderThumbnail(container, image, totalCount) {
         container.innerHTML = `
-            <div class="relative w-12 h-12 rounded overflow-hidden bg-gray-100 border">
+            <div class="wf-thumb-wrap relative w-12 h-12 rounded overflow-hidden bg-gray-100 border">
                 <img src="/${image.image_path}" 
                      alt="${image.alt_text || 'Item image'}" 
                      class="w-full h-full object-cover"
-                     onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-gray-400 text-xs\\'>📷</div>'">
+                     loading="lazy"
+                     decoding="async">
                 ${totalCount > 1 ? `<div class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">${totalCount}</div>` : ''}
             </div>
         `;
+        // Attach safe error fallback for early method variant as well
+        try {
+            const imgEl = container.querySelector('img');
+            const wrapEl = container.querySelector('.wf-thumb-wrap');
+            if (imgEl) {
+                imgEl.addEventListener('error', () => {
+                    try {
+                        if (!container.isConnected) return;
+                        const html = '<div class="w-full h-full rounded bg-gray-100 border flex items-center justify-center text-gray-400"><span class="text-lg">📷</span></div>';
+                        if (wrapEl) {
+                            wrapEl.innerHTML = html;
+                        } else {
+                            container.innerHTML = html;
+                        }
+                    } catch (_) {}
+                }, { once: true });
+            }
+        } catch (_) {}
         this.loadExistingMarketingSuggestion(this.currentItemSku);
         this.updateCategoryDropdown();
         // Expose selected handler for legacy calls in PHP markup
@@ -2014,7 +2042,7 @@ class AdminInventoryModule {
         }
 
         // Ensure SKU is set and initial images load on page load
-        const skuField = document.getElementById('skuEdit') || document.getElementById('skuDisplay') || document.getElementById('sku');
+        const skuField = document.getElementById('skuEdit') || document.getElementById('sku') || document.getElementById('skuDisplay');
         if (skuField && skuField.value) {
             this.currentItemSku = skuField.value;
         }
@@ -3881,7 +3909,7 @@ class AdminInventoryModule {
         try {
             const isUpdate = !!id;
             const q = `inventoryId=${encodeURIComponent(this.currentItemSku)}&costType=${encodeURIComponent(category)}` + (isUpdate ? `&id=${encodeURIComponent(id)}` : '');
-            const result = await ApiClient.request(`/functions/process_cost_breakdown.php?${q}`, {
+            const result = await ApiClient.post(`/functions/process_cost_breakdown.php?${q}`, {
                 method: isUpdate ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -5062,7 +5090,7 @@ class AdminInventoryModule {
             category: document.getElementById('categoryEdit')?.value || '',
             brandVoice,
             contentTone,
-            useImages: supportsImages
+            useImages: !!supportsImages
         };
         try {
             const res = await ApiClient.post('/api/suggest_marketing.php', itemData);
@@ -5321,6 +5349,8 @@ class AdminInventoryModule {
                 const saved = this.costBreakdown[category][itemId];
                 delete this.costBreakdown[category][itemId];
                 this.costBreakdown[category][result.data.id] = saved;
+                this.renderCostList(category);
+                this.updateTotalsDisplay();
             }
         } catch (error) {
             console.error('Failed to persist suggested cost item:', error);
@@ -5418,45 +5448,78 @@ class AdminInventoryModule {
         const thumbnailContainers = document.querySelectorAll('.thumbnail-container');
         if (!thumbnailContainers.length) return;
 
-        for (const container of thumbnailContainers) {
-            const sku = container.dataset.sku;
-            if (!sku) continue;
+        const fallbackFetches = [];
 
-            try {
-                const data = await ApiClient.get('/api/get_item_images.php', { sku });
-                
-                if (data.success && data.images && data.images.length > 0) {
-                    const primaryImage = data.images.find(img => img.is_primary) || data.images[0];
-                    this.renderThumbnail(container, primaryImage, data.images.length);
-                } else {
-                    this.renderEmptyThumbnail(container);
-                }
-            } catch (error) {
-                console.error(`Failed to load thumbnail for SKU ${sku}:`, error);
-                this.renderEmptyThumbnail(container);
+        thumbnailContainers.forEach((container) => {
+            const sku = container.dataset.sku;
+            if (!sku) return;
+
+            const itemData = this.itemsBySku?.get?.(sku);
+            const primaryImage = itemData?.primary_image;
+            const totalCount = Number(itemData?.image_count ?? 0);
+
+            if (primaryImage && primaryImage.image_path) {
+                this.renderThumbnail(container, primaryImage, totalCount);
+                return;
             }
+
+            fallbackFetches.push(this.fetchThumbnailForSku(container, sku));
+        });
+
+        if (fallbackFetches.length) {
+            await Promise.allSettled(fallbackFetches);
         }
     }
 
+    async fetchThumbnailForSku(container, sku) {
+        try {
+            const data = await ApiClient.get('/api/get_item_images.php', { sku });
+
+            if (data.success && data.images && data.images.length > 0) {
+                const primaryImage = data.images.find((img) => img.is_primary) || data.images[0];
+                this.renderThumbnail(container, primaryImage, data.images.length);
+                if (this.itemsBySku && this.itemsBySku.has(sku)) {
+                    const item = this.itemsBySku.get(sku);
+                    item.primary_image = primaryImage;
+                    item.image_count = data.images.length;
+                }
+                return;
+            }
+        } catch (error) {
+            console.error(`Failed to load thumbnail for SKU ${sku}:`, error);
+        }
+
+        this.renderEmptyThumbnail(container);
+    }
+
     renderThumbnail(container, image, totalCount) {
-        // Ensure proper web-accessible path
-        const imagePath = image.image_path.startsWith('/') ? image.image_path : `/${image.image_path}`;
-        
         container.innerHTML = `
-            <div class="relative w-12 h-12 rounded overflow-hidden bg-gray-100 border">
-                <img src="${imagePath}" 
+            <div class="wf-thumb-wrap relative w-12 h-12 rounded overflow-hidden bg-gray-100 border">
+                <img src="/${image.image_path}" 
                      alt="${image.alt_text || 'Item image'}" 
                      class="w-full h-full object-cover"
-                     onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full flex items-center justify-center text-gray-400 text-xs\\'>📷</div>'">
+                     loading="lazy"
+                     decoding="async">
                 ${totalCount > 1 ? `<div class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">${totalCount}</div>` : ''}
             </div>
         `;
-
-        // If the editor is present, ensure its panels are populated
+        // Attach safe error fallback for early method variant as well
         try {
-            // Expose selected handlers for legacy calls in PHP markup
-            window.handleGlobalColorSelection = this.handleGlobalColorSelection?.bind?.(this) || this.handleGlobalColorSelection;
-            // Expose loaders for compatibility with migrated inline calls
+            const imgEl = container.querySelector('img');
+            const wrapEl = container.querySelector('.wf-thumb-wrap');
+            if (imgEl) {
+                imgEl.addEventListener('error', () => {
+                    try {
+                        if (!container.isConnected) return;
+                        const html = '<div class="w-full h-full rounded bg-gray-100 border flex items-center justify-center text-gray-400"><span class="text-lg">📷</span></div>';
+                        if (wrapEl) {
+                            wrapEl.innerHTML = html;
+                        } else {
+                            container.innerHTML = html;
+                        }
+                    } catch (_) {}
+                }, { once: true });
+            }
             window.loadItemColors = this.loadItemColors.bind(this);
             window.loadItemSizes = this.loadItemSizes.bind(this);
             // Expose suggestion helpers for compatibility with legacy inline calls
@@ -5491,6 +5554,37 @@ class AdminInventoryModule {
                 <span class="text-lg">📷</span>
             </div>
         `;
+    }
+
+    deriveThumbnailPath(imagePath) {
+        if (!imagePath) return null;
+        const parts = imagePath.split('/');
+        const fileName = parts.pop();
+        if (!fileName) return null;
+
+        const dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex === -1) return null;
+
+        const name = fileName.slice(0, dotIndex);
+        const ext = fileName.slice(dotIndex + 1).toLowerCase();
+
+        if (ext !== 'png' && ext !== 'jpg' && ext !== 'jpeg' && ext !== 'webp') {
+            return null;
+        }
+
+        const thumbName = `${name}-thumb.${ext}`;
+        parts.push(thumbName);
+        const candidate = parts.join('/');
+        return candidate;
+    }
+
+    deriveVariantPath(imagePath, targetExt) {
+        if (!imagePath || !targetExt) return null;
+        const lower = targetExt.toLowerCase();
+        const parts = imagePath.split('.');
+        if (parts.length < 2) return null;
+        parts[parts.length - 1] = lower;
+        return parts.join('.');
     }
 
     loadModalImages() {

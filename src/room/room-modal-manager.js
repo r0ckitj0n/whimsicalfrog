@@ -90,12 +90,16 @@ export class RoomModalManager {
   /* ---------- EVENTS ---------- */
   setupEventListeners() {
     document.body.addEventListener('click', evt => {
-      const trigger = evt.target.closest('[data-room]');
-      if (trigger) {
-        evt.preventDefault();
-        this.show(trigger.dataset.room);
-      }
-    });
+      // Ignore clicks inside the already-open room modal overlay
+      const inOpenModal = !!(evt.target.closest && evt.target.closest('.room-modal-overlay.show'));
+      if (inOpenModal) return;
+      const trigger = evt.target.closest('[data-room], .room-door, .door-area, .door-link, [data-room-number]');
+      if (!trigger) return;
+      // Exclude the modal content container itself (#modalRoomPage)
+      if (trigger.id === 'modalRoomPage') return;
+      evt.preventDefault();
+      this.show(trigger.dataset.room || trigger.getAttribute('data-room-number'));
+    }, false);
 
     this.overlay.addEventListener('click', evt => {
       if (evt.target === this.overlay) this.hide();
@@ -185,6 +189,52 @@ export class RoomModalManager {
       iframe.classList.remove('hidden');
       // Emit event for external hooks (e.g., analytics)
       eventBus.emit('roomModalLoaded', { roomNumber });
+      try {
+        // Attach delegated click handler inside iframe for product images/elements
+        const win = iframe.contentWindow;
+        const doc = win && win.document;
+        if (!doc) return;
+        if (doc.documentElement.hasAttribute('data-wf-product-clicks')) return;
+        doc.documentElement.setAttribute('data-wf-product-clicks', '1');
+        const getData = (el) => {
+          if (!el) return null;
+          const dp = el.getAttribute && el.getAttribute('data-product');
+          if (dp) {
+            try { return JSON.parse(dp); } catch(_) {}
+          }
+          const ds = el.dataset || {};
+          if (ds.sku) {
+            return {
+              sku: ds.sku,
+              name: ds.name || '',
+              price: parseFloat(ds.price || ds.cost || '0'),
+              description: ds.description || '',
+              stock: parseInt((ds.stockLevel ?? ds.stock ?? '0'), 10),
+              category: ds.category || '',
+              image: ds.image || ''
+            };
+          }
+          return null;
+        };
+        doc.addEventListener('click', (e) => {
+          const t = e.target;
+          if (!t || typeof t.closest !== 'function') return;
+          const trigger = t.closest('.room-product-icon, [data-sku], [data-product], img[data-sku], img[data-product]');
+          if (!trigger) return;
+          e.preventDefault();
+          if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+          try { parent && parent.hideGlobalPopupImmediate && parent.hideGlobalPopupImmediate(); } catch(_) {}
+          const iconEl = trigger.closest('.room-product-icon') || trigger;
+          const data = getData(iconEl) || (iconEl.dataset && iconEl.dataset.sku ? { sku: iconEl.dataset.sku } : null);
+          const sku = (data && data.sku) || (iconEl.dataset && iconEl.dataset.sku);
+          if (!sku) return;
+          if (parent && typeof parent.showGlobalItemModal === 'function') {
+            parent.showGlobalItemModal(sku, data || { sku });
+          } else if (parent && parent.WhimsicalFrog && parent.WhimsicalFrog.GlobalModal && typeof parent.WhimsicalFrog.GlobalModal.show === 'function') {
+            parent.WhimsicalFrog.GlobalModal.show(sku, data || { sku });
+          }
+        }, true);
+      } catch (_) {}
     });
   }
 

@@ -117,7 +117,7 @@ $flash = flash_take('flash_success');
         <textarea id="secret-value" name="value" class="w-full border rounded px-3 py-2" rows="3" placeholder="Enter secret value" required></textarea>
       </div>
       <div>
-        <button type="submit" class="wf-btn">Save Secret</button>
+        <button type="submit" class="btn btn-primary">Save Secret</button>
       </div>
     </form>
   </section>
@@ -146,7 +146,7 @@ $flash = flash_take('flash_success');
                     <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>">
                     <input type="hidden" name="action" value="delete">
                     <input type="hidden" name="key" value="<?= htmlspecialchars($row['key']) ?>">
-                    <button type="submit" class="wf-btn wf-btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-danger">Delete</button>
                   </form>
                 </td>
               </tr>

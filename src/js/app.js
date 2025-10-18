@@ -5,17 +5,13 @@
 
 // Import CSS to be processed by Vite
 import '../styles/main.css';
+import '../styles/site-base.css';
 import '../styles/admin-hints.css';
 import '../core/action-registry.js';
 import './body-background-from-data.js';
-import initializeTooltipManager from '../modules/tooltip-manager.js';
-// Load curator early so WF_TooltipCurator is available when needed
-import '../modules/tooltip-curator.js';
-import { buildAdminUrl } from '../core/admin-url-builder.js';
-// Install delegated hover popup behavior early to avoid double-binding later
-import '../room/event-manager.js';
-import RoomModalManager from '../modules/room-modal-manager.js';
-import { ApiClient } from '../core/api-client.js';
+// Install global delegated hover/click listeners for item icons across pages
+import "../room/event-manager.js";
+import "./account-settings-modal.js";
 
 // TEMP: detect duplicate module evaluations during dev or unexpected reloads
 try {
@@ -754,7 +750,7 @@ if (__WF_IS_ADMIN) {
                                             set('bizCountry', s.business_country);
                                             set('bizWebsite', s.business_website);
                                             set('bizLogoUrl', s.business_logo_url);
-                                            set('bizTagline', s.business_tagline);
+                                            set('bizTagline', s.site_tagline);
                                             set('bizDescription', s.business_description);
                                             set('bizSupportEmail', s.business_support_email);
                                             set('bizSupportPhone', s.business_support_phone);
@@ -770,8 +766,8 @@ if (__WF_IS_ADMIN) {
                                             set('bizTimezone', s.business_timezone);
                                             set('bizCurrency', s.business_currency);
                                             set('bizLocale', s.business_locale);
-                                            set('brandPrimary', s.business_brand_primary || '#0ea5e9');
-                                            set('brandSecondary', s.business_brand_secondary || '#6366f1');
+                                            set('brandPrimary', s.business_brand_primary || '#87ac3a');
+                                            set('brandSecondary', s.business_brand_secondary || '#BF5700');
                                             set('brandAccent', s.business_brand_accent || '#22c55e');
                                             set('brandBackground', s.business_brand_background || '#ffffff');
                                             set('brandText', s.business_brand_text || '#111827');
@@ -815,8 +811,8 @@ if (__WF_IS_ADMIN) {
                             if (closest('[data-action="business-reset-branding"]')) {
                                 e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
                                 const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-                                set('brandPrimary', '#0ea5e9');
-                                set('brandSecondary', '#6366f1');
+                                set('brandPrimary', '#87ac3a');
+                                set('brandSecondary', '#BF5700');
                                 set('brandAccent', '#22c55e');
                                 set('brandBackground', '#ffffff');
                                 set('brandText', '#111827');

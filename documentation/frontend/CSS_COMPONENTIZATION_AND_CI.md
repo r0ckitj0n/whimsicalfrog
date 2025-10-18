@@ -95,23 +95,24 @@ Defined in `src/styles/z-index.css` under `:root`:
 
 ```css
 /* Core site chrome */
---z-index-page-header: 3000;
---z-index-site-nav: 2950;
+--z-index-page-header: 300;
+--z-index-site-nav: 290;
+--z-admin-nav: var(--z-index-page-header, 300);
 
 /* Modals / overlays */
---z-index-room-modal: 2400;
---z-index-room-modal-header: 2450;
---z-index-cart-overlay: 10070;
---z-index-checkout-overlay: 10060;
---z-index-checkout-content: 10061;
---z-index-receipt-overlay: 10080;
---z-index-global-popup: 100200; /* emergency/highest overlay tier */
+--z-index-room-modal: 1100;
+--z-index-room-modal-header: 1110;
+--z-index-cart-overlay: 1200;
+--z-index-checkout-overlay: 1300;
+--z-index-checkout-content: 1310;
+--z-index-receipt-overlay: 1320;
+--z-index-global-popup: 1250; /* emergency/highest overlay tier */
 
 /* UI chrome */
---z-index-loader: 10500;
---z-index-toast: 11000;          /* wf notifications container */
---z-index-dropdown: 11500;
---z-index-tooltip: 12000;
+--z-index-loader: 900;
+--z-index-toast: 1500;          /* wf notifications container */
+--z-index-dropdown: 400;
+--z-index-tooltip: 450;
 
 /* Component-specific low layers */
 --z-index-checkout-badge: 3;     /* inline badges inside cards */
@@ -121,21 +122,23 @@ Defined in `src/styles/z-index.css` under `:root`:
 --z-index-modal-front: 430;
 
 /* Legacy/compat and helpers (subset) */
---z-overlay: 10050;              /* generic overlay backdrop */
---z-overlay-content: 10051;
---z-admin-overlay: 10100;        /* admin-special overlays */
---z-admin-overlay-content: 10101;
---z-index-header-ink: 200;       /* header text and links */
---z-index-nav: 300;              /* navigation links/items */
+--z-overlay: 1200;              /* generic overlay backdrop */
+--z-overlay-content: 1210;
+--z-admin-overlay: 1400;        /* admin-special overlays */
+--z-admin-overlay-content: 1410;
+--z-index-header-ink: 310;       /* header text and links */
+--z-index-nav: 320;              /* navigation links/items */
 --z-index-global-notification: 500;
---z-inline-popup: 1000;          /* product hover popups */
---z-inline-popup-high: 1100;
+--z-inline-popup: 550;          /* product hover popups */
+--z-inline-popup-high: 560;
 --z-badge: 10;                   /* decorative badges */
 --z-badge-high: 15;              /* badge hover */
 --z-header-over-room-modal: 3000;/* keep header over room modal */
+--z-room-base: 80;               /* main room background */
 ```
 
 Notes:
+- 2025-10-17: Normalized header/nav tiers for the `room_main` modal work. Header (`--z-index-page-header`) now sits at `300`, and the admin navbar reuses the same token via `--z-admin-nav`. Room backgrounds use `--z-room-base` (80) so headers remain clickable unless an overlay is visible.
 - Values emphasize relative ordering. Prefer updating tokens rather than sprinkling numbers in components.
 - For new layers, add a token here with a clear comment. Keep gaps between tiers to avoid tight coupling.
 

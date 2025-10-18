@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Allow direct access for the index script itself
+RewriteRule ^index\.php$ - [L]
+
+# For any other request within this directory, route through index.php
+RewriteRule ^.*$ index.php [QSA,L]

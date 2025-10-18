@@ -1050,8 +1050,9 @@ body[data-page^='admin'] .admin-filter-form {
     max-width: calc(100vw - 2rem);
     max-height: calc(100vh - 2rem);
 }.modal-header {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding: 5px 12px;
+    margin-bottom: 0;
+    border-bottom: 1px solid #e5e7eb;
 }.modal-body {
     padding-left: 1rem;
     padding-right: 1rem;
@@ -1526,42 +1527,42 @@ body[data-page^='admin'] .admin-filter-form {
 /* Apply background images to fullscreen-container via body classes */
 .room-bg-main .fullscreen-container {
     background-image: var(--dynamic-room-bg-url, none);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }.room-bg-room1 .fullscreen-container {
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }.room-bg-room2 .fullscreen-container {
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }.room-bg-room3 .fullscreen-container {
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }.room-bg-room4 .fullscreen-container {
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }.room-bg-room5 .fullscreen-container {
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }.room-bg-room6 .fullscreen-container {
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }.room-bg-landing .fullscreen-container {
     background-image: var(--bg-webp);
-    background-size: contain;
+    background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
 }/* PNG fallbacks for browsers without WebP support */
@@ -2691,13 +2692,17 @@ body[data-page^='admin'] .admin-filter-form {
    MODAL Z-INDEX MANAGEMENT
    ============================================== */
 
-/* Ensure modals don't interfere with admin navbar *//* When modals are open, ensure navbar stays visible */;
+/* Ensure modals take precedence over admin navbar
+   When any admin modal overlay is present, keep the admin tabs below overlays. */
 body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
-    z-index: var(--z-debug);
-}/* Fallback for browsers without :has() support */
-.modal-open .admin-tab-navigation {
-    z-index: calc(var(--z-dropdown) + 3); /* This seems to be an outlier that needs more investigation */;
-}/* Enhanced Tab Color Overrides - RESTORED LAST NIGHT'S STYLING *//* Force all admin tab colors to be white text *//* Content Area Protection *//* Prevent any floating elements from interfering *//* ==============================================
+    z-index: var(--z-admin-nav, 500);
+}
+/* Fallback for browsers without :has() support */
+body.modal-open[data-page^='admin'] .admin-tab-navigation,
+html.modal-open:has(body[data-page^='admin']) .admin-tab-navigation {
+    z-index: var(--z-admin-nav, 500);
+}
+/* Enhanced Tab Color Overrides - RESTORED LAST NIGHT'S STYLING *//* Force all admin tab colors to be white text *//* Content Area Protection *//* Prevent any floating elements from interfering *//* ==============================================
    CRITICAL UTILITY CLASSES RESTORED
    ============================================== */
 
@@ -3592,6 +3597,43 @@ body { /* Allow content overflow */
 }.admin-data-table tr:last-child td {
     border-bottom: none;
 }/* Messages */
+.admin-data-table th:last-child,
+.admin-data-table td:last-child {
+    min-width: 160px;
+    padding-right: 1.25rem;
+}
+
+.admin-data-table .admin-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.admin-data-table .admin-actions a,
+.admin-data-table .admin-actions button {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    min-width: 0;
+    line-height: 1;
+    font-size: 18px;
+    color: inherit;
+    font-family: inherit !important;
+}
+
+/* Text color utilities used in admin Actions column */
+.text-red-600 { color: #dc2626; }
+.text-red-800 { color: #991b1b; }
+.hover\:text-red-800:hover { color: #991b1b; }
+.text-purple-600 { color: #7e22ce; }
+.text-purple-800 { color: #6b21a8; }
+.hover\:text-purple-800:hover { color: #6b21a8; }
+.text-blue-600 { color: #2563eb; }
+.text-blue-800 { color: #1e40af; }
+.hover\:text-blue-800:hover { color: #1e40af; }
+.text-green-600 { color: #16a34a; }
+.text-green-800 { color: #166534; }
+.hover\:text-green-800:hover { color: #166534; }
 .admin-message {
     margin: 1.5rem;
     padding: 1rem;
@@ -4481,7 +4523,54 @@ body[data-page='admin/settings'] {
     align-items: center;
 }.admin-form-inline .form-input {
     flex: 1;
-}/* Admin Alerts */
+}
+
+.assignment-form {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.assignment-form button {
+    flex: 0 0 auto;
+}
+
+.assignment-form__select {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 160px;
+    max-width: 220px;
+}
+
+@media (max-width: 640px) {
+    .assignment-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .assignment-form__select {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* Admin Tablist: horizontal tabs row */
+.admin-tablist {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+@media (max-width: 640px) {
+    .admin-tablist { flex-wrap: wrap; }
+}
+/* Admin Assignments: Drag & Drop feedback */
+.admin-table tr[draggable="true"] { cursor: grab; }
+.admin-table tr.dragging { cursor: grabbing; opacity: 0.6; }
+.admin-table tr.drag-over { outline: 2px dashed var(--brand-primary, #87ac3a); outline-offset: -2px; }
+/* Admin Alerts */
 .admin-alert {
     margin-bottom: 1rem;
     padding: 0.75rem 1rem;
@@ -6747,196 +6836,7 @@ body[data-page='admin/settings'] div:has(#ai-provider-selection-content) { displ
     color: #1e40af;
     font-size: 14px;
     line-height: 1.5;
-}/* Order Modal System - Simplified Design */
-.admin-modal-overlay #orderModal {
-    padding: 1rem;
-}.admin-modal-overlay #orderModal .admin-modal-content {
-    background-color: var(--modal-bg-color, white);
-    border-radius: var(--modal-border-radius, 12px);
-    box-shadow: var(--modal-shadow, 0 25px 50px -12px rgb(0 0 0 / 25%));
-    width: 100%;
-    max-width: 900px;
-    max-height: calc(100vh - 2rem);
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-}.admin-modal-overlay #orderModal .admin-modal-header {
-    padding: 1.5rem 1.5rem 1rem;
-    border-bottom: 1px solid var(--admin-border-color, #e5e7eb);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-}.admin-modal-overlay #orderModal .modal-title {
-    font-size: var(--heading-font-size, 1.5rem);
-    font-weight: 600;
-    color: #111827;
-    margin: 0;
-}.admin-modal-overlay #orderModal .modal-close {
-    color: #6b7280;
-    transition: color 0.2s ease;
-    padding: 0.5rem;
-    border-radius: 6px;
-}.admin-modal-overlay #orderModal .modal-close:hover {
-    color: #374151;
-    background-color: #f3f4f6;
-}.admin-modal-overlay #orderModal .modal-body {
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 0;
-}.admin-modal-overlay #orderModal .order-edit-form {
-    padding: 1.5rem;
-}.admin-modal-overlay #orderModal .form-section {
-    background-color: var(--order-form-section-bg, #f9fafb);
-    border: 1px solid var(--admin-border-color, #e5e7eb);
-    border-radius: var(--border-radius, 8px);
-    padding: 1.5rem;
-    margin-bottom: var(--order-form-spacing, 1.5rem);
-}.admin-modal-overlay #orderModal .form-section:last-child {
-    margin-bottom: 0;
-}.admin-modal-overlay #orderModal .form-section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #111827;
-    margin: 0 0 1rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--admin-border-color, #e5e7eb);
-}.admin-modal-overlay #orderModal .form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-}.admin-modal-overlay #orderModal .form-group {
-    display: flex;
-    flex-direction: column;
-}.admin-modal-overlay #orderModal .form-label {
-    font-weight: 500;
-    color: var(--form-label-color, #374151);
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
-}.admin-modal-overlay #orderModal .form-input {
-    padding: 0.75rem;
-    border: 1px solid var(--form-input-border, #d1d5db);
-    border-radius: 6px;
-    background-color: var(--form-input-bg, white);
-    font-size: 0.875rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}.admin-modal-overlay #orderModal .form-select {
-    padding: 0.75rem;
-    border: 1px solid var(--form-input-border, #d1d5db);
-    border-radius: 6px;
-    background-color: var(--form-input-bg, white);
-    font-size: 0.875rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}.admin-modal-overlay #orderModal .form-textarea {
-    padding: 0.75rem;
-    border: 1px solid var(--form-input-border, #d1d5db);
-    border-radius: 6px;
-    background-color: var(--form-input-bg, white);
-    font-size: 0.875rem;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}.admin-modal-overlay #orderModal .form-input:focus {
-    outline: none;
-    border-color: var(--form-input-focus, #87ac3a);
-    box-shadow: 0 0 0 3px rgb(135 172 58 / 10%);
-}.admin-modal-overlay #orderModal .form-select:focus {
-    outline: none;
-    border-color: var(--form-input-focus, #87ac3a);
-    box-shadow: 0 0 0 3px rgb(135 172 58 / 10%);
-}.admin-modal-overlay #orderModal .form-textarea:focus {
-    outline: none;
-    border-color: var(--form-input-focus, #87ac3a);
-    box-shadow: 0 0 0 3px rgb(135 172 58 / 10%);
-}.admin-modal-overlay #orderModal .form-input[readonly] {
-    background-color: #f3f4f6;
-    color: #6b7280;
-}/* Order Items Container */
-.admin-modal-overlay #orderModal .order-items-container {
-    border: 1px solid var(--order-item-border, #e5e7eb);
-    border-radius: 6px;
-    background-color: white;
-    overflow: hidden;
-}.admin-modal-overlay #orderModal .order-item-row {
-    flex-direction: column;
-    gap: 0.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--order-item-border, #e5e7eb);
-    background-color: var(--order-item-row-bg, white);
-}.admin-modal-overlay #orderModal .order-item-row:last-child {
-    border-bottom: none;
-}.admin-modal-overlay #orderModal .order-item-info {
-    flex-grow: 1;
-}.admin-modal-overlay #orderModal .item-name {
-    font-weight: 600;
-    color: #111827;
-    margin-bottom: 0.25rem;
-}.admin-modal-overlay #orderModal .item-sku {
-    font-size: 0.75rem;
-    color: #6b7280;
-    font-family: monospace;
-}.admin-modal-overlay #orderModal .order-item-pricing {
-    width: 100%;
-    text-align: right;
-    margin-left: 1rem;
-}.admin-modal-overlay #orderModal .item-price {
-    font-size: 0.875rem;
-    color: #374151;
-    margin-bottom: 0.25rem;
-}.admin-modal-overlay #orderModal .item-total {
-    font-weight: 700;
-    color: #111827;
-    font-size: 1rem;
-}/* Address Display */
-.admin-modal-overlay #orderModal .address-display {
-    background-color: white;
-    border: 1px solid var(--admin-border-color, #e5e7eb);
-    border-radius: 6px;
-    padding: 1rem;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    color: #374151;
-    white-space: pre-line;
-}/* Modal Footer */
-.admin-modal-overlay #orderModal .modal-footer {
-    padding: 1rem 1.5rem;
-    border-top: 1px solid var(--admin-border-color, #e5e7eb);
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    flex-shrink: 0;
-    background-color: #f8fafc;
-}.admin-modal-overlay #orderModal .modal-footer .btn-secondary {
-    background-color: var(--button-bg-secondary, #f3f4f6);
-    color: var(--button-text-secondary, #374151);
-    border: 1px solid #d1d5db;
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--button-border-radius, 6px);
-    font-weight: 500;
-    transition: all 0.2s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-}.admin-modal-overlay #orderModal .modal-footer .btn-secondary:hover {
-    background-color: #e5e7eb;
-    border-color: #9ca3af;
-}.admin-modal-overlay #orderModal .modal-footer .btn-primary {
-    background-color: var(--button-bg-primary, #87ac3a);
-    color: var(--button-text-primary, white);
-    border: 1px solid var(--button-bg-primary, #87ac3a);
-    padding: 0.75rem 1.5rem;
-    border-radius: var(--button-border-radius, 6px);
-    font-weight: 500;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}.admin-modal-overlay #orderModal .modal-footer .btn-primary:hover {
-    background-color: var(--brand-secondary, #BF5700);
-    border-color: var(--brand-secondary, #BF5700);
-}
-
-/* Responsive Design */
+}/* Responsive Design */
 @media (width <= 768px) {.admin-modal-overlay #orderModal {
     padding: 0.5rem;
 }.admin-modal-overlay #orderModal .admin-modal-content {
@@ -6976,7 +6876,7 @@ body[data-page='admin/settings'] div:has(#ai-provider-selection-content) { displ
     font-family: var(--font-primary);
     font-weight: 500;
     text-decoration: none;
-    border: 1px solid transparent;
+    border: 1px solid #d1d5db;
     cursor: pointer;
     transition: all var(--transition-base);
     white-space: nowrap;
@@ -6985,7 +6885,13 @@ body[data-page='admin/settings'] div:has(#ai-provider-selection-content) { displ
     position: relative;
     overflow: hidden;
     line-height: 1.25;
-}.btn:focus-visible {
+    padding: 8px 12px;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: var(--gray-800, #1f2937);
+}
+.btn:hover { background-color: #f3f4f6; border-color: #cbd5e1; }
+.btn:focus-visible {
     outline: 2px solid var(--brand-primary);
     outline-offset: 2px;
 }.btn:disabled {
@@ -7031,13 +6937,13 @@ body[data-page='admin/settings'] div:has(#ai-provider-selection-content) { displ
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-fast);
-    background: var(--brand-primary);
-    color: var(--white);
-    border-color: var(--brand-primary);
+    background: var(--brand-primary, #87ac3a);
+    color: var(--white, #ffffff);
+    border-color: var(--brand-primary, #87ac3a);
     box-shadow: var(--shadow-sm);
 }.btn-primary:hover {
-    background: var(--brand-secondary);
-    border-color: var(--brand-secondary);
+    background: var(--brand-secondary, #BF5700);
+    border-color: var(--brand-secondary, #BF5700);
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
 }.btn-primary:active {
@@ -11666,28 +11572,29 @@ body:has(#cartPage) {
     background: var(--brand-secondary, #BF5700);
     border-color: var(--brand-secondary, #BF5700);
 }.modal-button.btn-primary:focus {
-    outline-color: #87ac3a;
+    outline-color: var(--brand-primary, #87ac3a);
 }.confirmation-modal-button.confirm:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgb(135 172 58 / 50%);
-    outline-color: #87ac3a;
+    outline-color: var(--brand-primary, #87ac3a);
 }.modal-button.btn-secondary {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: 1px solid var(--brand-primary, #87ac3a);
 }.confirmation-modal-button.cancel {
-    border-color: #d1d5db;
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    background: var(--brand-primary, #87ac3a);
+    color: white;
+    border: 1px solid var(--brand-primary, #87ac3a);
 }.modal-button.btn-secondary:hover {
-    background: #e5e7eb;
+    background: var(--brand-secondary, #BF5700);
+    border-color: var(--brand-secondary, #BF5700);
 }.confirmation-modal-button.cancel:hover {
-    background: #e5e7eb;
+    background: var(--brand-secondary, #BF5700);
+    border-color: var(--brand-secondary, #BF5700);
 }.modal-button.btn-secondary:focus {
-    outline-color: #9ca3af;
+    outline-color: var(--brand-primary, #87ac3a);
 }.confirmation-modal-button.cancel:focus {
-    outline-color: #9ca3af;
+    outline-color: var(--brand-primary, #87ac3a);
 }.modal-button.btn-danger {
     background: #ef4444;
     color: white;
@@ -11817,16 +11724,17 @@ body:has(#cartPage) {
 }.room-modal-content .modal-footer .btn-secondary {
     flex: 1;
     padding: 10px 16px;
-    background: #f3f4f6;
-    border: 1px solid #d1d5db;
-    color: #374151;
+    background: var(--brand-primary, #87ac3a);
+    color: #ffffff;
+    border: 1px solid var(--brand-primary, #87ac3a);
     border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
 }.room-modal-content .modal-footer .btn-secondary:hover {
-    background: #e5e7eb;
+    background: var(--brand-secondary, #BF5700);
+    border-color: var(--brand-secondary, #BF5700);
 }.room-modal-content .modal-footer .btn-primary {
     flex: 2;
     padding: 10px 16px;
@@ -12599,7 +12507,7 @@ input[type="checkbox"].color-checkbox {
 .detailed-item-modal-container .modal-header {
     flex-direction: row-reverse;
 }.detailed-item-modal-container .modal-header > div {
-    background-color: var(--brand-primary);
+    background-color: var(--brand-primary, #87ac3a);
     padding: 12px 16px;
     border-radius: 0.5rem 0 0 0.5rem;
 }.detailed-item-modal-container .modal-header > div .modal-title {
@@ -12607,11 +12515,11 @@ input[type="checkbox"].color-checkbox {
 }.detailed-item-modal-container .modal-header > div .modal-subtitle {
     color: #fff;
 }.detailed-item-modal-container .modal-button.btn-secondary {
-    background: var(--brand-primary);
+    background: var(--brand-primary, #87ac3a);
     color: #fff;
     border: none !important;
 }.detailed-item-modal-container .modal-button.btn-secondary:hover {
-    background: var(--brand-secondary);
+    background: var(--brand-secondary, #BF5700);
     border: none !important;
 }.customer-modal {
     position: fixed;
@@ -12624,14 +12532,13 @@ input[type="checkbox"].color-checkbox {
     z-index: var(--z-modal, 50);
     padding: var(--spacing-md, 1rem);
 }.modal-header {
-    margin-bottom: 20px;
-    padding-bottom: 16px;
+    margin-bottom: 0;
+    padding: 5px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-lg, 1.5rem);
-    border-bottom: 1px solid var(--border-color, #e5e7eb);
-    background: var(--bg-subtle, #f9fafb);
+    gap: 1rem;
+    border-bottom: 1px solid #e5e7eb;
 }.modal-title {
     font-size: var(--font-size-lg, 1.125rem);
     font-weight: var(--font-weight-semibold, 600);
@@ -12766,10 +12673,6 @@ input[type="checkbox"].color-checkbox {
     color: var(--text-secondary, #6b7280);
     height: 100%;
     min-height: 200px;
-}.order-history-empty .empty-icon {
-    font-size: var(--font-size-3xl, 2rem);
-    margin-bottom: var(--spacing-sm, 0.75rem);
-    opacity: 0.6;
 }.order-history-item {
     background: var(--card-bg, white);
     border: 1px solid var(--border-light, #f3f4f6);
@@ -12814,7 +12717,40 @@ input[type="checkbox"].color-checkbox {
 }.status-delivered {
     background-color: var(--success-bg, #d1fae5);
     color: var(--success-text-dark, #065f46);
-}.delete-modal.show {
+}.status-cancelled {
+    background-color: var(--danger-bg-light, #fee2e2);
+    color: var(--danger-text-dark, #b91c1c);
+}.status-default {
+    background-color: var(--gray-200, #f3f4f6);
+    color: var(--text-secondary, #6b7280);
+}.payment-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: var(--font-size-xs, 0.65rem);
+    font-weight: var(--font-weight-semibold, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}.badge-payment-pending {
+    background-color: var(--warning-bg-light, #fef3c7);
+    color: var(--warning-text-dark, #92400e);
+}.badge-payment-received {
+    background-color: var(--success-bg-light, #dcfce7);
+    color: var(--success-text-dark, #166534);
+}.badge-payment-processing {
+    background-color: var(--info-bg-light, #dbeafe);
+    color: var(--info-text-dark, #1e40af);
+}.badge-payment-refunded {
+    background-color: var(--gray-200, #f3f4f6);
+    color: var(--text-secondary, #6b7280);
+}.badge-payment-failed {
+    background-color: var(--danger-bg-light, #fee2e2);
+    color: var(--danger-text-dark, #b91c1c);
+}.badge-payment-default {
+    background-color: var(--gray-200, #f3f4f6);
+    color: var(--text-secondary, #6b7280);
+}/* Delete Modal Styles */
+.delete-modal.show {
     pointer-events: auto;
     opacity: 1;
     visibility: visible;
@@ -13044,10 +12980,10 @@ input[type="checkbox"].color-checkbox {
     padding: var(--card-padding, 1.25rem);
     background: var(--card-bg-secondary, #f8fafc);
     border-radius: var(--border-radius, 8px);
+    border: 1px solid var(--border-color, #e5e7eb);
     transition: var(--transition-all, all 0.3s ease);
     text-decoration: none;
     color: inherit;
-    border: 1px solid var(--border-color, #e5e7eb);
     cursor: pointer;
 }.tool-card:hover {
     background: var(--card-bg-hover, #f1f5f9);
@@ -13345,16 +13281,16 @@ input[type="checkbox"].color-checkbox {
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }.status-draft {
-    background: #e5e7eb;
+    background-color: #e5e7eb;
     color: #6b7280;
 }.status-scheduled {
-    background: #dbeafe;
+    background-color: #dbeafe;
     color: #1e40af;
 }.status-sent {
-    background: #d1fae5;
+    background-color: #d1fae5;
     color: #065f46;
 }.status-posted {
-    background: #d1fae5;
+    background-color: #d1fae5;
     color: #065f46;
 }.status-active {
     background-color: var(--success-color, #10b981);
@@ -13418,7 +13354,7 @@ input[type="checkbox"].color-checkbox {
     flex-direction: column;
     gap: var(--spacing-sm, 0.75rem);
 }
-}/* ========================================
+}/* ==============================================
    ORDER MANAGEMENT SYSTEM CSS
 ======================================== */
 
@@ -13760,26 +13696,23 @@ input[type="checkbox"].color-checkbox {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgb(135 172 58 / 30%);
 }.btn-secondary {
-    background: var(--brand-primary);
-    border-color: var(--brand-primary);
-    background-color: transparent;
-    color: var(--button-bg-primary);
-    padding: var(--button-padding);
-    border-radius: var(--button-border-radius);
-    font-weight: 500;
+    background: var(--brand-primary, #87ac3a);
+    border-color: var(--brand-primary, #87ac3a);
+    color: #ffffff;
+    padding: 10px 16px;
+    border: 1px solid var(--brand-primary, #87ac3a);
+    border-radius: 10px;
+    font-weight: 600;
     transition: all 0.2s ease;
-    border: none;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     text-decoration: none;
     box-shadow: 0 2px 4px rgb(0 0 0 / 5%);
 }.btn-secondary:hover {
-    background: var(--brand-secondary);
-    border-color: var(--brand-secondary);
-    background-color: var(--button-bg-primary);
-    color: var(--button-text-primary);
+    background: var(--brand-secondary, #BF5700);
+    border-color: var(--brand-secondary, #BF5700);
+    color: #ffffff;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgb(0 0 0 / 15%);
 }.btn-secondary:active {
@@ -13790,7 +13723,7 @@ input[type="checkbox"].color-checkbox {
     position: absolute;
     top: 12px;
     right: 12px;
-    background-color: var(--brand-primary);
+    background-color: var(--brand-primary, #87ac3a);
     color: white;
     padding: 6px 12px;
     border-radius: 6px;
@@ -13990,7 +13923,7 @@ input[type="submit"] {
 .back-to-main-button {
     display: flex;
     
-    background: var(--brand-primary);
+    background: var(--brand-primary, #87ac3a);
     color: var(--white);
     border-radius: var(--radius-lg);
     backdrop-filter: var(--backdrop-blur-sm);
@@ -14286,7 +14219,7 @@ img {
     color: var(--brand-primary, #87ac3a);
     margin: 0 0 16px;
 }.popup-add-to-cart-btn:hover {
-    background: var(--brand-primary-hover, var(--brand-secondary, #BF5700));
+    background: var(--brand-secondary, #BF5700);
     transform: translateY(-1px);
 }.popup-add-to-cart-btn:active {
     transform: translateY(0);
@@ -14341,7 +14274,7 @@ img {
     font-size: 1.1rem;
     font-weight: bold;
     margin: 0;
-    color: #87ac3a;
+    color: var(--brand-primary, #87ac3a);
 }.room-modal-order-summary {
     background: #f8f9fa;
     padding: 10px;
@@ -14370,10 +14303,11 @@ img {
     border-radius: 6px;
     cursor: pointer;
 }.room-modal-footer .btn-secondary {
-    border: 1px solid #ddd;
-    background: #f8f9fa;
+    border: 1px solid var(--brand-primary, #87ac3a);
+    background: var(--brand-primary, #87ac3a);
+    color: #ffffff;
 }.room-modal-footer .btn-primary {
-    background: #87ac3a;
+    background: var(--brand-primary, #87ac3a);
     color: white;
     border: none;
     font-weight: bold;
@@ -14483,4 +14417,98 @@ body.wf-modal-scroll-lock {
 }
 .admin-modal-overlay.wf-topmost .admin-modal-content {
   overflow: auto;
+}
+
+/* ==============================================
+     Global Button Styles (Primary)
+     Uses brand variables; this is the canonical button class site-wide.
+     ============================================== */
+.btn,
+.btn-primary,
+.btn-secondary,
+.button,
+.add-to-cart,
+.add-to-cart-btn,
+.add-to-cart-popup,
+.search-add-to-cart-btn,
+.wf-add-to-cart-btn,
+.popup-add-to-cart-btn,
+.room-modal-button,
+/* Admin aliases */
+.wf-admin-nav-button,
+.admin-settings-button,
+.admin-action-button,
+/* Modal primary aliases */
+.modal-button.btn-primary,
+.modal-button.btn-secondary,
+.confirmation-modal-button.confirm,
+.confirmation-modal-button.cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  background-color: var(--brand-primary, #87ac3a);
+  color: #ffffff;
+  transition: background-color 0.2s ease, border-color 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+}
+.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.button:hover,
+.add-to-cart:hover,
+.add-to-cart-btn:hover,
+.add-to-cart-popup:hover,
+.search-add-to-cart-btn:hover,
+.wf-add-to-cart-btn:hover,
+.popup-add-to-cart-btn:hover,
+.room-modal-button:hover,
+/* Admin aliases */
+.wf-admin-nav-button:hover,
+.admin-settings-button:hover,
+.admin-action-button:hover,
+/* Modal primary aliases */
+.modal-button.btn-primary:hover,
+.modal-button.btn-secondary:hover,
+.confirmation-modal-button.confirm:hover,
+.confirmation-modal-button.cancel:hover {
+  background-color: var(--brand-secondary, #BF5700);
+  border-color: var(--brand-secondary, #BF5700);
+  color: #ffffff;
+}
+.btn:disabled,
+.btn[aria-disabled="true"],
+.btn.is-disabled,
+.btn-primary:disabled,
+.btn-primary[aria-disabled="true"],
+.btn-primary.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+/* Size variants */
+.btn-xs { padding: 6px 10px; font-size: 0.875rem; border-radius: 8px; }
+.btn-sm { padding: 8px 12px; font-size: 0.9rem; border-radius: 8px; }
+.btn-lg { padding: 12px 18px; font-size: 1.05rem; border-radius: 12px; }
+/* Accessible focus outline */
+.btn:focus-visible,
+.btn-primary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand-secondary, #BF5700) 70%, white 30%);
+  outline-offset: 2px;
+}
+
+/* OOS/disabled: enforce grey look for add-to-cart contexts */
+.search-add-to-cart-btn[disabled],
+.add-to-cart-btn.is-disabled,
+.add-to-cart-btn[disabled],
+.add-to-cart-popup.is-disabled,
+.add-to-cart-popup[disabled] {
+  background: #d1d5db !important; /* gray-300 */
+  color: #6b7280 !important;      /* gray-500 */
+  border-color: #d1d5db !important;
+  cursor: not-allowed !important;
 }

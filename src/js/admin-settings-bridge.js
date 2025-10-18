@@ -5,6 +5,303 @@ import { ApiClient } from '../core/api-client.js';
 import '../modules/admin-settings-lightweight.js';
 function byId(id){ return document.getElementById(id); }
 
+const FONT_LIBRARY = [
+  { id: 'system-sans', name: 'System UI', detail: 'Sans-serif', stack: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif", category: 'sans-serif', sample: 'Reliable interface typography.' },
+  { id: 'inter', name: 'Inter', detail: 'Sans-serif', stack: "'Inter', 'Helvetica Neue', Arial, sans-serif", category: 'sans-serif', sample: 'Modern UI and marketing copy.' },
+  { id: 'roboto', name: 'Roboto', detail: 'Sans-serif', stack: "'Roboto', 'Helvetica Neue', Arial, sans-serif", category: 'sans-serif', sample: 'Approachable body copy with clarity.' },
+  { id: 'open-sans', name: 'Open Sans', detail: 'Sans-serif', stack: "'Open Sans', 'Helvetica Neue', Arial, sans-serif", category: 'sans-serif', sample: 'Friendly paragraphs and marketing text.' },
+  { id: 'poppins', name: 'Poppins', detail: 'Sans-serif', stack: "'Poppins', 'Helvetica Neue', Arial, sans-serif", category: 'sans-serif', sample: 'Rounded titles with personality.' },
+  { id: 'work-sans', name: 'Work Sans', detail: 'Sans-serif', stack: "'Work Sans', 'Helvetica Neue', Arial, sans-serif", category: 'sans-serif', sample: 'Clean product descriptions and UI labels.' },
+  { id: 'montserrat', name: 'Montserrat', detail: 'Display Sans', stack: "'Montserrat', 'Helvetica Neue', Arial, sans-serif", category: 'display', sample: 'Bold headlines with geometric flair.' },
+  { id: 'raleway', name: 'Raleway', detail: 'Display Sans', stack: "'Raleway', 'Helvetica Neue', Arial, sans-serif", category: 'display', sample: 'Elegant uppercase headings.' },
+  { id: 'merriweather', name: 'Merriweather', detail: 'Serif', stack: "'Merriweather', Georgia, serif", category: 'serif', sample: 'Editorial style paragraphs and quotes.' },
+  { id: 'playfair', name: 'Playfair Display', detail: 'Serif', stack: "'Playfair Display', 'Times New Roman', serif", category: 'serif', sample: 'High-contrast headings with classic charm.' },
+  { id: 'dm-serif', name: 'DM Serif Text', detail: 'Serif', stack: "'DM Serif Text', 'Times New Roman', serif", category: 'serif', sample: 'Refined accents for premium brands.' },
+  { id: 'fira-code', name: 'Fira Code', detail: 'Monospace', stack: "'Fira Code', 'Courier New', monospace", category: 'monospace', sample: 'Technical snippets and code samples.' },
+  { id: 'source-code', name: 'Source Code Pro', detail: 'Monospace', stack: "'Source Code Pro', 'Courier New', monospace", category: 'monospace', sample: 'Console-style accents and UI.' },
+  { id: 'dancing-script', name: 'Dancing Script', detail: 'Handwriting', stack: "'Dancing Script', 'Brush Script MT', cursive", category: 'handwriting', sample: 'Playful handwritten callouts.' },
+  { id: 'pacifico', name: 'Pacifico', detail: 'Handwriting', stack: "'Pacifico', 'Brush Script MT', cursive", category: 'handwriting', sample: 'Retro script for standout words.' }
+];
+
+function normalizeFontStack(value) {
+  if (!value) return '';
+  return value.split(',').map((part) => part.trim().replace(/\s+/g, ' ')).filter(Boolean).join(',');
+}
+
+FONT_LIBRARY.forEach((font) => {
+  font.normalizedStack = normalizeFontStack(font.stack);
+});
+
+const FONT_LIBRARY_BY_ID = new Map(FONT_LIBRARY.map((font) => [font.id, font]));
+const DEFAULT_FONTS = {
+  primary: FONT_LIBRARY_BY_ID.get('system-sans') || FONT_LIBRARY[0],
+  secondary: FONT_LIBRARY_BY_ID.get('merriweather') || FONT_LIBRARY[0]
+};
+
+const FONT_PICKER_STYLE_ID = 'wf-font-picker-styles';
+
+function describeCustomStack(stack) {
+  if (!stack) return '';
+  const safe = stack.replace(/\s+,\s+/g, ', ');
+  const families = safe.split(',').map((part) => part.replace(/^['"]|['"]$/g, '').trim()).filter(Boolean);
+  if (!families.length) return stack;
+  return `Custom: ${families.slice(0, 2).join(', ')}${families.length > 2 ? '…' : ''}`;
+}
+
+function getFontMetaByStack(stack) {
+  if (!stack) return null;
+  const normalized = normalizeFontStack(stack);
+  for (const font of FONT_LIBRARY) {
+    if (font.normalizedStack === normalized) {
+      return font;
+    }
+  }
+  return null;
+}
+
+function updateFontPreviewLabel(target, meta, stack) {
+  const labelId = target === 'secondary' ? 'brandFontSecondaryLabel' : 'brandFontPrimaryLabel';
+  const label = byId(labelId);
+  if (!label) return;
+
+  let text = 'Not set';
+  if (meta) {
+    text = `${meta.name} (${meta.detail})`;
+  } else if (stack) {
+    text = describeCustomStack(stack);
+  }
+
+  label.textContent = text;
+  label.dataset.fontStack = stack || '';
+  if (meta && meta.id) {
+    label.dataset.fontId = meta.id;
+  } else {
+    delete label.dataset.fontId;
+  }
+}
+
+function setFontField(target, stack) {
+  const isSecondary = target === 'secondary';
+  const inputId = isSecondary ? 'brandFontSecondary' : 'brandFontPrimary';
+  const defaultMeta = isSecondary ? DEFAULT_FONTS.secondary : DEFAULT_FONTS.primary;
+
+  let effective = typeof stack === 'string' ? stack.trim() : '';
+  let meta = getFontMetaByStack(effective);
+
+  if (!effective && defaultMeta) {
+    effective = defaultMeta.stack;
+    meta = defaultMeta;
+  }
+
+  const input = byId(inputId);
+  if (input) {
+    input.value = effective;
+    input.dataset.fontId = meta ? meta.id : '';
+  }
+
+  updateFontPreviewLabel(target, meta, effective);
+
+  return effective;
+}
+
+function ensureFontPickerStyles() {
+  let styleEl = document.getElementById(FONT_PICKER_STYLE_ID);
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = FONT_PICKER_STYLE_ID;
+    document.head.appendChild(styleEl);
+  }
+
+  const rules = FONT_LIBRARY.map((font) => {
+    const selector = `.font-picker-card[data-font-id="${font.id}"] .font-picker-sample`;
+    return `${selector}{font-family:${font.stack};}`;
+  }).join('\n');
+
+  styleEl.textContent = rules;
+}
+
+function renderFontPickerList() {
+  const list = byId('fontPickerList');
+  if (!list) return;
+
+  list.innerHTML = '';
+
+  FONT_LIBRARY.forEach((font) => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'font-picker-card';
+    card.dataset.fontId = font.id;
+    card.dataset.category = font.category;
+    card.dataset.fontStack = font.stack;
+    card.innerHTML = `
+      <div class="font-picker-title">${font.name}</div>
+      <div class="font-picker-detail">${font.detail}</div>
+      <div class="font-picker-sample" aria-hidden="true">${font.sample}</div>
+      <div class="font-picker-stack">${font.stack}</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function applyFontPickerFilters() {
+  const list = byId('fontPickerList');
+  const searchField = byId('fontPickerSearch');
+  const categorySelect = byId('fontPickerCategory');
+  if (!list) return;
+
+  const query = (searchField?.value || '').toLowerCase();
+  const category = (categorySelect?.value || 'all').toLowerCase();
+
+  list.querySelectorAll('.font-picker-card').forEach((card) => {
+    const name = (card.querySelector('.font-picker-title')?.textContent || '').toLowerCase();
+    const stack = (card.dataset.fontStack || '').toLowerCase();
+    const detail = (card.querySelector('.font-picker-detail')?.textContent || '').toLowerCase();
+    const cardCategory = (card.dataset.category || '').toLowerCase();
+
+    const matchesCategory = category === 'all' || cardCategory === category;
+    const matchesQuery = !query || name.includes(query) || stack.includes(query) || detail.includes(query);
+
+    card.classList.toggle('is-hidden', !(matchesCategory && matchesQuery));
+  });
+}
+
+function openFontPicker(target) {
+  const overlay = byId('fontPickerModal');
+  if (!overlay) return;
+  overlay.dataset.fontTarget = target;
+  overlay.dataset.selectedFont = '';
+  overlay.classList.remove('hidden');
+  overlay.classList.add('show');
+  overlay.setAttribute('aria-hidden', 'false');
+
+  const list = byId('fontPickerList');
+  const currentInput = byId(target === 'secondary' ? 'brandFontSecondary' : 'brandFontPrimary');
+  const currentValue = currentInput ? normalizeFontStack(currentInput.value) : '';
+  const customInput = byId('fontPickerCustomInput');
+  if (customInput) customInput.value = currentInput ? currentInput.value || '' : '';
+  if (list) {
+    list.querySelectorAll('.font-picker-card').forEach((card) => {
+      card.classList.remove('is-selected');
+      const stack = card.dataset.fontStack || '';
+      const meta = getFontMetaByStack(stack);
+      if (meta && meta.normalizedStack === currentValue) {
+        overlay.dataset.selectedFont = meta.id;
+        card.classList.add('is-selected');
+      }
+    });
+  }
+
+  if (!overlay.dataset.selectedFont && list) {
+    list.querySelectorAll('.font-picker-card').forEach((card) => card.classList.remove('is-selected'));
+  }
+
+  requestAnimationFrame(() => {
+    const searchField = byId('fontPickerSearch');
+    if (searchField) searchField.focus();
+  });
+}
+
+function closeFontPicker() {
+  const overlay = byId('fontPickerModal');
+  if (!overlay) return;
+  overlay.classList.add('hidden');
+  overlay.classList.remove('show');
+  overlay.setAttribute('aria-hidden', 'true');
+  delete overlay.dataset.fontTarget;
+  delete overlay.dataset.selectedFont;
+}
+
+function handleFontCardSelection(card) {
+  const overlay = byId('fontPickerModal');
+  if (!overlay || !card) return;
+
+  overlay.dataset.selectedFont = card.dataset.fontId || '';
+
+  const list = byId('fontPickerList');
+  if (list) {
+    list.querySelectorAll('.font-picker-card').forEach((btn) => {
+      btn.classList.toggle('is-selected', btn === card);
+    });
+  }
+
+  const customInput = byId('fontPickerCustomInput');
+  if (customInput) {
+    customInput.value = card.dataset.fontStack || '';
+  }
+}
+
+function applySelectedFontFromPicker() {
+  const overlay = byId('fontPickerModal');
+  if (!overlay) return;
+
+  const target = overlay.dataset.fontTarget || 'primary';
+  const selectedId = overlay.dataset.selectedFont || '';
+  const customInput = byId('fontPickerCustomInput');
+  const customStack = customInput ? customInput.value.trim() : '';
+
+  let stackToApply = '';
+  if (selectedId) {
+    const meta = FONT_LIBRARY_BY_ID.get(selectedId);
+    if (meta) {
+      stackToApply = meta.stack;
+    }
+  }
+
+  // Custom input overrides the selected card when provided
+  if (customStack) {
+    stackToApply = customStack;
+  }
+
+  const effective = setFontField(target, stackToApply);
+
+  // Update CSS variables in preview immediately
+  const data = collectBusinessInfo();
+  if (target === 'primary') {
+    data.business_brand_font_primary = effective;
+  } else {
+    data.business_brand_font_secondary = effective;
+  }
+  applyBusinessCssToRoot(data);
+
+  closeFontPicker();
+}
+
+function initializeFontPicker() {
+  if (initializeFontPicker.__wfInit) return;
+  initializeFontPicker.__wfInit = true;
+
+  ensureFontPickerStyles();
+  renderFontPickerList();
+  applyFontPickerFilters();
+
+  const searchField = byId('fontPickerSearch');
+  if (searchField) {
+    searchField.addEventListener('input', () => applyFontPickerFilters());
+  }
+
+  const categorySelect = byId('fontPickerCategory');
+  if (categorySelect) {
+    categorySelect.addEventListener('change', () => applyFontPickerFilters());
+  }
+}
+
+function ensureFontPreviewStacks() {
+  const primaryLabel = byId('brandFontPrimaryLabel');
+  const secondaryLabel = byId('brandFontSecondaryLabel');
+  const primaryStack = byId('brandFontPrimary')?.value || '';
+  const secondaryStack = byId('brandFontSecondary')?.value || '';
+
+  if (primaryLabel) primaryLabel.dataset.fontStack = primaryStack;
+  if (secondaryLabel) secondaryLabel.dataset.fontStack = secondaryStack;
+}
+
+// Expose key helpers globally for legacy handlers and inline scripts
+if (typeof window !== 'undefined') {
+    window.loadBusinessInfo = loadBusinessInfo;
+    window.applyBusinessInfo = applyBusinessInfo;
+    window.saveBusinessInfo = saveBusinessInfo;
+}
+
 function ensureColorChipObserver(modal) {
   try {
     if (!modal) return;
@@ -219,11 +516,35 @@ function applyBusinessInfo(s) {
     set('bizPhone', s.business_phone || '');
     set('bizHours', s.business_hours || '');
     set('bizWebsite', s.business_website || '');
-    set('bizLogoUrl', s.business_logo_url || '');
-    set('bizTagline', s.business_tagline || '');
+    set('bizLogoUrl', (s.business_logo_url && s.business_logo_url.trim() !== '') ? s.business_logo_url : (typeof window !== 'undefined' && typeof window.wfBrandLogoPath === 'function' ? window.wfBrandLogoPath() : '/images/logos/logo-whimsicalfrog.webp'));
+    set('bizTagline', s.site_tagline || '');
     set('bizDescription', s.business_description || '');
-    set('brandPrimary', s.business_brand_primary || '#0ea5e9');
-    set('brandSecondary', s.business_brand_secondary || '#6366f1');
+    const primaryStack = setFontField('primary', s.business_brand_font_primary);
+    const secondaryStack = setFontField('secondary', s.business_brand_font_secondary);
+    set('brandFontPrimary', primaryStack);
+    set('brandFontSecondary', secondaryStack);
+    ensureFontPreviewStacks();
+    set('bizSupportEmail', s.business_support_email || '');
+    set('bizSupportPhone', s.business_support_phone || '');
+    set('bizFacebook', s.business_facebook || '');
+    set('bizInstagram', s.business_instagram || '');
+    set('bizTwitter', s.business_twitter || '');
+    set('bizTikTok', s.business_tiktok || '');
+    set('bizYouTube', s.business_youtube || '');
+    set('bizLinkedIn', s.business_linkedin || '');
+    set('bizTermsUrl', s.business_terms_url || '');
+    set('bizPrivacyUrl', s.business_privacy_url || '');
+    set('bizTaxId', s.business_tax_id || '');
+    set('bizTimezone', s.business_timezone || '');
+    set('bizCurrency', s.business_currency || '');
+    set('bizLocale', s.business_locale || '');
+    set('footerNote', s.business_footer_note || '');
+    set('footerHtml', s.business_footer_html || '');
+    set('returnPolicy', s.business_policy_return || '');
+    set('shippingPolicy', s.business_policy_shipping || '');
+    set('warrantyPolicy', s.business_policy_warranty || '');
+    set('brandPrimary', s.business_brand_primary || '#87ac3a');
+    set('brandSecondary', s.business_brand_secondary || '#BF5700');
     set('brandAccent', s.business_brand_accent || '#22c55e');
     set('brandBackground', s.business_brand_background || '#ffffff');
     set('brandText', s.business_brand_text || '#111827');
@@ -255,8 +576,10 @@ function collectBusinessInfo() {
         business_hours: get('bizHours'),
         business_website: get('bizWebsite'),
         business_logo_url: get('bizLogoUrl'),
-        business_tagline: get('bizTagline'),
+        site_tagline: get('bizTagline'),
         business_description: get('bizDescription'),
+        business_brand_font_primary: get('brandFontPrimary'),
+        business_brand_font_secondary: get('brandFontSecondary'),
         business_brand_primary: get('brandPrimary'),
         business_brand_secondary: get('brandSecondary'),
         business_brand_accent: get('brandAccent'),
@@ -264,6 +587,25 @@ function collectBusinessInfo() {
         business_brand_text: get('brandText'),
         business_css_vars: get('customCssVars'),
         business_brand_palette: JSON.stringify(brandPalette),
+        business_support_email: get('bizSupportEmail'),
+        business_support_phone: get('bizSupportPhone'),
+        business_facebook: get('bizFacebook'),
+        business_instagram: get('bizInstagram'),
+        business_twitter: get('bizTwitter'),
+        business_tiktok: get('bizTikTok'),
+        business_youtube: get('bizYouTube'),
+        business_linkedin: get('bizLinkedIn'),
+        business_terms_url: get('bizTermsUrl'),
+        business_privacy_url: get('bizPrivacyUrl'),
+        business_tax_id: get('bizTaxId'),
+        business_timezone: get('bizTimezone'),
+        business_currency: get('bizCurrency'),
+        business_locale: get('bizLocale'),
+        business_footer_note: get('footerNote'),
+        business_footer_html: get('footerHtml'),
+        business_policy_return: get('returnPolicy'),
+        business_policy_shipping: get('shippingPolicy'),
+        business_policy_warranty: get('warrantyPolicy'),
     };
 }
 
@@ -274,8 +616,17 @@ async function saveBusinessInfo() {
     try {
         const mod = await import('../modules/business-settings-api.js');
         const BusinessSettingsAPI = mod?.default || mod?.BusinessSettingsAPI;
-        // Save all fields under the 'business_info' category as our canonical source
-        await BusinessSettingsAPI.upsert('business_info', payload);
+        const { site_tagline, ...businessInfo } = payload;
+        const requests = [];
+
+        if (Object.keys(businessInfo).length > 0) {
+            requests.push(BusinessSettingsAPI.upsert('business_info', businessInfo));
+        }
+        if (typeof site_tagline === 'string') {
+            requests.push(BusinessSettingsAPI.upsert('branding', { site_tagline }));
+        }
+
+        await Promise.all(requests);
         if(status) status.textContent = 'Saved successfully!';
         setTimeout(() => { if(status && status.textContent === 'Saved successfully!') status.textContent = ''; }, 2000);
     } catch (e) {
@@ -295,7 +646,10 @@ document.addEventListener('click', async (e) => {
     loadBusinessInfo().then(() => {
       showModal('businessInfoModal'); // Assuming showModal exists
       setTimeout(()=>{
-        try { wireBrandingLivePreview(); } catch(err){ console.error('Error wiring branding live preview', err); }
+        try {
+          wireBrandingLivePreview();
+          initializeFontPicker();
+        } catch(err){ console.error('Error wiring branding live preview', err); }
       }, 0);
     });
     return;
@@ -344,7 +698,34 @@ document.addEventListener('click', async (e) => {
     hideModal('businessInfoModal'); // Assuming hideModal exists
     return;
   }
-    if (closest('[data-action="business-save-branding"]')) {
+  if (closest('[data-action="open-font-picker"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = closest('[data-action="open-font-picker"]').dataset.fontTarget || 'primary';
+    initializeFontPicker();
+    openFontPicker(target);
+    return;
+  }
+  if (closest('[data-action="close-font-picker"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeFontPicker();
+    return;
+  }
+  if (closest('[data-action="apply-font-selection"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    applySelectedFontFromPicker();
+    return;
+  }
+  const fontCard = closest('#fontPickerList .font-picker-card');
+  if (fontCard) {
+    e.preventDefault();
+    e.stopPropagation();
+    handleFontCardSelection(fontCard);
+    return;
+  }
+  if (closest('[data-action="business-save-branding"]')) {
     e.preventDefault(); e.stopPropagation();
     saveBusinessInfo();
     return;

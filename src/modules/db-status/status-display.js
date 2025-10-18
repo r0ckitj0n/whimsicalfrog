@@ -140,7 +140,7 @@ export class DbStatusDisplayManager {
       .map(cmd => {
         const description = this.apiTester.getCommandDescription(cmd.command);
         return `
-          <button class="db-command-btn" data-action="runCommand"
+          <button class="btn btn-secondary btn-sm" data-action="runCommand"
                   data-params='${JSON.stringify({ command: cmd.command })}'
                   title="${description}">
             ${cmd.label}
@@ -210,7 +210,7 @@ export class DbStatusDisplayManager {
       ? tables.map(table => `
           <div class="table-item">
             <span class="table-name">${table}</span>
-            <button class="btn-small" data-action="runCommand"
+            <button class="btn btn-sm" data-action="runCommand"
                     data-params='${JSON.stringify({ command: 'describe', table })}'
                     title="Describe table">
               📋

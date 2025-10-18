@@ -8,7 +8,7 @@
     "dev:5176": "VITE_DEV_PORT=5176 VITE_HMR_PORT=5176 printf 'http://localhost:5176' > hot && vite --host localhost --port 5176 --strictPort",
     "stop": "rm hot",
     "quarantine:dupes": "bash scripts/dev/quarantine_duplicates.sh",
-    "prebuild": "bash scripts/dev/quarantine_duplicates.sh && node scripts/guards/guard-repo-hygiene.mjs",
+    "prebuild": "bash scripts/dev/quarantine_duplicates.sh && node scripts/guards/guard-repo-hygiene.mjs && node scripts/guards/no-inline-fallbacks.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --cache --cache-location .cache/eslint/",
@@ -25,6 +25,7 @@
     "guard:repo-hygiene": "node scripts/guards/guard-repo-hygiene.mjs",
     "guard:z-index": "node scripts/guard-z-index.mjs",
     "guard:no-raw-fetch": "node scripts/guards/no-raw-fetch.mjs",
+    "guard:no-inline-fallbacks": "node scripts/guards/no-inline-fallbacks.mjs",
     "guard:fetch": "npm run guard:no-raw-fetch",
     "smoke:api-client": "node scripts/guards/smoke-api-client-usage.mjs",
     "guard:brand-colors": "rg -n \"#6b8e23|#789a34\" --glob '!**/backups/**' --glob '!**/*.backup*' --glob '!**/site-base.css.backup'",
@@ -102,6 +103,10 @@
     "**/*.css": [
       "node scripts/dev/guard-css-staged.mjs",
       "node scripts/guard-z-index.mjs"
+    ]
+    ,
+    "sections/**/*.php": [
+      "node scripts/guards/no-inline-fallbacks.mjs"
     ]
   }
 }

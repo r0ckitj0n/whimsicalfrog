@@ -41,7 +41,13 @@ $modalMode = match(true) {
 
 // Preload edit item when needed
 if ($modalMode === 'view' || $modalMode === 'edit') {
-    $editItem = Database::queryOne("SELECT * FROM items WHERE sku = ?", [$_GET[$modalMode]]) ?: null;
+    $openValRaw = (string)($_GET[$modalMode] ?? '');
+    // Defensive: if user appended debug_nav=1 without '&', the value can look like WF-AR-001debug_nav=1
+    if (($p = stripos($openValRaw, 'debug_nav')) !== false) {
+        $openValRaw = substr($openValRaw, 0, $p);
+    }
+    $openVal = trim($openValRaw);
+    $editItem = Database::queryOne("SELECT * FROM items WHERE sku = ?", [$openVal]) ?: null;
 } elseif ($modalMode === 'add') {
     $lastSku = Database::queryOne("SELECT sku FROM items WHERE sku LIKE 'WF-GEN-%' ORDER BY sku DESC LIMIT 1");
     $lastNum = $lastSku ? (int)substr($lastSku['sku'], -3) : 0;
@@ -63,6 +69,23 @@ $filters = [
     'category' => $_GET['category'] ?? '',
     'stock' => $_GET['stock'] ?? ''
 ];
+
+// Sorting (whitelisted)
+$sortBy = isset($_GET['sort']) ? strtolower((string)$_GET['sort']) : 'sku';
+$sortDir = isset($_GET['dir']) ? strtolower((string)$_GET['dir']) : 'asc';
+$validDir = ($sortDir === 'desc') ? 'DESC' : 'ASC';
+$sortMap = [
+    'name' => 'i.name',
+    'category' => 'i.category',
+    'sku' => 'i.sku',
+    'stock' => 'i.stockLevel',
+    'reorder' => 'i.reorderPoint',
+    'cost' => 'i.costPrice',
+    'retail' => 'i.retailPrice',
+    'images' => 'image_count',
+];
+$orderColumn = $sortMap[$sortBy] ?? 'i.sku';
+$orderClause = $orderColumn . ' ' . $validDir . ', i.sku ASC';
 
 // Build WHERE
 $whereConditions = ['1=1'];
@@ -86,16 +109,7 @@ if (!empty($filters['stock'])) {
     $whereConditions[] = $stockCondition;
 }
 
-// Pagination
-$perPage = 50;
-$currentPage = isset($_GET['pageNum']) ? max(1, (int)$_GET['pageNum']) : 1;
-$offset = ($currentPage - 1) * $perPage;
-
-$countSql = "SELECT COUNT(*) AS cnt FROM items i WHERE " . implode(' AND ', $whereConditions);
-$countRow = Database::queryOne($countSql, $queryParams);
-$totalRecords = (int)($countRow['cnt'] ?? 0);
-$totalPages = (int)ceil($totalRecords / $perPage);
-
+// No pagination - display all items
 $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count 
         FROM items i 
         LEFT JOIN (
@@ -104,14 +118,88 @@ $sql = "SELECT i.*, COALESCE(img_count.image_count, 0) as image_count
             GROUP BY sku
         ) img_count ON i.sku = img_count.sku 
         WHERE " . implode(' AND ', $whereConditions) . " 
-        ORDER BY i.sku ASC
-        LIMIT " . intval($perPage) . " OFFSET " . intval($offset);
+        ORDER BY " . $orderClause;
 
 $items = Database::queryAll($sql, $queryParams);
+
+// Preload primary images for all items in the current result set
+$primaryImages = [];
+if (!empty($items)) {
+    $skus = array_values(array_filter(array_map(static function ($item) {
+        return $item['sku'] ?? null;
+    }, $items)));
+
+    if (!empty($skus)) {
+        $placeholders = implode(',', array_fill(0, count($skus), '?'));
+        $imageRows = Database::queryAll(
+            "SELECT sku, image_path, alt_text, is_primary, sort_order, id
+             FROM item_images
+             WHERE sku IN ($placeholders)
+             ORDER BY sku ASC, is_primary DESC, sort_order ASC, id ASC",
+            $skus
+        );
+
+        foreach ($imageRows as $row) {
+            $sku = $row['sku'] ?? null;
+            if (!$sku || isset($primaryImages[$sku])) {
+                continue;
+            }
+
+            $width = null;
+            $height = null;
+            $fileSize = null;
+            $imagePath = $row['image_path'] ?? null;
+            if ($imagePath) {
+                $fullPath = dirname(__DIR__) . '/' . ltrim($imagePath, '/');
+                if (is_file($fullPath)) {
+                    $dimensions = @getimagesize($fullPath);
+                    if (is_array($dimensions)) {
+                        $width = $dimensions[0] ?? null;
+                        $height = $dimensions[1] ?? null;
+                    }
+                    $fileSize = @filesize($fullPath);
+                }
+            }
+
+            $primaryImages[$sku] = [
+                'image_path' => $imagePath,
+                'alt_text' => $row['alt_text'] ?? null,
+                'is_primary' => (bool)($row['is_primary'] ?? false),
+                'sort_order' => (int)($row['sort_order'] ?? 0),
+                'width' => $width ? (int)$width : null,
+                'height' => $height ? (int)$height : null,
+                'file_size' => $fileSize !== false ? ($fileSize !== null ? (int)$fileSize : null) : null
+            ];
+        }
+    }
+
+    foreach ($items as &$item) {
+        $sku = $item['sku'] ?? null;
+        $item['primary_image'] = $sku && isset($primaryImages[$sku]) ? $primaryImages[$sku] : null;
+    }
+    unset($item);
+}
 
 // Messages
 $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
+
+// Helpers for sortable header links
+function invSortUrl($column, $currentSort, $currentDir) {
+    $newDir = ($column === $currentSort && $currentDir === 'asc') ? 'desc' : 'asc';
+    $queryParams = $_GET;
+    $queryParams['sort'] = $column;
+    $queryParams['dir'] = $newDir;
+    // Reset to first page when sorting changes
+    unset($queryParams['pageNum']);
+    // Remove modal/view/edit params
+    unset($queryParams['view'], $queryParams['edit'], $queryParams['add']);
+    return '/admin/inventory?' . http_build_query($queryParams);
+}
+function invSortIndicator($column, $currentSort, $currentDir) {
+    if ($column !== $currentSort) return '';
+    return ($currentDir === 'asc') ? '↑' : '↓';
+}
 ?>
 
 <div class="admin-content-container">
@@ -151,15 +239,41 @@ $messageType = $_GET['type'] ?? '';
         <table id="inventoryTable" class="inventory-table admin-data-table">
             <thead>
                 <tr>
-                    <th>Image</th><th>Images</th><th>Name</th><th>Category</th><th>SKU</th><th>Stock</th>
-                    <th>Reorder Point</th><th>Cost Price</th><th>Retail Price</th><th>Actions</th>
+                    <th>Image</th>
+                    <th>
+                        <a href="<?= invSortUrl('images', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='images' ? ' is-active' : '' ?>">Images <?= invSortIndicator('images', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= invSortUrl('name', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='name' ? ' is-active' : '' ?>">Name <?= invSortIndicator('name', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= invSortUrl('category', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='category' ? ' is-active' : '' ?>">Category <?= invSortIndicator('category', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= invSortUrl('sku', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='sku' ? ' is-active' : '' ?>">SKU <?= invSortIndicator('sku', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= invSortUrl('stock', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='stock' ? ' is-active' : '' ?>">Stock <?= invSortIndicator('stock', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= invSortUrl('reorder', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='reorder' ? ' is-active' : '' ?>">Reorder Point <?= invSortIndicator('reorder', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= invSortUrl('cost', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='cost' ? ' is-active' : '' ?>">Cost Price <?= invSortIndicator('cost', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= invSortUrl('retail', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='retail' ? ' is-active' : '' ?>">Retail Price <?= invSortIndicator('retail', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($items)): ?>
                     <tr><td colspan="10" class="text-center">No items found matching your criteria.</td></tr>
                 <?php else: ?>
-                    <?php foreach ($items as $item): ?>
+                    <?php 
+                        $linkBase = $_GET; unset($linkBase['view'], $linkBase['edit'], $linkBase['add']);
+                        foreach ($items as $item): ?>
                     <tr data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" class="<?= (isset($_GET['highlight']) && $_GET['highlight'] == $item['sku']) ? 'bg-yellow-100' : '' ?> hover:bg-gray-50">
                         <td>
                             <div class="thumbnail-container" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" >
@@ -180,8 +294,10 @@ $messageType = $_GET['type'] ?? '';
                         <td class="editable" data-field="retailPrice">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
                         <td>
                             <div class="admin-actions">
-                                <a href="/admin/inventory?view=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-blue-600 hover:text-blue-800" title="View Item">👁️</a>
-                                <a href="/admin/inventory?edit=<?= htmlspecialchars($item['sku'] ?? '') ?>" class="text-green-600 hover:text-green-800" title="Edit Item">✏️</a>
+                                <?php $viewHref = '/admin/inventory?' . http_build_query(array_merge($linkBase, ['view' => ($item['sku'] ?? '')])); ?>
+                                <?php $editHref = '/admin/inventory?' . http_build_query(array_merge($linkBase, ['edit' => ($item['sku'] ?? '')])); ?>
+                                <a href="<?= htmlspecialchars($viewHref) ?>" class="text-blue-600 hover:text-blue-800" title="View Item">👁️</a>
+                                <a href="<?= htmlspecialchars($editHref) ?>" class="text-green-600 hover:text-green-800" title="Edit Item">✏️</a>
                                 <button data-action="delete-item" class="text-red-600 hover:text-red-800" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item">🗑️</button>
                             </div>
                         </td>
@@ -196,31 +312,37 @@ $messageType = $_GET['type'] ?? '';
 // Option A: Server-rendered Admin Item Editor
 // Treat both view and edit modes as editor render to avoid client modal and header redirects after output.
 if ($modalMode === 'view' || $modalMode === 'edit' || $modalMode === 'add') {
+    // Compute prev/next SKUs from the full items array that's displayed in the table
+    $prevSku = null;
+    $nextSku = null;
+    if ($editItem) {
+        $currentSku = (string)($editItem['sku'] ?? '');
+        $rawSkus = array_values(array_map(static function ($row) { return (string)($row['sku'] ?? ''); }, $items));
+        $norm = static function ($v) { return strtolower(trim((string)$v)); };
+        $skuListNorm = array_map($norm, $rawSkus);
+        $idx = array_search($norm($currentSku), $skuListNorm, true);
+        if ($idx === false) {
+            // Fallback: prefer sanitized $openVal, else fallback to raw query params
+            $openKey = ($openVal !== '') ? $openVal : ($_GET['view'] ?? ($_GET['edit'] ?? null));
+            if ($openKey !== null && $openKey !== '') {
+                $altIdx = array_search($norm($openKey), $skuListNorm, true);
+                if ($altIdx !== false) { $idx = $altIdx; }
+            }
+        }
+        $n = count($rawSkus);
+        if ($idx !== false && $n > 0) {
+            $prevSku = $rawSkus[(($idx - 1 + $n) % $n)];
+            $nextSku = $rawSkus[(($idx + 1) % $n)];
+        }
+        // Removed temporary debug panel output
+    }
+
     require_once dirname(__DIR__) . '/components/admin_item_editor.php';
     // Render the editor UI (adapted from archived implementation)
-    renderAdminItemEditor($modalMode, $editItem, $categories, $field_errors ?? []);
+    renderAdminItemEditor($modalMode, $editItem, $categories, $field_errors ?? [], $prevSku, $nextSku);
 }
 ?>
 
-    <?php if ($totalPages > 1): ?>
-        <div class="pagination flex justify-center mt-4 space-x-2">
-            <?php for ($p = 1; $p <= $totalPages; $p++): ?>
-                <?php
-                    $queryParams = [
-                        'pageNum' => $p,
-                        'search' => $filters['search'] ?? '',
-                        'category' => $filters['category'] ?? '',
-                        'stock' => $filters['stock'] ?? ''
-                    ];
-                $queryString = http_build_query(array_filter($queryParams));
-                ?>
-                <a href="/admin/inventory?<?= $queryString ?>"
-                   class="px-3 py-1 rounded text-sm <?= ($p == $currentPage) ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' ?>">
-                    <?= $p ?>
-                </a>
-            <?php endfor; ?>
-        </div>
-    <?php endif; ?>
 
 </div>
 

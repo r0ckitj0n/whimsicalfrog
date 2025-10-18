@@ -85,7 +85,7 @@ function json_fail(string $message, array $data = [], int $code = 400): void
 switch ($action) {
     case 'prune_sessions':
         $days = isset($_REQUEST['days']) ? max(0, (int)$_REQUEST['days']) : 2;
-        $sessionDir = $root . '/sessions';
+        $sessionDir = '/tmp/whimsicalfrog_sessions';
 
         if (!is_dir($sessionDir)) {
             json_ok(['action' => 'prune_sessions', 'deleted' => 0, 'note' => 'sessions directory not found']);

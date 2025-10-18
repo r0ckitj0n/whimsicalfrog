@@ -73,6 +73,15 @@ if (is_file($filePath)) {
     return false; // Serve the requested file as-is.
 }
 
+// If the request points to a directory containing an index.php, serve that controller.
+if (is_dir($filePath)) {
+    $indexFile = rtrim($filePath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'index.php';
+    if (is_file($indexFile)) {
+        require $indexFile;
+        return true;
+    }
+}
+
 // If a request targets bare /assets/*.js or /assets/*.css (missing /dist prefix), avoid HTML fallthrough
 if (preg_match('#^/assets/(.+)\.(js|css)$#i', $requestedPath, $m)) {
     $stem = $m[1];

@@ -68,10 +68,12 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     <div class="admin-modal admin-modal-content w-[95vw] h-[85vh]">
       <div class="modal-header">
         <h2 id="siteDeploymentTitle" class="admin-card-title">🚀 Site Deployment</h2>
-        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <iframe id="siteDeploymentFrame" title="Site Deployment" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/deploy_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+      <div class="wf-modal-actions">
+        <button type="button" class="btn wf-modal-button" data-action="close-admin-modal">Cancel</button>
       </div>
     </div>
   </div>
@@ -80,6 +82,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
   // Cart & Checkout settings moved into Shopping Cart modal (see modal section below)
   try {
       require_once dirname(__DIR__) . '/api/business_settings_helper.php';
+  } catch (Throwable $____e) {}
+  try {
+      require_once dirname(__DIR__) . '/includes/upsell_rules_helper.php';
   } catch (Throwable $____e) {}
   $ecomm = class_exists('BusinessSettings') ? (BusinessSettings::getByCategory('ecommerce') ?? []) : [];
   ?>
@@ -91,13 +96,12 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
   <!-- STATIC: Shipping & Distance Settings Modal (outside <noscript>) -->
   <div id="shippingSettingsModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shippingSettingsTitle">
     <div class="admin-modal admin-modal-content">
-      <div class="modal-header">
+      <div class="modal-header flex items-center justify-between">
         <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings</h2>
-        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">×</button>
         <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"></span>
       </div>
       <div class="modal-body">
-        <form id="shippingSettingsFormStatic" data-action="prevent-submit" class="space-y-4">
+        <form id="shippingSettingsFormStatic" data-action="prevent-submit" class="wf-modal-form space-y-4">
           <fieldset class="border rounded p-3">
             <legend class="text-sm font-semibold">USPS</legend>
             <label class="block text-sm font-medium mb-1" for="uspsUserId">USPS Web Tools USERID</label>
@@ -134,12 +138,10 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
             <label class="block text-sm font-medium mb-1" for="orsKey">OpenRouteService API Key</label>
             <input id="orsKey" type="text" class="form-input w-full" placeholder="optional (used for driving miles)" />
           </fieldset>
-          <div class="flex items-center justify-between pt-2">
-            <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
-            <div class="flex gap-2">
-              <button type="button" class="btn-secondary wf-admin-nav-button" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">Close</button>
-              <button type="button" class="btn-brand wf-admin-nav-button" id="shippingSettingsSaveBtn">Save Settings</button>
-            </div>
+          <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
+          <div class="wf-modal-actions">
+            <button type="button" class="btn wf-modal-button admin-modal-close">Cancel</button>
+            <button type="button" class="btn btn-primary wf-modal-button" id="shippingSettingsSaveBtn">Save Settings</button>
           </div>
         </form>
       </div>
@@ -153,6 +155,78 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     $showUpsells = strtolower((string)($ecomm['ecommerce_cart_show_upsells'] ?? 'false'));
     $confirmClear = strtolower((string)($ecomm['ecommerce_cart_confirm_clear'] ?? 'true'));
     $minTotal = (string)($ecomm['ecommerce_cart_minimum_total'] ?? '0');
+    $upsellAutoData = [];
+    $upsellSiteLeaders = [];
+    $upsellSamplePairs = [];
+
+    if (function_exists('wf_generate_cart_upsell_rules')) {
+        try {
+            $generatedUpsellRules = wf_generate_cart_upsell_rules();
+            if (is_array($generatedUpsellRules)) {
+                $upsellAutoData = $generatedUpsellRules;
+            }
+        } catch (Throwable $____e) {}
+    }
+
+    if (!empty($upsellAutoData) && isset($upsellAutoData['map']) && is_array($upsellAutoData['map'])) {
+        $map = $upsellAutoData['map'];
+        $products = isset($upsellAutoData['products']) && is_array($upsellAutoData['products']) ? $upsellAutoData['products'] : [];
+
+        $defaultLeaders = isset($map['_default']) && is_array($map['_default']) ? array_slice($map['_default'], 0, 3) : [];
+        foreach ($defaultLeaders as $leaderSku) {
+            $leaderSku = strtoupper(trim((string)$leaderSku));
+            if ($leaderSku === '') {
+                continue;
+            }
+            $label = $leaderSku;
+            if (isset($products[$leaderSku]['name']) && $products[$leaderSku]['name'] !== '') {
+                $label = $products[$leaderSku]['name'] . ' (' . $leaderSku . ')';
+            }
+            if (!in_array($label, $upsellSiteLeaders, true)) {
+                $upsellSiteLeaders[] = $label;
+            }
+        }
+
+        $pairCount = 0;
+        foreach ($map as $sourceSku => $targets) {
+            if ($sourceSku === '_default') {
+                continue;
+            }
+            if (!is_array($targets) || !$targets) {
+                continue;
+            }
+            $sourceSku = strtoupper(trim((string)$sourceSku));
+            if ($sourceSku === '') {
+                continue;
+            }
+            $sourceLabel = $sourceSku;
+            if (isset($products[$sourceSku]['name']) && $products[$sourceSku]['name'] !== '') {
+                $sourceLabel = $products[$sourceSku]['name'] . ' (' . $sourceSku . ')';
+            }
+            $recommendationLabels = [];
+            foreach (array_slice($targets, 0, 3) as $targetSku) {
+                $targetSku = strtoupper(trim((string)$targetSku));
+                if ($targetSku === '') {
+                    continue;
+                }
+                $targetLabel = $targetSku;
+                if (isset($products[$targetSku]['name']) && $products[$targetSku]['name'] !== '') {
+                    $targetLabel = $products[$targetSku]['name'] . ' (' . $targetSku . ')';
+                }
+                $recommendationLabels[] = $targetLabel;
+            }
+            if ($recommendationLabels) {
+                $upsellSamplePairs[] = [
+                    'source' => $sourceLabel,
+                    'recommendations' => $recommendationLabels,
+                ];
+                $pairCount++;
+            }
+            if ($pairCount >= 3) {
+                break;
+            }
+        }
+    }
   ?>
   <div id="shoppingCartModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shoppingCartSettingsTitle">
     <div class="admin-modal admin-modal-content">
@@ -196,112 +270,48 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
             <p class="text-sm text-gray-600 mt-1">Set to 0 to disable minimum total enforcement.</p>
           </div>
           <div class="form-control">
-            <label class="block text-sm font-medium mb-1" for="upsellRulesInput">Upsell Rules (JSON)</label>
-            <textarea id="upsellRulesInput" class="form-textarea w-full" rows="6" placeholder='{"map":{"SKU1":["SKU_A","SKU_B"],"_default":["SKU_X"]},"products":{"SKU_A":{"name":"Extra Lid","price":4.99,"image":"/images/items/lid.png"}}}'></textarea>
-            <p class="text-sm text-gray-600 mt-1">Optional. Provide JSON to drive cart upsells. See example below.</p>
-            <details class="mt-2">
-              <summary class="text-sm text-gray-700 cursor-pointer">Example schema</summary>
-              <pre class="text-xs bg-gray-50 p-2 rounded overflow-x-auto">{
-  "map": {
-    "WF-TMB-001": ["WF-LID-001", "WF-STRAW-002"],
-    "_default": ["WF-STICKER-PACK"]
-  },
-  "products": {
-    "WF-LID-001": { "name": "Tumbler Lid", "price": 4.99, "image": "/images/items/WF-LID-001.webp" },
-    "WF-STRAW-002": { "name": "Steel Straw", "price": 2.49, "image": "/images/items/WF-STRAW-002.webp" },
-    "WF-STICKER-PACK": { "name": "Sticker Pack", "price": 3.00, "image": "/images/items/WF-STICKER-PACK.webp" }
-  }
-}</pre>
-            </details>
+            <h3 class="text-sm font-semibold mb-1">Upsell recommendations</h3>
+            <p class="text-sm text-gray-600 mt-1">Upsells are generated automatically using recent sales. For each item we surface the top seller in the same category, another strong performer from that category, and the overall best sellers on the site.</p>
+            <?php if (!empty($upsellSiteLeaders)) : ?>
+              <div class="mt-3">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Site leaders</p>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                  <?php foreach ($upsellSiteLeaders as $leaderLabel) : ?>
+                    <li><?= htmlspecialchars($leaderLabel, ENT_QUOTES) ?></li>
+                  <?php endforeach; ?>
+                </ul>
+              </div>
+            <?php endif; ?>
+            <?php if (!empty($upsellSamplePairs)) : ?>
+              <div class="mt-3">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Sample pairings</p>
+                <div class="space-y-2">
+                  <?php foreach ($upsellSamplePairs as $pair) : ?>
+                    <div class="text-sm text-gray-700">
+                      <div class="font-medium"><?= htmlspecialchars($pair['source'], ENT_QUOTES) ?></div>
+                      <div class="text-xs text-gray-500">Recommended: <?= htmlspecialchars(implode(', ', $pair['recommendations']), ENT_QUOTES) ?></div>
+                    </div>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            <?php else : ?>
+              <p class="text-xs text-gray-500 mt-2">No sales recorded yet. Upsells will populate automatically once orders are placed.</p>
+            <?php endif; ?>
           </div>
           <div class="mt-3 flex items-center justify-end gap-2">
-            <button type="button" class="btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal">Close</button>
-            <button type="button" class="btn-brand wf-admin-nav-button" id="saveCartSettingsBtn">Save</button>
+            <button type="button" class="btn btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal">Close</button>
+            <button type="button" class="btn btn-primary wf-admin-nav-button" id="saveCartSettingsBtn">Save</button>
           </div>
         </form>
       </div>
     </div>
   </div>
-
-  <script>
-  (function(){
-    try {
-      var btn = document.getElementById('saveCartSettingsBtn');
-      if (btn && !btn.__wfBound) {
-        btn.__wfBound = true;
-        btn.addEventListener('click', async function(){
-          try {
-            var openAdd = !!(document.getElementById('openCartOnAddCheckbox') && document.getElementById('openCartOnAddCheckbox').checked);
-            var mergeDupes = !!(document.getElementById('mergeDuplicatesCheckbox') && document.getElementById('mergeDuplicatesCheckbox').checked);
-            var showUpsells = !!(document.getElementById('showUpsellsCheckbox') && document.getElementById('showUpsellsCheckbox').checked);
-            var confirmClear = !!(document.getElementById('confirmClearCheckbox') && document.getElementById('confirmClearCheckbox').checked);
-            var minTotalEl = document.getElementById('minimumTotalInput');
-            var minTotal = minTotalEl ? parseFloat(minTotalEl.value) : 0;
-            if (!isFinite(minTotal) || minTotal < 0) minTotal = 0;
-
-            var upsellText = (document.getElementById('upsellRulesInput') && document.getElementById('upsellRulesInput').value || '').trim();
-            var upsellRules = null;
-            if (upsellText) {
-              try {
-                upsellRules = JSON.parse(upsellText);
-                if (typeof upsellRules !== 'object' || upsellRules === null) throw new Error('Invalid JSON root');
-              } catch (jsonErr) {
-                if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Upsell Rules JSON is invalid');
-                else alert('Upsell Rules JSON is invalid');
-                return;
-              }
-            }
-
-            var payload = {
-              category: 'ecommerce',
-              settings: {
-                ecommerce_open_cart_on_add: openAdd,
-                ecommerce_cart_merge_duplicates: mergeDupes,
-                ecommerce_cart_show_upsells: showUpsells,
-                ecommerce_cart_confirm_clear: confirmClear,
-                ecommerce_cart_minimum_total: minTotal
-              }
-            };
-            if (upsellRules) payload.settings.ecommerce_upsell_rules = upsellRules; // send as JSON type
-            var origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
-            var res = await fetch(origin.replace(/\/$/, '') + '/api/business_settings.php?action=upsert_settings', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-              credentials: 'include'
-            });
-            if (res.ok) {
-              if (window.wfNotifications && typeof window.wfNotifications.success === 'function') window.wfNotifications.success('Cart settings saved');
-              else if (typeof window.showNotification === 'function') window.showNotification('Cart settings saved', 'success');
-              else alert('Cart settings saved');
-              try {
-                window.__WF_OPEN_CART_ON_ADD = openAdd;
-                window.__WF_CART_MERGE_DUPES = mergeDupes;
-                window.__WF_CART_SHOW_UPSELLS = showUpsells;
-                window.__WF_CART_CONFIRM_CLEAR = confirmClear;
-                window.__WF_CART_MIN_TOTAL = minTotal;
-                if (upsellRules) window.__WF_UPSELL_RULES = upsellRules;
-              } catch(_){ }
-            } else {
-              if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Failed to save settings');
-              else if (typeof window.showNotification === 'function') window.showNotification('Failed to save settings', 'error');
-              else alert('Failed to save settings');
-            }
-          } catch (e) {
-            if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Error saving settings');
-            else alert('Error saving settings');
-          }
-        });
-      }
-    } catch(_) {}
-  })();
-  </script>
   <!-- STATIC: Address Diagnostics Modal (outside <noscript>) -->
   <div id="addressDiagnosticsModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="addressDiagnosticsTitle">
     <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
       <div class="modal-header">
         <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics</h2>
-        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <iframe id="addressDiagnosticsFrame" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"></iframe>
@@ -314,7 +324,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
       <div class="modal-header">
         <h2 id="sizeColorRedesignTitle" class="admin-card-title">🧩 Size/Color System Redesign</h2>
-        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close" onclick="this.closest('.admin-modal-overlay').classList.add('hidden'); this.closest('.admin-modal-overlay').setAttribute('aria-hidden','true');">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <iframe id="sizeColorRedesignFrame" title="Size/Color Redesign" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/size_color_redesign.php?modal=1" src="about:blank" referrerpolicy="no-referrer"></iframe>
@@ -324,287 +334,15 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     
 
-    <script>
-    (function(){
-      try {
-        // Kill any lingering room overlay that could steal clicks
-        var ro = document.getElementById('roomModalOverlay');
-        if (ro) { ro.style.display = 'none'; ro.classList.remove('show'); ro.style.pointerEvents = 'none'; }
-
-        // Delegated close handler for settings modals (X buttons and dedicated close triggers)
-        document.addEventListener('click', function(ev){
-          var btn = ev.target && ev.target.closest ? ev.target.closest('.admin-modal-close,[data-action="close-admin-modal"]') : null;
-          if (!btn) return;
-          ev.preventDefault(); ev.stopPropagation();
-          var overlay = btn.closest('.admin-modal-overlay');
-          if (overlay) { overlay.classList.remove('show'); overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden','true'); }
-        }, true);
-
-        // MutationObserver: auto-tag any inserted overlays as closable
-        try {
-          var __wfOverlayObserver = new MutationObserver(function(muts){
-            muts.forEach(function(m){
-              m.addedNodes && m.addedNodes.forEach(function(n){
-                if (!(n instanceof Element)) return;
-                if (n.matches && n.matches('.admin-modal-overlay') && !n.classList.contains('wf-modal-closable')) {
-                  n.classList.add('wf-modal-closable');
-                }
-                // Also scan descendants
-                n.querySelectorAll && n.querySelectorAll('.admin-modal-overlay').forEach(function(el){
-                  if (!el.classList.contains('wf-modal-closable')) el.classList.add('wf-modal-closable');
-                });
-              });
-            });
-          });
-          __wfOverlayObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
-        } catch(_){}
-
-        // Backdrop click-to-close for modal overlays marked as closable
-        document.addEventListener('click', function(ev){
-          try {
-            var target = ev.target;
-            // Only close when the backdrop itself is clicked (not inner content)
-            if (target && target.classList && target.classList.contains('wf-modal-closable') && target.classList.contains('admin-modal-overlay')){
-              ev.preventDefault(); ev.stopPropagation();
-              target.classList.remove('show');
-              target.classList.add('hidden');
-              target.setAttribute('aria-hidden','true');
-            }
-          } catch(_){}
-        }, true);
-
-        // ESC key closes the topmost visible closable modal
-        document.addEventListener('keydown', function(ev){
-          if (ev.key !== 'Escape') return;
-          try {
-            var overlays = Array.from(document.querySelectorAll('.admin-modal-overlay.wf-modal-closable'))
-              .filter(function(el){ return !el.classList.contains('hidden'); });
-            if (!overlays.length) return;
-            var top = overlays[overlays.length - 1];
-            top.classList.remove('show');
-            top.classList.add('hidden');
-            top.setAttribute('aria-hidden','true');
-            ev.preventDefault(); ev.stopPropagation();
-          } catch(_){}
-        }, true);
-
-        // Fallback opener: Address Diagnostics
-        var diagBtn = document.getElementById('addressDiagBtn');
-        if (diagBtn && !diagBtn.__wfBound) {
-          diagBtn.__wfBound = true;
-          diagBtn.addEventListener('click', function(ev){
-            ev.preventDefault(); ev.stopPropagation();
-            try {
-              var frame = document.getElementById('addressDiagnosticsFrame');
-              if (frame && !frame.getAttribute('src')) {
-                var ds = frame.getAttribute('data-src') || '/sections/tools/address_diagnostics.php?modal=1';
-                frame.setAttribute('src', ds);
-              }
-              var m = document.getElementById('addressDiagnosticsModal');
-              if (m) { m.classList.remove('hidden'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents = 'auto'; }
-            } catch(_){ }
-          });
-        }
-
-        // Fallback opener: Shipping Settings
-        var shipBtn = document.getElementById('shippingSettingsBtn');
-        if (shipBtn && !shipBtn.__wfBound) {
-          shipBtn.__wfBound = true;
-          shipBtn.addEventListener('click', function(ev){
-            ev.preventDefault(); ev.stopPropagation();
-            try {
-              var m = document.getElementById('shippingSettingsModal');
-              if (m) { m.classList.remove('hidden'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents = 'auto'; }
-            } catch(_){ }
-          });
-        }
-      } catch(_){ }
-    })();
-    </script>
+    
 
     <!-- Auto-size all settings modals to content -->
-    <script>
-    (function(){
-      function applyAutoSize(root){
-        var scope = root || document;
-        var panels = scope.querySelectorAll('.admin-modal.admin-modal-content');
-        panels.forEach(function(p){
-          if (p.closest('[data-size="fixed"]')) return; // allow opt-out
-          // Remove hardcoded Tailwind utility sizes if present
-          p.classList.remove('w-[90vw]', 'h-[85vh]');
-          // Apply auto-size class (CSS uses !important caps)
-          if (!p.classList.contains('wf-modal-auto')) p.classList.add('wf-modal-auto');
-        });
-      }
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function(){ applyAutoSize(document); });
-      } else {
-        applyAutoSize(document);
-      }
-      // Observe future inserts (modals created/attached later)
-      try {
-        var mo = new MutationObserver(function(muts){
-          muts.forEach(function(m){
-            m.addedNodes && m.addedNodes.forEach(function(n){
-              if (!(n instanceof Element)) return;
-              if (n.matches && n.matches('.admin-modal.admin-modal-content')) applyAutoSize(n.parentNode || n);
-              if (n.querySelectorAll) applyAutoSize(n);
-            });
-          });
-        });
-        mo.observe(document.documentElement, { childList: true, subtree: true });
-      } catch(_){ }
-    })();
-    </script>
+    
 
     <!-- Auto-resize same-origin iframes inside modals (e.g., Categories) -->
-    <script>
-    (function(){
-      function sizeIframe(iframe){
-        try {
-          if (!iframe || !iframe.contentDocument) return;
-          var doc = iframe.contentDocument;
-          var body = doc.body;
-          var html = doc.documentElement;
-          var h = Math.max(
-            body ? body.scrollHeight : 0,
-            body ? body.offsetHeight : 0,
-            html ? html.scrollHeight : 0,
-            html ? html.offsetHeight : 0
-          );
-          iframe.style.height = Math.max(260, Math.min(h + 12, Math.floor(window.innerHeight * 0.85))) + 'px';
-        } catch(_) {}
-      }
-      function bindAutoResize(iframe){
-        if (!iframe || iframe.__wfAutoSized) return;
-        iframe.__wfAutoSized = true;
-        var onLoad = function(){
-          sizeIframe(iframe);
-          try {
-            var body = iframe.contentDocument && iframe.contentDocument.body;
-            if (body && 'ResizeObserver' in window) {
-              var ro = new ResizeObserver(function(){ sizeIframe(iframe); });
-              ro.observe(body);
-              iframe.__wfResizeObserver = ro;
-            }
-          } catch(_) {}
-        };
-        iframe.addEventListener('load', onLoad);
-        setTimeout(function(){ sizeIframe(iframe); }, 100);
-      }
-      function init(){
-        document.querySelectorAll('iframe[data-auto-resize="true"]').forEach(bindAutoResize);
-      }
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-      } else {
-        init();
-      }
-      try {
-        var mo = new MutationObserver(function(muts){
-          muts.forEach(function(m){
-            m.addedNodes && m.addedNodes.forEach(function(n){
-              if (!(n instanceof Element)) return;
-              if (n.matches && n.matches('iframe[data-auto-resize="true"]')) bindAutoResize(n);
-              if (n.querySelectorAll) n.querySelectorAll('iframe[data-auto-resize="true"]').forEach(bindAutoResize);
-            });
-          });
-        });
-        mo.observe(document.documentElement, { childList: true, subtree: true });
-      } catch(_) {}
+    
 
-      // Cross-iframe messaging: exact sizing from child when available
-      window.addEventListener('message', function(ev){
-        try {
-          var d = ev.data || {};
-          if (d && d.type === 'wf-iframe-size' && typeof d.height === 'number') {
-            if (d.key === 'categories') {
-              var f = document.getElementById('categoriesFrame');
-              if (f) {
-                f.style.height = Math.max(160, Math.min(d.height + 12, Math.floor(window.innerHeight * 0.85))) + 'px';
-                // Nudge panel auto-size in case height decreased
-                try {
-                  var p = f.closest('.admin-modal.admin-modal-content');
-                  if (p && !p.classList.contains('wf-modal-auto')) p.classList.add('wf-modal-auto');
-                } catch(_) {}
-              }
-            }
-          }
-        } catch(_) {}
-      });
-    })();
-    </script>
-
-    <!-- Fallback delegated handlers: ensure core buttons work even if bundles lag -->
-    <script>
-    (function(){
-      try {
-        if (window.__wfSettingsFallbackBound) return; // idempotent
-        window.__wfSettingsFallbackBound = true;
-        var onClick = function(ev){
-          try {
-            var t = ev.target && ev.target.closest ? ev.target.closest('[data-action]') : null;
-            if (!t) return;
-            // Health & Diagnostics
-            if (t.matches('[data-action="open-health-diagnostics"]')) {
-              ev.preventDefault(); ev.stopPropagation();
-              var m = document.getElementById('healthModal');
-              if (m) {
-                // bring to top and ensure over-header
-                try { if (m.parentElement && m.parentElement !== document.body) document.body.appendChild(m); } catch(_){ }
-                try { m.classList.add('over-header'); m.style.removeProperty('z-index'); m.style.pointerEvents = 'auto'; } catch(_){ }
-                m.classList.remove('hidden');
-                m.classList.add('show');
-                m.setAttribute('aria-hidden','false');
-              }
-              return;
-            }
-            // Secrets Manager
-            if (t.matches('[data-action="open-secrets-modal"]')) {
-              ev.preventDefault(); ev.stopPropagation();
-              var s = document.getElementById('secretsModal');
-              if (s) {
-                try { if (s.parentElement && s.parentElement !== document.body) document.body.appendChild(s); } catch(_){ }
-                try { s.classList.add('over-header'); s.style.removeProperty('z-index'); s.style.pointerEvents = 'auto'; } catch(_){ }
-                s.classList.remove('hidden');
-                s.classList.add('show');
-                s.setAttribute('aria-hidden','false');
-              }
-              return;
-            }
-            // Account Settings: let global modal handler open the modal (no navigation)
-            if (t.matches('[data-action="open-account-settings"]')) {
-              ev.preventDefault(); ev.stopPropagation();
-              return;
-            }
-            // Shopping Cart Settings
-            if (t.matches('[data-action="open-shopping-cart"]')) {
-              ev.preventDefault(); ev.stopPropagation();
-              try {
-                var scm = document.getElementById('shoppingCartModal');
-                if (scm) {
-                  try {
-                    if (scm.parentElement && scm.parentElement !== document.body) {
-                      document.body.appendChild(scm);
-                    }
-                    scm.classList.add('over-header');
-                    scm.style.removeProperty('z-index');
-                  } catch(_) {}
-                  scm.classList.remove('hidden');
-                  scm.classList.add('show');
-                  scm.setAttribute('aria-hidden','false');
-                  scm.style.pointerEvents = 'auto';
-                }
-              } catch(_) {}
-              return;
-            }
-          } catch(_){ }
-        };
-        document.addEventListener('click', onClick, true);
-        document.addEventListener('click', onClick);
-      } catch(_){ }
-    })();
-    </script>
+    
 
   <!-- Customer Messages Modal: Shop Encouragement Phrases -->
   <div id="customerMessagesModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="customerMessagesTitle">
@@ -621,8 +359,8 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         </div>
         <div class="mt-3 flex items-center justify-end gap-2">
           <span id="customerMessagesStatus" class="text-sm text-gray-600" aria-live="polite"></span>
-          <button type="button" class="btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal" id="customerMessagesCancelBtn">Cancel</button>
-          <button type="button" class="btn-brand wf-admin-nav-button" id="customerMessagesSaveBtn">Save Phrases</button>
+          <button type="button" class="btn btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal" id="customerMessagesCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-primary wf-admin-nav-button" id="customerMessagesSaveBtn">Save Phrases</button>
         </div>
       </div>
     </div>
@@ -720,6 +458,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
   <!-- Delegated click handler so buttons work regardless of when they are rendered -->
   <script>
   (function(){
+    return; /* centralized via Vite: src/modules/admin-settings-lightweight.js */
     try {
       document.addEventListener('click', function(ev){
         var t = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-address-diagnostics"], #addressDiagBtn') : null;
@@ -967,6 +706,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
   <!-- Fallback handlers: ensure Visual & Design tool modals open even if JS entry lags -->
   <script>
   (function(){
+    return; /* centralized via Vite: src/modules/admin-settings-lightweight.js */
     try {
       function showOverlay(el){
         if (!el) return;
@@ -1054,6 +794,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     <script>
     // Fallback: open Address Diagnostics modal if bridge hasn't loaded yet
     (function(){
+      return; /* centralized via Vite: src/modules/admin-settings-lightweight.js */
       try {
         const btn = document.getElementById('addressDiagBtn');
         if (btn && !btn.__wfBound) {
@@ -1078,82 +819,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     
 
     <script>
-    (function(){
-      try {
-        const openBtn = document.getElementById('shippingSettingsBtn');
-        const modal = document.getElementById('shippingSettingsModal');
-        const statusEl = document.getElementById('shippingSettingsStatus');
-        const saveBtn = document.getElementById('shippingSettingsSaveBtn');
-        const closeEls = Array.from(document.querySelectorAll('[data-action="close-shipping-settings"]'));
-        const getVal = (id) => (document.getElementById(id)?.value || '').trim();
-        const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
-
-        function showModal(){ if (modal){ modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false'); } }
-        function hideModal(){ if (modal){ modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); } }
-        function setStatus(msg, ok){ if (!statusEl) return; statusEl.textContent = msg || ''; statusEl.className = 'modal-status-chip ' + (ok ? 'text-green-700' : 'text-gray-600'); }
-
-        async function loadSettings(){
-          try {
-            setStatus('Loading…', false);
-            const url = '/api/business_settings.php?action=get_by_category&category=shipping';
-            const r = await fetch(url, { credentials: 'include' });
-            const j = r.ok ? await r.json() : null;
-            const list = (j && j.success && Array.isArray(j.data?.settings)) ? j.data.settings : (j?.data?.settings || []);
-            const map = {}; (list||[]).forEach(row => { if (row && row.setting_key) map[row.setting_key] = row.setting_value; });
-            setVal('uspsUserId', map['usps_webtools_userid'] || '');
-            setVal('upsAccessKey', map['ups_access_key'] || '');
-            setVal('upsSecret', map['ups_secret'] || '');
-            setVal('fedexKey', map['fedex_key'] || '');
-            setVal('fedexSecret', map['fedex_secret'] || '');
-            setVal('orsKey', map['ors_api_key'] || '');
-            setStatus('Loaded', true);
-          } catch (e) { setStatus('Load failed', false); }
-        }
-
-        async function saveSettings(){
-          try {
-            setStatus('Saving…', false);
-            const payload = {
-              action: 'upsert_settings',
-              category: 'shipping',
-              settings: {
-                usps_webtools_userid: getVal('uspsUserId'),
-                ups_access_key: getVal('upsAccessKey'),
-                ups_secret: getVal('upsSecret'),
-                fedex_key: getVal('fedexKey'),
-                fedex_secret: getVal('fedexSecret'),
-                ors_api_key: getVal('orsKey')
-              }
-            };
-            const r = await fetch('/api/business_settings.php?action=upsert_settings', {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
-            const j = r.ok ? await r.json() : null;
-            if (j && j.success) {
-              setStatus('Saved', true);
-              // Optional: close after short delay
-              setTimeout(hideModal, 600);
-            } else {
-              setStatus('Save failed', false);
-            }
-          } catch (e) { setStatus('Save failed', false); }
-        }
-
-        openBtn && openBtn.addEventListener('click', async () => { showModal(); await loadSettings(); });
-        closeEls.forEach(el => el.addEventListener('click', hideModal));
-        saveBtn && saveBtn.addEventListener('click', saveSettings);
-      } catch (_) {}
-    })();
-    </script>
-
-    
-
-    <script>
     // Fallback openers for AI & Automation Tools, AI Provider, and Square Settings
     (function(){
+      return; /* centralized via Vite: src/modules/admin-settings-lightweight.js */
       try {
         if (window.__wfAIModalFallbackBound) return; // prevent double binding
         window.__wfAIModalFallbackBound = true;
@@ -1506,6 +1174,45 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     </div>
 
+    <!-- Font Picker Modal -->
+    <div id="fontPickerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="fontPickerTitle">
+      <div class="admin-modal admin-modal-content max-w-4xl">
+        <div class="modal-header">
+          <h2 id="fontPickerTitle" class="admin-card-title">Font Library</h2>
+          <button type="button" class="admin-modal-close" data-action="close-font-picker" aria-label="Close">×</button>
+          <span class="modal-status-chip" aria-live="polite"></span>
+        </div>
+        <div class="modal-body">
+          <div class="mb-4 flex flex-col gap-2 md:flex-row md:items-center">
+            <input id="fontPickerSearch" type="search" class="form-input flex-1" placeholder="Search fonts (e.g., Inter, serif, display)" />
+            <select id="fontPickerCategory" class="form-select md:w-48">
+              <option value="all">All Categories</option>
+              <option value="sans-serif">Sans-serif</option>
+              <option value="serif">Serif</option>
+              <option value="display">Display</option>
+              <option value="handwriting">Handwriting</option>
+              <option value="monospace">Monospace</option>
+            </select>
+          </div>
+          <div id="fontPickerList" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" data-font-target="" data-selected-font="">
+            <!-- Font options populated by JS -->
+          </div>
+          <div class="mt-4">
+            <label for="fontPickerCustomInput" class="block text-sm font-medium mb-1">Custom Font Stack</label>
+            <input id="fontPickerCustomInput" type="text" class="form-input w-full" placeholder="Example: Merienda, 'Times New Roman', serif" />
+            <p class="text-xs text-gray-500 mt-1">Useful when you need a specific combination not listed above. Separate multiple fonts with commas.</p>
+          </div>
+        </div>
+        <div class="modal-footer flex items-center justify-between">
+          <div id="fontPickerDescription" class="text-sm text-gray-600">Choose a font stack that matches your brand tone.</div>
+          <div class="flex gap-2">
+            <button type="button" class="btn btn-secondary" data-action="close-font-picker">Cancel</button>
+            <button type="button" class="btn btn-primary" data-action="apply-font-selection">Use Selected Font</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Business Info Modal (native form, best practice) -->
     <div id="businessInfoModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="businessInfoTitle">
       <div class="admin-modal admin-modal-content">
@@ -1536,7 +1243,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
                   </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button type="button" class="btn-brand" data-action="business-save-branding">Save Branding</button>
                     <button type="button" class="btn-secondary" data-action="business-reset-branding">Reset Branding</button>
                   </div>
               </div>
@@ -1546,12 +1252,20 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               <h3 class="text-sm font-semibold mb-2">Brand Fonts</h3>
               <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label for="brandFontPrimary" class="block text-sm font-medium mb-1">Primary Font</label>
-                  <input id="brandFontPrimary" type="text" class="form-input w-full" placeholder="(ie: Inter, system-ui)" />
+                  <label class="block text-sm font-medium mb-1">Primary Font</label>
+                  <div class="flex items-center gap-2">
+                    <input id="brandFontPrimary" type="hidden" />
+                    <span id="brandFontPrimaryLabel" class="font-preview-label font-preview-label--primary">System UI (Sans-serif)</span>
+                    <button type="button" class="btn btn-secondary btn-sm" data-action="open-font-picker" data-font-target="primary">Edit</button>
+                  </div>
                 </div>
                 <div>
-                  <label for="brandFontSecondary" class="block text-sm font-medium mb-1">Secondary Font</label>
-                  <input id="brandFontSecondary" type="text" class="form-input w-full" placeholder="(ie: Merriweather)" />
+                  <label class="block text-sm font-medium mb-1">Secondary Font</label>
+                  <div class="flex items-center gap-2">
+                    <input id="brandFontSecondary" type="hidden" />
+                    <span id="brandFontSecondaryLabel" class="font-preview-label font-preview-label--secondary">Merriweather (Serif)</span>
+                    <button type="button" class="btn btn-secondary btn-sm" data-action="open-font-picker" data-font-target="secondary">Edit</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1716,7 +1430,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
             </div>
             <div class="flex items-center justify-between">
               <div id="businessInfoStatus" class="text-sm text-gray-600"></div>
-              <button type="button" class="btn-brand" data-action="business-save">Save</button>
+              <button type="button" class="btn btn-primary" data-action="business-save">Save</button>
             </div>
           </form>
         </div>
@@ -1976,9 +1690,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
             <!-- Actions -->
             <div class="flex flex-wrap items-center gap-3">
-              <button id="saveSquareSettingsBtn" type="button" class="btn-brand" data-action="square-save-settings">Save Settings</button>
-              <button type="button" class="btn-secondary btn--square-action" data-action="square-test-connection">Test Connection</button>
-              <button type="button" class="btn-secondary btn--square-action" data-action="square-sync-items">Sync Items</button>
+              <button id="saveSquareSettingsBtn" type="button" class="btn btn-primary" data-action="square-save-settings">Save Settings</button>
+              <button type="button" class="btn btn-secondary btn--square-action" data-action="square-test-connection">Test Connection</button>
+              <button type="button" class="btn btn-secondary btn--square-action" data-action="square-sync-items">Sync Items</button>
               <button type="button" class="btn-danger btn--square-action" data-action="square-clear-token">Clear Token</button>
             </div>
 
@@ -1989,7 +1703,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Account Settings Modal (iframe embed) -->
-    <div id="accountSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
+    <div id="adminAccountSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
       <div class="admin-modal admin-modal-content">
         <div class="modal-header">
           <h2 id="accountSettingsTitle" class="admin-card-title">👤 Account Settings</h2>
@@ -1997,7 +1711,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <span class="modal-status-chip" aria-live="polite"></span>
         </div>
         <div class="modal-body">
-          <iframe id="accountSettingsFrame" title="Account Settings" src="about:blank" data-src="/sections/admin_router.php?section=account-settings&modal=1" class="wf-admin-embed-frame"></iframe>
+          <iframe id="adminAccountSettingsFrame" title="Account Settings" src="about:blank" data-src="/sections/admin_router.php?section=account-settings&modal=1" class="wf-admin-embed-frame"></iframe>
         </div>
       </div>
     </div>
@@ -2113,8 +1827,8 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               <div id="dashboardConfigResult" class="text-sm text-gray-500"></div>
               <div class="flex items-center gap-2">
                 <button type="button" class="btn" data-action="dashboard-config-reset">Reset to defaults</button>
-                <button type="button" class="btn-secondary" data-action="dashboard-config-refresh">Refresh</button>
-                <button type="button" class="btn-brand" data-action="dashboard-config-save">Save</button>
+                <button type="button" class="btn btn-secondary" data-action="dashboard-config-refresh">Refresh</button>
+                <button type="button" class="btn btn-primary" data-action="dashboard-config-save">Save</button>
               </div>
             </div>
           </div>
@@ -2156,9 +1870,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
             <p class="text-sm text-gray-700">Paste JSON or key=value lines to update secrets. Sensitive values are never prefilled.</p>
             <textarea id="secretsPayload" name="secrets_payload" class="form-textarea w-full" rows="8" placeholder='{"SMTP_PASS":"..."}'></textarea>
             <div class="flex flex-wrap items-center gap-3">
-              <button type="button" class="btn-brand" data-action="secrets-save">Save Secrets</button>
-              <button type="button" class="btn-secondary" data-action="secrets-rotate">Rotate Keys</button>
-              <button type="button" class="btn-secondary" data-action="secrets-export">Export Secrets</button>
+              <button type="button" class="btn btn-primary" data-action="secrets-save">Save Secrets</button>
+              <button type="button" class="btn btn-secondary" data-action="secrets-rotate">Rotate Keys</button>
+              <button type="button" class="btn btn-secondary" data-action="secrets-export">Export Secrets</button>
             </div>
             <div id="secretsResult" class="status status--info"></div>
           </form>
@@ -2213,8 +1927,8 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
             <div class="flex justify-between items-center">
               <div id="aiSettingsResult" class="text-sm text-gray-500"></div>
               <div class="flex items-center gap-2">
-                <button type="button" class="btn-secondary" data-action="test-ai-provider">Test Provider</button>
-                <button type="button" class="btn-brand" data-action="save-ai-settings">Save Settings</button>
+                <button type="button" class="btn btn-secondary" data-action="test-ai-provider">Test Provider</button>
+                <button type="button" class="btn btn-primary" data-action="save-ai-settings">Save Settings</button>
               </div>
             </div>
           </form>

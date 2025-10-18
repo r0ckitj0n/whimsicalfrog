@@ -87,6 +87,51 @@ function getAllAssignments($pdo)
     }
 }
 
+function updateAssignment($pdo, $input)
+{
+    $id = $input['id'] ?? null;
+    if ($id === null) {
+        Response::error('Assignment id is required', null, 400);
+        return;
+    }
+    try {
+        $existing = Database::queryOne("SELECT * FROM room_category_assignments WHERE id = ?", [$id]);
+        if (!$existing) {
+            Response::notFound('Assignment not found');
+            return;
+        }
+        $roomNumber = $input['room_number'] ?? $existing['room_number'];
+        $roomName = $input['room_name'] ?? $existing['room_name'];
+        $categoryId = $input['category_id'] ?? $existing['category_id'];
+        $isPrimary = isset($input['is_primary']) ? (int)$input['is_primary'] : (int)$existing['is_primary'];
+        $displayOrder = isset($input['display_order']) ? (int)$input['display_order'] : (int)$existing['display_order'];
+
+        // Prevent duplicates
+        $dup = Database::queryOne(
+            "SELECT id FROM room_category_assignments WHERE room_number = ? AND category_id = ? AND id <> ?",
+            [$roomNumber, $categoryId, $id]
+        );
+        if ($dup && isset($dup['id'])) {
+            Response::error('This room-category assignment already exists', null, 409);
+            return;
+        }
+
+        Database::beginTransaction();
+        if ($isPrimary === 1) {
+            Database::execute("UPDATE room_category_assignments SET is_primary = 0 WHERE room_number = ?", [$roomNumber]);
+        }
+        Database::execute(
+            "UPDATE room_category_assignments SET room_number = ?, room_name = ?, category_id = ?, is_primary = ?, display_order = ? WHERE id = ?",
+            [$roomNumber, $roomName, $categoryId, $isPrimary, $displayOrder, $id]
+        );
+        Database::commit();
+        Response::updated(['message' => 'Assignment updated successfully']);
+    } catch (PDOException $e) {
+        Database::rollBack();
+        Response::serverError('Database error: ' . $e->getMessage());
+    }
+}
+
 function getSummary($pdo)
 {
     try {
@@ -151,6 +196,9 @@ function handlePost($pdo, $input)
             break;
         case 'update_single_order':
             updateSingleOrder($pdo, $input);
+            break;
+        case 'update_assignment':
+            updateAssignment($pdo, $input);
             break;
         default:
             Response::error('Invalid action', null, 400);

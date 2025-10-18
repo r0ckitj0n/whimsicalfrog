@@ -342,8 +342,16 @@
   max-height: calc(100vh - 16px) !important;
   /* Ensure popup participates in stacking context and layers above base UIs */
   position: absolute;
-  z-index: var(--z-index-global-popup, 2600);
- }
+  z-index: var(--z-global-popup, var(--z-index-global-popup, 100200)) !important;
+}
+
+/* Default hidden unless explicitly shown by JS */
+.item-popup:not(.visible):not(.force-visible):not(.measuring) {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  display: block !important; /* preserve layout for measurement */
+}
 
 /* Popup visibility states (prevent initial flash and manage interactions) */
 .item-popup.hidden {
@@ -358,7 +366,7 @@
 }
 /* When the anchor is inside the room modal, elevate popup above the overlay and header */
 #itemPopup.in-room-modal {
-  z-index: var(--z-index-god-mode, 100001);
+  z-index: var(--z-global-popup, var(--z-index-global-popup, 100200)) !important;
 }
 /* During measurement, keep it hidden to avoid flicker */
 .item-popup.measuring {

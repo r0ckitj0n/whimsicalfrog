@@ -8,7 +8,7 @@
   left: 0;
   right: 0;
   width: 100%;
-  z-index: var(--z-admin-nav, 2000);
+  z-index: var(--z-admin-nav, 500);
   background: transparent !important; /* fully transparent */
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;

@@ -55,12 +55,20 @@ try {
 $modalMode = ''; // Default to no modal unless 'view' or 'edit' is in URL
 $editCustomer = null;
 $customerOrders = [];
+$customerAddresses = [];
 
 // Check if we're in view mode
 if (isset($_GET['view']) && !empty($_GET['view'])) {
-    $customerIdToView = $_GET['view'];
-    $editCustomer = array_filter($customersData, function ($customer) use ($customerIdToView) {
-        return ($customer['id'] ?? '') == $customerIdToView;
+    $customerKeyRaw = (string)$_GET['view'];
+    if (($p = stripos($customerKeyRaw, 'debug_nav')) !== false) {
+        $customerKeyRaw = substr($customerKeyRaw, 0, $p);
+    }
+    $customerKey = trim($customerKeyRaw);
+    $norm = static function($v){ return strtolower(trim((string)$v)); };
+    $editCustomer = array_filter($customersData, function ($customer) use ($customerKey, $norm) {
+        $id = $customer['id'] ?? '';
+        $username = $customer['username'] ?? '';
+        return $norm($id) === $norm($customerKey) || $norm($username) === $norm($customerKey);
     });
     $editCustomer = !empty($editCustomer) ? array_values($editCustomer)[0] : null;
 
@@ -68,13 +76,24 @@ if (isset($_GET['view']) && !empty($_GET['view'])) {
         $modalMode = 'view';
         // Get customer orders
         $customerOrders = getCustomerOrders($editCustomer['id'], $ordersData);
+        $customerAddresses = Database::queryAll(
+            'SELECT * FROM customer_addresses WHERE user_id = ? ORDER BY is_default DESC, address_name ASC',
+            [$editCustomer['id'] ?? '']
+        );
     }
 }
 // Check if we're in edit mode
 elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
-    $customerIdToEdit = $_GET['edit'];
-    $editCustomer = array_filter($customersData, function ($customer) use ($customerIdToEdit) {
-        return ($customer['id'] ?? '') == $customerIdToEdit;
+    $customerKeyRaw = (string)$_GET['edit'];
+    if (($p = stripos($customerKeyRaw, 'debug_nav')) !== false) {
+        $customerKeyRaw = substr($customerKeyRaw, 0, $p);
+    }
+    $customerKey = trim($customerKeyRaw);
+    $norm = static function($v){ return strtolower(trim((string)$v)); };
+    $editCustomer = array_filter($customersData, function ($customer) use ($customerKey, $norm) {
+        $id = $customer['id'] ?? '';
+        $username = $customer['username'] ?? '';
+        return $norm($id) === $norm($customerKey) || $norm($username) === $norm($customerKey);
     });
     $editCustomer = !empty($editCustomer) ? array_values($editCustomer)[0] : null;
 
@@ -82,6 +101,10 @@ elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
         $modalMode = 'edit';
         // Get customer orders
         $customerOrders = getCustomerOrders($editCustomer['id'], $ordersData);
+        $customerAddresses = Database::queryAll(
+            'SELECT * FROM customer_addresses WHERE user_id = ? ORDER BY is_default DESC, address_name ASC',
+            [$editCustomer['id'] ?? '']
+        );
     }
 }
 
@@ -158,14 +181,7 @@ usort($customersData, function ($a, $b) use ($sortBy, $sortDir) {
     }
 });
 
-// Pagination
-$itemsPerPage = 10;
-$totalItems = count($customersData);
-$totalPages = ceil($totalItems / $itemsPerPage);
-$currentPage = isset($_GET['page']) ? max(1, min($totalPages, intval($_GET['page']))) : 1;
-$offset = ($currentPage - 1) * $itemsPerPage;
-
-$paginatedCustomers = array_slice($customersData, $offset, $itemsPerPage);
+// No pagination - display all customers
 
 // Helper function to generate sort URL
 function getSortUrl($column, $currentSort, $currentDir)
@@ -194,6 +210,72 @@ function getCustomerOrders($customerId, $ordersData)
     return array_filter($ordersData, function ($order) use ($customerId) {
         return isset($order['userId']) && $order['userId'] === $customerId;
     });
+}
+
+function normalizeCustomerAddress(array $address): array
+{
+    $address['id'] = (string)($address['id'] ?? $address['address_id'] ?? '');
+    $address['addressName'] = $address['address_name'] ?? ($address['addressName'] ?? '');
+    $address['addressLine1'] = $address['address_line1'] ?? ($address['addressLine1'] ?? '');
+    $address['addressLine2'] = $address['address_line2'] ?? ($address['addressLine2'] ?? '');
+    $address['city'] = $address['city'] ?? ($address['city'] ?? '');
+    $address['state'] = $address['state'] ?? ($address['state'] ?? '');
+    $address['zipCode'] = $address['zip_code'] ?? ($address['zipCode'] ?? '');
+    $address['isDefault'] = isset($address['is_default']) ? (int)$address['is_default'] : (isset($address['isDefault']) ? (int)$address['isDefault'] : 0);
+    return $address;
+}
+
+function renderCustomerAddressesHtml(array $addresses, bool $editable): string
+{
+    if (empty($addresses)) {
+        return '<div class="text-sm text-gray-500">No addresses on file.</div>';
+    }
+
+    ob_start();
+    foreach ($addresses as $address) {
+        $id = htmlspecialchars((string)($address['id'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $name = htmlspecialchars((string)($address['addressName'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $line1 = htmlspecialchars((string)($address['addressLine1'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $line2Raw = trim((string)($address['addressLine2'] ?? ''));
+        $line2 = $line2Raw !== '' ? htmlspecialchars($line2Raw, ENT_QUOTES, 'UTF-8') : '';
+        $city = htmlspecialchars((string)($address['city'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $state = htmlspecialchars((string)($address['state'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $zip = htmlspecialchars((string)($address['zipCode'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $isDefault = !empty($address['isDefault']);
+
+        $containerClasses = 'customer-address-item border border-gray-200 rounded-md p-3 flex flex-col gap-2';
+        if ($isDefault) {
+            $containerClasses .= ' bg-green-50 border-green-300';
+        }
+
+        echo '<div class="' . $containerClasses . '" data-address-id="' . $id . '" data-address-default="' . ($isDefault ? '1' : '0') . '">';
+        echo '<div class="text-sm text-gray-700">';
+        echo '<div class="font-medium">' . $name;
+        if ($isDefault) {
+            echo ' <span class="ml-2 text-xs font-semibold text-green-700">(Default)</span>';
+        }
+        echo '</div>';
+        echo '<div>' . $line1 . '</div>';
+        if ($line2 !== '') {
+            echo '<div>' . $line2 . '</div>';
+        }
+        echo '<div>' . $city . ', ' . $state . ' ' . $zip . '</div>';
+        echo '</div>';
+
+        if ($editable && $id !== '') {
+            echo '<div class="flex flex-wrap gap-2">';
+            echo '<button type="button" class="btn btn-small" data-action="customer-address-edit" data-address-id="' . $id . '">Edit</button>';
+            if (!$isDefault) {
+                echo '<button type="button" class="btn btn-small btn-secondary" data-action="customer-address-default" data-address-id="' . $id . '">Make Default</button>';
+            }
+            echo '<button type="button" class="btn btn-small btn-danger" data-action="customer-address-delete" data-address-id="' . $id . '">Delete</button>';
+            echo '</div>';
+        }
+
+        echo '</div>';
+    }
+
+    return ob_get_clean();
 }
 
 // Process customer deletion if form submitted
@@ -229,14 +311,7 @@ $message = $_GET['message'] ?? '';
 $messageType = $_GET['type'] ?? '';
 ?>
 
-<?php
-// Only include the wrapper if this file is accessed directly, not when included by admin_router.php
-if (!isset($adminSection) || $adminSection !== "customers") {
-    // Always include admin navbar on customers page, even when accessed directly
-    $section = "customers";
-    include_once dirname(__DIR__) . "/components/admin_nav_tabs.php";
-}
-?>
+<?php /* Removed redundant wrapper include to avoid duplicate nav and stray endif */ ?>
 
 
             <div class="admin-filter-section">
@@ -253,7 +328,7 @@ if (!isset($adminSection) || $adminSection !== "customers") {
                             <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
                         </span>
                     </form>
-                </div>
+                    </div>
             </div>
 
             <?php if ($message): ?>
@@ -267,22 +342,22 @@ if (!isset($adminSection) || $adminSection !== "customers") {
                     <thead>
                         <tr>
                             <th>
-                                <a href="<?= getSortUrl('name', $sortBy, $sortDir) ?>" class="table-sort-link">
+                                <a href="<?= getSortUrl('name', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='name' ? ' is-active' : '' ?>">
                                     Customer <?= getSortIndicator('name', $sortBy, $sortDir) ?>
                                 </a>
                             </th>
                             <th>
-                                <a href="<?= getSortUrl('email', $sortBy, $sortDir) ?>" class="table-sort-link">
+                                <a href="<?= getSortUrl('email', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='email' ? ' is-active' : '' ?>">
                                     Email <?= getSortIndicator('email', $sortBy, $sortDir) ?>
                                 </a>
                             </th>
                             <th>
-                                <a href="<?= getSortUrl('role', $sortBy, $sortDir) ?>" class="table-sort-link">
+                                <a href="<?= getSortUrl('role', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='role' ? ' is-active' : '' ?>">
                                     Role <?= getSortIndicator('role', $sortBy, $sortDir) ?>
                                 </a>
                             </th>
                             <th>
-                                <a href="<?= getSortUrl('orders', $sortBy, $sortDir) ?>" class="table-sort-link">
+                                <a href="<?= getSortUrl('orders', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='orders' ? ' is-active' : '' ?>">
                                     Orders <?= getSortIndicator('orders', $sortBy, $sortDir) ?>
                                 </a>
                             </th>
@@ -290,7 +365,7 @@ if (!isset($adminSection) || $adminSection !== "customers") {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($paginatedCustomers)): ?>
+                        <?php if (empty($customersData)): ?>
                             <tr>
                                 <td colspan="5" class="table-empty-cell">
                                     <div class="admin-empty-state">
@@ -301,7 +376,7 @@ if (!isset($adminSection) || $adminSection !== "customers") {
                                 </td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($paginatedCustomers as $customer):
+                            <?php foreach ($customersData as $customer):
                                 $customerId = $customer['id'] ?? '';
                                 $firstName = $customer['firstName'] ?? '';
                                 $lastName = $customer['lastName'] ?? '';
@@ -341,9 +416,12 @@ if (!isset($adminSection) || $adminSection !== "customers") {
                                 <td><?= $orderCount ?> orders</td>
                                 <td>
                                     <div class="admin-actions">
-                                        <a href="/sections/admin_router.php?section=customers&view=<?= htmlspecialchars($customerId) ?>"
+                                        <?php $linkBaseTbl = $_GET; unset($linkBaseTbl['view'], $linkBaseTbl['edit']); $linkBaseTbl['section']='customers';
+                                        $viewHref = '/sections/admin_router.php?' . http_build_query(array_merge($linkBaseTbl, ['view' => $customerId]));
+                                        $editHref = '/sections/admin_router.php?' . http_build_query(array_merge($linkBaseTbl, ['edit' => $customerId])); ?>
+                                        <a href="<?= htmlspecialchars($viewHref) ?>"
                                            class="text-blue-600 hover:text-blue-800" title="View Customer">👁️</a>
-                                        <a href="/sections/admin_router.php?section=customers&edit=<?= htmlspecialchars($customerId) ?>"
+                                        <a href="<?= htmlspecialchars($editHref) ?>"
                                            class="text-green-600 hover:text-green-800" title="Edit Customer">✏️</a>
                                         <button data-action="confirm-delete" data-customer-id="<?= $customerId ?>" data-customer-name="<?= htmlspecialchars($firstName . ' ' . $lastName) ?>"
                                                 class="text-red-600 hover:text-red-800" title="Delete Customer">🗑️</button>
@@ -359,24 +437,72 @@ if (!isset($adminSection) || $adminSection !== "customers") {
 
 
 <?php if (($modalMode === 'view' || $modalMode === 'edit') && $editCustomer): ?>
+<?php
+    // Compute prev/next using the full customers list that's displayed in the table
+    $currentId = (string)($editCustomer['id'] ?? '');
+    $prevCustomerId = null;
+    $nextCustomerId = null;
+    $rawIds = array_values(array_map(fn($c) => (string)($c['id'] ?? ''), $customersData));
+    $norm = static function ($v) { return strtolower(trim((string)$v)); };
+    $idListNorm = array_map($norm, $rawIds);
+    $idx = array_search($norm($currentId), $idListNorm, true);
+    if ($idx === false) {
+        // Fallback: try to locate by username using the original view/edit param
+        $openKey = $_GET['view'] ?? ($_GET['edit'] ?? null);
+        if ($openKey !== null && $openKey !== '') {
+            $rawUsernames = array_values(array_map(fn($c) => (string)($c['username'] ?? ''), $customersData));
+            $userIdx = array_search($norm($openKey), array_map($norm, $rawUsernames), true);
+            if ($userIdx !== false) {
+                $idx = $userIdx;
+            }
+        }
+    }
+    $n = count($rawIds);
+    if ($idx !== false && $n > 0) {
+        $prevCustomerId = $rawIds[(($idx - 1 + $n) % $n)];
+        $nextCustomerId = $rawIds[(($idx + 1) % $n)];
+    }
+    // debug panel removed
+    $modeParam = $modalMode === 'edit' ? 'edit' : 'view';
+?>
 <!-- Customer View/Edit Modal -->
-<div class="customer-modal admin-modal-overlay" id="customerModalOuter" data-action="close-customer-editor-on-overlay">
+<div class="customer-modal admin-modal-overlay topmost show" id="customerModalOuter" data-action="close-customer-editor-on-overlay">
     <!-- Navigation Arrows -->
-    <button id="prevCustomerBtn" data-action="navigate-customer" data-direction="prev" class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Previous customer">
-        <span class="text-xl">‹</span>
-    </button>
-    <button id="nextCustomerBtn" data-action="navigate-customer" data-direction="next" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-full shadow-lg hover:bg-gray-50 text-gray-600" title="Next customer">
-        <span class="text-xl">›</span>
-    </button>
+    <?php
+        $linkBase = $_GET;
+        unset($linkBase['view'], $linkBase['edit']);
+        $linkBase['section'] = 'customers';
+        $prevTarget = ($prevCustomerId !== null && $prevCustomerId !== '') ? $prevCustomerId : $currentId;
+        $nextTarget = ($nextCustomerId !== null && $nextCustomerId !== '') ? $nextCustomerId : $currentId;
+        $prevHref = '/sections/admin_router.php?' . http_build_query(array_merge($linkBase, [$modeParam => $prevTarget]));
+        $nextHref = '/sections/admin_router.php?' . http_build_query(array_merge($linkBase, [$modeParam => $nextTarget]));
+    ?>
+    <a href="<?= htmlspecialchars($prevHref) ?>"
+       class="nav-arrow nav-arrow-left wf-nav-arrow wf-nav-left" title="Previous customer" aria-label="Previous customer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M15 19l-7-7 7-7" />
+        </svg>
+    </a>
+    <a href="<?= htmlspecialchars($nextHref) ?>"
+       class="nav-arrow nav-arrow-right wf-nav-arrow wf-nav-right" title="Next customer" aria-label="Next customer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 5l7 7-7 7" />
+        </svg>
+    </a>
 
     <div class="admin-modal">
         <!-- Modal Header -->
-        <div class="modal-header">
+        <div class="modal-header flex items-center justify-between gap-2">
             <h2 class="modal-title">
                 <?= $modalMode === 'view' ? 'View Customer: ' : 'Edit Customer: ' ?>
                 <?= htmlspecialchars(($editCustomer['firstName'] ?? '') . ' ' . ($editCustomer['lastName'] ?? '')) ?>
             </h2>
-            <a href="/sections/admin_router.php?section=customers" class="modal-close" data-action="close-customer-editor">&times;</a>
+            <?php if ($modalMode === 'view'): ?>
+                <a href="/sections/admin_router.php?section=customers&amp;edit=<?= htmlspecialchars($editCustomer['id'] ?? '') ?>"
+                   class="btn btn-primary btn-small" data-action="navigate-to-edit">Edit Customer</a>
+            <?php elseif ($modalMode === 'edit'): ?>
+                <button type="submit" form="customerForm" class="btn btn-primary btn-small" data-action="save-customer">Save</button>
+            <?php endif; ?>
         </div>
 
         <?php if ($modalMode === 'edit'): ?>
@@ -384,7 +510,6 @@ if (!isset($adminSection) || $adminSection !== "customers") {
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="customerId" value="<?= htmlspecialchars($editCustomer['id'] ?? '') ?>">
         <?php endif; ?>
-
         <div class="modal-body">
 
             <div class="personal-col">
@@ -454,33 +579,19 @@ if (!isset($adminSection) || $adminSection !== "customers") {
             <div class="address-col">
                 <div class="form-section">
                     <h5 class="form-section-title">Address Information</h5>
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label for="addressLine1" class="form-label">Address Line 1</label>
-                            <input type="text" id="addressLine1" name="addressLine1" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['addressLine1'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
+                    <?php $normalizedAddresses = array_map('normalizeCustomerAddress', $customerAddresses); ?>
+                    <?php if ($modalMode === 'view'): ?>
+                        <div id="viewCustomerAddresses" class="customer-address-list">
+                            <?= renderCustomerAddressesHtml($normalizedAddresses, false) ?>
                         </div>
-                        <div class="form-group full-width">
-                            <label for="addressLine2" class="form-label">Address Line 2</label>
-                            <input type="text" id="addressLine2" name="addressLine2" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['addressLine2'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
+                    <?php else: ?>
+                        <div class="customer-address-editor" data-customer-id="<?= htmlspecialchars($editCustomer['id'] ?? '') ?>">
+                            <div class="customer-address-list" id="editCustomerAddresses">
+                                <?= renderCustomerAddressesHtml($normalizedAddresses, true) ?>
+                            </div>
+                            <button type="button" class="btn btn-small btn-outline" data-action="customer-address-add">Add Address</button>
                         </div>
-                        <div class="form-group">
-                            <label for="city" class="form-label">City</label>
-                            <input type="text" id="city" name="city" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['city'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="state" class="form-label">State</label>
-                            <input type="text" id="state" name="state" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['state'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="zipCode" class="form-label">ZIP Code</label>
-                            <input type="text" id="zipCode" name="zipCode" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['zipCode'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -535,23 +646,7 @@ if (!isset($adminSection) || $adminSection !== "customers") {
             </div>
         </div>
 
-        <!-- Modal Footer -->
-        <div class="modal-footer">
-            <a href="/sections/admin_router.php?section=customers" class="btn btn-secondary" data-action="close-customer-editor">
-                <?= $modalMode === 'edit' ? 'Cancel' : 'Close' ?>
-            </a>
-            <?php if ($modalMode === 'view'): ?>
-                <a href="/sections/admin_router.php?section=customers&edit=<?= htmlspecialchars($editCustomer['id'] ?? '') ?>"
-                   class="btn btn-primary" data-action="navigate-to-edit">Edit Customer</a>
-            <?php else: ?>
-                <button type="button" id="saveCustomerBtn" class="btn btn-primary" data-action="save-customer">
-                    <span class="button-text">Save Changes</span>
-                    <span class="loading-spinner hidden">⏳</span>
-                </button>
-            <?php endif; ?>
-
-            <!-- Test buttons removed -->
-        </div>
+        <!-- Modal Footer intentionally empty for edit mode (no bottom controls) -->
 
         <?php if ($modalMode === 'edit'): ?>
         </form>
@@ -575,536 +670,3 @@ if (!isset($adminSection) || $adminSection !== "customers") {
     </div>
 </div>
 
-
-        <div class="modal-body">
-
-            <div class="personal-col">
-                <div class="form-section">
-                    <h5 class="form-section-title">Personal Information</h5>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="firstName" class="form-label">First Name</label>
-                            <input type="text" id="firstName" name="firstName" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['firstName'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : 'required' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="lastName" class="form-label">Last Name</label>
-                            <input type="text" id="lastName" name="lastName" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['lastName'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : 'required' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" id="username" name="username" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['username'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : 'required' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" id="email" name="email" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['email'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : 'required' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="role" class="form-label">Role</label>
-                            <?php if ($modalMode === 'edit'): ?>
-                                <select id="role" name="role" class="form-select" required>
-                                    <option value="customer" <?= ($editCustomer['role'] ?? '') === 'customer' ? 'selected' : '' ?>>Customer</option>
-                                    <option value="admin" <?= ($editCustomer['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
-                                </select>
-                            <?php else: ?>
-                                <input type="text" class="form-input readonly" readonly
-                                       value="<?= htmlspecialchars($editCustomer['role'] ?? '') ?>">
-                            <?php endif; ?>
-                        </div>
-                        <div class="form-group">
-                            <label for="phoneNumber" class="form-label">Phone Number</label>
-                            <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['phoneNumber'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                    </div>
-                </div>
-
-                <?php if ($modalMode === 'edit'): ?>
-                <div class="form-section">
-                    <h5 class="form-section-title">Password Management</h5>
-                    <p class="form-section-help">Leave password fields blank to keep the current password unchanged.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="newPassword" class="form-label">New Password</label>
-                            <input type="password" id="newPassword" name="newPassword"
-                                   class="form-input" placeholder="Enter new password (min 6 characters)" minlength="6">
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword"
-                                   class="form-input" placeholder="Confirm new password">
-                        </div>
-                    </div>
-                </div>
-                <?php endif; ?>
-            </div>
-
-            <div class="address-col">
-                <div class="form-section">
-                    <h5 class="form-section-title">Address Information</h5>
-                    <div class="form-grid">
-                        <div class="form-group full-width">
-                            <label for="addressLine1" class="form-label">Address Line 1</label>
-                            <input type="text" id="addressLine1" name="addressLine1" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['addressLine1'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="addressLine2" class="form-label">Address Line 2</label>
-                            <input type="text" id="addressLine2" name="addressLine2" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['addressLine2'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="city" class="form-label">City</label>
-                            <input type="text" id="city" name="city" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['city'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="state" class="form-label">State</label>
-                            <input type="text" id="state" name="state" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['state'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                        <div class="form-group">
-                            <label for="zipCode" class="form-label">ZIP Code</label>
-                            <input type="text" id="zipCode" name="zipCode" class="form-input <?= $modalMode === 'view' ? 'readonly' : '' ?>"
-                                   value="<?= htmlspecialchars($editCustomer['zipCode'] ?? '') ?>" <?= $modalMode === 'view' ? 'readonly' : '' ?>>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Order History Sidebar -->
-            <div class="modal-sidebar">
-                <div class="order-history-panel">
-                    <h3 class="order-history-title">Order History</h3>
-                    <div class="order-history-content">
-                        <?php if (empty($customerOrders)): ?>
-                            <div class="order-history-empty">
-                                <div class="empty-icon">📦</div>
-                                <div class="empty-subtitle">No orders found for this customer.</div>
-                            </div>
-                        <?php else: ?>
-                            <?php foreach ($customerOrders as $order):
-                                $orderDate = date('M j, Y', strtotime($order['date'] ?? $order['createdAt'] ?? 'now'));
-                                $statusClass = 'status-' . strtolower($order['status'] ?? 'pending');
-                                ?>
-                            <div class="order-history-item" data-action="view-order" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
-                                <h5 class="order-id">Order #<?= htmlspecialchars($order['id'] ?? '') ?></h5>
-                                <div class="order-details">
-                                    <div class="order-detail">
-                                        <span>Date:</span>
-                                        <span><?= $orderDate ?></span>
-                                    </div>
-                                    <div class="order-detail">
-                                        <span>Total:</span>
-                                        <span>$<?= number_format(floatval($order['total'] ?? $order['totalAmount'] ?? 0), 2) ?></span>
-                                    </div>
-                                    <div class="order-detail">
-                                        <span>Status:</span>
-                                        <span class="order-status <?= $statusClass ?>">
-                                            <?= htmlspecialchars($order['status'] ?? 'Pending') ?>
-                                        </span>
-                                    </div>
-                                    <div class="order-detail">
-                                        <span>Payment:</span>
-                                        <span><?= htmlspecialchars($order['paymentMethod'] ?? 'N/A') ?> - <?= htmlspecialchars($order['paymentStatus'] ?? 'N/A') ?></span>
-                                    </div>
-                                    <?php if (!empty($order['shippingMethod'])): ?>
-                                    <div class="order-detail">
-                                        <span>Shipping:</span>
-                                        <span><?= htmlspecialchars($order['shippingMethod']) ?></span>
-                                    </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer">
-            <a href="/sections/admin_router.php?section=customers" class="btn btn-secondary" data-action="close-customer-editor">
-                <?= $modalMode === 'edit' ? 'Cancel' : 'Close' ?>
-            </a>
-            <?php if ($modalMode === 'view'): ?>
-                <a href="/sections/admin_router.php?section=customers&edit=<?= htmlspecialchars($editCustomer['id'] ?? '') ?>"
-                   class="btn btn-primary" data-action="navigate-to-edit">Edit Customer</a>
-            <?php else: ?>
-                <button type="button" id="saveCustomerBtn" class="btn btn-primary" data-action="save-customer">
-                    <span class="button-text">Save Changes</span>
-                    <span class="loading-spinner hidden">⏳</span>
-                </button>
-            <?php endif; ?>
-
-            <!-- Test buttons removed -->
-        </div>
-
-        <?php if ($modalMode === 'edit'): ?>
-        </form>
-        <?php endif; ?>
-    </div>
-</div>
-
-<?php
-// Only include the wrapper if this file is accessed directly, not when included by admin_router.php
-if (!isset($adminSection) || $adminSection !== 'customers'):
-    ?>
-?>
-</div>
-</div>
-<?php endif; ?>
-
-<!-- Delete Confirmation Modal -->
-        </div>
-    </div>
-</div>
-
-
-<!-- Test notification script removed -->
-<!--
-    console.log('[TEST] Testing notification system...');
-    console.log('[TEST] window.wfNotifications:', typeof window.wfNotifications);
-    console.log('[TEST] window.showSuccess:', typeof window.showSuccess);
-    console.log('[TEST] window.showError:', typeof window.showError);
-    console.log('[TEST] window.showNotification:', typeof window.showNotification);
-
-    // Test 1: Try wfNotifications directly
-    if (window.wfNotifications) {
-        console.log('[TEST] Using window.wfNotifications');
-        window.wfNotifications.success('✅ Direct wfNotifications test!');
-        window.wfNotifications.error('❌ Direct wfNotifications error test!');
-        window.wfNotifications.info('ℹ️ Direct wfNotifications info test!');
-    } else {
-        console.log('[TEST] window.wfNotifications not available');
-    }
-
-    // Test 2: Try showNotification functions
-    if (window.showSuccess) {
-        console.log('[TEST] Using window.showSuccess');
-        window.showSuccess('✅ window.showSuccess test!');
-    } else {
-        console.log('[TEST] window.showSuccess not available');
-    }
-
-    if (window.showError) {
-        console.log('[TEST] Using window.showError');
-        window.showError('❌ window.showError test!');
-    } else {
-        console.log('[TEST] window.showError not available');
-    }
-
-    if (window.showNotification) {
-        console.log('[TEST] Using window.showNotification');
-        window.showNotification('ℹ️ window.showNotification test!', 'info', { title: 'Test' });
-    } else {
-        console.log('[TEST] window.showNotification not available');
-    }
-
-    // Test 3: Manual notification creation
-    try {
-        console.log('[TEST] Creating manual notification...');
-        if (window.AdminCustomersModule && window.AdminCustomersModule.createManualNotification) {
-            window.AdminCustomersModule.createManualNotification('✅ Manual notification test!', 'success');
-            window.AdminCustomersModule.createManualNotification('❌ Manual error notification test!', 'error');
-            window.AdminCustomersModule.createManualNotification('ℹ️ Manual info notification test!', 'info');
-        } else {
-            console.log('[TEST] AdminCustomersModule.createManualNotification not available');
-        }
-    } catch(error) {
-        console.error('[TEST] Manual notification failed:', error);
-    }
-
-    // Test 4: Try direct DOM manipulation
-    try {
-        console.log('[TEST] Creating direct DOM notification...');
-        const container = document.getElementById('wf-notification-container') || (() => {
-            const div = document.createElement('div');
-            div.id = 'wf-notification-container';
-            div.className = 'wf-notification-container';
-            div.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; pointer-events: none; max-width: 400px;';
-            document.body.appendChild(div);
-            return div;
-        })();
-
-        const notification = document.createElement('div');
-        notification.className = 'wf-notification wf-success-notification';
-        notification.innerHTML = `
-            <div class="wf-notification-content">
-                <div class="wf-notification-icon">✅</div>
-                <div class="wf-notification-body">
-                    <div class="wf-notification-message">🎯 Direct DOM notification test!</div>
-                </div>
-                <button class="wf-notification-close">&times;</button>
-            </div>
-        `;
-
-        container.appendChild(notification);
-
-        // Show notification
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-            notification.style.opacity = '1';
-        }, 10);
-
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            notification.style.transform = 'translateX(120%)';
-            notification.style.opacity = '0';
-            setTimeout(() => notification.remove(), 400);
-        }, 5000);
-
-        console.log('[TEST] Direct DOM notification created and should be visible!');
-    } catch(error) {
-        console.error('[TEST] Direct DOM notification failed:', error);
-    }
-
-    // Test 5: Debug save button
-    console.log('[TEST] Testing save button...');
-    const saveBtn = document.getElementById('saveCustomerBtn');
-    if (saveBtn) {
-        console.log('[TEST] Save button found:', saveBtn);
-        console.log('[TEST] Save button attributes:', {
-            id: saveBtn.id,
-            type: saveBtn.type,
-            tagName: saveBtn.tagName,
-            className: saveBtn.className,
-            dataAction: saveBtn.dataset.action
-        });
-
-        // Try to trigger save manually
-        console.log('[TEST] Attempting to trigger save manually...');
-        try {
-            if (window.AdminCustomersModule && window.AdminCustomersModule.handleCustomerSave) {
-                window.AdminCustomersModule.handleCustomerSave();
-                console.log('[TEST] Manual save triggered successfully!');
-            } else {
-                console.log('[TEST] AdminCustomersModule.handleCustomerSave not available');
-            }
-        } catch(error) {
-            console.error('[TEST] Manual save failed:', error);
-        }
-    } else {
-        console.log('[TEST] Save button not found!');
-    }
-}
-
-function debugSave() {
-    console.log('[DEBUG] Manual save trigger initiated');
-
-    // Test 1: Check if button exists
-    const saveBtn = document.getElementById('saveCustomerBtn');
-    console.log('[DEBUG] Save button element:', saveBtn);
-
-    if (!saveBtn) {
-        console.error('[DEBUG] Save button not found!');
-        return;
-    }
-
-    // Test 2: Check button properties
-    console.log('[DEBUG] Save button details:', {
-        id: saveBtn.id,
-        type: saveBtn.type,
-        tagName: saveBtn.tagName,
-        className: saveBtn.className,
-        disabled: saveBtn.disabled,
-        style: saveBtn.style.cssText,
-        dataAction: saveBtn.dataset.action
-    });
-
-    // Test 3: Check if AdminCustomersModule exists
-    console.log('[DEBUG] Checking AdminCustomersModule...');
-    console.log('[DEBUG] window.AdminCustomersModule:', typeof window.AdminCustomersModule);
-    console.log('[DEBUG] AdminCustomersModule object:', window.AdminCustomersModule);
-
-    if (window.AdminCustomersModule) {
-        console.log('[DEBUG] AdminCustomersModule methods:', Object.getOwnPropertyNames(window.AdminCustomersModule));
-    }
-
-    // Test 4: Try clicking programmatically
-    console.log('[DEBUG] Attempting programmatic click...');
-    try {
-        saveBtn.click();
-        console.log('[DEBUG] Programmatic click successful');
-    } catch(error) {
-        console.error('[DEBUG] Programmatic click failed:', error);
-    }
-
-    // Test 5: Try manual save function
-    console.log('[DEBUG] Attempting manual save...');
-    try {
-        if (window.AdminCustomersModule && window.AdminCustomersModule.handleCustomerSave) {
-            console.log('[DEBUG] AdminCustomersModule.handleCustomerSave exists, calling it...');
-            window.AdminCustomersModule.handleCustomerSave();
-            console.log('[DEBUG] Manual save successful');
-        } else {
-            console.error('[DEBUG] AdminCustomersModule.handleCustomerSave not available');
-            console.log('[DEBUG] Available properties:', window.AdminCustomersModule ? Object.keys(window.AdminCustomersModule) : 'AdminCustomersModule not found');
-        }
-    } catch(error) {
-        console.error('[DEBUG] Manual save failed:', error);
-    }
-
-    // Test 6: Try direct notification test
-    console.log('[DEBUG] Testing notifications directly...');
-    try {
-        if (window.showSuccess) {
-            window.showSuccess('Debug save test notification');
-        } else {
-            console.log('[DEBUG] window.showSuccess not available');
-        }
-    } catch(error) {
-        console.error('[DEBUG] Direct notification failed:', error);
-    }
-}</script>
-
-<script>
-function directNotificationTest() {
-    console.log('[DIRECT] Direct notification test started');
-
-    // Test 1: Direct showSuccess call
-    try {
-        console.log('[DIRECT] Calling window.showSuccess');
-        window.showSuccess('🎯 Direct notification test - SUCCESS!');
-        console.log('[DIRECT] showSuccess called successfully');
-    } catch(error) {
-        console.error('[DIRECT] showSuccess failed:', error);
-    }
-
-    // Test 2: Direct wfNotifications call
-    try {
-        console.log('[DIRECT] Calling window.wfNotifications.success');
-        window.wfNotifications.success('✅ Direct wfNotifications test');
-        console.log('[DIRECT] wfNotifications.success called successfully');
-    } catch(error) {
-        console.error('[DIRECT] wfNotifications failed:', error);
-    }
-
-    // Test 3: Manual notification creation
-    try {
-        console.log('[DIRECT] Calling AdminCustomersModule.createManualNotification');
-        window.AdminCustomersModule.createManualNotification('🔧 Direct manual notification test', 'success');
-        console.log('[DIRECT] Manual notification created successfully');
-    } catch(error) {
-        console.error('[DIRECT] Manual notification failed:', error);
-    }
-}
-
-<!-- Page Data for admin-customers module (consumed by js/admin-customers.js) -->
-<script type="application/json" id="customer-page-data">
-<?= json_encode([
-        'customers' => array_values($customersData),
-        'currentCustomerId' => $editCustomer['id'] ?? null,
-        'modalMode' => $modalMode ?? null,
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
-</script>
-
-<script>
-function simpleNotificationTest() {
-    console.log('[SIMPLE] Testing basic notification...');
-
-    // Test 1: Use wfNotifications directly
-    try {
-        if (window.wfNotifications && window.wfNotifications.success) {
-            console.log('[SIMPLE] Using wfNotifications.success');
-            window.wfNotifications.success('🎯 Simple notification test - SUCCESS!');
-            console.log('[SIMPLE] wfNotifications.success called');
-        } else {
-            console.log('[SIMPLE] wfNotifications not available');
-        }
-    } catch(error) {
-        console.error('[SIMPLE] wfNotifications failed:', error);
-    }
-
-    // Test 2: Use showSuccess directly
-    try {
-        if (window.showSuccess) {
-            console.log('[SIMPLE] Using window.showSuccess');
-            window.showSuccess('✅ Direct showSuccess test');
-            console.log('[SIMPLE] showSuccess called');
-        } else {
-            console.log('[SIMPLE] showSuccess not available');
-        }
-    } catch(error) {
-        console.error('[SIMPLE] showSuccess failed:', error);
-    }
-
-    // Test 3: Create manual notification
-    try {
-        console.log('[SIMPLE] Creating manual notification');
-        if (window.AdminCustomersModule && window.AdminCustomersModule.createManualNotification) {
-            window.AdminCustomersModule.createManualNotification('🔧 Manual notification test', 'success');
-            console.log('[SIMPLE] Manual notification created');
-        } else {
-            console.log('[SIMPLE] Manual notification method not available');
-        }
-    } catch(error) {
-        console.error('[SIMPLE] Manual notification failed:', error);
-    }
-
-    // Test 4: Direct DOM creation (guaranteed to work)
-    try {
-        console.log('[SIMPLE] Creating direct DOM notification');
-        const container = document.getElementById('wf-notification-container') || (() => {
-            const div = document.createElement('div');
-            div.id = 'wf-notification-container';
-            div.className = 'wf-notification-container';
-            div.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 999999; pointer-events: none; max-width: 400px;';
-            document.body.appendChild(div);
-            return div;
-        })();
-
-        const notification = document.createElement('div');
-        notification.className = 'wf-notification wf-success-notification wf-toast-enter wf-toast-enter-active';
-        notification.innerHTML = `
-            <div class="wf-notification-content">
-                <div class="wf-notification-icon">🎉</div>
-                <div class="wf-notification-body">
-                    <div class="wf-notification-message">💯 DIRECT DOM TEST - This should definitely appear!</div>
-                </div>
-                <button class="wf-notification-close">&times;</button>
-            </div>
-        `;
-
-        container.appendChild(notification);
-
-        // Show notification with animation
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-            notification.style.opacity = '1';
-        }, 10);
-
-        // Auto remove after 10 seconds
-        setTimeout(() => {
-            notification.style.transform = 'translateX(120%)';
-            notification.style.opacity = '0';
-            setTimeout(() => notification.remove(), 400);
-        }, 10000);
-
-        console.log('[SIMPLE] Direct DOM notification created - should be visible!');
-    } catch(error) {
-        console.error('[SIMPLE] Direct DOM notification failed:', error);
-    }
-}
-</script>
-
-<!-- Simple save notification handler (remove in production) -->
-<script>
-// Wait for AdminCustomersModule to be ready, then enhance notifications
-document.addEventListener('DOMContentLoaded', function() {
-    // Wait a bit for the module to initialize
-    setTimeout(function() {
-        if (window.AdminCustomersModule && window.AdminCustomersModule.createManualNotification) {
-            console.log('[NOTIFICATION] AdminCustomersModule notification system is working');
-        } else {
-            console.log('[NOTIFICATION] AdminCustomersModule not ready yet');
-        }
-    }, 1000);
-});
-</script>
-
-<?php // Admin customers script is loaded via app.js per-page imports?>

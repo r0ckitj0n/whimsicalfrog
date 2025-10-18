@@ -24,23 +24,23 @@ if (!function_exists('renderAccountSettingsModal')) {
         <fieldset class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label for="acc_username" class="block text-sm font-medium text-gray-700">Username</label>
-            <input id="acc_username" name="username" type="text" class="block w-full border border-gray-300 bg-gray-100 rounded-md shadow-sm sm:text-sm" readonly>
+            <input id="acc_username" name="username" type="text" autocomplete="username" class="block w-full border border-gray-300 bg-gray-100 rounded-md shadow-sm sm:text-sm" readonly>
           </div>
           <div>
             <label for="acc_email" class="block text-sm font-medium text-gray-700">Email</label>
-            <input id="acc_email" name="email" type="email" class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm" required>
+            <input id="acc_email" name="email" type="email" autocomplete="email" class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm" required>
           </div>
           <div>
             <label for="acc_firstName" class="block text-sm font-medium text-gray-700">First Name</label>
-            <input id="acc_firstName" name="firstName" type="text" class="block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm">
+            <input id="acc_firstName" name="firstName" type="text" autocomplete="given-name" class="block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm">
           </div>
           <div>
             <label for="acc_lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
-            <input id="acc_lastName" name="lastName" type="text" class="block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm">
+            <input id="acc_lastName" name="lastName" type="text" autocomplete="family-name" class="block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm">
           </div>
           <div>
             <label for="acc_phoneNumber" class="block text-sm font-medium text-gray-700">Phone Number</label>
-            <input id="acc_phoneNumber" name="phoneNumber" type="tel" class="block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="(555) 555-5555">
+            <input id="acc_phoneNumber" name="phoneNumber" type="tel" autocomplete="tel" class="block w-full border border-gray-300 rounded-md shadow-sm sm:text-sm" placeholder="(555) 555-5555">
           </div>
         </fieldset>
 

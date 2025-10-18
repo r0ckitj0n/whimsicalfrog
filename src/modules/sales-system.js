@@ -218,7 +218,7 @@ class SalesSystem {
                     ${item.image ? `<img src="${item.image}" alt="${this.escapeHtml(item.name || item.sku)}" class="popup-image">` : ''}
                     ${priceHtml}
                     ${item.description ? `<p class="popup-description">${this.escapeHtml(item.description)}</p>` : ''}
-                    <button class="add-to-cart-popup" data-sku="${item.sku}">Add to Cart</button>
+                    <button class="add-to-cart-popup btn btn-sm" data-sku="${item.sku}">Add to Cart</button>
                 </div>
             `;
 

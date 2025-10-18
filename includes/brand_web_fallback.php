@@ -44,7 +44,6 @@ $css = ":root{\n" . implode("\n", $vars) . "\n}\n" .
 ".text-brand-secondary{color:var(--brand-secondary)!important;}\n" .
 ".bg-brand-light{background:rgba(14,165,233,0.08)}\n" .
 ".wf-brand-font{font-family:var(--brand-font-primary) !important;}\n" .
-".btn-brand{background:var(--brand-primary);color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;}\n" .
 ".link-brand{color:var(--brand-secondary);}\n";
 
 echo "<style id=\"wf-brand-fallback\">\n$css\n</style>\n";

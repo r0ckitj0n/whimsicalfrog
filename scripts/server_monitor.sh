@@ -12,6 +12,18 @@ VITE_PORT=5176
 LOG_FILE="$WEBSITE_DIR/logs/monitor.log"
 CHECK_INTERVAL=60  # Check every 60 seconds
 
+# Enable local DB usage by default in dev (can be overridden by user)
+: "${WF_DB_DEV_ALLOW:=1}"
+export WF_DB_DEV_ALLOW
+
+# Default local DB credentials (overrideable before invoking this script)
+: "${WF_DB_LOCAL_HOST:=127.0.0.1}"
+: "${WF_DB_LOCAL_NAME:=whimsicalfrog}"
+: "${WF_DB_LOCAL_USER:=root}"
+: "${WF_DB_LOCAL_PASS:=Palz2516!}"
+: "${WF_DB_LOCAL_PORT:=3306}"
+export WF_DB_LOCAL_HOST WF_DB_LOCAL_NAME WF_DB_LOCAL_USER WF_DB_LOCAL_PASS WF_DB_LOCAL_PORT
+
 # Colors for terminal output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

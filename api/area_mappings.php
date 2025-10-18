@@ -5,6 +5,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
 }
 
+function wf_fetch_area_mappings($roomNumber)
+{
+    $aliases = wf_room_aliases($roomNumber);
+    if (empty($aliases)) {
+        return [];
+    }
+
+    $placeholders = implode(',', array_fill(0, count($aliases), '?'));
+    $params = $aliases;
+
+    $sql = "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active FROM area_mappings";
+    $conditions = ["room_number IN ($placeholders)"];
+
+    $hasRoomType = wf_has_column('area_mappings', 'room_type');
+    if ($hasRoomType) {
+        $conditions[] = "room_type IN ($placeholders)";
+        $params = array_merge($params, $aliases);
+    }
+
+    $sql .= ' AND (' . implode(' OR ', $conditions) . ') ORDER BY is_active DESC, display_order, id';
+
+    try {
+        return Database::queryAll($sql, $params);
+    } catch (Throwable $e) {
+        // Fallback: try without room_type clause in case column is missing or query failed
+        try {
+            return Database::queryAll(
+                "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active FROM area_mappings WHERE room_number IN ($placeholders) ORDER BY is_active DESC, display_order, id",
+                $aliases
+            );
+        } catch (Throwable $inner) {
+            if ($hasRoomType) {
+                try {
+                    return Database::queryAll(
+                        "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active FROM area_mappings WHERE room_type IN ($placeholders) ORDER BY is_active DESC, display_order, id",
+                        $aliases
+                    );
+                } catch (Throwable $fallback) {
+                    return [];
+                }
+            if (empty($items) && $categoryId) {
+                $items = Database::queryAll(
+                    "SELECT sku, name FROM items WHERE category_id = ? ORDER BY sku ASC",
+                    [$categoryId]
+                );
+            }
+            }
+            return [];
+        }
+    }
+}
+
+function wf_backfill_room_numbers($roomNumber)
+{
+    if (!wf_has_column('area_mappings', 'room_type')) {
+        return;
+    }
+
+    $aliases = wf_room_aliases($roomNumber);
+    if (empty($aliases)) {
+        return;
+    }
+
+    $canonical = wf_normalize_room_number($roomNumber);
+    if ($canonical === null || $canonical === '') {
+        return;
+    }
+
+    $placeholders = implode(',', array_fill(0, count($aliases), '?'));
+    $params = array_merge([$canonical], $aliases);
+
+    try {
+        Database::execute(
+            "UPDATE area_mappings SET room_number = ? WHERE (room_number IS NULL OR room_number = '') AND room_type IN ($placeholders)",
+            $params
+        );
+    } catch (Throwable $e) {
+        // Ignore failures; best-effort backfill
+    }
+}
+
 // Include database configuration (absolute)
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
@@ -93,6 +174,51 @@ function wf_normalize_room_number($value)
     return $v; // allow non-numeric room codes like 'A'
 }
 
+function wf_room_aliases($roomNumber)
+{
+    if ($roomNumber === null || $roomNumber === '') {
+        return [];
+    }
+
+    $aliases = [$roomNumber];
+    $aliases[] = strtolower($roomNumber);
+    $aliases[] = strtoupper($roomNumber);
+
+    if (preg_match('/^\d+$/', $roomNumber)) {
+        $aliases[] = 'room' . $roomNumber;
+        $aliases[] = 'Room' . $roomNumber;
+        $aliases[] = 'ROOM' . $roomNumber;
+    } else {
+        $numeric = null;
+        if (preg_match('/^(?:room)?(\d+)$/i', $roomNumber, $m)) {
+            $numeric = (string)((int)$m[1]);
+        }
+        if ($numeric !== null) {
+            $aliases[] = $numeric;
+            $aliases[] = 'room' . $numeric;
+            $aliases[] = 'Room' . $numeric;
+            $aliases[] = 'ROOM' . $numeric;
+        } else {
+            $aliases[] = 'room' . $roomNumber;
+            $aliases[] = 'Room' . $roomNumber;
+            $aliases[] = 'ROOM' . $roomNumber;
+        }
+    }
+
+    if ($roomNumber === '0') {
+        $aliases[] = 'main';
+        $aliases[] = 'Main';
+        $aliases[] = 'MAIN';
+    }
+    if (strcasecmp($roomNumber, 'A') === 0) {
+        $aliases[] = 'landing';
+        $aliases[] = 'Landing';
+        $aliases[] = 'LANDING';
+    }
+
+    return array_values(array_unique(array_filter($aliases, static fn($v) => $v !== '')));
+}
+
 switch ($method) {
     case 'GET':
         handleGet();
@@ -152,7 +278,11 @@ function handleGet()
                     Response::error('room is required', null, 400);
                     return;
                 }
-                $rows = Database::queryAll("SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order FROM area_mappings WHERE is_active = 1 AND room_number = ? ORDER BY display_order, id", [$roomNumber]);
+                $rows = wf_fetch_area_mappings($roomNumber);
+
+                if (!empty($rows)) {
+                    wf_backfill_room_numbers($roomNumber);
+                }
                 Response::success(['mappings' => $rows]);
                 return;
 

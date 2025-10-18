@@ -59,7 +59,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
     <div class="">
         <div class="flex justify-between items-center">
             <h1 class="text-brand-primary">Cost Breakdown Manager</h1>
-            <a href="/admin/?section=inventory" class="btn-brand">
+            <a href="/admin/?section=inventory" class="btn btn-secondary btn-sm">
                 Back to Inventory
             </a>
         </div>
@@ -79,7 +79,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                     </select>
                 </div>
                 <div>
-                    <button id="loadItemBtn" class="btn-brand">
+                    <button id="loadItemBtn" class="btn btn-primary btn-sm">
                         Load Item
                     </button>
                 </div>
@@ -123,7 +123,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                     <div class="card-standard">
                         <div class="flex justify-between items-center">
                             <h3 class="text-brand-primary">Materials</h3>
-                            <button id="addMaterialBtn" class="btn-brand text-sm">
+                            <button id="addMaterialBtn" class="btn btn-primary btn-sm">
                                 + Add Material
                             </button>
                         </div>
@@ -139,7 +139,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                     <div class="card-standard">
                         <div class="flex justify-between items-center">
                             <h3 class="text-brand-primary">Labor</h3>
-                            <button id="addLaborBtn" class="btn-brand text-sm">+ Add Labor</button>
+                            <button id="addLaborBtn" class="btn btn-primary btn-sm">+ Add Labor</button>
                         </div>
                         
                         <div id="laborList" class="divide-y divide-gray-200">
@@ -156,7 +156,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                     <div class="bg-white rounded-lg shadow-md">
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-semibold text-gray-700">Energy</h3>
-                            <button id="addEnergyBtn" class="bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
+                            <button id="addEnergyBtn" class="btn btn-primary btn-sm">
                                 Add Energy
                             </button>
                         </div>
@@ -195,7 +195,7 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                                 </div>
                             </div>
                             <div class="mt-3">
-                                <button id="updateCostBtn" class="btn-brand text-sm">
+                                <button id="updateCostBtn" class="btn btn-primary btn-sm">
                                     Update Cost Price
                                 </button>
                             </div>
@@ -268,8 +268,8 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                         <div><span class="font-medium">${escapeHtml(material.name)}</span></div>
                         <div class="flex items-center">
                             <span class="font-semibold">$${parseFloat(material.cost).toFixed(2)}</span>
-                            <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"material","id":${material.id}}' title="Edit Material">✏️</button>
-                            <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"material","id":${material.id},"name":"${escapeHtml(material.name)}"}' title="Delete Material">🗑️</button>
+                            <button class="btn btn-sm btn-secondary" data-action="openEditModal" data-params='{"type":"material","id":${material.id}}' title="Edit Material">✏️</button>
+                            <button class="btn btn-sm btn-danger" data-action="openDeleteModal" data-params='{"type":"material","id":${material.id},"name":"${escapeHtml(material.name)}"}' title="Delete Material">🗑️</button>
                         </div>`;
                     materialsList.appendChild(el);
                 });
@@ -288,8 +288,8 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                         <div><span class="font-medium">${escapeHtml(labor.description)}</span></div>
                         <div class="flex items-center">
                             <span class="font-semibold">$${parseFloat(labor.cost).toFixed(2)}</span>
-                            <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"labor","id":${labor.id}}' title="Edit Labor">✏️</button>
-                            <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"labor","id":${labor.id},"name":"${escapeHtml(labor.description)}"}' title="Delete Labor">🗑️</button>
+                            <button class="btn btn-sm btn-secondary" data-action="openEditModal" data-params='{"type":"labor","id":${labor.id}}' title="Edit Labor">✏️</button>
+                            <button class="btn btn-sm btn-danger" data-action="openDeleteModal" data-params='{"type":"labor","id":${labor.id},"name":"${escapeHtml(labor.description)}"}' title="Delete Labor">🗑️</button>
                         </div>`;
                     laborList.appendChild(el);
                 });
@@ -308,8 +308,8 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                         <div><span class="font-medium">${escapeHtml(energy.description)}</span></div>
                         <div class="flex items-center">
                             <span class="font-semibold">$${parseFloat(energy.cost).toFixed(2)}</span>
-                            <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"energy","id":${energy.id}}' title="Edit Energy">✏️</button>
-                            <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"energy","id":${energy.id},"name":"${escapeHtml(energy.description)}"}' title="Delete Energy">🗑️</button>
+                            <button class="btn btn-sm btn-secondary" data-action="openEditModal" data-params='{"type":"energy","id":${energy.id}}' title="Edit Energy">✏️</button>
+                            <button class="btn btn-sm btn-danger" data-action="openDeleteModal" data-params='{"type":"energy","id":${energy.id},"name":"${escapeHtml(energy.description)}"}' title="Delete Energy">🗑️</button>
                         </div>`;
                     energyList.appendChild(el);
                 });

@@ -210,7 +210,7 @@ if (!$isModal) {
     </div>
     <div class="mt-4 flex items-center justify-end gap-2">
       <button id="btnBrandReset" type="button" class="btn btn-secondary">Reset to defaults</button>
-      <button id="btnBrandSave" type="button" class="btn btn-brand">Save Brand Colors</button>
+      <button id="btnBrandSave" type="button" class="btn btn-primary">Save Brand Colors</button>
     </div>
   </div>
 
@@ -231,7 +231,7 @@ if (!$isModal) {
       </div>
     </div>
     <div class="mt-4 flex items-center justify-end gap-2">
-      <button id="btnFontSave" type="button" class="btn btn-brand">Save Fonts</button>
+      <button id="btnFontSave" type="button" class="btn btn-primary">Save Fonts</button>
     </div>
   </div>
 
@@ -242,7 +242,7 @@ if (!$isModal) {
     </p>
     <textarea id="editCustomCssVars" class="form-textarea w-full" rows="6" placeholder="--brand-shadow: 0 10px 20px rgba(0,0,0,.15);"></textarea>
     <div class="mt-3 flex items-center justify-end">
-      <button id="btnCustomSave" type="button" class="btn btn-brand">Save Custom Variables</button>
+      <button id="btnCustomSave" type="button" class="btn btn-primary">Save Custom Variables</button>
     </div>
   </div>
 

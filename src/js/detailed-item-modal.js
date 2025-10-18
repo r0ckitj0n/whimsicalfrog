@@ -994,6 +994,7 @@ import { ApiClient } from '../core/api-client.js';
 
     // Public API
     window.showGlobalItemModal = async function showGlobalItemModal(sku, itemData) {
+        try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
         // Create modal HTML from server and inject
         currentModalItem = itemData || { sku };
         // Prepare payload expected by API: { item, images }

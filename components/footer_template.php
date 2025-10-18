@@ -25,7 +25,7 @@ $footerConfig = [
 $footerData = [
     'company' => [
         'name' => (function_exists('wf_site_name') ? wf_site_name() : ((defined('SITE_NAME') ? SITE_NAME : 'Your Site'))),
-        'tagline' => 'Custom Crafts & Creative Designs',
+        'tagline' => (function_exists('wf_site_tagline') ? wf_site_tagline() : ''),
         'logo' => (function_exists('wf_brand_logo_path') ? wf_brand_logo_path() : (defined('BRAND_LOGO_PATH') ? BRAND_LOGO_PATH : '/images/logos/logo-whimsicalfrog.webp')),
         'description' => 'Creating unique, personalized items that bring joy and whimsy to your world.'
     ],

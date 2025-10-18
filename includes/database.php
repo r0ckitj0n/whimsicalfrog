@@ -49,6 +49,9 @@ class Database
                 $socket = getenv('WF_DB_LIVE_SOCKET') ?: '';
             }
 
+            // Optional dev override: allow disabling the DB by setting WF_DB_DEV_DISABLE=1
+            // (handled downstream by helpers; do not throw here so landing still responds)
+
             // Add a conservative connect_timeout in the DSN to avoid long hangs
             $dsn = "mysql:host={$host};port={$port};dbname={$db};charset=utf8mb4;connect_timeout=3";
             if (!empty($socket)) {
@@ -68,6 +71,30 @@ class Database
                 // @phpstan-ignore-next-line constant defined only for mysql driver
                 $options[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8mb4";
             }
+
+            // Development fast-fail: avoid long hangs when DB is down locally.
+            // Only apply this preflight on development hosts to keep production behavior unchanged.
+            try {
+                if ($this->isDevelopmentEnvironment()) {
+                    @ini_set('mysql.connect_timeout', '2');
+                    @ini_set('default_socket_timeout', '2');
+                    $reachable = false;
+                    if (!empty($socket)) {
+                        // For sockets, a simple existence check is enough as a heuristic
+                        $reachable = @file_exists($socket);
+                    } else {
+                        $h = $host ?: 'localhost';
+                        $p = (int)($port ?: 3306);
+                        $errno = 0; $errstr = '';
+                        $fp = @fsockopen($h, $p, $errno, $errstr, 0.8);
+                        if (is_resource($fp)) { fclose($fp); $reachable = true; }
+                    }
+                    if (!$reachable) {
+                        // Throw quickly so callers can catch and render fallbacks (e.g., landing page)
+                        throw new PDOException("MySQL host not reachable on dev: {$host}:{$port}", 2001);
+                    }
+                }
+            } catch (\Throwable $____e) { /* ignore preflight errors; proceed to PDO attempt */ }
 
             try {
                 $this->pdo = new PDO($dsn, $user, $pass, $options);
@@ -141,6 +168,44 @@ class Database
             self::$instance = new self();
         }
         return self::$instance->pdo;
+    }
+
+    /**
+     * Quick local DB availability probe to avoid hangs in development.
+     * Returns true if a TCP socket to the expected MySQL host:port can be opened within $timeout seconds.
+     * Only intended for localhost/dev use; production code should not rely on this.
+     */
+    public static function isAvailableQuick(float $timeout = 0.6): bool
+    {
+        try {
+            // Consider local/dev if CLI or host indicates localhost/127.0.0.1
+            $isLocal = (PHP_SAPI === 'cli');
+            if (!$isLocal) {
+                $hh = $_SERVER['HTTP_HOST'] ?? '';
+                $isLocal = (strpos($hh, 'localhost') !== false) || (strpos($hh, '127.0.0.1') !== false);
+            }
+            if ($isLocal) {
+                $disable = getenv('WF_DB_DEV_DISABLE');
+                if ($disable === '1' || strtolower((string)$disable) === 'true') {
+                    return false;
+                }
+            } else {
+                return true; // production/staging: assume DB available
+            }
+            $socket = getenv('WF_DB_LOCAL_SOCKET');
+            if ($socket && @file_exists($socket)) {
+                return true;
+            }
+            $host = getenv('WF_DB_LOCAL_HOST') ?: 'localhost';
+            $port = (int)(getenv('WF_DB_LOCAL_PORT') ?: 3306);
+            $errno = 0; $errstr = '';
+            $ctx = stream_context_create([ 'socket' => [ 'so_reuseport' => true ] ]);
+            $fp = @stream_socket_client("tcp://{$host}:{$port}", $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT, $ctx);
+            if (is_resource($fp)) { fclose($fp); return true; }
+            return false;
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**

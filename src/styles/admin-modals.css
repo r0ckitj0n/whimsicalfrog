@@ -1,3 +1,65 @@
+/* Hard override for Orders overlay centering/stacking */
+#orderModal.admin-modal-overlay.over-header.show {
+  padding-top: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: var(--z-overlay-topmost, 1600) !important;
+}
+
+/* Dedicated admin arrow classes to bypass legacy selectors */
+.admin-modal-overlay .wf-nav-arrow {
+  position: fixed !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: var(--brand-primary, #87ac3a);
+  border: 3px solid var(--brand-primary, #87ac3a);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  text-decoration: none;
+  z-index: 2147483647 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.admin-modal-overlay .wf-nav-left { left: 14px !important; right: auto !important; }
+.admin-modal-overlay .wf-nav-right { right: 14px !important; left: auto !important; }
+.admin-modal-overlay .wf-nav-arrow svg { width: 32px; height: 32px; stroke: currentColor; }
+@media (max-width: 640px) { .admin-modal-overlay .wf-nav-arrow { width: 52px; height: 52px; } .admin-modal-overlay .wf-nav-arrow svg { width: 26px; height: 26px; } }
+/* Global z-index tokens for overlays/panels (source-level, Vite-managed) */
+:root {
+  --z-admin-nav: 500;
+  --z-site-header: var(--z-index-page-header, 300);
+  --z-admin-overlay: 1400; /* base overlay above global overlays */
+  --z-admin-overlay-content: 1410; /* panel above its overlay */
+  --wf-admin-overlay-z: var(--z-admin-overlay, 1400);
+  --admin-modal-body-padding-y: 0.25rem;
+  --admin-modal-body-padding-x: 0.375rem;
+  --admin-modal-section-padding: 0.25rem;
+  --admin-modal-section-gap: 0.375rem;
+  --admin-modal-section-radius: 0.25rem;
+  --admin-modal-section-border: transparent;
+  --admin-modal-section-bg: transparent;
+  --admin-modal-panel-padding: 0.25rem;
+}
+
+/* Generic site overlays: ensure they also stack above header/nav and support over-header centering */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-admin-overlay, 1400);
+}
+.modal-overlay.topmost { z-index: var(--z-overlay-topmost, 1600) !important; }
+.modal-overlay.over-header.show {
+  padding-top: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: var(--z-admin-overlay, 1400) !important;
+}
 /* Admin modal base styles (Vite-managed)
    Keeps modals consistent without relying on inline utilities only. */
 
@@ -14,12 +76,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 0.5rem;
   opacity: 1;
   visibility: visible;
   transition: all 0.3s ease;
-  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100));
+  /* Ensure overlay is always above site header and any sticky elements */
+  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 200000));
 }
+
+/* Orders/items overlays: minimize outer padding further */
+.admin-modal-overlay.order-modal { padding: 0.25rem !important; }
+/* Inventory modal overlay: match compact padding */
+#inventoryModalOuter { padding: 0.25rem !important; }
 
 .admin-modal-overlay.hidden {
   opacity: 0;
@@ -34,30 +102,188 @@
   pointer-events: auto;
 }
 
-.admin-modal-overlay.topmost {
-  z-index: var(--z-detailed-item-modal, 100300) !important;
+.admin-modal-overlay.topmost { z-index: var(--z-overlay-topmost, 1600) !important; }
+
+/* Opt-out from global header offset: keep overlay centered and untampered */
+.admin-modal-overlay.over-header.show {
+  padding-top: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 200000)) !important;
 }
 
 /* Modal panel defaults. Utilities can augment on top. */
+
 .admin-modal {
   background: #fff;
-  width: 90% !important;
-  max-width: none !important;
+  width: clamp(720px, 90vw, 1200px) !important;
+  max-width: 95vw !important;
   color: #111827; /* gray-900 */
   border-radius: 0.5rem; /* rounded-lg */
   box-shadow: 0 20px 40px rgba(0,0,0,.25);
-  max-height: 90vh;
-  overflow: hidden; /* keep header/footer fixed */
-  position: relative; /* ensure new stacking context */
-  z-index: var(--z-admin-overlay-content,  10101);
+  /* Avoid forcing full viewport height to prevent double scrollbars */
+  max-height: min(90vh, 980px);
+  height: auto;
+  overflow: hidden;
+  position: relative;
+  z-index: var(--z-admin-overlay-content, 1410);
   display: flex;
   flex-direction: column;
 }
 
+/* Defeat legacy/global .admin-modal-content padding (1.5rem) with compact panel padding */
+.admin-modal.admin-modal-content {
+  padding: var(--admin-modal-panel-padding, 0.25rem) !important;
+}
+
 .admin-modal .modal-body {
   flex: 1 1 auto;
-  min-height: 0; /* allow flex item to shrink so overflow can occur */
+  min-height: 0;
   overflow-y: auto;
+  /* Use explicit sides with !important to defeat legacy `.modal-body { padding-left/right: ... }` */
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  margin-bottom: 0 !important; /* defeat legacy margin */
+}
+
+.admin-modal .modal-header {
+  padding: var(--admin-modal-body-padding-y, 0.25rem) var(--admin-modal-body-padding-x, 0.375rem);
+  gap: 0.5rem;
+}
+
+/* Inventory modal: header/body compact spacing even without .admin-modal wrapper */
+#inventoryModalOuter .modal-header {
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  gap: 0.5rem !important;
+}
+
+.admin-modal .modal-header > h1,
+.admin-modal .modal-header > h2,
+.admin-modal .modal-header > h3,
+.admin-modal .modal-header > h4 {
+  margin: 0;
+}
+
+.admin-modal .modal-section {
+  background: var(--admin-modal-section-bg, transparent);
+  border: 1px solid var(--admin-modal-section-border, transparent);
+  border-radius: var(--admin-modal-section-radius, 0.25rem);
+  padding: var(--admin-modal-section-padding, 0.25rem) !important;
+  margin-bottom: var(--admin-modal-section-gap, 0.375rem);
+}
+
+.admin-modal .modal-section:last-of-type { margin-bottom: 0 !important; }
+#inventoryModalOuter .modal-section:last-of-type { margin-bottom: 0 !important; }
+
+/* Inventory modal: mirror compact section styles without relying on `.admin-modal` ancestor */
+#inventoryModalOuter .modal-section {
+  background: var(--admin-modal-section-bg, transparent);
+  border: 1px solid var(--admin-modal-section-border, transparent);
+  border-radius: var(--admin-modal-section-radius, 0.25rem);
+  padding: var(--admin-modal-section-padding, 0.25rem) !important;
+  margin-bottom: var(--admin-modal-section-gap, 0.375rem);
+}
+
+/* Remove extra margin injected by legacy `.admin-modal-content { margin: ... }` */
+.admin-modal-overlay .admin-modal-content { margin: 0 !important; }
+
+.admin-modal .modal-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Inventory modal: enforce compact body paddings */
+#inventoryModalOuter .modal-body {
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+}
+
+/* Break ancestor stacking contexts when any admin modal overlay is present */
+html:has(.admin-modal-overlay:not(.hidden)) .site-wrapper,
+html:has(.admin-modal-overlay:not(.hidden)) .page-content,
+html:has(.admin-modal-overlay:not(.hidden)) .content,
+html:has(.admin-modal-overlay:not(.hidden)) #admin-section-content,
+html:has(.admin-modal-overlay:not(.hidden)) .admin-content-container {
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+  will-change: auto !important;
+}
+
+/* Also neutralize header/nav stacking contexts while overlay is visible */
+html:has(.admin-modal-overlay.show) .site-header,
+html:has(.admin-modal-overlay.show) .universal-page-header,
+html:has(.admin-modal-overlay.show) .header-container,
+html:has(.admin-modal-overlay.show) .admin-tab-navigation {
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+  isolation: auto !important;
+  z-index: var(--z-site-header, 1000) !important; /* keep headers below overlay */
+}
+
+/* Prevent transformed ancestors from creating a containing block for fixed arrows */
+.admin-modal-overlay,
+.admin-modal-overlay.show,
+.admin-modal-overlay .admin-modal,
+.customer-modal,
+.order-modal,
+.admin-modal {
+  transform: none !important;
+  overflow: visible !important;
+}
+
+/* Modal navigation arrows (cartoonish, brand-colored) */
+.nav-arrow {
+  position: fixed !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: var(--brand-primary, #87ac3a);
+  border: 3px solid var(--brand-primary, #87ac3a);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+  /* Ensure absolutely topmost above any overlay variants */
+  z-index: 2147483647 !important;
+  pointer-events: auto;
+}
+.nav-arrow:hover { transform: translateY(-50%) scale(1.05); box-shadow: 0 10px 24px rgba(0,0,0,0.2); background: #fffef5; }
+.nav-arrow svg { width: 32px; height: 32px; stroke: currentColor; }
+.nav-arrow-left { left: 10px !important; right: auto !important; }
+.nav-arrow-right { right: 10px !important; left: auto !important; }
+@media (max-width: 640px) { .nav-arrow { width: 52px; height: 52px; } .nav-arrow svg { width: 26px; height: 26px; } }
+
+/* Ensure global/mobile styles cannot hide admin modal arrows */
+@media (max-width: 768px) {
+  .admin-modal-overlay .nav-arrow { display: inline-flex !important; visibility: visible !important; opacity: 1 !important; }
+}
+
+/* Hard guard: in admin overlays, never hide, fade, or flip nav arrows via legacy CSS */
+.admin-modal-overlay .nav-arrow,
+.admin-modal-overlay .nav-arrow-left,
+.admin-modal-overlay .nav-arrow-right {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Lock page scroll whenever any admin modal overlay is visible */
+html:has(.admin-modal-overlay.show),
+body:has(.admin-modal-overlay.show) {
+  overflow: hidden !important;
 }
 
 /* Auto-size modal utility: makes modal fit its content with reasonable viewport caps */
@@ -141,6 +367,7 @@
 }
 
 /* Prevent layout shift on overlay show/hide */
+/* Lock the page underlay without creating extra scrollbars */
 html.modal-open { overflow: hidden !important; }
 body.modal-open { overflow: hidden !important; }
 body.wf-no-scroll { overflow: hidden !important; }
@@ -194,11 +421,11 @@ body.wf-no-scroll { overflow: hidden !important; }
 /* Receipt modal specific styles */
 #receiptModal.hidden { display: none; }
 #receiptModal .modal-content {
-  /* Ensure the receipt panel never exceeds the viewport */
-  width: auto !important;
-  max-width: min(95vw, 800px) !important;
-  height: auto !important;
-  max-height: 90vh !important;
+  /* Grow to 80% of viewport for better visibility */
+  width: 80vw !important;
+  max-width: 80vw !important;
+  height: 80vh !important;
+  max-height: 80vh !important;
   display: flex;
   flex-direction: column;
   overflow: hidden; /* header/footer fixed; body scrolls */
@@ -268,6 +495,104 @@ body.wf-no-scroll { overflow: hidden !important; }
   padding-right: 0; /* Let scrollbar be flush with modal edge */
 }
 
+/* Shopping Cart modal: ensure long forms remain scrollable */
+#shoppingCartModal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0;
+}
+
+#shoppingCartModal .modal-body::-webkit-scrollbar {
+  width: 17px;
+}
+#shoppingCartModal .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+#shoppingCartModal .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border: 1px solid #a6a6a6;
+}
+#shoppingCartModal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+#shoppingCartModal .modal-body {
+  scrollbar-width: auto;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+#inventoryModalOuter.admin-modal-overlay {
+  align-items: stretch !important;
+  justify-content: center !important;
+  padding: 0.25rem !important;
+}
+
+#inventoryModalOuter.admin-modal-overlay.show {
+  overflow: hidden;
+}
+
+#inventoryModalOuter .admin-modal {
+  margin: 0 !important;
+  width: clamp(760px, 92vw, 1200px) !important;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: var(--z-admin-overlay-content, 200010) !important;
+}
+
+#inventoryModalOuter .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: 0 !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  max-height: calc(90vh - 140px);
+  scrollbar-width: auto;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Remove panel bottom padding for inventory modal to let content reach edge */
+#inventoryModalOuter .admin-modal.admin-modal-content {
+  padding-bottom: 0 !important;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar {
+  width: 17px;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border: 1px solid #a6a6a6;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+#inventoryModalOuter .wf-modal-actions {
+  background: #ffffff;
+  padding-bottom: 0.25rem;
+  padding-top: 0.25rem;
+}
+
+#inventoryModalOuter .wf-modal-actions:not(:has(.wf-modal-button, .btn, button)) {
+  display: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+#inventoryModalOuter .wf-modal-form {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 #businessInfoModal .modal-body::-webkit-scrollbar {
   width: 17px; /* Standard Windows scrollbar width */
 }
@@ -324,13 +649,14 @@ body.wf-no-scroll { overflow: hidden !important; }
 }
 
 /* Order modal specific styling - auto-size to content */
+.order-modal .admin-modal,
 .order-modal .modal-content {
-  width: auto !important;
-  min-width: 800px;
-  max-width: 90vw;
+  width: clamp(760px, 88vw, 1200px) !important;
+  min-width: 720px;
+  max-width: 95vw;
   height: auto !important;
-  min-height: 400px;
-  max-height: 90vh;
+  min-height: 360px;
+  max-height: 86vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -339,7 +665,6 @@ body.wf-no-scroll { overflow: hidden !important; }
 .order-modal .modal-body {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
 }
 
 /* Dashboard Configuration modal: auto-size to content with viewport caps */
@@ -405,21 +730,22 @@ body.wf-no-scroll { overflow: hidden !important; }
   padding: 0.5rem 0.75rem;
 }
 
-/* Orders page: add a fixed 80px top offset so the view/edit modal appears below padding */
-body[data-page='admin/orders'] #orderModal {
-  padding-top: 80px !important;
-  align-items: flex-start !important; /* ensure padding space is respected */
-}
+/* Remove top offset hack; center overlay vertically to prevent blank space below */
+body[data-page='admin/orders'] #orderModal { padding-top: 0 !important; align-items: center !important; }
 
 .order-modal .order-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  min-height: 300px;
+  gap: 1rem;
+  align-items: flex-start;
 }
 
 .order-modal .form-section {
   margin-bottom: 1.5rem;
+}
+
+.order-modal .form-section-header {
+  margin-bottom: 0.5rem;
 }
 
 .order-modal .form-section:last-child {
@@ -427,18 +753,15 @@ body[data-page='admin/orders'] #orderModal {
 }
 
 /* Ensure modal grows with content but has reasonable constraints */
-.order-modal .modal-content {
-  resize: both;
-  overflow: auto;
-}
+.order-modal .admin-modal,
+.order-modal .modal-content { resize: none; overflow: hidden; }
 
-/* Style for when modal has a lot of content */
-.order-modal.show {
-  max-height: 95vh;
-}
+/* Overlay should always cover full viewport; content has its own max-height */
+.admin-modal-overlay.order-modal { height: 100vh; height: 100dvh; max-height: none !important; }
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
+  .order-modal .admin-modal,
   .order-modal .modal-content {
     min-width: 600px;
     max-width: 95vw;
@@ -446,11 +769,12 @@ body[data-page='admin/orders'] #orderModal {
 
   .order-modal .order-form-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 }
 
 @media (max-width: 768px) {
+  .order-modal .admin-modal,
   .order-modal .modal-content {
     min-width: 90vw;
     max-width: 95vw;

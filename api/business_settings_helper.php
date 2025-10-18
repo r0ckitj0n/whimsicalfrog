@@ -8,6 +8,23 @@ require_once __DIR__ . '/config.php';
 class BusinessSettings
 {
     private static $cache = [];
+    private static function dbUp(): bool {
+        try {
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $isLocal = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false);
+            if ($isLocal) {
+                $disable = getenv('WF_DB_DEV_DISABLE');
+                if ($disable === '1' || strtolower((string)$disable) === 'true') {
+                    return false;
+                }
+                return \Database::isAvailableQuick(0.6);
+            }
+            // Non-local: assume available
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
 
 
     /**
@@ -15,20 +32,25 @@ class BusinessSettings
      */
     public static function get($key, $default = null)
     {
+        if (!self::dbUp()) {
+            return $default;
+        }
         // Check cache first
         if (isset(self::$cache[$key])) {
             return self::$cache[$key];
         }
 
         try {
-            // Prefer settings from the 'business_info' category when duplicates exist
-            // to align with the single source of truth for company information. If not
-            // found there, prefer 'ecommerce' next, then fall back to the most recent row.
             $result = Database::queryOne(
                 "SELECT setting_value, setting_type, category, updated_at
                  FROM business_settings
                  WHERE setting_key = ?
-                 ORDER BY (category = 'business_info') DESC, (category = 'ecommerce') DESC, updated_at DESC",
+                 ORDER BY
+                   (category = 'business_info') DESC,
+                   (category = 'business') DESC,
+                   (category = 'branding') DESC,
+                   (category = 'ecommerce') DESC,
+                   updated_at DESC",
                 [$key]
             );
 
@@ -51,6 +73,9 @@ class BusinessSettings
      */
     public static function getByCategory($category)
     {
+        if (!self::dbUp()) {
+            return [];
+        }
         try {
             // Order by key then updated_at ASC so the most recent row appears last per key
             // ensuring the final assigned value is the latest
@@ -76,6 +101,9 @@ class BusinessSettings
      */
     public static function getAll()
     {
+        if (!self::dbUp()) {
+            return [];
+        }
         try {
             $results = Database::queryAll("SELECT * FROM business_settings ORDER BY category, display_order");
 
@@ -196,12 +224,28 @@ class BusinessSettings
 
     public static function getPrimaryColor()
     {
-        return self::get('primary_color', '#87ac3a');
+        $explicit = self::get('business_brand_primary', null);
+        if (is_string($explicit) && trim($explicit) !== '') {
+            return trim($explicit);
+        }
+        $legacy = self::get('primary_color', null);
+        if (is_string($legacy) && trim($legacy) !== '') {
+            return trim($legacy);
+        }
+        return '#87ac3a';
     }
 
     public static function getSecondaryColor()
     {
-        return self::get('secondary_color', '#BF5700');
+        $explicit = self::get('business_brand_secondary', null);
+        if (is_string($explicit) && trim($explicit) !== '') {
+            return trim($explicit);
+        }
+        $legacy = self::get('secondary_color', null);
+        if (is_string($legacy) && trim($legacy) !== '') {
+            return trim($legacy);
+        }
+        return '#BF5700';
     }
 
     public static function getPaymentMethods()

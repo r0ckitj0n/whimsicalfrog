@@ -34,7 +34,7 @@
             <span class="wf-label">Password</span>
             <input type="password" name="password" autocomplete="current-password" required class="wf-input" />
           </label>
-          <button type="submit" class="wf-btn wf-btn-primary">Login</button>
+          <button type="submit" class="btn btn-primary">Login</button>
         </form>
       </div>`;
 

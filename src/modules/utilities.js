@@ -149,8 +149,8 @@ class DOMUtils {
                 <h3 class="wf-dialog-title">${this.escapeHtml(title)}</h3>
                 <p class="wf-dialog-message">${this.escapeHtml(message)}</p>
                 <div class="wf-dialog-actions">
-                    <button class="confirm-btn wf-btn wf-btn-primary">Confirm</button>
-                    <button class="cancel-btn wf-btn wf-btn-muted">Cancel</button>
+                    <button class="confirm-btn btn btn-primary">Confirm</button>
+                    <button class="cancel-btn btn btn-secondary">Cancel</button>
                 </div>
             `;
 

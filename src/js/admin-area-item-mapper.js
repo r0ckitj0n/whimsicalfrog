@@ -34,7 +34,8 @@ import { ApiClient } from '../core/api-client.js';
       return data;
     } catch (e) {
       console.error(`[AreaItem] API failed for ${url}:`, e);
-      setMsg(`Network error fetching data from ${url}.`, 'error');
+      const message = e && e.message ? e.message : `Network error fetching data from ${url}.`;
+      setMsg(message, 'error');
       throw e; // escalate so callers can handle uniformly
     }
   }
@@ -136,9 +137,12 @@ import { ApiClient } from '../core/api-client.js';
         fetchJSON(`/api/area_mappings.php?action=get_live_view&room=${encodeURIComponent(room)}`)
       ]);
 
-      state.lastExplicit = (exp && exp.success) ? exp.mappings : [];
-      state.lastDerived = (live && live.success) ? live.mappings : [];
-      state.lastDerivedCategory = (live && live.success) ? live.category : '';
+      const expPayload = (exp && exp.success) ? (exp.data || exp) : null;
+      const livePayload = (live && live.success) ? (live.data || live) : null;
+
+      state.lastExplicit = Array.isArray(expPayload?.mappings) ? expPayload.mappings : [];
+      state.lastDerived = Array.isArray(livePayload?.mappings) ? livePayload.mappings : [];
+      state.lastDerivedCategory = typeof livePayload?.category === 'string' ? livePayload.category : '';
       if ((!exp || exp.success === false) || (!live || live.success === false)) {
         setMsg('Loaded with limited data. Some endpoints returned no data.', 'error');
       }

@@ -91,9 +91,7 @@
     position: relative;
     overflow: hidden;
     background: transparent;
-
-    /* Use exact aspect ratio */
-    aspect-ratio: 1280 / 896;
+    /* Fill remaining modal body height */
 }
 
 .room-modal-iframe-container {
@@ -101,12 +99,10 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    background-size: contain;
+    background-size: cover; /* fill container; avoid bottom white space */
     background-position: center;
     background-repeat: no-repeat;
-
-    /* Maintain exact aspect ratio */
-    aspect-ratio: 1280 / 896;
+    /* Fill remaining modal body height */
 }
 
 .room-modal-content-wrapper {
@@ -116,21 +112,12 @@
     width: 100%;
     height: 100%;
     z-index: var(--z-content-overlay);
-
-    /* Ensure this also maintains aspect ratio */
-    aspect-ratio: 1280 / 896;
+    /* Match parent container height */
 }
 
-/* Ensure body and html have proper dimensions */
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
+/* Ensure page does not scroll behind the room modal when it is open */
+body.room-modal-open {
     overflow: hidden;
-
-    /* Maintain aspect ratio at root level */
-    aspect-ratio: 1280 / 896;
 }
 
 /* Room Product Icon Styles - Centralized */
@@ -266,7 +253,9 @@ html, body {
     transform: translateY(0);
 }
 
-.hidden {
+/* Scope hidden utility to room modal contexts to avoid global side-effects */
+.room-modal-overlay .hidden,
+.modal-room-page .hidden {
     display: none;
 }
 

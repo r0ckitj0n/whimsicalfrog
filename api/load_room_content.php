@@ -293,7 +293,16 @@ function generateRoomContent($roomNumber, $pdo, $isModal = false, $withPerf = fa
                 <source srcset="<?php echo getImageUrl($it['image_path'], 'items'); ?>" type="image/webp">
                 <img src="<?php echo getImageUrl($it['image_path'], 'items', 'png'); ?>"
                      alt="<?php echo htmlspecialchars($it['name'] ?? ''); ?>"
-                     class="room-product-icon-img">
+                     class="room-product-icon-img"
+                     draggable="false"
+                     data-sku="<?php echo htmlspecialchars($it['sku']); ?>"
+                     data-name="<?php echo htmlspecialchars($it['name']); ?>"
+                     data-price="<?php echo htmlspecialchars($it['retailPrice'] ?? $it['price'] ?? '0', ENT_QUOTES); ?>"
+                     data-stock-level="<?php echo htmlspecialchars((string)($it['stockLevel'] ?? $it['stock'] ?? '0')); ?>"
+                     data-category="<?php echo htmlspecialchars($it['category'] ?? ''); ?>"
+                     data-image="<?php echo getImageUrl($it['image_path'], 'items', 'png'); ?>"
+                     data-description="<?php echo htmlspecialchars($it['description'] ?? ''); ?>"
+                     data-marketing-label="<?php echo htmlspecialchars($it['marketingLabel'] ?? ''); ?>">
               </picture>
             </div>
           <?php endforeach; ?>

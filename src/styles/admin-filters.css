@@ -23,6 +23,9 @@ body[data-page^='admin'] {
   --wf-admin-filter-height: var(--wf-admin-filter-height, 44px);
 }
 
+/* Standard bottom gap for list pages */
+/* (Cleanup) Removed bottom-gap token */
+
 /* Do not lock root scroll; confine scrolling to the list container */
 /* Lock page scroll for these three pages so only the list owns scrolling */
 html:has(body[data-page='admin/customers']),
@@ -88,7 +91,15 @@ body[data-page='admin/inventory'] .admin-table-section {
   width: 100%;
   position: relative; /* establish stacking context for sticky header */
   background: #fff;
+  border-radius: 8px;
 }
+
+/* (Cleanup) Removed scroller height reduction */
+
+/* (Cleanup) Removed extra bottom padding */
+
+/* (Cleanup) Removed spacer ::after */
+
 
 /* Sticky table header inside the scrolling list */
 body[data-page='admin/customers'] .admin-table-section thead th,
@@ -101,6 +112,12 @@ body[data-page='admin/inventory'] .admin-table-section thead td {
   top: 0 !important; /* stick to top of the scroller (below filters) */
   z-index: 50 !important;
   background: #fff !important; /* solid to cover rows under */
+}
+
+/* Inventory: ensure header text is readable on white sticky background */
+body[data-page='admin/inventory'] .admin-table-section thead th,
+body[data-page='admin/inventory'] .admin-table-section thead td {
+  color: #374151 !important; /* gray-700 */
 }
 
 /* Also pin the thead itself for Safari/table cross-browser reliability */

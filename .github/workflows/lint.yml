@@ -33,3 +33,6 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
+
+      - name: Guard - No Inline Fallbacks
+        run: node scripts/guards/no-inline-fallbacks.mjs

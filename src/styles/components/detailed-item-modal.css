@@ -396,7 +396,38 @@
     padding-top: 1.25rem !important;   /* ~py-5 */
     padding-bottom: 1.25rem !important;
     font-size: 1.25rem !important;     /* ~text-xl */
-    line-height: 1.2 !important;
+}
+
+/* Brand primary button semantics for detailed item modal */
+.detailed-item-modal .wf-add-to-cart-btn,
+.detailed-item-modal .btn--detailed-add-to-cart,
+.detailed-item-modal .room-modal-button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    padding: 10px 16px !important;
+    border-radius: 10px !important;
+    border: 1px solid transparent !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    background-color: var(--brand-primary, #87ac3a) !important;
+    color: #ffffff !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease, filter 0.2s ease, opacity 0.2s ease !important;
+}
+.detailed-item-modal .wf-add-to-cart-btn:hover,
+.detailed-item-modal .btn--detailed-add-to-cart:hover,
+.detailed-item-modal .room-modal-button:hover {
+    background-color: var(--brand-secondary, #BF5700) !important;
+    border-color: var(--brand-secondary, #BF5700) !important;
+    color: #ffffff !important;
+}
+.detailed-item-modal .wf-add-to-cart-btn:focus-visible,
+.detailed-item-modal .btn--detailed-add-to-cart:focus-visible,
+.detailed-item-modal .room-modal-button:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--brand-secondary, #BF5700) 70%, white 30%) !important;
+    outline-offset: 2px !important;
 }
 
 /* ==============================================

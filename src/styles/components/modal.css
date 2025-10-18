@@ -9,7 +9,7 @@
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    z-index: var(--z-global-popup, 2147483600) !important;
+    z-index: var(--z-overlay-topmost, 1600) !important;
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;

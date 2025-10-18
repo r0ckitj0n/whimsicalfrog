@@ -31,12 +31,27 @@ DEPLOY_DIR=$(mktemp -d)
 echo "Temporary directory: $DEPLOY_DIR"
 
 # Copy core files (excluding development-only files)
-rsync -av --exclude='logs/' --exclude='database/' --exclude='.env' \
-    --exclude='setup-dev-database.php' --exclude='database-config-dev.php' \
-    --exclude='deploy.sh' --exclude='start-replit.sh' --exclude='replit.md' \
-    --exclude='node_modules/' --exclude='backups/' --exclude='tests/' \
-    --exclude='.git/' --exclude='.replit' \
-    ./ "$DEPLOY_DIR/"
+RSYNC_EXCLUDES=(
+    "--exclude=logs/"
+    "--exclude=database/"
+    "--exclude=.env"
+    "--exclude=setup-dev-database.php"
+    "--exclude=database-config-dev.php"
+    "--exclude=deploy.sh"
+    "--exclude=start-replit.sh"
+    "--exclude=replit.md"
+    "--exclude=node_modules/"
+    "--exclude=backups/"
+    "--exclude=tests/"
+    "--exclude=.git/"
+    "--exclude=.replit"
+)
+
+if [[ "${WF_DEPLOY_EXCLUDE_TMP:-1}" != "0" ]]; then
+    RSYNC_EXCLUDES+=("--exclude=tmp/" "--exclude=/tmp/")
+fi
+
+rsync -av "${RSYNC_EXCLUDES[@]}" ./ "$DEPLOY_DIR/"
 
 echo "Files prepared for deployment:"
 find "$DEPLOY_DIR" -type f | head -10

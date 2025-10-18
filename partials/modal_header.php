@@ -11,7 +11,38 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Section</title>
-    <?php vite('src/js/app.js'); ?>
+    <?php
+    // Always try the Vite dev server first (WF_VITE_ORIGIN > hot file > default localhost:5176)
+    $origin = getenv('WF_VITE_ORIGIN');
+    if (!$origin && file_exists(dirname(__DIR__) . '/hot')) {
+        $origin = trim((string)@file_get_contents(dirname(__DIR__) . '/hot'));
+    }
+    if (!$origin) { $origin = 'http://localhost:5176'; }
+    try {
+        $parts = @parse_url($origin);
+        if (is_array($parts) && ($parts['host'] ?? '') === '127.0.0.1') {
+            $origin = ($parts['scheme'] ?? 'http') . '://localhost' . (isset($parts['port']) ? (':' . $parts['port']) : '') . ($parts['path'] ?? '');
+        }
+    } catch (Throwable $e) { /* ignore */ }
+    $probe = function(string $o){
+        $u = rtrim($o,'/') . '/@vite/client';
+        $ctx = stream_context_create(['http'=>['timeout'=>0.6,'ignore_errors'=>true],'https'=>['timeout'=>0.6,'ignore_errors'=>true]]);
+        return @file_get_contents($u, false, $ctx) !== false;
+    };
+    if ($probe($origin)) {
+        $o = rtrim($origin,'/');
+        // Load HMR client and entry
+        echo '<script crossorigin="anonymous" type="module" src="' . $o . '/@vite/client"></script>' . "\n";
+        echo '<script crossorigin="anonymous" type="module" src="' . $o . '/src/entries/app.js"></script>' . "\n";
+        // Also include CSS directly so iframe styles are immediate
+        echo '<link rel="stylesheet" href="' . $o . '/src/styles/main.css">' . "\n";
+        echo '<link rel="stylesheet" href="' . $o . '/src/styles/site-base.css">' . "\n";
+        echo '<link rel="stylesheet" href="' . $o . '/src/styles/admin-modals.css">' . "\n";
+    } else {
+        // Fall back to production manifest bundles
+        echo vite('js/app.js');
+    }
+    ?>
     <?php
     // Inject server-side branding CSS variables just like the main header
     try {

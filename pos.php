@@ -90,6 +90,23 @@ $businessName = 'WhimsicalFrog';
         // Backward compatibility: some templates still call vite().
         echo vite('src/entries/pos.js');
     }
+    // Inject brand CSS variables (same approach as header) so POS uses Business Settings
+    try {
+        require_once __DIR__ . '/api/business_settings_helper.php';
+        $biz = BusinessSettings::getByCategory('business');
+        $vars = [];
+        $san = function ($v) { return trim((string)$v); };
+        if (!empty($biz['business_brand_primary']))   { $vars[] = "--brand-primary: "   . $san($biz['business_brand_primary'])   . ';'; }
+        if (!empty($biz['business_brand_secondary'])) { $vars[] = "--brand-secondary: " . $san($biz['business_brand_secondary']) . ';'; }
+        if (!empty($biz['business_brand_accent']))    { $vars[] = "--brand-accent: "    . $san($biz['business_brand_accent'])    . ';'; }
+        if (!empty($biz['business_brand_background'])){ $vars[] = "--brand-bg: "        . $san($biz['business_brand_background']). ';'; }
+        if (!empty($biz['business_brand_text']))      { $vars[] = "--brand-text: "      . $san($biz['business_brand_text'])      . ';'; }
+        if (!empty($biz['business_brand_font_primary']))   { $vars[] = "--brand-font-primary: "   . $san($biz['business_brand_font_primary'])   . ';'; }
+        if (!empty($biz['business_brand_font_secondary'])) { $vars[] = "--brand-font-secondary: " . $san($biz['business_brand_font_secondary']) . ';'; }
+        if (!empty($vars)) {
+            echo "<style id=\"wf-branding-vars-pos\">:root\n{" . implode("\n", $vars) . "\n}</style>\n";
+        }
+    } catch (Throwable $e) { /* noop */ }
 ?>
 </head>
 <body class="pos-body">
@@ -97,8 +114,8 @@ $businessName = 'WhimsicalFrog';
         <div class="pos-header">
             <h1 class="pos-title">🛒 <?= htmlspecialchars($businessName) ?> POS</h1>
             <div class="pos-header-buttons">
-                <a href="/sections/admin_router.php?section=dashboard" class="pos-btn">← Back to Admin</a>
-                <button class="pos-btn" data-action="toggle-fullscreen">📺 Fullscreen</button>
+                <a href="/sections/admin_router.php?section=dashboard" class="btn btn-secondary btn-sm">← Back to Admin</a>
+                <button class="btn btn-secondary btn-sm" data-action="toggle-fullscreen">📺 Fullscreen</button>
             </div>
         </div>
         
@@ -185,8 +202,8 @@ $businessName = 'WhimsicalFrog';
             </div>
             
             <div class="pos-options-actions">
-                <button data-action="cancel-options" class="pos-options-btn-cancel">Cancel</button>
-                <button data-action="confirm-options" class="pos-options-btn-confirm">Add to Cart</button>
+                <button data-action="cancel-options" class="btn btn-secondary btn-sm">Cancel</button>
+                <button data-action="confirm-options" class="btn btn-primary btn-sm">Add to Cart</button>
             </div>
         </div>
     </div>
@@ -202,8 +219,8 @@ $businessName = 'WhimsicalFrog';
                 <p id="wfModalMessage">Complete this sale?</p>
             </div>
             <div class="wf-modal-footer">
-                <button class="wf-btn wf-btn-secondary" data-action="close-wf-modal">Cancel</button>
-                <button class="wf-btn wf-btn-primary" data-action="confirm-wf-modal">Complete Sale</button>
+                <button class="btn btn-secondary" data-action="close-wf-modal">Cancel</button>
+                <button class="btn btn-primary" data-action="confirm-wf-modal">Complete Sale</button>
             </div>
         </div>
     </div>

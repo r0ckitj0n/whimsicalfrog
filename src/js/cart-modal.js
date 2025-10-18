@@ -1,6 +1,8 @@
 // Global Cart Modal Overlay
 // Creates a site-wide modal for the cart and wires header cart link to open it
 import '../styles/cart-modal.css';
+import { ApiClient } from '../core/api-client.js';
+import { normalizeAssetUrl, attachStrictImageGuards, removeBrokenImage } from '../core/asset-utils.js';
 
 function initCartModal() {
   try {
@@ -10,11 +12,15 @@ function initCartModal() {
     const state = {
       overlay: null,
       container: null,
+      layoutHost: null,
       itemsEl: null,
+      upsellWrap: null,
+      upsellList: null,
       keydownHandler: null,
       lockDepth: 0,
       prevHtmlOverflow: '',
-      prevBodyOverflow: ''
+      prevBodyOverflow: '',
+      resizeBound: false,
     };
 
     function createOverlay() {
@@ -35,7 +41,7 @@ function initCartModal() {
 
       // Inner content (cart-specific header classes to avoid room-modal overrides)
       modal.innerHTML = `
-        <div class="bg-white rounded-lg shadow-xl overflow-hidden w-full max-w-3xl max-h-[90vh] flex flex-col">
+        <div class="bg-white rounded-lg shadow-xl w-full modal-shell">
           <div class="flex-shrink-0 bg-white border-b border-gray-200 cart-header">
             <div class="cart-modal-header-bar">
               <h1 class="cart-modal-title">Shopping Cart</h1>
@@ -47,13 +53,13 @@ function initCartModal() {
               </button>
             </div>
           </div>
-          <div id="cartModalItems" class="flex-1 overflow-y-auto cart_column_layout cart_column_direction cart-scrollbar">
+          <div id="cartModalItems" class="modal-body flex-1 overflow-y-auto cart_column_layout cart_column_direction cart-scrollbar">
             <div class="p-6 text-center text-gray-500">Loading cart...</div>
-          </div>
-          <div id="cartUpsells" class="border-t border-gray-200 hidden">
-            <div class="p-4">
-              <div class="text-sm font-semibold mb-3">You may also like</div>
-              <div id="cartUpsellsList" class="grid grid-cols-2 gap-3"></div>
+            <div id="cartUpsells" class="border-t border-gray-200 hidden">
+              <div class="p-4">
+                <div class="cart-upsell-heading">You may also like</div>
+                <div id="cartUpsellsList" class="cart-upsell-track"></div>
+              </div>
             </div>
           </div>
           <div id="cartModalFooter" class="cart-modal-footer"></div>
@@ -65,7 +71,10 @@ function initCartModal() {
 
       state.overlay = overlay;
       state.container = modal;
+      try { state.layoutHost = modal.querySelector(':scope > div'); } catch(_) { state.layoutHost = null; }
       state.itemsEl = overlay.querySelector('#cartModalItems');
+      state.upsellWrap = overlay.querySelector('#cartUpsells');
+      state.upsellList = overlay.querySelector('#cartUpsellsList');
 
       // Let clicks inside the modal bubble so global delegated handlers (e.g., remove item) work.
       // Underlying page is already shielded by the overlay covering the viewport.
@@ -289,6 +298,8 @@ function initCartModal() {
           state.overlay = null;
           state.container = null;
           state.itemsEl = null;
+          state.upsellWrap = null;
+          state.upsellList = null;
           // Recreate immediately, then open after a short delay so CSS/classes settle
           createOverlay();
           setTimeout(() => {
@@ -314,6 +325,44 @@ function initCartModal() {
 
     // Initialize overlay immediately so it is present for z-index stacking and quick open
     createOverlay();
+
+    const UPSSELL_CACHE_TTL_MS = 60 * 1000;
+    const upsellApiCache = new Map();
+    let lastUpsellMetadata = null;
+
+    function makeCacheKey(skus, limit){
+      try {
+        const ordered = Array.isArray(skus) ? Array.from(new Set(skus.map(s => String(s || '').toUpperCase()).filter(Boolean))).sort() : [];
+        return ordered.join('|') + '::' + (limit || 0);
+      } catch (_) {
+        return String(limit || 0);
+      }
+    }
+
+    async function fetchUpsellsFromApi(skus, limit = 6){
+      try {
+        const key = makeCacheKey(skus, limit);
+        if (key && upsellApiCache.has(key)) {
+          const cached = upsellApiCache.get(key);
+          if (cached && (Date.now() - cached.ts) < UPSSELL_CACHE_TTL_MS) {
+            return cached.items;
+          }
+        }
+        const payload = await ApiClient.post('cart_upsells.php', {
+          skus: Array.isArray(skus) ? skus : [],
+          limit: limit > 0 ? limit : 6,
+        });
+        const items = (payload && payload.data && Array.isArray(payload.data.upsells)) ? payload.data.upsells : [];
+        lastUpsellMetadata = (payload && payload.data && payload.data.metadata) ? payload.data.metadata : null;
+        if (key) {
+          upsellApiCache.set(key, { ts: Date.now(), items });
+        }
+        return items;
+      } catch (err) {
+        console.warn('[CartModal] Upsell API failed', err);
+        return [];
+      }
+    }
 
     function localResolveUpsells(skus){
       try {
@@ -345,66 +394,204 @@ function initCartModal() {
       } catch(_) { return []; }
     }
 
+    function metadataFallbackUpsells(){
+      try {
+        const meta = lastUpsellMetadata || {};
+        const seen = new Set();
+        const collected = [];
+        const pushSku = (sku) => {
+          const normalized = String(sku || '').toUpperCase();
+          if (!normalized || seen.has(normalized)) return;
+          seen.add(normalized);
+          const match = (window.__WF_UPSELL_RULES && window.__WF_UPSELL_RULES.products && window.__WF_UPSELL_RULES.products[normalized]) || null;
+          if (match) {
+            collected.push({
+              sku: normalized,
+              name: match.name || normalized,
+              price: Number(match.price || match.retailPrice || 0) || 0,
+              image: match.image || match.thumbnail || ''
+            });
+            return;
+          }
+          collected.push({ sku: normalized, name: normalized, price: 0, image: '' });
+        };
+        if (Array.isArray(meta.category_leaders)) {
+          meta.category_leaders.slice(0, 3).forEach(pushSku);
+        }
+        if (Array.isArray(meta.category_secondaries)) {
+          meta.category_secondaries.slice(0, 2).forEach(pushSku);
+        }
+        if (meta.site_top) pushSku(meta.site_top);
+        if (meta.site_second) pushSku(meta.site_second);
+        return collected;
+      } catch(_) {
+        return [];
+      }
+    }
+
     function maybeRenderUpsells(){
       try {
         const show = !!window.__WF_CART_SHOW_UPSELLS;
-        const wrap = state.overlay && state.overlay.querySelector('#cartUpsells');
-        const list = state.overlay && state.overlay.querySelector('#cartUpsellsList');
+        const strictNoFallbacks = (typeof window.__WF_STRICT_NO_FALLBACKS === 'boolean') ? window.__WF_STRICT_NO_FALLBACKS : true;
+        const wrap = state.upsellWrap;
+        const list = state.upsellList;
         if (!wrap || !list) return;
-        if (!show) { wrap.classList.add('hidden'); list.innerHTML=''; return; }
+
+        const stopScrollReveal = (opts = {}) => {
+          const { reset = false } = opts;
+          try {
+            if (wrap._revealHandler && wrap._revealHost) {
+              wrap._revealHost.removeEventListener('scroll', wrap._revealHandler);
+            }
+          } catch(_) {}
+          delete wrap._revealHandler;
+          delete wrap._revealHost;
+          if (reset) {
+            delete wrap.dataset.revealed;
+          }
+        };
+
+        const ensureAttachedToScrollHost = () => {
+          try {
+            const itemsHost = state.itemsEl;
+            if (itemsHost && !itemsHost.contains(wrap)) {
+              itemsHost.appendChild(wrap);
+            }
+          } catch(_) {}
+        };
+
+        const revealUpsellsNow = () => {
+          ensureAttachedToScrollHost();
+          wrap.classList.remove('hidden');
+          wrap.dataset.revealed = '1';
+          stopScrollReveal();
+        };
+
+        const setupScrollReveal = () => {
+          const host = state.itemsEl;
+          if (!host) {
+            revealUpsellsNow();
+            return;
+          }
+          ensureAttachedToScrollHost();
+          const scrollNeeded = host.scrollHeight > host.clientHeight + 4;
+          if (!scrollNeeded) {
+            revealUpsellsNow();
+            return;
+          }
+          if (wrap.dataset.revealed === '1') {
+            revealUpsellsNow();
+            return;
+          }
+          if (wrap._revealHost && wrap._revealHost !== host) {
+            stopScrollReveal();
+          }
+          if (!wrap._revealHandler) {
+            const handler = () => {
+              try {
+                const nearBottom = (host.scrollTop + host.clientHeight) >= (host.scrollHeight - 12);
+                if (nearBottom) {
+                  revealUpsellsNow();
+                } else if (wrap.dataset.revealed !== '1') {
+                  wrap.classList.add('hidden');
+                }
+              } catch(_) {}
+            };
+            host.addEventListener('scroll', handler, { passive: true });
+            wrap._revealHandler = handler;
+            wrap._revealHost = host;
+          }
+          if (wrap._revealHandler) {
+            wrap._revealHandler();
+          }
+        };
+
+        if (!show) {
+          stopScrollReveal({ reset: true });
+          wrap.classList.add('hidden');
+          list.innerHTML='';
+          return;
+        }
+
         const items = (window.WF_Cart && typeof window.WF_Cart.getItems === 'function') ? window.WF_Cart.getItems() : [];
         const skus = Array.isArray(items) ? items.map(i => String(i.sku||'')).filter(Boolean) : [];
-        // If a global provider exists, use it. Otherwise use rules or a simple note.
-        if (typeof window.WF_getUpsells === 'function') {
-          Promise.resolve(window.WF_getUpsells(skus)).then((recs) => {
-            const arr = Array.isArray(recs) ? recs : [];
-            if (!arr.length) { wrap.classList.add('hidden'); list.innerHTML=''; return; }
-            wrap.classList.remove('hidden');
-            list.innerHTML = arr.slice(0,4).map(r => {
-              const name = (r.name || r.title || r.sku || '').toString();
-              const sku = (r.sku || '').toString();
-              const price = Number(r.price || r.retailPrice || 0) || 0;
-              const img = r.image || r.thumbnail || '';
-              return `
-                <div class="border rounded p-2 flex gap-2 items-center">
-                  ${img ? `<img src="${img}" alt="${name}" class="w-12 h-12 object-cover rounded"/>` : ''}
-                  <div class="flex-1 min-w-0">
-                    <div class="text-sm font-medium truncate">${name}</div>
-                    <div class="text-xs text-brand-secondary">${sku}</div>
-                    <div class="text-sm">$${price.toFixed(2)}</div>
-                  </div>
-                  <button type="button" class="btn btn-xs" data-action="upsell-add" data-sku="${sku}" data-name="${name}" data-price="${price}">Add</button>
-                </div>
-              `;
-            }).join('');
-          }).catch(() => { wrap.classList.add('hidden'); list.innerHTML=''; });
-        } else {
-          const recs = localResolveUpsells(skus);
-          if (recs.length) {
-            wrap.classList.remove('hidden');
-            list.innerHTML = recs.slice(0,4).map(r => {
-              const name = (r.name || r.title || r.sku || '').toString();
-              const sku = (r.sku || '').toString();
-              const price = Number(r.price || r.retailPrice || 0) || 0;
-              const img = r.image || r.thumbnail || '';
-              return `
-                <div class="border rounded p-2 flex gap-2 items-center">
-                  ${img ? `<img src="${img}" alt="${name}" class="w-12 h-12 object-cover rounded"/>` : ''}
-                  <div class="flex-1 min-w-0">
-                    <div class="text-sm font-medium truncate">${name}</div>
-                    <div class="text-xs text-brand-secondary">${sku}</div>
-                    <div class="text-sm">$${price.toFixed(2)}</div>
-                  </div>
-                  <button type="button" class="btn btn-xs" data-action="upsell-add" data-sku="${sku}" data-name="${name}" data-price="${price}">Add</button>
-                </div>
-              `;
-            }).join('');
-          } else {
-            // No provider and no rules; show placeholder informational note only once
-            wrap.classList.remove('hidden');
-            list.innerHTML = `<div class=\"text-sm text-brand-secondary\">Upsell recommendations will appear here when configured.</div>`;
+        const externalProvider = (typeof window.WF_getUpsells === 'function')
+          ? (args) => Promise.resolve(window.WF_getUpsells(args))
+          : (args) => fetchUpsellsFromApi(args, 4);
+
+        const normalizeUpsellItems = (items) => {
+          if (!Array.isArray(items)) return [];
+          return items.map((r) => {
+            if (!r) return null;
+            const image = normalizeAssetUrl(r.image || r.thumbnail || '');
+            if (!image) return null;
+            return {
+              sku: (r.sku || '').toString(),
+              name: (r.name || r.title || r.sku || '').toString(),
+              price: Number(r.price || r.retailPrice || 0) || 0,
+              image
+            };
+          }).filter(Boolean);
+        };
+
+        const renderUpsellList = (normalized) => {
+          if (!normalized.length) {
+            stopScrollReveal({ reset: true });
+            ensureAttachedToScrollHost();
+            wrap.classList.add('hidden');
+            list.innerHTML = '';
+            return false;
           }
-        }
+          attachStrictImageGuards(list, 'img.cart-upsell-thumb');
+          list.innerHTML = normalized.map((r) => `
+            <div class="cart-upsell-entry">
+              <img src="${r.image}" alt="${r.name}" class="cart-upsell-thumb" loading="lazy"/>
+              <div class="cart-upsell-meta">
+                <div class="cart-upsell-name" title="${r.name}">${r.name}</div>
+                <div class="cart-upsell-price">$${r.price.toFixed(2)}</div>
+              </div>
+              <button type="button" class="btn btn-xs" data-action="upsell-add" data-sku="${r.sku}" data-name="${r.name}" data-price="${r.price}">Add</button>
+            </div>
+          `).join('');
+          try {
+            list.querySelectorAll('img.cart-upsell-thumb').forEach((img) => {
+              if (img.complete && (!img.naturalWidth || img.naturalWidth === 0)) {
+                removeBrokenImage(img);
+              } else {
+                img.addEventListener('error', () => removeBrokenImage(img), { once: true });
+              }
+            });
+          } catch(_) {}
+          return true;
+        };
+
+        externalProvider(skus).then((recs) => {
+          let arr = Array.isArray(recs) ? recs : [];
+          if (!arr.length && !strictNoFallbacks) {
+            arr = localResolveUpsells(skus);
+          }
+          if (!arr.length && !strictNoFallbacks) {
+            arr = metadataFallbackUpsells();
+          }
+          const normalized = normalizeUpsellItems(arr);
+          const limited = normalized.slice(0, 4);
+          if (!renderUpsellList(limited)) return;
+          delete wrap.dataset.revealed;
+          setupScrollReveal();
+        }).catch(() => {
+          let fallbackArr = [];
+          if (!strictNoFallbacks) {
+            fallbackArr = localResolveUpsells(skus);
+            if (!fallbackArr.length) {
+              fallbackArr = metadataFallbackUpsells();
+            }
+          }
+          const normalized = normalizeUpsellItems(fallbackArr);
+          const limited = normalized.slice(0, 4);
+          if (!renderUpsellList(limited)) return;
+          delete wrap.dataset.revealed;
+          setupScrollReveal();
+        });
       } catch(_) {}
     }
 

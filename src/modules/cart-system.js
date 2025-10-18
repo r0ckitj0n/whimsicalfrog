@@ -5,6 +5,7 @@
  */
 
 import '../styles/cart-system.css';
+import { normalizeAssetUrl, removeBrokenImage } from '../core/asset-utils.js';
 
 class CartSystem {
     constructor() {
@@ -113,7 +114,7 @@ class CartSystem {
     // Show add to cart notifications
     showAddToCartNotifications(item, addedQuantity, totalQuantity, isNewItem) {
         const itemName = item.name || item.sku || 'Item';
-        const _price = parseFloat(item.price) || 0;
+        const image = normalizeAssetUrl(item.image);
         
         // Main notification
         let message = `${itemName} `;
@@ -124,6 +125,16 @@ class CartSystem {
         }
 
         this.showNotification(message, 'success');
+        if (image) {
+            try {
+                const preview = document.querySelector('.cart-notification img');
+                if (preview) {
+                    preview.src = image;
+                    preview.alt = itemName;
+                    preview.addEventListener('error', () => removeBrokenImage(preview), { once: true });
+                }
+            } catch (_) {}
+        }
         
         // Cart status after delay
         setTimeout(() => {

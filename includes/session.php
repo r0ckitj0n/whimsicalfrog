@@ -32,28 +32,37 @@ class SessionManager
         // Merge custom config
         self::$config = array_merge(self::$config, $config);
 
-        // Prefer project-local sessions directory; fallback to system temp if not writable
+        // Store sessions under /tmp only (best practice), falling back to bare /tmp if needed
         try {
             $chosen = null;
-            $sessDir = dirname(__DIR__) . '/sessions';
-            if (!is_dir($sessDir)) {
-                @mkdir($sessDir, 0777, true);
+            $pathsToTry = [];
+
+            $preferredRoot = '/tmp';
+            if ($preferredRoot !== '') {
+                $preferredRoot = rtrim($preferredRoot, '/');
+                if ($preferredRoot === '') {
+                    $preferredRoot = '/';
+                }
+                if (is_dir($preferredRoot) || @mkdir($preferredRoot, 0777, true)) {
+                    $pathsToTry[] = $preferredRoot . '/whimsicalfrog_sessions';
+                    $pathsToTry[] = $preferredRoot;
+                }
             }
-            @chmod($sessDir, 0777);
-            if (is_dir($sessDir) && is_writable($sessDir)) {
-                $chosen = $sessDir;
-            }
-            if ($chosen === null) {
-                $tmp = rtrim((string)@sys_get_temp_dir(), '/');
-                if ($tmp) {
-                    $alt = $tmp . '/wf_sessions';
-                    if (!is_dir($alt)) {
-                        @mkdir($alt, 0777, true);
-                    }
-                    @chmod($alt, 0777);
-                    if (is_dir($alt) && is_writable($alt)) {
-                        $chosen = $alt;
-                    }
+
+            foreach ($pathsToTry as $candidate) {
+                if (!is_string($candidate) || $candidate === '') {
+                    continue;
+                }
+                $created = false;
+                if (!is_dir($candidate)) {
+                    $created = @mkdir($candidate, 0777, true);
+                }
+                if ($created) {
+                    @chmod($candidate, 0777);
+                }
+                if (is_dir($candidate) && is_writable($candidate)) {
+                    $chosen = $candidate;
+                    break;
                 }
             }
             if ($chosen) {

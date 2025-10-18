@@ -3,6 +3,132 @@ body[data-page^='admin'] #attributesModal .admin-modal {
   width: min(1200px, 98vw) !important;
 }
 
+/* Font Picker modal styles */
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card {
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card:hover {
+  border-color: rgba(59, 130, 246, 0.55);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card.is-selected {
+  border-color: var(--brand-primary, #2563eb);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12);
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card .font-picker-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card .font-picker-detail {
+  font-size: 13px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card .font-picker-sample {
+  font-size: 18px;
+  color: #1f2937;
+  line-height: 1.35;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card .font-picker-stack {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 6px;
+  word-break: break-word;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: inherit;
+  border: 2px solid transparent;
+  pointer-events: none;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card.is-selected::after {
+  border-color: var(--brand-primary, rgba(37, 99, 235, 0.55));
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card[data-category='serif'] .font-picker-sample {
+  font-style: italic;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card[data-category='monospace'] .font-picker-sample {
+  font-family: 'Fira Code', 'Source Code Pro', 'Courier New', monospace;
+  font-size: 15px;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card[data-category='handwriting'] .font-picker-sample {
+  font-size: 19px;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card[data-category='display'] .font-picker-title {
+  letter-spacing: 0.02em;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .font-picker-card.is-hidden {
+  display: none;
+}
+
+/* Font preview labels next to hidden inputs */
+body[data-page='admin/settings'] .font-preview-label {
+  background: rgba(241, 245, 249, 0.9);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  min-height: 30px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+body[data-page='admin/settings'] .font-preview-label::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #64748b;
+  opacity: 0.55;
+}
+
+body[data-page='admin/settings'] .font-preview-label--primary::before {
+  background: var(--brand-primary, #2563eb);
+}
+
+body[data-page='admin/settings'] .font-preview-label--secondary::before {
+  background: var(--brand-secondary, #bf5700);
+}
+
+body[data-page='admin/settings'] .font-preview-label--primary {
+  font-family: var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);
+}
+
+body[data-page='admin/settings'] .font-preview-label--secondary {
+  font-family: var(--brand-font-secondary, 'Merriweather', Georgia, serif);
+}
+
 /* Email History Drawer (CSS-managed animation + overlay) */
 body[data-page='admin/settings'] .email-drawer {
   position: absolute;
@@ -120,8 +246,15 @@ body[data-page^='admin'] .admin-modal .admin-modal-close:focus {
 }
 
 /* Settings page: limit root overflow to prevent horizontal scroll artifacts */
-body[data-page='admin/settings'] { overflow-x: hidden !important; }
-html:has(body[data-page='admin/settings']) { overflow-x: clip !important; height: 100% !important; }
+body[data-page='admin/settings'] {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+}
+html:has(body[data-page='admin/settings']) {
+  overflow-x: clip !important;
+  overflow-y: hidden !important;
+  height: 100% !important;
+}
 
 /* Settings: ensure the background image fills the entire viewport */
 body[data-page='admin/settings'] {
@@ -210,15 +343,36 @@ body[data-page^='admin'] #admin-section-content {
   padding-bottom: 0 !important;
 }
 
+/* Restore compact side padding for key admin sections */
+body[data-page='admin/dashboard'] #admin-section-content,
+body[data-page='admin/customers'] #admin-section-content {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* (Cleanup) Removed experimental list-page scroller/spacing overrides to avoid side effects */
+
+/* Marketing and Reports wrap content in page-level containers */
+body[data-page='admin/marketing'] .admin-marketing-page,
+body[data-page='admin/reports'] .admin-reports-page {
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+/* (Cleanup) Removed dashboard bottom spacer */
+
 /* Settings route: ensure no extra height is reserved at the bottom */
 body[data-page='admin/settings'] #admin-section-content {
   /* Inner scroller: cards-only scroll */
   overflow-y: auto !important;
   /* Match viewport minus header + tabs + slightly larger gap to fully clear bars */
-  min-height: calc(100dvh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
-  /* Fallback for browsers without dvh support */
-  height: auto !important;
-  min-height: calc(100svh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  height: calc(100vh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  max-height: calc(100vh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  height: calc(100svh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  max-height: calc(100svh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  height: calc(100dvh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
+  max-height: calc(100dvh - (var(--wf-header-height, 64px) + var(--admin-tabs-height, 56px) + 24px)) !important;
   -webkit-overflow-scrolling: touch !important;
   padding-bottom: 0 !important;
   margin-bottom: 0 !important;
@@ -282,10 +436,59 @@ body[data-page^='admin'] #deployManagerModal {
   align-items: center !important;
   z-index: var(--z-detailed-item-modal, 100300) !important;
 }
+body[data-page^='admin'] #businessInfoModal {
+  position: fixed !important;
+  inset: 0 !important;
+  height: 100vh !important;
+  padding-top: 0 !important;
+  align-items: center !important;
+  z-index: var(--z-detailed-item-modal, 100300) !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+body[data-page^='admin'] #businessInfoModal .admin-modal {
+  margin-top: 0 !important;
+}
+body:has(#businessInfoModal:not(.hidden)) .site-header,
+body:has(#businessInfoModal.show) .site-header,
+body:has(#businessInfoModal:not(.hidden)) .universal-page-header,
+body:has(#businessInfoModal.show) .universal-page-header {
+  z-index: var(--z-index-base, 1) !important;
+}
+body.modal-open[data-page^='admin'] .site-header,
+html.modal-open:has(body[data-page^='admin']) .site-header,
+body.modal-open[data-page^='admin'] .universal-page-header,
+html.modal-open:has(body[data-page^='admin']) .universal-page-header {
+  z-index: var(--z-index-base, 1) !important;
+}
 body[data-page^='admin'] #devStatusModal {
   padding-top: 0 !important;
   align-items: center !important;
   z-index: var(--z-detailed-item-modal, 100300) !important;
+}
+
+body[data-page='admin/settings'] #fontPickerModal {
+  z-index: calc(var(--z-detailed-item-modal, 100300) + 20) !important;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .modal-body {
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .modal-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.7);
+  border-radius: 9999px;
+}
+
+body[data-page='admin/settings'] #fontPickerModal .modal-body::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.6);
+  border-radius: 9999px;
 }
 /* Explicit helpers for inventory detailed modal and orders modal on admin routes */
 body[data-page^='admin'] #detailedItemModal:not(.hidden),
@@ -602,6 +805,36 @@ body[data-page^='admin'] #attributesModal .modal-body {
   gap: 12px;
   overflow: hidden; /* ensure inner lists get the scroll, not the body */
 }
+body[data-page^='admin'] #attributesModal .modal-body {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+body[data-page^='admin'] #attributesModal .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 90vh !important;
+  max-height: 90vh !important;
+}
+body[data-page^='admin'] #attributesModal .modal-header {
+  flex: 0 0 auto !important;
+}
+body[data-page^='admin'] #attributesModal .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+body[data-page^='admin'] #attributesModal .modal-body > .wf-admin-embed-frame {
+  flex: 1 1 auto !important;
+  height: 100% !important;
+  width: 100% !important;
+  display: block !important;
+  border: 0 !important;
+}
+body[data-page^='admin'] #attributesModal .wf-admin-embed-frame--tall {
+  height: 100% !important;
+}
 body[data-page^='admin'] #attributesModal .grid {
   flex: 1 1 auto;
   min-height: 0; /* allow inner scroll areas to size */
@@ -620,6 +853,9 @@ body[data-page^='admin'] #attributesModal .attr-list {
   border: 1px solid #e5e7eb; /* subtle boundary */
   border-radius: 6px;
   background: #fff;
+}
+body[data-page^='admin'] .admin-modal .modal-body {
+  margin-bottom: 0 !important;
 }
 /* Standard Windows scrollbar styling for all admin pages */
 body[data-page^='admin'] *::-webkit-scrollbar {
@@ -777,21 +1013,19 @@ body[data-page^='admin'] h1:first-child {
 body[data-page^='admin'] .admin-modal-overlay {
   /* Already handled above but reinforcing */
   padding-top: var(--wf-overlay-offset, calc(var(--wf-header-height, 64px) + 12px)) !important;
-  z-index: var(--z-admin-overlay,  10050) !important;
 }
 
 /* Admin navbar positioning - CONSISTENT SPACING */
 body[data-page^='admin'] .admin-tab-navigation {
   /* Ensure navbar is positioned below header */
   top: 72px !important; /* 64px header + 8px gap for compact layout */
-  z-index: var(--z-admin-nav, 2000) !important;
   margin: 0 !important;
 }
 
 /* Settings page: add more space between header and navbar */
 body[data-page='admin/settings'] .admin-tab-navigation {
   top: 76px !important; /* 64px header + 12px gap */
-  z-index: 10000 !important; /* above page content, below overlays (10100) */
+  z-index: var(--z-admin-nav, 500) !important;
   margin: 0 !important;
   display: flex !important;
   visibility: visible !important;
@@ -815,4 +1049,9 @@ body[data-page^='admin'] .admin-header {
 body[data-page='admin/settings'] #admin-section-content > .settings-page {
   margin-top: 0 !important;  /* remove extra push down */
   padding-top: 0 !important;     /* neutralize pt-128 so spacing is external, not internal */
+}
+
+/* Add breathing room at bottom so settings cards do not touch viewport edge */
+body[data-page='admin/settings'] #admin-section-content > .settings-page {
+  padding-bottom: 48px !important;
 }

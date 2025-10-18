@@ -8,7 +8,7 @@ function renderGlobalPopup()
     ?>
     
     <!-- Global Item Popup -->
-    <div id="itemPopup" class="item-popup hidden" aria-hidden="true">
+    <div id="itemPopup" class="item-popup" aria-hidden="true">
         <div class="popup-content">
             <!-- Sale Badge -->
             <div id="popupSaleBadge" class="popup-sale-badge hidden">

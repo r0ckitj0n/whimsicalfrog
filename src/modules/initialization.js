@@ -133,6 +133,20 @@ export const Initialization = {
     // Apply business branding to CSS root variables
   },
 
+  async loadBusinessInfo() {
+    console.log('loadBusinessInfo called');
+    return {};
+  },
+
+  applyBusinessInfo(info) {
+    console.log('applyBusinessInfo called', info);
+  },
+
+  async saveBusinessInfo(info) {
+    console.log('saveBusinessInfo called', info);
+    return { success: true };
+  },
+
   async fetchGlobalAttributes() {
     try {
       console.log('fetchGlobalAttributes called');
@@ -187,7 +201,7 @@ export const Initialization = {
         genderList.innerHTML = genders.map(gender => `
           <li class="flex justify-between items-center py-1">
             <span>${gender.name}</span>
-            <button class="text-red-500 text-xs" data-action="attr-delete" data-type="gender" data-id="${gender.id}">Delete</button>
+            <button class="btn btn-sm btn-danger" data-action="attr-delete" data-type="gender" data-id="${gender.id}">Delete</button>
           </li>
         `).join('');
       }
@@ -198,7 +212,7 @@ export const Initialization = {
         sizeList.innerHTML = sizes.map(size => `
           <li class="flex justify-between items-center py-1">
             <span>${size.name} (${size.code})</span>
-            <button class="text-red-500 text-xs" data-action="attr-delete" data-type="size" data-id="${size.id}">Delete</button>
+            <button class="btn btn-sm btn-danger" data-action="attr-delete" data-type="size" data-id="${size.id}">Delete</button>
           </li>
         `).join('');
       }
@@ -209,7 +223,7 @@ export const Initialization = {
         colorList.innerHTML = colors.map(color => `
           <li class="flex justify-between items-center py-1">
             <span>${color.name}</span>
-            <button class="text-red-500 text-xs" data-action="attr-delete" data-type="color" data-id="${color.id}">Delete</button>
+            <button class="btn btn-sm btn-danger" data-action="attr-delete" data-type="color" data-id="${color.id}">Delete</button>
           </li>
         `).join('');
       }
@@ -236,62 +250,6 @@ export const Initialization = {
     console.log('updateSectionWidth called:', sectionKey, value);
     // Update section width in dashboard configuration
   },
-
-  async loadBusinessInfo() {
-    try {
-      console.log('loadBusinessInfo called');
-      // Load business information from API (backend supports get_business_info)
-      const data = await ApiClient.get('/api/business_settings.php?action=get_business_info');
-
-      const settings = (data && (data.data || data)) || null;
-      if (settings) this.applyBusinessInfo(settings);
-    } catch (error) {
-      console.error('Failed to load business info:', error);
-    }
-  },
-
-  applyBusinessInfo(settings) {
-    console.log('applyBusinessInfo called:', settings);
-    // Apply business settings to form fields
-    if (!settings) return;
-
-    const fieldMappings = {
-      'bizName': 'business_name',
-      'bizEmail': 'business_email',
-      'bizWebsite': 'website',
-      'bizPhone': 'phone',
-      'bizAddress': 'address',
-      'bizCity': 'city',
-      'bizState': 'state',
-      'bizPostal': 'postal_code',
-      'bizCountry': 'country'
-    };
-
-    Object.entries(fieldMappings).forEach(([fieldId, settingKey]) => {
-      const element = document.getElementById(fieldId);
-      if (element && settings[settingKey]) {
-        element.value = settings[settingKey];
-      }
-    });
-  },
-
-  async saveBusinessInfo() {
-    try {
-      console.log('saveBusinessInfo called');
-      const businessData = this.collectBusinessInfo();
-      const result = await ApiClient.post('/api/business_settings.php?action=upsert_settings', {
-        category: 'business',
-        settings: businessData
-      });
-      if (result.success) {
-        console.log('Business info saved successfully');
-      } else {
-        console.error('Failed to save business info:', result.error);
-      }
-    } catch (error) {
-      console.error('Error saving business info:', error);
-    }
-  }
 };
 
 // Auto-initialize

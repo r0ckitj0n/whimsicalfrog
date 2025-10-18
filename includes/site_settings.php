@@ -35,6 +35,12 @@ if (!function_exists('wf_site_name')) {
     }
 }
 
+if (!function_exists('wf_site_tagline')) {
+    function wf_site_tagline(): string {
+        return wf_setting('site_tagline', 'SITE_TAGLINE', defined('SITE_TAGLINE') ? SITE_TAGLINE : '');
+    }
+}
+
 if (!function_exists('wf_brand_logo_path')) {
     function wf_brand_logo_path(): string {
         // DB key: business_logo_url; env BRAND_LOGO_PATH

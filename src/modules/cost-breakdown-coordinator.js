@@ -270,12 +270,12 @@ export class CostBreakdownCoordinator {
           </div>
           <div class="flex items-center">
             <span class="font-semibold">$${parseFloat(item.cost).toFixed(2)}</span>
-            <button class="text-green-600 hover:text-green-800" data-action="openEditModal"
+            <button class="btn btn-sm btn-secondary" data-action="openEditModal"
                     data-params='${JSON.stringify({
                       type: this.getCostTypeFromSelector(listSelector),
                       id: item.id
                     })}' title="Edit">✏️</button>
-            <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal"
+            <button class="btn btn-sm btn-danger" data-action="openDeleteModal"
                     data-params='${JSON.stringify({
                       type: this.getCostTypeFromSelector(listSelector),
                       id: item.id,

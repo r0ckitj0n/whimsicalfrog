@@ -48,7 +48,7 @@ $default_config = [
     'show_user_menu' => true,
     'show_logo' => true,
     'logo_text' => (function_exists('wf_site_name') ? wf_site_name() : ((defined('SITE_NAME') ? SITE_NAME : 'Your Site'))),
-    'logo_tagline' => 'Enchanted Treasures',
+    'logo_tagline' => (function_exists('wf_site_tagline') ? wf_site_tagline() : ''),
     'logo_image' => (function_exists('wf_brand_logo_path') ? wf_brand_logo_path() : (defined('BRAND_LOGO_PATH') ? BRAND_LOGO_PATH : '/images/logos/logo-whimsicalfrog.webp')),
     'navigation_items' => [
         ['label' => 'Shop', 'url' => '/shop', 'active' => false],
@@ -175,7 +175,7 @@ try {
                         <div class="logo-text-container">
                             <div class="logo-text"><?php echo htmlspecialchars($config['logo_text']); ?></div>
                             <?php if (!empty($config['logo_tagline'])): ?>
-                                <div class="logo-tagline text-brand-secondary"><?php echo htmlspecialchars($config['logo_tagline']); ?></div>
+                                <div class="logo-tagline"><?php echo htmlspecialchars($config['logo_tagline']); ?></div>
                             <?php endif; ?>
                         </div>
                     </a>

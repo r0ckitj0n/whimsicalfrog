@@ -228,11 +228,8 @@ if ($isLocalhost) {
         }
     }
 
-    // Force TCP connection by nullifying socket after config file read
-    $socket = null;
-
     // Allow environment overrides for local DB
-    $host   = wf_env('WF_DB_LOCAL_HOST', $host);
+    $host   = wf_env('WF_DB_LOCAL_HOST', $host ?: 'localhost');
     $db     = wf_env('WF_DB_LOCAL_NAME', $db);
     $user   = wf_env('WF_DB_LOCAL_USER', $user);
     $pass   = wf_env('WF_DB_LOCAL_PASS', $pass);

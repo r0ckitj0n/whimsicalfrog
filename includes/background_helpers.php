@@ -19,6 +19,19 @@ if (!function_exists('get_landing_background_path')) {
             return $default;
         }
 
+        // If local DB is not available (dev), avoid calling DB-backed helper
+        try {
+            if (class_exists('Database') && method_exists('Database', 'isAvailableQuick')) {
+                $disable = getenv('WF_DB_DEV_DISABLE');
+                if ($disable === '1' || strtolower((string)$disable) === 'true') {
+                    return $default;
+                }
+                if (!\Database::isAvailableQuick(0.6)) {
+                    return $default;
+                }
+            }
+        } catch (\Throwable $e) { /* fall back to default below */ }
+
         try {
             $path = get_active_background('landing');
             if ($path && is_string($path) && file_exists($path)) {

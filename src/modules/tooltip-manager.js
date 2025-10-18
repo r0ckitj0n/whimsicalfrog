@@ -230,6 +230,8 @@ function mapSettingsSelectors(elementId) {
 }
 
 async function loadTooltips() {
+  // Global guard: allow pages to temporarily block tooltip attachment during heavy UI work
+  try { if (window.__WF_BLOCK_TOOLTIP_ATTACH) { console.info('[TooltipManager] Skipping attach (blocked)'); return; } } catch(_) {}
   const contextRaw = getPageContext();
   // Normalize likely values to our API expectations
   const aliases = { 'admin_settings': 'settings', 'admin-settings': 'settings' };
@@ -344,13 +346,27 @@ async function loadTooltips() {
       return false;
     };
     // Per-page rules (tweak caps/blacklist by page)
+    // Trimmed to reduce DOM work on admin pages while keeping at least one attachment per row.
     const pageRules = {
-      settings: { maxGenericPerId: 3, blacklist: [] },
-      admin:    { maxGenericPerId: 2, blacklist: [] },
-      common:   { maxGenericPerId: 3, blacklist: [] },
+      // Admin contexts
+      orders:    { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      inventory: { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      customers: { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      reports:   { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      marketing: { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      pos:       { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      'db-status': { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      'room-config-manager': { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      'cost-breakdown-manager': { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      admin:     { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] },
+      // Settings tends to have more forms; allow slightly higher but still trimmed
+      settings:  { maxGenericPerId: 2, maxPerTooltip: 1, blacklist: [] },
+      // Shared/common fallbacks
+      common:    { maxGenericPerId: 2, maxPerTooltip: 1, blacklist: [] },
     };
-    const rules = pageRules[page_context] || { maxGenericPerId: 3, blacklist: [] };
-    const MAX_GENERIC_ATTACH_PER_ID = rules.maxGenericPerId ?? 3;
+    const rules = pageRules[page_context] || { maxGenericPerId: 1, maxPerTooltip: 1, blacklist: [] };
+    const MAX_GENERIC_ATTACH_PER_ID = rules.maxGenericPerId ?? 1;
+    const MAX_ATTACH_PER_TOOLTIP = rules.maxPerTooltip ?? 1;
 
     const attachedTargets = [];
     for (const tt of tooltips) {
@@ -367,6 +383,8 @@ async function loadTooltips() {
         if (remain <= 0) { continue; }
         if (targets.length > remain) targets = targets.slice(0, remain);
       }
+      // Additional cap: limit attachments per tooltip row to keep DOM light on admin pages
+      if (targets.length > MAX_ATTACH_PER_TOOLTIP) targets = targets.slice(0, MAX_ATTACH_PER_TOOLTIP);
       for (const t of targets) {
         attachTooltip(t, data);
         attached++;
@@ -546,6 +564,7 @@ export default function initializeTooltipManager() {
   
   // Also try loading tooltips after a short delay to catch dynamically loaded elements
   setTimeout(() => {
+    try { if (window.__WF_BLOCK_TOOLTIP_ATTACH) { setTimeout(() => loadTooltips(), 250); return; } } catch(_) {}
     loadTooltips();
   }, 250);
   
@@ -624,7 +643,7 @@ export default function initializeTooltipManager() {
     const reattach = () => {
       const now = Date.now();
       const elapsed = now - last;
-      const run = () => { try { loadTooltips(); last = Date.now(); } catch(_) {} };
+      const run = () => { try { if (window.__WF_BLOCK_TOOLTIP_ATTACH) { setTimeout(() => reattach(), THROTTLE_MS); return; } loadTooltips(); last = Date.now(); } catch(_) {} };
       if (elapsed >= THROTTLE_MS) { run(); }
       else {
         clearTimeout(t); t = setTimeout(run, THROTTLE_MS - elapsed);

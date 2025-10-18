@@ -1,6 +1,7 @@
 // Vite entry: admin-settings.js
 // Ensure lightweight handlers and modal factories are available immediately
 import '../modules/admin-settings-lightweight.js';
+import '../js/admin-settings-fallbacks.js';
 try {
   await import('../js/admin-settings.js');
 } catch (e) {

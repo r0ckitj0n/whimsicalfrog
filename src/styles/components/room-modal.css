@@ -18,8 +18,8 @@
 }
 
 /* Ensure main page header stays above the overlay */
-.site-header.universal-page-header { z-index: var(--z-header-over-room-modal, 3000) !important; }
-.room-page-header { position: relative !important; z-index: var(--z-header-over-room-modal, 3000) !important; }
+.site-header.universal-page-header { z-index: var(--z-index-page-header, 300) !important; }
+.room-page-header { position: relative !important; z-index: var(--z-index-page-header, 300) !important; }
 
 /* Header width rules are now defined canonically in components/components-base.css */
 
@@ -77,10 +77,11 @@ body.modal-open #itemPopup.in-room-modal {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Ensure overlay sits above room doors (doors use ~10060) */
-  z-index: var(--z-index-room-modal, 11000);
+  /* Ensure overlay sits above room doors */
+  z-index: var(--z-index-room-modal, 1100);
   opacity: 0;
   visibility: hidden;
+  pointer-events: none; /* do not intercept clicks when hidden */
   transition: all 0.3s ease;
 }
 
@@ -88,22 +89,35 @@ body.modal-open #itemPopup.in-room-modal {
   align-items: flex-start !important;
   padding-top: calc(var(--header-height, 80px) + 5px) !important;
   opacity: 1;
-  visibility: visible; }
+  visibility: visible;
+  pointer-events: auto; /* enable interaction when visible */
+}
 
 .room-modal-container {
   margin-bottom: 5px !important;
   position: relative;
   width: min(95vw, min(95vh * 1.43, 1200px));
-  aspect-ratio: 1280 / 896;
   background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 10%), 0 10px 10px -5px rgb(0 0 0 / 4%);
   transform: scale(0.95);
   transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .room-modal-overlay.show .room-modal-container { transform: scale(1); }
+
+/* Make header auto-height and body keep the room image aspect ratio */
+.room-modal-header { flex: 0 0 auto; }
+.room-modal-body { flex: 0 0 auto; width: 100%; aspect-ratio: 1280 / 896; position: relative; }
+
+/* Ensure inner containers stretch to full height of the body */
+.room-modal-body .modal-room-page,
+.room-modal-body .room-modal-iframe-container,
+.room-modal-body .room-overlay-wrapper,
+.room-modal-body .room-modal-content-wrapper { height: 100%; }
 
 .room-modal-iframe {
     width: 100%;

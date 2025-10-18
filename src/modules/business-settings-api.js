@@ -27,8 +27,8 @@ export const BusinessSettingsAPI = {
     if (!category) throw new Error('category is required');
     if (!settings || typeof settings !== 'object') throw new Error('settings map is required');
     // upsertSettings() accepts JSON with { action: 'upsert_settings', category, settings }
-    return ApiClient.post('business_settings.php', {
-      action: 'upsert_settings',
+    const qs = toQuery({ action: 'upsert_settings' });
+    return ApiClient.post(`/api/business_settings.php?${qs}`, {
       category,
       settings,
     });

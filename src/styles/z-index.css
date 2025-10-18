@@ -1,25 +1,25 @@
 /* Global z-index tokens */
 :root {
   /* Room modal base stacking */
-  --z-index-room-modal: 2400;
+  --z-index-room-modal: 1100;
   /* Cart overlay must sit above room modal */
-  --z-index-cart-overlay: 10070;
+  --z-index-cart-overlay: 1200;
   /* Header and site chrome */
-  --z-index-page-header: 3000;
-  --z-index-site-nav: 2950;
+  --z-index-page-header: 300;
+  --z-index-site-nav: 290;
   /* Checkout / Receipt overlays */
-  --z-index-checkout-overlay: 10060;
-  --z-index-checkout-content: 10061;
-  --z-index-receipt-overlay: 10080;
+  --z-index-checkout-overlay: 1300;
+  --z-index-checkout-content: 1310;
+  --z-index-receipt-overlay: 1320;
   /* UI chrome */
-  --z-index-loader: 10500;
-  --z-index-toast: 11000;
-  --z-index-dropdown: 11500;
-  --z-index-tooltip: 12000;
+  --z-index-loader: 900;
+  --z-index-toast: 1500;
+  --z-index-dropdown: 400;
+  --z-index-tooltip: 450;
   /* Component-specific low layers */
   --z-index-checkout-badge: 3; /* inline badges inside cards */
   /* Emergency/global overlays */
-  --z-index-global-popup: 100200;
+  --z-index-global-popup: 1250; /* above room/cart overlays, below admin/detailed modals */
   /* Internal modal parts */
   --z-index-modal-content: 420;
   --z-index-modal-front: 430;
@@ -42,55 +42,56 @@
   --z-index-content-front: 15;
 
   /* -- Floating UI & Page-Level Components -- */
-  --z-index-floating-ui: 20;
-  --z-index-page-header: 100;
-  --z-index-page-footer: 90;
+  --z-index-floating-ui: 200;
+  --z-index-page-header: 300;
+  --z-index-page-footer: 290;
 
   /* -- Overlays & Dropdowns -- */
-  --z-index-dropdown: 200;
-  --z-index-tooltip: 15000; /* Above admin overlays (10100) but below god-mode */
-  --z-index-overlay-backdrop: 300;
+  --z-index-dropdown: 400;
+  --z-index-tooltip: 450;
+  --z-index-overlay-backdrop: 1000;
 
   /* -- Modals & Popups -- */
-  --z-index-modal-back: 400;
-  --z-index-modal-base: 410;
-  --z-index-modal-content: 420;
-  --z-index-modal-front: 430;
+  --z-index-modal-back: 1005;
+  --z-index-modal-base: 1010;
+  --z-index-modal-content: 1020;
+  --z-index-modal-front: 1030;
 
   /* -- Unified Overlay Tiers (sitewide) -- */
-  /* Standard overlays (confirmation modals, generic modals) should sit above header/nav */
-  --z-overlay: 10050;
-  --z-overlay-content: 10051;
+  /* Standard overlays (confirmation modals, generic modals) */
+  --z-overlay: 1200;
+  --z-overlay-content: 1210;
+  --z-overlay-topmost: 1600;
 
   /* Admin-specific overlays (admin modals/panels) may have distinct stacking needs */
-  --z-admin-overlay: 10100;             /* slightly above global overlays */
-  --z-admin-overlay-content: 10101;
+  --z-admin-overlay: 1400;              /* above global overlays */
+  --z-admin-overlay-content: 1410;
 
   /* -- Room & Special Modals -- */
-  --z-index-room-modal: 2400;
-  --z-index-room-modal-header: 2450;
-  /* Checkout / Payment overlay (should sit above room modal but below site header overrides) */
-  --z-index-checkout-overlay: 2500;
+  --z-index-room-modal: 1100;
+  --z-index-room-modal-header: 1110;
+  /* Checkout / Payment overlay (above room modal, below admin) */
+  --z-index-checkout-overlay: 1300;
 
   /* -- Global Notifications & Highest Level -- */
   --z-index-global-notification: 500;
-  --z-index-god-mode: 9999;
+  --z-index-god-mode: 1600; /* emergency */
 
   /* Detailed Item Modal overlay (sits above hover popups and room overlay) */
-  --z-detailed-item-modal: 100300;
+  --z-detailed-item-modal: 1500;
   /* Global popup above most content but below god-mode unless explicitly raised */
-  --z-global-popup: 100200;
+  --z-global-popup: 1250; /* mirror of --z-index-global-popup */
 
   /* -- Header/Nav & Inline UI (non-overlay) -- */
-  --z-index-header-ink: 200;            /* header text and links */
-  --z-index-nav: 300;                   /* navigation links/items */
+  --z-index-header-ink: 310;            /* header text and links */
+  --z-index-nav: 320;                   /* navigation links/items */
   /* Shop filters should sit above header (3000) and room modal (~2400), below overlays */
-  --z-shop-filters: 3500;
-  --z-inline-popup: 1000;               /* product hover popups, small tips */
-  --z-inline-popup-high: 1100;          /* slightly above default inline popups */
-  --z-index-toast: 10000;               /* global toasts/notifications */
+  --z-shop-filters: 600;
+  --z-inline-popup: 550;                /* product hover popups, small tips */
+  --z-inline-popup-high: 560;           /* slightly above default inline popups */
+  --z-index-toast: 1500;                /* global toasts/notifications */
   /* Room main layers */
-  --z-room-base: 1000;                  /* base layer for main room section */
+  --z-room-base: 80;                    /* base layer for main room section (below header) */
   --z-room-door: 10060;                 /* door interactive layer */
   /* Help documentation dropdown */
   --z-help-dropdown: 50;                /* search results dropdown in help docs */
@@ -102,7 +103,7 @@
   --z-index-flat: 0;                    /* neutral stack */
   --z-content-2: 2;                     /* small content elevation */
   --z-content-3: 3;                     /* small content elevation */
-  --z-admin-nav: 500;                   /* admin navigation bar (below overlays) */
+  --z-admin-nav: var(--z-index-page-header, 300); /* admin navigation bar shares header tier */
   --z-header-over-room-modal: 3000;     /* keep header above room modal overlay when needed */
 }
 

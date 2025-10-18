@@ -28,7 +28,7 @@ if (!$isModal) {
     .section { border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:12px; background:#fafafa; }
     .actions { display:flex; gap:8px; justify-content:flex-end; margin-top: 8px; }
     .btn { padding:8px 12px; border-radius:6px; border:1px solid #d1d5db; background:#fff; cursor:pointer; }
-    .btn-brand { background:#2563eb; color:#fff; border-color:#1d4ed8; }
+    .btn-primary { background:#2563eb; color:#fff; border-color:#1d4ed8; }
     .status { font-size: 12px; margin-left:auto; }
     .success { color:#065f46; }
     .error { color:#b91c1c; }
@@ -112,7 +112,7 @@ if (!$isModal) {
 
     <div class="actions">
       <button class="btn" id="closeBtn" onclick="try{window.parent.document.querySelector('[data-action=\"close-admin-modal\"]')?.click()}catch(_){window.close?.()}">Close</button>
-      <button class="btn btn-brand" id="saveBtn">Save Settings</button>
+      <button class="btn btn-primary" id="saveBtn">Save Settings</button>
     </div>
   </div>
 

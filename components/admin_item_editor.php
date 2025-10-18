@@ -11,7 +11,7 @@ if (!function_exists('renderAdminItemEditor')) {
      * @param array $categories List of category names
      * @param array $field_errors Field names with validation errors
      */
-    function renderAdminItemEditor(string $mode, ?array $editItem, array $categories, array $field_errors = [])
+    function renderAdminItemEditor(string $mode, ?array $editItem, array $categories, array $field_errors = [], ?string $prevSku = null, ?string $nextSku = null)
     {
         $isEdit = ($mode === 'edit');
         $isView = ($mode === 'view');
@@ -29,31 +29,50 @@ if (!function_exists('renderAdminItemEditor')) {
         $description = htmlspecialchars($editItem['description'] ?? '', ENT_QUOTES, 'UTF-8');
         ?>
 
-        <div id="inventoryModalOuter" class="admin-modal-overlay topmost show fixed inset-0 flex items-start justify-center overflow-y-auto">
-            <div class="admin-modal wf-admin-panel-visible show relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-5xl">
-                <div class="modal-header flex justify-between items-center p-2 border-b border-gray-100">
+        <div id="inventoryModalOuter" class="admin-modal-overlay topmost show">
+            <?php $modeParam = $isEdit ? 'edit' : ($isView ? 'view' : ''); $linkBase = $_GET; unset($linkBase['view'],$linkBase['edit'],$linkBase['add']);
+                $selfSku = ($editItem['sku'] ?? '');
+                $prevHref = $modeParam ? ('/admin/inventory?' . http_build_query(array_merge($linkBase, [$modeParam => ($prevSku ?: $selfSku)]))) : null;
+                $nextHref = $modeParam ? ('/admin/inventory?' . http_build_query(array_merge($linkBase, [$modeParam => ($nextSku ?: $selfSku)]))) : null;
+            ?>
+            <a href="<?= htmlspecialchars($prevHref ?: '#') ?>" class="nav-arrow nav-arrow-left wf-nav-arrow wf-nav-left" title="Previous item" aria-label="Previous item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <a href="<?= htmlspecialchars($nextHref ?: '#') ?>" class="nav-arrow nav-arrow-right wf-nav-arrow wf-nav-right" title="Next item" aria-label="Next item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+            <div class="admin-modal admin-modal-content wf-admin-panel-visible show relative bg-white rounded-lg shadow-xl w-full max-w-5xl">
+                <div class="modal-header flex items-center justify-between gap-3 border-b border-gray-100">
                     <h2 class="text-lg font-bold text-green-700">
                         <?= $isView ? 'View Item' : ($isEdit ? 'Edit Item' : 'Add New Inventory Item') ?><?= ($isEdit || $isView) && $name ? ' (' . $name . ')' : '' ?>
                     </h2>
-                    <button type="button" class="modal-close-btn" aria-label="Close" data-action="close-admin-editor">×</button>
+                    <?php if ($isView && $sku): $editHref = '/admin/inventory?' . http_build_query(array_merge($linkBase, ['edit' => ($editItem['sku'] ?? '')])); ?>
+                        <a href="<?= htmlspecialchars($editHref) ?>" class="btn btn-primary btn-sm modal-action-edit" title="Edit Item">Edit</a>
+                    <?php elseif ($isEdit): ?>
+                        <button type="submit" class="btn btn-primary btn-sm" form="inventoryForm" data-action="save-inventory">Save</button>
+                    <?php endif; ?>
                 </div>
 
-                <div class="modal-body p-4">
-            <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="flex flex-col gap-6">
+                <div class="modal-body">
+            <form id="inventoryForm" method="POST" action="#" enctype="multipart/form-data" class="wf-modal-form">
                 <input type="hidden" name="action" value="<?= $isEdit ? 'update' : 'add' ?>">
                 <?php if ($isEdit && $sku): ?>
                     <input type="hidden" name="itemSku" value="<?= $sku ?>">
                 <?php endif; ?>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
                     <!-- Left: Item Information -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <div class="modal-section">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center">
                             <span class="mr-2">📝</span> Item Information
                         </h3>
 
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="space-y-2">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 <div>
                                     <label for="skuEdit" class="block text-gray-700">SKU *</label>
                                     <input type="text" id="skuEdit" name="sku" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('sku', $field_errors) ? 'field-error-highlight' : '' ?>" required value="<?= $sku ?>"<?= $isReadOnly ? ' readonly' : '' ?>>
@@ -64,7 +83,7 @@ if (!function_exists('renderAdminItemEditor')) {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 <div>
                                     <label for="categoryEdit" class="block text-gray-700">Category *</nlabel>
                                     <select id="categoryEdit" name="category" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('category', $field_errors) ? 'field-error-highlight' : '' ?>" required<?= $isReadOnly ? ' disabled' : '' ?>>
@@ -83,7 +102,7 @@ if (!function_exists('renderAdminItemEditor')) {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 <div>
                                     <label for="stockLevel" class="block text-gray-700">Stock Level *</label>
                                     <input type="number" id="stockLevel" name="stockLevel" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('stockLevel', $field_errors) ? 'field-error-highlight' : '' ?>" min="0" required value="<?= $stockLevel ?>"<?= $isReadOnly ? ' readonly' : '' ?>>
@@ -94,7 +113,7 @@ if (!function_exists('renderAdminItemEditor')) {
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                 <div>
                                     <label for="costPrice" class="block text-gray-700">Cost Price ($) *</label>
                                     <input type="number" id="costPrice" name="costPrice" step="0.01" min="0" class="mt-1 block w-full p-2 border border-gray-300 rounded <?= in_array('costPrice', $field_errors) ? 'field-error-highlight' : '' ?>" required value="<?= $costPrice ?>"<?= $isReadOnly ? ' readonly' : '' ?>>
@@ -121,15 +140,15 @@ if (!function_exists('renderAdminItemEditor')) {
                     </div>
 
                     <!-- Right: Cost & Price Analysis (placeholders; JS renders details) -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-4">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <div class="modal-section">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center">
                             <span class="mr-2">💰</span> Cost & Price Analysis
                         </h3>
                         <div class="suggestions-container">
                             <div class="cost-breakdown-wrapper">
-                                <h4 class="font-semibold text-gray-700 mb-2 text-sm">Cost Breakdown</h4>
+                                <h4 class="font-semibold text-gray-700 mb-1 text-sm">Cost Breakdown</h4>
                                 <?php if (!$isView): ?>
-                                <div class="flex items-center gap-2 mb-3">
+                                <div class="flex items-center gap-2 mb-2">
                                     <button type="button" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700" data-action="get-cost-suggestion">✨ AI Suggest Cost</button>
                                     <button type="button" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700" data-action="get-price-suggestion">✨ AI Generate Price</button>
                                     <button type="button" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700" id="open-marketing-manager-btn" data-action="open-marketing-manager">🎯 AI Marketing</button>
@@ -142,7 +161,7 @@ if (!function_exists('renderAdminItemEditor')) {
                                         <span class="font-bold text-green-800 text-lg" id="suggestedCostDisplay">$0.00</span>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                     <div>
                                         <div class="flex justify-between items-center">
                                             <h5 class="font-medium text-gray-700 text-sm">Materials</h5>
@@ -181,10 +200,10 @@ if (!function_exists('renderAdminItemEditor')) {
                                     </div>
                                 </div>
                             </div>
-                            <div class="price-suggestion-wrapper mt-4">
-                                <h4 class="font-semibold text-gray-700 mb-2 text-sm">Price Suggestion</h4>
+                            <div class="price-suggestion-wrapper mt-2">
+                                <h4 class="font-semibold text-gray-700 mb-1 text-sm">Price Suggestion</h4>
                                 <?php if (!$isView): ?>
-                                <div class="flex items-center gap-2 mb-3">
+                                <div class="flex items-center gap-2 mb-2">
                                     <button type="button" class="px-2 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700" data-action="get-price-suggestion">✨ AI Generate Price</button>
                                     <button type="button" class="px-2 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700" data-action="apply-price-suggestion">Apply To Field</button>
                                     <button type="button" class="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600" data-action="clear-price-suggestion">Clear</button>
@@ -208,13 +227,13 @@ if (!function_exists('renderAdminItemEditor')) {
                 </div>
 
                 <!-- Full-Width Images Section -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <div class="modal-section">
                     <div id="imagesSection" class="images-section-container">
-                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2 flex items-center">
                             <span class="mr-2">🖼️</span> Item Images
                         </h3>
                         <div id="currentImagesContainer" class="current-images-section">
-                            <div class="flex justify-between items-center mb-3">
+                            <div class="flex justify-between items-center mb-2">
                                 <div class="text-sm text-gray-600">Current Images:</div>
                                 <?php if ($isEdit): ?>
                                 <button type="button" id="processExistingImagesBtn" data-action="process-images-ai" class="px-3 py-2 bg-purple-500 text-white rounded text-sm hover:bg-purple-600 transition-colors">
@@ -245,19 +264,19 @@ if (!function_exists('renderAdminItemEditor')) {
                 </div>
 
                 <!-- Bottom: Gender, Size & Color Management -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="modal-section">
+                    <div class="flex justify-between items-center mb-1">
                         <h3 class="text-lg font-semibold text-gray-800 flex items-center"><span class="mr-2">📦</span> Gender, Size & Color Management</h3>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1">
                             <button type="button" data-action="ensure-color-sizes" class="bg-gray-700 text-white rounded text-xs px-2 py-1 hover:bg-gray-800" title="Ensure each color has its own size rows (clone general sizes to each color)">Configure containers</button>
                             <button type="button" data-action="distribute-general-stock-evenly" class="bg-amber-600 text-white rounded text-xs px-2 py-1 hover:bg-amber-700" title="Copy general size stock evenly across all colors for each size, then zero the general rows">Distribute general stock</button>
                             <button type="button" data-action="sync-size-stock" class="bg-blue-500 text-white rounded text-xs px-2 py-1 hover:bg-blue-600">Sync Stock</button>
                         </div>
                     </div>
                     <!-- Nested Inventory Editor (JS renders tree here) -->
-                    <div class="mb-6">
-                        <h4 class="font-medium text-gray-700 text-sm mb-2">Nested Inventory Editor (by Gender ➜ Color ➜ Size)</h4>
-                        <div class="flex flex-wrap items-center gap-2 mb-3" id="nestedInventoryControls">
+                    <div class="mb-2">
+                        <h4 class="font-medium text-gray-700 text-sm mb-1">Nested Inventory Editor (by Gender ➜ Color ➜ Size)</h4>
+                        <div class="flex flex-wrap items-center gap-1 mb-1" id="nestedInventoryControls">
                             <label class="text-xs text-gray-600">Gender
                                 <select id="nestedGenderFilter" class="border border-gray-300 rounded text-xs p-1 ml-1">
                                     <option value="">All</option>
@@ -284,15 +303,15 @@ if (!function_exists('renderAdminItemEditor')) {
                                     <option value="stock">Stock</option>
                                 </select>
                             </label>
-                            <button type="button" data-action="recompute-nested-totals" class="ml-2 bg-gray-200 text-gray-800 rounded text-xs px-2 py-1" title="Recalculate color totals from the visible size inputs without saving">Recompute totals</button>
+                            <button type="button" data-action="recompute-nested-totals" class="ml-1 bg-gray-200 text-gray-800 rounded text-xs px-2 py-1" title="Recalculate color totals from the visible size inputs without saving">Recompute totals</button>
                             <button type="button" data-action="save-visible-size-stocks" class="bg-blue-600 text-white rounded text-xs px-2 py-1 hover:bg-blue-700" title="Persist all visible size quantities to the server">Save all visible totals</button>
-                            <div class="ml-auto flex items-center gap-2">
+                            <div class="ml-auto flex items-center gap-1">
                                 <button type="button" id="btnExpandAllNested" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1">Expand all</button>
                                 <button type="button" id="btnCollapseAllNested" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1">Collapse all</button>
-                                <label class="text-xs text-gray-600 inline-flex items-center gap-1 ml-2">
+                                <label class="text-xs text-gray-600 inline-flex items-center gap-1 ml-1">
                                     <input id="nestedShowInactive" type="checkbox" class="align-middle"> Show inactive
                                 </label>
-                                <div class="flex items-center gap-1 ml-4 text-xs text-gray-700">
+                                <div class="flex items-center gap-1 ml-2 text-xs text-gray-700">
                                     <span>Bulk:</span>
                                     <input id="nestedBulkValue" type="number" min="0" class="border border-gray-300 rounded text-xs p-1 w-20" placeholder="Qty" />
                                     <button type="button" id="nestedBulkSet" class="bg-gray-200 text-gray-800 rounded text-xs px-2 py-1" title="Set all visible stock to value">Set</button>
@@ -301,13 +320,13 @@ if (!function_exists('renderAdminItemEditor')) {
                                 </div>
                             </div>
                         </div>
-                        <div id="nestedInventoryEditor" class="space-y-3" data-sku="<?= $sku ?>">
+                        <div id="nestedInventoryEditor" class="space-y-2" data-sku="<?= $sku ?>">
                             <div class="text-sm text-gray-500">Loading nested inventory…</div>
                         </div>
-                        <div class="mt-2 text-xs text-gray-600">
+                        <div class="mt-1 text-xs text-gray-600">
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 mr-2">Group container</span>
                             Groups options like Gender. These do not directly hold stock.
-                            <br />
+                            <br>
                             <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 border border-gray-200 mr-2">Item container</span>
                             Represents actual sellable variants (e.g., Colors). Totals roll up from Sizes.
                         </div>
@@ -315,14 +334,14 @@ if (!function_exists('renderAdminItemEditor')) {
                     </div>
                     <div>
                         <!-- Temporary fallback: showing legacy Sizes/Colors panels while nested editor stabilizes -->
-                        <div class="mb-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">Temporary fallback: Legacy Sizes/Colors lists are visible while the nested editor is loading.</div>
+                        <div class="mb-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">Temporary fallback: Legacy Sizes/Colors lists are visible while the nested editor is loading.</div>
                         <div id="sizesList" class="space-y-2"></div>
                         <div id="sizesLoading" class="text-center text-gray-500 text-sm">Loading sizes...</div>
                         <div id="colorsList" class="space-y-2"></div>
                         <div id="colorsLoading" class="text-center text-gray-500 text-sm">Loading colors...</div>
                     </div>
                     <?php if (!$isView): ?>
-                    <div class="mt-4 flex gap-2">
+                    <div class="mt-2 flex gap-1">
                         <button type="button" data-action="add-item-size" class="bg-gray-700 text-white rounded text-xs px-3 py-2">+ Add Size</button>
                         <button type="button" data-action="add-item-color" class="bg-gray-700 text-white rounded text-xs px-3 py-2">+ Add Color</button>
                     </div>
@@ -330,15 +349,15 @@ if (!function_exists('renderAdminItemEditor')) {
                 </div>
 
                 <!-- Option Cascade & Grouping -->
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="modal-section">
+                    <div class="flex justify-between items-center mb-1">
                         <h3 class="text-lg font-semibold text-gray-800 flex items-center"><span class="mr-2">🧭</span> Option Cascade & Grouping</h3>
                         <span class="text-xs text-gray-500">Configure how options are shown and aggregated</span>
                     </div>
-                    <div id="optionCascadePanel" class="space-y-4" data-sku="<?= $sku ?>">
+                    <div id="optionCascadePanel" class="space-y-2" data-sku="<?= $sku ?>">
                         <div>
-                            <h4 class="font-medium text-gray-700 text-sm mb-2">Cascade Order</h4>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <h4 class="font-medium text-gray-700 text-sm mb-1">Cascade Order</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
                                 <div>
                                     <label class="block text-xs text-gray-600">First</label>
                                     <select id="cascadeOrder1" class="mt-1 block w-full p-2 border border-gray-300 rounded">
@@ -366,19 +385,19 @@ if (!function_exists('renderAdminItemEditor')) {
                             </div>
                         </div>
                         <div>
-                            <h4 class="font-medium text-gray-700 text-sm mb-2">Enabled Dimensions</h4>
-                            <div class="flex gap-4 items-center text-sm">
-                                <label class="inline-flex items-center gap-2"><input type="checkbox" id="dimGender" checked> Gender</label>
-                                <label class="inline-flex items-center gap-2"><input type="checkbox" id="dimSize" checked> Size</label>
-                                <label class="inline-flex items-center gap-2"><input type="checkbox" id="dimColor" checked> Color</label>
+                            <h4 class="font-medium text-gray-700 text-sm mb-1">Enabled Dimensions</h4>
+                            <div class="flex gap-2 items-center text-sm">
+                                <label class="inline-flex items-center gap-1"><input type="checkbox" id="dimGender" checked> Gender</label>
+                                <label class="inline-flex items-center gap-1"><input type="checkbox" id="dimSize" checked> Size</label>
+                                <label class="inline-flex items-center gap-1"><input type="checkbox" id="dimColor" checked> Color</label>
                             </div>
                         </div>
                         <div>
-                            <h4 class="font-medium text-gray-700 text-sm mb-2">Grouping Rules (JSON)</h4>
-                            <textarea id="groupingRules" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder='{"size": {"Plus": ["XL","XXL"]}}'></textarea>
+                            <h4 class="font-medium text-gray-700 text-sm mb-1">Grouping Rules (JSON)</h4>
+                            <textarea id="groupingRules" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded" placeholder='{&quot;size&quot;: {&quot;Plus&quot;: [&quot;XL&quot;,&quot;XXL&quot;]}}'></textarea>
                             <div class="text-xs text-gray-500 mt-1">Optional. Leave blank to use default size codes and color names.</div>
                         </div>
-                        <div class="flex justify-end gap-2">
+                        <div class="flex justify-end gap-1">
                             <button type="button" class="btn" data-action="reload-option-settings">Reload</button>
                             <button type="button" class="btn btn-primary" data-action="save-option-settings">Save Option Settings</button>
                         </div>
@@ -386,12 +405,12 @@ if (!function_exists('renderAdminItemEditor')) {
                     </div>
                 </div>
                 <!-- Form actions -->
-                <div class="mt-6 flex justify-end gap-2">
-                    <button type="button" class="btn" data-action="close-admin-editor">Close</button>
+                <div class="wf-modal-actions">
                     <?php if ($isView): ?>
-                    <a href="/admin/inventory?edit=<?= htmlspecialchars($sku) ?>" class="btn btn-primary">Edit Item</a>
-                    <?php else: ?>
-                    <button type="submit" class="btn btn-primary" data-action="save-inventory">Save Changes</button>
+                    <button type="button" class="btn wf-modal-button" data-action="close-admin-editor">Close</button>
+                    <?php endif; ?>
+                    <?php if (!$isView && !$isEdit): ?>
+                    <button type="submit" class="btn btn-primary wf-modal-button" data-action="save-inventory">Save Changes</button>
                     <?php endif; ?>
                 </div>
             </form>

@@ -34,7 +34,7 @@ if (!empty($___wf_direct_include)) {
         <div class="flex items-center justify-between mb-3">
           <h2 class="text-lg font-medium">Shipping address</h2>
           <div id="addressActions" class="flex items-center gap-2">
-            <button id="addAddressToggle" type="button" class="btn-secondary btn-sm">Add address</button>
+            <button id="addAddressToggle" type="button" class="btn btn-secondary btn-sm">Add address</button>
           </div>
         </div>
         <div id="addressList" class="space-y-2 text-sm">
@@ -72,8 +72,8 @@ if (!empty($___wf_direct_include)) {
             </div>
           </div>
           <div class="mt-3 flex gap-2">
-            <button id="saveAddressBtn" type="button" class="btn-brand btn-sm">Save address</button>
-            <button id="cancelAddressBtn" type="button" class="btn-secondary btn-sm">Cancel</button>
+            <button id="saveAddressBtn" type="button" class="btn btn-primary btn-sm">Save address</button>
+            <button id="cancelAddressBtn" type="button" class="btn btn-secondary btn-sm">Cancel</button>
           </div>
         </div>
       </div>
@@ -160,8 +160,8 @@ if (!empty($___wf_direct_include)) {
         </div>
         <div id="checkoutError" class="mt-3 text-sm text-red-600 hidden"></div>
         <div class="mt-4 flex gap-3">
-          <a href="/cart.php" class="btn-secondary w-1/2">Back to Cart</a>
-          <button id="placeOrderBtn" type="button" class="btn-brand w-1/2" disabled>Place order</button>
+          <a href="/cart.php" class="btn btn-secondary w-1/2">Back to Cart</a>
+          <button id="placeOrderBtn" type="button" class="btn btn-primary w-1/2" disabled>Place order</button>
         </div>
       </div>
     </aside>

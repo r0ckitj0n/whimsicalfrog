@@ -43,6 +43,9 @@ if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
 require_once dirname(__DIR__) . '/includes/vite_helper.php';
 // Ensure core helpers are available (get_active_background, etc)
 require_once dirname(__DIR__) . '/includes/functions.php';
+try {
+    require_once dirname(__DIR__) . '/includes/upsell_rules_helper.php';
+} catch (Throwable $____e) {}
 // Background helpers (provides get_landing_background_path fallback)
 require_once dirname(__DIR__) . '/includes/background_helpers.php';
 
@@ -144,11 +147,57 @@ echo "<script>(function(){try{console.log('[WF-Header] version ', '" . addslashe
 // In dev (localhost) or explicit ?vite=dev, bypass vite() entirely and emit dev scripts directly.
 $__wf_is_localhost = isset($_SERVER['HTTP_HOST']) && (stripos($_SERVER['HTTP_HOST'], 'localhost') !== false);
 if ($__wf_is_localhost || (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'dev')) {
-    $devOrigin = rtrim(getenv('WF_VITE_ORIGIN') ?: 'http://localhost:5176', '/');
-    echo "<script>try{console.log('[Header] DEV mode active', { origin: '" . addslashes($devOrigin) . "' });}catch(_){}</script>\n";
-    echo '<script crossorigin="anonymous" type="module" src="' . $devOrigin . '/@vite/client"></script>' . "\n";
-    echo '<script crossorigin="anonymous" type="module" src="' . $devOrigin . '/src/entries/app.js"></script>' . "\n";
-    echo '<script crossorigin="anonymous" type="module" src="' . $devOrigin . '/src/entries/header-bootstrap.js"></script>' . "\n";
+    // Determine Vite dev origin robustly: env > hot file > default, normalize to localhost
+    $devOrigin = getenv('WF_VITE_ORIGIN');
+    if (!$devOrigin) {
+        $hotFile = dirname(__DIR__) . '/hot';
+        if (is_file($hotFile)) {
+            $raw = @file_get_contents($hotFile);
+            if (is_string($raw) && trim($raw) !== '') {
+                $devOrigin = trim($raw);
+            }
+        }
+    }
+    if (!$devOrigin) { $devOrigin = 'http://localhost:5176'; }
+    // Normalize host: prefer localhost over 127.0.0.1 to align with cookies/policies
+    try {
+        $p = @parse_url($devOrigin);
+        if (is_array($p) && isset($p['host']) && ($p['host'] === '127.0.0.1' || $p['host'] === '0.0.0.0')) {
+            $sch = $p['scheme'] ?? 'http';
+            $hst = 'localhost';
+            $prt = isset($p['port']) ? (':' . $p['port']) : '';
+            $pth = $p['path'] ?? '';
+            $devOrigin = $sch . '://' . $hst . $prt . $pth;
+        }
+    } catch (\Throwable $e) { /* noop */ }
+    $devOrigin = rtrim($devOrigin, '/');
+    // Probe reachability of /@vite/client; if unreachable, try common ports
+    $probe = function(string $origin, float $timeout = 0.6): bool {
+        $url = rtrim($origin, '/') . '/@vite/client';
+        $ctx = stream_context_create([
+            'http' => [ 'timeout' => $timeout, 'ignore_errors' => true ],
+            'https' => [ 'timeout' => $timeout, 'ignore_errors' => true ],
+        ]);
+        return @file_get_contents($url, false, $ctx) !== false;
+    };
+    $origin = $devOrigin;
+    if (!$probe($origin)) {
+        $cands = ['http://localhost:5176','http://localhost:5175','http://localhost:5174','http://localhost:5173'];
+        foreach ($cands as $cand) {
+            if ($probe($cand)) { $origin = $cand; break; }
+        }
+    }
+    if ($probe($origin)) {
+        echo "<script>try{console.log('[Header] DEV mode active', { origin: '" . addslashes($origin) . "' });}catch(_){}</script>\n";
+        echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/@vite/client"></script>' . "\n";
+        echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/app.js"></script>' . "\n";
+        echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/header-bootstrap.js"></script>' . "\n";
+    } else {
+        // Fallback to production assets if dev server is not reachable
+        echo "<!-- Vite dev server not reachable; falling back to production assets -->\n";
+        echo vite('js/app.js');
+        echo vite('js/header-bootstrap.js');
+    }
 } else {
     echo vite('js/app.js');
     // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
@@ -256,15 +305,15 @@ echo <<<'STYLE'
   :root{--wf-header-height:64px; --wf-overlay-offset: calc(var(--wf-header-height) + 12px)}
   body{padding-top:var(--wf-header-height)}
   /* Ensure common overlays/modals are not obscured by the header (only when visible) */
-  .admin-modal-overlay.show,
-  .modal-overlay.show,
+  .admin-modal-overlay.show:not(.over-header),
+  .modal-overlay.show:not(.over-header),
   [role="dialog"].overlay.show,
   .wf-search-modal.show,
   #searchModal.show,
   #loggingStatusModal.show,
   #databaseTablesModal.show,
-  .admin-modal-overlay[aria-hidden="false"],
-  .modal-overlay[aria-hidden="false"],
+  .admin-modal-overlay[aria-hidden="false"]:not(.over-header),
+  .modal-overlay[aria-hidden="false"]:not(.over-header),
   [role="dialog"].overlay[aria-hidden="false"],
   .wf-search-modal[aria-hidden="false"],
   #searchModal[aria-hidden="false"],
@@ -272,7 +321,7 @@ echo <<<'STYLE'
   #databaseTablesModal[aria-hidden="false"] {
     padding-top: var(--wf-overlay-offset) !important;
     align-items: flex-start !important;
-    z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important; /* above header and nav using unified token */
+    z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 200000)) !important; /* above header and nav using unified token */
     /* Do NOT force display here; let component CSS control visibility */
     justify-content: center !important;   /* center horizontally */
   }
@@ -346,15 +395,34 @@ try {
         $confirmClearRaw = isset($ecomm['ecommerce_cart_confirm_clear']) ? strtolower((string)$ecomm['ecommerce_cart_confirm_clear']) : 'true';
         $confirmClear = ($confirmClearRaw !== '0' && $confirmClearRaw !== 'false');
         $minTotal = isset($ecomm['ecommerce_cart_minimum_total']) ? (float)$ecomm['ecommerce_cart_minimum_total'] : 0.0;
-        $upsellRulesRaw = isset($ecomm['ecommerce_upsell_rules']) ? (string)$ecomm['ecommerce_upsell_rules'] : '';
-        // Validate JSON; if invalid, fall back to empty object
-        $upsellRulesJson = '{}';
-        if ($upsellRulesRaw !== '') {
-            $tmp = json_decode($upsellRulesRaw, true);
-            if (is_array($tmp)) {
-                $upsellRulesJson = json_encode($tmp);
+        $upsellRulesSetting = $ecomm['ecommerce_upsell_rules'] ?? null;
+        $upsellRulesData = null;
+
+        if (is_array($upsellRulesSetting)) {
+            $upsellRulesData = $upsellRulesSetting;
+        } elseif (is_string($upsellRulesSetting)) {
+            $trimmedRules = trim($upsellRulesSetting);
+            if ($trimmedRules !== '') {
+                $decodedRules = json_decode($trimmedRules, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decodedRules)) {
+                    $upsellRulesData = $decodedRules;
+                }
             }
         }
+
+        if (($upsellRulesData === null || $upsellRulesData === [] || (isset($upsellRulesData['map']) && empty($upsellRulesData['map'])) )
+            && function_exists('wf_generate_cart_upsell_rules')) {
+            try {
+                $generatedRules = wf_generate_cart_upsell_rules();
+                if (is_array($generatedRules) && !empty($generatedRules)) {
+                    $upsellRulesData = $generatedRules;
+                }
+            } catch (Throwable $_____e) {}
+        }
+
+        $upsellRulesJson = ($upsellRulesData && is_array($upsellRulesData))
+            ? json_encode($upsellRulesData)
+            : '{}';
         echo '<script>'
           . 'window.__WF_OPEN_CART_ON_ADD=' . ($open ? 'true' : 'false') . ';'
           . 'window.__WF_CART_SHOW_UPSELLS=' . ($showUpsells ? 'true' : 'false') . ';'
@@ -477,7 +545,7 @@ if ($__is_admin_route) {
 .site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
 .site-header nav ul{list-style:none;margin:0;padding:0;display:flex;gap:14px;flex-wrap:wrap}
 .site-header nav ul>li{display:inline-flex}
-.admin-tab-navigation{position:fixed!important;top:68px!important;left:0;right:0;z-index:2000;margin:0!important;padding:0px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
+.admin-tab-navigation{position:fixed!important;top:68px!important;left:0;right:0;z-index:var(--z-admin-nav,500);margin:0!important;padding:0px 10px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation ul{list-style:none!important;margin:0 auto!important;padding:0!important;display:flex!important;flex-wrap:wrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .container,.admin-tab-navigation .wrapper,.admin-tab-navigation .flex,.admin-tab-navigation > div,.admin-tab-navigation .u-display-flex{max-width:1200px;margin:0 auto!important;width:100%!important;display:flex!important;justify-content:center!important;align-items:center!important}
@@ -512,7 +580,7 @@ if ($isAdmin && (strpos($pageSlug, 'admin/settings') === 0)) {
 .site-header .nav-links a{display:inline-flex!important;align-items:center!important;text-decoration:none}
 .site-header nav ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:row!important;gap:14px;flex-wrap:nowrap!important}
 .site-header nav ul>li{display:inline-flex}
-.admin-tab-navigation{position:fixed;top:72px;left:0;right:0;z-index:2000;margin:0!important;padding:0px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
+.admin-tab-navigation{position:fixed;top:72px;left:0;right:0;z-index:var(--z-admin-nav,500);margin:0!important;padding:0px 12px!important;display:flex!important;justify-content:center!important;align-items:center!important;width:100%!important}
 .admin-tab-navigation>*{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;justify-content:center!important;align-items:center!important;margin:0 auto!important;padding:0!important;width:100%!important;text-align:center!important}
 .admin-tab-navigation .admin-nav-tab{display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap;border-radius:9999px;padding:10px 16px;text-decoration:none;margin:0!important;width:auto!important;max-width:none!important;flex:0 0 auto!important}
 .admin-tab-navigation .admin-nav-tab, .admin-tab-navigation .admin-nav-tab:visited{color:inherit;text-decoration:none}

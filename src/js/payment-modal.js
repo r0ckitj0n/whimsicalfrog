@@ -43,7 +43,7 @@ function initPaymentModal() {
         const bi = await ensureBusinessInfo();
         const fromZip = String(bi?.business_postal || '').trim();
         const addr = await __getSelectedShippingAddress();
-        const toZip = String(addr?.zip_code || '').trim();
+        const toZip = String(addr?.zipCode || '').trim();
         if (!fromZip || !toZip) return null;
         const items = (cartApi.getItems?.() || []).map(i => ({ sku: (i?.sku||'').toString(), qty: Number(i?.quantity||0), weightOz: Number(i?.weightOz||0)||undefined })).filter(x => x.sku && x.qty>0);
         const resp = await apiClient.post('/api/shipping_rates.php', { items, from: { zip: fromZip }, to: { zip: toZip }, carrier: carrier.toUpperCase(), debug: false });
@@ -59,7 +59,7 @@ function initPaymentModal() {
         const from = { address: (bi?.business_address||''), city: (bi?.business_city||''), state: (bi?.business_state||''), zip: (bi?.business_postal||'') };
         const addr = await __getSelectedShippingAddress();
         if (!addr) return null;
-        const to = { address: (addr.address_line1||''), city: (addr.city||''), state: (addr.state||''), zip: (addr.zip_code||'') };
+        const to = { address: (addr.addressLine1||''), city: (addr.city||''), state: (addr.state||''), zip: (addr.zipCode||'') };
         const resp = await apiClient.post('/api/distance.php', { from, to });
         const milesRaw = resp?.data?.miles ?? resp?.miles;
         const miles = (milesRaw == null ? null : Number(milesRaw));
@@ -421,11 +421,11 @@ function initPaymentModal() {
             try {
               const bi = await ensureBusinessInfo();
               const fromZip = String(bi?.business_postal || '').trim();
-              const toZip = String(addr?.zip_code || '').trim();
+              const toZip = String(addr?.zipCode || '').trim();
               if (fromZip && toZip && /^\d{5}(-\d{4})?$/.test(fromZip) && /^\d{5}(-\d{4})?$/.test(toZip)) {
                 eligible = true;
               }
-            } catch(_) {}
+            } catch (_) {}
           }
           console.info('[PaymentModal] Local Delivery eligibility ->', { miles, eligible });
           localOpt.disabled = !eligible; localOpt.hidden = !eligible;
@@ -484,20 +484,20 @@ function initPaymentModal() {
         }
         const html = addresses.map((a) => {
           const id = String(a.id);
-          const checked = (selectedAddressId ? String(selectedAddressId) === id : a.is_default == 1);
+          const checked = (selectedAddressId ? String(selectedAddressId) === id : a.isDefault == 1);
           if (!selectedAddressId && checked) selectedAddressId = id;
-          const line2 = a.address_line2 ? `${a.address_line2}<br/>` : '';
+          const line2 = a.addressLine2 ? `${a.addressLine2}<br/>` : '';
           return `
             <label class="flex items-start gap-3 p-2 rounded hover:bg-gray-50 cursor-pointer">
               <input type="radio" name="pm-shippingAddress" class="form-radio mt-1" value="${id}" ${checked ? 'checked' : ''} />
               <div class="text-sm">
-                <div class="font-medium">${a.address_name || 'Address'}</div>
+                <div class="font-medium">${a.addressName || 'Address'}</div>
                 <div class="hint">
-                  ${a.address_line1}<br/>
+                  ${a.addressLine1}<br/>
                   ${line2}
-                  ${a.city}, ${a.state} ${a.zip_code}
+                  ${a.city}, ${a.state} ${a.zipCode}
                 </div>
-                ${a.is_default == 1 ? '<div class="text-xs text-green-600">Default</div>' : ''}
+                ${a.isDefault == 1 ? '<div class="text-xs text-green-600">Default</div>' : ''}
               </div>
             </label>
           `;
@@ -586,7 +586,7 @@ function initPaymentModal() {
           const url = `/api/customer_addresses.php?action=get_addresses&user_id=${encodeURIComponent(userId)}`;
           const res = await apiClient.get(url);
           addresses = Array.isArray(res?.addresses) ? res.addresses : [];
-          const def = addresses.find((a) => String(a.is_default) === '1');
+          const def = addresses.find((a) => String(a.isDefault) === '1');
           selectedAddressId = def ? String(def.id) : (addresses[0] ? String(addresses[0].id) : null);
           renderAddresses();
           try { await fetchDrivingMiles(); } catch(_) {}
@@ -762,7 +762,7 @@ function initPaymentModal() {
           } catch(_) {}
           if (selectedAddressId) {
             const addr = addresses.find(a => String(a.id) === String(selectedAddressId));
-            if (addr && addr.zip_code) payload.zip = String(addr.zip_code);
+            if (addr && addr.zipCode) payload.zip = String(addr.zipCode);
           }
           // Fallback: if no selected address ZIP, use business postal ZIP so backend can compute tax from settings/ZIP
           if (!payload.zip) {

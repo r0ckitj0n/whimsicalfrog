@@ -84,8 +84,8 @@ export class RoomSettingsManager {
           </div>
         </div>
         <div class="admin-modal-footer">
-          <button type="button" class="btn-secondary" data-action="close">Cancel</button>
-          <button type="button" class="btn-primary" data-action="save">Save All Settings</button>
+          <button type="button" class="btn btn-secondary" data-action="close">Cancel</button>
+          <button type="button" class="btn btn-primary" data-action="save">Save All Settings</button>
         </div>
       </div>
     `;

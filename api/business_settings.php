@@ -397,6 +397,18 @@ function getBusinessInfo()
         }
     };
 
+    $brandPrimaryRaw = trim((string)$get('business_brand_primary'));
+    $brandSecondaryRaw = trim((string)$get('business_brand_secondary'));
+    $brandAccentRaw = trim((string)$get('business_brand_accent'));
+    $brandBackgroundRaw = trim((string)$get('business_brand_background'));
+    $brandTextRaw = trim((string)$get('business_brand_text'));
+
+    $brandPrimary = $brandPrimaryRaw !== '' ? $brandPrimaryRaw : BusinessSettings::getPrimaryColor();
+    $brandSecondary = $brandSecondaryRaw !== '' ? $brandSecondaryRaw : BusinessSettings::getSecondaryColor();
+    $brandAccent = $brandAccentRaw !== '' ? $brandAccentRaw : '#22c55e';
+    $brandBackground = $brandBackgroundRaw !== '' ? $brandBackgroundRaw : '#ffffff';
+    $brandText = $brandTextRaw !== '' ? $brandTextRaw : '#111827';
+
     $info = [
         'business_name' => BusinessSettings::getBusinessName(),
         'business_email' => BusinessSettings::getBusinessEmail(),
@@ -412,7 +424,8 @@ function getBusinessInfo()
         'business_country' => $get('business_country'),
         'business_website' => $get('business_website', BusinessSettings::getSiteUrl()),
         'business_logo_url' => $get('business_logo_url'),
-        'business_tagline' => $get('business_tagline'),
+        'business_tagline' => $get('site_tagline'),
+        'site_tagline' => $get('site_tagline'),
         'business_description' => $get('business_description'),
         'business_support_email' => $get('business_support_email'),
         'business_support_phone' => $get('business_support_phone'),
@@ -428,11 +441,11 @@ function getBusinessInfo()
         'business_timezone' => $get('business_timezone'),
         'business_currency' => $get('business_currency'),
         'business_locale' => $get('business_locale'),
-        'business_brand_primary' => $get('business_brand_primary', '#0ea5e9'),
-        'business_brand_secondary' => $get('business_brand_secondary', '#6366f1'),
-        'business_brand_accent' => $get('business_brand_accent', '#22c55e'),
-        'business_brand_background' => $get('business_brand_background', '#ffffff'),
-        'business_brand_text' => $get('business_brand_text', '#111827'),
+        'business_brand_primary' => $brandPrimary,
+        'business_brand_secondary' => $brandSecondary,
+        'business_brand_accent' => $brandAccent,
+        'business_brand_background' => $brandBackground,
+        'business_brand_text' => $brandText,
         'business_footer_note' => $get('business_footer_note'),
         'business_footer_html' => $get('business_footer_html'),
         'business_policy_return' => $get('business_policy_return'),

@@ -20,8 +20,8 @@
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-    /* Ensure the section participates in stacking context below doors */
-    z-index: var(--z-room-base, 1000);
+    /* Ensure the section stays beneath the site header; doors use a much higher z-index */
+    z-index: var(--z-room-base, 200);
     overflow: hidden;
     pointer-events: auto;
 }
@@ -212,7 +212,7 @@
 /* Header gradient is now defined canonically in `.site-header.universal-page-header` via --gradient-header. */
 
 /* Remove text shadow from page header text and increase z-index */
-.room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: var(--z-index-page-header, 100) !important;  position: relative !important; }
+.room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: var(--z-index-page-header, 300) !important;  position: relative !important; }
 
 /* Ensure header text and links are above the gradient */
 .site-header * { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }

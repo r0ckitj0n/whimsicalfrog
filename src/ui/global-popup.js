@@ -31,6 +31,38 @@ class UnifiedPopupSystem {
     this.init();
   }
 
+  _ensureVisibilityObserver() {
+    if (!this.popupEl) return;
+    if (this._visObserver) return;
+    try {
+      const fix = () => {
+        try {
+          const hasPos = !!(this.popupEl && this.popupEl.dataset && this.popupEl.dataset.wfGpPosClass);
+          const measuring = !!this.popupEl.classList.contains('measuring');
+          const suppressed = this.popupEl.classList.contains('suppress-auto-show') || this.popupEl.dataset.wfGpSuppress === '1';
+          if (hasPos && !measuring && !suppressed) {
+            if (this.popupEl.classList.contains('hidden') || !this.popupEl.classList.contains('visible')) {
+              this.popupEl.classList.remove('hidden', 'measuring');
+              this.popupEl.classList.add('visible', 'force-visible');
+              this.popupEl.setAttribute('aria-hidden', 'false');
+              try { console.log('[globalPopup] vis-observer forced visible'); } catch(_) {}
+            }
+          }
+        } catch(_) {}
+      };
+      const mo = new MutationObserver((muts) => {
+        for (const m of muts) {
+          if (m.type === 'attributes' && m.attributeName === 'class') { fix(); }
+          if (m.type === 'attributes' && m.attributeName === 'data-wf-gp-pos-class') { fix(); }
+        }
+      });
+      mo.observe(this.popupEl, { attributes: true, attributeFilter: ['class', 'data-wf-gp-pos-class'] });
+      this._visObserver = mo;
+      // Initial correction if already positioned
+      fix();
+    } catch(_) {}
+  }
+
   // Replace popup element if fallback shim wrapped classList or attached observers
   _sanitizePopupEl() {
     if (!this.popupEl) return;
@@ -52,6 +84,9 @@ class UnifiedPopupSystem {
       // Remove fallback style if present
       try { const s = document.getElementById('wf-fallback-globalpopup-style'); if (s && s.parentNode) s.parentNode.removeChild(s); } catch(_){}
     }
+
+    // Install class-change observer to auto-correct visibility
+    try { this._ensureVisibilityObserver(); } catch(_) {}
   }
 
   init() {
@@ -60,15 +95,27 @@ class UnifiedPopupSystem {
     const styleEl = document.createElement('style');
     styleEl.innerHTML = `
       .item-popup{pointer-events:auto !important;}
-      /* Force correct coordinates and appearance even if legacy bundle overrides */
-      .item-popup.positioned{left:auto !important;top:auto !important;}
       /* Neutral background without translucent shade */
       .item-popup{background:transparent !important; box-shadow:none !important;}
       /* Ensure popup container does not stretch full width; size to its content */
       .item-popup{display:inline-block !important; width:auto !important; max-width: min(520px, 96vw) !important;}
       .item-popup .popup-content{display:block !important;}
+      /* Explicit visibility toggles to beat global utility .hidden rules */
+      .item-popup.hidden{opacity:0 !important; visibility:hidden !important; pointer-events:none !important;}
+      .item-popup.force-visible{display:block !important; opacity:1 !important; visibility:visible !important; pointer-events:auto !important;}
+      .item-popup.visible{display:block !important; opacity:1 !important; visibility:visible !important; pointer-events:auto !important;}
+      /* Default hidden unless explicitly shown */
+      .item-popup:not(.visible):not(.force-visible):not(.measuring){opacity:0 !important; visibility:hidden !important; pointer-events:none !important;}
+      /* If positioned, force visible even if a stray .hidden remains (except during measurement) */
+      .item-popup[class*="wf-gp-"]:not(.measuring){display:block !important; opacity:1 !important; visibility:visible !important; pointer-events:auto !important;}
       /* Helper: temporarily allow hit-testing through popup */
       .wf-gp-hitpass{pointer-events:none !important;}
+      /* Topmost helper class driven by tokens with a hard fallback */
+      #itemPopup.wf-gp-topmost{z-index: var(--z-global-popup, var(--z-index-global-popup, 1250)) !important; position:fixed !important; pointer-events:auto !important;}
+      /* Safety: when any modal is open, ensure popup layers above overlays even if in-room-modal flag misses */
+      body.modal-open #itemPopup{z-index: var(--z-global-popup, var(--z-index-global-popup, 1250)) !important; position:fixed !important; pointer-events:auto !important;}
+      /* When flagged as in-room-modal, also ensure very high z-index */
+      #itemPopup.in-room-modal{z-index: var(--z-global-popup, var(--z-index-global-popup, 1250)) !important;}
     `;
     document.head.appendChild(styleEl);
     if (this.popupEl) return;
@@ -80,10 +127,36 @@ class UnifiedPopupSystem {
     this.popupEl = document.getElementById('wfItemPopup') || document.getElementById('itemPopup');
     if (!this.popupEl) {
       // Popup not yet in DOM – wait for template insertion
-      document.addEventListener('DOMContentLoaded', () => {
+      const tryBind = () => {
         this.popupEl = document.getElementById('wfItemPopup') || document.getElementById('itemPopup');
-        if (this.popupEl) this.bindPopupInteractions();
-      });
+        if (this.popupEl) {
+          try { this._sanitizePopupEl(); } catch(_) {}
+          this.bindPopupInteractions();
+          // If a show was pending, re-invoke now that the element exists
+          try {
+            if (this._pendingShowArgs) {
+              const { anchorEl, item } = this._pendingShowArgs;
+              this._pendingShowArgs = null;
+              this._showRetryCount = 0;
+              this.show(anchorEl, item);
+            }
+          } catch(_) {}
+          return true;
+        }
+        return false;
+      };
+      // Bind for DOMContentLoaded (in case we're imported early)
+      document.addEventListener('DOMContentLoaded', tryBind, { once: true });
+      // If DOM is already parsed, attempt immediately and also observe for late insertion
+      if (document.readyState === 'interactive' || document.readyState === 'complete') {
+        // Immediate attempt
+        if (!tryBind()) {
+          this._installPopupObserver && this._installPopupObserver();
+        }
+      } else {
+        // As a fallback, also listen to window load
+        window.addEventListener('load', tryBind, { once: true });
+      }
       return; // No popup element right now
     }
 
@@ -103,6 +176,25 @@ class UnifiedPopupSystem {
     } else {
       return;
     }
+    // Ensure popup is at the end of <body> so it layers above late-inserted overlays
+    try {
+      if (this.popupEl.parentNode !== document.body || document.body.lastElementChild !== this.popupEl) {
+        document.body.appendChild(this.popupEl);
+      }
+    } catch(_) {}
+
+    // Hover persistence on the popup itself
+    try {
+      this.popupEl.addEventListener('mouseenter', () => {
+        try { this.cancelHide(); } catch(_) {}
+        this.isPointerOverPopup = true;
+      });
+      this.popupEl.addEventListener('mouseleave', () => {
+        this.isPointerOverPopup = false;
+        try { this.scheduleHide(500); } catch(_) {}
+      });
+    } catch(_) {}
+
     // Click anywhere inside popup opens item modal (even if out of stock)
     this.popupEl.addEventListener('click', async (e) => {
       // Prevent any default anchor behavior and stop the event from reaching
@@ -212,7 +304,7 @@ class UnifiedPopupSystem {
   }
   static _ensureRule(cls, t, l) {
     if (UnifiedPopupSystem._POS.rules.has(cls)) return;
-    const css = `.item-popup.${cls}{position:fixed;top:${Math.round(t)}px !important;left:${Math.round(l)}px !important;z-index:100200 !important;}`;
+    const css = `.item-popup.${cls}{position:fixed;top:${Math.round(t)}px !important;left:${Math.round(l)}px !important;z-index:var(--z-global-popup, var(--z-index-global-popup, 1250)) !important;}`;
     UnifiedPopupSystem._ensureStyleEl().appendChild(document.createTextNode(css));
     UnifiedPopupSystem._POS.rules.add(cls);
   }
@@ -239,12 +331,37 @@ class UnifiedPopupSystem {
     this._lastAnchor = anchorEl;
     this._anchorEl = anchorEl;
     this._showing = true;
+    // Clear any previous suppression from a prior hide
+    try {
+      if (this.popupEl) {
+        this.popupEl.classList.remove('suppress-auto-show');
+        try { delete this.popupEl.dataset.wfGpSuppress; } catch(_) {}
+      }
+    } catch(_) {}
     // Reset pointer state so we can transition between items cleanly
     this.isPointerOverPopup = false;
+    // Establish grace period early to avoid immediate hides during initial movement
+    try { this._graceUntil = Date.now() + 600; } catch(_) {}
     console.log('[globalPopup] show called with:', anchorEl, item);
     this.init();
+    try { this._ensureVisibilityObserver(); } catch(_) {}
     if (!this.popupEl) {
-      console.warn('[globalPopup] popup element not yet available');
+      // Try one more immediate lookup (in case footer just appended it)
+      this.popupEl = document.getElementById('wfItemPopup') || document.getElementById('itemPopup');
+    }
+    if (!this.popupEl) {
+      // Install an observer and schedule a short retry to avoid losing the hover
+      try { this._installPopupObserver(); } catch(_) {}
+      this._pendingShowArgs = { anchorEl, item };
+      this._showRetryCount = (this._showRetryCount || 0);
+      if (this._showRetryCount < 10) {
+        this._showRetryCount++;
+        setTimeout(() => {
+          try { this.show(anchorEl, item); } catch(_) {}
+        }, 50);
+      } else {
+        console.warn('[globalPopup] popup element unavailable after retries');
+      }
       return;
     }
     if (!anchorEl || !item) {
@@ -400,31 +517,73 @@ class UnifiedPopupSystem {
     // Persist for reclamping on dynamic size changes
     this._anchorViewportRect = anchorViewportRect;
 
+    // Ensure popup is the last child of body so equal z-indices resolve in our favor
+    try {
+      if (this.popupEl.parentNode !== document.body || document.body.lastElementChild !== this.popupEl) {
+        document.body.appendChild(this.popupEl);
+      }
+      // Force topmost via class instead of inline styles (respects lints and theming)
+      this.popupEl.classList.add('wf-gp-topmost');
+    } catch(_) {}
+
     // Show invisibly to measure size then clamp
     // Add measuring first, then remove hidden to avoid any chance of a paint between operations
     this.popupEl.classList.add('measuring');
     this.popupEl.classList.remove('hidden');
+    // Safety: force visible early; rAF will apply final 'visible' after clamping
+    this.popupEl.classList.add('force-visible');
 
     requestAnimationFrame(() => {
-      this._clampAndApply(this._anchorViewportRect);
+      try {
+        try {
+          this._clampAndApply(this._anchorViewportRect);
+        } catch (e) {
+          console.warn('[globalPopup] clamp error', e);
+        }
 
-      // Reveal popup now that it is positioned
-      this.popupEl.classList.remove('measuring');
-      this.popupEl.classList.add('visible');
-      this.popupEl.setAttribute('aria-hidden', 'false');
-      console.log('[globalPopup] popup shown');
-      // Grace period to allow pointer to travel from icon/iframe to popup without hiding
-      this._graceUntil = Date.now() + 350;
-      this._showing = false;
+        // Reveal popup now that it is positioned
+        try {
+          this.popupEl.classList.remove('measuring');
+          this.popupEl.classList.add('visible');
+          this.popupEl.classList.remove('force-visible');
+          this.popupEl.setAttribute('aria-hidden', 'false');
+          console.log('[globalPopup] popup shown');
+        } catch (e) {
+          console.warn('[globalPopup] reveal error', e);
+        }
 
-      // Document-level mousemove watcher disabled to match backup behavior
-      // (delegated mouseover/mouseout + popup mouseenter/leave + iframe boundary listeners)
+        // Grace period to allow pointer to travel from icon/iframe to popup without hiding
+        this._graceUntil = Date.now() + 350;
+        this._showing = false;
 
-      // Observe size changes (e.g., image loads) and re-clamp to keep fully visible
-      this._ensureResizeObserver();
-      // Install lightweight mousemove watcher to hide when leaving both icon and popup
-      this._installMouseMoveWatcher();
+        // Observe size changes (e.g., image loads) and re-clamp to keep fully visible
+        try { this._ensureResizeObserver(); } catch (_) {}
+        // Install lightweight mousemove watcher to hide when leaving both icon and popup
+        try { this._installMouseMoveWatcher(); } catch (_) {}
+      } catch (err) {
+        console.warn('[globalPopup] rAF error', err);
+        // Best-effort reveal even if something failed
+        try {
+          this.popupEl.classList.remove('measuring');
+          this.popupEl.classList.remove('hidden');
+          this.popupEl.classList.add('visible');
+          this.popupEl.setAttribute('aria-hidden', 'false');
+        } catch (_) {}
+      }
     });
+
+    // Backup: if something prevented visibility, force it shortly after
+    setTimeout(() => {
+      try {
+        if (this.popupEl && !this.popupEl.classList.contains('visible')) {
+          console.warn('[globalPopup] applying fallback visible');
+          this.popupEl.classList.remove('measuring');
+          this.popupEl.classList.remove('hidden');
+          this.popupEl.classList.add('visible');
+          this.popupEl.setAttribute('aria-hidden', 'false');
+        }
+      } catch (_) {}
+    }, 120);
     console.log('[globalPopup] positioned popup at:', { top, left });
 
     // Hide any other stale popups
@@ -527,11 +686,35 @@ class UnifiedPopupSystem {
     try { this.popupEl && this.popupEl.classList.remove('wf-gp-hitpass'); } catch(_) {}
   }
 
-  hideImmediate() {
+  hideImmediate(force = false) {
     try { this._sanitizePopupEl(); } catch (_) {}
     console.log('[globalPopup] hide immediate');
+    // Respect grace period and active show to avoid flicker during initial hover
+    if (!force) {
+      try {
+        const now = Date.now();
+        if (this._showing || (this._graceUntil && now < this._graceUntil)) {
+          const deferMs = Math.max(200, (this._graceUntil || now) - now + 50);
+          try { console.log('[globalPopup] defer hideImmediate due to grace/show', { deferMs }); } catch(_) {}
+          return this.scheduleHide(deferMs);
+        }
+      } catch(_) {}
+    }
     if (this.popupEl) {
+      // Suppress auto-resurrection and remove positioning
+      try { this.popupEl.classList.add('suppress-auto-show'); } catch(_) {}
+      try { this.popupEl.dataset.wfGpSuppress = '1'; } catch(_) {}
+      try {
+        const prev = this.popupEl.dataset.wfGpPosClass;
+        if (prev) this.popupEl.classList.remove(prev);
+        delete this.popupEl.dataset.wfGpPosClass;
+      } catch(_) {}
+      if (this._visObserver && this._visObserver.disconnect) {
+        try { this._visObserver.disconnect(); } catch(_) {}
+        this._visObserver = null;
+      }
       try { this.popupEl.classList.remove('wf-gp-hitpass'); } catch(_) {}
+      try { this.popupEl.classList.remove('wf-gp-topmost'); } catch(_) {}
       this.popupEl.classList.remove('visible');
       this.popupEl.classList.add('hidden');
       this.popupEl.classList.remove('in-room-modal');
@@ -771,7 +954,7 @@ window.showGlobalPopup = (el, data) => unifiedPopup.show(el, data);
 // Export a debounced hide by default to avoid flicker from rapid mouse transitions
 window.hideGlobalPopup = () => unifiedPopup.scheduleHide();
 // Provide an immediate hide for explicit cases (e.g., modal close, route change)
-window.hideGlobalPopupImmediate = () => unifiedPopup.hideImmediate();
+window.hideGlobalPopupImmediate = () => unifiedPopup.hideImmediate(true);
 // Explicit schedule/cancel APIs for delegated handlers
 window.scheduleHideGlobalPopup = (delay) => unifiedPopup.scheduleHide(delay);
 window.cancelHideGlobalPopup = () => unifiedPopup.cancelHide();
@@ -815,7 +998,7 @@ try {
     };
     window.hideGlobalPopupImmediate = () => {
       try { console.log('[globalPopup] hideImmediate requested'); } catch(_) {}
-      try { unifiedPopup.hideImmediate(); } catch (_) {}
+      try { unifiedPopup.hideImmediate(true); } catch (_) {}
     };
     window.scheduleHideGlobalPopup = (delay) => {
       try { console.log('[globalPopup] scheduleHide requested', delay); } catch(_) {}

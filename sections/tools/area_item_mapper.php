@@ -168,11 +168,14 @@ try {
           async function j(url){
             const r = await fetch(url, { credentials: "same-origin", headers: { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest' } });
             const text = await r.text();
+            console.info('[AIM] fetch raw', { url, status: r.status, ok: r.ok, body: text.slice(0, 200) });
             // Extract JSON from responses that may include environment banners
-            const i = text.lastIndexOf('{');
+            const start = text.indexOf('{');
+            const end = text.lastIndexOf('}');
             let obj = null;
-            if (i >= 0) {
-              try { obj = JSON.parse(text.slice(i)); } catch(_) { obj = null; }
+            if (start !== -1 && end !== -1 && end >= start) {
+              const payload = text.slice(start, end + 1);
+              try { obj = JSON.parse(payload); } catch(_) { obj = null; }
             }
             return obj || { success:false };
           }
@@ -274,6 +277,8 @@ try {
                 j(`/api/area_mappings.php?action=get_mappings&room=${encodeURIComponent(room)}`),
                 j(`/api/area_mappings.php?action=get_live_view&room=${encodeURIComponent(room)}`)
               ]);
+              console.info('[AIM] exp payload', exp);
+              console.info('[AIM] live payload', live);
               const explicit = exp && exp.success ? ((exp.data && exp.data.mappings) || []) : [];
               const derived = live && live.success ? ((live.data && live.data.mappings) || []) : [];
               const cat = live && live.success ? ((live.data && live.data.category) || '') : '';

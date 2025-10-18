@@ -24,7 +24,7 @@ function ensureRoomBgClass(imageUrl) {
     const idx = roomBgClassMap.size + 1;
     const cls = `room-bg-${idx}`;
     const styleEl = getRoomModalStyleEl();
-    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
+    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}, .room-modal-container.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
     roomBgClassMap.set(imageUrl, cls);
     return cls;
 }
@@ -252,10 +252,15 @@ class RoomModalManager {
             } catch(_) {}
         };
 
-        // Room door clicks (capture-phase). Do not rely on defaultPrevented; other listeners may use it.
+        // Room door clicks (capture-phase). Prevent triggering inside the open modal content.
         document.addEventListener('click', (e) => {
             try {
-                const doorLink = e.target.closest && e.target.closest('[data-room], .door-link, .room-door, .door-area, [data-room-number]');
+                const inOpenModal = !!(e.target.closest && e.target.closest('.room-modal-overlay.show'));
+                if (inOpenModal) return; // Never treat clicks inside open modal as door clicks
+                // Only treat as a door click when clicking true door elements. Exclude #modalRoomPage.
+                const doorLink = e.target.closest && e.target.closest('.room-door, .door-area, .door-link, [data-room-number], a[data-room]');
+                // If inside an open modal, ignore generic [data-room] containers like #modalRoomPage
+                if (inOpenModal && (!doorLink || doorLink.id === 'modalRoomPage')) return;
                 if (!doorLink) return;
 
                 // Diagnostics
@@ -279,7 +284,7 @@ class RoomModalManager {
             } catch(err) {
                 console.warn('[RoomModalManager] Delegated door click handler error', err);
             }
-        }, true); // Use capture phase to catch events before they bubble
+        }, false); // Bubble phase to allow inner handlers to stop propagation first
 
         // Delegated: refresh page action for error state
         document.addEventListener('click', (e) => {
@@ -478,16 +483,23 @@ class RoomModalManager {
             console.log('[RoomModalManager] Skipping hover popup listeners; delegated event-manager is active');
         }
         body.addEventListener('click', (e) => {
-            const icon = e.target.closest && e.target.closest('.room-product-icon');
-            if (!icon) return;
-            e.preventDefault(); e.stopPropagation();
-            const data = getIconData(icon);
-            if (!data) return;
-            const sku = data.sku;
-            if (typeof window.showGlobalItemModal === 'function') window.showGlobalItemModal(sku, data);
-            else if (window.parent && typeof window.parent.showGlobalItemModal === 'function') window.parent.showGlobalItemModal(sku, data);
+            const target = e.target;
+            if (!target || typeof target.closest !== 'function') return;
+            const trigger = target.closest('.room-product-icon, [data-sku], [data-product], img[data-sku], img[data-product]');
+            if (!trigger) return;
+            e.preventDefault();
+            if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+            // Hide hover popup before opening modal (cover both iframe/top contexts)
+            try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
+            try { parent && parent.hideGlobalPopupImmediate && parent.hideGlobalPopupImmediate(); } catch(_) {}
+            const icon = trigger.closest('.room-product-icon') || trigger;
+            const data = getIconData(icon) || (icon.dataset?.sku ? { sku: icon.dataset.sku } : null);
+            const sku = data?.sku || icon.dataset?.sku;
+            if (!sku) return;
+            if (typeof window.showGlobalItemModal === 'function') window.showGlobalItemModal(sku, data || { sku });
+            else if (window.parent && typeof window.parent.showGlobalItemModal === 'function') window.parent.showGlobalItemModal(sku, data || { sku });
             else if (window.WhimsicalFrog) window.WhimsicalFrog.emit('product:modal-requested', { element: icon, sku });
-        });
+        }, true);
 
         // Background + coordinate scaling
         const modalPage = this.overlay.querySelector('#modalRoomPage');
@@ -519,6 +531,12 @@ class RoomModalManager {
                     const bgCls = ensureRoomBgClass(imageUrl);
                     if (roomWrapper.dataset.roomBgClass && roomWrapper.dataset.roomBgClass !== bgCls) roomWrapper.classList.remove(roomWrapper.dataset.roomBgClass);
                     if (bgCls) { roomWrapper.classList.add(bgCls); roomWrapper.dataset.roomBgClass = bgCls; }
+                    // Also apply to the modal container to guarantee full-cover background
+                    const container = this.overlay.querySelector('.room-modal-container');
+                    if (container) {
+                        if (container.dataset.roomBgClass && container.dataset.roomBgClass !== bgCls) container.classList.remove(container.dataset.roomBgClass);
+                        if (bgCls) { container.classList.add(bgCls); container.dataset.roomBgClass = bgCls; }
+                    }
                     // ResourceTiming breakdown if available
                     try {
                         const entries = performance.getEntriesByType('resource');

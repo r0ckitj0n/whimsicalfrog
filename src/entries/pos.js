@@ -1,5 +1,4 @@
 // Vite entry: pos.js (renamed from admin-pos.js)
-import '../styles/components/pos.css';
 import '../styles/components/modal.css';
 import '../styles/components/detailed-item-modal.css';
 import '../styles/site-base.css';

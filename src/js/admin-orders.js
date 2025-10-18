@@ -10,16 +10,18 @@ class AdminOrdersModule {
         this.allItems = [];
         this.modalMode = null;
         this.currentOrderId = null;
+        // Lightweight HTML cache for modal partials
+        this.__modalCache = new Map(); // key: `${action}:${id}` -> { html, ts }
+        this.__modalPrefetching = new Map(); // key -> Promise in flight
+        this.__prefetchHoverTimers = new Map(); // anchor -> timer id
+        // Signal readiness early to prevent inline fallback from attaching duplicate handlers
+        try { window.__WF_ADMIN_ORDERS_READY = true; } catch(_) {}
+        try { window.dispatchEvent(new CustomEvent('wf-admin-orders-ready')); } catch(_) {}
 
         this.loadData();
         this.bindEvents();
-        // If DOM is already loaded (likely on dynamic import), initialize immediately
-        if (document.readyState !== 'loading') {
-            this.initInlineEditing();
-            this.ensureOrderModalVisible();
-            this.ensureOrderOverlayVisible();
-        }
-        try { window.__WF_ADMIN_ORDERS_READY = true; } catch(_) {}
+        // If inline fallback installed earlier, detach it now
+        try { if (typeof window.__WF_ORDERS_INLINE_CLEANUP === 'function') { window.__WF_ORDERS_INLINE_CLEANUP(); } } catch(_) {}
     }
 
     loadData() {
@@ -92,6 +94,51 @@ class AdminOrdersModule {
             }
         }, true);
 
+        // Prefetch modal partial on hover over view/edit links (debounced)
+        try {
+            const onOver = (e) => {
+                const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+                if (!a) return;
+                const parsed = this.parseActionFromHref(a.getAttribute('href'));
+                if (!parsed) return;
+                const key = `${parsed.action}:${parsed.id}`;
+                if (this.__modalCache.has(key) || this.__modalPrefetching.has(key)) return;
+                // Debounce per-anchor
+                if (this.__prefetchHoverTimers.get(a)) return;
+                const t = setTimeout(() => {
+                    this.__prefetchHoverTimers.delete(a);
+                    this.prefetchOrderModal(parsed.action, parsed.id).catch(() => {});
+                }, 120);
+                this.__prefetchHoverTimers.set(a, t);
+            };
+            const onOut = (e) => {
+                const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+                if (!a) return;
+                const t = this.__prefetchHoverTimers.get(a);
+                if (t) { clearTimeout(t); this.__prefetchHoverTimers.delete(a); }
+            };
+            document.addEventListener('mouseover', onOver, { passive: true });
+            document.addEventListener('mouseout', onOut, { passive: true });
+        } catch(_) {}
+
+        // Idle-time prefetch for first visible order link
+        try {
+            const run = () => {
+                try {
+                    const a = document.querySelector('a[href*="?view="], a[href*="?edit="]');
+                    if (!a) return;
+                    const parsed = this.parseActionFromHref(a.getAttribute('href'));
+                    if (parsed) this.prefetchOrderModal(parsed.action, parsed.id).catch(() => {});
+                } catch(_) {}
+            };
+            if ('requestIdleCallback' in window) {
+                // @ts-ignore
+                window.requestIdleCallback(() => run(), { timeout: 1000 });
+            } else {
+                setTimeout(run, 400);
+            }
+        } catch(_) {}
+
         // ESC-to-close when overlay is present
         document.addEventListener('keydown', (e) => {
             const overlay = document.getElementById('orderModal');
@@ -112,11 +159,13 @@ class AdminOrdersModule {
             } catch(_) {}
             // Fallback: observe for #orderModal insertion and show it if needed
             try {
+                if (this.__ordersMo) return; // guard against duplicate observers
                 const mo = new MutationObserver(() => {
                     const el = document.getElementById('orderModal');
                     if (el && this.modalMode && !el.classList.contains('show')) {
                         this.showModal(el);
                         console.log('[AdminOrders] Observed #orderModal insertion; applied show');
+                        try { mo.disconnect(); } catch(_) {}
                     }
                 });
                 mo.observe(document.body, { childList: true, subtree: true });
@@ -137,6 +186,36 @@ class AdminOrdersModule {
         try { el.classList.remove('show'); } catch(_) {}
     }
 
+    // Ensure the overlay sits above header, is centered, and body is locked
+    ensureOrderOverlayVisible() {
+        try { this.normalizeOrderOverlay(); } catch(_) {}
+    }
+
+    normalizeOrderOverlay() {
+        try {
+            const el = document.getElementById('orderModal');
+            if (!el) return;
+            // Unhide and ensure visibility classes
+            try { el.classList.remove('hidden'); } catch(_) {}
+            try { el.classList.add('show'); } catch(_) {}
+            // Make sure it's treated as an admin overlay and marked to bypass header offset
+            el.classList.add('admin-modal-overlay');
+            el.classList.add('over-header');
+            el.classList.add('topmost');
+            // Classes control centering and stacking (no inline styles per repo guard)
+            // Upgrade panel wrapper if needed
+            const panel = el.querySelector('.admin-modal, .modal-content, .modal');
+            if (panel) {
+                try { panel.classList.add('admin-modal'); } catch(_) {}
+                try { panel.classList.add('wf-admin-panel-visible'); } catch(_) {}
+                try { panel.classList.add('show'); } catch(_) {}
+                // Panel layout is governed by CSS classes; no inline styles
+            }
+            // Lock scroll behind overlay
+            try { document.documentElement.classList.add('modal-open'); } catch(_) {}
+            try { document.body.classList.add('modal-open'); } catch(_) {}
+        } catch(_) {}
+    }
     handleDelegatedClick(event) {
         const actionTarget = event.target.closest('[data-action]');
         if (!actionTarget) return;
@@ -191,14 +270,22 @@ class AdminOrdersModule {
                 break;
             case 'close-order-editor-on-overlay': {
                 const overlay = document.getElementById('orderModal');
-                if (overlay && event.target === overlay) {
+                // Close only when clicking the true backdrop (overlay itself) or when clicking outside the panel,
+                // but ignore clicks on overlay-level controls like nav arrows.
+                const clickedNavArrow = !!(event.target && event.target.closest && event.target.closest('.nav-arrow'));
+                const clickedInsidePanel = !!(event.target && event.target.closest && event.target.closest('.admin-modal'));
+                if (overlay && !clickedNavArrow && (!clickedInsidePanel || event.target === overlay)) {
                     event.preventDefault();
+                    try { this.__modalAbortCtrl && this.__modalAbortCtrl.abort(); } catch(_) {}
+                    try { window.__WF_BLOCK_TOOLTIP_ATTACH = false; } catch(_) {}
                     window.location.href = buildAdminUrl('orders');
                 }
                 break;
             }
             case 'close-order-editor': {
                 event.preventDefault();
+                try { this.__modalAbortCtrl && this.__modalAbortCtrl.abort(); } catch(_) {}
+                try { window.__WF_BLOCK_TOOLTIP_ATTACH = false; } catch(_) {}
                 window.location.href = buildAdminUrl('orders');
                 break;
             }
@@ -242,28 +329,97 @@ class AdminOrdersModule {
             return;
         }
 
-        // Fallback: fetch and inject #orderModal using URL or module state
+        // Fallback: fetch (or use cache) and inject #orderModal using a lightweight partial
         if (requestedId && !orderModal && action) {
+            if (this.__loadingModal) {
+                try { console.debug('[AdminOrders] modal load already in-flight, skipping'); } catch(_) {}
+                return;
+            }
+            this.__loadingModal = true;
             try {
+                // Temporarily block tooltip attachments to avoid heavy DOM work during modal load
+                try { window.__WF_BLOCK_TOOLTIP_ATTACH = true; } catch(_) {}
+                // Show a temporary lightweight overlay while loading
+                const skeleton = document.createElement('div');
+                skeleton.id = 'orderModal';
+                skeleton.className = 'admin-modal-overlay topmost over-header order-modal show';
+                try { skeleton.setAttribute('data-action', 'close-order-editor-on-overlay'); } catch(_) {}
+                skeleton.innerHTML = `
+                  <div class="admin-modal admin-modal-content wf-admin-panel-visible show">
+                    <div class="modal-header">
+                      <h2 class="modal-title">Loading order…</h2>
+                      <a href="/admin/orders" class="modal-close" data-action="close-order-editor" aria-label="Close">×</a>
+                    </div>
+                    <div class="modal-body">
+                      <div class="p-4">Please wait…</div>
+                    </div>
+                  </div>`;
+                document.body.appendChild(skeleton);
+                try { this.normalizeOrderOverlay(); } catch(_) {}
+
                 const url = new URL(window.location.href);
                 url.searchParams.delete('view');
                 url.searchParams.delete('edit');
                 url.searchParams.set(action, requestedId);
+                url.searchParams.set('wf_partial', 'order_modal');
 
-                ApiClient.get(url.toString())
-                    .then(html => {
-                        const tmp = document.createElement('div');
-                        tmp.innerHTML = html;
-                        const el = tmp.querySelector('#orderModal');
-                        if (el) {
-                            document.body.appendChild(el);
-                            this.showModal(el);
-                            console.log('[AdminOrders] Injected #orderModal from fetched HTML');
-                        } else {
-                            console.warn('[AdminOrders] Fallback fetch did not contain #orderModal');
-                        }
-                    })
-                    .catch(() => {});
+                // Use cache if available
+                const key = `${action}:${requestedId}`;
+                const cached = this.__modalCache.get(key);
+                if (cached && typeof cached.html === 'string' && cached.html.length) {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = cached.html;
+                    const el = tmp.querySelector('#orderModal');
+                    if (el) {
+                        try { skeleton.remove(); } catch(_) { skeleton.classList.add('hidden'); }
+                        document.body.appendChild(el);
+                        try { this.normalizeOrderOverlay(); } catch(_) {}
+                        this.showModal(el);
+                        console.log('[AdminOrders] Injected #orderModal from cache');
+                        this.__loadingModal = false;
+                        try { window.__WF_BLOCK_TOOLTIP_ATTACH = false; window.__wfDebugTooltips && window.__wfDebugTooltips(); } catch(_) {}
+                        return;
+                    }
+                }
+
+                // Abortable fetch with timeout to avoid hangs
+                const ctrl = new AbortController();
+                this.__modalAbortCtrl && this.__modalAbortCtrl.abort();
+                this.__modalAbortCtrl = ctrl;
+                const timeout = setTimeout(() => { try { ctrl.abort(); } catch(_) {} }, 5000);
+
+                fetch(url.toString(), { credentials: 'include', signal: ctrl.signal })
+                  .then(r => r.text())
+                  .then(html => {
+                    // Cache trimmed response
+                    try { this.setModalCache(key, html); } catch(_) {}
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = html;
+                    const el = tmp.querySelector('#orderModal');
+                    if (el) {
+                        try { skeleton.remove(); } catch(_) { skeleton.classList.add('hidden'); }
+                        document.body.appendChild(el);
+                        try { this.normalizeOrderOverlay(); } catch(_) {}
+                        this.showModal(el);
+                        console.log('[AdminOrders] Injected #orderModal from partial');
+                    } else {
+                        console.warn('[AdminOrders] Partial did not contain #orderModal');
+                    }
+                  })
+                  .catch((e) => {
+                    if (e && e.name === 'AbortError') {
+                      console.warn('[AdminOrders] modal fetch aborted');
+                    } else {
+                      console.warn('[AdminOrders] modal fetch error', e);
+                    }
+                  })
+                  .finally(() => {
+                    clearTimeout(timeout);
+                    this.__loadingModal = false;
+                    this.__modalAbortCtrl = null;
+                    // Re-enable tooltip attachments and schedule a light reattach
+                    try { window.__WF_BLOCK_TOOLTIP_ATTACH = false; window.__wfDebugTooltips && window.__wfDebugTooltips(); } catch(_) {}
+                  });
             } catch (_) {}
         }
     }
@@ -291,7 +447,7 @@ class AdminOrdersModule {
         this.showModal(modal);
 
         // Use an iframe to guarantee identical layout and CSS isolation as checkout receipt
-        const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
+        const url = `/receipt.php?orderId=${encodeURIComponent(orderId)}&bare=1`;
         const iframe = document.createElement('iframe');
         iframe.src = url;
         iframe.title = 'Receipt';
@@ -318,7 +474,7 @@ class AdminOrdersModule {
     printReceipt() {
         const id = this.currentOrderId ? String(this.currentOrderId) : '';
         if (id) {
-            const url = `/receipt?orderId=${encodeURIComponent(id)}&bare=1`;
+            const url = `/receipt.php?orderId=${encodeURIComponent(id)}&bare=1`;
             try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
             return;
         }
@@ -335,10 +491,25 @@ class AdminOrdersModule {
         const orderIdText = (document.getElementById('deleteOrderId') || {}).textContent || '';
         const id = orderIdText.trim();
         if (!id) return;
-        // TODO: Implement actual delete endpoint; for now log and close modal
-        console.log('Requesting delete for order', id);
-        this.closeDeleteModal();
-        // Optionally trigger a reload or navigate to a server-side delete handler
+        try {
+            const res = await fetch(`/api/delete_order.php?orderId=${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+            let data = {};
+            try { data = await res.json(); } catch (_) {}
+            this.closeDeleteModal();
+            if (res.ok && (data && data.success)) {
+                try { window.showNotification && window.showNotification('Order deleted', 'success'); } catch(_) {}
+                window.location.href = '/admin/orders';
+            } else {
+                const msg = (data && (data.error || data.message)) || 'Failed to delete order';
+                try { window.showNotification && window.showNotification(msg, 'error'); } catch(_) {}
+            }
+        } catch (e) {
+            this.closeDeleteModal();
+            try { window.showNotification && window.showNotification('Network error', 'error'); } catch(_) {}
+        }
     }
 
     showAddItemModal() {

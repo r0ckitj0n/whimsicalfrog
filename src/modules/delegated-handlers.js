@@ -694,7 +694,7 @@ const DelegatedHandlers = {
             <span class="status-chip ${email.status === 'sent' ? 'chip-success' : email.status === 'failed' ? 'chip-error' : 'chip-warning'}">
               ${email.status}
             </span>
-            <button class="text-blue-600 hover:text-blue-800 text-xs" data-action="email-history-view-details" data-email-id="${email.id}">Details</button>
+            <button class="btn btn-secondary btn-sm" data-action="email-history-view-details" data-email-id="${email.id}">Details</button>
           </div>
         </div>
       </div>

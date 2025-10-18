@@ -197,12 +197,12 @@ foreach ($categories as $slug => $catData):
 
             <!-- Add to Cart Button - Always at Bottom -->
             <div class="product-button">
-                <button class="add-to-cart-btn btn-brand rounded-brand"
+                <button class="add-to-cart-btn btn btn-lg"
                         data-sku="<?php echo $sku; ?>"
                         data-name="<?php echo htmlspecialchars($productName); ?>"
                         data-price="<?php echo $price; ?>"
                         data-custom-text="<?php echo $customButtonText; ?>">
-                    <?php echo $customButtonText; ?>
+                        <?php echo $customButtonText; ?>
                 </button>
             </div>
         </div>

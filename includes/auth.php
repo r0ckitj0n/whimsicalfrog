@@ -50,10 +50,16 @@ function ensureSessionStarted()
             $parsed = wf_auth_parse_cookie($cookieVal ?? '');
             if (is_array($parsed) && !empty($parsed['userId'])) {
                 $uid = $parsed['userId'];
-                // Fetch user
+                // Fetch user (dev-safe): skip DB if unavailable to avoid hangs
                 $row = null;
                 try {
-                    $row = Database::queryOne('SELECT id, username, email, role, firstName, lastName FROM users WHERE id = ?', [$uid]);
+                    $dbOk = true;
+                    if (class_exists('Database') && method_exists('Database', 'isAvailableQuick')) {
+                        $dbOk = \Database::isAvailableQuick(0.6);
+                    }
+                    if ($dbOk) {
+                        $row = Database::queryOne('SELECT id, username, email, role, firstName, lastName FROM users WHERE id = ?', [$uid]);
+                    }
                 } catch (\Throwable $e) {
                     $row = null;
                 }

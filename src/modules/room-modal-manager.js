@@ -316,13 +316,18 @@ class RoomModalManager {
                 try { performance.mark('wf:roomModal:fetch:start'); } catch(_) {}
                 const tNavStart = performance.timeOrigin || (performance.timing && performance.timing.navigationStart) || 0;
                 const tFetchStart = performance.now();
-                const json = await ApiClient.get('/api/load_room_content.php', { room: key, modal: 1, perf: 1 });
-                if (!json.success) throw new Error(json.message || 'Failed to load room content');
-                roomContent = json.content;
-                if (json.metadata) this.updateHeader(json.metadata);
-                // Cache background metadata if provided to avoid extra API call
-                if (json.background) {
-                    this._bgMetaCache.set(key, json.background);
+                const resp = await ApiClient.get('/api/load_room_content.php', { room: key, modal: 1, perf: 1 });
+                // Accept both JSON and HTML string responses (defensive for prod)
+                if (typeof resp === 'string') {
+                    roomContent = resp;
+                } else {
+                    if (!resp.success) throw new Error(resp.message || 'Failed to load room content');
+                    roomContent = resp.content;
+                    if (resp.metadata) this.updateHeader(resp.metadata);
+                    // Cache background metadata if provided to avoid extra API call
+                    if (resp.background) {
+                        this._bgMetaCache.set(key, resp.background);
+                    }
                 }
                 this.roomCache.set(key, roomContent);
                 try {

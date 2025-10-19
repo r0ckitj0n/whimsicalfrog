@@ -2,6 +2,8 @@
 #paymentModalOverlay .confirmation-modal.payment-modal {
   height: calc(90dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
   max-height: calc(90dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  /* Override global .confirmation-modal { max-width: 500px } */
+  max-width: min(1100px, 95vw) !important;
   width: min(1000px, 95vw) !important;
   display: flex !important;
   flex-direction: column !important;

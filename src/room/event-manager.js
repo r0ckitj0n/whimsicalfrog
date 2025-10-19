@@ -129,6 +129,37 @@ export function attachDelegatedItemEvents() {
     }
   });
 
+  // Capture-phase fallback: ensure popup clicks always open details
+  document.addEventListener('pointerdown', async (e) => {
+    let targetEl = e.target;
+    if (targetEl && targetEl.nodeType === 3) targetEl = targetEl.parentElement;
+    const popup = document.getElementById('itemPopup');
+    if (!popup) return;
+    // Determine if the pointer is within the visible popup rect regardless of event target
+    const pr = popup.getBoundingClientRect();
+    const x = e.clientX, y = e.clientY;
+    const insideRect = (x >= pr.left && x <= pr.right && y >= pr.top && y <= pr.bottom);
+    const inPopup = insideRect || (!!targetEl && typeof targetEl.closest === 'function' && !!targetEl.closest('.item-popup'));
+    if (!inPopup) return;
+    try {
+      e.preventDefault();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+    } catch(_) {}
+    let sku = '';
+    try { sku = String(document.getElementById('itemPopup')?.dataset?.sku || ''); } catch(_) {}
+    if (!sku) return;
+    try { console.log('[eventManager] popup pointerdown fallback -> open details for', sku); } catch(_) {}
+    let detailsFn = (parent && parent.showGlobalItemModal) || window.showGlobalItemModal;
+    if (typeof detailsFn !== 'function') {
+      try { await import('../js/detailed-item-modal.js'); } catch(_) {}
+      detailsFn = window.showGlobalItemModal;
+    }
+    if (typeof detailsFn === 'function') {
+      try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
+      detailsFn(sku, {});
+    }
+  }, true);
+
   // Schedule hide when leaving icons or popup
   document.addEventListener('mouseout', e => {
     const targetEl = e.target;

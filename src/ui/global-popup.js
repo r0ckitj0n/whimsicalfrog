@@ -11,7 +11,7 @@ const console = {
   error: (...args) => { try { __WF_CON && __WF_CON.error && __WF_CON.error(...args); } catch(_) {} }
 };
 
-const BIND_VERSION = 'v2';
+const BIND_VERSION = 'v3';
 
 class UnifiedPopupSystem {
   constructor() {
@@ -208,6 +208,7 @@ class UnifiedPopupSystem {
         window.hideGlobalPopupImmediate();
       }
       const sku = this.currentItem?.sku;
+      try { console.log('[globalPopup] openDetails fired via', e?.type, 'sku=', sku); } catch(_) {}
       try {
         if (typeof window.showGlobalItemModal !== 'function') {
           await import('../js/detailed-item-modal.js');

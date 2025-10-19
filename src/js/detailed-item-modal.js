@@ -1012,33 +1012,33 @@ import { ApiClient } from '../core/api-client.js';
             // Init item options with base SKU (strip only variant suffix tokens -G*, -S*, -C*)
             const rawSku = String(sku || payloadItem?.sku || '');
             const baseSku = rawSku.replace(/(-(G|S|C)[A-Z0-9]+)+$/i, '');
-            await initOptions(modal, baseSku, itemData || {});
 
-            // Debug: log SKU and counts for troubleshooting missing options
-            try {
-                console.log('[GlobalModal] Base SKU for options:', baseSku, {
-                    gendersCount: (optionState?.genders || []).length,
-                    colorsCount: (optionState?.colors || []).length,
-                    sizesAllCount: (optionState?.sizesAll || []).length
-                });
-            } catch(_) {}
-
-            // If no colors, show all sizes and enable size selection
-            if (optionState?.colors?.length === 0) {
-                optionState.sizes = optionState.sizesAll;
-                const sizeSelect = qs('#itemSizeSelect', modal);
-                if (sizeSelect) sizeSelect.disabled = false;
-            }
-
-            // Show modal
+            // Show modal immediately to avoid perceived delay
             modal.classList.remove('hidden');
             modal.classList.add('show');
             modal.setAttribute('aria-hidden', 'false');
-
-            // Bind handlers
+            // Bind handlers and ESC early so user can close during load
             bindCloseHandlers(modal);
-            // Ensure ESC key closes the modal
             bindEscHandler(modal);
+
+            // Initialize options asynchronously (do not block initial render)
+            (async () => {
+                await initOptions(modal, baseSku, itemData || {});
+                // If no colors, show all sizes and enable size selection
+                if (optionState?.colors?.length === 0) {
+                    optionState.sizes = optionState.sizesAll;
+                    const sizeSelect = qs('#itemSizeSelect', modal);
+                    if (sizeSelect) sizeSelect.disabled = false;
+                }
+                // Debug: log SKU and counts for troubleshooting missing options
+                try {
+                    console.log('[GlobalModal] Base SKU for options:', baseSku, {
+                        gendersCount: (optionState?.genders || []).length,
+                        colorsCount: (optionState?.colors || []).length,
+                        sizesAllCount: (optionState?.sizesAll || []).length
+                    });
+                } catch(_) {}
+            })();
         } catch (err) {
             console.error('[GlobalModal] Failed to open detailed modal', err);
         }

@@ -345,6 +345,12 @@ class UnifiedPopupSystem {
     console.log('[globalPopup] show called with:', anchorEl, item);
     this.init();
     try { this._ensureVisibilityObserver(); } catch(_) {}
+    try {
+      if (!window.__wfDidPrefetchItemModal) {
+        window.__wfDidPrefetchItemModal = true;
+        import('../js/detailed-item-modal.js').catch(() => {});
+      }
+    } catch(_) {}
     if (!this.popupEl) {
       // Try one more immediate lookup (in case footer just appended it)
       this.popupEl = document.getElementById('wfItemPopup') || document.getElementById('itemPopup');
@@ -662,7 +668,6 @@ class UnifiedPopupSystem {
       this.hideTimer = null;
     }
     this._pendingHide = true;
-    try { this.popupEl && this.popupEl.classList.add('wf-gp-hitpass'); } catch(_) {}
     this.hideTimer = setTimeout(() => {
       this.hideImmediate();
     }, finalDelay);

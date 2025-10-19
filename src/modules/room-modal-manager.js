@@ -587,6 +587,11 @@ class RoomModalManager {
                         if (container.dataset.roomBgClass && container.dataset.roomBgClass !== bgCls) container.classList.remove(container.dataset.roomBgClass);
                         if (bgCls) { container.classList.add(bgCls); container.dataset.roomBgClass = bgCls; }
                     }
+                    const iframeContainer = this.overlay.querySelector('.room-modal-iframe-container');
+                    if (iframeContainer) {
+                        if (iframeContainer.dataset.roomBgClass && iframeContainer.dataset.roomBgClass !== bgCls) iframeContainer.classList.remove(iframeContainer.dataset.roomBgClass);
+                        if (bgCls) { iframeContainer.classList.add(bgCls); iframeContainer.dataset.roomBgClass = bgCls; }
+                    }
                     // ResourceTiming breakdown if available
                     try {
                         const entries = performance.getEntriesByType('resource');

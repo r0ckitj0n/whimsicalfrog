@@ -24,7 +24,7 @@ function ensureRoomBgClass(imageUrl) {
     const idx = roomBgClassMap.size + 1;
     const cls = `room-bg-${idx}`;
     const styleEl = getRoomModalStyleEl();
-    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}, .room-modal-container.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
+    styleEl.appendChild(document.createTextNode(`.room-modal-iframe-container.${cls}, .room-overlay-wrapper.${cls}, .room-modal-body.${cls}, .room-modal-container.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
     roomBgClassMap.set(imageUrl, cls);
     return cls;
 }
@@ -317,17 +317,27 @@ class RoomModalManager {
                 const tNavStart = performance.timeOrigin || (performance.timing && performance.timing.navigationStart) || 0;
                 const tFetchStart = performance.now();
                 const resp = await ApiClient.get('/api/load_room_content.php', { room: key, modal: 1, perf: 1 });
-                // Accept both JSON and HTML string responses (defensive for prod)
+                // Accept JSON or text. If text looks like JSON, parse it.
                 if (typeof resp === 'string') {
-                    roomContent = resp;
+                    let parsed = null;
+                    const t = resp.trim();
+                    if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
+                        try { parsed = JSON.parse(t); } catch(_) { parsed = null; }
+                    }
+                    if (parsed && typeof parsed === 'object') {
+                        if (parsed.success === false) throw new Error(parsed.message || parsed.error || 'Failed to load room content');
+                        roomContent = parsed.content || '';
+                        if (parsed.metadata) this.updateHeader(parsed.metadata);
+                        if (parsed.background) this._bgMetaCache.set(key, parsed.background);
+                    } else {
+                        // Raw HTML body
+                        roomContent = resp;
+                    }
                 } else {
                     if (!resp.success) throw new Error(resp.message || 'Failed to load room content');
                     roomContent = resp.content;
                     if (resp.metadata) this.updateHeader(resp.metadata);
-                    // Cache background metadata if provided to avoid extra API call
-                    if (resp.background) {
-                        this._bgMetaCache.set(key, resp.background);
-                    }
+                    if (resp.background) this._bgMetaCache.set(key, resp.background);
                 }
                 this.roomCache.set(key, roomContent);
                 try {
@@ -388,11 +398,42 @@ class RoomModalManager {
     setContent(html) {
         const body = this.overlay.querySelector('.room-modal-body');
         if (!body) return;
+        let htmlStr = html;
+        try {
+            // If an object with a content field was passed, extract it
+            if (htmlStr && typeof htmlStr === 'object' && typeof htmlStr.content === 'string') {
+                htmlStr = htmlStr.content;
+            }
+            if (typeof htmlStr === 'string') {
+                let t = htmlStr.trim();
+                // If the string looks like a JSON object (server sent JSON as text), parse and take .content
+                if ((t.startsWith('{') && t.endsWith('}')) || t.includes('"content"')) {
+                    try {
+                        const obj = JSON.parse(t);
+                        if (obj && typeof obj.content === 'string') {
+                            htmlStr = obj.content;
+                            t = htmlStr.trim();
+                        }
+                    } catch(_) { /* not JSON, continue */ }
+                }
+                // If still wrapped in quotes or contains escaped quotes, try unescaping once
+                if ((t.startsWith('"') && t.endsWith('"')) || t.includes('\\"')) {
+                    try { htmlStr = JSON.parse(t); } catch (_) {
+                        htmlStr = t
+                          .replace(/\\\//g, '/')
+                          .replace(/\\n/g, '\n')
+                          .replace(/\\t/g, '\t')
+                          .replace(/\\"/g, '"')
+                          .replace(/\\\\/g, '\\');
+                    }
+                }
+            }
+        } catch(_) {}
         const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
         const scripts = [];
         let match;
-        while ((match = scriptRegex.exec(html)) !== null) scripts.push(match[1]);
-        body.innerHTML = html;
+        while (typeof htmlStr === 'string' && (match = scriptRegex.exec(htmlStr)) !== null) scripts.push(match[1]);
+        body.innerHTML = (typeof htmlStr === 'string') ? htmlStr : String(htmlStr || '');
         scripts.forEach((code, i) => { try { new Function(code)(); } catch (e) { console.error(`[Room] Error executing modal script ${i + 1}:`, e); } });
         this.initializeModalContent();
     }
@@ -508,10 +549,14 @@ class RoomModalManager {
 
         // Background + coordinate scaling
         const modalPage = this.overlay.querySelector('#modalRoomPage');
-        if (!modalPage) return;
-        const rn = modalPage.getAttribute('data-room');
-        if (rn) {
-            window.roomNumber = rn;
+        let rn = null;
+        if (modalPage) {
+            rn = modalPage.getAttribute('data-room');
+            if (rn) { window.roomNumber = rn; }
+        }
+        // Fallback to currentRoomNumber if DOM id was malformed
+        if (!rn) {
+            rn = this.currentRoomNumber;
         }
 
         const originalImageWidth = 1280;

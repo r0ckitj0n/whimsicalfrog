@@ -129,36 +129,7 @@ export function attachDelegatedItemEvents() {
     }
   });
 
-  // Capture-phase fallback: ensure popup clicks always open details
-  document.addEventListener('pointerdown', async (e) => {
-    let targetEl = e.target;
-    if (targetEl && targetEl.nodeType === 3) targetEl = targetEl.parentElement;
-    const popup = document.getElementById('itemPopup');
-    if (!popup) return;
-    // Determine if the pointer is within the visible popup rect regardless of event target
-    const pr = popup.getBoundingClientRect();
-    const x = e.clientX, y = e.clientY;
-    const insideRect = (x >= pr.left && x <= pr.right && y >= pr.top && y <= pr.bottom);
-    const inPopup = insideRect || (!!targetEl && typeof targetEl.closest === 'function' && !!targetEl.closest('.item-popup'));
-    if (!inPopup) return;
-    try {
-      e.preventDefault();
-      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
-    } catch(_) {}
-    let sku = '';
-    try { sku = String(document.getElementById('itemPopup')?.dataset?.sku || ''); } catch(_) {}
-    if (!sku) return;
-    try { console.log('[eventManager] popup pointerdown fallback -> open details for', sku); } catch(_) {}
-    let detailsFn = (parent && parent.showGlobalItemModal) || window.showGlobalItemModal;
-    if (typeof detailsFn !== 'function') {
-      try { await import('../js/detailed-item-modal.js'); } catch(_) {}
-      detailsFn = window.showGlobalItemModal;
-    }
-    if (typeof detailsFn === 'function') {
-      try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
-      detailsFn(sku, {});
-    }
-  }, true);
+  // Removed popup click fallbacks; popup handles its own open logic.
 
   // Schedule hide when leaving icons or popup
   document.addEventListener('mouseout', e => {
@@ -178,28 +149,7 @@ export function attachDelegatedItemEvents() {
   document.addEventListener('click', async e => {
     const targetEl = e.target;
     if (!targetEl || typeof targetEl.closest !== 'function') return;
-    // Fallback: clicking anywhere inside the popup should open the detailed modal
-    const inPopup = targetEl.closest('.item-popup');
-    if (inPopup) {
-      e.preventDefault();
-      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
-      // Avoid double-open if modal already visible
-      const existing = document.getElementById('detailedItemModal');
-      if (existing && existing.getAttribute('aria-hidden') !== 'true' && existing.classList.contains('show')) return;
-      let sku = '';
-      try { sku = String(document.getElementById('itemPopup')?.dataset?.sku || ''); } catch(_) {}
-      if (!sku) return;
-      let detailsFn = (parent && parent.showGlobalItemModal) || window.showGlobalItemModal;
-      if (typeof detailsFn !== 'function') {
-        try { await import('../js/detailed-item-modal.js'); } catch(_) {}
-        detailsFn = window.showGlobalItemModal;
-      }
-      if (typeof detailsFn === 'function') {
-        try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
-        detailsFn(sku, {});
-      }
-      return;
-    }
+    // No popup fallback here; rely on popup element handlers
     // Support clicks on standard icons and any element carrying product data
     const icon = targetEl.closest('.item-icon, .room-product-icon, [data-sku], [data-product]');
     if (!icon) return;

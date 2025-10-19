@@ -996,9 +996,9 @@ import { ApiClient } from '../core/api-client.js';
     window.showGlobalItemModal = async function showGlobalItemModal(sku, itemData) {
         try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
         // Create modal HTML from server and inject
-        currentModalItem = itemData || { sku };
+        currentModalItem = (itemData && typeof itemData === 'object') ? { sku, ...itemData } : { sku };
         // Prepare payload expected by API: { item, images }
-        const payloadItem = itemData && typeof itemData === 'object' ? itemData : { sku };
+        const payloadItem = (itemData && typeof itemData === 'object') ? { sku, ...itemData } : { sku };
         const payloadImages = Array.isArray(itemData?.images)
             ? itemData.images.map((img) => (typeof img === 'string' ? { image_path: img } : img))
             : (itemData?.image ? [{ image_path: itemData.image }] : []);

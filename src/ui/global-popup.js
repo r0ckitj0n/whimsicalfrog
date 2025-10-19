@@ -207,7 +207,8 @@ class UnifiedPopupSystem {
       if (typeof window.hideGlobalPopupImmediate === 'function') {
         window.hideGlobalPopupImmediate();
       }
-      const sku = this.currentItem?.sku;
+      const sku = this.currentItem?.sku || this.popupEl?.dataset?.sku;
+      const payload = (sku ? { sku, ...(this.currentItem || {}) } : (this.currentItem || {}));
       try { console.log('[globalPopup] openDetails fired via', e?.type, 'sku=', sku); } catch(_) {}
       try {
         if (typeof window.showGlobalItemModal !== 'function') {
@@ -217,9 +218,9 @@ class UnifiedPopupSystem {
         console.warn('[globalPopup] failed to lazy-load item modal', e2);
       }
       if (typeof window.showGlobalItemModal === 'function' && sku) {
-        window.showGlobalItemModal(sku, this.currentItem);
+        window.showGlobalItemModal(sku, payload);
       } else if (window.WhimsicalFrog?.GlobalModal?.show && sku) {
-        window.WhimsicalFrog.GlobalModal.show(sku, this.currentItem);
+        window.WhimsicalFrog.GlobalModal.show(sku, payload);
       } else {
         console.warn('[globalPopup] No modal function available to open detailed modal');
       }
@@ -255,7 +256,8 @@ class UnifiedPopupSystem {
         if (typeof window.hideGlobalPopupImmediate === 'function') {
           window.hideGlobalPopupImmediate();
         }
-        const sku = this.currentItem?.sku;
+        const sku = this.currentItem?.sku || this.popupEl?.dataset?.sku;
+        const payload = (sku ? { sku, ...(this.currentItem || {}) } : (this.currentItem || {}));
         try {
           if (typeof window.showGlobalItemModal !== 'function') {
             await import('../js/detailed-item-modal.js');
@@ -265,10 +267,10 @@ class UnifiedPopupSystem {
         }
         if (typeof window.showGlobalItemModal === 'function' && sku) {
           console.log('[globalPopup] opening detailed modal from Add button for', sku);
-          window.showGlobalItemModal(sku, this.currentItem);
+          window.showGlobalItemModal(sku, payload);
         } else if (window.WhimsicalFrog?.GlobalModal?.show && sku) {
           console.log('[globalPopup] opening detailed modal via WF.GlobalModal (Add) for', sku);
-          window.WhimsicalFrog.GlobalModal.show(sku, this.currentItem);
+          window.WhimsicalFrog.GlobalModal.show(sku, payload);
         }
       });
     }
@@ -286,13 +288,14 @@ class UnifiedPopupSystem {
         if (typeof window.hideGlobalPopupImmediate === 'function') {
           window.hideGlobalPopupImmediate();
         }
-        const sku = this.currentItem?.sku;
+        const sku = this.currentItem?.sku || this.popupEl?.dataset?.sku;
+        const payload = (sku ? { sku, ...(this.currentItem || {}) } : (this.currentItem || {}));
         if (typeof window.showGlobalItemModal === 'function' && sku) {
           console.log('[globalPopup] opening detailed modal from image click for', sku);
-          window.showGlobalItemModal(sku, this.currentItem);
+          window.showGlobalItemModal(sku, payload);
         } else if (window.WhimsicalFrog?.GlobalModal?.show && sku) {
           console.log('[globalPopup] opening detailed modal via WF.GlobalModal (image) for', sku);
-          window.WhimsicalFrog.GlobalModal.show(sku, this.currentItem);
+          window.WhimsicalFrog.GlobalModal.show(sku, payload);
         }
       });
     }

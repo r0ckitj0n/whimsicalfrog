@@ -486,7 +486,17 @@ if (__WF_IS_ADMIN) {
             const body = document.body;
             const ds = body ? body.dataset : {};
             const page = (ds && ds.page) || (window.WF_PAGE_INFO && window.WF_PAGE_INFO.page) || '';
-            const isAdmin = (ds && ds.isAdmin === 'true') || (typeof page === 'string' && page.startsWith('admin'));
+            let isAdmin = (ds && ds.isAdmin === 'true') || (typeof page === 'string' && page.startsWith('admin'));
+            // Harden admin detection for live routes under subpaths or router variants
+            try {
+                const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+                const search = (window.location && window.location.search) ? window.location.search.toLowerCase() : '';
+                const pathIndicatesAdmin = /(^|\/)admin(\/|$)/.test(path) || /(^|\/)sections\/(admin|admin_router\.php)/.test(path);
+                const queryIndicatesAdmin = /(^|[?&])section=/.test(search);
+                if (!isAdmin && (pathIndicatesAdmin || queryIndicatesAdmin)) {
+                    isAdmin = true;
+                }
+            } catch (_) {}
 
             if (!isAdmin) return;
 
@@ -649,6 +659,17 @@ if (__WF_IS_ADMIN) {
                     }
                 } catch (_) {}
             }
+
+            // Final hardening: if DOM/URL clearly indicates Settings, force section = 'settings'
+            try {
+                const search = (window.location && window.location.search) ? window.location.search.toLowerCase() : '';
+                const path = (window.location && window.location.pathname) ? window.location.pathname.toLowerCase() : '';
+                const hasSettingsDom = !!document.querySelector('.settings-page[data-page="admin-settings"], .settings-page');
+                const urlIndicatesSettings = /(^|[?&])section=settings\b/.test(search) || /(^|\/)admin\/settings(\/|$)/.test(path) || /admin_settings|admin-settings/.test(path);
+                if (urlIndicatesSettings || hasSettingsDom) {
+                    section = 'settings';
+                }
+            } catch (_) {}
 
             // Minimal diagnostic log
             try { console.log('[App] Admin section resolved:', section); } catch(_) {}

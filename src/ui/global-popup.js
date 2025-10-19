@@ -196,7 +196,8 @@ class UnifiedPopupSystem {
     } catch(_) {}
 
     // Click anywhere inside popup opens item modal (even if out of stock)
-    this.popupEl.addEventListener('click', async (e) => {
+    this._lastPointerDownOpenAt = 0;
+    const openDetails = async (e) => {
       // Prevent any default anchor behavior and stop the event from reaching
       // underlying room links/areas (which could navigate to under_construction)
       try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
@@ -207,7 +208,6 @@ class UnifiedPopupSystem {
         window.hideGlobalPopupImmediate();
       }
       const sku = this.currentItem?.sku;
-      console.log('[globalPopup] Popup clicked! SKU:', sku, 'Current item:', this.currentItem);
       try {
         if (typeof window.showGlobalItemModal !== 'function') {
           await import('../js/detailed-item-modal.js');
@@ -224,6 +224,15 @@ class UnifiedPopupSystem {
       }
       this.isPointerOverPopup = true;
       this.cancelHide();
+    };
+    // Prefer pointerdown for faster response and to avoid other click preventers
+    this.popupEl.addEventListener('pointerdown', async (e) => {
+      this._lastPointerDownOpenAt = Date.now();
+      await openDetails(e);
+    });
+    this.popupEl.addEventListener('click', async (e) => {
+      if (this._lastPointerDownOpenAt && (Date.now() - this._lastPointerDownOpenAt) < 350) return;
+      await openDetails(e);
     });
     this.popupEl.addEventListener('mouseenter', () => {
       this.isPointerOverPopup = true;
@@ -378,6 +387,7 @@ class UnifiedPopupSystem {
     try { this.popupEl.classList.remove('oos'); } catch(_) {}
     // Save current item for click handling
     this.currentItem = item;
+    try { if (this.popupEl && item && item.sku) this.popupEl.dataset.sku = String(item.sku); } catch(_) {}
     // Basic content update
     const setText = (selector, text) => {
       const el = this.popupEl.querySelector(selector);

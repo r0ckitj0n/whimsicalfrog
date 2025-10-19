@@ -147,6 +147,28 @@ export function attachDelegatedItemEvents() {
   document.addEventListener('click', async e => {
     const targetEl = e.target;
     if (!targetEl || typeof targetEl.closest !== 'function') return;
+    // Fallback: clicking anywhere inside the popup should open the detailed modal
+    const inPopup = targetEl.closest('.item-popup');
+    if (inPopup) {
+      e.preventDefault();
+      if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
+      // Avoid double-open if modal already visible
+      const existing = document.getElementById('detailedItemModal');
+      if (existing && existing.getAttribute('aria-hidden') !== 'true' && existing.classList.contains('show')) return;
+      let sku = '';
+      try { sku = String(document.getElementById('itemPopup')?.dataset?.sku || ''); } catch(_) {}
+      if (!sku) return;
+      let detailsFn = (parent && parent.showGlobalItemModal) || window.showGlobalItemModal;
+      if (typeof detailsFn !== 'function') {
+        try { await import('../js/detailed-item-modal.js'); } catch(_) {}
+        detailsFn = window.showGlobalItemModal;
+      }
+      if (typeof detailsFn === 'function') {
+        try { window.hideGlobalPopupImmediate && window.hideGlobalPopupImmediate(); } catch(_) {}
+        detailsFn(sku, {});
+      }
+      return;
+    }
     // Support clicks on standard icons and any element carrying product data
     const icon = targetEl.closest('.item-icon, .room-product-icon, [data-sku], [data-product]');
     if (!icon) return;

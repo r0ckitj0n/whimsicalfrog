@@ -114,16 +114,18 @@
 
 /* Modal panel defaults. Utilities can augment on top. */
 
+
 .admin-modal {
   background: #fff;
-  width: clamp(720px, 90vw, 1200px) !important;
-  max-width: 95vw !important;
+  width: var(--admin-modal-width, clamp(720px, 90vw, 1200px)) !important;
+  max-width: var(--admin-modal-max-width, 95vw) !important;
   color: #111827; /* gray-900 */
   border-radius: 0.5rem; /* rounded-lg */
   box-shadow: 0 20px 40px rgba(0,0,0,.25);
   /* Avoid forcing full viewport height to prevent double scrollbars */
-  max-height: min(90vh, 980px);
-  height: auto;
+  max-height: var(--admin-modal-max-height, min(90vh, 980px));
+  height: var(--admin-modal-height, auto);
+  margin: var(--admin-modal-margin, 0);
   overflow: hidden;
   position: relative;
   z-index: var(--z-admin-overlay-content, 1410);
@@ -131,7 +133,93 @@
   flex-direction: column;
 }
 
-/* Defeat legacy/global .admin-modal-content padding (1.5rem) with compact panel padding */
+/* Tokenized size presets */
+.admin-modal.admin-modal--md {
+  --admin-modal-width: clamp(560px, 70vw, 800px);
+  --admin-modal-max-width: 90vw;
+  --admin-modal-max-height: 85vh;
+}
+.admin-modal.admin-modal--lg {
+  --admin-modal-width: 80vw;
+  --admin-modal-max-width: 95vw;
+  --admin-modal-max-height: 90vh;
+}
+.admin-modal.admin-modal--lg-narrow {
+  --admin-modal-width: clamp(680px, 75vw, 1100px);
+  --admin-modal-max-width: 95vw;
+  --admin-modal-max-height: 90vh;
+}
+.admin-modal.admin-modal--xl {
+  --admin-modal-width: 90vw;
+  --admin-modal-max-width: 95vw;
+  --admin-modal-max-height: 95vh;
+}
+.admin-modal.admin-modal--full {
+  --admin-modal-width: 95vw;
+  --admin-modal-max-width: 95vw;
+  --admin-modal-height: 95vh;
+  --admin-modal-max-height: 95vh;
+}
+
+/* Semantic aliases (map features to presets/tokens) */
+.admin-modal.admin-modal--attributes {
+  --admin-modal-width: 90vw;
+  --admin-modal-max-width: 95vw;
+  --admin-modal-max-height: 90vh;
+}
+.admin-modal.admin-modal--dashboard-config {
+  --admin-modal-width: clamp(680px, 80vw, 1200px);
+  --admin-modal-max-width: 95vw;
+  --admin-modal-max-height: 85vh;
+}
+.admin-modal.admin-modal--receipt {
+  --admin-modal-width: 90vw;
+  --admin-modal-max-width: 90vw;
+  --admin-modal-height: 90vh;
+  --admin-modal-max-height: 90vh;
+}
+.admin-modal.admin-modal--order-editor {
+  --admin-modal-width: clamp(760px, 88vw, 1200px);
+  --admin-modal-max-width: 95vw;
+  --admin-modal-max-height: 86vh;
+}
+
+.admin-modal.admin-modal--room-map {
+  --admin-modal-width: 95vw;
+  --admin-modal-max-width: 95vw;
+  --admin-modal-height: 95vh;
+  --admin-modal-max-height: 95vh;
+  --admin-modal-margin: 0;
+  /* Ensure content variant picks up same sizing when both classes are on same element */
+  --admin-modal-content-width: 95vw;
+  --admin-modal-content-max-width: 95vw;
+  --admin-modal-content-max-height: 95vh;
+  --admin-modal-content-padding: 0.5rem;
+  --admin-modal-content-margin: 0;
+  min-width: 960px;
+}
+
+.admin-modal--room-map .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.5rem !important;
+  overflow: hidden;
+}
+
+.rme-modal-body .wf-admin-embed-frame--tall {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* High-specificity fallback to crush stray legacy caps on admin pages */
+body[data-page^='admin'] .admin-modal.admin-modal--room-map {
+  width: 95vw !important;
+  max-width: 95vw !important;
+  height: 95vh !important;
+  max-height: 95vh !important;
+}
+
 .admin-modal.admin-modal-content {
   padding: var(--admin-modal-panel-padding, 0.25rem) !important;
 }
@@ -146,6 +234,7 @@
   padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
   padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
   margin-bottom: 0 !important; /* defeat legacy margin */
+  max-height: var(--admin-modal-inner-max-height, auto);
 }
 
 .admin-modal .modal-header {
@@ -421,11 +510,6 @@ body.wf-no-scroll { overflow: hidden !important; }
 /* Receipt modal specific styles */
 #receiptModal.hidden { display: none; }
 #receiptModal .modal-content {
-  /* Grow to 80% of viewport for better visibility */
-  width: 80vw !important;
-  max-width: 80vw !important;
-  height: 80vh !important;
-  max-height: 80vh !important;
   display: flex;
   flex-direction: column;
   overflow: hidden; /* header/footer fixed; body scrolls */
@@ -553,10 +637,24 @@ body.wf-no-scroll { overflow: hidden !important; }
   scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
+/* Admin modal inner-body presets */
+.admin-modal-body--md { --admin-modal-inner-max-height: 50vh; }
+.admin-modal-body--lg { --admin-modal-inner-max-height: 60vh; }
+.admin-modal-body--xl { --admin-modal-inner-max-height: 75vh; }
+
 /* Remove panel bottom padding for inventory modal to let content reach edge */
 #inventoryModalOuter .admin-modal.admin-modal-content {
   padding-bottom: 0 !important;
 }
+
+/* Admin scrollbox presets (for non-modal inner lists/regions) */
+.admin-scrollbox {
+  max-height: var(--admin-scrollbox-max-height, none);
+  overflow: auto;
+}
+.admin-scrollbox--md { --admin-scrollbox-max-height: 50vh; }
+.admin-scrollbox--lg { --admin-scrollbox-max-height: 60vh; }
+.admin-scrollbox--xl { --admin-scrollbox-max-height: 75vh; }
 
 #inventoryModalOuter .modal-body::-webkit-scrollbar {
   width: 17px;
@@ -669,11 +767,7 @@ body.wf-no-scroll { overflow: hidden !important; }
 
 /* Dashboard Configuration modal: auto-size to content with viewport caps */
 #dashboardConfigModal .admin-modal.admin-modal-content {
-  width: clamp(680px, 80vw, 1200px) !important; /* wider responsive panel */
-  max-width: 95vw !important;   /* cap to viewport */
-  min-width: 680px;             /* ensure comfortable layout */
-  height: auto !important;
-  max-height: 85vh;
+  /* Container layout; sizing provided by .admin-modal--dashboard-config tokens */
   overflow: hidden; /* header/footer fixed, body scrolls */
   display: flex;
   flex-direction: column;
@@ -758,6 +852,25 @@ body[data-page='admin/orders'] #orderModal { padding-top: 0 !important; align-it
 
 /* Overlay should always cover full viewport; content has its own max-height */
 .admin-modal-overlay.order-modal { height: 100vh; height: 100dvh; max-height: none !important; }
+#categoryManagementRoot #tabPanelAssignments .admin-card {
+  --categories-assignments-max-width: 1100px;
+  max-width: min(95%, var(--categories-assignments-max-width));
+  margin-left: auto;
+  margin-right: auto;
+}
+#categoryManagementRoot #tabPanelAssignments .admin-table th:last-child,
+#categoryManagementRoot #tabPanelAssignments .admin-table td:last-child {
+  text-align: center;
+}
+
+#templateManagerRoot .admin-table th:last-child,
+#templateManagerRoot .admin-table td:last-child {
+  text-align: center;
+}
+#templateManagerRoot .admin-table th:nth-child(1) { width: 64px; }
+#templateManagerRoot .admin-table th:nth-child(5) { width: 80px; }
+#templateManagerRoot .admin-table th:nth-child(7) { width: 380px; }
+#templateManagerRoot .code-badge { margin-right: 4px; }
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {

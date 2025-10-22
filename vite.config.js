@@ -53,6 +53,7 @@ export default defineConfig({
         'js/pos.js': resolve(__dirname, 'src/entries/pos.js'),
         'js/admin-cost-breakdown.js': resolve(__dirname, 'src/entries/admin-cost-breakdown.js'),
         'js/help-documentation.js': resolve(__dirname, 'src/entries/help-documentation.js'),
+        'js/admin-room-map-editor.js': resolve(__dirname, 'src/entries/admin-room-map-editor.js'),
       },
     }
   },

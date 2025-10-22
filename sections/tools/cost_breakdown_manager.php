@@ -46,8 +46,9 @@ if (!empty($selectedItemId)) {
 }
 
 // Header include (only if root layout not bootstrapped)
+$is_modal_context = isset($_GET['modal']) || strpos($_SERVER['HTTP_REFERER'] ?? '', 'admin_settings') !== false;
 $__wf_included_layout = false;
-if (!function_exists('__wf_admin_root_footer_shutdown')) {
+if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
     $page = 'admin/cost-breakdown-manager';
     include dirname(__DIR__, 2) . '/partials/header.php';
     $__wf_included_layout = true;
@@ -59,9 +60,11 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
     <div class="">
         <div class="flex justify-between items-center">
             <h1 class="text-brand-primary">Cost Breakdown Manager</h1>
+            <?php if (!$is_modal_context): ?>
             <a href="/admin/?section=inventory" class="btn btn-secondary btn-sm">
                 Back to Inventory
             </a>
+            <?php endif; ?>
         </div>
         
         <!-- Item Selection -->
@@ -72,8 +75,8 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                     <select id="itemSelector" class="w-full border border-gray-300 rounded-brand">
                         <option value="">- Select an item -</option>
                         <?php foreach ($inventoryItems as $item): ?>
-                        <option value="<?php echo $item['id']; ?>" <?php echo ($selectedItemId === $item['id']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($item['name']); ?> (<?php echo $item['id']; ?>)
+                        <option value="<?php echo htmlspecialchars($item['id']); ?>" data-name="<?php echo htmlspecialchars($item['name']); ?>" data-category="<?php echo htmlspecialchars($item['category'] ?? ''); ?>" data-cost="<?php echo htmlspecialchars((string)($item['costPrice'] ?? '0')); ?>" <?php echo ($selectedItemId === $item['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($item['name']); ?> (<?php echo htmlspecialchars($item['id']); ?>)
                         </option>
                         <?php endforeach; ?>
                     </select>
@@ -102,15 +105,15 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <span class="text-gray-600 text-sm">Category:</span>
-                        <div class="font-medium"><?php echo htmlspecialchars($selectedItem['category'] ?? 'N/A'); ?></div>
+                        <div id="categoryDisplay" class="font-medium"><?php echo htmlspecialchars($selectedItem['category'] ?? 'N/A'); ?></div>
                     </div>
                     <div>
                         <span class="text-gray-600 text-sm">Current Cost Price:</span>
-                        <div class="font-medium">$<?php echo number_format($selectedItem['costPrice'] ?? 0, 2); ?></div>
+                        <div id="itemCostDisplay" class="font-medium">$<?php echo number_format($selectedItem['costPrice'] ?? 0, 2); ?></div>
                     </div>
                     <div>
                         <span class="text-gray-600 text-sm">Retail Price:</span>
-                        <div class="font-medium">$<?php echo number_format($selectedItem['retailPrice'] ?? 0, 2); ?></div>
+                        <div id="retailPriceDisplay" class="font-medium">$<?php echo number_format($selectedItem['retailPrice'] ?? 0, 2); ?></div>
                     </div>
                 </div>
             </div>
@@ -150,24 +153,8 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                     </div>
                 </div>
                 
-                <!-- Right Column: Energy and Totals -->
+                <!-- Right Column: Totals and Energy -->
                 <div>
-                    <!-- Energy Section -->
-                    <div class="bg-white rounded-lg shadow-md">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-semibold text-gray-700">Energy</h3>
-                            <button id="addEnergyBtn" class="btn btn-primary btn-sm">
-                                Add Energy
-                            </button>
-                        </div>
-                        
-                        <div id="energyList" class="divide-y divide-gray-200">
-                            <div class="text-center text-gray-500 italic" id="noEnergyMsg">
-                                No energy costs added yet
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- Cost Summary -->
                     <div class="card-standard">
                         <h3 class="text-brand-primary">Cost Summary</h3>
@@ -201,6 +188,17 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Energy Section -->
+                    <div class="card-standard">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-brand-primary">Energy</h3>
+                            <button id="addEnergyBtn" class="btn btn-primary btn-sm">Add Energy</button>
+                        </div>
+                        <div id="energyList" class="divide-y divide-gray-200">
+                            <div class="text-center text-gray-500 italic" id="noEnergyMsg">No energy costs added yet</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,14 +217,43 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
         let currentItemId = <?php echo json_encode($selectedItemId ?: null); ?>;
         let costBreakdown = { materials: [], labor: [], energy: [], totals: { materialTotal: 0, laborTotal: 0, energyTotal: 0, suggestedCost: 0 } };
 
-        document.getElementById('loadItemBtn').addEventListener('click', function() {
+        document.getElementById('loadItemBtn').addEventListener('click', onItemLoad);
+
+        document.getElementById('itemSelector').addEventListener('change', onItemLoad);
+
+        function onItemLoad(){
             const sel = document.getElementById('itemSelector');
-            if (!sel.value) return;
+            if (!sel || !sel.value) return;
             currentItemId = sel.value;
+            // Update header fields from selected option's data
+            const opt = sel.options[sel.selectedIndex];
+            if (opt) {
+                const name = opt.getAttribute('data-name') || '';
+                const cat = opt.getAttribute('data-category') || '';
+                const cost = opt.getAttribute('data-cost') || '0';
+                const idEl = document.getElementById('itemIdDisplay');
+                const nmEl = document.getElementById('itemNameDisplay');
+                if (nmEl) nmEl.textContent = name || (`Item ${currentItemId}`);
+                if (idEl) idEl.textContent = `ID: ${currentItemId}`;
+                const catEl = document.getElementById('categoryDisplay');
+                if (catEl && cat) catEl.textContent = cat;
+                const itemCostEl = document.getElementById('itemCostDisplay');
+                if (itemCostEl) itemCostEl.textContent = `$${parseFloat(cost||'0').toFixed(2)}`;
+            }
             document.getElementById('costBreakdownContainer').classList.remove('hidden');
             document.getElementById('emptyStateContainer').classList.add('hidden');
             loadCostBreakdown(currentItemId);
-        });
+        }
+
+        // Auto-load if an item is preselected on initial render
+        (function(){
+            try {
+                const sel = document.getElementById('itemSelector');
+                if ((currentItemId && String(currentItemId).length) || (sel && sel.value)) {
+                    onItemLoad();
+                }
+            } catch(_){}
+        })();
 
         document.getElementById('addMaterialBtn').addEventListener('click', function() {
             openAddModal('material');
@@ -459,3 +486,13 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
 <?php if ($__wf_included_layout) {
     include dirname(__DIR__, 2) . '/partials/footer.php';
 } ?>
+
+<?php if ($is_modal_context): ?>
+<style>
+  body { margin: 0; padding: 16px; background: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
+  .bg-gray-100 { background: #fff !important; }
+  h1 { font-size: 20px !important; margin: 0 0 8px !important; }
+  .card-standard { box-shadow: none !important; }
+</style>
+<?php endif; ?>

@@ -24,7 +24,9 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
 <div class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <div class="bg-white rounded-lg shadow-lg p-6">
+            <?php if (!$is_modal_context): ?>
             <h1 class="text-3xl font-bold text-gray-800 mb-6">Room Configuration Manager</h1>
+            <?php endif; ?>
             <div id="messageContainer"></div>
             <div class="mb-6">
                 <label for="roomSelect" class="block text-sm font-medium text-gray-700 mb-2">Select Room:</label>

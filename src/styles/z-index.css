@@ -125,6 +125,7 @@
   --wf-overlay-content-z: var(--z-overlay-content);
   --wf-admin-overlay-z: var(--z-admin-overlay);
   --wf-admin-overlay-content-z: var(--z-admin-overlay-content);
+  --wf-confirm-overlay-z: var(--z-overlay-topmost);
 
   /* Legacy alias for popup stacks used in older CSS */
   --z-popups: var(--z-global-popup);

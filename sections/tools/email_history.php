@@ -58,7 +58,9 @@ if (!$inModal) {
 
 <div class="container mx-auto p-4 bg-white">
   <div class="flex items-center justify-between mb-4">
+    <?php if (!$inModal): ?>
     <h1 class="text-2xl font-bold">Email History</h1>
+    <?php endif; ?>
     <form method="get" class="flex items-center gap-2 text-sm">
       <?php if ($inModal): ?><input type="hidden" name="modal" value="1"><?php endif; ?>
       <input type="search" name="q" value="<?= htmlspecialchars($q) ?>" class="form-input" placeholder="Search recipient, sender, subject, order ID" />

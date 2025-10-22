@@ -24,7 +24,8 @@ function ensureRoomBgClass(imageUrl) {
     const idx = roomBgClassMap.size + 1;
     const cls = `room-bg-${idx}`;
     const styleEl = getRoomModalStyleEl();
-    styleEl.appendChild(document.createTextNode(`.room-modal-iframe-container.${cls}, .room-overlay-wrapper.${cls}, .room-modal-body.${cls}, .room-modal-container.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
+    // Apply background ONLY to the inner content wrapper to avoid duplicate layering
+    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
     roomBgClassMap.set(imageUrl, cls);
     return cls;
 }
@@ -58,6 +59,7 @@ class RoomModalManager {
         this._apiBusy = false; // deprecated: do not serialize all requests globally
         this._prewarmStopped = false; // stop flag after first open
         this._inflightByUrl = new Map(); // url -> Promise to coalesce identical requests
+        this._loadedExternalScripts = new Set(); // track loaded <script src> to avoid duplicates
         
         // Diagnostics from URL params
         try {
@@ -434,6 +436,29 @@ class RoomModalManager {
         let match;
         while (typeof htmlStr === 'string' && (match = scriptRegex.exec(htmlStr)) !== null) scripts.push(match[1]);
         body.innerHTML = (typeof htmlStr === 'string') ? htmlStr : String(htmlStr || '');
+        // Execute external script tags (e.g. Vite module entries) found in injected HTML
+        try {
+            const externalScripts = Array.from(body.querySelectorAll('script[src]'));
+            externalScripts.forEach((s) => {
+                const src = s.getAttribute('src');
+                if (!src || this._loadedExternalScripts.has(src)) return;
+                const type = s.getAttribute('type') || '';
+                const asyncAttr = s.hasAttribute('async');
+                const deferAttr = s.hasAttribute('defer');
+                const newEl = document.createElement('script');
+                if (type) newEl.type = type;
+                if (asyncAttr) newEl.async = true;
+                if (deferAttr) newEl.defer = true;
+                newEl.src = src;
+                // copy crossorigin if present (Vite uses it)
+                const cx = s.getAttribute('crossorigin');
+                if (cx) newEl.setAttribute('crossorigin', cx);
+                // Append to head to ensure proper module evaluation order
+                document.head.appendChild(newEl);
+                this._loadedExternalScripts.add(src);
+            });
+        } catch (e) { console.warn('[RoomModalManager] Failed to load external scripts from modal content', e); }
+        // Execute inline scripts captured from HTML
         scripts.forEach((code, i) => { try { new Function(code)(); } catch (e) { console.error(`[Room] Error executing modal script ${i + 1}:`, e); } });
         this.initializeModalContent();
     }
@@ -581,17 +606,6 @@ class RoomModalManager {
                     const bgCls = ensureRoomBgClass(imageUrl);
                     if (roomWrapper.dataset.roomBgClass && roomWrapper.dataset.roomBgClass !== bgCls) roomWrapper.classList.remove(roomWrapper.dataset.roomBgClass);
                     if (bgCls) { roomWrapper.classList.add(bgCls); roomWrapper.dataset.roomBgClass = bgCls; }
-                    // Also apply to the modal container to guarantee full-cover background
-                    const container = this.overlay.querySelector('.room-modal-container');
-                    if (container) {
-                        if (container.dataset.roomBgClass && container.dataset.roomBgClass !== bgCls) container.classList.remove(container.dataset.roomBgClass);
-                        if (bgCls) { container.classList.add(bgCls); container.dataset.roomBgClass = bgCls; }
-                    }
-                    const iframeContainer = this.overlay.querySelector('.room-modal-iframe-container');
-                    if (iframeContainer) {
-                        if (iframeContainer.dataset.roomBgClass && iframeContainer.dataset.roomBgClass !== bgCls) iframeContainer.classList.remove(iframeContainer.dataset.roomBgClass);
-                        if (bgCls) { iframeContainer.classList.add(bgCls); iframeContainer.dataset.roomBgClass = bgCls; }
-                    }
                     // ResourceTiming breakdown if available
                     try {
                         const entries = performance.getEntriesByType('resource');

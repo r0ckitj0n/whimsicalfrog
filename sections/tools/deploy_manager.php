@@ -2,6 +2,11 @@
 // sections/tools/deploy_manager.php
 // Browser-based Deploy Manager (Backup, Fast Deploy, Full Deploy)
 
+http_response_code(410);
+header('Content-Type: text/plain; charset=utf-8');
+echo 'Deploy Manager has been removed.';
+return;
+
 // Resolve project root
 $ROOT = dirname(__DIR__, 2);
 
@@ -135,6 +140,7 @@ if (!$EMBED && file_exists($headerPath)) require $headerPath;
 ?>
 
 <div class="wf-container adm-container <?php echo $EMBED ? 'adm--embed' : ''; ?>">
+  <?php if (!$EMBED): ?>
   <div class="adm-card__header">
     <h1 class="adm-title">Deploy Manager</h1>
     <form id="dryRunForm" method="post" class="adm-form-inline">
@@ -152,6 +158,7 @@ if (!$EMBED && file_exists($headerPath)) require $headerPath;
       <button type="button" class="wf-admin-nav-button" id="openWhitelistModalBtn">Manage Whitelist</button>
     </div>
   </div>
+  <?php endif; ?>
 
   <div class="adm-section">
     <h2>Stale Cleanup Planner</h2>
@@ -250,7 +257,7 @@ if (!$EMBED && file_exists($headerPath)) require $headerPath;
 
 <!-- Inline Whitelist Modal -->
 <div id="deployWhitelistModal" class="admin-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="deployWhitelistTitle">
-  <div class="admin-modal admin-modal-content max-w-[720px] w-[95vw] max-h-[85vh]">
+  <div class="admin-modal admin-modal-content admin-modal--md">
     <div class="modal-header">
       <h2 id="deployWhitelistTitle" class="admin-card-title">Asset Whitelist</h2>
       <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
@@ -369,7 +376,7 @@ function renderPlannerTable(items){
       <label><input type="checkbox" id="plannerSelectAll"> Select all</label>
       <span class="text-muted">(${items.length} items)</span>
     </div>
-    <div class="overflow-auto max-h-[50vh] border rounded">
+    <div class="admin-scrollbox admin-scrollbox--md border rounded">
       <table class="adm-table w-full text-sm">
         <thead><tr><th style="width:48px"></th><th>Path</th></tr></thead>
         <tbody>${rows}</tbody>

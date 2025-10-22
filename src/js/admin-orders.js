@@ -345,7 +345,7 @@ class AdminOrdersModule {
                 skeleton.className = 'admin-modal-overlay topmost over-header order-modal show';
                 try { skeleton.setAttribute('data-action', 'close-order-editor-on-overlay'); } catch(_) {}
                 skeleton.innerHTML = `
-                  <div class="admin-modal admin-modal-content wf-admin-panel-visible show">
+                  <div class="admin-modal admin-modal-content admin-modal--order-editor wf-admin-panel-visible show">
                     <div class="modal-header">
                       <h2 class="modal-title">Loading order…</h2>
                       <a href="/admin/orders" class="modal-close" data-action="close-order-editor" aria-label="Close">×</a>

@@ -43,12 +43,12 @@ export class RoomSettingsManager {
     const modalWrapper = document.createElement('div');
     modalWrapper.className = 'admin-modal-overlay hidden';
     modalWrapper.innerHTML = `
-      <div class="admin-modal-content modal-wide">
-        <div class="admin-modal-header">
+      <div class="admin-modal admin-modal-content admin-modal--lg">
+        <div class="modal-header admin-modal-header">
           <h2>Enhanced Room Settings</h2>
           <button type="button" class="modal-close">×</button>
         </div>
-        <div class="admin-modal-body">
+        <div class="modal-body admin-modal-body">
           <div class="loading-message">
             <p>Loading room settings...</p>
             <div class="loading-spinner"></div>
@@ -83,7 +83,7 @@ export class RoomSettingsManager {
             </div>
           </div>
         </div>
-        <div class="admin-modal-footer">
+        <div class="modal-footer admin-modal-footer">
           <button type="button" class="btn btn-secondary" data-action="close">Cancel</button>
           <button type="button" class="btn btn-primary" data-action="save">Save All Settings</button>
         </div>

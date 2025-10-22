@@ -63,20 +63,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     // Ensure API calls hit the same origin/port as this page in local dev
     try { window.__WF_BACKEND_ORIGIN = window.location.origin; } catch(_) {}
   </script>
-  <!-- STATIC: Site Deployment Modal -->
-  <div id="siteDeploymentModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="siteDeploymentTitle">
-    <div class="admin-modal admin-modal-content w-[95vw] h-[85vh]">
-      <div class="modal-header">
-        <h2 id="siteDeploymentTitle" class="admin-card-title">🚀 Site Deployment</h2>
-      </div>
-      <div class="modal-body">
-        <iframe id="siteDeploymentFrame" title="Site Deployment" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/deploy_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
-      </div>
-      <div class="wf-modal-actions">
-        <button type="button" class="btn wf-modal-button" data-action="close-admin-modal">Cancel</button>
-      </div>
-    </div>
-  </div>
 
   <?php
   // Cart & Checkout settings moved into Shopping Cart modal (see modal section below)
@@ -98,6 +84,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     <div class="admin-modal admin-modal-content">
       <div class="modal-header flex items-center justify-between">
         <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"></span>
       </div>
       <div class="modal-body">
@@ -308,10 +295,10 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
   </div>
   <!-- STATIC: Address Diagnostics Modal (outside <noscript>) -->
   <div id="addressDiagnosticsModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="addressDiagnosticsTitle">
-    <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics</h2>
-        <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <iframe id="addressDiagnosticsFrame" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"></iframe>
@@ -321,7 +308,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
   <!-- STATIC: Size/Color Redesign Tool Modal -->
   <div id="sizeColorRedesignModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="sizeColorRedesignTitle">
-    <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="sizeColorRedesignTitle" class="admin-card-title">🧩 Size/Color System Redesign</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
@@ -593,88 +580,8 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           } catch(_) {}
           return;
         }
-        var d = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-deploy-manager"], #deployManagerBtn') : null;
-        if (d) {
-          ev.preventDefault(); ev.stopPropagation();
-          var m = document.getElementById('deployManagerModal');
-          if (m) {
-            try {
-              // Ensure overlay is at top-level to avoid ancestor stacking contexts
-              if (m.parentElement && m.parentElement !== document.body) {
-                document.body.appendChild(m);
-              }
-              // Guarantee over-header behavior
-              m.classList.add('over-header');
-              m.style.removeProperty('z-index'); // allow CSS !important to apply
-            } catch(_) {}
-            m.classList.remove('hidden');
-            m.classList.add('show');
-            m.setAttribute('aria-hidden','false');
-            m.style.pointerEvents = 'auto';
-          }
-          return;
-        }
-        var rc = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-repo-cleanup"], #repoCleanupBtn') : null;
-        if (rc) {
-          ev.preventDefault(); ev.stopPropagation();
-          var m = document.getElementById('repoCleanupModal');
-          if (m) {
-            try {
-              if (m.parentElement && m.parentElement !== document.body) {
-                document.body.appendChild(m);
-              }
-              m.classList.add('over-header');
-              m.style.removeProperty('z-index');
-            } catch(_) {}
-            m.classList.remove('hidden');
-            m.classList.add('show');
-            m.setAttribute('aria-hidden','false');
-            m.style.pointerEvents = 'auto';
-          }
-          return;
-        }
-        var db = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-db-schema-audit"], #dbSchemaAuditBtn') : null;
-        if (db) {
-          ev.preventDefault(); ev.stopPropagation();
-          var m = document.getElementById('dbSchemaAuditModal');
-          if (m) {
-            try {
-              if (m.parentElement && m.parentElement !== document.body) {
-                document.body.appendChild(m);
-              }
-              m.classList.add('over-header');
-              m.style.removeProperty('z-index');
-              var f = m.querySelector('#dbSchemaAuditFrame');
-              if (f && !f.getAttribute('src')) {
-                f.setAttribute('src', f.getAttribute('data-src') || '/sections/tools/db_schema_audit.php?modal=1');
-              }
-            } catch(_) {}
-            m.classList.remove('hidden');
-            m.classList.add('show');
-            m.setAttribute('aria-hidden','false');
-            m.style.pointerEvents = 'auto';
-          }
-          return;
-        }
-        var dbs = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-db-schema-audit"], #dbSchemaAuditBtn') : null;
-        if (dbs) {
-          ev.preventDefault(); ev.stopPropagation();
-          var m = document.getElementById('dbSchemaAuditModal');
-          if (m) {
-            try {
-              if (m.parentElement && m.parentElement !== document.body) {
-                document.body.appendChild(m);
-              }
-              m.classList.add('over-header');
-              m.style.removeProperty('z-index');
-            } catch(_) {}
-            m.classList.remove('hidden');
-            m.classList.add('show');
-            m.setAttribute('aria-hidden','false');
-            m.style.pointerEvents = 'auto';
-          }
-          return;
-        }
+        
+        
         var tm = ev.target && ev.target.closest ? ev.target.closest('[data-action="open-template-manager"], #templateManagerBtn') : null;
         if (tm) {
           ev.preventDefault(); ev.stopPropagation();
@@ -727,7 +634,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         el.setAttribute('aria-modal','true');
         el.setAttribute('tabindex','-1');
         el.setAttribute('aria-labelledby','backgroundManagerTitle');
-        el.innerHTML = '\n      <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">\n        <div class="modal-header">\n          <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body"></div>\n      </div>';
+        el.innerHTML = '\n      <div class="admin-modal admin-modal-content admin-modal--lg">\n        <div class="modal-header">\n          <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body"></div>\n      </div>';
         try { document.body.appendChild(el); } catch(_){ }
         return el;
       }
@@ -742,7 +649,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         el.setAttribute('aria-modal','true');
         el.setAttribute('tabindex','-1');
         el.setAttribute('aria-labelledby','cssCatalogTitle');
-        el.innerHTML = '\n      <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">\n        <div class="modal-header">\n          <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body">\n          <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>\n        </div>\n      </div>';
+        el.innerHTML = '\n      <div class="admin-modal admin-modal-content admin-modal--lg">\n        <div class="modal-header">\n          <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body">\n          <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>\n        </div>\n      </div>';
         try { document.body.appendChild(el); } catch(_){}
         return el;
       }
@@ -764,13 +671,8 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           if (m) { primeIframe('areaItemMapperFrame'); showOverlay(m); }
           return;
         }
-        // Room Map Editor
-        if (q('[data-action="open-room-map-editor"]')){
-          ev.preventDefault(); ev.stopPropagation();
-          const m = document.getElementById('roomMapEditorModal');
-          if (m) { primeIframe('roomMapEditorFrame'); showOverlay(m); }
-          return;
-        }
+        // Room Map Editor - handled by Vite module admin-settings-lightweight.js
+        // (removed inline fallback - modal is now created dynamically)
         // Background Manager (no iframe; content provided by Vite module)
         if (q('[data-action="open-background-manager"]')){
           ev.preventDefault(); ev.stopPropagation();
@@ -877,59 +779,22 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Dev Status Dashboard Modal (iframe embed) -->
     <div id="devStatusModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
-      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+      <div class="admin-modal admin-modal-content admin-modal--lg">
         <div class="modal-header">
           <h2 id="devStatusTitle" class="admin-card-title">🧪 Dev Status Dashboard</h2>
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body admin-modal-body--lg">
           <iframe id="devStatusFrame" title="Dev Status" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/dev/status.php" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
 
-    <!-- Deploy Manager Modal (iframe embed) -->
-    <div id="deployManagerModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="deployManagerTitle">
-      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
-        <div class="modal-header">
-          <h2 id="deployManagerTitle" class="admin-card-title">🚀 Deploy Manager</h2>
-          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
-        </div>
-        <div class="modal-body">
-          <iframe id="deployManagerFrame" title="Deploy Manager" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/deploy_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
-        </div>
-      </div>
-    </div>
-
-    <!-- DB Schema Audit Modal (iframe embed) -->
-    <div id="dbSchemaAuditModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="dbSchemaAuditTitle">
-      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
-        <div class="modal-header">
-          <h2 id="dbSchemaAuditTitle" class="admin-card-title">🗃️ DB Schema Audit</h2>
-          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
-        </div>
-        <div class="modal-body">
-          <iframe id="dbSchemaAuditFrame" title="DB Schema Audit" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/db_schema_audit.php?modal=1" referrerpolicy="no-referrer"></iframe>
-        </div>
-      </div>
-    </div>
-
-    <!-- Repository Cleanup Modal (iframe embed) -->
-    <div id="repoCleanupModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="repoCleanupTitle">
-      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
-        <div class="modal-header">
-          <h2 id="repoCleanupTitle" class="admin-card-title">🧹 Repository Cleanup</h2>
-          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
-        </div>
-        <div class="modal-body">
-          <iframe id="repoCleanupFrame" title="Repository Cleanup" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/repo_cleanup.php?modal=1" referrerpolicy="no-referrer"></iframe>
-        </div>
-      </div>
-    </div>
+    
 
     <!-- Attributes Management Modal (iframe embed) -->
     <div id="attributesModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="attributesTitle">
-      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">
+      <div class="admin-modal admin-modal-content admin-modal--attributes">
         <div class="modal-header">
           <h2 id="attributesTitle" class="admin-card-title">🧩 Genders, Sizes, &amp; Colors</h2>
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -957,10 +822,10 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     function ensureAddressDiagnosticsModal(){
       var modal = $('addressDiagnosticsModal');
       if (!modal){
-        var html = '\n      <div class="admin-modal admin-modal-content w-[90vw] h-[85vh]">\n        <div class="modal-header">\n          <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics<\/h2>\n          <button type="button" class="admin-modal-close" aria-label="Close">×<\/button>\n        <\/div>\n        <div class="modal-body">\n          <iframe id="addressDiagnosticsFrame" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"><\/iframe>\n        <\/div>\n      <\/div>';
+        var html = '\n      <div class="admin-modal admin-modal-content admin-modal--lg">\n        <div class="modal-header">\n          <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics<\/h2>\n          <button type="button" class="admin-modal-close" aria-label="Close">×<\/button>\n        <\/div>\n        <div class="modal-body">\n          <iframe id="addressDiagnosticsFrame" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"><\/iframe>\n        <\/div>\n      <\/div>';
         modal = createEl('div', { id:'addressDiagnosticsModal', class:'admin-modal-overlay wf-modal-closable hidden', role:'dialog', 'aria-modal':'true', tabindex:'-1', 'aria-labelledby':'addressDiagnosticsTitle' }, html);
         ensureContainer().appendChild(modal);
-        try { modal.querySelector('.admin-modal-close').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}
+        try { modal.querySelector('.admin-modal-close').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}}
       }
       var frame = $('addressDiagnosticsFrame');
       if (frame && !frame.getAttribute('src')){ frame.setAttribute('src', frame.getAttribute('data-src') || '/sections/tools/address_diagnostics.php?modal=1'); }
@@ -1036,7 +901,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         <button type="button" id="categoriesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-categories">Category Management</button>
         <button type="button" id="dashboardConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
         <button type="button" id="attributesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-attributes">Genders, Sizes, &amp; Colors</button>
-        <button type="button" id="templateManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-template-manager">Template Manager</button>
         <button type="button" id="shoppingCartBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shopping-cart" onclick="(function(b){try{var m=document.getElementById('shoppingCartModal');if(m){if(m.parentElement&&m.parentElement!==document.body){document.body.appendChild(m);}m.classList.add('over-header');m.classList.remove('hidden');m.classList.add('show');m.setAttribute('aria-hidden','false');m.style.pointerEvents='auto';}}catch(e){}})(this); return false;">Shopping Cart</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-blue', 'Content Management', 'Organize products, categories, and room content', $__content); ?>
 
@@ -1044,7 +908,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       <?php ob_start(); ?>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-area-item-mapper">Area-Item Mapper</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-background-manager">Background Manager</button>
-        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-css-catalog">CSS Catalog</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-editor">Room Map Editor</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-purple', 'Visual & Design', 'Customize appearance and interactive elements', $__content); ?>
 
@@ -1060,6 +923,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
       <?php // Communication ?>
       <?php ob_start(); ?>
+        <button type="button" id="templateManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-template-manager">Email Templates</button>
         <button type="button" id="customerMessagesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-customer-messages">Customer Messages</button>
         <button type="button" id="emailConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-settings">Email Configuration</button>
         <button type="button" id="emailHistoryBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-history">Email History</button>
@@ -1070,16 +934,11 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
       <?php // Technical & System ?>
       <?php ob_start(); ?>
-        <button type="button" id="accountSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-account-settings">Account Settings</button>
-        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=cost-breakdown-manager">Cost Breakdown Manager</a>
-        <button type="button" id="siteDeploymentBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-site-deployment">Site Deployment</button>
-        <button type="button" id="deployManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-deploy-manager">Deploy Manager</button>
-        <button type="button" id="dbSchemaAuditBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-db-schema-audit">DB Schema Audit</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-cost-breakdown">Cost Breakdown Manager</button>
         <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Health & Diagnostics</button>
         <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=reports-browser">Reports &amp; Documentation Browser</a>
-        <button type="button" id="repoCleanupBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-repo-cleanup">Repository Cleanup</button>
+        
         <button type="button" id="secretsManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-secrets-modal">Secrets Manager</button>
-        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=customers">User Manager</a>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-red', 'Technical & System', 'System tools and advanced configuration', $__content); ?>
     </div>
 
@@ -1134,7 +993,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Area-Item Mapper Modal (hidden by default) -->
     <div id="areaItemMapperModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="areaItemMapperTitle">
-      <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+      <div class="admin-modal admin-modal-content admin-modal--lg">
         <div class="modal-header">
           <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area-Item Mapper</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1147,19 +1006,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
 
 
-    <!-- Room Map Editor Modal (iframe embed) -->
-    <div id="roomMapEditorModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="roomMapEditorTitle">
-      <div class="admin-modal admin-modal-content">
-        <div class="modal-header">
-          <h2 id="roomMapEditorTitle" class="admin-card-title">��️ Room Map Editor</h2>
-          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
-          <span class="modal-status-chip" aria-live="polite"></span>
-        </div>
-        <div class="modal-body">
-          <iframe id="roomMapEditorFrame" title="Room Map Editor" src="about:blank" data-src="/sections/tools/room_map_editor.php?modal=1" class="wf-admin-embed-frame"></iframe>
-        </div>
-      </div>
-    </div>
     <!-- Template Manager Modal (iframe embed) -->
     <div id="templateManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="templateManagerTitle">
       <div class="admin-modal admin-modal-content">
@@ -1170,6 +1016,20 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         </div>
         <div class="modal-body">
           <iframe id="templateManagerFrame" title="Template Manager" src="about:blank" data-src="/sections/tools/template_manager.php?modal=1" class="wf-admin-embed-frame"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cost Breakdown Manager Modal (iframe embed) -->
+    <div id="costBreakdownModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="costBreakdownTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg">
+        <div class="modal-header">
+          <h2 id="costBreakdownTitle" class="admin-card-title">💲 Cost Breakdown Manager</h2>
+          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+          <span class="modal-status-chip" aria-live="polite"></span>
+        </div>
+        <div class="modal-body">
+          <iframe id="costBreakdownFrame" title="Cost Breakdown Manager" src="about:blank" data-src="/sections/tools/cost_breakdown_manager.php?modal=1" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1559,7 +1419,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
             <button type="button" class="btn-secondary" data-action="email-history-download">Download CSV</button>
             <div id="emailHistoryStatus" class="text-sm text-gray-600"></div>
           </div>
-          <div id="emailHistoryList" class="border rounded-sm divide-y max-h-[60vh] overflow-auto">
+          <div id="emailHistoryList" class="border rounded-sm divide-y overflow-auto">
             <!-- rows injected here -->
           </div>
           <div id="emailHistoryDrawerOverlay" class="email-drawer-overlay hidden" aria-hidden="true"></div>
@@ -1746,7 +1606,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Categories Modal (hidden by default) -->
     <div id="categoriesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="categoriesTitle">
-      <div class="admin-modal admin-modal-content wf-modal-auto">
+      <div class="admin-modal admin-modal-content admin-modal--lg-narrow">
         <div class="modal-header">
           <h2 id="categoriesTitle" class="admin-card-title">📂 Category Management</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1797,7 +1657,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     <!-- All modal logic handled by Vite bridge -->
     <!-- Dashboard Configuration Modal (hidden by default) -->
     <div id="dashboardConfigModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="dashboardConfigTitle">
-      <div class="admin-modal admin-modal-content">
+      <div class="admin-modal admin-modal-content admin-modal--dashboard-config">
         <div class="modal-header">
           <h2 id="dashboardConfigTitle" class="admin-card-title">⚙️ Dashboard Configuration</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>

@@ -1,7 +1,4 @@
-/* Attributes modal: wider layout for 3 side-by-side lists */
-body[data-page^='admin'] #attributesModal .admin-modal {
-  width: min(1200px, 98vw) !important;
-}
+/* Attributes modal: sizing via tokens (neutralize fixed width) */
 
 /* Font Picker modal styles */
 body[data-page='admin/settings'] #fontPickerModal .font-picker-card {
@@ -275,6 +272,8 @@ body[data-page^='admin'] .admin-modal-overlay {
 body[data-page^='admin'] .admin-modal-overlay .admin-modal {
   margin-top: 0 !important;
 }
+
+/* Room Map Editor: use .admin-modal--room-map tokens (neutralize fixed sizes) */
 
 /* Ensure settings content does NOT create a stacking context that traps overlays */
 body[data-page='admin/settings'] .settings-page,
@@ -770,8 +769,6 @@ body[data-page^='admin'] .btn--square-action[aria-disabled="true"] {
 
 /* Dashboard Configuration modal: make body scroll within viewport */
 body[data-page^='admin'] #dashboardConfigModal .admin-modal {
-  width: min(960px, 96vw) !important;
-  max-height: 92vh !important;
   display: flex !important;
   flex-direction: column !important;
 }
@@ -789,8 +786,6 @@ body[data-page^='admin'] #dashboardConfigModal .modal-body {
 body[data-page^='admin'] .admin-modal-overlay .admin-modal {
   display: flex !important;
   flex-direction: column !important;
-  max-height: 92vh !important;
-  width: min(960px, 96vw) !important;
 }
 body[data-page^='admin'] .admin-modal-overlay .modal-body {
   flex: 1 1 auto !important;

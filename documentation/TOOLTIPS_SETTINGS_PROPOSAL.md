@@ -177,10 +177,6 @@
 **Current**: Hover or click to see what it adjusts.
 **Proposed**: Deploy code changes to production. The "make it live" button—test first, deploy second, panic never (ideally).
 
-### `repoCleanupBtn` / `action:open-repo-cleanup`
-**Current**: Hover or click to see what it adjusts.
-**Proposed**: Clean up old files, unused assets, and code cruft. Digital spring cleaning for your repository.
-
 ---
 
 ## Analytics & Reports

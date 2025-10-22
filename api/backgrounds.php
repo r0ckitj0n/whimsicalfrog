@@ -11,6 +11,25 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
     exit;
 }
 
+function renameBackground($input)
+{
+    $id = $input['id'] ?? $input['background_id'] ?? '';
+    $name = trim((string)($input['background_name'] ?? $input['name'] ?? ''));
+    if ($id === '' || $name === '') {
+        Response::validationError(['id' => 'required', 'background_name' => 'required']);
+    }
+    try {
+        $affected = Database::execute("UPDATE backgrounds SET background_name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [$name, $id]);
+        if ($affected > 0) {
+            Response::success(null, 'Background renamed successfully');
+        } else {
+            Response::notFound('Background not found');
+        }
+    } catch (Throwable $e) {
+        Response::serverError('Database error', $e->getMessage());
+    }
+}
+
 // Database connection (centralized via Database singleton)
 try {
     Database::getInstance();
@@ -44,10 +63,16 @@ function normalizeRoomNumberFromInput($input)
     if ($roomParam === null || $roomParam === '') {
         return '';
     }
-    if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
-        return (string)((int)$m[1]);
+    $val = trim((string)$roomParam);
+    if ($val === '') return '';
+    if (preg_match('/^room([0-9a-zA-Z]+)$/i', $val, $m)) {
+        return strtoupper((string)$m[1]);
     }
-    return (string)((int)$roomParam);
+    // Accept digits or single-letter rooms like 'A'
+    if (preg_match('/^[0-9]+$/', $val)) return ltrim($val, '+');
+    if (preg_match('/^[a-zA-Z]$/', $val)) return strtoupper($val);
+    // Fallback: keep as-is
+    return $val;
 }
 
 function saveBackground($input)
@@ -57,7 +82,7 @@ function saveBackground($input)
     $imageFilename = $input['image_filename'] ?? '';
     $webpFilename = $input['webp_filename'] ?? null;
 
-    if ($roomNumber === '' || !preg_match('/^[1-5]$/', $roomNumber) || empty($backgroundName) || empty($imageFilename)) {
+    if ($roomNumber === '' || !preg_match('/^(?:[0-5]|A|S|X)$/', $roomNumber) || empty($backgroundName) || empty($imageFilename)) {
         Response::error('Missing or invalid fields', null, 400);
         return;
     }
@@ -93,7 +118,7 @@ function applyBackground($input)
     $roomNumber = normalizeRoomNumberFromInput($input);
     $backgroundId = $input['background_id'] ?? '';
 
-    if ($roomNumber === '' || !preg_match('/^[1-5]$/', $roomNumber) || empty($backgroundId)) {
+    if ($roomNumber === '' || !preg_match('/^(?:[0-5]|A|S|X)$/', $roomNumber) || empty($backgroundId)) {
         Response::error('Missing or invalid fields', null, 400);
         return;
     }
@@ -101,7 +126,7 @@ function applyBackground($input)
     try {
         Database::beginTransaction();
 
-        // Deactivate all backgrounds for this room
+        // Deactivate all backgrounds for this room only
         Database::execute("UPDATE backgrounds SET is_active = 0 WHERE room_number = ?", [$roomNumber]);
 
         // Activate the selected background (by id is sufficient)
@@ -131,7 +156,7 @@ function handleDelete($input)
 
     try {
         // Check if it's an Original background
-        $background = Database::queryOne("SELECT background_name, image_filename, webp_filename FROM backgrounds WHERE id = ?", [$backgroundId]);
+        $background = Database::queryOne("SELECT background_name, image_filename, png_filename, webp_filename FROM backgrounds WHERE id = ?", [$backgroundId]);
 
         if (!$background) {
             Response::notFound('Background not found');
@@ -143,18 +168,24 @@ function handleDelete($input)
             return;
         }
 
-        // Delete the background
+        // Delete files from disk first (best-effort)
+        $imagesRoot = realpath(__DIR__ . '/../images');
+        if ($imagesRoot === false) {
+            $imagesRoot = __DIR__ . '/../images';
+        }
+        $paths = [];
+        if (!empty($background['image_filename'])) $paths[] = $background['image_filename'];
+        if (!empty($background['png_filename'])) $paths[] = $background['png_filename'];
+        if (!empty($background['webp_filename'])) $paths[] = $background['webp_filename'];
+        foreach ($paths as $rel) {
+            $rel = ltrim($rel, '/');
+            $abs = (strpos($rel, 'images/') === 0) ? (__DIR__ . '/../' . $rel) : ($imagesRoot . '/' . $rel);
+            if (is_file($abs)) { @unlink($abs); }
+        }
+
+        // Delete the background row
         $deleted = Database::execute("DELETE FROM backgrounds WHERE id = ?", [$backgroundId]);
-
         if ($deleted > 0) {
-            // Optionally delete the image files (commented out for safety)
-            // if (file_exists("../images/" . $background['image_filename'])) {
-            //     unlink("../images/" . $background['image_filename']);
-            // }
-            // if ($background['webp_filename'] && file_exists("../images/" . $background['webp_filename'])) {
-            //     unlink("../images/" . $background['webp_filename']);
-            // }
-
             Response::success(null, 'Background deleted successfully');
         } else {
             Response::error('Failed to delete background');
@@ -180,6 +211,8 @@ function wf_handle_backgrounds_get(): void
         $activeOnly = isset($_GET['active_only']) && $_GET['active_only'] === 'true';
 
         if ($roomNumber !== '') {
+            $sql = '';
+            $params = [];
             $sql = "SELECT * FROM backgrounds WHERE room_number = ?";
             $params = [$roomNumber];
             if ($activeOnly) {
@@ -187,6 +220,12 @@ function wf_handle_backgrounds_get(): void
             }
             $sql .= " ORDER BY background_name = 'Original' DESC, created_at DESC";
             $rows = Database::queryAll($sql, $params);
+            // Fallback: if Main (0) returns no rows, include legacy/empty room_number rows
+            if ($roomNumber === '0' && count($rows) === 0) {
+                $rows = Database::queryAll(
+                    "SELECT * FROM backgrounds WHERE (room_number = '0' OR room_number IS NULL OR room_number = '') ORDER BY background_name = 'Original' DESC, created_at DESC"
+                );
+            }
             if ($activeOnly && count($rows) > 0) {
                 Response::success(['background' => $rows[0]]);
             } else {
@@ -217,6 +256,9 @@ function wf_handle_backgrounds_post(): void
             return;
         case 'upload':
             handleUpload($data);
+            return;
+        case 'rename':
+            renameBackground($data);
             return;
         default:
             Response::error('Invalid action');

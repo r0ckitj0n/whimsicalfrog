@@ -1,33 +1,13 @@
 // Lazy modal factory: Background Manager (embeds dashboard #background)
-const __wfEnsureBackgroundManagerModal = () => {
-  let el = document.getElementById('backgroundManagerModal');
-  if (el) return el;
-  el = document.createElement('div');
-  el.id = 'backgroundManagerModal';
-  el.className = 'admin-modal-overlay hidden';
-  el.setAttribute('aria-hidden', 'true');
-  el.setAttribute('role', 'dialog');
-  el.setAttribute('aria-modal', 'true');
-  el.setAttribute('tabindex', '-1');
-  el.setAttribute('aria-labelledby', 'backgroundManagerTitle');
-  el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
-      <div class="modal-header">
-        <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <iframe id="backgroundManagerFrame" title="Background Manager" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/admin_dashboard.php?modal=1#background" referrerpolicy="no-referrer"></iframe>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(el);
-  return el;
-};
 // Lazy modal factory: Room Map Editor
 const __wfEnsureRoomMapEditorModal = () => {
   let el = document.getElementById('roomMapEditorModal');
-  if (el) return el;
+  // ALWAYS force recreation to pick up template changes
+  if (el) {
+    console.log('[RoomMapEditor] Removing existing modal to force refresh');
+    el.remove();
+    el = null;
+  }
   el = document.createElement('div');
   el.id = 'roomMapEditorModal';
   el.className = 'admin-modal-overlay hidden';
@@ -37,17 +17,18 @@ const __wfEnsureRoomMapEditorModal = () => {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'roomMapEditorTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+    <div class="admin-modal admin-modal--room-map">
       <div class="modal-header">
-        <h2 id="roomMapEditorTitle" class="admin-card-title">🗺️ Room Map Editor</h2>
+        <h2 id="roomMapEditorTitle" class="admin-card-title">🗺️ Room Map Editor (New Design)</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body">
-        <iframe id="roomMapEditorFrame" title="Room Map Editor" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/room_map_editor.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body rme-modal-body">
+        <iframe id="roomMapEditorFrame" title="Room Map Editor" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/room_map_editor.php?modal=1&amp;vite=dev" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
   document.body.appendChild(el);
+  console.log('[RoomMapEditor] New modal created with iframe');
   return el;
 };
 // Lazy modal factory: Area-Item Mapper
@@ -63,7 +44,7 @@ const __wfEnsureAreaItemMapperModal = () => {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'areaItemMapperTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area-Item Mapper</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -90,7 +71,7 @@ const __wfEnsureEmailSettingsModal = () => {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'emailSettingsTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -117,7 +98,7 @@ const __wfEnsureReceiptMessagesModal = () => {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'receiptMessagesTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="receiptMessagesTitle" class="admin-card-title">🧾 Receipt Messages</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -143,13 +124,13 @@ const __wfEnsureTemplateManagerModal = () => {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'templateManagerTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
-        <h2 id="templateManagerTitle" class="admin-card-title">📁 Template Manager</h2>
+        <h2 id="templateManagerTitle" class="admin-card-title">📧 Email Templates</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
-        <iframe id="templateManagerFrame" title="Template Manager" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/template_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+        <iframe id="templateManagerFrame" title="Email Templates" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/template_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -170,39 +151,13 @@ const __wfEnsureEmailHistoryModal = () => {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'emailHistoryTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="emailHistoryTitle" class="admin-card-title">📬 Email History</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <iframe id="emailHistoryFrame" title="Email History" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_history.php?modal=1" referrerpolicy="no-referrer"></iframe>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(el);
-  return el;
-};
-// Ensure a given overlay element exists; used to lazily create modals on demand
-const __wfEnsureCssCatalogModal = () => {
-  let el = document.getElementById('cssCatalogModal');
-  if (el) return el;
-  el = document.createElement('div');
-  el.id = 'cssCatalogModal';
-  el.className = 'admin-modal-overlay hidden';
-  el.setAttribute('aria-hidden', 'true');
-  el.setAttribute('role', 'dialog');
-  el.setAttribute('aria-modal', 'true');
-  el.setAttribute('tabindex', '-1');
-  el.setAttribute('aria-labelledby', 'cssCatalogTitle');
-  el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
-      <div class="modal-header">
-        <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -234,10 +189,16 @@ import '../modules/admin-settings-coordinator.js';
 const __wfShowModal = (id) => {
   const el = document.getElementById(id);
   if (!el) return false;
-  try { el.removeAttribute('hidden'); } catch(_) {}
+  el.removeAttribute('hidden'); // Remove HTML hidden attribute
   el.classList.remove('hidden');
   el.classList.add('show');
   el.setAttribute('aria-hidden', 'false');
+  if (el.hasAttribute('style')) {
+    const attr = el.getAttribute('style');
+    if (!attr || /display\s*:/.test(attr)) {
+      el.removeAttribute('style');
+    }
+  }
   return true;
 };
 
@@ -451,31 +412,11 @@ const __wfHideModal = (id) => {
         return;
       }
 
-      // Deploy Manager modal (iframe)
-      if (closest('[data-action="open-deploy-manager"], #deployManagerBtn')) {
-        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfShowModal('deployManagerModal');
-        return;
-      }
+      
 
-      // DB Schema Audit modal (iframe)
-      if (closest('[data-action="open-db-schema-audit"], #dbSchemaAuditBtn')) {
-        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfShowModal('dbSchemaAuditModal');
-        const f = document.getElementById('dbSchemaAuditFrame');
-        if (f && !f.getAttribute('src')) {
-          const ds = f.getAttribute('data-src') || '/sections/tools/db_schema_audit.php?modal=1';
-          f.setAttribute('src', ds);
-        }
-        return;
-      }
+      
 
-      // Repository Cleanup modal (iframe)
-      if (closest('[data-action="open-repo-cleanup"], #repoCleanupBtn')) {
-        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfShowModal('repoCleanupModal');
-        return;
-      }
+      
 
       // Dashboard Configuration modal (native)
       if (closest('[data-action="open-dashboard-config"], #dashboardConfigBtn')) {
@@ -558,8 +499,11 @@ const __wfHideModal = (id) => {
         __wfEnsureRoomMapEditorModal();
         __wfShowModal('roomMapEditorModal');
         const iframe = document.getElementById('roomMapEditorFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe && iframe.dataset && iframe.dataset.src) {
+          const target = iframe.dataset.src;
+          // ALWAYS reload with fresh cache-busting parameter
+          const bust = (target.includes('?') ? '&' : '?') + '_v=' + Date.now() + '&_r=' + Math.random();
+          iframe.setAttribute('src', target + bust);
         }
         return;
       }
@@ -582,19 +526,6 @@ const __wfHideModal = (id) => {
             iframe.addEventListener('load', () => { try { iframe.dataset.loaded = '1'; iframe.dataset.loading = '0'; } catch(_) {} }, { once: true });
             iframe.src = ds;
           }
-        }
-        return;
-      }
-
-      // Open Background Manager modal (lazy create)
-      if (closest('[data-action="open-background-manager"]')) {
-        e.preventDefault();
-        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfEnsureBackgroundManagerModal();
-        __wfShowModal('backgroundManagerModal');
-        const iframe = document.getElementById('backgroundManagerFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
         }
         return;
       }

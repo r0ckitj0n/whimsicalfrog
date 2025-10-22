@@ -106,8 +106,7 @@ function generateSpecificTooltip(string $elementId, string $context): ?string {
     // Settings buttons - Deployment & Repository
     'deploymanagerbtn' => 'Deploy code changes to production. The "make it live" button—test first, deploy second, panic never (ideally).',
     'action:open-deploy-manager' => 'Deploy code changes to production. The "make it live" button—test first, deploy second, panic never (ideally).',
-    'repocleanupbtn' => 'Clean up old files, unused assets, and code cruft. Digital spring cleaning for your repository.',
-    'action:open-repo-cleanup' => 'Clean up old files, unused assets, and code cruft. Digital spring cleaning for your repository.',
+    
     
     // Settings buttons - Analytics & Reports
     'analyticsbtn' => 'Traffic stats, conversion rates, and visitor behavior. See who\'s browsing, what they\'re clicking, and where they bail.',

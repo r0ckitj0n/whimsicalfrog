@@ -601,10 +601,6 @@ body[data-page='contact'] .content { color: #fff !important; }
 
 /* Admin Orders: ensure only one scrollbar by letting the iframe manage scroll */
 #receiptModal .modal-content {
-  width: 90vw !important;
-  max-width: 90vw !important;
-  height: 90vh !important;
-  max-height: 90vh !important;
   display: flex;
   flex-direction: column;
 }

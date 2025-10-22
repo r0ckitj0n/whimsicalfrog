@@ -148,7 +148,9 @@ $messageType = $_GET['type'] ?? '';
 
 ?>
 <div id="categoryManagementRoot" class="p-4">
+    <?php if (!$isModal): ?>
     <h1 class="admin-title">Category Management</h1>
+    <?php endif; ?>
 
      <!-- Tabs Navigation -->
     <div class="admin-card my-2">

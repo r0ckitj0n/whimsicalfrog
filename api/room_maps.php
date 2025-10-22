@@ -8,10 +8,21 @@ function normalize_room_number($value)
     if ($value === null || $value === '') {
         return '';
     }
-    if (preg_match('/^room(\d+)$/i', (string)$value, $m)) {
+    $v = trim((string)$value);
+    // Pattern: roomN -> N
+    if (preg_match('/^room(\d+)$/i', $v, $m)) {
         return (string)((int)$m[1]);
     }
-    return (string)((int)$value);
+    // Single-letter rooms (e.g., 'A' for Landing)
+    if (preg_match('/^[A-Za-z]$/', $v)) {
+        return strtoupper($v);
+    }
+    // Pure numeric
+    if (preg_match('/^\d+$/', $v)) {
+        return (string)((int)$v);
+    }
+    // Fallback: return as-is (trimmed)
+    return $v;
 }
 
 try {

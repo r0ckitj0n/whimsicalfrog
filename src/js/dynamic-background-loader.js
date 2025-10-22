@@ -85,11 +85,19 @@ export async function loadRoomBackground(roomNumberStr) {
         
         if (data.success && data.background) {
             const background = data.background;
-            // Select the appropriate wrapper for modal or main page
-                const raw = (background.webp_filename || background.image_filename) || '';
-                const fname = raw;
-                const imageUrl = window.location.origin + `/images/backgrounds/${fname}?v=${Date.now()}`;
-                const roomWrapper = document.getElementById('modalRoomPage')
+            // Build robust URL from API fields (webp -> png -> image)
+            const raw = (background.webp_filename || background.png_filename || background.image_filename) || '';
+            const val = String(raw).trim();
+            const buildUrl = (v) => {
+                if (!v) return '';
+                if (/^https?:\/\//i.test(v)) return v;
+                if (v.startsWith('/images/')) return window.location.origin + v;
+                if (v.startsWith('images/')) return window.location.origin + '/' + v;
+                if (v.startsWith('backgrounds/')) return window.location.origin + '/images/' + v;
+                return window.location.origin + '/images/backgrounds/' + v;
+            };
+            const imageUrl = buildUrl(val) + `&v=${Date.now()}`.replace('&v','?v');
+            const roomWrapper = document.getElementById('modalRoomPage')
     ? (document.querySelector('.room-overlay-wrapper') || document.querySelector('.room-modal-body') || document.querySelector('.room-modal-iframe-container'))
     : document.getElementById('mainRoomPage') || document.getElementById('landingPage') || document.getElementById('shopPage');
             

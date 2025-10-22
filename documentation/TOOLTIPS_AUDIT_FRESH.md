@@ -1486,9 +1486,6 @@ Format per entry:
 - [settings:::receiptSettingsBtn]
   - Title: Receiptsettings
   - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
-- [settings:::repoCleanupBtn]
-  - Title: Repocleanup
-  - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.
 - [settings:::room-category-btn]
   - Title: Room Category
   - Tooltip: Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.

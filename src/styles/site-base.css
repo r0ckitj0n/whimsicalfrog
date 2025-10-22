@@ -1042,13 +1042,13 @@ body[data-page^='admin'] .admin-filter-form {
    ============================================== */
 
 @media (max-width: 640px) {.modal-content {
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
-    max-height: calc(100vh - 2rem);
+    margin: var(--modal-mobile-margin, 1rem);
+    max-width: var(--modal-mobile-max-width, calc(100vw - 2rem));
+    max-height: var(--modal-mobile-max-height, calc(100vh - 2rem));
 }.admin-modal-content {
-    margin: 1rem;
-    max-width: calc(100vw - 2rem);
-    max-height: calc(100vh - 2rem);
+    margin: var(--admin-modal-mobile-margin, 1rem);
+    max-width: var(--admin-modal-mobile-max-width, calc(100vw - 2rem));
+    max-height: var(--admin-modal-mobile-max-height, calc(100vh - 2rem));
 }.modal-header {
     padding: 5px 12px;
     margin-bottom: 0;
@@ -12079,7 +12079,7 @@ body.image-viewer-open #imageViewerModal {
     left: 0;
     width: 100%;
     height: 100vh;
-    z-index: var(--z-index-overlay-backdrop);
+    z-index: var(--wf-confirm-overlay-z, var(--z-overlay-topmost, var(--z-index-overlay-backdrop)));
 }
 .confirmation-modal-overlay.under-header {
     z-index: calc(var(--z-index-page-header) - 1);
@@ -14332,15 +14332,15 @@ img {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background-room-main.webp');
-    --bg-png: url('/images/backgrounds/background-room-main.png');
+    --bg-webp: url('/images/backgrounds/background-room0.webp');
+    --bg-png: url('/images/backgrounds/background-room0.png');
     background-image: var(--bg-webp);
 }.room-bg-landing {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    --bg-webp: url('/images/backgrounds/background-home.webp');
-    --bg-png: url('/images/backgrounds/background-home.png');
+    --bg-webp: url('/images/backgrounds/background-roomA.webp');
+    --bg-png: url('/images/backgrounds/background-roomA.png');
     background-image: var(--bg-webp);
 }.room-bg-room1 {
     background-size: cover;

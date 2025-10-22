@@ -1486,9 +1486,6 @@ Format per entry:
 - [settings:::receiptSettingsBtn]
   - Title: Receiptsettings
   - Tooltip: Control what shows on order confirmations. Line items, notes, branding—make it official.
-- [settings:::repoCleanupBtn]
-  - Title: Repocleanup
-  - Tooltip: Hover or click to see what it adjusts.
 - [settings:::room-category-btn]
   - Title: Room Category
   - Tooltip: Hover or click to see what it adjusts.

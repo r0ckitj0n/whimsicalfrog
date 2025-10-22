@@ -114,19 +114,19 @@ try {
             <div class="header-left">
                 <?php if ($config['show_logo']): ?>
                     <?php
-                    // Normalize and resolve logo path regardless of current working directory.
                     $logo_src = '';
+                    $logo_webp = '';
+                    $logo_png = '';
                     try {
                         $cfg = isset($config['logo_image']) ? (string)$config['logo_image'] : '';
                         if ($cfg !== '') {
-                            // If absolute URL, use directly
                             if (preg_match('#^(?:https?:)?//#i', $cfg)) {
                                 $logo_src = $cfg;
+                                $logo_webp = preg_replace('/\.(png|jpe?g)$/i', '.webp', $cfg) ?? $cfg;
+                                $logo_png = preg_replace('/\.webp$/i', '.png', $cfg) ?? $cfg;
                             } else {
-                                // Ensure leading slash for web path
                                 $webPath = ($cfg[0] === '/') ? $cfg : ('/' . ltrim($cfg, '/'));
                                 $absPath = dirname(__DIR__) . $webPath;
-                                // If the configured path doesn't exist, try common alternates (webp <-> png)
                                 if (!is_file($absPath)) {
                                     $alt1 = preg_replace('/\.(png|jpe?g)$/i', '.webp', $webPath);
                                     if ($alt1 !== null && $alt1 !== $webPath && is_file(dirname(__DIR__) . $alt1)) {
@@ -139,7 +139,6 @@ try {
                                     }
                                     $absPath = dirname(__DIR__) . $webPath;
                                 }
-                                // Final fallback to canonical logo assets if still missing
                                 if (!is_file($absPath)) {
                                     if (is_file(dirname(__DIR__) . '/images/logos/logo-whimsicalfrog.webp')) {
                                         $webPath = '/images/logos/logo-whimsicalfrog.webp';
@@ -150,26 +149,37 @@ try {
                                     }
                                 }
                                 if (is_file($absPath)) {
-                                    $logo_src = $webPath; // Use web path for img src
+                                    $logo_src = $webPath;
+                                    $wp = preg_replace('/\.(png|jpe?g)$/i', '.webp', $webPath);
+                                    $pp = preg_replace('/\.webp$/i', '.png', $webPath);
+                                    if ($wp && is_file(dirname(__DIR__) . $wp)) { $logo_webp = $wp; }
+                                    if ($pp && is_file(dirname(__DIR__) . $pp)) { $logo_png = $pp; }
+                                    if ($logo_webp === '' && strtolower(substr($webPath, -5)) === '.webp') { $logo_webp = $webPath; }
+                                    if ($logo_png === '' && strtolower(substr($webPath, -4)) === '.png') { $logo_png = $webPath; }
                                 }
                             }
                         } else {
-                            // No config provided: try canonical assets
                             if (is_file(dirname(__DIR__) . '/images/logos/logo-whimsicalfrog.webp')) {
-                                $logo_src = '/images/logos/logo-whimsicalfrog.webp';
+                                $logo_webp = '/images/logos/logo-whimsicalfrog.webp';
+                                $logo_src = $logo_webp;
                             } elseif (is_file(dirname(__DIR__) . '/images/logos/logo-whimsicalfrog.png')) {
-                                $logo_src = '/images/logos/logo-whimsicalfrog.png';
+                                $logo_png = '/images/logos/logo-whimsicalfrog.png';
+                                $logo_src = $logo_png;
                             }
                         }
                     } catch (\Throwable $e) {
-                        // Non-fatal; omit image if resolution fails
                     }
 ?>
                     <a href="/" class="logo-link" aria-label="<?php echo htmlspecialchars($config['logo_text']); ?> - Home">
-                        <?php if ($logo_src !== ''): ?>
-                            <img src="<?php echo htmlspecialchars($logo_src); ?>"
-                                 alt="<?php echo htmlspecialchars($config['logo_text']); ?>"
-                                 class="header-logo">
+                        <?php if ($logo_webp !== '' || $logo_png !== '' || $logo_src !== ''): ?>
+                            <picture>
+                                <?php if ($logo_webp !== ''): ?>
+                                    <source srcset="<?php echo htmlspecialchars($logo_webp); ?>" type="image/webp">
+                                <?php endif; ?>
+                                <img src="<?php echo htmlspecialchars($logo_png !== '' ? $logo_png : $logo_src); ?>"
+                                     alt="<?php echo htmlspecialchars($config['logo_text']); ?>"
+                                     class="header-logo">
+                            </picture>
                         <?php endif; ?>
 
                         <div class="logo-text-container">

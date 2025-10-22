@@ -508,53 +508,99 @@ function get_active_background($roomType)
     try {
         $pdo = Database::getInstance();
         $roomTypeStr = strtolower((string)$roomType);
-        // Strict: only support modern schema by room_number mapping; do not infer for non-room pages
+        $pickFile = function ($row) {
+            $candidates = [];
+            if (!empty($row['webp_filename'])) $candidates[] = $row['webp_filename'];
+            if (!empty($row['png_filename'])) $candidates[] = $row['png_filename'];
+            if (!empty($row['image_filename'])) $candidates[] = $row['image_filename'];
+            foreach ($candidates as $rel) {
+                $rel = ltrim($rel, '/');
+                // Allow either already rooted under images/ or just backgrounds/
+                $abs = (strpos($rel, 'images/') === 0)
+                    ? __DIR__ . '/..' . '/' . $rel
+                    : __DIR__ . '/..' . '/images/' . $rel;
+                if (is_file($abs)) {
+                    return (strpos($rel, 'images/') === 0) ? ('/' . $rel) : ('/images/' . $rel);
+                }
+            }
+            return '';
+        };
+
+        if ($roomTypeStr === 'landing') {
+            // Prefer active Landing (A)
+            $stmt = $pdo->prepare("SELECT image_filename, png_filename, webp_filename FROM backgrounds WHERE room_number = 'A' AND is_active = 1 ORDER BY id DESC LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if ($row) {
+                $url = $pickFile($row);
+                if ($url !== '') return $url;
+            }
+            // Fallback to 'home' subset stored in room 0 historically
+            $stmt = $pdo->prepare("SELECT image_filename, png_filename, webp_filename FROM backgrounds WHERE room_number = '0' AND is_active = 1 AND (
+                LOWER(COALESCE(webp_filename,'')) LIKE ? OR LOWER(COALESCE(image_filename,'')) LIKE ? OR LOWER(COALESCE(png_filename,'')) LIKE ?
+            ) ORDER BY id DESC LIMIT 1");
+            $stmt->execute(['%background-roomA%', '%background-roomA%', '%background-roomA%']);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if ($row) {
+                $url = $pickFile($row);
+                if ($url !== '') return $url;
+            }
+            return '';
+        }
+
+        if ($roomTypeStr === 'shop') {
+            // Shop uses its own room key 'S'
+            $stmt = $pdo->prepare("SELECT image_filename, png_filename, webp_filename FROM backgrounds WHERE room_number = 'S' AND is_active = 1 ORDER BY id DESC LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if ($row) {
+                $url = $pickFile($row);
+                if ($url !== '') return $url;
+            }
+            return '';
+        }
+
+        if ($roomTypeStr === 'settings' || $roomTypeStr === 'admin/settings') {
+            // Settings uses its own room key 'X'
+            $stmt = $pdo->prepare("SELECT image_filename, png_filename, webp_filename FROM backgrounds WHERE room_number = 'X' AND is_active = 1 ORDER BY id DESC LIMIT 1");
+            $stmt->execute();
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if ($row) {
+                $url = $pickFile($row);
+                if ($url !== '') return $url;
+            }
+            return '';
+        }
+
+        if ($roomTypeStr === 'room_main') {
+            // Exclude Landing 'home' subset when selecting main
+            $stmt = $pdo->prepare("SELECT image_filename, png_filename, webp_filename FROM backgrounds WHERE room_number = '0' AND is_active = 1 AND NOT (
+                LOWER(COALESCE(webp_filename,'')) LIKE ? OR LOWER(COALESCE(image_filename,'')) LIKE ? OR LOWER(COALESCE(png_filename,'')) LIKE ?
+            ) ORDER BY id DESC LIMIT 1");
+            $stmt->execute(['%background-roomA%', '%background-roomA%', '%background-roomA%']);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+            if ($row) {
+                $url = $pickFile($row);
+                if ($url !== '') return $url;
+            }
+            return '';
+        }
+
         $roomNumber = null;
         if (preg_match('/^room(\d+)$/', $roomTypeStr, $m)) {
             $roomNumber = (int)$m[1];
         } elseif (ctype_digit($roomTypeStr)) {
             $roomNumber = (int)$roomTypeStr;
-        } elseif ($roomTypeStr === 'landing' || $roomTypeStr === 'shop') {
-            // Landing and shop pages use home background
-            $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = '0' AND (webp_filename = 'background-home.webp' OR image_filename = 'background-home.png') AND is_active = 1 ORDER BY id DESC LIMIT 1");
-            $stmt->execute();
-            $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-            if ($background) {
-                $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
-                $abs = __DIR__ . '/..' . '/images/backgrounds/' . ltrim($imageFile, '/');
-                if (is_file($abs)) {
-                    return '/images/backgrounds/' . ltrim($imageFile, '/');
-                }
-            }
-            return '';
-        } elseif ($roomTypeStr === 'room_main') {
-            // room_main uses its own specific background
-            $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = '0' AND (webp_filename = 'background-room-main.webp' OR image_filename = 'background-room-main.png') ORDER BY id DESC LIMIT 1");
-            $stmt->execute();
-            $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-            if ($background) {
-                $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
-                $abs = __DIR__ . '/..' . '/images/backgrounds/' . ltrim($imageFile, '/');
-                if (is_file($abs)) {
-                    return '/images/backgrounds/' . ltrim($imageFile, '/');
-                }
-            }
-            return '';
         } else {
             return '';
         }
 
-        $stmt = $pdo->prepare("SELECT image_filename, webp_filename FROM backgrounds WHERE room_number = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
+        $stmt = $pdo->prepare("SELECT image_filename, png_filename, webp_filename FROM backgrounds WHERE room_number = ? AND is_active = 1 ORDER BY id DESC LIMIT 1");
         $stmt->execute([$roomNumber]);
-        $background = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-        if ($background) {
-            $imageFile = !empty($background['webp_filename']) ? $background['webp_filename'] : $background['image_filename'];
-            $abs = __DIR__ . '/..' . '/images/backgrounds/' . ltrim($imageFile, '/');
-            if (is_file($abs)) {
-                return '/images/backgrounds/' . ltrim($imageFile, '/');
-            }
-            // File missing on disk; surface by returning empty
-            return '';
+        $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        if ($row) {
+            $url = $pickFile($row);
+            if ($url !== '') return $url;
         }
     } catch (Exception $e) {
         error_log('Error fetching active background: ' . $e->getMessage());

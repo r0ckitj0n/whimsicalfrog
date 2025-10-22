@@ -1486,9 +1486,6 @@ Format per entry:
 - [settings:::receiptSettingsBtn]
   - Title: Receiptsettings
   - Tooltip: Control what shows on order confirmations. Line items, notes, branding—make it official.
-- [settings:::repoCleanupBtn]
-  - Title: Repocleanup
-  - Tooltip: Clean up old files, unused assets, and code cruft. Digital spring cleaning for your repository.
 - [settings:::room-category-btn]
   - Title: Room Category
   - Tooltip: Decide which product categories appear in which rooms. Traffic control so shoppers find the fun stuff naturally.

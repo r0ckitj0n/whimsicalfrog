@@ -200,7 +200,7 @@ if (defined('WF_PARTIAL_REQUEST') && ($_GET['wf_partial'] ?? '') === 'order_moda
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
     </a>
-    <div class="admin-modal admin-modal-content wf-admin-panel-visible show">
+    <div class="admin-modal admin-modal-content admin-modal--order-editor wf-admin-panel-visible show">
         <div class="modal-header">
             <h2 class="modal-title">
                 <?= $modalState['mode'] === 'view' ? 'View' : 'Edit' ?> Order: <?= htmlspecialchars($orderId) ?>
@@ -575,7 +575,7 @@ function ordSortIndicator($column, $currentSort, $currentDir)
         </svg>
     </a>
 
-    <div class="admin-modal admin-modal-content wf-admin-panel-visible show">
+    <div class="admin-modal admin-modal-content admin-modal--order-editor wf-admin-panel-visible show">
         <!-- Modal Header -->
         <div class="modal-header">
             <h2 class="modal-title">
@@ -805,19 +805,17 @@ function ordSortIndicator($column, $currentSort, $currentDir)
     </div>
 </div>
 
-<!-- Receipt Modal -->
-<div id="receiptModal" class="modal-overlay hidden">
-    <div class="modal-content max-w-800">
+<!-- Receipt Modal (tokenized sizing) -->
+<div id="receiptModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="receiptTitle">
+    <div class="admin-modal admin-modal--receipt">
         <div class="modal-header">
-            <h3>Order Receipt</h3>
-            <button data-action="close-receipt-modal">×</button>
+            <h3 id="receiptTitle">Order Receipt</h3>
+            <button type="button" class="admin-modal-close" data-action="close-receipt-modal" aria-label="Close">×</button>
         </div>
-        <div class="modal-body">
-            <div id="receiptContent"></div>
-        </div>
+        <div class="modal-body" id="receiptContent"></div>
         <div class="modal-footer">
-            <button data-action="print-receipt" class="btn btn-primary">Print</button>
-            <button data-action="close-receipt-modal" class="btn btn-secondary">Close</button>
+            <button type="button" class="btn btn-primary" data-action="print-receipt">Print</button>
+            <button type="button" class="btn" data-action="close-receipt-modal">Close</button>
         </div>
     </div>
 </div>

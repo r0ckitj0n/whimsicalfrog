@@ -1483,9 +1483,6 @@ Format per entry:
 - [settings:::receiptSettingsBtn]
   - Title: Receiptsettings
   - Tooltip: Receipts that say “organized adult.” Clear line items, helpful notes, and fewer “where’s my order?” emails. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
-- [settings:::repoCleanupBtn]
-  - Title: Repocleanup
-  - Tooltip: Clean repos so releases don’t trip on leftovers. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.
 - [settings:::room-category-btn]
   - Title: Room Category
   - Tooltip: Link categories to rooms so shoppers aren’t lost. Click with confidence, or at least fake it convincingly enough that nobody asks uncomfortable questions about whether you know what you're doing. Settings: where small changes have big consequences. Tread carefully, test thoroughly, keep documentation open in another tab, and maybe say a little prayer to the tech gods before clicking save.

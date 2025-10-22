@@ -74,36 +74,35 @@ if (!$inModal) {
   <div id="admin-section-content">
 <?php endif; ?>
 
-<div class="container mx-auto p-4 bg-white">
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="text-2xl font-bold">Template Manager</h1>
-    <div class="text-sm text-gray-600">Design templates and assign them to email events</div>
+<div id="templateManagerRoot" class="p-3">
+  <?php if (!$inModal): ?>
+  <div class="admin-card">
+    <div class="flex items-center justify-between">
+      <h1 class="admin-card-title">Template Manager</h1>
+      <div class="text-sm text-gray-600">Design templates and assign them to email events</div>
+    </div>
   </div>
-
-  <div class="border-b mb-3 text-sm">
-    <span class="px-3 py-2 border-b-2 border-blue-600 text-blue-700 font-semibold">Email Templates</span>
-  </div>
+  <?php endif; ?>
 
   <!-- Email Templates Panel -->
   <div id="tmPanelEmail" class="space-y-3">
-    <!-- Guidance: 3-step workflow -->
-    <div class="border rounded bg-blue-50 border-blue-200 p-3 text-xs text-blue-900">
+    <div class="admin-card text-sm">
       <div class="font-semibold mb-1">How this works</div>
       <ol class="list-decimal list-inside space-y-1">
         <li><b>Create or edit templates</b> with subject + HTML content.</li>
         <li><b>Assign templates</b> to email types (e.g., order_confirmation).</li>
         <li><b>Preview or send a test</b> to verify formatting.</li>
       </ol>
-      <div class="mt-2 text-[11px] text-blue-800">Tip: “Assignments” control which template is used when the system sends each kind of email.</div>
+      <div class="mt-2 text-xs text-gray-600">Tip: “Assignments” control which template is used when the system sends each kind of email.</div>
     </div>
-    <div class="text-xs text-gray-600">Manage templates below, then use "Edit Assignments" to map them to email types.</div>
-    <div id="tmEmailToolbar" class="flex gap-2 items-center">
-      <button id="tmRefresh" class="btn btn-secondary btn-xs">Refresh</button>
-      <button id="tmNew" class="btn btn-primary btn-xs">New Template</button>
-      <button id="tmAssignEdit" class="btn btn-secondary btn-xs" title="Map templates to email types">Edit Assignments</button>
+    <div class="admin-card text-sm text-gray-600">Manage templates below, then use "Edit Assignments" to map them to email types.</div>
+    <div id="tmEmailToolbar" class="admin-card admin-form-inline">
+      <button id="tmRefresh" class="btn btn-secondary btn-sm">Refresh</button>
+      <button id="tmNew" class="btn btn-primary btn-sm">New Template</button>
+      <button id="tmAssignEdit" class="btn btn-secondary btn-sm" title="Map templates to email types">Edit Assignments</button>
     </div>
-    <div class="border rounded">
-      <table class="w-full text-xs">
+    <div class="admin-card">
+      <table class="admin-table">
         <thead class="bg-gray-50 border-b">
           <tr>
             <th class="text-left p-2 w-8">ID</th>
@@ -127,10 +126,12 @@ if (!$inModal) {
 
   <!-- Assignments Editor Panel -->
   <div id="tmPanelAssignEditor" class="hidden">
-    <div class="p-2 font-semibold">Edit Assignments</div>
-    <div class="text-xs text-gray-600 mb-2">Select which template should be used for each email type, then click Save.</div>
-    <div class="border rounded">
-      <table class="w-full text-xs">
+    <div class="admin-card">
+      <h3 class="admin-card-title">Edit Assignments</h3>
+      <div class="text-sm text-gray-600">Select which template should be used for each email type, then click Save.</div>
+    </div>
+    <div class="admin-card">
+      <table class="admin-table">
         <thead class="bg-gray-50 border-b">
           <tr>
             <th class="text-left p-2">Email Type</th>
@@ -142,15 +143,17 @@ if (!$inModal) {
         </tbody>
       </table>
     </div>
-    <div class="mt-2 flex gap-2">
-      <button id="tmAssignSave" class="btn btn-primary btn-xs">Save Assignments</button>
-      <button id="tmAssignCancel" class="btn btn-secondary btn-xs">Cancel</button>
+    <div class="admin-card admin-form-inline">
+      <div class="flex gap-2 justify-end w-full">
+        <button id="tmAssignSave" class="btn btn-primary btn-sm">Save Assignments</button>
+        <button id="tmAssignCancel" class="btn btn-secondary btn-sm">Cancel</button>
+      </div>
     </div>
   </div>
 
   <!-- Template Editor Modal -->
   <div id="tmTemplateModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="tmEditorTitle">
-    <div class="admin-modal admin-modal-content w-[80vw] h-[85vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="tmEditorTitle" class="admin-card-title">Template Editor</h2>
         <button type="button" class="admin-modal-close" data-action="tm-editor-close" aria-label="Close">×</button>
@@ -260,7 +263,7 @@ if (!$inModal) {
         const active = (String(t.is_active)==='1'||String(t.is_active).toLowerCase()==='true') ? 'Yes' : 'No';
         const assigned = (usage[String(id)]||[]);
         const assignedBadges = assigned.length
-          ? assigned.map(z => `<span class=\"inline-block bg-gray-100 text-gray-700 rounded px-1 py-0.5 mr-1\">${z}</span>`).join('')
+          ? assigned.map(z => `<span class=\"code-badge\">${z}</span>`).join('')
           : '<span class="text-gray-400">—</span>';
         return `<tr>
           <td class="p-2">${id}</td>
@@ -270,12 +273,12 @@ if (!$inModal) {
           <td class="p-2">${active}</td>
           <td class="p-2">${assignedBadges}</td>
           <td class="p-2">
-            <button class="btn btn-secondary btn-xs" data-action="tm-preview" data-id="${id}" title="Open a new window with rendered HTML">Preview HTML</button>
-            <button class="btn btn-secondary btn-xs" data-action="tm-preview-inline" data-id="${id}" title="Preview inside a modal">Preview Inline</button>
-            <button class="btn btn-secondary btn-xs" data-action="tm-send-test" data-id="${id}" title="Send a test email using this template">Send Test…</button>
-            <button class="btn btn-secondary btn-xs" data-action="tm-edit" data-id="${id}" title="Edit template fields">Edit</button>
-            <button class="btn btn-secondary btn-xs" data-action="tm-duplicate" data-id="${id}" title="Create a copy of this template">Duplicate</button>
-            <button class="btn btn-secondary btn-xs" data-action="tm-archive" data-id="${id}" title="Archive (set inactive)">Archive</button>
+            <button class="btn btn-secondary btn-sm" data-action="tm-preview" data-id="${id}" title="Open a new window with rendered HTML">Preview HTML</button>
+            <button class="btn btn-secondary btn-sm" data-action="tm-preview-inline" data-id="${id}" title="Preview inside a modal">Preview Inline</button>
+            <button class="btn btn-secondary btn-sm" data-action="tm-send-test" data-id="${id}" title="Send a test email using this template">Send Test…</button>
+            <button class="btn btn-secondary btn-sm" data-action="tm-edit" data-id="${id}" title="Edit template fields">Edit</button>
+            <button class="btn btn-secondary btn-sm" data-action="tm-duplicate" data-id="${id}" title="Create a copy of this template">Duplicate</button>
+            <button class="btn btn-secondary btn-sm" data-action="tm-archive" data-id="${id}" title="Archive (set inactive)">Archive</button>
           </td>
         </tr>`;
       }).join('');
@@ -547,7 +550,7 @@ if (!$inModal) {
       if (!wrap) return;
       const type = fType.value || 'custom';
       const vars = VARS_BY_TYPE[type] || VARS_BY_TYPE.custom;
-      wrap.innerHTML = vars.map(v => `<button type="button" class="btn btn-xs" data-action="tm-insert-var" data-var="${v}" title="Insert variable">${v}</button>`).join(' ');
+      wrap.innerHTML = vars.map(v => `<button type=\"button\" class=\"btn btn-sm\" data-action=\"tm-insert-var\" data-var=\"${v}\" title=\"Insert variable\">${v}</button>`).join(' ');
     }
     fType?.addEventListener('change', renderVarHelper);
     document.addEventListener('click', (ev)=>{
@@ -590,13 +593,13 @@ if (!$inModal) {
 
 <!-- Inline Preview Modal -->
 <div id="tmPreviewModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="tmPreviewTitle">
-  <div class="admin-modal admin-modal-content w-[80vw] h-[85vh]">
+  <div class="admin-modal admin-modal-content admin-modal--lg">
     <div class="modal-header">
       <h2 id="tmPreviewTitle" class="admin-card-title">Preview</h2>
       <button type="button" class="admin-modal-close" data-action="tm-preview-close" aria-label="Close">×</button>
     </div>
-    <div class="modal-body p-0">
-      <div id="tmPreviewBody" class="w-full h-[75vh]"></div>
+    <div class="modal-body p-0 site-modal-body--xl">
+      <div id="tmPreviewBody" class="w-full"></div>
     </div>
   </div>
 </div>

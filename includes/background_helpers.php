@@ -34,7 +34,11 @@ if (!function_exists('get_landing_background_path')) {
 
         try {
             $path = get_active_background('landing');
-            if ($path && is_string($path) && file_exists($path)) {
+            if ($path && is_string($path)) {
+                $fs = __DIR__ . '/..' . '/' . ltrim($path, '/');
+                if (file_exists($fs)) {
+                    return $path;
+                }
                 return $path;
             }
         } catch (Throwable $e) {

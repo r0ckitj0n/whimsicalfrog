@@ -114,12 +114,12 @@ import { ApiClient } from '../../core/api-client.js';
         const container = document.createElement('div');
         container.innerHTML = `
           <div id="detailedItemModal" class="modal-overlay hidden">
-            <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div class="modal-content site-modal--xl">
               <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
                 <h2 class="text-2xl font-bold text-gray-800">${data.item.name}</h2>
                 <button class="detailed-modal-close-btn text-gray-500 hover:text-gray-700 text-3xl font-bold">&times;</button>
               </div>
-              <div class="p-6">
+              <div class="px-6 py-4">
                 <div class="text-3xl font-bold text-green-600 mb-2">$${parseFloat(data.item.retailPrice).toFixed(2)}</div>
                 ${data.item.description ? `<p class="text-gray-700 text-lg leading-relaxed">${String(data.item.description).replace(/\n/g,'<br>')}</p>` : ''}
               </div>
@@ -159,12 +159,12 @@ import { ApiClient } from '../../core/api-client.js';
         const container = document.createElement('div');
         container.innerHTML = `
           <div id="detailedItemModal" class="modal-overlay hidden">
-            <div class="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+            <div class="modal-content site-modal--xl">
               <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center z-10">
                 <h2 class="text-2xl font-bold text-gray-800">${data.item.name}</h2>
                 <button class="detailed-modal-close-btn text-gray-500 hover:text-gray-700 text-3xl font-bold">&times;</button>
               </div>
-              <div class="p-6">
+              <div class="px-6 py-4">
                 <div class="text-3xl font-bold text-green-600 mb-2">$${parseFloat(data.item.retailPrice).toFixed(2)}</div>
                 ${data.item.description ? `<p class=\"text-gray-700 text-lg leading-relaxed\">${String(data.item.description).replace(/\\n/g,'<br>')}</p>` : ''}
               </div>

@@ -32,89 +32,89 @@ class SessionManager
         // Merge custom config
         self::$config = array_merge(self::$config, $config);
 
-        // Store sessions under /tmp only (best practice), falling back to bare /tmp if needed
-        try {
-            $chosen = null;
-            $pathsToTry = [];
-
-            $preferredRoot = '/tmp';
-            if ($preferredRoot !== '') {
-                $preferredRoot = rtrim($preferredRoot, '/');
-                if ($preferredRoot === '') {
-                    $preferredRoot = '/';
-                }
-                if (is_dir($preferredRoot) || @mkdir($preferredRoot, 0777, true)) {
-                    $pathsToTry[] = $preferredRoot . '/whimsicalfrog_sessions';
-                    $pathsToTry[] = $preferredRoot;
-                }
-            }
-
-            foreach ($pathsToTry as $candidate) {
-                if (!is_string($candidate) || $candidate === '') {
-                    continue;
-                }
-                $created = false;
-                if (!is_dir($candidate)) {
-                    $created = @mkdir($candidate, 0777, true);
-                }
-                if ($created) {
-                    @chmod($candidate, 0777);
-                }
-                if (is_dir($candidate) && is_writable($candidate)) {
-                    $chosen = $candidate;
-                    break;
-                }
-            }
-            if ($chosen) {
-                ini_set('session.save_path', $chosen);
-            }
-        } catch (\Throwable $e) { /* non-fatal */
-        }
-
-        // Robust HTTPS detection (behind proxies)
-        $isHttps = (
-            (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-            (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
-            (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
-            (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
-        );
-
-        // For localhost and IP addresses, avoid setting a Domain attribute at all
-        try {
-            $hostCheck = $_SERVER['HTTP_HOST'] ?? '';
-            if (strpos($hostCheck, ':') !== false) {
-                $hostCheck = explode(':', $hostCheck)[0];
-            }
-            $isIpHost = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $hostCheck);
-            $isLocalHost = ($hostCheck === 'localhost' || $hostCheck === '127.0.0.1' || $isIpHost);
-            if ($isLocalHost) {
-                self::$config['domain'] = '';
-            }
-        } catch (\Throwable $e) { /* noop */
-        }
-
-        // Set session configuration
-        ini_set('session.name', self::$config['name']);
-        // If lifetime is 0, we still want a sane GC window so data persists across requests.
-        // Use 24h for GC when lifetime<=0, but keep cookie_lifetime=0 (session cookie) for the browser.
-        $cfgLifetime = (int) self::$config['lifetime'];
-        $gcLifetime = ($cfgLifetime > 0) ? $cfgLifetime : 86400; // 24h default GC if not specified
-        $cookieLifetime = $cfgLifetime; // 0 means session cookie in browser
-        ini_set('session.gc_maxlifetime', $gcLifetime);
-        ini_set('session.cookie_lifetime', $cookieLifetime);
-        ini_set('session.cookie_path', self::$config['path']);
-        ini_set('session.cookie_domain', self::$config['domain']);
-        ini_set('session.cookie_secure', $isHttps ? 1 : 0);
-        ini_set('session.cookie_httponly', self::$config['httponly']);
-        // Use SameSite=None only when secure over HTTPS; otherwise Lax to ensure cookies are accepted on localhost/dev
-        $sameSite = $isHttps ? 'None' : 'Lax';
-        ini_set('session.cookie_samesite', $sameSite);
-        ini_set('session.use_strict_mode', 1);
-        ini_set('session.use_cookies', 1);
-        ini_set('session.use_only_cookies', 1);
-
-        // Start session
+        // Start session (configure ONLY if not already active)
         if (session_status() === PHP_SESSION_NONE) {
+            // Store sessions under /tmp only (best practice), falling back to bare /tmp if needed
+            try {
+                $chosen = null;
+                $pathsToTry = [];
+
+                $preferredRoot = '/tmp';
+                if ($preferredRoot !== '') {
+                    $preferredRoot = rtrim($preferredRoot, '/');
+                    if ($preferredRoot === '') {
+                        $preferredRoot = '/';
+                    }
+                    if (is_dir($preferredRoot) || @mkdir($preferredRoot, 0777, true)) {
+                        $pathsToTry[] = $preferredRoot . '/whimsicalfrog_sessions';
+                        $pathsToTry[] = $preferredRoot;
+                    }
+                }
+
+                foreach ($pathsToTry as $candidate) {
+                    if (!is_string($candidate) || $candidate === '') {
+                        continue;
+                    }
+                    $created = false;
+                    if (!is_dir($candidate)) {
+                        $created = @mkdir($candidate, 0777, true);
+                    }
+                    if ($created) {
+                        @chmod($candidate, 0777);
+                    }
+                    if (is_dir($candidate) && is_writable($candidate)) {
+                        $chosen = $candidate;
+                        break;
+                    }
+                }
+                if ($chosen) {
+                    ini_set('session.save_path', $chosen);
+                }
+            } catch (\Throwable $e) { /* non-fatal */
+            }
+
+            // Robust HTTPS detection (behind proxies)
+            $isHttps = (
+                (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                (($_SERVER['SERVER_PORT'] ?? '') == 443) ||
+                (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ||
+                (strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '') === 'on')
+            );
+
+            // For localhost and IP addresses, avoid setting a Domain attribute at all
+            try {
+                $hostCheck = $_SERVER['HTTP_HOST'] ?? '';
+                if (strpos($hostCheck, ':') !== false) {
+                    $hostCheck = explode(':', $hostCheck)[0];
+                }
+                $isIpHost = (bool) preg_match('/^\d{1,3}(?:\.\d{1,3}){3}$/', $hostCheck);
+                $isLocalHost = ($hostCheck === 'localhost' || $hostCheck === '127.0.0.1' || $isIpHost);
+                if ($isLocalHost) {
+                    self::$config['domain'] = '';
+                }
+            } catch (\Throwable $e) { /* noop */
+            }
+            
+            // Set session configuration BEFORE starting session
+            ini_set('session.name', self::$config['name']);
+            // If lifetime is 0, we still want a sane GC window so data persists across requests.
+            // Use 24h for GC when lifetime<=0, but keep cookie_lifetime=0 (session cookie) for the browser.
+            $cfgLifetime = (int) self::$config['lifetime'];
+            $gcLifetime = ($cfgLifetime > 0) ? $cfgLifetime : 86400; // 24h default GC if not specified
+            $cookieLifetime = $cfgLifetime; // 0 means session cookie in browser
+            ini_set('session.gc_maxlifetime', $gcLifetime);
+            ini_set('session.cookie_lifetime', $cookieLifetime);
+            ini_set('session.cookie_path', self::$config['path']);
+            ini_set('session.cookie_domain', self::$config['domain']);
+            ini_set('session.cookie_secure', $isHttps ? 1 : 0);
+            ini_set('session.cookie_httponly', self::$config['httponly']);
+            // Use SameSite=None only when secure over HTTPS; otherwise Lax to ensure cookies are accepted on localhost/dev
+            $sameSite = $isHttps ? 'None' : 'Lax';
+            ini_set('session.cookie_samesite', $sameSite);
+            ini_set('session.use_strict_mode', 1);
+            ini_set('session.use_cookies', 1);
+            ini_set('session.use_only_cookies', 1);
+            
             session_start();
             // Normalize cookie to base domain to avoid duplicate host-only vs domain cookies
             try {

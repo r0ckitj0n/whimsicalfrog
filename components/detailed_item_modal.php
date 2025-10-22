@@ -64,9 +64,9 @@ function renderDetailedItemModal($item, $images = [])
 
     ?>
     <div id="detailedItemModal" class="detailed-item-modal fixed inset-0 hidden flex items-center justify-center z-50 p-2 sm:p-4" data-action="closeDetailedModalOnOverlay">
-        <div class="bg-white rounded-lg shadow-xl max-w-7xl xl:max-w-[1400px] w-full max-h-[98vh] overflow-hidden relative detailed-item-modal-container">
+        <div class="modal-content site-modal--xl bg-white rounded-lg shadow-xl overflow-hidden relative detailed-item-modal-container">
             <!-- Scrollable Content -->
-            <div class="overflow-y-auto max-h-[95vh]">
+            <div class="overflow-y-auto">
                 <div class="p-6">
                     <div class="grid md:grid-cols-2 gap-6">
                         <!-- Left Column - Images -->

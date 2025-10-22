@@ -10,10 +10,10 @@
   background: #ffffff;
   border-radius: 0.5rem; /* 8px */
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -2px rgb(0 0 0 / 5%);
-  width: 100%;
-  max-width: 80rem; /* 1280px */
-  max-height: calc(100vh - 2rem);
-  overflow-y: auto;
+  width: var(--admin-modal-width, 100%);
+  max-width: var(--admin-modal-max-width, 80rem); /* 1280px */
+  max-height: var(--admin-modal-max-height, calc(100vh - 2rem));
+  overflow-y: var(--admin-modal-content-overflow, auto);
   padding: var(--admin-modal-panel-padding, 0.5rem);
   transform: scale(1);
   transition: transform 0.3s ease;

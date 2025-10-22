@@ -488,7 +488,6 @@ $items = [
   "settings:::loggingStatusBtn" => "See current logging settings at a glance.",
   "settings:::receiptMessagesBtn" => "Edit friendly messages on receipts—useful beats verbose.",
   "settings:::receiptSettingsBtn" => "Receipts that say “organized adult.” Clear line items, helpful notes, and fewer “where’s my order?” emails.",
-  "settings:::repoCleanupBtn" => "Clean repos so releases don’t trip on leftovers.",
   "settings:::room-category-btn" => "Link categories to rooms so shoppers aren’t lost.",
   "settings:::room-mapper-btn" => "Draw hotspots on images and make exploration fun.",
   "settings:::roomCategoryBtn" => "Connect categories to rooms and guide shoppers naturally.",

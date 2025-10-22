@@ -26,7 +26,6 @@ if (!$__wf_modal && !function_exists('__wf_admin_root_footer_shutdown')) {
 <?php if ($__wf_modal): ?>
   <div class="bg-white">
     <div class="px-4 py-3 border-b">
-      <h1 class="text-xl font-semibold">Area-Item Mapper</h1>
       <p class="text-sm text-gray-600 mt-1">Map room areas to items or categories, and find unrepresented content.</p>
     </div>
     <div class="p-4">

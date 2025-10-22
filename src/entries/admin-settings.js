@@ -66,23 +66,3 @@ try {
     try { window.__wfSortSettingsButtons = sortSettingsCardButtons; } catch(_) {}
   }
 })();
-
-// Delegated handler: open Site Deployment modal (migrated from inline PHP script)
-(function(){
-  if (window.__wfBoundSiteDeploymentOpen) return;
-  window.__wfBoundSiteDeploymentOpen = true;
-  document.addEventListener('click', (ev) => {
-    const btn = ev.target && ev.target.closest && ev.target.closest('#siteDeploymentBtn, [data-action="open-site-deployment"]');
-    if (!btn) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    try {
-      const modal = document.getElementById('siteDeploymentModal');
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.setAttribute('aria-hidden', 'false');
-        // rely on CSS to enable pointer events when visible
-      }
-    } catch (_) {}
-  }, true);
-})();

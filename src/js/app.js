@@ -729,7 +729,7 @@ if (__WF_IS_ADMIN) {
                         el.setAttribute('tabindex','-1');
                         el.setAttribute('aria-labelledby','cssCatalogTitle');
                         el.innerHTML = `
-                          <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+                          <div class="admin-modal admin-modal-content admin-modal--lg">
                             <div class="modal-header">
                               <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>
                               <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -848,16 +848,7 @@ if (__WF_IS_ADMIN) {
                             if (closest('[data-action="open-logging-status"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('loggingStatusModal'); return; }
                             if (closest('[data-action="open-ai-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiSettingsModal'); return; }
                             if (closest('[data-action="open-ai-tools"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiToolsModal'); return; }
-                            if (closest('[data-action="open-db-schema-audit"]')) {
-                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
-                                if (quickShow('dbSchemaAuditModal')) {
-                                    const iframe = document.getElementById('dbSchemaAuditFrame');
-                                    if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-                                        iframe.src = iframe.dataset.src;
-                                    }
-                                }
-                                return;
-                            }
+                            
                             if (closest('[data-action="open-css-catalog"]')) {
                                 e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
                                 ensureCssCatalogModal();

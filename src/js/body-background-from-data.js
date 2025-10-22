@@ -31,12 +31,18 @@ import { ApiClient } from '../core/api-client.js';
       if (!roomNum) return null;
       // Fetch background info and return an absolute URL with cache-busting
       const data = await ApiClient.get('/api/get_background.php', { room: roomNum }).catch(() => null);
-      const bg = data && data.background ? (data.background.webp_filename || data.background.image_filename) : null;
+      const bg = data && data.background ? (data.background.webp_filename || data.background.png_filename || data.background.image_filename) : null;
       if (!bg) return null;
-      let fname = String(bg);
-      if (fname.startsWith('background_')) fname = fname.replace(/^background_/, 'background-');
-      if (!fname.startsWith('background-')) fname = `background-${fname}`;
-      const url = `${window.location.origin}/images/backgrounds/${fname}?v=${Date.now()}`;
+      const val = String(bg).trim();
+      const buildUrl = (v) => {
+        if (!v) return '';
+        if (/^https?:\/\//i.test(v)) return v;
+        if (v.startsWith('/images/')) return window.location.origin + v;
+        if (v.startsWith('images/')) return window.location.origin + '/' + v;
+        if (v.startsWith('backgrounds/')) return window.location.origin + '/images/' + v;
+        return window.location.origin + '/images/backgrounds/' + v;
+      };
+      const url = buildUrl(val) + `&v=${Date.now()}`.replace('&v','?v');
       body.setAttribute('data-bg-url', url);
       return url;
     } catch (_) { return null; }

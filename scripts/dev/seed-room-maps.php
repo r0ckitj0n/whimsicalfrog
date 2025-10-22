@@ -60,13 +60,13 @@ try {
     ];
     // Room 1
     $room1 = [
-        [ 'selector' => '.area-1', 'top' => 332, 'left' => 104, 'width' => 121, 'height' => 137 ],
-        [ 'selector' => '.area-2', 'top' => 345, 'left' => 289, 'width' => 92,  'height' => 122 ],
-        [ 'selector' => '.area-3', 'top' => 347, 'left' => 385, 'width' => 83,  'height' => 122 ],
-        [ 'selector' => '.area-4', 'top' => 344, 'left' => 474, 'width' => 90,  'height' => 125 ],
-        [ 'selector' => '.area-5', 'top' => 345, 'left' => 569, 'width' => 83,  'height' => 124 ],
-        [ 'selector' => '.area-6', 'top' => 466, 'left' => 911, 'width' => 96,  'height' => 133 ],
-        [ 'selector' => '.area-7', 'top' => 469, 'left' => 1067,'width' => 107, 'height' => 149 ],
+        [ 'selector' => '.area-1', 'top' => 287.40974467509506, 'left' => 203.5043928816512,  'width' => 113.58328412030193, 'height' => 124.47261006123307 ],
+        [ 'selector' => '.area-2', 'top' => 286.02785512563344, 'left' => 355.65301348711995, 'width' => 99.45945945945948,  'height' => 122.76731088999156 ],
+        [ 'selector' => '.area-3', 'top' => 453.35447651631125, 'left' => 294.27236855996625, 'width' => 89.72972972972974,  'height' => 131.8918918918919 ],
+        [ 'selector' => '.area-4', 'top' => 292.6647611050993,  'left' => 486.191343565245,   'width' => 77.871156434755,    'height' => 116.13040491052573 ],
+        [ 'selector' => '.area-5', 'top' => 446.5615160143053,  'left' => 434.5347933382602,  'width' => 80.13274816564603,  'height' => 127.39801767710094 ],
+        [ 'selector' => '.area-6', 'top' => 466.233624432538,    'left' => 924.6647305875211,  'width' => 103.78378378378379, 'height' => 143.7837837837838 ],
+        [ 'selector' => '.area-7', 'top' => 477.19488525390625,  'left' => 1082.508264490076,  'width' => 115.67567567567568, 'height' => 161.0810810810811 ],
     ];
     // Room 2
     $room2 = [
@@ -114,8 +114,10 @@ try {
     upsert_map('0', $room0, 'Original');
     upsert_map('1', $room1, 'Original');
     upsert_map('2', $room2, 'Original');
-    upsert_map('3', $room3, 'Original');
-    upsert_map('4', $room4, 'Original');
+    // Swap: room 3 (Sublimation) should use the coordinates defined in $room4
+    // and room 4 (Artwork) should use the coordinates defined in $room3
+    upsert_map('3', $room4, 'Original');
+    upsert_map('4', $room3, 'Original');
     upsert_map('5', $room5, 'Original');
 
     // Optionally seed landing (use room_number 'A' if you maintain A/B letters for landing)

@@ -359,7 +359,7 @@ function ensureBackgroundManagerModal() {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'backgroundManagerTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content w-[80vw] h-[80vh]">
+    <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -654,6 +654,29 @@ document.addEventListener('click', async (e) => {
     });
     return;
   }
+  
+  // Cost Breakdown Manager (iframe embed)
+  if (closest('[data-action="open-cost-breakdown"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const modal = document.getElementById('costBreakdownModal');
+      const frame = document.getElementById('costBreakdownFrame');
+      if (frame && (frame.getAttribute('src') === null || frame.getAttribute('src') === 'about:blank')) {
+        const ds = frame.getAttribute('data-src') || '/sections/tools/cost_breakdown_manager.php?modal=1';
+        frame.setAttribute('src', ds);
+      }
+      if (typeof window.showModal === 'function' && modal) window.showModal('costBreakdownModal');
+      else if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        try { modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
+      }
+    } catch (err) {
+      console.warn('Failed to open Cost Breakdown Manager', err);
+    }
+    return;
+  }
 
   // Background Manager (no iframe; Vite-managed module)
   if (closest('[data-action="open-background-manager"]')) {
@@ -868,7 +891,7 @@ document.addEventListener('click', async (e) => {
   }
 
   // ... (other delegated handlers for health, hints, etc.) ...
-});
+}, true);
 
 // Set bridge initialization flag to prevent entry file fallbacks
 window.__WF_ADMIN_SETTINGS_BRIDGE_INIT = true;

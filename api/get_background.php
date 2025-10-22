@@ -99,7 +99,7 @@ try {
     $rn = $roomNumber;
     $t0 = microtime(true);
     $background = Database::queryOne(
-        "SELECT background_name, image_filename, webp_filename, created_at 
+        "SELECT background_name, image_filename, png_filename, webp_filename, created_at 
          FROM backgrounds 
          WHERE room_number = ? AND is_active = 1 
          LIMIT 1",
@@ -123,6 +123,33 @@ try {
         wf_cache_set($ck, $resp);
         Response::json($resp);
     } else {
+        // Fallbacks for Main (0): support legacy rows and non-active latest
+        if ($rn === '0') {
+            // 1) Legacy: null/empty room_number but active
+            $legacy = Database::queryOne(
+                "SELECT background_name, image_filename, png_filename, webp_filename, created_at 
+                 FROM backgrounds 
+                 WHERE (room_number IS NULL OR room_number = '') AND is_active = 1 
+                 ORDER BY id DESC LIMIT 1"
+            );
+            if ($legacy) {
+                $resp = ['success' => true, 'background' => $legacy];
+                wf_cache_set($ck, $resp);
+                Response::json($resp);
+            }
+            // 2) Latest for room 0 regardless of is_active
+            $latest = Database::queryOne(
+                "SELECT background_name, image_filename, png_filename, webp_filename, created_at 
+                 FROM backgrounds 
+                 WHERE room_number = '0' 
+                 ORDER BY is_active DESC, id DESC LIMIT 1"
+            );
+            if ($latest) {
+                $resp = ['success' => true, 'background' => $latest];
+                wf_cache_set($ck, $resp);
+                Response::json($resp);
+            }
+        }
         // Strict: no background configured for this room
         Response::notFound('No active background found for room ' . $roomNumber);
     }

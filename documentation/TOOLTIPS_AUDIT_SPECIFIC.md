@@ -1486,9 +1486,6 @@ Format per entry:
 - [settings:::receiptSettingsBtn]
   - Title: Receiptsettings
   - Tooltip: Opens receipt layout settings where you control what shows on order confirmations. Line items, notes, branding—make it official.
-- [settings:::repoCleanupBtn]
-  - Title: Repocleanup
-  - Tooltip: A settings control. Hover or click to see what it adjusts.
 - [settings:::room-category-btn]
   - Title: Room Category
   - Tooltip: A settings control. Hover or click to see what it adjusts.

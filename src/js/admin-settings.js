@@ -660,7 +660,7 @@ function showContentToneModal() {
   if (existing) existing.remove();
   const modalHtml = `
     <div id="contentToneModal" class="admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="overlay-close">
-      <div class="admin-modal bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="contentToneTitle">
+      <div class="admin-modal admin-modal--md bg-white rounded-lg flex flex-col" role="dialog" aria-modal="true" aria-labelledby="contentToneTitle">
         <div class="flex justify-between items-center border-b p-4">
           <h3 id="contentToneTitle" class="text-lg font-semibold text-gray-800">Manage Content Tone Options</h3>
           <button type="button" class="text-gray-500 hover:text-gray-700 text-xl" data-action="content-tone-close" aria-label="Close">&times;</button>
@@ -875,7 +875,7 @@ function showBrandVoiceModal() {
   if (existing) existing.remove();
   const modalHtml = `
     <div id="brandVoiceModal" class="admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="overlay-close">
-      <div class="admin-modal bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col" role="dialog" aria-modal="true" aria-labelledby="brandVoiceTitle">
+      <div class="admin-modal admin-modal--md bg-white rounded-lg flex flex-col" role="dialog" aria-modal="true" aria-labelledby="brandVoiceTitle">
         <div class="flex justify-between items-center border-b p-4">
           <h3 id="brandVoiceTitle" class="text-lg font-semibold text-gray-800">Manage Brand Voice Options</h3>
           <button type="button" class="text-gray-500 hover:text-gray-700 text-xl" data-action="brand-voice-close" aria-label="Close">&times;</button>
@@ -2718,7 +2718,7 @@ function showTestEmailModal(templateId) {
       overlay.id = 'emailTemplateEditModal';
       overlay.className = 'admin-modal-overlay fixed left-0 right-0 bg-black bg-opacity-50 flex items-start justify-center z-50 hidden';
       overlay.innerHTML = `
-        <div class="admin-modal bg-white rounded-lg w-full max-w-3xl max-h-[90vh] flex flex-col shadow-xl" role="dialog" aria-modal="true" aria-labelledby="emailTemplateEditTitle">
+        <div class="admin-modal admin-modal-content admin-modal--lg bg-white rounded-lg flex flex-col shadow-xl" role="dialog" aria-modal="true" aria-labelledby="emailTemplateEditTitle">
           <div class="flex items-center justify-between p-4 border-b">
             <h3 id="emailTemplateEditTitle" class="text-lg font-semibold text-gray-800">Edit Email Template</h3>
             <button type="button" class="admin-modal-close admin-modal-close--tight text-gray-700 hover:text-gray-900" data-action="close-admin-modal" aria-label="Close">&times;</button>
@@ -4553,12 +4553,20 @@ function initAdminSettingsDelegatedListeners() {
     function previewBackground(imageUrl, name) {
         if (!imageUrl) return;
         const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4';
+        overlay.id = 'imagePreviewModal';
+        overlay.className = 'admin-modal-overlay show';
+        overlay.setAttribute('aria-hidden', 'false');
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
         overlay.innerHTML = `
-          <div class="relative bg-white rounded shadow-xl max-w-5xl w-full max-h-[90vh] overflow-auto">
-            <button class="absolute top-2 right-3 text-2xl" data-action="close-preview" aria-label="Close">&times;</button>
-            <div class="p-3 border-b"><div class="font-semibold">${(name || 'Preview').replace(/</g,'&lt;')}</div></div>
-            <div class="p-3 flex items-center justify-center"><img src="${imageUrl}" alt="${(name||'').replace(/</g,'&lt;')}" class="max-w-full h-auto"></div>
+          <div class="admin-modal admin-modal--lg">
+            <div class="modal-header">
+              <h3 class="modal-title">${(name || 'Preview').replace(/</g,'&lt;')}</h3>
+              <button class="admin-modal-close" data-action="close-preview" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="p-3 flex items-center justify-center"><img src="${imageUrl}" alt="${(name||'').replace(/</g,'&lt;')}" class="max-w-full h-auto"></div>
+            </div>
           </div>`;
         document.body.appendChild(overlay);
     }

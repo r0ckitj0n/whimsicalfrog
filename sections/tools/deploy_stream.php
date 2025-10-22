@@ -2,6 +2,11 @@
 // sections/tools/deploy_stream.php
 // Server-Sent Events stream for Deploy actions
 
+http_response_code(410);
+header('Content-Type: text/plain; charset=utf-8');
+echo 'Deploy Manager streaming has been removed.';
+exit;
+
 $ROOT = dirname(__DIR__, 2);
 
 // Optional auth

@@ -129,6 +129,7 @@ function vite(string $entry): string
                 'js/admin-settings.js' => 'src/entries/admin-settings.js',
                 'js/admin-db-status.js' => 'src/entries/admin-db-status.js',
                 'js/header-bootstrap.js' => 'src/entries/header-bootstrap.js',
+                'js/admin-room-map-editor.js' => 'src/entries/admin-room-map-editor.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             $devMarker = "<script>try{console.log('[ViteBoot] DEV emission active', { origin: '" . addslashes($origin) . "', entry: '" . addslashes($devEntry) . "' });}catch(_){}</script>\n";
@@ -189,6 +190,7 @@ function vite(string $entry): string
                 'js/admin-settings.js' => 'src/entries/admin-settings.js',
                 'js/admin-db-status.js' => 'src/entries/admin-db-status.js',
                 'js/header-bootstrap.js' => 'src/entries/header-bootstrap.js',
+                'js/admin-room-map-editor.js' => 'src/entries/admin-room-map-editor.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             return $bootScript .

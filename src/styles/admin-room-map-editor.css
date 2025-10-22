@@ -1,18 +1,349 @@
 /* Room Map Editor component styles (no inline styles) */
 
-.rme-canvas-wrap {
-  height: 80vh;
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
-.rme-canvas {
-  height: 80vh;
-  background-position: center top;
-  background-size: contain;
-  background-repeat: no-repeat;
+
+body {
+  margin: 0;
+  background: #f3f4f6;
+  color: #1f2937;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.rme-app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rme-card {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+}
+
+.rme-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.rme-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rme-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.rme-title-badge {
+  font-size: 0.75rem;
+  color: #6d28d9;
+  margin-left: 0.4rem;
+  font-weight: 600;
+}
+
+.rme-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.rme-message {
+  min-height: 2.5rem;
+}
+
+.rme-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 0.9rem;
+  min-height: 0;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.rme-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+  scrollbar-width: thin;
+}
+
+.rme-main {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.rme-panel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.6rem;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
+  padding: 0.7rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rme-panel-heading {
+  margin-bottom: 0.25rem;
+}
+
+.rme-panel-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.rme-panel-subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.rme-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rme-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.rme-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  gap: 0.5rem;
+}
+
+.rme-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.rme-color-input {
+  width: 72px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background: transparent;
+}
+
+.rme-area-list {
+  max-height: 200px;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #f9fafb;
+}
+
+.rme-area-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0.75rem;
+}
+
+.rme-area-row:last-of-type {
+  border-bottom: none;
+}
+
+.rme-area-row.is-selected {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.rme-area-row[draggable="true"] {
+  cursor: grab;
+}
+
+.rme-textarea {
   width: 100%;
+  min-height: 130px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  padding: 0.75rem;
+  background: #f9fafb;
 }
+
+.rme-canvas-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
+.rme-frame {
+  position: relative;
+  flex: 0 0 auto;
+  min-height: 0;
+  height: auto;
+  background: #111827;
+  border-radius: 0.95rem;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Match live page behavior by constraining the frame to the viewport aspect ratio */
+.rme-frame.match-viewport {
+  flex: 0 0 auto;
+  height: auto;
+  aspect-ratio: var(--rme-viewport-aspect, 16/9);
+  max-height: 100%;
+}
+
+/* Constrain the frame to the image's native aspect ratio (for modal rooms) */
+.rme-frame.match-image {
+  flex: 0 0 auto;
+  height: auto;
+  aspect-ratio: 16/9; /* real ratio injected via dynamic style */
+  max-height: 100%;
+}
+
+.rme-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* Image and SVG overlay will be absolutely positioned inside */
+}
+
+/* Background image element that mirrors legacy background-position/size */
+.rme-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Anchor helpers toggled by JS depending on room type */
+.rme-bg.pos-top { object-position: center top; }
+.rme-bg.pos-center { object-position: center center; }
+
 .rme-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: auto;
   cursor: crosshair;
+}
+
+.rme-gridline {
+  stroke: #e5e7eb;
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+.rme-rect {
+  fill: rgba(16, 185, 129, 0.15);
+  stroke: #10b981;
+  stroke-width: 2;
+}
+
+.rme-rect.is-selected {
+  fill: rgba(59, 130, 246, 0.18);
+  stroke: #3b82f6;
+}
+
+.rme-rect.reorder-target {
+  stroke-dasharray: 4 3;
+}
+
+.rme-handle {
+  fill: #ffffff;
+  stroke: #3b82f6;
+  stroke-width: 2;
+}
+
+.rme-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.rme-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rme-toolbar input[type="number"] {
+  width: 80px;
+}
+
+.rme-toolbar select {
+  min-width: 110px;
+}
+
+@media (max-width: 1200px) {
+  .rme-layout {
+    flex-direction: column;
+  }
+
+  .rme-sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .rme-sidebar .rme-panel {
+    flex: 1 1 320px;
+  }
+}
+
+@media (max-width: 768px) {
+  .rme-card {
+    padding: 1rem;
+  }
+
+  .rme-actions-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .rme-preset-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .rme-fullscreen {
@@ -21,6 +352,6 @@
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  z-index: var(--z-admin-overlay-content,  10101) !important;
+  z-index: var(--z-admin-overlay-content, 10101) !important;
   background: white !important;
 }

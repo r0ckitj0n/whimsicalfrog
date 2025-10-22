@@ -87,14 +87,14 @@ body.modal-open #itemPopup.in-room-modal {
 
 .room-modal-overlay.show {
   align-items: flex-start !important;
-  padding-top: calc(var(--header-height, 80px) + 5px) !important;
+  padding-top: 0 !important; /* flush to top of viewport */
   opacity: 1;
   visibility: visible;
   pointer-events: auto; /* enable interaction when visible */
 }
 
 .room-modal-container {
-  margin-bottom: 5px !important;
+  margin-bottom: 0 !important; /* prevent stray white bar at bottom */
   position: relative;
   width: min(95vw, min(95vh * 1.43, 1200px));
   background: white;
@@ -527,6 +527,16 @@ body.modal-open .modal-overlay:not(.room-modal-overlay, #detailedItemModal) {
   transform: scale(0);
   visibility: hidden;
   z-index: var(--z-index-behind);
+}
+
+/* Allow detailed item modal to remain visible above room modal */
+body.modal-open #detailedItemModal .modal-content {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  visibility: visible;
+  z-index: var(--z-detailed-item-modal, 100300);
 }
 body.modal-open #quantityModal {
   display: none;

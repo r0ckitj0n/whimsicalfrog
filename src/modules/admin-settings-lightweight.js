@@ -100,6 +100,32 @@ const __wfUpdateActionIconsToggleLabel = () => {
 };
 // Initialize label immediately
 try { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __wfUpdateActionIconsToggleLabel, { once: true }); else __wfUpdateActionIconsToggleLabel(); } catch(_) {}
+
+// Apply the document-level class from stored preference
+const __wfApplyActionIconsClass = () => {
+  try {
+    const on = (localStorage.getItem(__wfACTION_ICONS_KEY) || '') === '1';
+    const root = document.documentElement;
+    if (root && root.classList) {
+      if (on) root.classList.add('admin-actions-icons'); else root.classList.remove('admin-actions-icons');
+    }
+  } catch(_) {}
+};
+try { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __wfApplyActionIconsClass, { once: true }); else __wfApplyActionIconsClass(); } catch(_) {}
+
+// Toggle preference and refresh UI
+const __wfToggleActionIcons = () => {
+  try {
+    const on = (localStorage.getItem(__wfACTION_ICONS_KEY) || '') === '1';
+    if (on) {
+      try { localStorage.removeItem(__wfACTION_ICONS_KEY); } catch(_) {}
+    } else {
+      try { localStorage.setItem(__wfACTION_ICONS_KEY, '1'); } catch(_) {}
+    }
+    __wfApplyActionIconsClass();
+    __wfUpdateActionIconsToggleLabel();
+  } catch(_) {}
+};
 // Lazy modal factory: Area-Item Mapper
 const __wfEnsureAreaItemMapperModal = () => {
   let el = document.getElementById('areaItemMapperModal');
@@ -421,7 +447,17 @@ const __wfEnsureTemplateManagerModal = () => {
 // Lazy modal factory: Email History (uses Reports/Docs browser as a proxy)
 const __wfEnsureEmailHistoryModal = () => {
   let el = document.getElementById('emailHistoryModal');
-  if (el) return el;
+  if (el) {
+    // If a legacy/static modal exists in DOM, ensure it uses the iframe-based UI
+    const existingIframe = el.querySelector('#emailHistoryFrame');
+    if (!existingIframe) {
+      const body = el.querySelector('.modal-body');
+      if (body) {
+        body.innerHTML = '<iframe id="emailHistoryFrame" title="Email History" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_history.php?modal=1" referrerpolicy="no-referrer"></iframe>';
+      }
+    }
+    return el;
+  }
   el = document.createElement('div');
   el.id = 'emailHistoryModal';
   el.className = 'admin-modal-overlay hidden';
@@ -703,6 +739,14 @@ const __wfAI_loadSettingsAndRender = async () => {
         return;
       }
 
+      // Toggle Action Buttons mode (Icons <-> Text Labels)
+      if (closest('[data-action="toggle-action-icons"], #actionIconsToggleBtn')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfToggleActionIcons();
+        return;
+      }
+
       // Open Reports & Documentation Browser (iframe)
       if (closest('[data-action="open-reports-browser"]')) {
         e.preventDefault();
@@ -852,7 +896,9 @@ const __wfAI_loadSettingsAndRender = async () => {
         __wfShowModal('emailHistoryModal');
         const iframe = document.getElementById('emailHistoryFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+          const base = iframe.dataset.src;
+          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
+          iframe.src = base + bust;
         }
         return;
       }
@@ -873,8 +919,10 @@ const __wfAI_loadSettingsAndRender = async () => {
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-ai-suggestions"]'), document.getElementById('marketingSuggestionsProxyModal'));
         __wfShowModal('marketingSuggestionsProxyModal');
         const iframe = document.getElementById('marketingSuggestionsProxyFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe) {
+          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
+          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
+          iframe.src = base + bust;
         }
         return;
       }
@@ -886,8 +934,10 @@ const __wfAI_loadSettingsAndRender = async () => {
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-content-generator"]'), document.getElementById('contentGeneratorProxyModal'));
         __wfShowModal('contentGeneratorProxyModal');
         const iframe = document.getElementById('contentGeneratorProxyFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe) {
+          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
+          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
+          iframe.src = base + bust;
         }
         return;
       }
@@ -899,8 +949,10 @@ const __wfAI_loadSettingsAndRender = async () => {
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-newsletters"]'), document.getElementById('newslettersProxyModal'));
         __wfShowModal('newslettersProxyModal');
         const iframe = document.getElementById('newslettersProxyFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe) {
+          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
+          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
+          iframe.src = base + bust;
         }
         return;
       }
@@ -912,8 +964,10 @@ const __wfAI_loadSettingsAndRender = async () => {
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-automation"]'), document.getElementById('automationProxyModal'));
         __wfShowModal('automationProxyModal');
         const iframe = document.getElementById('automationProxyFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe) {
+          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
+          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
+          iframe.src = base + bust;
         }
         return;
       }
@@ -925,8 +979,10 @@ const __wfAI_loadSettingsAndRender = async () => {
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-discounts"]'), document.getElementById('discountsProxyModal'));
         __wfShowModal('discountsProxyModal');
         const iframe = document.getElementById('discountsProxyFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe) {
+          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
+          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
+          iframe.src = base + bust;
         }
         return;
       }
@@ -938,8 +994,10 @@ const __wfAI_loadSettingsAndRender = async () => {
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-coupons"]'), document.getElementById('couponsProxyModal'));
         __wfShowModal('couponsProxyModal');
         const iframe = document.getElementById('couponsProxyFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe) {
+          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
+          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
+          iframe.src = base + bust;
         }
         return;
       }

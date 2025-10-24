@@ -44,7 +44,7 @@ document.addEventListener('click', async (e) => {
           modal.classList.add('over-header');
           const frame = modal.querySelector('#socialMediaManagerFrame');
           if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
-            const ds = frame.getAttribute('data-src') || '/sections/admin_marketing.php?modal=1&tool=social-media';
+            const ds = frame.getAttribute('data-src') || '/sections/tools/social_manager.php?modal=1&vite=dev';
             frame.setAttribute('src', ds);
           }
         } catch (_) {}
@@ -338,8 +338,10 @@ document.addEventListener('click', async (e) => {
   if (closest('[data-action="business-save"]')) {
     e.preventDefault();
     e.stopPropagation();
-    const form = closest('form');
-    if (form && window.saveBusinessInfo) {
+    // The Save button may live in the modal header (outside the form),
+    // so do not require a closest form to trigger the save.
+    // Prefer calling the centralized save function directly.
+    if (window.saveBusinessInfo) {
       window.saveBusinessInfo();
     }
     return;
@@ -673,10 +675,43 @@ document.addEventListener('click', async (e) => {
     e.preventDefault();
     e.stopPropagation();
     try {
-      // Default to previewing latest error logs
-      if (DelegatedHandlers && typeof DelegatedHandlers.previewLog === 'function') {
-        DelegatedHandlers.previewLog('error_logs');
+      // Try to fetch logs and open the top-priority file log
+      let targetPath = null;
+      try {
+        const res = await ApiClient.get('/api/website_logs.php?action=list_logs');
+        if (res && res.success && Array.isArray(res.logs)) {
+          const filePriority = {
+            'file:php_error.log': 0,
+            'file:application.log': 1,
+            'file:vite_server.log': 2,
+            'file:php_server.log': 3,
+            'file:monitor.log': 4,
+            'file:monitor_root.log': 5,
+            'file:autostart.log': 6
+          };
+          const isFile = (log) => (log && (log.log_source === 'file' || String(log.type).startsWith('file:')));
+          const weight = (log) => {
+            const t = String(log.type);
+            return (t in filePriority) ? filePriority[t] : 50;
+          };
+          const first = res.logs.filter(isFile).sort((a,b)=> weight(a) - weight(b))[0];
+          if (first && first.path) {
+            targetPath = first.path;
+          }
+        }
+      } catch (_) { /* ignore and use fallback */ }
+
+      if (!targetPath) {
+        targetPath = 'logs/php_error.log';
       }
+
+      const a = document.createElement('a');
+      a.href = `/api/admin_file_proxy.php?path=${encodeURIComponent(targetPath)}`;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (error) {
       console.error('Error opening latest log preview:', error);
     }
@@ -849,18 +884,48 @@ const DelegatedHandlers = {
         list.innerHTML = '<div class="text-sm text-gray-500">No logs available.</div>';
         return;
       }
-      // Sort: important first
-      const order = ['error_logs','admin_activity_logs','email_logs','order_logs','inventory_logs','user_activity_logs','analytics_logs'];
-      const sorted = res.logs.slice().sort((a,b)=>{
-        const ai = order.indexOf(a.type); const bi = order.indexOf(b.type);
-        return (ai===-1?999:ai) - (bi===-1?999:bi);
-      });
+      // Sort: important file logs first, then key DB logs
+      const filePriority = {
+        'file:php_error.log': 0,
+        'file:application.log': 1,
+        'file:vite_server.log': 2,
+        'file:php_server.log': 3,
+        'file:monitor.log': 4,
+        'file:monitor_root.log': 5,
+        'file:autostart.log': 6
+      };
+      const dbOrder = ['error_logs','admin_activity_logs','email_logs','order_logs','inventory_logs','user_activity_logs','analytics_logs'];
+      const weight = (log) => {
+        const t = String(log.type);
+        if (t.startsWith('file:')) return (t in filePriority) ? filePriority[t] : 50; // other files after the key ones
+        const i = dbOrder.indexOf(t);
+        return (i === -1) ? 200 : (100 + i); // DB logs after files
+      };
+      const sorted = res.logs.slice().sort((a,b)=> weight(a) - weight(b));
       list.innerHTML = sorted.map(log => {
         const last = log.last_entry ? new Date(log.last_entry).toLocaleString() : 'Never';
-        const count = typeof log.entries === 'number' ? log.entries : 0;
         const desc = log.description || '';
         const name = log.name || log.type;
         const type = log.type;
+        const isFile = (log.log_source === 'file') || String(type).startsWith('file:');
+        if (isFile) {
+          const size = log.size || '';
+          const safePath = encodeURIComponent(log.path || '');
+          return `
+            <div class="flex items-start justify-between gap-3 p-2 border rounded">
+              <div class="min-w-0">
+                <div class="font-medium">${name}</div>
+                <div class="text-xs text-gray-600">${desc}</div>
+                <div class="text-xs text-gray-500 mt-0.5">Size: ${size || '—'} • Last Modified: ${last}</div>
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <a class="btn btn-secondary btn-sm" href="/api/admin_file_proxy.php?path=${safePath}" target="_blank" rel="noopener">Open</a>
+                <a class="btn btn-secondary btn-sm" href="/api/admin_file_proxy.php?path=${safePath}" download>Download</a>
+              </div>
+            </div>
+          `;
+        }
+        const count = typeof log.entries === 'number' ? log.entries : 0;
         return `
           <div class="flex items-start justify-between gap-3 p-2 border rounded">
             <div class="min-w-0">

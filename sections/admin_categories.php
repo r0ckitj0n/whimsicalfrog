@@ -1,6 +1,13 @@
 <?php
 // sections/admin_categories.php — Primary implementation for Category Management
 
+// Bootstrap dependencies and enforce authentication BEFORE any output
+require_once dirname(__DIR__) . '/includes/functions.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/auth_helper.php';
+
+AuthHelper::requireAdmin();
+
 // Detect modal context
 $isModal = isset($_GET['modal']) && $_GET['modal'] == '1';
 if (!$isModal) {
@@ -79,13 +86,6 @@ if ($isModal) {
     $section = 'categories';
     include_once dirname(__DIR__) . '/components/admin_nav_tabs.php';
 }
-
-// Authentication check - case insensitive
-require_once dirname(__DIR__) . '/includes/functions.php';
-require_once dirname(__DIR__) . '/includes/auth.php';
-require_once dirname(__DIR__) . '/includes/auth_helper.php';
-
-AuthHelper::requireAdmin();
 
 try {
     // Fetch categories from items
@@ -328,7 +328,10 @@ $messageType = $_GET['type'] ?? '';
           try { alert(msg); } catch(_) {}
         }
         // Canonical categories for inline editing in Assignments
-        const CANONICAL_CATEGORIES = <?php echo json_encode($canonicalCategories, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE); ?>;
+        const CANONICAL_CATEGORIES = <?php
+          $___json = json_encode($canonicalCategories, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE);
+          echo ($___json === false || $___json === null) ? '[]' : $___json;
+        ?>;
         const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
         function showPanel(key) {
           tabs.forEach(t => {
@@ -809,7 +812,10 @@ $messageType = $_GET['type'] ?? '';
           }
         }
 
-        document.getElementById('categoryTableBody').addEventListener('click', function(e) {
+        (function(){
+          const tbodyEl = document.getElementById('categoryTableBody');
+          if (!tbodyEl) return; // Categories table not rendered (empty list); skip binding
+          tbodyEl.addEventListener('click', async function(e) {
             const targetCell = e.target.closest('.editable-cell');
             const delBtn = e.target.closest('.delete-category-btn');
             if (delBtn) {
@@ -902,7 +908,8 @@ $messageType = $_GET['type'] ?? '';
                     revertUI();
                 }
             };
-        });
+          });
+        })();
 
         const skuRulesContainerEl = document.getElementById('skuRulesContainer');
         if (skuRulesContainerEl) {

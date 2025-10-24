@@ -133,12 +133,11 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           </fieldset>
           <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
           <div class="wf-modal-actions">
-            <button type="button" class="btn wf-modal-button admin-modal-close">Cancel</button>
           </div>
         </form>
       </div>
     </div>
-
+    </div>
     <!-- Colors & Fonts Modal (branding settings moved here) -->
     <div id="colorsFontsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="colorsFontsTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
@@ -939,7 +938,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
-          <iframe id="attributesFrame" title="Attributes Management" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/components/embeds/attributes_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+          <iframe id="attributesFrame" title="Attributes Management" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/components/embeds/attributes_manager.php?modal=1&amp;admin_token=whimsical_admin_2024" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1011,7 +1010,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       <?php // Business & Analytics ?>
       <?php ob_start(); ?>
         <button type="button" id="addressDiagBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-address-diagnostics">Address Diagnostics</button>
-        <button type="button" id="aiToolsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-tools">AI &amp; Automation Tools</button>
         <button type="button" id="aiSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-settings">AI Provider</button>
         <button type="button" id="businessInfoBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-business-info">Business Information</button>
         <button type="button" id="squareSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-square-settings">Configure Square</button>
@@ -1109,7 +1107,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="marketingSuggestionsProxyFrame" title="AI Item Suggestions" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=suggestions" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+          <iframe id="marketingSuggestionsProxyFrame" title="AI Item Suggestions" src="about:blank" data-src="/sections/tools/ai_suggestions.php?modal=1&amp;vite=dev" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1121,7 +1119,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="contentGeneratorProxyFrame" title="AI Content Generator" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=content" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+          <iframe id="contentGeneratorProxyFrame" title="AI Content Generator" src="about:blank" data-src="/sections/tools/ai_content_generator.php?modal=1&amp;vite=dev" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1133,7 +1131,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="newslettersProxyFrame" title="Newsletters" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=newsletters" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+          <iframe id="newslettersProxyFrame" title="Newsletters" src="about:blank" data-src="/sections/tools/newsletters_manager.php?modal=1&amp;vite=dev" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1145,7 +1143,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="automationProxyFrame" title="Automation" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=automation" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+          <iframe id="automationProxyFrame" title="Automation" src="about:blank" data-src="/sections/tools/automation_manager.php?modal=1&amp;vite=dev" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1157,7 +1155,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="discountsProxyFrame" title="Discount Codes" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=discounts" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+          <iframe id="discountsProxyFrame" title="Discount Codes" src="about:blank" data-src="/sections/tools/discounts_manager.php?modal=1&amp;vite=dev" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1169,7 +1167,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="couponsProxyFrame" title="Coupons" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=coupons" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+          <iframe id="couponsProxyFrame" title="Coupons" src="about:blank" data-src="/sections/tools/coupons_manager.php?modal=1&amp;vite=dev" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>
@@ -1182,7 +1180,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="socialMediaManagerFrame" title="Social Media Manager" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=social-media" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+          <iframe id="socialMediaManagerFrame" title="Social Media Manager" src="about:blank" data-src="/sections/tools/social_manager.php?modal=1&amp;vite=dev" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
         </div>
       </div>
     </div>

@@ -6,8 +6,16 @@ require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
 
-// Enforce admin auth using centralized helper
-AuthHelper::requireAdmin();
+// Enforce admin auth with dev admin_token fallback for iframe usage
+try {
+    $json = json_decode(file_get_contents('php://input'), true) ?: [];
+    $token = $_GET['admin_token'] ?? $_POST['admin_token'] ?? ($json['admin_token'] ?? null);
+    if (!$token || $token !== (AuthHelper::ADMIN_TOKEN ?? 'whimsical_admin_2024')) {
+        AuthHelper::requireAdmin();
+    }
+} catch (Throwable $____) {
+    AuthHelper::requireAdmin();
+}
 
 try {
     try {

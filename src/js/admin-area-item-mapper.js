@@ -2,7 +2,6 @@ import { ApiClient } from '../core/api-client.js';
 (function(){
   try {
     if (window.__AIM_LOADED === '1') { console.info('[AIM] Already loaded, skipping duplicate init'); return; }
-    window.__AIM_LOADED = '1';
   } catch(_) {}
   const byId = (id) => document.getElementById(id);
   const qs = (sel) => document.querySelector(sel);
@@ -381,6 +380,7 @@ import { ApiClient } from '../core/api-client.js';
             handleSearch(e);
         }
     });
+    try { window.__AIM_LOADED = '1'; } catch(_) {}
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run, {once:true});

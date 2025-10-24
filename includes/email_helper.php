@@ -203,10 +203,18 @@ class EmailHelper
             }
             if (isset(self::$config['smtp_debug'])) {
                 self::$mailer->SMTPDebug = (int) self::$config['smtp_debug'];
-                // Route debug output to error_log to avoid leaking to responses
-                self::$mailer->Debugoutput = function ($str, $level) {
-                    error_log('PHPMailer SMTP debug(' . $level . '): ' . $str);
-                };
+                // Allow a custom sink for debug output (e.g., streaming to client). Fallback to error_log.
+                $sink = self::$config['smtp_debug_sink'] ?? null;
+                if (is_callable($sink)) {
+                    // Preserve signature ($str, $level)
+                    self::$mailer->Debugoutput = function ($str, $level) use ($sink) {
+                        try { $sink($str, $level); } catch (\Throwable $__) { error_log('PHPMailer SMTP debug(' . $level . '): ' . $str); }
+                    };
+                } else {
+                    self::$mailer->Debugoutput = function ($str, $level) {
+                        error_log('PHPMailer SMTP debug(' . $level . '): ' . $str);
+                    };
+                }
             }
 
             self::$mailer->CharSet = self::$config['charset'];

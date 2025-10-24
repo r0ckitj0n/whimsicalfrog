@@ -71,7 +71,7 @@ function listAvailableLogs($pdo)
 {
     $logs = [];
 
-    // Database-based logs only
+    // Database-based logs
     $databaseLogs = [
         'analytics_logs' => [
             'name' => 'Analytics Logs',
@@ -173,6 +173,54 @@ function listAvailableLogs($pdo)
             'last_entry' => $lastEntryTime,
             'log_source' => 'database'
         ];
+    }
+
+    // Also include file-based logs from /logs
+    $logsDir = realpath(__DIR__ . '/../logs');
+    if ($logsDir && is_dir($logsDir)) {
+        // Friendly names and descriptions for important files
+        $friendly = [
+            'php_error.log'   => ['PHP Error Log', 'PHP errors and exceptions'],
+            'application.log' => ['Application Log', 'App-level info/debug messages'],
+            'vite_server.log' => ['Vite Dev Server Log', 'Front-end dev server output'],
+            'php_server.log'  => ['PHP Server Log', 'Built-in PHP server output'],
+            'monitor.log'     => ['Monitor Log', 'Process and health monitor'],
+            'monitor_root.log'=> ['Monitor (Root) Log', 'Root-level monitor messages'],
+            'autostart.log'   => ['Autostart Log', 'Startup and bootstrap output'],
+        ];
+
+        // Match .log and rotated .log.* (including .gz)
+        $files = glob($logsDir . '/*');
+        foreach ($files as $file) {
+            if (!is_file($file)) continue;
+            $base = basename($file);
+            // Skip hidden and non-log JSON inventories by default
+            if ($base[0] === '.') continue;
+            if (!preg_match('/\.log(\.|$)/', $base)) continue;
+
+            $mtime = @filemtime($file) ?: null;
+            $sizeBytes = @filesize($file) ?: 0;
+            $sizeMb = round($sizeBytes / (1024 * 1024), 2) . ' MB';
+            $pretty = $friendly[$base][0] ?? $base;
+            $desc = $friendly[$base][1] ?? 'Log file';
+
+            $logs[] = [
+                'type' => 'file:' . $base,
+                'name' => $pretty,
+                'description' => $desc,
+                'category' => 'File',
+                'entries' => null,
+                'table' => null,
+                'timestamp_field' => null,
+                'message_field' => null,
+                'last_entry' => $mtime ? date('c', $mtime) : null,
+                'log_source' => 'file',
+                'filename' => $base,
+                'path' => 'logs/' . $base,
+                'size_bytes' => $sizeBytes,
+                'size' => $sizeMb
+            ];
+        }
     }
 
     echo json_encode(['success' => true, 'logs' => $logs]);

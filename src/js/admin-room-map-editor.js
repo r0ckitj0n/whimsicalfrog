@@ -70,18 +70,27 @@ import { ApiClient } from '../core/api-client.js';
     const frame = byId('rmeFrame'); if (!frame) return;
     const meta = state.roomMeta.get(String(room||''));
     const st = ensureDynStyle();
-    const usePage = (meta && meta.render_context === 'page') || (!meta && (room === 'A' || room === '0'));
+    // For Landing (A) and Main (0) rooms, fit the entire image in the editor to allow full-background mapping
+    const isPageRoom = (room === 'A' || room === '0');
     const explicit = meta && typeof meta.target_aspect === 'number' && meta.target_aspect > 0 ? meta.target_aspect : null;
-    if (usePage){
-      const ratio = explicit || getSiteViewportAspect();
-      st.textContent = `#rmeFrame.match-viewport{aspect-ratio:${ratio};}`;
-      frame.classList.add('match-viewport');
-      frame.classList.remove('match-image');
-    } else {
+    if (isPageRoom){
       const ratio = explicit || ((imgW && imgH) ? (imgW / imgH) : 16/9);
       st.textContent = `#rmeFrame.match-image{aspect-ratio:${ratio};}`;
       frame.classList.add('match-image');
       frame.classList.remove('match-viewport');
+    } else {
+      const usePage = (meta && meta.render_context === 'page') || false;
+      if (usePage){
+        const ratio = explicit || getSiteViewportAspect();
+        st.textContent = `#rmeFrame.match-viewport{aspect-ratio:${ratio};}`;
+        frame.classList.add('match-viewport');
+        frame.classList.remove('match-image');
+      } else {
+        const ratio = explicit || ((imgW && imgH) ? (imgW / imgH) : 16/9);
+        st.textContent = `#rmeFrame.match-image{aspect-ratio:${ratio};}`;
+        frame.classList.add('match-image');
+        frame.classList.remove('match-viewport');
+      }
     }
   }
 
@@ -117,15 +126,16 @@ import { ApiClient } from '../core/api-client.js';
     if (w > 0 && h > 0){
       s.setAttribute('viewBox', `0 0 ${w} ${h}`);
       const roomVal = (byId('rmeRoomSelect') && byId('rmeRoomSelect').value || '').trim();
-      const meta = state.roomMeta.get(String(roomVal||''));
-      const isPage = (meta && meta.render_context === 'page') || (!meta && (roomVal === 'A' || roomVal === '0'));
-      // Live pages (Landing/Main) use center/cover backgrounds; match with xMidYMid
-      s.setAttribute('preserveAspectRatio', isPage ? 'xMidYMid slice' : 'xMidYMid slice');
+      const _meta = state.roomMeta.get(String(roomVal||''));
+      const fitEntire = (roomVal === 'A' || roomVal === '0');
+      // In the editor, fit the entire image for Landing/Main so authors can use the full background
+      s.setAttribute('preserveAspectRatio', fitEntire ? 'xMidYMid meet' : 'xMidYMid slice');
       const bg = byId('rmeBgImg');
       if (bg){
-        // Center for page and modal to mirror live site backgrounds
+        // Center for all, and use contain for Landing/Main to zoom out
         bg.classList.toggle('pos-top', false);
         bg.classList.toggle('pos-center', true);
+        bg.classList.toggle('fit-contain', fitEntire);
       }
       // Rebase existing rectangles to this image's natural size when needed (page rooms)
       maybeRebaseRectsForRoom(roomVal, w, h);

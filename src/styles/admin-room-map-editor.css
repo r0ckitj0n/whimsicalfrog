@@ -252,6 +252,11 @@ body {
   user-select: none;
 }
 
+/* When editing Landing/Main, zoom out to show the full image */
+.rme-bg.fit-contain {
+  object-fit: contain;
+}
+
 /* Anchor helpers toggled by JS depending on room type */
 .rme-bg.pos-top { object-position: center top; }
 .rme-bg.pos-center { object-position: center center; }

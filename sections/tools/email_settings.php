@@ -42,6 +42,33 @@ if (!$isModal) {
       <div id="status" class="status"></div>
     </div>
 
+    <div class="section" id="statusSection">
+      <div class="grid">
+        <div class="row">
+          <label>Provider</label>
+          <div id="statusProvider" class="hint">Loading…</div>
+        </div>
+        <div class="row">
+          <label>Effective From</label>
+          <div id="statusFrom" class="hint">Loading…</div>
+        </div>
+        <div class="row">
+          <label>Secrets</label>
+          <div id="statusSecrets" class="hint">Loading…</div>
+        </div>
+        <div class="row">
+          <label>Business Information</label>
+          <div class="inline">
+            <div>
+              <div id="businessNameDisplay" class="hint"></div>
+              <div id="businessEmailDisplay" class="hint"></div>
+            </div>
+            <button class="btn" id="applyBusinessToEmailBtn" title="Set From/Admin to Business Info">Use Business Email</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="section">
       <div class="grid">
         <div class="row">
@@ -122,7 +149,13 @@ if (!$isModal) {
         <div class="inline">
           <input id="testEmail" type="email" placeholder="you@example.com" class="flex-1" />
           <button class="btn" id="sendTestBtn">Send Test</button>
+          <button class="btn" id="liveTestBtn" title="Stream SMTP logs live">Live Test</button>
+          <button class="btn" id="stopLiveBtn" title="Stop live stream" style="display:none">Stop</button>
         </div>
+      </div>
+      <div class="row" id="liveLogRow" style="display:none">
+        <label>Live Logs</label>
+        <pre id="liveLog" style="background:#0b1020;color:#d1e7ff;border-radius:6px;padding:10px;min-height:140px;max-height:300px;overflow:auto;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;font-size:12px;">Waiting…</pre>
       </div>
     </div>
 
@@ -136,9 +169,33 @@ if (!$isModal) {
     (function(){
       const $ = (id) => document.getElementById(id);
       const statusEl = $('status');
+      let __es = null;
 
       function setStatus(msg, ok){
         if(!statusEl) return; statusEl.textContent = msg||''; statusEl.className = 'status ' + (ok? 'success':'error');
+      }
+
+      function updateStatusDisplay(cfg){
+        try {
+          const prov = (cfg && cfg.effectiveProvider) || ((cfg && cfg.smtpEnabled) ? 'smtp' : 'mail');
+          const host = (cfg && cfg.smtpHost) || '';
+          const port = (cfg && cfg.smtpPort) || '';
+          const enc = (cfg && cfg.smtpEncryption) || '';
+          const fromN = (cfg && (cfg.fromName || cfg.effectiveFromName)) || '';
+          const fromE = (cfg && (cfg.fromEmail || cfg.effectiveFromEmail)) || '';
+          const uPresent = !!(cfg && cfg.secretUsernamePresent);
+          const pPresent = !!(cfg && cfg.secretPasswordPresent);
+          const bizName = (cfg && cfg.businessName) || '';
+          const bizEmail = (cfg && cfg.businessEmail) || '';
+
+          $('statusProvider').textContent = prov === 'smtp'
+            ? `SMTP ${host || '(host?)'}:${port || '?'} ${enc ? enc.toUpperCase() : ''}`.trim()
+            : 'PHP mail()';
+          $('statusFrom').textContent = `${fromN || '(name?)'} <${fromE || 'email?'}>`;
+          $('statusSecrets').textContent = `username: ${uPresent ? 'present' : 'missing'}, password: ${pPresent ? 'present' : 'missing'}`;
+          $('businessNameDisplay').textContent = bizName ? `Name: ${bizName}` : '';
+          $('businessEmailDisplay').textContent = bizEmail ? `Email: ${bizEmail}` : '';
+        } catch (_) {}
       }
 
       async function apiRequest(method, url, data=null, options={}){
@@ -182,6 +239,7 @@ if (!$isModal) {
           $('smtpAuth').checked = !!c.smtpAuth;
           $('smtpTimeout').value = c.smtpTimeout || '';
           $('smtpDebug').checked = !!c.smtpDebug;
+          updateStatusDisplay(c);
           setStatus('Loaded', true);
         } catch(e){ setStatus(e.message || 'Load failed'); }
       }
@@ -226,9 +284,65 @@ if (!$isModal) {
         } catch(e){ setStatus(e.message || 'Test failed'); }
       }
 
+      function appendLog(line){
+        const pre = $('liveLog'); if (!pre) return;
+        if (pre.textContent === 'Waiting…') pre.textContent = '';
+        pre.textContent += (typeof line === 'string' ? line : JSON.stringify(line)) + "\n";
+        pre.scrollTop = pre.scrollHeight;
+      }
+
+      function stopLive(){
+        if (__es) { try { __es.close(); } catch(_) {} __es = null; }
+        $('stopLiveBtn').style.display = 'none';
+      }
+
+      function startLive(){
+        const to = $('testEmail').value.trim();
+        if(!to){ setStatus('Enter test email'); return; }
+        try { $('liveLogRow').style.display = ''; $('liveLog').textContent = 'Waiting…'; } catch(_) {}
+        stopLive();
+        const url = '/api/email_test_stream.php?to=' + encodeURIComponent(to);
+        __es = new EventSource(url, { withCredentials: true });
+        $('stopLiveBtn').style.display = '';
+        setStatus('Streaming…');
+        __es.addEventListener('start', (e) => { try { appendLog('[start] ' + (e.data||'')); } catch(_) {} });
+        __es.addEventListener('config', (e) => {
+          try {
+            const cfg = JSON.parse(e.data||'{}');
+            appendLog(`[config] provider=${cfg.provider} from=${cfg.fromName} <${cfg.fromEmail}>`);
+            if (cfg.smtp) appendLog(`[smtp] host=${cfg.smtp.host} port=${cfg.smtp.port} enc=${cfg.smtp.encryption} auth=${cfg.smtp.auth} user=${cfg.smtp.username_present?'present':'missing'} pass=${cfg.smtp.password_present?'present':'missing'}`);
+          } catch(_) {}
+        });
+        __es.addEventListener('smtp', (e) => { try { const d = JSON.parse(e.data||'{}'); appendLog(`[smtp:${d.level}] ${d.msg}`); } catch(_) {} });
+        __es.addEventListener('log', (e) => { try { const d = JSON.parse(e.data||'{}'); appendLog(`[log ${d.t}] ${d.msg}`); } catch(_) {} });
+        __es.addEventListener('progress', (e) => { appendLog('[progress] ' + (e.data||'')); });
+        __es.addEventListener('error', (e) => { appendLog('[error] ' + (e.data||'')); });
+        __es.addEventListener('done', (e) => {
+          try {
+            const d = JSON.parse(e.data||'{}');
+            appendLog(`[done] ${d.success ? 'SUCCESS' : 'FAIL'} - ${d.message || ''}`);
+            setStatus(d.success ? 'Live test succeeded' : (d.message || 'Live test failed'), !!d.success);
+          } catch(_) {}
+          stopLive();
+        });
+        __es.onerror = () => { appendLog('[event-source] connection error'); stopLive(); };
+      }
+
       document.addEventListener('DOMContentLoaded', function(){
         $('saveBtn')?.addEventListener('click', saveConfig);
         $('sendTestBtn')?.addEventListener('click', sendTest);
+        $('liveTestBtn')?.addEventListener('click', startLive);
+        $('stopLiveBtn')?.addEventListener('click', stopLive);
+        $('applyBusinessToEmailBtn')?.addEventListener('click', () => {
+          try {
+            const bn = $('businessNameDisplay').textContent.replace(/^Name:\s*/,'').trim();
+            const be = $('businessEmailDisplay').textContent.replace(/^Email:\s*/,'').trim();
+            if (be) $('fromEmail').value = be;
+            if (bn) $('fromName').value = bn;
+            if (be) $('adminEmail').value = be;
+            setStatus('Applied Business Info to From/Admin', true);
+          } catch(_) {}
+        });
         loadConfig();
       });
     })();

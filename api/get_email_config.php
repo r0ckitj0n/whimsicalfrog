@@ -5,6 +5,7 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 
 require_once __DIR__ . '/business_settings_helper.php';
+require_once __DIR__ . '/../includes/secret_store.php';
 
 try {
     // Load from database (single source of truth)
@@ -44,7 +45,13 @@ try {
             if (is_bool($val)) return $val;
             $s = strtolower((string)$val);
             return in_array($s, ['1','true','yes','on'], true);
-        })(isset($settings['smtp_debug']) ? $settings['smtp_debug'] : null)
+        })(isset($settings['smtp_debug']) ? $settings['smtp_debug'] : null),
+        // Display-only business info (for hydration and status)
+        'businessEmail'  => (string) BusinessSettings::get('business_email', ''),
+        'businessName'   => (string) BusinessSettings::get('business_name', ''),
+        // Secret presence flags for UI badges
+        'secretUsernamePresent' => (function(){ try { $u = secret_get('smtp_username'); return is_string($u) && trim($u) !== ''; } catch (\Throwable $__) { return false; } })(),
+        'secretPasswordPresent' => (function(){ try { $p = secret_get('smtp_password'); return is_string($p) && trim($p) !== ''; } catch (\Throwable $__) { return false; } })(),
     ];
 
     // Display-only fallbacks: if email category is empty, show sensible legacy/global defaults
@@ -57,6 +64,12 @@ try {
     if ($config['fromName'] === '') {
         $config['fromName'] = BusinessSettings::get('business_name', $config['fromName']);
     }
+
+    // Effective status summary for UI
+    $config['usingSmtp'] = (bool)$config['smtpEnabled'];
+    $config['effectiveProvider'] = $config['usingSmtp'] ? 'smtp' : 'mail';
+    $config['effectiveFromEmail'] = $config['fromEmail'] ?: $config['businessEmail'] ?: '';
+    $config['effectiveFromName'] = $config['fromName'] ?: $config['businessName'] ?: '';
 
     // Optional debug block: helps diagnose category/key mismatches without changing normal behavior
     $debug = null;

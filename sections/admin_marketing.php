@@ -4,6 +4,8 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
 
 // Detect modal context
 $isModal = (isset($_GET['modal']) && $_GET['modal'] == '1');
+$tool = isset($_GET['tool']) ? strtolower((string)$_GET['tool']) : '';
+$suppressMain = ($isModal && $tool !== '');
 
 // When not in modal, include full admin layout and navbar
 if (!$isModal) {
@@ -143,6 +145,7 @@ body[data-page='admin/marketing'] #admin-section-content {
 </div>
     </div>
 
+    <?php if (!$suppressMain): ?>
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="admin-card text-center">
@@ -226,6 +229,7 @@ body[data-page='admin/marketing'] #admin-section-content {
         <p><strong>Promotions</strong> provides discount codes and coupons to drive conversions and reward loyal shoppers.</p>
         <p>Select a tool below to view its details and available actions.</p>
     </div>
+    <?php endif; ?>
 </div>
 
 <script>

@@ -4,6 +4,7 @@
 
 // Include marketing helper for selling points
 require_once __DIR__ . '/../api/marketing_helper.php';
+require_once __DIR__ . '/../api/business_settings_helper.php';
 
 /**
  * Helper function to get image URL with fallback
@@ -261,7 +262,7 @@ function renderDetailedItemModal($item, $images = [])
                                                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13h10m-10 0v6a1 1 0 001 1h8a1 1 0 001-1v-6m-9 0h9"></path>
                                                  </svg>
-                                                 <span>Add to Cart</span>
+                                                 <span><?php echo htmlspecialchars(getRandomCartButtonText()); ?></span>
                                             </button>
                                     </div>
                                 </div>

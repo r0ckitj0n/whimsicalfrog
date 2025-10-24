@@ -185,7 +185,11 @@ export function init(modalEl) {
     const deleteBtn = ev.target && ev.target.closest('button[data-action="delete-bg"]');
     if (deleteBtn) {
       const id = deleteBtn.getAttribute('data-id');
-      const okConfirm = window.confirm('Delete this background?');
+      if (typeof window.showConfirmationModal !== 'function') {
+        if (typeof window.showNotification === 'function') window.showNotification({ type: 'error', title: 'Action canceled', message: 'Confirmation UI unavailable.' });
+        return;
+      }
+      const okConfirm = await window.showConfirmationModal({ title: 'Delete Background', message: 'Delete this background?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' });
       if (!okConfirm) return;
       try {
         const res = await ApiClient.delete('/api/backgrounds.php', { body: JSON.stringify({ background_id: id }) });

@@ -62,6 +62,10 @@ if (!$isModal) {
           <label for="bccEmail">BCC Email (optional)</label>
           <input id="bccEmail" type="email" placeholder="audit@example.com" />
         </div>
+        <div class="row">
+          <label for="replyTo">Reply-To Email (optional)</label>
+          <input id="replyTo" type="email" placeholder="support@example.com" />
+        </div>
       </div>
     </div>
 
@@ -97,6 +101,18 @@ if (!$isModal) {
             <option value="ssl">SSL</option>
           </select>
         </div>
+        <div class="row inline">
+          <input id="smtpAuth" type="checkbox" />
+          <label for="smtpAuth">Require SMTP Authentication</label>
+        </div>
+        <div class="row">
+          <label for="smtpTimeout">SMTP Timeout (seconds)</label>
+          <input id="smtpTimeout" type="number" placeholder="30" />
+        </div>
+        <div class="row inline">
+          <input id="smtpDebug" type="checkbox" />
+          <label for="smtpDebug">Enable SMTP Debug Logging</label>
+        </div>
       </div>
     </div>
 
@@ -125,23 +141,47 @@ if (!$isModal) {
         if(!statusEl) return; statusEl.textContent = msg||''; statusEl.className = 'status ' + (ok? 'success':'error');
       }
 
+      async function apiRequest(method, url, data=null, options={}){
+        const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
+        const m = String(method||'GET').toUpperCase();
+        if (A && typeof A.request === 'function') {
+          if (m === 'GET') return A.get(url, (options && options.params) || {});
+          if (m === 'POST') return A.post(url, data||{}, options||{});
+          if (m === 'PUT') return A.put(url, data||{}, options||{});
+          if (m === 'DELETE') return A.delete(url, options||{});
+          return A.request(url, { method: m, ...(options||{}) });
+        }
+        const isForm = (typeof FormData !== 'undefined') && (data instanceof FormData);
+        const headers = isForm ? { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) }
+                               : { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
+        const cfg = { credentials:'include', method:m, headers, ...(options||{}) };
+        if (!isForm && data !== null && typeof cfg.body === 'undefined') cfg.body = JSON.stringify(data);
+        if (isForm && typeof cfg.body === 'undefined') cfg.body = data;
+        const res = await fetch(url, cfg);
+        return res.json().catch(()=>({}));
+      }
+      const apiGet = (url, params) => apiRequest('GET', url, null, { params });
+
       async function loadConfig(){
         try {
           setStatus('Loading…');
-          const r = await fetch('/api/get_email_config.php', { credentials: 'include' });
-          const j = await r.json();
+          const j = await apiGet('/api/get_email_config.php');
           if(!j || !j.success) throw new Error(j?.error || 'Failed to load');
           const c = j.config || {};
           $('fromEmail').value = c.fromEmail || '';
           $('fromName').value = c.fromName || '';
           $('adminEmail').value = c.adminEmail || '';
           $('bccEmail').value = c.bccEmail || '';
+          $('replyTo').value = c.replyTo || '';
           $('smtpEnabled').checked = !!c.smtpEnabled;
           $('smtpHost').value = c.smtpHost || '';
           $('smtpPort').value = c.smtpPort || '';
           $('smtpUsername').value = c.smtpUsername || '';
           $('smtpPassword').value = '';
           $('smtpEncryption').value = c.smtpEncryption || '';
+          $('smtpAuth').checked = !!c.smtpAuth;
+          $('smtpTimeout').value = c.smtpTimeout || '';
+          $('smtpDebug').checked = !!c.smtpDebug;
           setStatus('Loaded', true);
         } catch(e){ setStatus(e.message || 'Load failed'); }
       }
@@ -155,15 +195,18 @@ if (!$isModal) {
           form.append('fromName', $('fromName').value.trim());
           form.append('adminEmail', $('adminEmail').value.trim());
           form.append('bccEmail', $('bccEmail').value.trim());
+          form.append('replyTo', $('replyTo').value.trim());
           if ($('smtpEnabled').checked) form.append('smtpEnabled','1');
           form.append('smtpHost', $('smtpHost').value.trim());
           form.append('smtpPort', $('smtpPort').value.trim());
           form.append('smtpUsername', $('smtpUsername').value.trim());
           if ($('smtpPassword').value.trim() !== '') form.append('smtpPassword', $('smtpPassword').value.trim());
           form.append('smtpEncryption', $('smtpEncryption').value);
+          if ($('smtpAuth').checked) form.append('smtpAuth','1');
+          form.append('smtpTimeout', $('smtpTimeout').value.trim());
+          if ($('smtpDebug').checked) form.append('smtpDebug','1');
 
-          const r = await fetch('/api/save_email_config.php', { method:'POST', credentials:'include', body: form });
-          const j = await r.json();
+          const j = await apiRequest('POST','/api/save_email_config.php', form);
           if(!j || !j.success) throw new Error(j?.error || 'Save failed');
           setStatus('Saved', true);
         } catch(e){ setStatus(e.message || 'Save failed'); }
@@ -177,8 +220,7 @@ if (!$isModal) {
           const form = new FormData();
           form.append('action','test');
           form.append('testEmail', to);
-          const r = await fetch('/api/save_email_config.php', { method:'POST', credentials:'include', body: form });
-          const j = await r.json();
+          const j = await apiRequest('POST','/api/save_email_config.php', form);
           if(!j || !j.success) throw new Error(j?.error || 'Test failed');
           setStatus('Test email sent!', true);
         } catch(e){ setStatus(e.message || 'Test failed'); }

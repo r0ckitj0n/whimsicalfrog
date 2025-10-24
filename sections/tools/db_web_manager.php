@@ -207,6 +207,10 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
   const envSel = document.getElementById('wfDbToolsEnv');
   const tableInput = document.getElementById('wfDbToolsTable');
   const out = document.getElementById('wfDbToolsOut');
+  function fetchApi(url, init={}){
+    const headers = { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(init.headers||{}) };
+    return fetch(url, { credentials: 'include', ...init, headers });
+  }
   function qsFor(action){
     const p = new URLSearchParams();
     p.set('action', action);
@@ -218,12 +222,12 @@ if (!function_exists('__wf_admin_root_footer_shutdown')) {
   }
   async function call(action, needsCsrf){
     try {
-      let res = await fetch('/api/db_tools.php?' + qsFor(action), { credentials: 'include' });
+      let res = await fetchApi('/api/db_tools.php?' + qsFor(action));
       if (res.status === 428 && needsCsrf) {
-        const tRes = await fetch('/api/db_tools.php?action=csrf_token', { credentials: 'include' });
+        const tRes = await fetchApi('/api/db_tools.php?action=csrf_token');
         const token = tRes.headers.get('X-CSRF-Token');
         if (token) {
-          res = await fetch('/api/db_tools.php?' + qsFor(action), { credentials: 'include', headers: { 'X-CSRF-Token': token } });
+          res = await fetchApi('/api/db_tools.php?' + qsFor(action), { headers: { 'X-CSRF-Token': token } });
         }
       }
       const data = await res.json();

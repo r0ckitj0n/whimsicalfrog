@@ -39,13 +39,15 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
 </div>
 <script>
 (function(){
+  async function postForm(url, form){
+    return window.ApiClient.request(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form });
+  }
   const api = async (action, payload) => {
     const form = new URLSearchParams();
     form.set('action', action);
     if (payload) { Object.entries(payload).forEach(([k,v]) => { if (v !== undefined && v !== null) form.set(k, v); }); }
-    const res = await fetch('/api/categories.php', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: form });
-    const data = await res.json().catch(() => ({ success:false, error:'Invalid JSON' }));
-    if (!data.success) { const msg = (data && data.error) ? data.error : `HTTP ${res.status}`; throw new Error(msg); }
+    const data = await postForm('/api/categories.php', form);
+    if (!data || !data.success) { const msg = (data && data.error) ? data.error : 'Request failed'; throw new Error(msg); }
     return data.data || {};
   };
 
@@ -53,6 +55,53 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
     NAME_RENAME_CONFIRM: 50,
     SKU_REWRITE_BG_DEFAULT: 1000,
   };
+
+  async function brandedConfirm(message, options){
+    try {
+      if (window.parent && typeof window.parent.showConfirmationModal === 'function') {
+        return await window.parent.showConfirmationModal({
+          title: (options && options.title) || 'Please confirm',
+          message,
+          confirmText: (options && options.confirmText) || 'Confirm',
+          confirmStyle: (options && options.confirmStyle) || 'confirm',
+          icon: (options && options.icon) || '⚠️',
+          iconType: (options && options.iconType) || 'warning'
+        });
+      }
+      if (typeof window.showConfirmationModal === 'function') {
+        return await window.showConfirmationModal({
+          title: (options && options.title) || 'Please confirm',
+          message,
+          confirmText: (options && options.confirmText) || 'Confirm',
+          confirmStyle: (options && options.confirmStyle) || 'confirm',
+          icon: (options && options.icon) || '⚠️',
+          iconType: (options && options.iconType) || 'warning'
+        });
+      }
+    } catch(_) {}
+    try {
+      if (window.parent && window.parent.wfNotifications && typeof window.parent.wfNotifications.show === 'function') {
+        window.parent.wfNotifications.show('Confirmation UI unavailable. Action canceled.', 'error');
+      } else if (window.parent && typeof window.parent.showNotification === 'function') {
+        window.parent.showNotification('Confirmation UI unavailable. Action canceled.', 'error');
+      } else if (typeof window.showNotification === 'function') {
+        window.showNotification('Confirmation UI unavailable. Action canceled.', 'error');
+      }
+    } catch(_) {}
+    return false;
+  }
+  function notify(msg, type){
+    try {
+      if (window.parent && window.parent.wfNotifications && typeof window.parent.wfNotifications.show === 'function') {
+        window.parent.wfNotifications.show(msg, type || 'info'); return;
+      }
+      if (window.parent && typeof window.parent.showNotification === 'function') { window.parent.showNotification(msg, type || 'info'); return; }
+      if (typeof window.showNotification === 'function') { window.showNotification(msg, type || 'info'); return; }
+      if (type === 'error' && typeof window.showError === 'function') { window.showError(msg); return; }
+      if (type === 'success' && typeof window.showSuccess === 'function') { window.showSuccess(msg); return; }
+    } catch(_) {}
+    try { alert(msg); } catch(_) {}
+  }
 
   const tableBody = document.getElementById('categoryTableBody');
   const addForm = document.getElementById('addCategoryForm');
@@ -127,7 +176,7 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
 
         // Decision matrix
         if (field === 'name' && itemsCount > THRESHOLDS.NAME_RENAME_CONFIRM) {
-          const ok = confirm(`This will update the category name on ${itemsCount} item(s). Proceed?`);
+          const ok = await brandedConfirm(`This will update the category name on ${itemsCount} item(s). Proceed?`, { confirmText: 'Update', confirmStyle: 'confirm', iconType: 'warning' });
           if (!ok) { cancel(); return; }
           await api('update', payload);
           await refresh();
@@ -135,13 +184,13 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
         }
         if (field === 'code') {
           if (skuCount > THRESHOLDS.SKU_REWRITE_BG_DEFAULT) {
-            const ok = confirm(`About ${skuCount} SKU(s) will be affected. Proceed in BACKGROUND?`);
+            const ok = await brandedConfirm(`About ${skuCount} SKU(s) will be affected. Proceed in BACKGROUND?`, { confirmText: 'Proceed', confirmStyle: 'confirm', iconType: 'warning' });
             if (!ok) { cancel(); return; }
             await api('start_rewrite_job', { id, code: payload.code });
             await refresh();
             return;
           } else if (skuCount > THRESHOLDS.NAME_RENAME_CONFIRM) {
-            const ok = confirm(`This will rewrite ${skuCount} SKU(s) now. Proceed?`);
+            const ok = await brandedConfirm(`This will rewrite ${skuCount} SKU(s) now. Proceed?`, { confirmText: 'Rewrite', confirmStyle: 'danger', iconType: 'danger' });
             if (!ok) { cancel(); return; }
             await api('update', payload);
             await refresh();
@@ -152,7 +201,7 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
         await api('update', payload);
         await refresh();
       } catch (err) {
-        alert(err.message || 'Update failed');
+        notify(err.message || 'Update failed', 'error');
         cancel();
       }
     }
@@ -169,13 +218,13 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
         const tr = delBtn.closest('tr'); const id = tr ? Number(tr.getAttribute('data-category-id')||'0') : 0;
         const name = tr ? (tr.getAttribute('data-category')||'') : '';
         if (!id) return;
-        const ok = confirm(`Delete category "${name}"? If items use this category, deletion may be blocked.`);
+        const ok = await brandedConfirm(`Delete category "${name}"? If items use this category, deletion may be blocked.`, { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' });
         if (!ok) return;
         (async () => {
           try { await api('delete', { id }); await refresh(); }
           catch (err) {
             // Build remap UI inline
-            buildRemapUI(tr, id, name).catch(() => { alert(err.message || 'Delete failed'); });
+            buildRemapUI(tr, id, name).catch(() => { notify(err.message || 'Delete failed', 'error'); });
           }
         })();
       }
@@ -200,8 +249,8 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
     tr.parentNode.insertBefore(row, tr.nextSibling);
     btn.addEventListener('click', async () => {
       const target_id = select.value ? Number(select.value) : 0;
-      if (!target_id) { alert('Choose a target category'); return; }
-      try { await api('delete', { id, force: '1', target_id }); await refresh(); } catch (e) { alert(e.message || 'Remap failed'); }
+      if (!target_id) { notify('Choose a target category', 'error'); return; }
+      try { await api('delete', { id, force: '1', target_id }); await refresh(); } catch (e) { notify(e.message || 'Remap failed', 'error'); }
     });
   }
 
@@ -215,7 +264,7 @@ include dirname(__DIR__, 2) . '/sections/admin_categories.php';
         if (newCatInput) newCatInput.value = '';
         await refresh();
       } catch (err) {
-        alert(err.message || 'Add failed');
+        notify(err.message || 'Add failed', 'error');
       }
     });
   }

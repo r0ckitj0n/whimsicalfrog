@@ -66,6 +66,7 @@ require_once __DIR__ . '/business_settings_helper.php';
 require_once __DIR__ . '/../includes/tax_service.php';
 require_once __DIR__ . '/../includes/stock_manager.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/database_logger.php';
 
 // Error display controlled centrally in api/config.php
 // Content-Type header already set at top of file
@@ -892,6 +893,18 @@ try {
         }
 
         Database::commit();
+
+        try {
+            DatabaseLogger::logOrderActivity(
+                $orderId,
+                'order_created',
+                'Order created',
+                null,
+                $orderStatus ?? null,
+                isset($input['customerId']) ? $input['customerId'] : null,
+                null
+            );
+        } catch (Exception $e) {}
 
         // Send order confirmation emails (non-fatal)
         $emailResults = null;

@@ -147,7 +147,7 @@ foreach ($footerData['links'] as $text => $url) {
                 <?php if ($footerConfig['show_newsletter']): ?>
                 <div class="footer-newsletter">
                     <h4 class="footer-heading footer_newsletter_heading">Newsletter</h4>
-                    <p class="footer-text footer_newsletter_text">Get updates on new products and special offers!</p>
+                    <p class="footer-text footer_newsletter_text">Get updates on new items and special offers!</p>
                     <form class="footer-newsletter-form" action="/api/newsletter_signup.php" method="POST">
                         <input type="email" name="email" placeholder="Your email address" class="footer-newsletter-input" required>
                         <button type="submit" class="footer-newsletter-button">Subscribe</button>

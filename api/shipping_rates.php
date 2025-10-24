@@ -5,6 +5,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/business_settings_helper.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/secret_store.php';
 
 try {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -62,12 +63,27 @@ try {
         }
     }
 
-    // Load provider keys from BusinessSettings
+    // Load provider keys from BusinessSettings, then prefer secrets if present
     $uspsUserId = (string) BusinessSettings::get('usps_webtools_userid', '');
     $upsKey = (string) BusinessSettings::get('ups_access_key', '');
     $upsSecret = (string) BusinessSettings::get('ups_secret', '');
     $fedexKey = (string) BusinessSettings::get('fedex_key', '');
     $fedexSecret = (string) BusinessSettings::get('fedex_secret', '');
+    try {
+        $v = secret_get('usps_webtools_userid'); if (is_string($v) && $v !== '') $uspsUserId = $v;
+    } catch (Exception $e) {}
+    try {
+        $v = secret_get('ups_access_key'); if (is_string($v) && $v !== '') $upsKey = $v;
+    } catch (Exception $e) {}
+    try {
+        $v = secret_get('ups_secret'); if (is_string($v) && $v !== '') $upsSecret = $v;
+    } catch (Exception $e) {}
+    try {
+        $v = secret_get('fedex_key'); if (is_string($v) && $v !== '') $fedexKey = $v;
+    } catch (Exception $e) {}
+    try {
+        $v = secret_get('fedex_secret'); if (is_string($v) && $v !== '') $fedexSecret = $v;
+    } catch (Exception $e) {}
 
     $rates = [];
 

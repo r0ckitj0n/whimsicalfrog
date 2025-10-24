@@ -284,13 +284,119 @@ if (!$EMBED && file_exists($headerPath)) require $headerPath;
 </div>
 
 <script>
-const resultPre = document.querySelector('pre');
-const lastRunsEl = document.getElementById('lastRuns');
-function saveRun(action, exitCode) {
-  try {
-    const key = 'wfDeployHistory';
-    const now = new Date();
-    const item = { time: now.toISOString(), exit: exitCode };
+(function(){
+  const resultPre = document.querySelector('pre');
+  const lastRunsEl = document.getElementById('lastRuns');
+  async function apiRequest(method, url, data=null, options={}){
+    const A = window.ApiClient;
+    const m = String(method||'GET').toUpperCase();
+    if (m === 'GET') return A.get(url, (options && options.params) || {});
+    if (m === 'POST') return A.post(url, data||{}, options||{});
+    if (m === 'PUT') return A.put(url, data||{}, options||{});
+    if (m === 'DELETE') return A.delete(url, options||{});
+    return A.request(url, { method: m, ...(options||{}) });
+  }
+  function saveRun(action, exitCode) {
+    try {
+      const key = 'wfDeployHistory';
+      const now = new Date();
+      const item = { time: now.toISOString(), exit: exitCode };
+      const cur = JSON.parse(localStorage.getItem(key) || '{}');
+      cur[action] = item;
+      localStorage.setItem(key, JSON.stringify(cur));
+    } catch (_) {}
+  }
+  function renderLastRuns() {
+    if (!lastRunsEl) return;
+    try {
+      const cur = JSON.parse(localStorage.getItem('wfDeployHistory') || '{}');
+      const labels = {
+        backup: 'Create Live Backup',
+        fast_deploy: 'Fast Deploy',
+        full_deploy: 'Full Deploy',
+        verify: 'Verify Only',
+        quarantine: 'Quarantine Duplicates',
+        stale_scan: 'Scan Stale Assets',
+        stale_move: 'Move Stale Assets'
+      };
+      const rows = Object.keys(labels).map(k => {
+        const v = cur[k];
+        const ts = v && v.time ? new Date(v.time).toLocaleString() : '—';
+        const ex = v && typeof v.exit !== 'undefined' ? v.exit : '—';
+        return `<div class="adm-last-runs__row"><span class="adm-last-runs__label">${labels[k]}:</span> <span class="adm-last-runs__value">${ts} (exit ${ex})</span></div>`;
+      });
+      lastRunsEl.innerHTML = rows.join('');
+    } catch (_) { lastRunsEl.textContent = 'No data.'; }
+  }
+  renderLastRuns();
+  function appendLine(text){
+    if (!resultPre) return;
+    resultPre.textContent += (resultPre.textContent ? "\n" : "") + text;
+    resultPre.scrollTop = resultPre.scrollHeight;
+  }
+  function submitAction(form){
+    const dryToggle = document.getElementById('dryRunToggle');
+    const dbwToggle = document.getElementById('dbWhitelistToggle');
+    const dryInput = form.querySelector('input[name="dry_run"]');
+    const dbwInput = form.querySelector('input[name="dbw"]');
+    if (dryInput && dryToggle) dryInput.value = dryToggle.checked ? '1' : '0';
+    if (dbwInput && dbwToggle) dbwInput.value = dbwToggle.checked ? '1' : '0';
+    const action = (form.querySelector('input[name="action"]')||{}).value;
+    const wantsStream = form.hasAttribute('data-stream');
+    if (wantsStream && (action === 'fast_deploy' || action === 'full_deploy')){
+      // Use SSE streaming
+      try {
+        resultPre.textContent = '';
+        const params = new URLSearchParams();
+        params.set('action', action);
+        params.set('dry_run', dryInput ? dryInput.value : '0');
+        params.set('dbw', dbwInput ? dbwInput.value : '0');
+        const es = new EventSource(`/sections/tools/deploy_stream.php?${params.toString()}`);
+        es.addEventListener('message', (ev)=>{ appendLine(ev.data); });
+        es.addEventListener('done', ()=>{ appendLine('--- Completed ---'); try { saveRun(action, 0); renderLastRuns(); } catch(_){} es.close(); });
+        es.addEventListener('error', ()=>{ appendLine('--- Stream error ---'); es.close(); });
+      } catch(e){ appendLine('Streaming not available; falling back.'); return true; }
+      return false;
+    }
+    // Non-streaming (backup/verify)
+    setTimeout(()=>{ try { saveRun(action, 0); renderLastRuns(); } catch(_){} }, 0);
+    return true;
+  }
+
+  // Stale Cleanup Planner
+  const plannerArea = document.getElementById('plannerArea');
+  const plannerActions = document.getElementById('plannerActions');
+  const plannerDbw = document.getElementById('plannerDbw');
+  const plannerScanBtn = document.getElementById('plannerScanBtn');
+  const plannerWhitelistBtn = document.getElementById('plannerWhitelistBtn');
+  const plannerMoveBtn = document.getElementById('plannerMoveBtn');
+  let plannerData = { stale: [] };
+
+  function renderPlannerTable(items){
+    if (!plannerArea) return;
+    if (!items || !items.length) { plannerArea.innerHTML = '<div class="text-muted">No stale assets found.</div>'; plannerActions.classList.add('hidden'); return; }
+    const rows = items.map((p, idx) => `
+      <tr>
+        <td><input type="checkbox" class="planner-check" data-path="${p}"></td>
+        <td>${p}</td>
+      </tr>
+    `).join('');
+    plannerArea.innerHTML = `
+      <div class="mb-2 flex items-center gap-2">
+        <label><input type="checkbox" id="plannerSelectAll"> Select all</label>
+        <span class="text-muted">(${items.length} items)</span>
+      </div>
+      <div class="admin-scrollbox admin-scrollbox--md border rounded">
+        <table class="adm-table w-full text-sm">
+          <thead><tr><th style="width:48px"></th><th>Path</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+    plannerActions.classList.remove('hidden');
+    const selAll = document.getElementById('plannerSelectAll');
+    if (selAll) selAll.addEventListener('change', ()=>{
+      document.querySelectorAll('.planner-check').forEach(cb => { cb.checked = selAll.checked; });
     const cur = JSON.parse(localStorage.getItem(key) || '{}');
     cur[action] = item;
     localStorage.setItem(key, JSON.stringify(cur));
@@ -393,8 +499,7 @@ function renderPlannerTable(items){
 async function runPlannerScan(){
   try {
     if (plannerArea) plannerArea.innerHTML = '<div class="text-muted">Scanning…</div>';
-    const res = await fetch('/api/stale_scan.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dbw: plannerDbw && plannerDbw.checked ? 1 : 0 }) });
-    const json = await res.json();
+    const json = await apiRequest('POST','/api/stale_scan.php', { dbw: plannerDbw && plannerDbw.checked ? 1 : 0 });
     if (!json.success) throw new Error(json.error || 'Scan failed');
     plannerData = { stale: Array.isArray(json.stale) ? json.stale : [] };
     renderPlannerTable(plannerData.stale);
@@ -412,8 +517,7 @@ async function plannerWhitelistSelected(){
   const files = getPlannerSelection();
   if (!files.length) { alert('Select at least one file.'); return; }
   try {
-    const res = await fetch('/api/asset_whitelist.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_many', patterns: files }) });
-    const json = await res.json();
+    const json = await apiRequest('POST','/api/asset_whitelist.php', { action: 'add_many', patterns: files });
     if (!json.success) throw new Error(json.error || 'Whitelist failed');
     // Re-scan to update list
     runPlannerScan();
@@ -424,8 +528,7 @@ async function plannerMoveSelected(){
   const files = getPlannerSelection();
   if (!files.length) { alert('Select at least one file.'); return; }
   try {
-    const res = await fetch('/api/move_to_stale.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ files }) });
-    const json = await res.json();
+    const json = await apiRequest('POST','/api/move_to_stale.php', { files });
     if (!json.success) throw new Error(json.error || 'Move failed');
     // Re-scan to update list
     runPlannerScan();
@@ -464,8 +567,7 @@ function closeWhitelistModal(){
 async function loadWhitelist(){
   try {
     wlList.innerHTML = '<div class="text-muted">Loading…</div>';
-    const res = await fetch('/api/asset_whitelist.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'list' }) });
-    const json = await res.json();
+    const json = await apiRequest('POST','/api/asset_whitelist.php', { action: 'list' });
     if (!json.success) throw new Error(json.error || 'Failed');
     const rows = Array.isArray(json.data) ? json.data : [];
     if (!rows.length) { wlList.innerHTML = '<div class="text-muted">No whitelist patterns yet.</div>'; return; }
@@ -483,8 +585,7 @@ async function addWhitelistPattern(ev){
   const pattern = (input && input.value || '').trim();
   if (!pattern) return false;
   try {
-    const res = await fetch('/api/asset_whitelist.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add', pattern }) });
-    const json = await res.json();
+    const json = await apiRequest('POST','/api/asset_whitelist.php', { action: 'add', pattern });
     if (!json.success) throw new Error(json.error || 'Failed');
     input.value = '';
     loadWhitelist();
@@ -495,8 +596,7 @@ async function removeWhitelistPattern(ev, id){
   if (ev) ev.preventDefault();
   if (!id) return false;
   try {
-    const res = await fetch('/api/asset_whitelist.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'remove', id }) });
-    const json = await res.json();
+    const json = await apiRequest('POST','/api/asset_whitelist.php', { action: 'remove', id });
     if (!json.success) throw new Error(json.error || 'Failed');
     loadWhitelist();
   } catch(e){ alert('Failed to remove'); }

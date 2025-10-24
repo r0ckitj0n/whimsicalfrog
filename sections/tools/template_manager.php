@@ -68,13 +68,16 @@ if (!$inModal) {
   $section = 'settings';
   include_once $root . '/components/admin_nav_tabs.php';
 }
+if ($inModal) {
+  include $root . '/partials/modal_header.php';
+}
 ?>
 <?php if (!$inModal): ?>
 <div class="admin-dashboard page-content">
   <div id="admin-section-content">
 <?php endif; ?>
 
-<div id="templateManagerRoot" class="p-3">
+<div id="templateManagerRoot" class="p-3 admin-actions-icons">
   <?php if (!$inModal): ?>
   <div class="admin-card">
     <div class="flex items-center justify-between">
@@ -86,20 +89,25 @@ if (!$inModal) {
 
   <!-- Email Templates Panel -->
   <div id="tmPanelEmail" class="space-y-3">
-    <div class="admin-card text-sm">
-      <div class="font-semibold mb-1">How this works</div>
-      <ol class="list-decimal list-inside space-y-1">
-        <li><b>Create or edit templates</b> with subject + HTML content.</li>
-        <li><b>Assign templates</b> to email types (e.g., order_confirmation).</li>
-        <li><b>Preview or send a test</b> to verify formatting.</li>
-      </ol>
-      <div class="mt-2 text-xs text-gray-600">Tip: “Assignments” control which template is used when the system sends each kind of email.</div>
-    </div>
-    <div class="admin-card text-sm text-gray-600">Manage templates below, then use "Edit Assignments" to map them to email types.</div>
-    <div id="tmEmailToolbar" class="admin-card admin-form-inline">
-      <button id="tmRefresh" class="btn btn-secondary btn-sm">Refresh</button>
-      <button id="tmNew" class="btn btn-primary btn-sm">New Template</button>
-      <button id="tmAssignEdit" class="btn btn-secondary btn-sm" title="Map templates to email types">Edit Assignments</button>
+    <div class="admin-card">
+      <div class="flex items-start justify-between gap-4">
+        <div class="text-sm">
+          <div class="font-semibold mb-1">How this works</div>
+          <ol class="list-decimal list-inside space-y-1">
+            <li><b>Create or edit templates</b> with subject + HTML content.</li>
+            <li><b>Assign templates</b> to email types (e.g., order_confirmation).</li>
+            <li><b>Preview or send a test</b> to verify formatting.</li>
+          </ol>
+          <div class="mt-2 text-xs text-gray-600">Tip: “Assignments” control which template is used when the system sends each kind of email.</div>
+          <div class="mt-2 text-sm text-gray-600">Manage templates below, then use "Edit Assignments" to map them to email types.</div>
+        </div>
+        <div id="tmEmailToolbar" class="admin-form-inline">
+          <button id="tmRefresh" class="btn btn-secondary btn-sm">Refresh</button>
+          <button id="tmNew" class="btn btn-primary btn-sm">New Template</button>
+          <button id="tmAssignEdit" class="btn btn-secondary btn-sm" title="Map templates to email types">Edit Assignments</button>
+          <button id="tmSeedDefaults" class="btn btn-secondary btn-sm" data-action="tm-seed-defaults" title="Create default templates for all categories">Create Defaults</button>
+        </div>
+      </div>
     </div>
     <div class="admin-card">
       <table class="admin-table">
@@ -214,10 +222,50 @@ if (!$inModal) {
 
   <script>
   (function(){
+    function notify(msg, type){
+      try {
+        if (window.parent && window.parent.wfNotifications && typeof window.parent.wfNotifications.show === 'function') { window.parent.wfNotifications.show(msg, type||'info'); return; }
+        if (window.parent && typeof window.parent.showNotification === 'function') { window.parent.showNotification(msg, type||'info'); return; }
+        if (typeof window.showNotification === 'function') { window.showNotification(msg, type||'info'); return; }
+      } catch(_) {}
+    }
+    async function brandedConfirm(message, options){
+      try {
+        if (window.parent && typeof window.parent.showConfirmationModal === 'function') {
+          return await window.parent.showConfirmationModal({ title:(options&&options.title)||'Please confirm', message, confirmText:(options&&options.confirmText)||'Confirm', confirmStyle:(options&&options.confirmStyle)||'danger', icon:'⚠️', iconType:(options&&options.iconType)||'warning' });
+        }
+        if (typeof window.showConfirmationModal === 'function') {
+          return await window.showConfirmationModal({ title:(options&&options.title)||'Please confirm', message, confirmText:(options&&options.confirmText)||'Confirm', confirmStyle:(options&&options.confirmStyle)||'danger', icon:'⚠️', iconType:(options&&options.iconType)||'warning' });
+        }
+      } catch(_) {}
+      notify('Confirmation UI unavailable. Action canceled.', 'error');
+      return false;
+    }
     // No tabs; Email Templates is the sole panel
+    const sendStatus = (m, ok) => { try { if (window.parent && window.parent !== window) window.parent.postMessage({ source:'wf-tm', type:'status', message: m||'', ok: !!ok }, '*'); } catch(_) {} };
 
-    // API helpers
-    const api = (u, opts={}) => fetch(u, { credentials: 'include', ...opts }).then(r => r.json()).catch(()=>null);
+    // API helpers (prefer shared ApiClient)
+    async function apiRequest(method, url, data=null, options={}){
+      const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
+      const m = String(method||'GET').toUpperCase();
+      if (A && typeof A.request === 'function') {
+        if (m === 'GET') return A.get(url, (options && options.params) || {});
+        if (m === 'POST') return A.post(url, data||{}, options||{});
+        if (m === 'PUT') return A.put(url, data||{}, options||{});
+        if (m === 'DELETE') return A.delete(url, options||{});
+        return A.request(url, { method: m, ...(options||{}) });
+      }
+      const isFormData = (typeof FormData !== 'undefined') && (data instanceof FormData);
+      const headers = isFormData ? { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) }
+                                 : { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
+      const cfg = { credentials:'include', method:m, headers, ...(options||{}) };
+      if (!isFormData && data !== null && typeof cfg.body === 'undefined') cfg.body = JSON.stringify(data);
+      if (isFormData && typeof cfg.body === 'undefined') cfg.body = data;
+      const res = await fetch(url, cfg);
+      return res.json().catch(()=>null);
+    }
+    const apiGet = (url, params) => apiRequest('GET', url, null, { params });
+    const apiPost = (url, body, options) => apiRequest('POST', url, body, options);
     const body = document.getElementById('tmEmailBody');
     const abody = null; // removed read-only assignments table
     const btnRefresh = document.getElementById('tmRefresh');
@@ -241,10 +289,25 @@ if (!$inModal) {
       if (!body) return;
       body.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-gray-500">Loading…</td></tr>';
       const [tplJ, asgJ] = await Promise.all([
-        api('/api/email_templates.php?action=get_all'),
-        api('/api/email_templates.php?action=get_assignments')
+        apiGet('/api/email_templates.php?action=get_all'),
+        apiGet('/api/email_templates.php?action=get_assignments')
       ]);
       if (!tplJ || !tplJ.success) { body.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-red-600">Failed to load templates</td></tr>'; return; }
+
+      // Auto-seed defaults if none exist (one-time per page load)
+      try {
+        if (!loadTemplates.__seedAttempted) {
+          const existing = Array.isArray(tplJ.templates) ? tplJ.templates : [];
+          if (existing.length === 0) {
+            loadTemplates.__seedAttempted = true;
+            await seedDefaultTemplates();
+            const re = await apiGet('/api/email_templates.php?action=get_all');
+            if (re && re.success) {
+              tplJ.templates = re.templates || [];
+            }
+          }
+        }
+      } catch(_) {}
       // Map template_id -> [types]
       const usage = {};
       try {
@@ -288,7 +351,7 @@ if (!$inModal) {
     async function loadAssignments(){
       if (!abody) return;
       abody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-gray-500">Loading…</td></tr>';
-      const j = await api('/api/email_templates.php?action=get_assignments');
+      const j = await apiGet('/api/email_templates.php?action=get_assignments');
       if (!j || !j.success) { abody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-red-600">Failed to load assignments</td></tr>'; return; }
       const rows = (j.assignments||[]).map(a => {
         const type = (a.email_type||'').toString();
@@ -308,11 +371,22 @@ if (!$inModal) {
       const btn = ev.target && ev.target.closest ? ev.target.closest('[data-action]') : null;
       if (!btn) return;
       const action = btn.getAttribute('data-action');
+      if (action === 'tm-seed-defaults') {
+        ev.preventDefault();
+        try {
+          await seedDefaultTemplates();
+          await loadTemplates();
+          notify('Default templates created (or already present). Assignments updated.', 'success');
+        } catch(_) {
+          notify('Failed to create defaults', 'error');
+        }
+        return;
+      }
       if (action === 'tm-preview') {
         ev.preventDefault();
         const id = btn.getAttribute('data-id');
         try {
-          const j = await api(`/api/email_templates.php?action=preview&template_id=${encodeURIComponent(id)}`);
+          const j = await apiGet(`/api/email_templates.php?action=preview&template_id=${encodeURIComponent(id)}`);
           if (j && j.success && j.preview && j.preview.html_content) {
             const w = window.open('', '_blank');
             if (w) {
@@ -327,7 +401,7 @@ if (!$inModal) {
         ev.preventDefault();
         const id = btn.getAttribute('data-id');
         try {
-          const j = await api(`/api/email_templates.php?action=preview&template_id=${encodeURIComponent(id)}`);
+          const j = await apiGet(`/api/email_templates.php?action=preview&template_id=${encodeURIComponent(id)}`);
           if (j && j.success && j.preview && j.preview.html_content) {
             openPreview(j.preview.subject||'Preview', j.preview.html_content);
           }
@@ -338,20 +412,14 @@ if (!$inModal) {
         const email = window.prompt('Send test to email address:');
         if (!email) return;
         try {
-          const r = await fetch('/api/email_templates.php?action=send_test', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ template_id: id, test_email: email })
-          });
-          const j = await r.json();
-          if (j && j.success) alert(j.message || 'Test sent'); else alert('Failed to send test');
-        } catch(_) { alert('Failed to send test'); }
+          const j = await apiPost('/api/email_templates.php?action=send_test', { template_id: id, test_email: email });
+          if (j && j.success) notify(j.message || 'Test sent', 'success'); else notify('Failed to send test', 'error');
+        } catch(_) { notify('Failed to send test', 'error'); }
       } else if (action === 'tm-edit') {
         ev.preventDefault();
         const id = btn.getAttribute('data-id');
         try {
-          const j = await api(`/api/email_templates.php?action=get_template&template_id=${encodeURIComponent(id)}`);
+          const j = await apiGet(`/api/email_templates.php?action=get_template&template_id=${encodeURIComponent(id)}`);
           if (j && j.success && j.template) {
             openEditor(j.template);
           }
@@ -360,7 +428,7 @@ if (!$inModal) {
         ev.preventDefault();
         const id = btn.getAttribute('data-id');
         try {
-          const j = await api(`/api/email_templates.php?action=get_template&template_id=${encodeURIComponent(id)}`);
+          const j = await apiGet(`/api/email_templates.php?action=get_template&template_id=${encodeURIComponent(id)}`);
           if (j && j.success && j.template) {
             const t = j.template;
             // Open editor with no id and a copied name
@@ -380,18 +448,12 @@ if (!$inModal) {
         ev.preventDefault();
         const id = btn.getAttribute('data-id');
         if (!id) return;
-        if (!confirm('Archive this template? This will set it to inactive.')) return;
+        if (!(await brandedConfirm('Archive this template? This will set it to inactive.', { confirmText:'Archive', confirmStyle:'danger', iconType:'warning' }))) return;
         try {
           // Minimal update: set is_active=0
-          const r = await fetch('/api/email_templates.php?action=update', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ template_id: id, is_active: 0 })
-          });
-          const j = await r.json();
-          if (j && j.success) loadTemplates(); else alert('Archive failed');
-        } catch(_) { alert('Archive failed'); }
+          const j = await apiPost('/api/email_templates.php?action=update', { template_id: id, is_active: 0 });
+          if (j && j.success) loadTemplates(); else notify('Archive failed', 'error');
+        } catch(_) { notify('Archive failed', 'error'); }
       } else if (action === 'tm-editor-close' || action === 'tm-editor-cancel') {
         ev.preventDefault(); closeEditor();
       } else if (action === 'tm-preview-draft') {
@@ -412,9 +474,9 @@ if (!$inModal) {
         panelAssignEditor.classList.remove('hidden');
         assignEditorBody.innerHTML = '<tr><td colspan="2" class="p-3 text-center text-gray-500">Loading…</td></tr>';
         const [typesJ, templatesJ, assignsJ] = await Promise.all([
-          api('/api/email_templates.php?action=get_types'),
-          api('/api/email_templates.php?action=get_all'),
-          api('/api/email_templates.php?action=get_assignments'),
+          apiGet('/api/email_templates.php?action=get_types'),
+          apiGet('/api/email_templates.php?action=get_all'),
+          apiGet('/api/email_templates.php?action=get_assignments'),
         ]);
         const types = Object.entries(typesJ?.types || {});
         const templates = (templatesJ?.templates || []);
@@ -447,24 +509,41 @@ if (!$inModal) {
     });
     document.getElementById('tmAssignSave')?.addEventListener('click', async () => {
       try {
+        sendStatus('Saving…', true);
         const selects = Array.from(assignEditorBody.querySelectorAll('.tm-assign-select'));
         for (const sel of selects) {
           const emailType = sel.getAttribute('data-email-type');
           const templateId = sel.value;
           if (!emailType || !templateId) continue;
-          await fetch('/api/email_templates.php?action=set_assignment', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email_type: emailType, template_id: templateId })
-          });
+          await apiPost('/api/email_templates.php?action=set_assignment', { email_type: emailType, template_id: templateId });
         }
         panelAssignEditor.classList.add('hidden');
+        sendStatus('Saved', true);
       } catch(_) { /* show toast if needed */ }
     });
 
     // Initial load
     loadTemplates();
+    try { sendStatus('Loaded', true); } catch(_){}
+
+    // Parent Save bridge: attempt to save active context
+    try {
+      window.addEventListener('message', function(ev){
+        try {
+          const d = ev && ev.data; if (!d || d.source !== 'wf-tm-parent') return;
+          if (d.type === 'save') {
+            // If editor modal visible, submit; else if assignments panel visible, save assignments
+            if (editorOverlay && !editorOverlay.classList.contains('hidden')) {
+              editorForm?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            } else if (panelAssignEditor && !panelAssignEditor.classList.contains('hidden')) {
+              document.getElementById('tmAssignSave')?.click();
+            } else {
+              sendStatus('Nothing to save', false);
+            }
+          }
+        } catch(_) {}
+      });
+    } catch(_) {}
 
     // Editor helpers
     function openEditor(t){
@@ -492,9 +571,9 @@ if (!$inModal) {
     editorForm?.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       // Basic validation
-      if (!fName.value.trim()) { alert('Name is required'); return; }
-      if (!fSubject.value.trim()) { alert('Subject is required'); return; }
-      if (!fHtml.value.trim()) { alert('HTML Content is required'); return; }
+      if (!fName.value.trim()) { notify('Name is required', 'error'); return; }
+      if (!fSubject.value.trim()) { notify('Subject is required', 'error'); return; }
+      if (!fHtml.value.trim()) { notify('HTML Content is required', 'error'); return; }
       const payload = {
         template_id: fId.value || undefined,
         template_name: fName.value.trim(),
@@ -509,20 +588,17 @@ if (!$inModal) {
       const isUpdate = !!fId.value;
       const url = isUpdate ? '/api/email_templates.php?action=update' : '/api/email_templates.php?action=create';
       try {
-        const r = await fetch(url, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const j = await r.json();
+        sendStatus('Saving…', true);
+        const j = await apiPost(url, payload);
         if (j && j.success) {
           closeEditor();
           loadTemplates();
+          sendStatus('Saved', true);
         } else {
-          alert('Save failed');
+          notify('Save failed', 'error');
+          sendStatus('Save failed', false);
         }
-      } catch(_) { alert('Save failed'); }
+      } catch(_) { notify('Save failed', 'error'); }
     });
 
     // Variable helper
@@ -560,6 +636,136 @@ if (!$inModal) {
       const v = a.getAttribute('data-var');
       if (v) insertAtCursor(fHtml, v);
     });
+
+    // --- Defaults Seeder ---
+    async function seedDefaultTemplates(){
+      const existing = await apiGet('/api/email_templates.php?action=get_all');
+      const templates = (existing && existing.templates) ? existing.templates : [];
+
+      // Helper to check by exact name
+      const existsByName = (name) => templates.some(t => String(t.template_name||'').toLowerCase() === String(name).toLowerCase());
+
+      // Business context
+      const brand = 'Whimsical Frog';
+      const brandUrl = 'https://whimsicalfrog.us';
+      const footer = `<p style="margin-top:24px;color:#6b7280;font-size:12px">— ${brand} • <a href="${brandUrl}" style="color:#2563eb">${brandUrl}</a></p>`;
+
+      const defs = [
+        {
+          type: 'order_confirmation',
+          name: 'WF Order Confirmation (Default)',
+          subject: 'Thank you for your order, {customer_name}! Order {order_id}',
+          html: `
+            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
+              <h1 style="margin:0 0 8px;font-size:20px">Thank you for your order!</h1>
+              <p style="margin:0 0 12px">Hi {customer_name}, we received your order <strong>{order_id}</strong> placed on {order_date}.</p>
+              <p style="margin:0 0 12px">Order total: <strong>{order_total}</strong></p>
+              <h2 style="margin:16px 0 8px;font-size:16px">Items</h2>
+              <ul style="margin:0 0 12px;padding-left:16px">{items}</ul>
+              <h2 style="margin:16px 0 8px;font-size:16px">Shipping Address</h2>
+              <p style="white-space:pre-line;margin:0 0 12px">{shipping_address}</p>
+              <p style="margin:12px 0">We'll email you a tracking link once your package ships.</p>
+              ${footer}
+            </div>
+          `,
+          text: 'Thank you for your order!\nOrder {order_id} on {order_date}\nTotal: {order_total}\nItems: (see HTML)\nShip to: {shipping_address}\n\n— '+brand+' ('+brandUrl+')',
+          desc: 'Default customer order confirmation for Whimsical Frog'
+        },
+        {
+          type: 'admin_notification',
+          name: 'WF Admin Notification (Default)',
+          subject: 'New order {order_id} from {customer_name}',
+          html: `
+            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
+              <h1 style="margin:0 0 8px;font-size:20px">New Order</h1>
+              <p style="margin:0 0 8px"><strong>Order:</strong> {order_id} on {order_date}</p>
+              <p style="margin:0 0 8px"><strong>Customer:</strong> {customer_name} ({customer_email})</p>
+              <p style="margin:0 0 8px"><strong>Total:</strong> {order_total}</p>
+              <h2 style="margin:16px 0 8px;font-size:16px">Items</h2>
+              <ul style="margin:0 0 12px;padding-left:16px">{items}</ul>
+              ${footer}
+            </div>
+          `,
+          text: 'New order {order_id} on {order_date}\nCustomer: {customer_name} ({customer_email})\nTotal: {order_total}\nItems: (see HTML)\n\n— '+brand,
+          desc: 'Default internal notification for new orders'
+        },
+        {
+          type: 'welcome',
+          name: 'WF Welcome (Default)',
+          subject: 'Welcome to '+brand+', {customer_name}',
+          html: `
+            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
+              <h1 style="margin:0 0 8px;font-size:20px">Welcome to ${brand}!</h1>
+              <p style="margin:0 0 12px">We're glad you're here, {customer_name}. Click below to activate your account and start exploring new arrivals and specials.</p>
+              <p style="margin:16px 0"><a href="{activation_url}" style="background:#111827;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none">Activate Account</a></p>
+              ${footer}
+            </div>
+          `,
+          text: 'Welcome to '+brand+'! Activate your account: {activation_url}\n\n— '+brand+' ('+brandUrl+')',
+          desc: 'Default welcome email for new customers'
+        },
+        {
+          type: 'password_reset',
+          name: 'WF Password Reset (Default)',
+          subject: brand+': Reset your password',
+          html: `
+            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
+              <h1 style="margin:0 0 8px;font-size:20px">Reset your password</h1>
+              <p style="margin:0 0 12px">We received a request to reset your password. If you didn't request this, you can ignore this message.</p>
+              <p style="margin:16px 0"><a href="{reset_url}" style="background:#111827;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none">Reset Password</a></p>
+              <p style="margin:0 0 12px;color:#6b7280;font-size:12px">This link may expire soon for your security.</p>
+              ${footer}
+            </div>
+          `,
+          text: 'Reset your password: {reset_url}\nIf you did not request this, ignore this email.\n\n— '+brand,
+          desc: 'Default password reset email'
+        },
+        {
+          type: 'custom',
+          name: 'WF Custom (Default)',
+          subject: 'A note from '+brand,
+          html: `
+            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
+              <h1 style="margin:0 0 8px;font-size:20px">Hello from ${brand}</h1>
+              <p style="margin:0 0 12px">{body}</p>
+              ${footer}
+            </div>
+          `,
+          text: 'Hello from '+brand+'\n\n{body}\n\n— '+brand,
+          desc: 'Generic custom template'
+        }
+      ];
+
+      const createdIds = {};
+      for (const d of defs){
+        if (!existsByName(d.name)){
+          const jr = await apiPost('/api/email_templates.php?action=create', {
+              template_name: d.name,
+              template_type: d.type,
+              subject: d.subject,
+              html_content: d.html,
+              text_content: d.text,
+              description: d.desc,
+              is_active: 1
+          });
+          if (jr && jr.success && jr.template_id) {
+            createdIds[d.type] = jr.template_id;
+          }
+        } else {
+          // Look up the existing template id by name to allow assignment
+          const t = templates.find(t => String(t.template_name||'').toLowerCase() === String(d.name).toLowerCase());
+          if (t && t.id) createdIds[d.type] = t.id;
+        }
+      }
+
+      // Assign defaults (skip custom)
+      const assignable = ['order_confirmation','admin_notification','welcome','password_reset'];
+      for (const et of assignable){
+        const tid = createdIds[et];
+        if (!tid) continue;
+        await apiPost('/api/email_templates.php?action=set_assignment', { email_type: et, template_id: tid });
+      }
+    }
 
     // Inline Preview modal helpers
     const previewOverlay = document.getElementById('tmPreviewModal');

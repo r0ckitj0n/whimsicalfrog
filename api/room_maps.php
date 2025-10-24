@@ -75,7 +75,8 @@ try {
                 $result = Database::execute("INSERT INTO room_maps (room_number, map_name, coordinates, is_active) VALUES (?, ?, ?, FALSE)", [$rn, $mapName, $coordinates]);
 
                 if ($result) {
-                    Response::success(['message' => 'Room map saved successfully']);
+                    $newId = Database::lastInsertId();
+                    Response::success(['message' => 'Room map saved successfully', 'map_id' => $newId]);
                 } else {
                     Response::error('Failed to save room map');
                 }
@@ -95,6 +96,31 @@ try {
                 } catch (Exception $e) {
                     Database::rollBack();
                     Response::serverError('Failed to apply room map: ' . $e->getMessage());
+                }
+            } elseif ($action === 'upsert_original') {
+                // Upsert the canonical 'Original' map for a room and set it active
+                $rn = normalize_room_number($input['room'] ?? ($input['room_number'] ?? ''));
+                $coordinates = json_encode($input['coordinates'] ?? []);
+                if ($rn === '') { Response::error('room is required'); break; }
+                try {
+                    Database::beginTransaction();
+                    // Check if Original exists
+                    $existing = Database::queryOne("SELECT id FROM room_maps WHERE room_number = ? AND map_name = 'Original' LIMIT 1", [$rn]);
+                    if ($existing && isset($existing['id'])) {
+                        Database::execute("UPDATE room_maps SET coordinates = ? WHERE id = ?", [$coordinates, $existing['id']]);
+                        $mapId = $existing['id'];
+                    } else {
+                        Database::execute("INSERT INTO room_maps (room_number, map_name, coordinates, is_active) VALUES (?, 'Original', ?, FALSE)", [$rn, $coordinates]);
+                        $mapId = Database::lastInsertId();
+                    }
+                    // Deactivate all, then activate Original
+                    Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_number = ?", [$rn]);
+                    Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$mapId]);
+                    Database::commit();
+                    Response::success(['message' => 'Original map upserted and activated', 'map_id' => $mapId]);
+                } catch (Exception $e) {
+                    Database::rollBack();
+                    Response::serverError('Failed to upsert original: ' . $e->getMessage());
                 }
             } elseif ($action === 'restore') {
                 // Restore a historical map (create a new map based on an old one)

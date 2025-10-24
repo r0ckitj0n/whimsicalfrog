@@ -24,7 +24,7 @@ $businessName = BusinessSettings::getBusinessName();
   </div>
   <div class="wrapper">
     <p>Hi <?= $name ?>,</p>
-    <p>We're excited to have you on board! Explore our handcrafted products and enjoy your stay.</p>
+    <p>We're excited to have you on board! Explore our handcrafted items and enjoy your stay.</p>
 
     <?php if ($hasActivation): ?>
     <p>

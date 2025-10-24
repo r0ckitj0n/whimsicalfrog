@@ -300,6 +300,9 @@ if (typeof window !== 'undefined') {
     window.loadBusinessInfo = loadBusinessInfo;
     window.applyBusinessInfo = applyBusinessInfo;
     window.saveBusinessInfo = saveBusinessInfo;
+    // Expose branding helpers for Colors & Fonts modal
+    window.wireBrandingLivePreview = wireBrandingLivePreview;
+    window.initializeFontPicker = initializeFontPicker;
 }
 
 function ensureColorChipObserver(modal) {
@@ -359,7 +362,7 @@ function ensureBackgroundManagerModal() {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'backgroundManagerTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content admin-modal--lg">
+    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>
         <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -432,8 +435,22 @@ function applyBusinessCssToRoot(s){
     if (s.business_brand_accent)    vars.push(`--brand-accent: ${s.business_brand_accent};`);
     if (s.business_brand_background)vars.push(`--brand-bg: ${s.business_brand_background};`);
     if (s.business_brand_text)      vars.push(`--brand-text: ${s.business_brand_text};`);
-    if (s.business_brand_font_primary) vars.push(`--brand-font-primary: ${s.business_brand_font_primary};`);
-    if (s.business_brand_font_secondary) vars.push(`--brand-font-secondary: ${s.business_brand_font_secondary};`);
+    if (s.business_brand_font_primary) {
+      vars.push(`--brand-font-primary: ${s.business_brand_font_primary};`);
+      vars.push(`--font-primary: ${s.business_brand_font_primary};`);
+      vars.push(`--font-family-primary: ${s.business_brand_font_primary};`);
+    }
+    if (s.business_brand_font_secondary) {
+      vars.push(`--brand-font-secondary: ${s.business_brand_font_secondary};`);
+      vars.push(`--font-secondary: ${s.business_brand_font_secondary};`);
+    }
+    // Public site color variables (optional)
+    if (s.business_public_header_bg)   vars.push(`--site-header-bg: ${s.business_public_header_bg};`);
+    if (s.business_public_header_text) vars.push(`--site-header-text: ${s.business_public_header_text};`);
+    if (s.business_public_modal_bg)    vars.push(`--site-modal-bg: ${s.business_public_modal_bg};`);
+    if (s.business_public_modal_text)  vars.push(`--site-modal-text: ${s.business_public_modal_text};`);
+    if (s.business_public_page_bg)     vars.push(`--site-page-bg: ${s.business_public_page_bg};`);
+    if (s.business_public_page_text)   vars.push(`--site-page-text: ${s.business_public_page_text};`);
     
     // Add palette colors as CSS variables
     brandPalette.forEach((p, i) => {
@@ -459,7 +476,7 @@ function applyBusinessCssToRoot(s){
 }
 
 function wireBrandingLivePreview() {
-  const ids = ['brandPrimary','brandSecondary','brandAccent','brandBackground','brandText'];
+  const ids = ['brandPrimary','brandSecondary','brandAccent','brandBackground','brandText','publicHeaderBg','publicHeaderText','publicModalBg','publicModalText','publicPageBg','publicPageText'];
   ids.forEach((id) => {
     const el = document.getElementById(id);
     if (!el || el.__wfBound) return;
@@ -495,6 +512,21 @@ async function loadBusinessInfo() {
         const data = (info && (info.data || info)) || {};
         applyBusinessInfo(data);
         applyBusinessCssToRoot(data);
+        try {
+          const wantPrimary = "'Merienda', cursive";
+          const wantSecondary = "Nunito, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+          const missingPrimary = !data.business_brand_font_primary;
+          const missingSecondary = !data.business_brand_font_secondary;
+          if (missingPrimary || missingSecondary) {
+            const up = {};
+            if (missingPrimary) up.business_brand_font_primary = wantPrimary;
+            if (missingSecondary) up.business_brand_font_secondary = wantSecondary;
+            try { await BusinessSettingsAPI.upsert('business_info', up); } catch(_) {}
+            const merged = { ...data, ...up };
+            applyBusinessCssToRoot(merged);
+            applyBusinessInfo(merged);
+          }
+        } catch(_) {}
         if(status) status.textContent = 'Loaded.';
     } catch (e) {
         if(status) status.textContent = `Error: ${e.message}`;
@@ -519,6 +551,31 @@ function applyBusinessInfo(s) {
     set('bizLogoUrl', (s.business_logo_url && s.business_logo_url.trim() !== '') ? s.business_logo_url : (typeof window !== 'undefined' && typeof window.wfBrandLogoPath === 'function' ? window.wfBrandLogoPath() : '/images/logos/logo-whimsicalfrog.webp'));
     set('bizTagline', s.site_tagline || '');
     set('bizDescription', s.business_description || '');
+    // If font stacks are missing from API, backfill from computed CSS variables
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      let computedPrimary = (cs.getPropertyValue('--brand-font-primary') || cs.getPropertyValue('--font-primary') || cs.getPropertyValue('--font-family-primary') || '').trim();
+      let computedSecondary = (cs.getPropertyValue('--brand-font-secondary') || cs.getPropertyValue('--font-secondary') || '').trim();
+      // Final fallback: body computed font-family
+      try {
+        if ((!computedPrimary || !computedSecondary) && document.body) {
+          const bf = getComputedStyle(document.body).fontFamily;
+          const bodyFamily = (bf || '').trim();
+          if (!computedPrimary && bodyFamily) computedPrimary = bodyFamily;
+          if (!computedSecondary && bodyFamily) computedSecondary = bodyFamily;
+        }
+      } catch(_) {}
+      // Prefer a heading font for secondary if available and distinct
+      try {
+        const h = document.querySelector('h1, h2, .site-title, .wf-cloud-title, .page-title');
+        const headingFamily = h ? (getComputedStyle(h).fontFamily || '').trim() : '';
+        if ((!computedSecondary || computedSecondary === computedPrimary) && headingFamily) {
+          computedSecondary = headingFamily;
+        }
+      } catch(_) {}
+      if (!s.business_brand_font_primary && computedPrimary) s.business_brand_font_primary = computedPrimary;
+      if (!s.business_brand_font_secondary && computedSecondary) s.business_brand_font_secondary = computedSecondary;
+    } catch(_) {}
     const primaryStack = setFontField('primary', s.business_brand_font_primary);
     const secondaryStack = setFontField('secondary', s.business_brand_font_secondary);
     set('brandFontPrimary', primaryStack);
@@ -548,6 +605,17 @@ function applyBusinessInfo(s) {
     set('brandAccent', s.business_brand_accent || '#22c55e');
     set('brandBackground', s.business_brand_background || '#ffffff');
     set('brandText', s.business_brand_text || '#111827');
+    // Public site colors (defaults chosen to match current styling without forcing changes)
+    // Keep header background unset by default to preserve gradient
+    set('publicHeaderBg', s.business_public_header_bg || '');
+    // Header text should match brand primary by default
+    set('publicHeaderText', s.business_public_header_text || s.business_brand_primary || '#87ac3a');
+    // Public modals are white with dark text by default
+    set('publicModalBg', s.business_public_modal_bg || '#ffffff');
+    set('publicModalText', s.business_public_modal_text || '#111827');
+    // Public pages default to white with dark text (most pages)
+    set('publicPageBg', s.business_public_page_bg || '#ffffff');
+    set('publicPageText', s.business_public_page_text || '#111827');
     set('customCssVars', s.business_css_vars || '');
 
     try {
@@ -586,6 +654,13 @@ function collectBusinessInfo() {
         business_brand_background: get('brandBackground'),
         business_brand_text: get('brandText'),
         business_css_vars: get('customCssVars'),
+        // Public site colors
+        business_public_header_bg: get('publicHeaderBg'),
+        business_public_header_text: get('publicHeaderText'),
+        business_public_modal_bg: get('publicModalBg'),
+        business_public_modal_text: get('publicModalText'),
+        business_public_page_bg: get('publicPageBg'),
+        business_public_page_text: get('publicPageText'),
         business_brand_palette: JSON.stringify(brandPalette),
         business_support_email: get('bizSupportEmail'),
         business_support_phone: get('bizSupportPhone'),
@@ -634,6 +709,210 @@ async function saveBusinessInfo() {
     }
 }
 
+// --- Branding Backup Utilities ---
+let __brandingBackupCache = null; // { snapshot: {...}, savedAt: string }
+
+function buildBrandingSnapshot() {
+  // Capture all branding-related fields plus palette
+  const s = collectBusinessInfo();
+  return {
+    business_brand_primary: s.business_brand_primary,
+    business_brand_secondary: s.business_brand_secondary,
+    business_brand_accent: s.business_brand_accent,
+    business_brand_background: s.business_brand_background,
+    business_brand_text: s.business_brand_text,
+    business_brand_font_primary: s.business_brand_font_primary,
+    business_brand_font_secondary: s.business_brand_font_secondary,
+    business_css_vars: s.business_css_vars,
+  };
+}
+
+function summarizeBrandSnapshot(snap, savedAt) {
+  if (!snap) return '<div class="text-xs text-gray-500">No backup found.</div>';
+
+  const esc = (s) => String(s || '').replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const swatch = (color) => {
+    const c = String(color || '').trim();
+    if (!c) return '';
+    const style = `display:inline-block;width:14px;height:14px;border:1px solid #d1d5db;border-radius:3px;background:${c};vertical-align:middle;margin-right:6px;`;
+    return `<span aria-hidden="true" style="${style}"></span>`;
+  };
+  const textChip = (color) => {
+    const c = String(color || '').trim();
+    if (!c) return '';
+    const style = `display:inline-block;padding:0 6px;line-height:16px;border:1px solid #d1d5db;border-radius:3px;color:${c};vertical-align:middle;margin-left:6px;font-size:11px;`;
+    return `<span aria-hidden="true" style="${style}">Aa</span>`;
+  };
+  const fontSample = (stack) => {
+    const s = String(stack || '').trim();
+    if (!s) return '';
+    const style = `display:inline-block;margin-left:6px;padding:0 6px;line-height:16px;border:1px solid #d1d5db;border-radius:3px;font-family:${esc(s)};font-size:12px;background:#fff;color:#111;vertical-align:middle;`;
+    return `<span aria-hidden="true" style="${style}">Sample</span>`;
+  };
+
+  const items = [];
+  if (snap.business_brand_primary) items.push(`<li><strong>Primary</strong>: ${swatch(snap.business_brand_primary)} ${esc(snap.business_brand_primary)}</li>`);
+  if (snap.business_brand_secondary) items.push(`<li><strong>Secondary</strong>: ${swatch(snap.business_brand_secondary)} ${esc(snap.business_brand_secondary)}</li>`);
+  if (snap.business_brand_accent) items.push(`<li><strong>Accent</strong>: ${swatch(snap.business_brand_accent)} ${esc(snap.business_brand_accent)}</li>`);
+  if (snap.business_brand_background) items.push(`<li><strong>Background</strong>: ${swatch(snap.business_brand_background)} ${esc(snap.business_brand_background)}</li>`);
+  if (snap.business_brand_text) items.push(`<li><strong>Text</strong>: ${esc(snap.business_brand_text)} ${textChip(snap.business_brand_text)}</li>`);
+  // Use the currently computed site fonts for the samples, falling back to snapshot values
+  const getComputedFont = (names) => {
+    try {
+      const cs = getComputedStyle(document.documentElement);
+      for (const n of names) {
+        const v = cs.getPropertyValue(n);
+        if (v && String(v).trim()) return String(v).trim();
+      }
+      // Final fallback: body computed font-family
+      if (document.body) {
+        const bf = getComputedStyle(document.body).fontFamily;
+        if (bf && String(bf).trim()) return String(bf).trim();
+      }
+    } catch(_) {}
+    return '';
+  };
+  const compPrimary = getComputedFont(['--brand-font-primary', '--font-primary', '--font-family-primary']);
+  let compSecondary = getComputedFont(['--brand-font-secondary', '--font-secondary']);
+  // Prefer a heading font for secondary if variables/body are missing or match primary
+  if (!compSecondary || compSecondary === compPrimary) {
+    try {
+      const h = document.querySelector('h1, h2, .site-title, .wf-cloud-title, .page-title');
+      const headingFamily = h ? (getComputedStyle(h).fontFamily || '').trim() : '';
+      if (headingFamily) compSecondary = headingFamily;
+    } catch(_) {}
+  }
+  if (snap.business_brand_font_primary) {
+    const effPrimary = compPrimary || snap.business_brand_font_primary;
+    items.push(`<li><strong>Primary Font</strong>: ${esc(effPrimary)} ${fontSample(effPrimary)}</li>`);
+  }
+  if (snap.business_brand_font_secondary) {
+    const effSecondary = compSecondary || snap.business_brand_font_secondary;
+    items.push(`<li><strong>Secondary Font</strong>: ${esc(effSecondary)} ${fontSample(effSecondary)}</li>`);
+  }
+
+  // Palette preview (show up to 6 chips)
+  const palette = Array.isArray(snap.palette) ? snap.palette : [];
+  const chips = palette.slice(0, 6).map((p) => {
+    const hex = esc(p?.hex || '');
+    const name = esc(p?.name || '');
+    const style = `display:inline-block;width:14px;height:14px;border:1px solid #d1d5db;border-radius:3px;background:${hex};vertical-align:middle;margin-right:4px;`;
+    return `<span title="${name}: ${hex}" style="${style}"></span>`;
+  }).join('');
+  items.push(`<li><strong>Palette</strong>: ${palette.length} colors ${chips ? `<span style="margin-left:6px;vertical-align:middle;">${chips}</span>` : ''}</li>`);
+
+  const when = savedAt ? new Date(savedAt).toLocaleString() : '';
+  const timeLine = when ? `<div class="text-xs text-gray-500 mt-2">Saved: ${when}</div>` : '';
+  return `<ul class="text-xs list-disc list-inside space-y-0.5">${items.join('')}</ul>${timeLine}`;
+}
+
+async function loadBrandingBackup() {
+  try {
+    const mod = await import('../modules/business-settings-api.js');
+    const BusinessSettingsAPI = mod?.default || mod?.BusinessSettingsAPI;
+    const res = await BusinessSettingsAPI.getByCategory('branding');
+    const rows = (res && (res.data?.settings || res.settings)) || [];
+    let backup = null;
+    let savedAt = null;
+    rows.forEach((r) => {
+      if (r.setting_key === 'brand_backup') {
+        try { backup = JSON.parse(r.setting_value || '{}'); } catch (_) { backup = null; }
+      } else if (r.setting_key === 'brand_backup_saved_at') {
+        savedAt = r.setting_value || null;
+      }
+    });
+    __brandingBackupCache = backup ? { snapshot: backup, savedAt } : null;
+    // Update the Brand Backup card UI (timestamp only)
+    const title = byId('brandPreviewTitle');
+    if (title) title.textContent = 'Brand Backup';
+    const savedAtEl = byId('brandBackupSavedAt');
+    if (savedAtEl) savedAtEl.textContent = savedAt ? new Date(savedAt).toLocaleString() : 'Never';
+    // Swatches are optional; update if present
+    const wrap = byId('brandPreviewSwatches');
+    if (wrap && backup) updateBrandPreviewSwatches(backup);
+    return __brandingBackupCache;
+  } catch (e) {
+    console.warn('Failed to load branding backup', e);
+    return null;
+  }
+}
+
+function applyBrandingSnapshotToForm(snap) {
+  if (!snap) return;
+  const set = (id, v) => { const el = byId(id); if (el) el.value = v ?? ''; };
+  set('brandPrimary', snap.business_brand_primary || '#87ac3a');
+  set('brandSecondary', snap.business_brand_secondary || '#BF5700');
+  set('brandAccent', snap.business_brand_accent || '#22c55e');
+  set('brandBackground', snap.business_brand_background || '#ffffff');
+  set('brandText', snap.business_brand_text || '#111827');
+  set('customCssVars', snap.business_css_vars || '');
+  // Fonts via setFontField to update labels
+  setFontField('primary', snap.business_brand_font_primary || '');
+  set('brandFontPrimary', byId('brandFontPrimary')?.value || '');
+  setFontField('secondary', snap.business_brand_font_secondary || '');
+  set('brandFontSecondary', byId('brandFontSecondary')?.value || '');
+  // Palette
+  brandPalette = Array.isArray(snap.palette) ? snap.palette.slice() : [];
+  renderBrandPalette();
+  // Apply CSS immediately
+  const s = collectBusinessInfo();
+  applyBusinessCssToRoot(s);
+}
+
+async function createBrandingBackup() {
+  try {
+    const snap = buildBrandingSnapshot();
+    const savedAt = new Date().toISOString();
+    const mod = await import('../modules/business-settings-api.js');
+    const BusinessSettingsAPI = mod?.default || mod?.BusinessSettingsAPI;
+    await BusinessSettingsAPI.upsert('branding', {
+      brand_backup: snap,
+      brand_backup_saved_at: savedAt,
+    });
+    __brandingBackupCache = { snapshot: snap, savedAt };
+    // Refresh the card display (timestamp only)
+    const title = byId('brandPreviewTitle');
+    if (title) title.textContent = 'Brand Backup';
+    const savedAtEl = byId('brandBackupSavedAt');
+    if (savedAtEl) savedAtEl.textContent = new Date(savedAt).toLocaleString();
+    updateBrandPreviewSwatches(snap);
+    if (window.wfNotifications?.success) window.wfNotifications.success('Branding backup saved');
+    else if (typeof window.showNotification === 'function') window.showNotification('Branding backup saved', 'success');
+  } catch (e) {
+    console.error('Failed to save branding backup', e);
+    if (window.wfNotifications?.error) window.wfNotifications.error('Failed to save branding backup');
+    else if (typeof window.showNotification === 'function') window.showNotification('Failed to save branding backup', 'error');
+  }
+}
+
+async function resetBrandingFromBackup() {
+  try {
+    if (!__brandingBackupCache) {
+      const loaded = await loadBrandingBackup();
+      if (!loaded) {
+        if (window.wfNotifications?.info) window.wfNotifications.info('No branding backup found');
+        else if (typeof window.showNotification === 'function') window.showNotification('No branding backup found', 'info');
+        return;
+      }
+    }
+    const snap = __brandingBackupCache?.snapshot;
+    if (!snap) {
+      if (window.wfNotifications?.info) window.wfNotifications.info('No branding backup found');
+      else if (typeof window.showNotification === 'function') window.showNotification('No branding backup found', 'info');
+      return;
+    }
+    applyBrandingSnapshotToForm(snap);
+    // Persist immediately
+    await saveBusinessInfo();
+    if (window.wfNotifications?.success) window.wfNotifications.success('Branding restored from backup');
+    else if (typeof window.showNotification === 'function') window.showNotification('Branding restored from backup', 'success');
+  } catch (e) {
+    console.error('Failed to reset from backup', e);
+    if (window.wfNotifications?.error) window.wfNotifications.error('Failed to reset from backup');
+    else if (typeof window.showNotification === 'function') window.showNotification('Failed to reset from backup', 'error');
+  }
+}
+
 // --- Main Delegated Click Handler ---
 document.addEventListener('click', async (e) => {
   const t = e.target;
@@ -649,7 +928,33 @@ document.addEventListener('click', async (e) => {
         try {
           wireBrandingLivePreview();
           initializeFontPicker();
+          // Also load existing branding backup summary
+          loadBrandingBackup().catch(()=>{});
         } catch(err){ console.error('Error wiring branding live preview', err); }
+      }, 0);
+    });
+    return;
+  }
+
+  // Colors & Fonts Modal (branding moved here)
+  if (closest('[data-action="open-colors-fonts"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    loadBusinessInfo().then(() => {
+      if (typeof window.showModal === 'function') window.showModal('colorsFontsModal');
+      else {
+        const el = document.getElementById('colorsFontsModal');
+        if (el) { el.classList.remove('hidden'); el.classList.add('show'); try { el.setAttribute('aria-hidden','false'); } catch(_) {} }
+      }
+      setTimeout(() => {
+        try {
+          wireBrandingLivePreview();
+          initializeFontPicker();
+          // Load existing branding backup timestamp and swatches
+          loadBrandingBackup().catch(() => {});
+        } catch (err) {
+          console.error('Error wiring Colors & Fonts modal', err);
+        }
       }, 0);
     });
     return;
@@ -783,6 +1088,50 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  // Reset Branding from backup
+  if (closest('[data-action="business-reset-branding"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    resetBrandingFromBackup();
+    return;
+  }
+
+  // Open Create Backup confirmation modal
+  if (closest('[data-action="business-backup-open"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    const modal = document.getElementById('brandingBackupModal');
+    if (modal) {
+      try { if (modal.parentElement && modal.parentElement !== document.body) document.body.appendChild(modal); } catch(_) {}
+      // Populate summary of current settings into the modal
+      try {
+        const snap = buildBrandingSnapshot();
+        const summary = summarizeBrandSnapshot(snap);
+        const box = modal.querySelector('#brandingBackupSummary');
+        if (box) box.innerHTML = summary;
+      } catch(_) {}
+      modal.classList.remove('hidden');
+      modal.classList.add('show');
+      try { modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
+    }
+    return;
+  }
+
+  // Confirm create/overwrite backup
+  if (closest('[data-action="business-backup-confirm"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    createBrandingBackup().then(() => {
+      const modal = document.getElementById('brandingBackupModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('show');
+        try { modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
+      }
+    });
+    return;
+  }
+
   // Attributes Management
   if (closest('[data-action="attr-add-form"]')) {
     const form = closest('form[data-action="attr-add-form"]');
@@ -795,7 +1144,7 @@ document.addEventListener('click', async (e) => {
       const value = input ? input.value.trim() : '';
 
       if (!value) {
-        alert(`Please enter a ${type} name`);
+        if (typeof window.showNotification === 'function') window.showNotification(`Please enter a ${type} name`, 'error');
         return;
       }
 
@@ -803,7 +1152,7 @@ document.addEventListener('click', async (e) => {
       if (type === 'size') {
         const parts = value.split(' ');
         if (parts.length < 2) {
-          alert('Please enter size as "Name Code" (e.g., "Extra Large XL")');
+          if (typeof window.showNotification === 'function') window.showNotification('Please enter size as "Name Code" (e.g., "Extra Large XL")', 'error');
           return;
         }
         const sizeName = parts.slice(0, -1).join(' ');
@@ -876,9 +1225,20 @@ document.addEventListener('click', async (e) => {
 
       const type = button.dataset.type;
       const id = button.dataset.id;
-      if (confirm(`Are you sure you want to delete this ${type}?`)) {
-        deleteAttribute(type, id);
+      if (typeof window.showConfirmationModal !== 'function') {
+        try { window.showNotification && window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
+        return;
       }
+      const ok = await window.showConfirmationModal({
+        title: 'Delete Attribute',
+        message: `Delete this ${type}?`,
+        confirmText: 'Delete',
+        confirmStyle: 'danger',
+        icon: '⚠️',
+        iconType: 'danger'
+      });
+      if (!ok) return;
+      deleteAttribute(type, id);
     }
     return;
   }
@@ -1053,7 +1413,7 @@ async function editAttribute(type, id) {
   }
 
   if (!currentItem) {
-    alert('Item not found');
+    if (typeof window.showNotification === 'function') window.showNotification('Item not found', 'error');
     return;
   }
 
@@ -1073,7 +1433,7 @@ async function editAttribute(type, id) {
     } else if (type === 'size') {
       const parts = newValue.split(' ');
       if (parts.length < 2) {
-        alert('Please enter size as "Name Code" (e.g., "Extra Large XL")');
+        if (typeof window.showNotification === 'function') window.showNotification('Please enter size as "Name Code" (e.g., "Extra Large XL")', 'error');
         return;
       }
       const sizeName = parts.slice(0, -1).join(' ');
@@ -1172,3 +1532,16 @@ window.initAttributesModal = async function(modal) {
     if (resultDiv) resultDiv.textContent = 'Failed to load attributes';
   }
 };
+
+// Expose selected helpers for other modules and legacy handlers
+try {
+  if (typeof window !== 'undefined') {
+    window.buildBrandingSnapshot = buildBrandingSnapshot;
+    window.applyBrandingSnapshotToForm = applyBrandingSnapshotToForm;
+    window.createBrandingBackup = createBrandingBackup;
+    window.resetBrandingFromBackup = resetBrandingFromBackup;
+    window.loadBrandingBackup = loadBrandingBackup;
+    window.applyBusinessCssToRoot = applyBusinessCssToRoot;
+    window.collectBusinessInfo = collectBusinessInfo;
+  }
+} catch(_) {}

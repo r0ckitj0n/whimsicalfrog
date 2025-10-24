@@ -11,6 +11,8 @@ require_once dirname(__DIR__, 2) . '/includes/auth_helper.php';
 // Simple auth: require admin via centralized helper
 AuthHelper::requireAdmin();
 
+$inModal = (isset($_GET['modal']) && $_GET['modal'] == '1');
+
 // Fetch data
 $genders = [];
 $sizes = [];
@@ -53,7 +55,10 @@ try {
 } catch (Throwable $e) {
     // fallthrough; lists will render empty gracefully
 }
+
+if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
 ?>
+<?php if (!$inModal): ?>
 <!doctype html>
 <html>
 <head>
@@ -116,7 +121,7 @@ try {
 </style>
 </head>
 <body>
-<div id="admin-section-content">
+<div id="admin-section-content" class="p-3 admin-actions-icons">
   <div class="admin-card compact my-2">
     <div class="flex items-center justify-between">
       <div>
@@ -143,8 +148,8 @@ try {
                 <li>
                   <span><?= htmlspecialchars((string)$g) ?></span>
                   <span class="row-actions">
-                    <button class="btn" data-action="gender-rename" data-gender="<?= htmlspecialchars((string)$g) ?>">Rename</button>
-                    <button class="btn btn-danger" data-action="gender-delete" data-gender="<?= htmlspecialchars((string)$g) ?>">Delete</button>
+                    <button class="btn" data-action="gender-rename" title="Edit" data-gender="<?= htmlspecialchars((string)$g) ?>">Rename</button>
+                    <button class="btn btn-danger" data-action="gender-delete" title="Delete" data-gender="<?= htmlspecialchars((string)$g) ?>">Delete</button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -171,9 +176,9 @@ try {
                   <span><?= htmlspecialchars((string)($t['template_name'] ?? '')) ?><?= $t['category'] ? ' · '.htmlspecialchars((string)$t['category']) : '' ?></span>
                   <span class="row-actions">
                     <span class="pill"><?=(int)($t['size_count'] ?? 0)?> sizes</span>
-                    <button class="btn" data-action="size-edit" data-id="<?= (int)($t['id'] ?? 0) ?>">Edit</button>
-                    <button class="btn" data-action="size-dup" data-id="<?= (int)($t['id'] ?? 0) ?>">Duplicate</button>
-                    <button class="btn btn-danger" data-action="size-delete" data-id="<?= (int)($t['id'] ?? 0) ?>">Delete</button>
+                    <button class="btn" data-action="size-edit" title="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>">Edit</button>
+                    <button class="btn" data-action="size-dup" title="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>">Duplicate</button>
+                    <button class="btn btn-danger" data-action="size-delete" title="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>">Delete</button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -201,9 +206,9 @@ try {
                   <span><?= htmlspecialchars((string)($t['template_name'] ?? '')) ?><?= $t['category'] ? ' · '.htmlspecialchars((string)$t['category']) : '' ?></span>
                   <span class="row-actions">
                     <span class="pill"><?=(int)($t['color_count'] ?? 0)?> colors</span>
-                    <button class="btn" data-action="color-edit" data-id="<?= (int)($t['id'] ?? 0) ?>">Edit</button>
-                    <button class="btn" data-action="color-dup" data-id="<?= (int)($t['id'] ?? 0) ?>">Duplicate</button>
-                    <button class="btn btn-danger" data-action="color-delete" data-id="<?= (int)($t['id'] ?? 0) ?>">Delete</button>
+                    <button class="btn" data-action="color-edit" title="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>">Edit</button>
+                    <button class="btn" data-action="color-dup" title="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>">Duplicate</button>
+                    <button class="btn btn-danger" data-action="color-delete" title="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>">Delete</button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -269,8 +274,8 @@ try {
         <li>
           <span>${escapeHtml(g)}</span>
           <span class="row-actions">
-            <button class="btn" data-action="gender-rename" data-gender="${escapeAttr(g)}">Rename</button>
-            <button class="btn btn-danger" data-action="gender-delete" data-gender="${escapeAttr(g)}">Delete</button>
+            <button class="btn" data-action="gender-rename" title="Edit" data-gender="${escapeAttr(g)}">Rename</button>
+            <button class="btn btn-danger" data-action="gender-delete" title="Delete" data-gender="${escapeAttr(g)}">Delete</button>
           </span>
         </li>`).join('');
       wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No genders found.</div>';
@@ -287,9 +292,9 @@ try {
         <span>${escapeHtml(t.template_name||'')}${t.category ? ' · '+escapeHtml(t.category) : ''}</span>
         <span class="row-actions">
           <span class="pill">${Number(t.size_count||0)} sizes</span>
-          <button class="btn" data-action="size-edit" data-id="${t.id}">Edit</button>
-          <button class="btn" data-action="size-dup" data-id="${t.id}">Duplicate</button>
-          <button class="btn btn-danger" data-action="size-delete" data-id="${t.id}">Delete</button>
+          <button class="btn" data-action="size-edit" title="Edit" data-id="${t.id}">Edit</button>
+          <button class="btn" data-action="size-dup" title="Duplicate" data-id="${t.id}">Duplicate</button>
+          <button class="btn btn-danger" data-action="size-delete" title="Delete" data-id="${t.id}">Delete</button>
         </span>
       </li>`).join('');
     wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No size templates found.</div>';
@@ -305,9 +310,9 @@ try {
         <span>${escapeHtml(t.template_name||'')}${t.category ? ' · '+escapeHtml(t.category) : ''}</span>
         <span class="row-actions">
           <span class="pill">${Number(t.color_count||0)} colors</span>
-          <button class="btn" data-action="color-edit" data-id="${t.id}">Edit</button>
-          <button class="btn" data-action="color-dup" data-id="${t.id}">Duplicate</button>
-          <button class="btn btn-danger" data-action="color-delete" data-id="${t.id}">Delete</button>
+          <button class="btn" data-action="color-edit" title="Edit" data-id="${t.id}">Edit</button>
+          <button class="btn" data-action="color-dup" title="Duplicate" data-id="${t.id}">Duplicate</button>
+          <button class="btn btn-danger" data-action="color-delete" title="Delete" data-id="${t.id}">Delete</button>
         </span>
       </li>`).join('');
     wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No color templates found.</div>';
@@ -315,6 +320,47 @@ try {
 
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
   function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+  async function brandedConfirm(message, options){
+    try {
+      if (window.parent && typeof window.parent.showConfirmationModal === 'function') {
+        return await window.parent.showConfirmationModal({
+          title: (options && options.title) || 'Please confirm',
+          message,
+          confirmText: (options && options.confirmText) || 'Confirm',
+          confirmStyle: (options && options.confirmStyle) || 'confirm',
+          icon: (options && options.icon) || '⚠️',
+          iconType: (options && options.iconType) || 'warning'
+        });
+      }
+      if (typeof window.showConfirmationModal === 'function') {
+        return await window.showConfirmationModal({
+          title: (options && options.title) || 'Please confirm',
+          message,
+          confirmText: (options && options.confirmText) || 'Confirm',
+          confirmStyle: (options && options.confirmStyle) || 'confirm',
+          icon: (options && options.icon) || '⚠️',
+          iconType: (options && options.iconType) || 'warning'
+        });
+      }
+    } catch(_) {}
+    try {
+      if (window.parent && window.parent.wfNotifications && typeof window.parent.wfNotifications.show === 'function') { window.parent.wfNotifications.show('Confirmation UI unavailable. Action canceled.', 'error'); }
+      else if (window.parent && typeof window.parent.showNotification === 'function') { window.parent.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); }
+      else if (typeof window.showNotification === 'function') { window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); }
+    } catch(_) {}
+    return false;
+  }
+  function notify(msg, type){
+    try {
+      if (window.parent && window.parent.wfNotifications && typeof window.parent.wfNotifications.show === 'function') { window.parent.wfNotifications.show(msg, type || 'info'); return; }
+      if (window.parent && typeof window.parent.showNotification === 'function') { window.parent.showNotification(msg, type || 'info'); return; }
+      if (typeof window.showNotification === 'function') { window.showNotification(msg, type || 'info'); return; }
+      if (type === 'error' && typeof window.showError === 'function') { window.showError(msg); return; }
+      if (type === 'success' && typeof window.showSuccess === 'function') { window.showSuccess(msg); return; }
+    } catch(_) {}
+    try { alert(msg); } catch(_) {}
+  }
 
   // Modal helpers
   function openAttrModal(kind, title){
@@ -458,7 +504,10 @@ try {
       } else if (action === 'gender-delete') {
         const name = btn.getAttribute('data-gender') || '';
         if (!name) return;
-        if (!confirm(`Delete gender "${name}" everywhere? This cannot be undone.`)) return;
+        {
+          const ok = await brandedConfirm(`Delete gender "${name}" everywhere? This cannot be undone.`, { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' });
+          if (!ok) return;
+        }
         await api('/api/genders_admin.php?action=delete', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({ name })
@@ -488,12 +537,15 @@ try {
         ev.preventDefault(); ev.stopPropagation();
         const id = btn.getAttribute('data-id');
         if (!id) return;
-        if (!confirm('Delete this size template?')) return;
+        {
+          const ok = await brandedConfirm('Delete this size template?', { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' });
+          if (!ok) return;
+        }
         const form = new FormData(); form.append('template_id', id);
         await api('/api/size_templates.php?action=delete_template', { method:'POST', body: form });
         await reloadSizes();
         renderSizeEditor(null);
-        toast('Size template deleted');
+        notify('Size template deleted', 'success');
       } else if (action === 'color-new') {
         ev.preventDefault(); ev.stopPropagation();
         const template_name = prompt('Color template name:');
@@ -518,12 +570,15 @@ try {
         ev.preventDefault(); ev.stopPropagation();
         const id = btn.getAttribute('data-id');
         if (!id) return;
-        if (!confirm('Delete this color template?')) return;
+        {
+          const ok = await brandedConfirm('Delete this color template?', { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' });
+          if (!ok) return;
+        }
         const form = new FormData(); form.append('template_id', id);
         await api('/api/color_templates.php?action=delete_template', { method:'POST', body: form });
         await reloadColors();
         renderColorEditor(null);
-        toast('Color template deleted');
+        notify('Color template deleted', 'success');
       } else if (action === 'size-dup') {
         const id = btn.getAttribute('data-id');
         const j = await api(`/api/size_templates.php?action=get_template&template_id=${encodeURIComponent(id)}`);
@@ -926,5 +981,6 @@ try {
 
 })();
 </script>
+<?php endif; ?>
 </body>
 </html>

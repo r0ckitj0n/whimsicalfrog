@@ -135,7 +135,7 @@ function generateStructuredData($seoData)
 <!-- SEO Meta Tags -->
 <title><?php echo htmlspecialchars($seoData['title']); ?> | WhimsicalFrog</title>
 <meta name="description" content="<?php echo htmlspecialchars($seoData['description']); ?>">
-<meta name="keywords" content="<?php echo htmlspecialchars($seoData['category']); ?>, WhimsicalFrog, custom products, online store">
+<meta name="keywords" content="<?php echo htmlspecialchars($seoData['category']); ?>, WhimsicalFrog, custom items, online store">
 <link rel="canonical" href="https://whimsicalfrog.us<?php echo htmlspecialchars($seoData['canonical']); ?>">
 
 <!-- Open Graph Tags -->
@@ -214,7 +214,7 @@ function generateStructuredData($seoData)
                                  data-stock="<?php echo $stockLevel; ?>"
                                  data-item-json="<?php echo htmlspecialchars(json_encode($itemWithImage)); ?>">
                                 <img src="<?php echo htmlspecialchars($primaryImageUrl); ?>" 
-                                     alt="<?php echo htmlspecialchars($item['name'] ?? 'Product'); ?>" 
+                                     alt="<?php echo htmlspecialchars($item['name'] ?? 'Item'); ?>" 
                                      loading="lazy">
                                 <?php if ($isOutOfStock): ?>
                                     <div class="out-of-stock-badge">Out of Stock</div>
@@ -246,7 +246,7 @@ function generateStructuredData($seoData)
             
             <!-- Compact Product Info -->
             <div class="room-modal-product-info">
-                                <h4 id="modalProductName" class="product-name room-modal-product-name">Product Name</h4>
+                                <h4 id="modalProductName" class="product-name room-modal-product-name">Item Name</h4>
                                 <p id="modalProductPrice" class="product-price room-modal-product-price">$0.00</p>
             </div>
             

@@ -269,6 +269,26 @@ if (!$isModal) {
   tabEditable && tabEditable.addEventListener('click', () => setTab('editable'));
   setTab('catalog');
 
+  // API helpers
+  async function apiRequest(method, url, data=null, options={}){
+    const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
+    const m = String(method||'GET').toUpperCase();
+    if (A && typeof A.request === 'function') {
+      if (m === 'GET') return A.get(url, (options && options.params) || {});
+      if (m === 'POST') return A.post(url, data||{}, options||{});
+      if (m === 'PUT') return A.put(url, data||{}, options||{});
+      if (m === 'DELETE') return A.delete(url, options||{});
+      return A.request(url, { method: m, ...(options||{}) });
+    }
+    const headers = { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
+    const cfg = { credentials:'include', method:m, headers, ...(options||{}) };
+    if (data !== null && typeof cfg.body === 'undefined') cfg.body = JSON.stringify(data);
+    const res = await fetch(url, cfg);
+    return res.json().catch(()=>null);
+  }
+  const apiGet = (url, params) => apiRequest('GET', url, null, { params });
+  const apiPost = (url, body, options) => apiRequest('POST', url, body, options);
+
   const q = document.getElementById('cssSearch');
   if (!q) return;
   q.addEventListener('input', () => {
@@ -331,8 +351,7 @@ if (!$isModal) {
 
   async function loadBusiness(){
     try {
-      const r = await fetch('/api/business_settings.php?action=get_business_info', { credentials:'include' });
-      const j = r.ok ? await r.json() : null;
+      const j = await apiGet('/api/business_settings.php?action=get_business_info');
       if (!j || !j.success) { statusEl.textContent = 'Unable to load current settings.'; return; }
       const s = j.data || {};
       const set = (pair, key, def, varName) => { try { const val = (s[key] ?? def ?? '').toString().trim(); if (!pair) return; const use= val || def || '#000000'; pair.color.value = use; pair.hex.value = use; applyCssVar(varName, use); } catch(_) {} };
@@ -380,8 +399,7 @@ if (!$isModal) {
         },
         category: 'business'
       };
-      const r = await fetch('/api/business_settings.php?action=upsert_settings', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload) });
-      const j = r.ok ? await r.json() : null;
+      const j = await apiPost('/api/business_settings.php?action=upsert_settings', payload);
       statusEl.textContent = (j && j.success) ? 'Brand colors saved! Prepare to bask in tasteful gradients.' : 'Save failed. The colors revolted.';
     } catch(_) { statusEl.textContent = 'Save failed. Try again.'; }
   });
@@ -389,8 +407,7 @@ if (!$isModal) {
   btnCustomSave && btnCustomSave.addEventListener('click', async () => {
     try {
       const payload = { settings: { business_css_vars: editCustom.value || '' }, category: 'business' };
-      const r = await fetch('/api/business_settings.php?action=upsert_settings', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload) });
-      const j = r.ok ? await r.json() : null;
+      const j = await apiPost('/api/business_settings.php?action=upsert_settings', payload);
       statusEl.textContent = (j && j.success) ? 'Custom variables saved! You wield great power.' : 'Save failed. CSS gods disapprove.';
     } catch(_) { statusEl.textContent = 'Save failed. Try again.'; }
   });
@@ -398,8 +415,7 @@ if (!$isModal) {
   btnFontSave && btnFontSave.addEventListener('click', async () => {
     try {
       const payload = { settings: { business_font_primary: (fontPrimaryEl?.value || '').trim(), business_font_secondary: (fontSecondaryEl?.value || '').trim() }, category: 'business' };
-      const r = await fetch('/api/business_settings.php?action=upsert_settings', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload) });
-      const j = r.ok ? await r.json() : null;
+      const j = await apiPost('/api/business_settings.php?action=upsert_settings', payload);
       if (fontPrimaryEl) applyCssVar('--font-primary', fontPrimaryEl.value || 'Merienda, cursive');
       if (fontSecondaryEl) applyCssVar('--font-secondary', fontSecondaryEl.value || 'Arial, sans-serif');
       statusEl.textContent = (j && j.success) ? 'Fonts saved! Your brand voice just cleared its throat.' : 'Save failed. The fonts went on strike.';

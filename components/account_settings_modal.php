@@ -9,7 +9,7 @@ if (!function_exists('renderAccountSettingsModal')) {
         ob_start();
         ?>
 <div id="accountSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
-  <div class="admin-modal admin-modal-content admin-modal--md overflow-hidden">
+  <div class="admin-modal admin-modal-content admin-modal--md admin-modal--actions-in-header overflow-hidden">
     <div class="modal-header">
       <h2 id="accountSettingsTitle" class="admin-card-title">Account Settings</h2>
       <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>

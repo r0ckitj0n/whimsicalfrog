@@ -202,11 +202,32 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
   var c=document.getElementById('configFormContainer');
   if(!f||!s) return;
 
+  async function apiRequest(method, url, data=null, options={}){
+    const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
+    const m = String(method||'GET').toUpperCase();
+    if (A && typeof A.request === 'function') {
+      if (m === 'GET') return A.get(url, (options && options.params) || {});
+      if (m === 'POST') return A.post(url, data||{}, options||{});
+      if (m === 'PUT') return A.put(url, data||{}, options||{});
+      if (m === 'DELETE') return A.delete(url, options||{});
+      return A.request(url, { method: m, ...(options||{}) });
+    }
+    const isForm = (typeof FormData !== 'undefined') && (data instanceof FormData);
+    const headers = isForm ? { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) }
+                           : { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
+    const cfg = { credentials:'include', method:m, headers, ...(options||{}) };
+    if (!isForm && data !== null && typeof cfg.body === 'undefined') cfg.body = JSON.stringify(data);
+    if (isForm && typeof cfg.body === 'undefined') cfg.body = data;
+    const res = await fetch(url, cfg);
+    return res.json().catch(()=>({}));
+  }
+  const apiGet = (url, params) => apiRequest('GET', url, null, { params });
+  const apiPost = (url, body, options) => apiRequest('POST', url, body, options);
+
   function load(room){
     if(!room) return;
     // Load JSON config (legacy UI settings)
-    var p1 = fetch('/api/room_config.php?action=get&room='+encodeURIComponent(room))
-      .then(function(r){return r.json();})
+    var p1 = apiGet('/api/room_config.php?action=get&room='+encodeURIComponent(room))
       .then(function(j){
         var cfg=(j&&j.config)||{};
         Object.keys(cfg).forEach(function(k){
@@ -217,8 +238,7 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
         });
       });
     // Load DB flags (room_settings)
-    var p2 = fetch('/api/room_settings.php?action=get_room&room_number='+encodeURIComponent(room))
-      .then(function(r){return r.json();})
+    var p2 = apiGet('/api/room_settings.php?action=get_room&room_number='+encodeURIComponent(room))
       .then(function(j){
         var room=(j&&j.room)||{};
         var cb=f.querySelector('#icons_white_background');
@@ -249,14 +269,8 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
       var n = Number(val);
       cfg[k] = isNaN(n) ? val : n;
     });
-    var saveJson = fetch('/api/room_config.php?action=save',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({room:room, config:cfg})
-    }).then(function(r){return r.json();});
-    var saveFlags = fetch('/api/room_settings.php',{
-      method:'PUT', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({action:'update_flags', room_number: room, icons_white_background: !!(f.querySelector('#icons_white_background')||{}).checked})
-    }).then(function(r){return r.json();});
+    var saveJson = apiPost('/api/room_config.php?action=save', {room:room, config:cfg});
+    var saveFlags = apiRequest('PUT','/api/room_settings.php', {action:'update_flags', room_number: room, icons_white_background: !!(f.querySelector('#icons_white_background')||{}).checked});
     Promise.all([saveJson, saveFlags]).then(function(results){
       var ok = (results[0]&&results[0].success)!==false && (results[1]&&results[1].success)!==false;
       if(ok){ alert('Settings saved successfully'); location.reload(); }

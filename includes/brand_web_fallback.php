@@ -11,8 +11,8 @@ $bs  = $__biz['business_brand_secondary']     ?? '#6366f1';
 $ba  = $__biz['business_brand_accent']        ?? '#22c55e';
 $bg  = $__biz['business_brand_background']    ?? '#ffffff';
 $tx  = $__biz['business_brand_text']          ?? '#111827';
-$ff1 = $__biz['business_brand_font_primary']  ?? "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif";
-$ff2 = $__biz['business_brand_font_secondary'] ?? $ff1;
+$ff1 = BusinessSettings::get('business_brand_font_primary', "'Merienda', cursive");
+$ff2 = BusinessSettings::get('business_brand_font_secondary', "Nunito, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif");
 
 // If the value is a single family with spaces and no commas or quotes, wrap in single quotes
 $quoteIfNeeded = function($v){

@@ -2872,7 +2872,7 @@ html {
 body { /* Allow content overflow */
     /* Root aspect ratio removed to prevent clipping */
     /* aspect-ratio: 1280 / 896; */
-    font-family: Arial, sans-serif;
+    font-family: var(--font-secondary, Nunito, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif);
     max-width: none;
     line-height: 1.6;
     width: 100%;
@@ -3207,12 +3207,20 @@ body { /* Allow content overflow */
 }/* Common Font Family Classes */
 .font-family-courier {
     font-family: 'Courier New', monospace;
-}.font-family-merienda {
+}
+.font-family-merienda {
     font-family: Merienda, cursive;
-}/* Common Transition Classes */
+}
+h1, h2, h3, h4, h5, h6,
+.page-title, .site-title, .admin-card-title, .admin-modal-title, .modal-title,
+.wf-cloud-title, .section-title {
+    font-family: var(--font-primary, 'Merienda', cursive) !important;
+}
+/* Common Transition Classes */
 .transition-all-02s {
     transition: all 0.2s ease;
-}.transition-all-03s {
+}
+.transition-all-03s {
     transition: all 0.3s ease;
 }/* Common Cursor Classes */
 .cursor-pointer {
@@ -3925,7 +3933,7 @@ body { /* Allow content overflow */
 .admin-nav-tab,
 .admin-nav-tab * {
     color: #ffffff !important;
-    font-family: var(--brand-font, inherit);
+    font-family: var(--font-primary, inherit);
 }
 
 /* Variable-driven theming with brand fallback */
@@ -6506,7 +6514,7 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
 body[data-page^='admin'] .settings-section .section-title,
 body[data-page^='admin'] .settings-section .section-description {
     color: #ffffff !important;
-    font-family: var(--brand-font, inherit);
+    font-family: var(--font-primary, inherit);
 }
 .settings-header {
     text-align: center;
@@ -6633,7 +6641,7 @@ body[data-page^='admin'] .settings-section:not([class*="card-theme-"]) .section-
 body[data-page^='admin'] .settings-section .admin-settings-button {
     background: var(--card-accent-bg, linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #BF5700)));
     color: #ffffff !important;
-    font-family: var(--font-primary, var(--brand-font, inherit));
+    font-family: var(--font-primary, inherit);
     font-weight: 600;
     font-size: 1rem;
     line-height: 1.25;

@@ -583,14 +583,21 @@ import { ApiClient } from '../core/api-client.js';
       redraw();
     }
   }
-  function clearAll(){
+  async function clearAll(){
     if (state.rectangles.length === 0) {
       setMsg('No areas to clear.', 'info');
       return;
     }
-    if (!confirm(`Are you sure you want to remove all ${state.rectangles.length} area(s)? This cannot be undone.`)) {
-      return;
-    }
+    if (typeof window.showConfirmationModal !== 'function') { setMsg('Confirmation UI unavailable. Action canceled.', 'error'); return; }
+    const ok = await window.showConfirmationModal({
+      title: 'Clear All Areas',
+      message: `Are you sure you want to remove all ${state.rectangles.length} area(s)? This cannot be undone.`,
+      confirmText: 'Clear All',
+      confirmStyle: 'danger',
+      icon: '⚠️',
+      iconType: 'danger'
+    });
+    if (!ok) return;
     state.rectangles = [];
     setSelection([]);
     syncTextarea();
@@ -715,6 +722,84 @@ import { ApiClient } from '../core/api-client.js';
       setIntroHintVisible(true);
       setMsg('No map found for this room yet.', 'info');
     }
+    // Refresh saved maps list whenever we load a map for this room
+    loadSavedMaps();
+  }
+
+  // --- Saved Maps Management (Apply/Delete/List) ---
+  function renderSavedMapsList(maps){
+    const host = byId('rmeMapsList');
+    if (!host) return;
+    if (!Array.isArray(maps) || maps.length === 0) {
+      host.innerHTML = '<div class="p-3 text-gray-500">No maps yet for this room.</div>';
+      return;
+    }
+    const rows = maps.map(m => {
+      const active = m.is_active ? '<span class="ml-2 px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">Active</span>' : '';
+      const name = (m.map_name || 'Untitled').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return `<div class="flex items-center justify-between px-3 py-2 border-b">
+        <div>
+          <div class="font-medium">${name} ${active}</div>
+          <div class="text-xs text-gray-500">#${m.id}</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-xs" data-action="rme-apply-map" data-id="${m.id}">Apply</button>
+          <button class="btn btn-xs btn-danger" data-action="rme-delete-map" data-id="${m.id}">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+    host.innerHTML = `<div class="border rounded">${rows}</div>`;
+  }
+
+  async function loadSavedMaps(){
+    const list = byId('rmeMapsList');
+    const roomVal = (byId('rmeRoomSelect') && byId('rmeRoomSelect').value || '').trim();
+    if (!list || !roomVal) return;
+    list.innerHTML = '<div class="p-3 text-gray-500">Loading maps...</div>';
+    const room = normalizeRoomForApi(roomVal);
+    const { data } = await fetchJSON(`/api/room_maps.php?room=${encodeURIComponent(room)}`);
+    if (data && data.success) {
+      const maps = (data.data && data.data.maps) || data.maps || [];
+      renderSavedMapsList(maps);
+    } else {
+      list.innerHTML = '<div class="p-3 text-red-600">Failed to load maps.</div>';
+    }
+  }
+
+  async function applySavedMap(id){
+    const roomVal = (byId('rmeRoomSelect') && byId('rmeRoomSelect').value || '').trim();
+    if (!id || !roomVal) return;
+    const room = normalizeRoomForApi(roomVal);
+    const payload = { action: 'apply', room, map_id: id };
+    const { data } = await fetchJSON('/api/room_maps.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if (data && data.success) {
+      setMsg('Map applied.', 'ok');
+      await loadActive();
+      await loadSavedMaps();
+    } else {
+      setMsg('Failed to apply map' + (data&&data.message? ': ' + data.message : ''), 'error');
+    }
+  }
+
+  async function deleteSavedMap(id){
+    if (!id) return;
+    if (typeof window.showConfirmationModal !== 'function') { setMsg('Confirmation UI unavailable. Action canceled.', 'error'); return; }
+    const ok = await window.showConfirmationModal({
+      title: 'Delete Map',
+      message: 'Delete this saved map?',
+      confirmText: 'Delete',
+      confirmStyle: 'danger',
+      icon: '⚠️',
+      iconType: 'danger'
+    });
+    if (!ok) return;
+    const { data } = await fetchJSON('/api/room_maps.php', { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ map_id: id }) });
+    if (data && data.success) {
+      setMsg('Map deleted.', 'ok');
+      await loadSavedMaps();
+    } else {
+      setMsg('Failed to delete map' + (data&&data.message? ': ' + data.message : ''), 'error');
+    }
   }
 
   async function saveMap(){
@@ -734,7 +819,17 @@ import { ApiClient } from '../core/api-client.js';
     const payload = { action:'save', room: roomParam, map_name: name, coordinates: coords };
     const { data } = await fetchJSON('/api/room_maps.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     if (data && data.success) { 
-      setMsg(`Map saved with ${state.rectangles.length} area(s)! Go to Room Map Manager to activate it.`,'ok'); 
+      // Auto-apply the newly saved map for immediate effect
+      const newId = data.map_id;
+      if (newId) {
+        const applyPayload = { action: 'apply', room: roomParam, map_id: newId };
+        const applyRes = await fetchJSON('/api/room_maps.php', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(applyPayload) });
+        if (applyRes && applyRes.data && applyRes.data.success) {
+          setMsg(`Map saved and applied with ${state.rectangles.length} area(s).`,'ok');
+          return;
+        }
+      }
+      setMsg(`Map saved with ${state.rectangles.length} area(s).`,'ok'); 
     } else { 
       setMsg('Could not save map' + (data&&data.message?': '+data.message:''), 'error'); 
     }
@@ -748,6 +843,7 @@ import { ApiClient } from '../core/api-client.js';
     if (t && t.id === 'rmeClearBtn') { evt.preventDefault(); clearAll(); return; }
     if (t && t.id === 'rmeLoadActiveBtn') { evt.preventDefault(); loadActive(); return; }
     if (t && t.id === 'rmeSaveMapBtn') { evt.preventDefault(); saveMap(); return; }
+    if (t && t.id === 'rmeLoadMapsBtn') { evt.preventDefault(); loadSavedMaps(); return; }
     if (t && t.id === 'rmeBgUrl') { ensureBg(); return; }
     // Snap grid preset buttons
     if (t && t.hasAttribute('data-snap')) {
@@ -982,6 +1078,17 @@ import { ApiClient } from '../core/api-client.js';
     document.addEventListener('click', onClick);
     document.addEventListener('change', onChange);
     document.addEventListener('keydown', onKeyDown);
+    // Saved maps actions (delegated to list container)
+    const mapsList = byId('rmeMapsList');
+    if (mapsList) {
+      mapsList.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]'); if (!btn) return;
+        const act = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+        if (act === 'rme-apply-map') { e.preventDefault(); applySavedMap(id); }
+        if (act === 'rme-delete-map') { e.preventDefault(); deleteSavedMap(id); }
+      });
+    }
     window.addEventListener('resize', () => { refreshFrameAspect(); setTimeout(redraw, 0); });
     // Simplify button labels for shop owners
     const startBtn = byId('rmeStartPolyBtn');

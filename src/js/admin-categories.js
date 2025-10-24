@@ -53,7 +53,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Delete Category ---
     async function handleDeleteCategory(btn) {
         const category = btn.dataset.category;
-        if (!confirm(`Delete category "${category}"?\n\nThis will remove the category from all products and update the SKU naming scheme.\nThis action cannot be undone.`)) return;
+        if (!category) return;
+        if (typeof window.showConfirmationModal !== 'function') {
+            try { window.showGlobalNotification && window.showGlobalNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
+            return;
+        }
+        {
+            const ok = await window.showConfirmationModal({
+                title: 'Delete Category',
+                message: `Delete category "${category}"?\n\nThis will remove the category from all products and update the SKU naming scheme.\nThis action cannot be undone.`,
+                confirmText: 'Delete',
+                confirmStyle: 'danger',
+                icon: '⚠️',
+                iconType: 'danger'
+            });
+            if (!ok) return;
+        }
 
         const originalText = btn.innerHTML;
         btn.innerHTML = '⏳';

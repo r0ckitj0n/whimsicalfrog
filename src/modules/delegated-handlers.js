@@ -28,14 +28,84 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  // Social Media Manager Modal (iframe)
+  if (closest('[data-action="open-social-media-manager"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const id = 'socialMediaManagerModal';
+      const modal = document.getElementById(id);
+      if (modal) {
+        // Prime iframe src once
+        try {
+          if (modal.parentElement && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+          }
+          modal.classList.add('over-header');
+          const frame = modal.querySelector('#socialMediaManagerFrame');
+          if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
+            const ds = frame.getAttribute('data-src') || '/sections/admin_marketing.php?modal=1&tool=social-media';
+            frame.setAttribute('src', ds);
+          }
+        } catch (_) {}
+        // Show via utils if present
+        if (window.WFModalUtils && typeof window.WFModalUtils.showModalById === 'function') {
+          window.WFModalUtils.showModalById(id);
+        } else if (typeof window.showModal === 'function') {
+          window.showModal(id);
+        } else {
+          modal.classList.remove('hidden');
+          modal.classList.add('show');
+          try { modal.setAttribute('aria-hidden','false'); } catch(_) {}
+        }
+      }
+    } catch (error) {
+      console.error('Error opening Social Media Manager modal:', error);
+    }
+    return;
+  }
+
+  // Social Media Posts Templates Modal (iframe)
+  if (closest('[data-action="open-social-posts"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const id = 'socialPostsManagerModal';
+      const modal = document.getElementById(id);
+      if (modal) {
+        try {
+          if (modal.parentElement && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+          }
+          const frame = modal.querySelector('#socialPostsManagerFrame');
+          if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
+            const ds = frame.getAttribute('data-src') || '/sections/tools/social_posts_manager.php?modal=1';
+            frame.setAttribute('src', ds);
+          }
+        } catch (_) {}
+        if (window.WFModalUtils && typeof window.WFModalUtils.showModalById === 'function') {
+          window.WFModalUtils.showModalById(id);
+        } else if (typeof window.showModal === 'function') {
+          window.showModal(id);
+        } else {
+          modal.classList.remove('hidden');
+          modal.classList.add('show');
+          try { modal.setAttribute('aria-hidden','false'); } catch(_) {}
+        }
+      }
+    } catch (error) {
+      console.error('Error opening Social Media Posts modal:', error);
+    }
+    return;
+  }
+
   // Dashboard Configuration Modal - Handled by inline script in admin_settings.php
   // if (closest('[data-action="open-dashboard-config"]')) {
   //   e.preventDefault();
   //   e.stopPropagation();
   //   try {
   //     // Load dashboard configuration data
-  //     const response = await fetch('/api/dashboard_sections.php?action=get_sections');
-  //     const data = await response.json();
+  //     const data = await ApiClient.get('/api/dashboard_sections.php?action=get_sections');
   //     console.log('Dashboard config data:', data);
 
   //     // Show modal
@@ -501,8 +571,7 @@ document.addEventListener('click', async (e) => {
   //   e.stopPropagation();
   //   try {
   //     if (confirm('Reset dashboard configuration to defaults?')) {
-  //       const response = await fetch('/api/dashboard_sections.php?action=reset_defaults');
-  //       const result = await response.json();
+  //       const result = await ApiClient.post('/api/dashboard_sections.php?action=reset_defaults', {});
 
   //       if (result.success) {
   //         await this.loadDashboardConfig();
@@ -575,6 +644,12 @@ document.addEventListener('click', async (e) => {
       if (window.showModal) {
         window.showModal('loggingStatusModal');
       }
+      // Load summary + shortcuts
+      try {
+        if (DelegatedHandlers && typeof DelegatedHandlers.loadLoggingStatusAndShortcuts === 'function') {
+          DelegatedHandlers.loadLoggingStatusAndShortcuts();
+        }
+      } catch (_) {}
     } catch (error) {
       console.error('Error opening logging status modal:', error);
     }
@@ -584,23 +659,102 @@ document.addEventListener('click', async (e) => {
   if (closest('[data-action="logging-refresh-status"]')) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Logging status refresh triggered');
-    // Implementation would go here
+    try {
+      if (DelegatedHandlers && typeof DelegatedHandlers.loadLoggingStatusAndShortcuts === 'function') {
+        DelegatedHandlers.loadLoggingStatusAndShortcuts();
+      }
+    } catch (error) {
+      console.error('Error refreshing logging status:', error);
+    }
     return;
   }
 
   if (closest('[data-action="logging-open-file"]')) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Open latest log file triggered');
-    // Implementation would go here
+    try {
+      // Default to previewing latest error logs
+      if (DelegatedHandlers && typeof DelegatedHandlers.previewLog === 'function') {
+        DelegatedHandlers.previewLog('error_logs');
+      }
+    } catch (error) {
+      console.error('Error opening latest log preview:', error);
+    }
     return;
   }
 
   if (closest('[data-action="logging-clear-logs"]')) {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Clear logs triggered');
+    try {
+      const ok = await (window.showConfirmationModal && window.showConfirmationModal({
+        title: 'Clear Error Logs',
+        message: 'Clear application error logs? This cannot be undone.',
+        confirmText: 'Clear Logs',
+        confirmStyle: 'danger',
+        icon: '⚠️',
+        iconType: 'danger'
+      }));
+      if (!ok) return;
+      if (DelegatedHandlers && typeof DelegatedHandlers.clearLog === 'function') {
+        DelegatedHandlers.clearLog('error_logs');
+      }
+    } catch (error) {
+      console.error('Error clearing logs:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="logging-download-all"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const a = document.createElement('a');
+      a.href = '/api/website_logs.php?action=download';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading all logs:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="logging-preview-log"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const btn = closest('[data-action="logging-preview-log"]');
+      const type = btn && btn.dataset ? btn.dataset.type : '';
+      if (type && DelegatedHandlers && typeof DelegatedHandlers.previewLog === 'function') {
+        DelegatedHandlers.previewLog(type);
+      }
+    } catch (error) {
+      console.error('Error previewing log:', error);
+    }
+    return;
+  }
+
+  if (closest('[data-action="logging-download-log"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const btn = closest('[data-action="logging-download-log"]');
+      const type = btn && btn.dataset ? btn.dataset.type : '';
+      if (type) {
+        const a = document.createElement('a');
+        a.href = `/api/website_logs.php?action=download_log&type=${encodeURIComponent(type)}`;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Error downloading log:', error);
+    }
     return;
   }
 
@@ -637,12 +791,19 @@ document.addEventListener('click', async (e) => {
     const id = button.dataset.id;
 
     if (window.deleteAttribute && type && id) {
-      if (confirm(`Delete this ${type}?`)) {
-        window.deleteAttribute(type, id);
-        // Refresh the modal data
-        if (window.populateAttributesModal) {
-          window.populateAttributesModal('attributesModal');
-        }
+      const ok = await (window.showConfirmationModal && window.showConfirmationModal({
+        title: 'Delete Attribute',
+        message: `Delete this ${type}?`,
+        confirmText: 'Delete',
+        confirmStyle: 'danger',
+        icon: '⚠️',
+        iconType: 'danger'
+      }));
+      if (!ok) return;
+      window.deleteAttribute(type, id);
+      // Refresh the modal data
+      if (window.populateAttributesModal) {
+        window.populateAttributesModal('attributesModal');
       }
     }
     return;
@@ -651,6 +812,138 @@ document.addEventListener('click', async (e) => {
 
 // Utility methods for complex features
 const DelegatedHandlers = {
+  async loadLoggingStatusAndShortcuts() {
+    try {
+      await Promise.all([
+        this.loadLoggingSummary(),
+        this.loadLoggingShortcuts()
+      ]);
+    } catch (error) {
+      console.error('Error loading logging summary/shortcuts:', error);
+    }
+  },
+
+  async loadLoggingSummary() {
+    try {
+      const res = await ApiClient.get('/api/website_logs.php?action=get_status');
+      const sum = document.getElementById('loggingSummary');
+      if (sum && res && res.success && res.status) {
+        const f = res.status.file_logging || {};
+        const d = res.status.database_logging || {};
+        const parts = [];
+        parts.push(`File logs: ${f.enabled ? 'enabled' : 'disabled'} (${f.total_size || '0 MB'})`);
+        parts.push(`DB logs - errors: ${d.error_logs ?? 0}, email: ${d.email_logs ?? 0}, admin: ${d.admin_activity_logs ?? 0}, analytics: ${d.analytics_logs ?? 0}`);
+        sum.textContent = parts.join(' • ');
+      }
+    } catch (error) {
+      console.error('Error loading logging summary:', error);
+    }
+  },
+
+  async loadLoggingShortcuts() {
+    try {
+      const res = await ApiClient.get('/api/website_logs.php?action=list_logs');
+      const list = document.getElementById('loggingShortcutsList');
+      if (!list) return;
+      if (!res || !res.success || !Array.isArray(res.logs)) {
+        list.innerHTML = '<div class="text-sm text-gray-500">No logs available.</div>';
+        return;
+      }
+      // Sort: important first
+      const order = ['error_logs','admin_activity_logs','email_logs','order_logs','inventory_logs','user_activity_logs','analytics_logs'];
+      const sorted = res.logs.slice().sort((a,b)=>{
+        const ai = order.indexOf(a.type); const bi = order.indexOf(b.type);
+        return (ai===-1?999:ai) - (bi===-1?999:bi);
+      });
+      list.innerHTML = sorted.map(log => {
+        const last = log.last_entry ? new Date(log.last_entry).toLocaleString() : 'Never';
+        const count = typeof log.entries === 'number' ? log.entries : 0;
+        const desc = log.description || '';
+        const name = log.name || log.type;
+        const type = log.type;
+        return `
+          <div class="flex items-start justify-between gap-3 p-2 border rounded">
+            <div class="min-w-0">
+              <div class="font-medium">${name}</div>
+              <div class="text-xs text-gray-600">${desc}</div>
+              <div class="text-xs text-gray-500 mt-0.5">Entries: ${count} • Last: ${last}</div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <button class="btn btn-secondary btn-sm" data-action="logging-preview-log" data-type="${type}">Preview</button>
+              <button class="btn btn-secondary btn-sm" data-action="logging-download-log" data-type="${type}">Download CSV</button>
+            </div>
+          </div>
+          <div id="logPreview_${type}" class="hidden border-l-4 border-gray-200 pl-3 ml-2 mt-1" style="max-height: 360px; overflow:auto;"></div>
+        `;
+      }).join('');
+    } catch (error) {
+      console.error('Error loading logging shortcuts:', error);
+    }
+  },
+
+  async previewLog(type) {
+    try {
+      if (!type) return;
+      const target = document.getElementById(`logPreview_${type}`);
+      if (!target) return;
+      // Toggle visibility if already populated
+      if (target.__wfPopulated) {
+        target.classList.toggle('hidden');
+        return;
+      }
+      const res = await ApiClient.get('/api/website_logs.php?action=get_log', { type, page: 1, limit: 50 });
+      if (!res || !res.success) {
+        target.innerHTML = '<div class="text-xs text-red-600">Failed to load preview.</div>';
+        target.classList.remove('hidden');
+        target.__wfPopulated = true;
+        return;
+      }
+      const entries = Array.isArray(res.entries) ? res.entries : [];
+      if (!entries.length) {
+        target.innerHTML = '<div class="text-xs text-gray-500">No recent entries.</div>';
+      } else {
+        target.innerHTML = `
+          <div class="text-xs text-gray-700 space-y-1">
+            ${entries.map(e => `<div class=\"truncate\">• ${this._formatLogEntry(type, e)}</div>`).join('')}
+          </div>
+        `;
+      }
+      target.classList.remove('hidden');
+      target.__wfPopulated = true;
+    } catch (error) {
+      console.error('Error previewing log:', error);
+    }
+  },
+
+  async clearLog(type) {
+    try {
+      if (!type) return;
+      const res = await ApiClient.post('/api/website_logs.php?action=clear_log', { type });
+      const status = document.getElementById('loggingStatusResult');
+      if (status) {
+        status.textContent = (res && res.success) ? (res.message || 'Log cleared') : (res && res.error ? res.error : 'Failed to clear log');
+      }
+      // Refresh shortcuts to update counts
+      this.loadLoggingShortcuts();
+    } catch (error) {
+      console.error('Error clearing log:', error);
+    }
+  },
+
+  _formatLogEntry(type, e) {
+    try {
+      switch(type){
+        case 'error_logs': return `${e.created_at || ''} - ${e.error_type || 'ERROR'}: ${e.message || ''}`;
+        case 'admin_activity_logs': return `${e.timestamp || ''} - ${e.action_type || ''}: ${e.action_description || ''}`;
+        case 'email_logs': return `${e.sent_at || ''} - ${e.status || ''}: ${e.email_subject || ''}`;
+        case 'order_logs': return `${e.created_at || ''} - ${e.order_id || ''}: ${e.action || ''}`;
+        case 'inventory_logs': return `${e.timestamp || ''} - ${e.item_sku || ''}: ${e.action_type || ''}`;
+        case 'user_activity_logs': return `${e.timestamp || ''} - ${e.activity_type || ''}: ${e.activity_description || ''}`;
+        case 'analytics_logs': return `${e.timestamp || ''} - ${e.event_type || ''} on ${e.page_url || ''}`;
+        default: return JSON.stringify(e);
+      }
+    } catch(_) { return ''; }
+  },
   async loadEmailHistory(filters = {}, page = 1) {
     try {
       const params = {

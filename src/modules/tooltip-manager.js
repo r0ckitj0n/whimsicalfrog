@@ -169,6 +169,24 @@ function attachTooltip(target, tipData) {
   // and to avoid interfering with modal clicks/focus management.
 }
 
+// Only attach tooltips to relevant interactive controls (avoid inputs/text fields)
+function isRelevantTooltipTarget(el) {
+  try {
+    if (!el) return false;
+    // Prefer explicit interactive elements
+    if (el.matches && el.matches('button, a, [role="button"]')) return true;
+    // Elements with button-like classes
+    if (el.matches && el.matches('.btn, .wf-admin-nav-button, .wf-modal-button')) return true;
+    // Exclude common form fields
+    if (el.matches && el.matches('input, select, textarea')) return false;
+    // Exclude generic containers (forms/divs) unless they are explicitly button-like
+    if (el.tagName === 'FORM') return false;
+    // Fallback: if nested inside a button, consider it relevant
+    if (el.closest && el.closest('button, [role="button"], .btn, .wf-admin-nav-button, .wf-modal-button')) return true;
+  } catch(_) {}
+  return false;
+}
+
 function mapSettingsSelectors(elementId) {
   // Non-invasive mapping from known IDs to current Settings selectors
   const pairs = [
@@ -279,7 +297,22 @@ async function loadTooltips() {
         const lower = s.toLowerCase();
         const prefix = lower.startsWith('data-action:') ? 'data-action:' : 'action:';
         const val = s.slice(prefix.length);
-        try { return Array.from(document.querySelectorAll(`[data-action="${CSS.escape(val)}"]`)); } catch { return []; }
+        try {
+          const nodes = Array.from(document.querySelectorAll(`[data-action="${CSS.escape(val)}"]`));
+          if (String(val).toLowerCase() === 'prevent-submit') {
+            const targets = [];
+            for (const el of nodes) {
+              if (el && el.tagName === 'FORM') {
+                const btn = el.querySelector('button[type="submit"], button[id*="save" i], [data-action*="save" i], .btn.btn-primary');
+                if (btn) targets.push(btn);
+              } else if (el && el.matches && el.matches('button, [role="button"]')) {
+                targets.push(el);
+              }
+            }
+            return targets;
+          }
+          return nodes;
+        } catch { return []; }
       }
       // Direct ID hit
       if (existingIds.has(s)) return [document.getElementById(s)];
@@ -386,6 +419,7 @@ async function loadTooltips() {
       // Additional cap: limit attachments per tooltip row to keep DOM light on admin pages
       if (targets.length > MAX_ATTACH_PER_TOOLTIP) targets = targets.slice(0, MAX_ATTACH_PER_TOOLTIP);
       for (const t of targets) {
+        if (!isRelevantTooltipTarget(t)) continue;
         attachTooltip(t, data);
         attached++;
         uniqueTargets.add(t);
@@ -410,6 +444,7 @@ async function loadTooltips() {
               const tt = tooltips.find(t => t.element_id === id);
               const data = tt ? { title: tt.title, content: tt.content, position: tt.position || 'top' } : { title: '', content: '', position: 'top' };
               for (const t of targets) {
+                if (!isRelevantTooltipTarget(t)) continue;
                 attachTooltip(t, data);
               }
               pending.delete(id);
@@ -430,6 +465,7 @@ async function loadTooltips() {
     // Attempt attaching inside same-origin iframes for generic/action:* IDs (modal content)
     const attachInFrame = (doc) => {
       try {
+        if (doc && ((doc.defaultView && doc.defaultView.__WF_BLOCK_TOOLTIP_ATTACH === true) || (doc.body && doc.body.getAttribute && doc.body.getAttribute('data-wf-block-tooltips') === '1'))) { return; }
         const q = (sel) => { try { return Array.from(doc.querySelectorAll(sel)); } catch { return []; } };
         const existingIdsFrame = new Set(Array.from(doc.querySelectorAll('[id]')).map(el => el.id));
         const resolveInFrame = (raw) => {
@@ -439,6 +475,19 @@ async function loadTooltips() {
           if (lower.startsWith('data-action:') || lower.startsWith('action:')) {
             const prefix = lower.startsWith('data-action:') ? 'data-action:' : 'action:';
             const val = s.slice(prefix.length);
+            if (String(val).toLowerCase() === 'prevent-submit') {
+              const forms = q(`[data-action="${CSS.escape(val)}"]`);
+              const targets = [];
+              for (const f of forms) {
+                if (f && f.tagName === 'FORM') {
+                  const btn = f.querySelector('button[type="submit"], button[id*="save" i], [data-action*="save" i], .btn.btn-primary');
+                  if (btn) targets.push(btn);
+                } else if (f && f.matches && f.matches('button, [role="button"]')) {
+                  targets.push(f);
+                }
+              }
+              return targets;
+            }
             return q(`[data-action="${CSS.escape(val)}"]`);
           }
           if (existingIdsFrame.has(s)) { const el = doc.getElementById(s); return el ? [el] : []; }
@@ -466,6 +515,7 @@ async function loadTooltips() {
           }
           const data = { title: tt.title, content: tt.content, position: tt.position || 'top' };
           for (const t of targets) {
+            if (!isRelevantTooltipTarget(t)) continue;
             attachTooltip(t, data);
             attached++;
             uniqueTargets.add(t);

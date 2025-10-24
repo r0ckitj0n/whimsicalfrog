@@ -72,6 +72,25 @@ require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
   const debugOut = $('debugOut');
   let biz = null;
 
+  async function apiRequest(method, url, data=null, options={}){
+    const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
+    const m = String(method||'GET').toUpperCase();
+    if (A && typeof A.request === 'function') {
+      if (m === 'GET') return A.get(url, (options && options.params) || {});
+      if (m === 'POST') return A.post(url, data||{}, options||{});
+      if (m === 'PUT') return A.put(url, data||{}, options||{});
+      if (m === 'DELETE') return A.delete(url, options||{});
+      return A.request(url, { method: m, ...(options||{}) });
+    }
+    const headers = { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
+    const cfg = { credentials:'include', method:m, headers, ...(options||{}) };
+    if (data !== null && typeof cfg.body === 'undefined') cfg.body = JSON.stringify(data);
+    const res = await fetch(url, cfg);
+    return res.json().catch(()=>({}));
+  }
+  const apiGet = (url, params) => apiRequest('GET', url, null, { params });
+  const apiPost = (url, body, options) => apiRequest('POST', url, body, options);
+
   function renderBlock(info){
     const lines = [];
     if (info.business_address) lines.push(info.business_address);
@@ -88,8 +107,7 @@ require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
 
   try {
     status.textContent = 'Loading business info…';
-    const r = await fetch('/api/business_settings.php?action=get_business_info', { credentials:'include' });
-    const j = await r.json();
+    const j = await apiGet('/api/business_settings.php?action=get_business_info');
     biz = (j && j.data) || j || {};
     renderBlock(biz);
     status.textContent = '';
@@ -124,12 +142,7 @@ require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
     };
 
     try{
-      const resp = await fetch('/api/distance.php', {
-        method:'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ from, to, debug: true })
-      });
-      const jr = await resp.json();
+      const jr = await apiPost('/api/distance.php', { from, to, debug: true });
       const d = jr && jr.data ? jr.data : jr;
       const miles = d && typeof d.miles !== 'undefined' ? d.miles : null;
       const cached = !!(d && d.cached);

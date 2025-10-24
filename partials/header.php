@@ -35,6 +35,16 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     ]);
 }
 
+// Central admin-route guard: if this request is for an admin route, enforce admin auth
+try {
+    $reqPathForGuard = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+    $isAdminContext = (isset($page) && $page === 'admin') || preg_match('#(^|/)admin(/|$)#i', $reqPathForGuard);
+    if ($isAdminContext) {
+        require_once dirname(__DIR__) . '/includes/auth.php';
+        requireAdmin(false);
+    }
+} catch (\Throwable $e) { /* noop */ }
+
 // Mark that the global layout has been bootstrapped
 if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
     define('WF_LAYOUT_BOOTSTRAPPED', true);
@@ -132,8 +142,67 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
     ?>
     <title>WhimsicalFrog</title>
     <script>
-      // Force API client to use the current origin/port (important for localhost dev)
-      try { window.__WF_BACKEND_ORIGIN = window.location.origin; } catch(_) {}
+      // Normalize dev host to localhost to avoid IPv4-only 127.0.0.1 issues
+      try {
+        (function(){
+          var hn = window.location.hostname;
+          if (hn === '127.0.0.1' || hn === '0.0.0.0') {
+            try {
+              var u = new URL(window.location.href);
+              u.hostname = 'localhost';
+              window.location.replace(u.toString());
+              return;
+            } catch(_) {
+              try { window.location.href = window.location.href.replace('127.0.0.1','localhost').replace('0.0.0.0','localhost'); return; } catch(__) {}
+            }
+          }
+          window.__WF_BACKEND_ORIGIN = window.location.origin;
+        })();
+      } catch(_) {}
+    </script>
+    <script>
+      (function(){
+        try {
+          if (!window.ApiClient || typeof window.ApiClient !== 'object') {
+            var _appendParams = function(url, params){
+              if (!params || typeof params !== 'object') return url;
+              try {
+                var u = new URL(url, window.location.origin);
+                Object.keys(params).forEach(function(k){ if (params[k] !== undefined && params[k] !== null) u.searchParams.set(k, String(params[k])); });
+                return u.toString();
+              } catch(_) { return url; }
+            };
+            var _isFormData = function(b){ return (typeof FormData !== 'undefined') && (b instanceof FormData); };
+            var _isPlainObject = function(v){ return Object.prototype.toString.call(v) === '[object Object]'; };
+            var _json = function(r){ return r && typeof r.json === 'function' ? r.json() : Promise.resolve({}); };
+            var base = {
+              request: function(url, opts){
+                opts = opts || {};
+                var method = (opts.method || 'GET').toUpperCase();
+                var headers = Object.assign({ 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest' }, opts.headers || {});
+                var body = opts.body;
+                if (body != null && !_isFormData(body) && _isPlainObject(body)) {
+                  headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+                  body = JSON.stringify(body);
+                }
+                var cfg = Object.assign({}, opts, { method: method, headers: headers, credentials: 'include', body: body });
+                return fetch(url, cfg).then(_json).catch(function(){ return {}; });
+              },
+              get: function(url, params){ return base.request(_appendParams(url, params||{}), { method: 'GET' }); },
+              post: function(url, data, options){ return base.request(url, Object.assign({ method: 'POST', body: data }, options||{})); },
+              put: function(url, data, options){ return base.request(url, Object.assign({ method: 'PUT', body: data }, options||{})); },
+              delete: function(url, options){ return base.request(url, Object.assign({ method: 'DELETE' }, options||{})); }
+            };
+            window.ApiClient = base;
+          }
+          if (typeof window.apiGet !== 'function') {
+            window.apiGet = function(url, params){ return window.ApiClient.get(url, params); };
+          }
+          if (typeof window.apiPost !== 'function') {
+            window.apiPost = function(url, data, options){ return window.ApiClient.post(url, data, options||{}); };
+          }
+        } catch(_) {}
+      })();
     </script>
     <?php
     // Debug breadcrumb: emit a one-time header version marker and currently attached <script> srcs
@@ -247,7 +316,7 @@ echo <<<'SCRIPT'
   try{
     var origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
     var url = origin.replace(/\/$/,'') + '/api/whoami.php';
-    fetch(url, {credentials:'include', headers: {'X-WF-ApiClient':'1'}}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    (window.ApiClient && typeof window.ApiClient.get==='function' ? window.ApiClient.get(url) : Promise.resolve(null)).then(function(j){
       if (!j) return;
       if (j && j.userId != null) {
         try { document.body.setAttribute('data-is-logged-in','true'); document.body.setAttribute('data-user-id', String(j.userId)); } catch(_){}
@@ -339,7 +408,12 @@ STYLE;
 // Server-side branding CSS variables from Business Settings (applies without JS)
 try {
     require_once dirname(__DIR__) . '/api/business_settings_helper.php';
+    // Merge settings from both categories; prefer business_info (new canonical)
     $biz = BusinessSettings::getByCategory('business');
+    $bizInfo = BusinessSettings::getByCategory('business_info');
+    if (is_array($bizInfo) && $bizInfo) {
+        $biz = array_merge($biz, $bizInfo);
+    }
     $vars = [];
     $sanitize = function ($v) { return trim((string)$v); };
     if (!empty($biz['business_brand_primary'])) {
@@ -363,6 +437,13 @@ try {
     if (!empty($biz['business_brand_font_secondary'])) {
         $vars[] = "--brand-font-secondary: " . $sanitize($biz['business_brand_font_secondary']) . ';';
     }
+    // Public site color variables (optional)
+    if (!empty($biz['business_public_header_bg']))   { $vars[] = "--site-header-bg: "   . $sanitize($biz['business_public_header_bg'])   . ';'; }
+    if (!empty($biz['business_public_header_text'])) { $vars[] = "--site-header-text: " . $sanitize($biz['business_public_header_text']) . ';'; }
+    if (!empty($biz['business_public_modal_bg']))    { $vars[] = "--site-modal-bg: "    . $sanitize($biz['business_public_modal_bg'])    . ';'; }
+    if (!empty($biz['business_public_modal_text']))  { $vars[] = "--site-modal-text: "  . $sanitize($biz['business_public_modal_text'])  . ';'; }
+    if (!empty($biz['business_public_page_bg']))     { $vars[] = "--site-page-bg: "     . $sanitize($biz['business_public_page_bg'])     . ';'; }
+    if (!empty($biz['business_public_page_text']))   { $vars[] = "--site-page-text: "   . $sanitize($biz['business_public_page_text'])   . ';'; }
     $custom = isset($biz['business_css_vars']) ? (string)$biz['business_css_vars'] : '';
     $customLines = [];
     if ($custom !== '') {
@@ -872,13 +953,16 @@ if ($pageSlug === 'shop') {
 // Attach STATIC background for ALL Admin pages (avoid DB on admin routes)
 if ($pageSlug === 'admin' || strpos($pageSlug, 'admin/') === 0) {
     $adminBg = '';
-    $defaultPngAbs = dirname(__DIR__) . '/images/backgrounds/background-settings.png';
-    $defaultWebpRel = '/images/backgrounds/background-settings.webp';
-    $defaultWebpAbs = dirname(__DIR__) . $defaultWebpRel;
-    if (file_exists($defaultWebpAbs)) {
-        $adminBg = $defaultWebpRel;
-    } elseif (file_exists($defaultPngAbs)) {
-        $adminBg = '/images/backgrounds/background-settings.png';
+    // Prefer new schema filenames for Settings background, fall back to legacy
+    $candidates = [
+        '/images/backgrounds/background-roomX.webp',
+        '/images/backgrounds/background-roomX.png',
+        '/images/backgrounds/background-settings.webp',
+        '/images/backgrounds/background-settings.png',
+    ];
+    foreach ($candidates as $rel) {
+        $abs = dirname(__DIR__) . $rel;
+        if (file_exists($abs)) { $adminBg = $rel; break; }
     }
     if ($adminBg) {
         $bodyBgUrl = $adminBg;

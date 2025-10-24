@@ -92,8 +92,51 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
                 echo "<style id=\"wf-branding-vars\">:root{\n" . implode("\n", $vars) . (empty($customLines) ? '' : ("\n" . implode("\n", $customLines))) . "\n}</style>\n";
             }
         }
-    } catch (\Throwable $___e) { /* noop */
-    }
-?>
+    } catch (\Throwable $___e) { /* noop */ }
+    ?>
+    <script>
+    (function(){
+      try {
+        var k = 'wf_admin_actions_icons';
+        var seenKey = 'wf_admin_icons_legend_seen';
+        var on = (localStorage.getItem(k) || '') === '1';
+        var cl = document.documentElement.classList;
+        if (on) cl.add('admin-actions-icons'); else cl.remove('admin-actions-icons');
+        function maybeShowLegend(){
+          try {
+            if ((localStorage.getItem(k) || '') !== '1') return;
+            if (localStorage.getItem(seenKey) === '1') return;
+            var box = document.createElement('div');
+            box.className = 'wf-icons-legend';
+            box.innerHTML = ''
+              + '<h4>Actions Icons</h4>'
+              + '<ul>'
+              + '  <li><span class="legend-icon" data-role="preview"></span> Preview HTML</li>'
+              + '  <li><span class="legend-icon" data-role="preview-inline"></span> Preview Inline</li>'
+              + '  <li><span class="legend-icon" data-role="send"></span> Send Test Email</li>'
+              + '  <li><span class="legend-icon" data-role="edit"></span> Edit</li>'
+              + '  <li><span class="legend-icon" data-role="duplicate"></span> Duplicate</li>'
+              + '  <li><span class="legend-icon" data-role="archive"></span> Archive</li>'
+              + '</ul>'
+              + '<div class="legend-footer"><button type="button" class="legend-close" aria-label="Close">Got it</button></div>';
+            document.body.appendChild(box);
+            var close = box.querySelector('.legend-close');
+            if (close) close.addEventListener('click', function(){ try { localStorage.setItem(seenKey, '1'); } catch(_){}; try { box.remove(); } catch(_){}});
+            setTimeout(function(){ try { localStorage.setItem(seenKey, '1'); } catch(_){}; try { box.remove(); } catch(_){ } }, 8000);
+          } catch(_){ }
+        }
+        // Show immediately if applicable
+        if (on) setTimeout(maybeShowLegend, 0);
+        window.addEventListener('storage', function(ev){
+          try {
+            if (!ev || ev.key !== k) return;
+            var set = ev.newValue === '1';
+            if (set) cl.add('admin-actions-icons'); else cl.remove('admin-actions-icons');
+            if (set) setTimeout(maybeShowLegend, 0);
+          } catch(_){ }
+        });
+      } catch(_){ }
+    })();
+    </script>
 </head>
 <body>

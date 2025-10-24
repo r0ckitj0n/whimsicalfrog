@@ -2,6 +2,7 @@
 // Square Settings API - Configuration and synchronization for Square integration
 require_once 'config.php';
 require_once 'business_settings_helper.php';
+require_once __DIR__ . '/../includes/secret_store.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -104,6 +105,12 @@ function getSquareSettings($pdo)
         }
     }
 
+    // Mask sensitive fields; only report presence
+    $settings['square_access_token_present'] = function_exists('secret_has') ? secret_has('square_access_token') : false;
+    $settings['square_webhook_signature_key_present'] = function_exists('secret_has') ? secret_has('square_webhook_signature_key') : false;
+    $settings['square_access_token'] = '';
+    $settings['square_webhook_signature_key'] = '';
+
     echo json_encode([
         'success' => true,
         'settings' => $settings
@@ -135,9 +142,18 @@ function saveSquareSettings($pdo)
 
         $savedCount = 0;
 
+        $secretKeys = ['square_access_token','square_webhook_signature_key'];
         foreach ($input as $key => $value) {
             if (!in_array($key, $allowedSettings)) {
                 continue;
+            }
+
+            // Route secrets to secret store, store masked value in DB
+            if (in_array($key, $secretKeys, true)) {
+                if (is_string($value) && $value !== '') {
+                    try { secret_set($key, $value); } catch (Exception $e) { /* ignore */ }
+                }
+                $value = '';
             }
 
             // Convert arrays to JSON
@@ -432,6 +448,14 @@ function getSquareSettingsArray($pdo)
             $settings[$field] = in_array(strtolower($settings[$field]), ['true', '1'], true);
         }
     }
+
+    // Prefer secrets for sensitive credentials at runtime
+    try {
+        $tok = function_exists('secret_get') ? secret_get('square_access_token') : null;
+        if (is_string($tok) && $tok !== '') $settings['square_access_token'] = $tok;
+        $wh = function_exists('secret_get') ? secret_get('square_webhook_signature_key') : null;
+        if (is_string($wh) && $wh !== '') $settings['square_webhook_signature_key'] = $wh;
+    } catch (Exception $e) { /* ignore */ }
 
     return $settings;
 }

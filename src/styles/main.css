@@ -50,7 +50,13 @@
 @import url('./admin-inventory.css');
 @import url('./admin-filters.css');
 @import url('./admin-settings.css');
-@import url('./utilities-ui.css');
+@import url('./admin-settings-extras.css');
+
+/* Public page defaults: site background and text colors (do not affect admin) */
+body[data-is-admin='false'] {
+  background: var(--site-page-bg, initial);
+  color: var(--site-page-text, inherit);
+}
 
 /* --- Checkout page layering fix: ensure it appears above room modal overlay --- */
 body[data-page='payment'] #paymentPage,

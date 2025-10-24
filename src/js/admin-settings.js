@@ -726,9 +726,17 @@ function updateContentToneOption(index, field, value) {
   }
 }
 
-function removeContentToneOption(index) {
+async function removeContentToneOption(index) {
   if (!isNaN(index) && index >= 0 && index < contentToneOptions.length) {
-    if (confirm('Are you sure you want to remove this content tone option?')) {
+    const ok = await (window.showConfirmationModal && window.showConfirmationModal({
+      title: 'Remove Option',
+      message: 'Are you sure you want to remove this content tone option?',
+      confirmText: 'Remove',
+      confirmStyle: 'danger',
+      icon: '⚠️',
+      iconType: 'danger'
+    }));
+    if (ok) {
       contentToneOptions.splice(index, 1);
       displayContentToneOptions();
     }
@@ -940,9 +948,17 @@ function updateBrandVoiceOption(index, field, value) {
   }
 }
 
-function removeBrandVoiceOption(index) {
+async function removeBrandVoiceOption(index) {
   if (!isNaN(index) && index >= 0 && index < brandVoiceOptions.length) {
-    if (confirm('Are you sure you want to remove this brand voice option?')) {
+    const ok = await (window.showConfirmationModal && window.showConfirmationModal({
+      title: 'Remove Option',
+      message: 'Are you sure you want to remove this brand voice option?',
+      confirmText: 'Remove',
+      confirmStyle: 'danger',
+      icon: '⚠️',
+      iconType: 'danger'
+    }));
+    if (ok) {
       brandVoiceOptions.splice(index, 1);
       displayBrandVoiceOptions();
     }
@@ -1049,7 +1065,170 @@ async function loadAIProviders() {
 function displayAIProviders(providers) {
   try {
     window.aiProviders = providers;
+  } catch (e) {
+    // Fallback: still render UI using current select/defaults even if API fails (e.g., incognito not logged in)
+    try {
+      const sel = document.getElementById('aiProvider');
+      const provider = (sel && sel.value) || getDefaultAIProvider();
+      renderAIProviderUI(provider, {});
+    } catch(_) {}
+  }
+}
+
+// Load current AI settings and populate the modal fields
+async function loadAISettings() {
+  try {
+    const result = await ApiClient.get('/api/ai_settings.php?action=get_settings');
+    const settings = (result && result.success && result.settings) ? result.settings : {};
+
+    // Provider select
+    const sel = document.getElementById('aiProvider');
+    if (sel && settings.ai_provider) {
+      try { sel.value = settings.ai_provider; } catch (_) {}
+    }
+
+    // Temperature and display
+    const temp = document.getElementById('aiTemperature') || document.getElementById('ai_temperature');
+    const tempLabel = document.getElementById('aiTemperatureValue');
+    if (temp && typeof settings.ai_temperature !== 'undefined') {
+      temp.value = settings.ai_temperature;
+      if (tempLabel) tempLabel.textContent = String(settings.ai_temperature);
+    }
+
+    // Max tokens
+    const maxTok = document.getElementById('aiMaxTokens') || document.getElementById('ai_max_tokens');
+    if (maxTok && typeof settings.ai_max_tokens !== 'undefined') {
+      maxTok.value = settings.ai_max_tokens;
+    }
+
+    // Timeout
+    const timeout = document.getElementById('aiTimeout') || document.getElementById('ai_timeout');
+    if (timeout && typeof settings.ai_timeout !== 'undefined') {
+      timeout.value = settings.ai_timeout;
+    }
+
+    // Fallback to local
+    const fallback = document.getElementById('fallbackToLocal') || document.getElementById('fallback_to_local');
+    if (fallback && typeof settings.fallback_to_local !== 'undefined') {
+      fallback.checked = !!settings.fallback_to_local;
+    }
+
+    // Render provider-specific fields and load models
+    const provider = (sel && sel.value) || settings.ai_provider || getDefaultAIProvider();
+    renderAIProviderUI(provider, settings);
+
+    // Wire change listener once
+    if (sel && !sel.__wfAIChangeWired) {
+      sel.__wfAIChangeWired = true;
+      sel.addEventListener('change', function () {
+        const prov = sel.value || getDefaultAIProvider();
+        renderAIProviderUI(prov, settings);
+      });
+    }
   } catch (_) {}
+}
+
+function renderAIProviderUI(provider, settings) {
+  const container = document.getElementById('aiProviderSettings');
+  if (!container) return;
+  const prov = provider || 'jons_ai';
+  const s = settings || {};
+  let html = '';
+  if (prov === 'openai') {
+    html = [
+      '<div class="grid gap-4 md:grid-cols-2">',
+      '  <div>',
+      '    <label for="openai_api_key" class="block text-sm font-medium mb-1">OpenAI API Key</label>',
+      '    <input id="openai_api_key" type="password" class="form-input w-full" placeholder="sk-..." />',
+      '  </div>',
+      '  <div>',
+      '    <label for="openai_model" class="block text-sm font-medium mb-1">OpenAI Model</label>',
+      '    <select id="openai_model" class="form-select w-full"></select>',
+      '  </div>',
+      '</div>'
+    ].join('');
+  } else if (prov === 'anthropic') {
+    html = [
+      '<div class="grid gap-4 md:grid-cols-2">',
+      '  <div>',
+      '    <label for="anthropic_api_key" class="block text-sm font-medium mb-1">Anthropic API Key</label>',
+      '    <input id="anthropic_api_key" type="password" class="form-input w-full" placeholder="anthropic-key" />',
+      '  </div>',
+      '  <div>',
+      '    <label for="anthropic_model" class="block text-sm font-medium mb-1">Anthropic Model</label>',
+      '    <select id="anthropic_model" class="form-select w-full"></select>',
+      '  </div>',
+      '</div>'
+    ].join('');
+  } else if (prov === 'google') {
+    html = [
+      '<div class="grid gap-4 md:grid-cols-2">',
+      '  <div>',
+      '    <label for="google_api_key" class="block text-sm font-medium mb-1">Google API Key</label>',
+      '    <input id="google_api_key" type="password" class="form-input w-full" placeholder="AIza..." />',
+      '  </div>',
+      '  <div>',
+      '    <label for="google_model" class="block text-sm font-medium mb-1">Google Model</label>',
+      '    <select id="google_model" class="form-select w-full"></select>',
+      '  </div>',
+      '</div>'
+    ].join('');
+  } else if (prov === 'meta') {
+    html = [
+      '<div class="grid gap-4 md:grid-cols-2">',
+      '  <div>',
+      '    <label for="meta_api_key" class="block text-sm font-medium mb-1">Meta API Key</label>',
+      '    <input id="meta_api_key" type="password" class="form-input w-full" placeholder="..." />',
+      '  </div>',
+      '  <div>',
+      '    <label for="meta_model" class="block text-sm font-medium mb-1">Meta Model</label>',
+      '    <select id="meta_model" class="form-select w-full"></select>',
+      '  </div>',
+      '</div>'
+    ].join('');
+  } else {
+    html = '<div class="text-sm text-gray-500">Using local AI. No keys required.</div>';
+  }
+  container.innerHTML = html;
+
+  // Prefill non-sensitive model from settings
+  try {
+    if (prov === 'openai' && s.openai_model) {
+      const el = document.getElementById('openai_model'); if (el) el.value = s.openai_model;
+    } else if (prov === 'anthropic' && s.anthropic_model) {
+      const el = document.getElementById('anthropic_model'); if (el) el.value = s.anthropic_model;
+    } else if (prov === 'google' && s.google_model) {
+      const el = document.getElementById('google_model'); if (el) el.value = s.google_model;
+    } else if (prov === 'meta' && s.meta_model) {
+      const el = document.getElementById('meta_model'); if (el) el.value = s.meta_model;
+    }
+  } catch(_) {}
+
+  // Populate models list for the chosen provider
+  try {
+    if (typeof loadModelsForCurrentProvider === 'function') {
+      const merged = Object.assign({}, s, { ai_provider: prov });
+      loadModelsForCurrentProvider(merged);
+    } else if (typeof refreshModels === 'function') {
+      refreshModels(prov);
+    }
+  } catch(_) {}
+
+  // Add "Saved" badge if secret is present
+  try {
+    const addBadge = (forId) => {
+      const lbl = container.querySelector(`label[for="${forId}"]`);
+      if (!lbl) return;
+      const badge = document.createElement('span');
+      badge.textContent = 'Saved';
+      badge.className = 'ml-2 inline-block px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 align-middle';
+      lbl.appendChild(badge);
+    };
+    if (prov === 'openai' && s.openai_key_present) addBadge('openai_api_key');
+    if (prov === 'anthropic' && s.anthropic_key_present) addBadge('anthropic_api_key');
+    if (prov === 'google' && s.google_key_present) addBadge('google_api_key');
+    if (prov === 'meta' && s.meta_key_present) addBadge('meta_api_key');
+  } catch(_) {}
 }
 
 function toggleSection(section) {
@@ -1085,6 +1264,7 @@ function toggleProviderSections() {
 
 async function saveAISettings() {
   const _sp = document.querySelector('input[name="ai_provider"]:checked');
+  const _selProvider = document.getElementById('aiProvider');
   const _openai_api_key = document.getElementById('openai_api_key');
   const _openai_model = document.getElementById('openai_model');
   const _anthropic_api_key = document.getElementById('anthropic_api_key');
@@ -1093,10 +1273,10 @@ async function saveAISettings() {
   const _google_model = document.getElementById('google_model');
   const _meta_api_key = document.getElementById('meta_api_key');
   const _meta_model = document.getElementById('meta_model');
-  const _ai_temperature = document.getElementById('ai_temperature');
-  const _ai_max_tokens = document.getElementById('ai_max_tokens');
-  const _ai_timeout = document.getElementById('ai_timeout');
-  const _fallback_to_local = document.getElementById('fallback_to_local');
+  const _ai_temperature = document.getElementById('ai_temperature') || document.getElementById('aiTemperature');
+  const _ai_max_tokens = document.getElementById('ai_max_tokens') || document.getElementById('aiMaxTokens');
+  const _ai_timeout = document.getElementById('ai_timeout') || document.getElementById('aiTimeout');
+  const _fallback_to_local = document.getElementById('fallback_to_local') || document.getElementById('fallbackToLocal');
   const _ai_brand_voice = document.getElementById('ai_brand_voice');
   const _ai_content_tone = document.getElementById('ai_content_tone');
   const _ai_cost_temperature = document.getElementById('ai_cost_temperature');
@@ -1109,7 +1289,7 @@ async function saveAISettings() {
   const _ai_value_based_weight = document.getElementById('ai_value_based_weight');
 
   const settings = {
-    ai_provider: (_sp && _sp.value) || getDefaultAIProvider(),
+    ai_provider: (_sp && _sp.value) || (_selProvider && _selProvider.value) || getDefaultAIProvider(),
     openai_api_key: (_openai_api_key && _openai_api_key.value) || '',
     openai_model: (_openai_model && _openai_model.value) || 'gpt-3.5-turbo',
     anthropic_api_key: (_anthropic_api_key && _anthropic_api_key.value) || '',
@@ -1157,7 +1337,8 @@ function showAISettingsError(message) {
 
 async function testAIProvider() {
   const _sp = document.querySelector('input[name="ai_provider"]:checked');
-  const selectedProvider = (_sp && _sp.value) || getDefaultAIProvider();
+  const _selProvider = document.getElementById('aiProvider');
+  const selectedProvider = (_sp && _sp.value) || (_selProvider && _selProvider.value) || getDefaultAIProvider();
   try {
     try { showNotification('Testing AI Provider', `Testing ${selectedProvider} provider...`, 'info'); } catch (_) {}
     const result = await ApiClient.get(`/api/ai_settings.php?action=test_provider&provider=${selectedProvider}`);
@@ -1753,15 +1934,15 @@ window.openDatabaseMaintenanceModal = function openDatabaseMaintenanceModal() {
     console.log('openDatabaseMaintenanceModal called');
     const modal = document.getElementById('databaseMaintenanceModal');
     if (!modal) {
-        console.error('databaseMaintenanceModal element not found!');
-        if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
-            window.wfNotifications.show('Database Maintenance modal not found. Please refresh the page.', 'error', { title: 'Admin Settings' });
-        } else if (window.showError) {
-            window.showError('Database Maintenance modal not found. Please refresh the page.');
-        } else {
-            alert('Database Maintenance modal not found. Please refresh the page.');
-        }
-        return;
+      console.error('databaseMaintenanceModal element not found!');
+      if (typeof window !== 'undefined' && window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+        window.wfNotifications.show('Database Maintenance modal not found. Please refresh the page.', 'error', { title: 'Admin Settings' });
+      } else if (window.showError) {
+        window.showError('Database Maintenance modal not found. Please refresh the page.');
+      } else {
+        try { if (typeof window.showNotification === 'function') window.showNotification('Database Maintenance modal not found. Please refresh the page.', 'error', { title: 'Admin Settings' }); } catch(_) { /* no-op */ }
+      }
+      return;
     }
     console.log('Opening database maintenance modal...');
     if (typeof window.openModal === 'function') {
@@ -1936,10 +2117,20 @@ async function convertDatabaseConnections(e) {
     const evt = getEvent(e);
     const button = (evt && evt.target) ? evt.target : document.querySelector('[data-action="convert-db"], #convertDatabaseConnectionsBtn');
     const resultsDiv = document.getElementById('conversionResults');
-    // Use native confirm for now; page also includes enhanced modals elsewhere
-    if (!confirm('This will modify files with direct PDO connections and create backups. Continue?')) {
+    // Branded confirmation modal (no native confirm fallback)
+    if (typeof window.showConfirmationModal !== 'function') {
+        try { if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
         return;
     }
+    const ok = await window.showConfirmationModal({
+        title: 'Convert DB Connections',
+        message: 'This will modify files with direct PDO connections and create backups. Continue?',
+        confirmText: 'Convert',
+        confirmStyle: 'danger',
+        icon: '⚠️',
+        iconType: 'danger'
+    });
+    if (!ok) return;
     if (button) {
         button.disabled = true;
         button.textContent = '🔄 Converting...';
@@ -2099,7 +2290,11 @@ async function getDatabaseTableCount() {
 
 async function compactRepairDatabase() {
     const tableCount = await getDatabaseTableCount();
-    const confirmed = await (window.showConfirmationModal ? window.showConfirmationModal({
+    if (typeof window.showConfirmationModal !== 'function') {
+        try { if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
+        return;
+    }
+    const confirmed = await window.showConfirmationModal({
         title: 'Database Compact & Repair',
         subtitle: 'Optimize and repair your database for better performance',
         message: 'This operation will create a safety backup first, then optimize and repair all database tables to improve performance and fix any corruption issues.',
@@ -2116,7 +2311,7 @@ async function compactRepairDatabase() {
         iconType: 'info',
         confirmText: 'Start Optimization',
         cancelText: 'Cancel'
-    }) : Promise.resolve(confirm('Create a safety backup, then optimize and repair all database tables?')));
+    });
     if (!confirmed) return;
 
     if (typeof window.showBackupProgressModal === 'function') {
@@ -2231,8 +2426,7 @@ async function compactRepairDatabase() {
             window.wfNotifications.show(error.message || 'Database optimization failed', 'error', { title: 'Database Maintenance' });
         } else if (typeof window.showError === 'function') {
             window.showError(error.message || 'Database optimization failed');
-        } else {
-            alert(error.message || 'Database optimization failed');
+        } else { try { if (typeof window.showNotification === 'function') window.showNotification(error.message || 'Database optimization failed', 'error', { title: 'Database Maintenance' }); } catch(_) {}
         }
     }
 }
@@ -2299,17 +2493,17 @@ async function updateDatabaseConfig(ev) {
             }
         };
 
-        if (typeof window.showConfirmationModal === 'function') {
-            window.showConfirmationModal({
-                title: 'Update database credentials?',
-                message: `A backup will be created automatically for ${updateData.environment} environment(s).`,
-                confirmText: 'Yes, Update',
-                cancelText: 'Cancel',
-                onConfirm: confirmAction
-            });
-        } else if (confirm(`Are you sure you want to update database credentials for ${updateData.environment} environment(s)? A backup will be created automatically.`)) {
-            await confirmAction();
+        if (typeof window.showConfirmationModal !== 'function') {
+            try { if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
+            return;
         }
+        window.showConfirmationModal({
+            title: 'Update database credentials?',
+            message: `A backup will be created automatically for ${updateData.environment} environment(s).` ,
+            confirmText: 'Yes, Update',
+            cancelText: 'Cancel',
+            onConfirm: confirmAction
+        });
     } catch (err) {
         console.error('[AdminSettings] updateDatabaseConfig error', err);
     }
@@ -2639,8 +2833,8 @@ function showTestEmailModal(templateId) {
                   window.wfNotifications.show(data.message || 'Test email sent successfully.', 'success', { title: 'Test Email' });
               } else if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') {
                   window.showSuccess(data.message || 'Test email sent successfully.');
-              } else {
-                  alert(data.message || 'Test email sent successfully.');
+              } else if (typeof window !== 'undefined' && typeof window.showNotification === 'function') {
+                  window.showNotification(data.message || 'Test email sent successfully.', 'success');
               }
               closeTestEmailModal();
           } else {
@@ -2649,8 +2843,8 @@ function showTestEmailModal(templateId) {
                   window.wfNotifications.show(msg, 'error', { title: 'Test Email' });
               } else if (typeof window !== 'undefined' && typeof window.showError === 'function') {
                   window.showError(msg);
-              } else {
-                  alert(msg);
+              } else if (typeof window !== 'undefined' && typeof window.showNotification === 'function') {
+                  window.showNotification(msg, 'error');
               }
           }
           if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = prevText; }
@@ -2916,7 +3110,16 @@ function showTestEmailModal(templateId) {
   }
 
   async function deleteEmailTemplate(templateId) {
-      if (!confirm('Are you sure you want to delete this email template? This action cannot be undone.')) return;
+      if (typeof window.showConfirmationModal !== 'function') { try { if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {} return; }
+      const ok = await window.showConfirmationModal({
+            title: 'Delete Email Template',
+            message: 'Are you sure you want to delete this email template? This action cannot be undone.',
+            confirmText: 'Delete',
+            confirmStyle: 'danger',
+            icon: '⚠️',
+            iconType: 'danger'
+      });
+      if (!ok) return;
       try {
           const id = String(templateId || '').trim();
           if (!id) return;
@@ -3292,27 +3495,39 @@ function showTestEmailModal(templateId) {
          }
      } catch (err) {
          console.error('Error loading color template:', err);
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error loading color template'); } catch (_) {}
+         if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error loading color template');
      }
  }
  
  async function deleteColorTemplate(templateId) {
-     if (!confirm('Are you sure you want to delete this color template? This action cannot be undone.')) return;
-     try {
+    if (typeof window.showConfirmationModal !== 'function') { 
+        if (typeof window !== 'undefined' && typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); 
+        return; 
+    }
+   const ok = await window.showConfirmationModal({
+          title: 'Delete Color Template',
+          message: 'Are you sure you want to delete this color template? This action cannot be undone.',
+          confirmText: 'Delete',
+          confirmStyle: 'danger',
+          icon: '⚠️',
+          iconType: 'danger'
+   });
+   if (!ok) return;
+    try {
          const data = await ApiClient.get('/api/color_templates.php', {
              method: 'POST',
              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
              body: `action=delete_template&template_id=${templateId}`
          });
          if (data.success) {
-             try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Color template deleted successfully!'); } catch (_) {}
+             if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Color template deleted successfully!');
              loadColorTemplates();
          } else {
-             try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to delete template: ' + data.message); } catch (_) {}
+             if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to delete template: ' + data.message);
          }
      } catch (err) {
          console.error('Error deleting color template:', err);
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error deleting color template'); } catch (_) {}
+         if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error deleting color template');
      }
  }
  
@@ -3479,7 +3694,7 @@ function showTestEmailModal(templateId) {
          }
      });
      if (colors.length === 0) {
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Please add at least one color to the template'); } catch (_) {}
+         if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Please add at least one color to the template');
          return;
      }
      const payload = {
@@ -3493,15 +3708,15 @@ function showTestEmailModal(templateId) {
          const action = isEdit ? 'update_template' : 'create_template';
          const data = await ApiClient.post(`/api/color_templates.php?action=${action}`, payload);
          if (data.success) {
-             try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(isEdit ? 'Color template updated successfully!' : 'Color template created successfully!'); } catch (_) {}
+             if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(isEdit ? 'Color template updated successfully!' : 'Color template created successfully!');
              closeColorTemplateEditModal();
              loadColorTemplates();
          } else {
-             try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to save template: ' + data.message); } catch (_) {}
+             if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to save template: ' + data.message);
          }
      } catch (err) {
          console.error('Error saving color template:', err);
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error saving color template'); } catch (_) {}
+         if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error saving color template');
      }
  }
  
@@ -3619,25 +3834,38 @@ function showTestEmailModal(templateId) {
          if (data.success) {
              showSizeTemplateEditModal(data.template);
          } else {
-             try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to load template: ' + data.message); } catch (_) {}
+             if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to load template: ' + data.message);
+             else console.error('Failed to load template:', data.message);
          }
      } catch (err) {
          console.error('Error loading size template:', err);
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error loading size template'); } catch (_) {}
+         if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error loading size template');
      }
  }
  
  async function deleteSizeTemplate(templateId) {
-     if (!confirm('Are you sure you want to delete this size template? This action cannot be undone.')) return;
-     try {
-         const data = await ApiClient.get('/api/size_templates.php', {
-             method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `action=delete_template&template_id=${templateId}`
-         });
-         if (data.success) {
-             try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Size template deleted successfully!'); } catch (_) {}
+    if (typeof window.showConfirmationModal !== 'function') { 
+        if (typeof window !== 'undefined' && typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); 
+        return; 
+    }
+   const ok = await window.showConfirmationModal({
+          title: 'Delete Size Template',
+          message: 'Are you sure you want to delete this size template? This action cannot be undone.',
+          confirmText: 'Delete',
+          confirmStyle: 'danger',
+          icon: '⚠️',
+          iconType: 'danger'
+   });
+   if (!ok) return;
+    try {
+        const data = await ApiClient.get('/api/size_templates.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `action=delete_template&template_id=${templateId}`
+        });
+        if (data.success) {
+             if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Size template deleted successfully!');
              loadSizeTemplates();
          } else {
-             try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to delete template: ' + data.message); } catch (_) {}
+             if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to delete template: ' + data.message);
          }
      } catch (err) {
          console.error('Error deleting size template:', err);
@@ -3861,6 +4089,7 @@ if (typeof window !== 'undefined') {
     // AI settings shims
     window.openAISettingsModal = openAISettingsModal;
     window.closeAISettingsModal = closeAISettingsModal;
+    window.loadAISettings = loadAISettings;
     window.loadAIProviders = loadAIProviders;
     window.displayAIProviders = displayAIProviders;
     window.toggleSection = toggleSection;
@@ -4393,8 +4622,8 @@ function initAdminSettingsDelegatedListeners() {
         };
     };
     const bgNotify = {
-        ok: (m) => { try { if (typeof window.showSuccess === 'function') window.showSuccess(m); else alert(m); } catch(_) {} },
-        err: (m) => { try { if (typeof window.showError === 'function') window.showError(m); else alert(m); } catch(_) {} },
+        ok: (m) => { try { if (typeof window.showSuccess === 'function') window.showSuccess(m); else if (typeof window.showNotification === 'function') window.showNotification(m, 'success'); } catch(_) {} },
+        err: (m) => { try { if (typeof window.showError === 'function') window.showError(m); else if (typeof window.showNotification === 'function') window.showNotification(m, 'error'); } catch(_) {} },
     };
     const imgUrlFor = (bg) => {
         if (!bg) return '';
@@ -4519,7 +4748,8 @@ function initAdminSettingsDelegatedListeners() {
     
     async function applyBackground(room, backgroundId) {
         if (!room || backgroundId == null) return;
-        if (!confirm('Apply this background?')) return;
+        if (typeof window.showConfirmationModal !== 'function') { try { if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {} return; }
+        { const ok = await window.showConfirmationModal({ title: 'Apply Background', message: 'Apply this background?', confirmText: 'Apply', confirmStyle: 'confirm', icon: 'ℹ️', iconType: 'info' }); if (!ok) return; }
         try {
             const data = await ApiClient.post('/api/backgrounds.php', { action: 'apply', room, background_id: backgroundId });
             if (data && data.success) {
@@ -4535,7 +4765,8 @@ function initAdminSettingsDelegatedListeners() {
     }
     async function deleteBackground(backgroundId, name) {
         if (backgroundId == null) return;
-        if (!confirm(`Delete background "${name || '#'+backgroundId}"? This cannot be undone.`)) return;
+        if (typeof window.showConfirmationModal !== 'function') { try { if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {} return; }
+        { const ok = await window.showConfirmationModal({ title: 'Delete Background', message: `Delete background "${name || ('#'+backgroundId)}"? This cannot be undone.`, confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' }); if (!ok) return; }
         try {
             const data = await ApiClient.post('/api/backgrounds.php?action=delete', { background_id: backgroundId });
             if (data && data.success) {
@@ -4768,8 +4999,7 @@ function initAdminSettingsDelegatedListeners() {
                     window.wfNotifications.show(msg, 'error', { title: 'Room Settings' });
                 } else if (typeof window.showError === 'function') {
                     window.showError(msg);
-                } else {
-                    alert(msg);
+                } else { try { if (typeof window.showNotification === 'function') window.showNotification(msg, 'error'); } catch(_) {}
                 }
             }
         } catch (err) {
@@ -4808,10 +5038,10 @@ function initAdminSettingsDelegatedListeners() {
                         window.wfNotifications.show(msg, 'error', { title: 'Room Settings' });
                     } else if (typeof window.showError === 'function') {
                         window.showError(msg);
-                    } else {
-                        alert(msg);
+                    } else { try { if (typeof window.showNotification === 'function') window.showNotification(msg, 'error'); } catch(_) {}
                     }
-                } catch(_) { alert(msg); }
+                } catch(_) { try { if (typeof window.showNotification === 'function') window.showNotification(msg, 'error'); } catch(__) {}
+                }
             }
         } catch (err) {
             console.warn('[RoomSettings] save error', err);
@@ -4907,10 +5137,10 @@ function initAdminSettingsDelegatedListeners() {
                         window.wfNotifications.show(msg, 'error', { title: 'File Explorer' });
                     } else if (typeof window.showError === 'function') {
                         window.showError(msg);
-                    } else {
-                        alert(msg);
+                    } else { try { if (typeof window.showNotification === 'function') window.showNotification(msg, 'error'); } catch(_) {}
                     }
-                } catch(_) { alert(result?.error || 'Failed to load directory'); }
+                } catch(_) { try { if (typeof window.showNotification === 'function') window.showNotification(result?.error || 'Failed to load directory', 'error'); } catch(__) {}
+                }
             }
         } catch (err) {
             console.warn('[FileExplorer] loadDirectory error', err);
@@ -5047,10 +5277,10 @@ function initAdminSettingsDelegatedListeners() {
                     window.wfNotifications.show(msg, 'error', { title: 'File Explorer' });
                 } else if (typeof window.showError === 'function') {
                     window.showError(msg);
-                } else {
-                    alert(msg);
+                } else { try { if (typeof window.showNotification === 'function') window.showNotification(msg, 'error'); } catch(_) {}
                 }
-            } catch(_) { alert('No editable file selected'); }
+            } catch(_) { try { if (typeof window.showNotification === 'function') window.showNotification('No editable file selected', 'error'); } catch(__) {}
+            }
             return;
         }
         const content = (document.getElementById('fileContent')||{}).value || '';
@@ -5084,7 +5314,8 @@ function initAdminSettingsDelegatedListeners() {
     }
     async function deleteItem(path, type) {
         const itemType = type === 'directory' ? 'folder' : 'file';
-        if (!confirm(`Are you sure you want to delete this ${itemType}?\n\n${path}`)) return;
+        if (typeof window.showConfirmationModal !== 'function') { try { if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {} return; }
+        { const ok = await window.showConfirmationModal({ title: 'Delete Item', message: `Delete this ${itemType}?\n\n${path}`, confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' }); if (!ok) return; }
         try {
             const res = await ApiClient.delete(`/api/file_manager.php?action=delete&path=${encodeURIComponent(path)}`);
             const result = await res.json();

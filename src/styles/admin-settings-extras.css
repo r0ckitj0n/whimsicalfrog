@@ -7,6 +7,15 @@
   border: 0;
 }
 
+/* Compact modal overrides: avoid oversized iframe height */
+.admin-modal.admin-modal--sm .wf-admin-embed-frame,
+.admin-modal.admin-modal--xs .wf-admin-embed-frame {
+  height: auto !important;
+  max-height: 70vh !important;
+  min-height: 220px !important;
+  border: 0;
+}
+
 /* Brand preview card uses CSS variables for live preview */
 #brandPreviewCard {
   background: var(--brand-bg, #ffffff);

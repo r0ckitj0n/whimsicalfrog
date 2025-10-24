@@ -228,11 +228,7 @@ export class ErrorHandler {
       console.log('[ERROR REPORT]', errorInfo);
 
       // Example integration:
-      // await fetch('/api/errors', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(errorInfo)
-      // });
+      // await ApiClient.post('/api/errors', errorInfo);
     } catch (reportError) {
       console.error('Failed to report error:', reportError);
     }

@@ -28,6 +28,8 @@ function handleReceiptSettings()
                 return generateAIReceiptMessage($pdo);
             case 'init_defaults':
                 return initializeDefaultSettings($pdo);
+            case 'delete':
+                return deleteReceiptSetting($pdo);
             default:
                 throw new Exception('Invalid action');
         }
@@ -333,6 +335,21 @@ function initializeDefaultSettings($pdo)
     }
 
     return ['success' => true, 'message' => 'Default receipt settings initialized'];
+}
+
+function deleteReceiptSetting($pdo)
+{
+    $input = json_decode(file_get_contents('php://input'), true);
+    $id = $input['id'] ?? ($_POST['id'] ?? $_GET['id'] ?? null);
+    if (!$id) {
+        throw new Exception('Missing id');
+    }
+    $id = (int)$id;
+    if ($id <= 0) {
+        throw new Exception('Invalid id');
+    }
+    Database::execute("DELETE FROM receipt_settings WHERE id = ?", [$id]);
+    return ['success' => true];
 }
 
 // Handle the request

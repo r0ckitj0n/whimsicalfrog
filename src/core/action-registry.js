@@ -37,9 +37,26 @@ export const centralFunctions = {
     } catch (_) { /* no-op */ }
   },
   // Generic confirmation handler to replace inline onclick="return confirm(...)"
-  confirm: (el, p = {}) => {
+  confirm: async (el, p = {}) => {
     const message = p.message || el.getAttribute('data-confirm') || 'Are you sure?';
-    const proceed = window.confirm(message);
+    if (typeof window.showConfirmationModal !== 'function') {
+      try {
+        if (window.wfNotifications && typeof window.wfNotifications.show === 'function') {
+          window.wfNotifications.show('Confirmation UI unavailable. Action canceled.', 'error');
+        } else if (typeof window.showNotification === 'function') {
+          window.showNotification('Confirmation UI unavailable. Action canceled.', 'error');
+        }
+      } catch(_) {}
+      return;
+    }
+    const proceed = await window.showConfirmationModal({
+      title: p.title || 'Please confirm',
+      message,
+      confirmText: p.confirmText || 'Confirm',
+      confirmStyle: p.confirmStyle || 'confirm',
+      icon: p.icon || '⚠️',
+      iconType: p.iconType || 'warning'
+    });
     if (!proceed) return;
 
     // Navigate if anchor

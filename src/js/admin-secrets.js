@@ -19,11 +19,16 @@
     const path = (ds && ds.path) || window.location.pathname || '';
     if (!/\/admin(\/|%2F)?secrets(\b|\/|$)/i.test(path)) return;
 
-    // Confirm delete actions
+    // Confirm delete actions (branded)
     document.querySelectorAll('form.admin-secret-delete-form').forEach((form) => {
-      form.addEventListener('submit', (e) => {
+      form.addEventListener('submit', async (e) => {
         const key = form.getAttribute('data-key') || '';
-        const ok = window.confirm(`Delete secret "${key}"? This cannot be undone.`);
+        if (typeof window.showConfirmationModal !== 'function') {
+          try { window.showNotification && window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
+          e.preventDefault();
+          return;
+        }
+        const ok = await window.showConfirmationModal({ title: 'Delete Secret', message: `Delete secret "${key}"? This cannot be undone.`, confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' });
         if (!ok) e.preventDefault();
       });
     });

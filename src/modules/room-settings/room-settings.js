@@ -43,10 +43,10 @@ export class RoomSettingsManager {
     const modalWrapper = document.createElement('div');
     modalWrapper.className = 'admin-modal-overlay hidden';
     modalWrapper.innerHTML = `
-      <div class="admin-modal admin-modal-content admin-modal--lg">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
         <div class="modal-header admin-modal-header">
           <h2>Enhanced Room Settings</h2>
-          <button type="button" class="modal-close">×</button>
+          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body">
           <div class="loading-message">
@@ -100,8 +100,8 @@ export class RoomSettingsManager {
    * Bind modal event handlers
    */
   bindModalEvents() {
-    // Close button
-    const closeBtn = this.modal.querySelector('.modal-close');
+    // Close button (support legacy .modal-close and new .admin-modal-close)
+    const closeBtn = this.modal.querySelector('.admin-modal-close, .modal-close');
     if (closeBtn) {
       closeBtn.addEventListener('click', () => this.close());
     }

@@ -170,6 +170,7 @@ function handleSaveConfig()
             'admin_email'     => $isFlagOn('clear_adminEmail') ? '' : $prefer('adminEmail', 'admin_email'),
             // If explicit clear flag set from UI, force blank; else preserve behavior
             'bcc_email'       => $isFlagOn('clear_bccEmail') ? '' : $prefer('bccEmail', 'bcc_email'),
+            'reply_to'        => $isFlagOn('clear_replyTo') ? '' : $prefer('replyTo', 'reply_to'),
             'smtp_enabled'    => isset($_POST['smtpEnabled']) ? 'true' : 'false',
             'smtp_host'       => $isFlagOn('clear_smtpHost') ? '' : $prefer('smtpHost', 'smtp_host'),
             'smtp_port'       => $isFlagOn('clear_smtpPort') ? '' : $prefer('smtpPort', 'smtp_port'),
@@ -177,6 +178,10 @@ function handleSaveConfig()
             'smtp_username'   => $isFlagOn('clear_smtpUsername') ? '' : $prefer('smtpUsername', 'smtp_username'),
             // Password stays in secret store only
             'smtp_encryption' => $isFlagOn('clear_smtpEncryption') ? '' : $prefer('smtpEncryption', 'smtp_encryption'),
+            // Additional SMTP controls
+            'smtp_auth'       => isset($_POST['smtpAuth']) ? 'true' : (isset($existing['smtp_auth']) ? ((in_array(strtolower((string)$existing['smtp_auth']), ['true','1','yes'], true)) ? 'true' : 'false') : 'true'),
+            'smtp_timeout'    => ($isFlagOn('clear_smtpTimeout') ? '' : ($prefer('smtpTimeout', 'smtp_timeout') !== '' ? (string)$prefer('smtpTimeout', 'smtp_timeout') : '')),
+            'smtp_debug'      => isset($_POST['smtpDebug']) ? 'true' : (isset($existing['smtp_debug']) ? ((in_array(strtolower((string)$existing['smtp_debug']), ['true','1','yes'], true)) ? 'true' : 'false') : 'false'),
         ];
 
         // Validation: if SMTP is enabled, require essential fields to be present (from POST or existing/secret)
@@ -271,12 +276,16 @@ function handleSaveConfig()
             'fromName'       => isset($settings['from_name']) ? (string)$settings['from_name'] : '',
             'adminEmail'     => isset($settings['admin_email']) ? (string)$settings['admin_email'] : '',
             'bccEmail'       => isset($settings['bcc_email']) ? (string)$settings['bcc_email'] : '',
+            'replyTo'        => isset($settings['reply_to']) ? (string)$settings['reply_to'] : '',
             'smtpEnabled'    => $smtpEnabled,
             'smtpHost'       => isset($settings['smtp_host']) ? (string)$settings['smtp_host'] : '',
             'smtpPort'       => isset($settings['smtp_port']) ? (string)$settings['smtp_port'] : '',
             'smtpUsername'   => isset($settings['smtp_username']) ? (string)$settings['smtp_username'] : '',
             'smtpPassword'   => '',
-            'smtpEncryption' => isset($settings['smtp_encryption']) ? (string)$settings['smtp_encryption'] : ''
+            'smtpEncryption' => isset($settings['smtp_encryption']) ? (string)$settings['smtp_encryption'] : '',
+            'smtpAuth'       => (function($val){ if ($val === null) return true; if (is_bool($val)) return $val; $s=strtolower((string)$val); return in_array($s,['1','true','yes','on'],true);} )(isset($settings['smtp_auth']) ? $settings['smtp_auth'] : null),
+            'smtpTimeout'    => isset($settings['smtp_timeout']) ? (string)$settings['smtp_timeout'] : '30',
+            'smtpDebug'      => (function($val){ if ($val === null) return false; if (is_bool($val)) return $val; $s=strtolower((string)$val); return in_array($s,['1','true','yes','on'],true);} )(isset($settings['smtp_debug']) ? $settings['smtp_debug'] : null),
         ];
 
         // Ensure no stray output corrupts JSON

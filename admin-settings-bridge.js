@@ -332,9 +332,10 @@ document.addEventListener('click', async (e) => {
 
       const type = button.dataset.type;
       const id = button.dataset.id;
-      if (confirm(`Are you sure you want to delete this ${type}?`)) {
-        deleteAttribute(type, id);
-      }
+      if (typeof window.showConfirmationModal !== 'function') { try { window.showNotification && window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {} return; }
+      const ok = await window.showConfirmationModal({ title: 'Delete Attribute', message: `Delete this ${type}?`, confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' });
+      if (!ok) return;
+      deleteAttribute(type, id);
     }
     return;
   }

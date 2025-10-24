@@ -187,7 +187,7 @@ function isAjaxRequest()
 // Database configuration based on environment
 if ($isLocalhost) {
     // Load local credentials from config/my.cnf
-    $host   = '127.0.0.1';
+    $host   = 'localhost';
     $db     = 'whimsicalfrog';
     $user   = 'root';
     $pass   = 'Palz2516!';
@@ -286,7 +286,7 @@ if ($__wf_enable_db_loggers) {
 // without hardcoding credentials in multiple places.
 
 // Build local config (read from my.cnf when available)
-$__wf_local_host   = '127.0.0.1';
+$__wf_local_host   = 'localhost';
 $__wf_local_db     = 'whimsicalfrog';
 $__wf_local_user   = 'root';
 $__wf_local_pass   = 'Palz2516!';

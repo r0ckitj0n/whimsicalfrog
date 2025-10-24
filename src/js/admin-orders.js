@@ -345,10 +345,10 @@ class AdminOrdersModule {
                 skeleton.className = 'admin-modal-overlay topmost over-header order-modal show';
                 try { skeleton.setAttribute('data-action', 'close-order-editor-on-overlay'); } catch(_) {}
                 skeleton.innerHTML = `
-                  <div class="admin-modal admin-modal-content admin-modal--order-editor wf-admin-panel-visible show">
+                  <div class="admin-modal admin-modal-content admin-modal--order-editor admin-modal--actions-in-header wf-admin-panel-visible show">
                     <div class="modal-header">
                       <h2 class="modal-title">Loading order…</h2>
-                      <a href="/admin/orders" class="modal-close" data-action="close-order-editor" aria-label="Close">×</a>
+                      <a href="/admin/orders" class="admin-modal-close" data-action="close-order-editor" aria-label="Close">×</a>
                     </div>
                     <div class="modal-body">
                       <div class="p-4">Please wait…</div>
@@ -492,14 +492,9 @@ class AdminOrdersModule {
         const id = orderIdText.trim();
         if (!id) return;
         try {
-            const res = await fetch(`/api/delete_order.php?orderId=${encodeURIComponent(id)}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            });
-            let data = {};
-            try { data = await res.json(); } catch (_) {}
+            const data = await ApiClient.delete(`/api/delete_order.php?orderId=${encodeURIComponent(id)}`);
             this.closeDeleteModal();
-            if (res.ok && (data && data.success)) {
+            if (data && data.success) {
                 try { window.showNotification && window.showNotification('Order deleted', 'success'); } catch(_) {}
                 window.location.href = '/admin/orders';
             } else {
@@ -528,23 +523,47 @@ class AdminOrdersModule {
         // Logic to add item via AJAX and update UI
         console.log(`Adding ${quantity} of ${sku} to order ${this.currentOrderId}`);
         // This would involve an API call and then a UI refresh/update.
-        // For now, we can reload the page to see the change.
-        alert('Item adding logic not fully implemented in JS module yet. Reload to see changes if backend is updated.');
+        // For now, show a non-blocking info toast instead of a native alert.
+        try { window.showNotification && window.showNotification('Item adding logic not fully implemented in JS module yet. Reload to see changes if backend is updated.', 'info'); } catch(_) {}
 
     }
 
     async removeItemFromOrder(itemId) {
-        if (!confirm('Are you sure you want to remove this item?')) return;
+        if (typeof window.showConfirmationModal !== 'function') {
+            try { window.showNotification && window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
+            return;
+        }
+        const ok = await window.showConfirmationModal({
+            title: 'Remove Item',
+            message: 'Remove this item from the order?',
+            confirmText: 'Remove',
+            confirmStyle: 'danger',
+            icon: '⚠️',
+            iconType: 'danger'
+        });
+        if (!ok) return;
 
         // Logic to remove item via AJAX and update UI
         console.log(`Removing item ${itemId} from order ${this.currentOrderId}`);
         // This would involve an API call and then a UI refresh/update.
-        // For now, we can reload the page to see the change.
-        alert('Item removal logic not fully implemented in JS module yet. Reload to see changes if backend is updated.');
+        // For now, show a non-blocking info toast instead of a native alert.
+        try { window.showNotification && window.showNotification('Item removal logic not fully implemented in JS module yet. Reload to see changes if backend is updated.', 'info'); } catch(_) {}
     }
 
-    impersonateCustomer(userId) {
-        if (!confirm('Are you sure you want to impersonate this customer?')) return;
+    async impersonateCustomer(userId) {
+        if (typeof window.showConfirmationModal !== 'function') {
+            try { window.showNotification && window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {}
+            return;
+        }
+        const ok = await window.showConfirmationModal({
+            title: 'Impersonate Customer',
+            message: 'Are you sure you want to impersonate this customer?',
+            confirmText: 'Impersonate',
+            confirmStyle: 'confirm',
+            icon: 'ℹ️',
+            iconType: 'info'
+        });
+        if (!ok) return;
         window.location.href = `/?impersonate=${userId}`; // Note: impersonate may need to remain as query param
     }
 

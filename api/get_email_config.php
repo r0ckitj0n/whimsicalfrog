@@ -23,13 +23,28 @@ try {
         'fromName'       => isset($settings['from_name']) ? (string)$settings['from_name'] : '',
         'adminEmail'     => isset($settings['admin_email']) ? (string)$settings['admin_email'] : '',
         'bccEmail'       => isset($settings['bcc_email']) ? (string)$settings['bcc_email'] : '',
+        'replyTo'        => isset($settings['reply_to']) ? (string)$settings['reply_to'] : '',
         'smtpEnabled'    => $smtpEnabled,
         'smtpHost'       => isset($settings['smtp_host']) ? (string)$settings['smtp_host'] : '',
         'smtpPort'       => isset($settings['smtp_port']) ? (string)$settings['smtp_port'] : '',
         'smtpUsername'   => isset($settings['smtp_username']) ? (string)$settings['smtp_username'] : '',
         // Never return password
         'smtpPassword'   => '',
-        'smtpEncryption' => isset($settings['smtp_encryption']) ? (string)$settings['smtp_encryption'] : ''
+        'smtpEncryption' => isset($settings['smtp_encryption']) ? (string)$settings['smtp_encryption'] : '',
+        // Additional SMTP settings
+        'smtpAuth'       => (function($val){
+            if ($val === null) return true; // default true
+            if (is_bool($val)) return $val;
+            $s = strtolower((string)$val);
+            return in_array($s, ['1','true','yes','on'], true);
+        })(isset($settings['smtp_auth']) ? $settings['smtp_auth'] : null),
+        'smtpTimeout'    => isset($settings['smtp_timeout']) ? (string)$settings['smtp_timeout'] : '30',
+        'smtpDebug'      => (function($val){
+            if ($val === null) return false;
+            if (is_bool($val)) return $val;
+            $s = strtolower((string)$val);
+            return in_array($s, ['1','true','yes','on'], true);
+        })(isset($settings['smtp_debug']) ? $settings['smtp_debug'] : null)
     ];
 
     // Display-only fallbacks: if email category is empty, show sensible legacy/global defaults

@@ -443,6 +443,16 @@ class EmailHelper
                 'reply_to' => $settings['reply_to'] ?? ''
             ];
 
+            // Additional SMTP controls (with sane defaults)
+            $smtpAuthRaw = $settings['smtp_auth'] ?? 'true';
+            $config['smtp_auth'] = in_array(strtolower((string)$smtpAuthRaw), ['1','true','yes','on'], true);
+
+            $smtpTimeoutRaw = $settings['smtp_timeout'] ?? 30;
+            $config['smtp_timeout'] = (int)$smtpTimeoutRaw ?: 30;
+
+            $smtpDebugRaw = $settings['smtp_debug'] ?? 'false';
+            $config['smtp_debug'] = in_array(strtolower((string)$smtpDebugRaw), ['1','true','yes','on'], true) ? 2 : 0; // 2 ~ client/server msgs
+
             // Override sensitive values from secret store if present
             $secPass = secret_get('smtp_password');
             if ($secPass !== null && $secPass !== '') {

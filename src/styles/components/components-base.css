@@ -6,7 +6,7 @@
 /* Consistent header with fade effect used across all pages except rooms 1-5 */
 /* Apply gradient background and define a sensible default header height */
 .site-header.universal-page-header {
-    background: var(--gradient-header);
+    background: var(--site-header-bg, var(--gradient-header));
     --header-height: 80px;
     font-family: var(--font-primary, 'Merienda', cursive);
     position: fixed;
@@ -17,6 +17,8 @@
     z-index: var(--z-index-page-header, 300);
     margin: 0;
     padding-right: 20px;
+    /* Header text should follow primary brand color */
+    color: var(--brand-primary);
 }
 .site-header.universal-page-header .header-content {
     display: grid;

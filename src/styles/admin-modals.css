@@ -139,6 +139,232 @@
   --admin-modal-max-width: 90vw;
   --admin-modal-max-height: 85vh;
 }
+.admin-modal.admin-modal--sm {
+  --admin-modal-width: clamp(420px, 60vw, 640px);
+  --admin-modal-max-width: 85vw;
+  --admin-modal-max-height: 80vh;
+}
+.admin-modal.admin-modal--xs {
+  --admin-modal-width: clamp(340px, 42vw, 460px);
+  --admin-modal-max-width: 78vw;
+  --admin-modal-max-height: 70vh;
+}
+/* Square 200x200 modal */
+.admin-modal.admin-modal--square-200 {
+  --admin-modal-width: 200px;
+  --admin-modal-max-width: 200px;
+  --admin-modal-height: 200px;
+  --admin-modal-max-height: 200px;
+  width: 200px !important;
+  height: 200px !important;
+  max-width: 200px !important;
+  max-height: 200px !important;
+  min-width: 0 !important;
+}
+.admin-modal.admin-modal--square-200 .modal-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px !important;
+}
+.admin-modal.admin-modal--square-200 .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+}
+/* Square 260x260 modal */
+.admin-modal.admin-modal--square-260 {
+  --admin-modal-width: 260px;
+  --admin-modal-max-width: 260px;
+  --admin-modal-height: 260px;
+  --admin-modal-max-height: 260px;
+  width: 260px !important;
+  height: 260px !important;
+  max-width: 260px !important;
+  max-height: 260px !important;
+  min-width: 0 !important;
+}
+.admin-modal.admin-modal--square-260 .modal-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  padding: 4px !important;
+}
+.admin-modal.admin-modal--square-260 .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+}
+/* Square 300x300 modal */
+.admin-modal.admin-modal--square-300 {
+  --admin-modal-width: 300px;
+  --admin-modal-max-width: 300px;
+  --admin-modal-height: 300px;
+  --admin-modal-max-height: 300px;
+  width: 300px !important;
+  height: 300px !important;
+  max-width: 300px !important;
+  max-height: 300px !important;
+  min-width: 0 !important;
+}
+.admin-modal.admin-modal--square-300 .modal-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden !important;
+  overflow-y: hidden !important;
+  padding: 0 !important;
+}
+.admin-modal.admin-modal--square-300 .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0 !important; /* override global frame border */
+  box-sizing: border-box !important;
+}
+
+/* Hard, ID-scoped overrides to guarantee fit for Cart Button Texts modal */
+#cartButtonTextsModal .modal-body {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+#cartButtonTextsModal .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal-content {
+  padding: 0 !important; /* remove inner panel padding so iframe can touch edges */
+}
+#cartButtonTextsModal .modal-header {
+  padding: 6px 8px !important; /* compact header to maximize body area */
+  position: static !important; /* allow close button to sit inline */
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important; /* allow stacking in tight width */
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
+#cartButtonTextsModal .modal-header > h2 { flex: 1 0 100% !important; margin: 0 !important; }
+#cartButtonTextsModal .modal-header-actions {
+  margin-left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important; /* allow stacking if cramped */
+}
+#cartButtonTextsModal .admin-modal-close {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  margin-left: auto !important; /* push X to far right on second row */
+  padding: 6px !important;
+}
+
+/* Generic utilities to avoid inline styles in JS */
+.wf-modal-body--fill { padding: 0 !important; overflow: hidden !important; display: flex !important; min-height: 0 !important; }
+.wf-modal-body--scroll { padding: 0 !important; overflow: auto !important; min-height: 0 !important; }
+.wf-embed--fill { width: 100% !important; height: 100% !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
+
+/* Force full-height layout for the square modal body and children */
+#cartButtonTextsModal .admin-modal.admin-modal--square-300 {
+  display: flex !important;
+  flex-direction: column !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal--square-300 .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  padding: 0 !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal--square-300 .modal-body > * {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+/* Generic: actions-in-header layout (title, status+Save group, Close X) */
+.admin-modal--actions-in-header .modal-header {
+  display: grid !important;
+  grid-template-columns: 1fr auto auto !important; /* title | actions | close */
+  align-items: center !important;
+  gap: 8px !important;
+  position: static !important;
+}
+.admin-modal.admin-modal--actions-in-header .modal-header { padding-right: 0 !important; }
+body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .modal-header { position: static !important; padding-right: 0 !important; }
+.admin-modal--actions-in-header .modal-header > h2 {
+  margin: 0 !important;
+  min-width: 0 !important; /* allow title to shrink */
+}
+.admin-modal--actions-in-header .modal-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important; /* keep status + Save together */
+  grid-column: 2 !important;
+  justify-self: end !important;
+}
+.admin-modal--actions-in-header .admin-modal-close {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  grid-column: 3 !important;
+  justify-self: end !important;
+  /* Circular close button with precise centering */
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;            /* avoid shifting the glyph */
+  border-radius: 9999px !important;
+  background-color: var(--brand-primary, #87ac3a) !important;
+  border: 1px solid transparent !important;
+  color: #ffffff !important;
+  display: inline-flex !important;  /* center the × */
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;        /* don't rely on line-height for centering */
+  font-size: 18px !important;       /* scale glyph to fit the circle nicely */
+  text-align: center !important;
+  cursor: pointer !important;
+}
+/* Override absolute positioning from legacy admin header rule */
+body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-modal-close {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+}
+
+.admin-modal--actions-in-header .admin-modal-close:hover { background-color: var(--brand-secondary, #BF5700) !important; color: #ffffff !important; border-color: var(--brand-secondary, #BF5700) !important; }
+.admin-modal--actions-in-header .admin-modal-close:focus { outline: none !important; }
+
+/* Header Save button alignment and sizing (match Shopping Cart modal) */
+.admin-modal--actions-in-header .modal-header-actions .btn {
+  height: 28px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  font-size: 0.875rem !important; /* text-sm */
+  line-height: 1.25rem !important;
+}
+.admin-modal--actions-in-header .modal-header-actions .btn.btn-sm { height: 28px !important; padding: 0 10px !important; }
+.admin-modal--actions-in-header .modal-header-actions .btn.btn-primary { color: #fff !important; }
+.admin-modal--actions-in-header .modal-header-actions .btn.btn-primary:hover { filter: brightness(0.96); }
+
+/* Receipt Messages modal: header/action layout and full-height body */
+#receiptMessagesModal .admin-modal.admin-modal-content { padding: 0 !important; }
+#receiptMessagesModal .modal-header { padding: 6px 8px !important; }
+#receiptMessagesModal .modal-body { padding: 0 !important; overflow: auto !important; }
+#receiptMessagesModal .wf-admin-embed-frame { width: 100% !important; height: auto !important; min-height: 1200px !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
+
+/* Shop Encouragements modal: mirror Cart Button Texts sizing and header */
+#shopEncouragementsModal .admin-modal.admin-modal-content { padding: 0 !important; }
+#shopEncouragementsModal .modal-header { padding: 6px 8px !important; }
+#shopEncouragementsModal .admin-modal.admin-modal--square-300 { display: flex !important; flex-direction: column !important; }
+#shopEncouragementsModal .admin-modal.admin-modal--square-300 .modal-body { flex: 1 1 auto !important; min-height: 0 !important; display: flex !important; padding: 0 !important; }
+#shopEncouragementsModal .admin-modal.admin-modal--square-300 .modal-body > * { flex: 1 1 auto !important; min-height: 0 !important; }
+#shopEncouragementsModal .wf-admin-embed-frame { width: 100% !important; height: 100% !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
 .admin-modal.admin-modal--lg {
   --admin-modal-width: 80vw;
   --admin-modal-max-width: 95vw;
@@ -395,6 +621,28 @@ body:has(.admin-modal-overlay.show) {
   z-index: var(--z-admin-overlay-content,  10101);
 }
 
+/* XS modal: force width to auto-fit content, within reasonable caps */
+.admin-modal.admin-modal--xs { width: auto !important; max-width: clamp(340px, 42vw, 460px) !important; }
+
+/* Make small/extra-small modals auto-fit their content (avoid big empty bodies) */
+.admin-modal.admin-modal--sm .modal-body,
+.admin-modal.admin-modal--xs .modal-body {
+  flex: 0 0 auto !important;
+  overflow: visible !important;
+}
+
+/* XS modal: tighter paddings */
+.admin-modal.admin-modal--xs .modal-body { padding: 0.125rem 0.25rem !important; }
+.admin-modal.admin-modal--xs .modal-header { padding: 0.125rem 0.25rem !important; }
+
+/* Prevent oversized iframes inside compact modals */
+.admin-modal.admin-modal--sm .wf-admin-embed-frame,
+.admin-modal.admin-modal--xs .wf-admin-embed-frame {
+  height: auto !important;
+  max-height: 70vh !important;
+  min-height: 220px !important;
+}
+
 /* Normalize inner panel appearance (used by JS instead of inline styles) */
 .wf-admin-panel-visible {
   opacity: 1 !important;
@@ -489,10 +737,13 @@ body.wf-no-scroll { overflow: hidden !important; }
 
 /* Modal close button styles (replacing prior inline styles) */
 .admin-modal-close {
-  font-size: 32px;
+  font-size: 28px;
   line-height: 1;
   padding: 12px;
   cursor: pointer;
+  display: inline-flex;            /* ensure glyph centers vertically */
+  align-items: center;
+  justify-content: center;
 }
 
 /* Tighter padding variant when used in dense headers */
@@ -604,6 +855,13 @@ body.wf-no-scroll { overflow: hidden !important; }
   scrollbar-color: #c1c1c1 #f1f1f1;
 }
 
+#customerMessagesModal .admin-modal {
+  --admin-modal-max-height: 92vh;
+}
+#customerMessagesModal .modal-body {
+  max-height: 85vh;
+}
+
 #inventoryModalOuter.admin-modal-overlay {
   align-items: stretch !important;
   justify-content: center !important;
@@ -653,6 +911,160 @@ body.wf-no-scroll { overflow: hidden !important; }
   overflow: auto;
 }
 .admin-scrollbox--md { --admin-scrollbox-max-height: 50vh; }
+
+/* Icon-only Actions column (opt-in)
+   Apply .admin-actions-icons on a container (e.g., modal root) to render
+   the last column action buttons as compact icons instead of words. */
+.admin-actions-icons .admin-table td:last-child .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  line-height: 1;
+  font-size: 0; /* hide label text; keep title/aria for a11y */
+}
+.admin-actions-icons .admin-table td:last-child .btn::before {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Map common actions by data-action (preferred) */
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-preview"]::before { content: "👁️"; }
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-preview-inline"]::before { content: "🪟"; }
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-send-test"]::before { content: "✉️"; }
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-edit"]::before { content: "✏️"; }
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-duplicate"]::before { content: "⧉"; }
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-archive"]::before { content: "🗄️"; }
+
+/* Generic fallbacks by title prefix (covers other tables using similar labels) */
+.admin-actions-icons .admin-table td:last-child .btn[title^="Preview"]::before { content: "👁️"; }
+.admin-actions-icons .admin-table td:last-child .btn[title^="Send"]::before { content: "✉️"; }
+.admin-actions-icons .admin-table td:last-child .btn[title^="Edit"]::before { content: "✏️"; }
+.admin-actions-icons .admin-table td:last-child .btn[title^="Duplicate"]::before { content: "⧉"; }
+.admin-actions-icons .admin-table td:last-child .btn[title^="Archive"]::before { content: "🗄️"; }
+
+/* Tight spacing between icons */
+.admin-actions-icons .admin-table td:last-child .btn + .btn { margin-left: 6px; }
+
+/* Make icon-only buttons visually consistent (shape, hover) */
+.admin-actions-icons .admin-table td:last-child .btn,
+.admin-actions-icons .row-actions .btn {
+  border-radius: 8px;
+  background-color: #e5e7eb; /* gray-200 */
+  color: #111827; /* gray-900 */
+}
+.admin-actions-icons .admin-table td:last-child .btn:hover,
+.admin-actions-icons .row-actions .btn:hover {
+  background-color: #d1d5db; /* gray-300 */
+}
+
+/* Make row-actions compact and hide text (icons only) */
+.admin-actions-icons .row-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  line-height: 1;
+  font-size: 0; /* hide label text; keep title/aria for a11y */
+}
+.admin-actions-icons .row-actions .btn::before { font-size: 14px; line-height: 1; }
+
+/* SVG mask icons (Lucide-like minimal shapes) to replace emoji content */
+/* Base helper (applied per selector with specific mask-image) */
+.admin-actions-icons .admin-table td:last-child .btn::before,
+.admin-actions-icons .row-actions .btn::before,
+.admin-actions-icons .btn-chip[download]::before,
+.wf-icons-legend .legend-icon::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 14px 14px;
+  mask-size: 14px 14px;
+}
+
+/* Eye (preview) */
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-preview"]::before,
+.admin-actions-icons .admin-table td:last-child .btn[title^="Preview"]::before,
+.admin-actions-icons .row-actions .btn[title^="Preview"]::before,
+.wf-icons-legend .legend-icon[data-role="preview"]::before {
+  -webkit-mask-image: url('/src/assets/icons/eye.svg');
+          mask-image: url('/src/assets/icons/eye.svg');
+}
+
+/* Window (inline preview) */
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-preview-inline"]::before,
+.admin-actions-icons .row-actions .btn[data-action="tm-preview-inline"]::before,
+.wf-icons-legend .legend-icon[data-role="preview-inline"]::before {
+  -webkit-mask-image: url('/src/assets/icons/window.svg');
+          mask-image: url('/src/assets/icons/window.svg');
+}
+
+/* Mail (send test) */
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-send-test"]::before,
+.admin-actions-icons .admin-table td:last-child .btn[title^="Send"]::before,
+.admin-actions-icons .row-actions .btn[title^="Send"]::before,
+.wf-icons-legend .legend-icon[data-role="send"]::before {
+  -webkit-mask-image: url('/src/assets/icons/mail.svg');
+          mask-image: url('/src/assets/icons/mail.svg');
+}
+
+/* Pencil (edit) */
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-edit"]::before,
+.admin-actions-icons .admin-table td:last-child .btn[title^="Edit"]::before,
+.admin-actions-icons .row-actions .btn[title^="Edit"]::before,
+.wf-icons-legend .legend-icon[data-role="edit"]::before {
+  -webkit-mask-image: url('/src/assets/icons/pencil.svg');
+          mask-image: url('/src/assets/icons/pencil.svg');
+}
+
+/* Copy (duplicate) */
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-duplicate"]::before,
+.admin-actions-icons .admin-table td:last-child .btn[title^="Duplicate"]::before,
+.admin-actions-icons .row-actions .btn[title^="Duplicate"]::before,
+.wf-icons-legend .legend-icon[data-role="duplicate"]::before {
+  -webkit-mask-image: url('/src/assets/icons/copy.svg');
+          mask-image: url('/src/assets/icons/copy.svg');
+}
+
+/* Archive */
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-archive"]::before,
+.admin-actions-icons .admin-table td:last-child .btn[title^="Archive"]::before,
+.admin-actions-icons .row-actions .btn[title^="Archive"]::before,
+.wf-icons-legend .legend-icon[data-role="archive"]::before {
+  -webkit-mask-image: url('/src/assets/icons/archive.svg');
+          mask-image: url('/src/assets/icons/archive.svg');
+}
+
+/* Trash (delete) */
+.admin-actions-icons .admin-table td:last-child .btn[title^="Delete"]::before,
+.admin-actions-icons .row-actions .btn[title^="Delete"]::before {
+  -webkit-mask-image: url('/src/assets/icons/trash.svg');
+          mask-image: url('/src/assets/icons/trash.svg');
+}
+
+/* Download */
+.admin-actions-icons .btn-chip[download] { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; min-width:28px; padding:0; border-radius:8px; font-size:0; background:#e5e7eb; color:#111827; }
+.admin-actions-icons .btn-chip[download]:hover { background:#d1d5db; }
+.admin-actions-icons .btn-chip[download]::before,
+.admin-actions-icons .admin-table td:last-child .btn[title^="Download"]::before,
+.admin-actions-icons .row-actions .btn[title^="Download"]::before {
+  -webkit-mask-image: url('/src/assets/icons/download.svg');
+          mask-image: url('/src/assets/icons/download.svg');
+}
 .admin-scrollbox--lg { --admin-scrollbox-max-height: 60vh; }
 .admin-scrollbox--xl { --admin-scrollbox-max-height: 75vh; }
 

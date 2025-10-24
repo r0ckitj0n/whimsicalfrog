@@ -43,29 +43,51 @@ class AdminLogger
     private static function createAdminLogTable()
     {
         try {
-            $sql = "CREATE TABLE IF NOT EXISTS admin_activity_logs (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NULL,
-                session_id VARCHAR(255) NULL,
-                activity_type VARCHAR(100) NOT NULL,
-                activity_category VARCHAR(50) NOT NULL,
-                activity_description TEXT NOT NULL,
-                entity_type VARCHAR(50) NULL,
-                entity_id VARCHAR(100) NULL,
-                old_values JSON NULL,
-                new_values JSON NULL,
-                ip_address VARCHAR(45) NULL,
-                user_agent TEXT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_user_id (user_id),
-                INDEX idx_activity_type (activity_type),
-                INDEX idx_activity_category (activity_category),
-                INDEX idx_created_at (created_at)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+            $exists = Database::queryAll("SHOW TABLES LIKE 'admin_activity_logs'");
+            if (!$exists) {
+                $sql = "CREATE TABLE admin_activity_logs (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    admin_user_id INT NULL,
+                    action_type VARCHAR(100) NOT NULL,
+                    action_description TEXT,
+                    target_type VARCHAR(100) NULL,
+                    target_id VARCHAR(100) NULL,
+                    ip_address VARCHAR(45) NULL,
+                    `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_admin_user_id (admin_user_id),
+                    INDEX idx_action_type (action_type),
+                    INDEX idx_timestamp (`timestamp`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+                Database::execute($sql);
+                return;
+            }
 
-            Database::execute($sql);
+            $cols = Database::queryAll("SHOW COLUMNS FROM admin_activity_logs");
+            $colNames = array_map(function($r){ return $r['Field']; }, $cols ?: []);
+
+            if (in_array('user_id', $colNames) && !in_array('admin_user_id', $colNames)) {
+                Database::execute("ALTER TABLE admin_activity_logs CHANGE `user_id` `admin_user_id` INT NULL");
+            }
+            if (in_array('activity_type', $colNames) && !in_array('action_type', $colNames)) {
+                Database::execute("ALTER TABLE admin_activity_logs CHANGE `activity_type` `action_type` VARCHAR(100) NOT NULL");
+            }
+            if (in_array('activity_description', $colNames) && !in_array('action_description', $colNames)) {
+                Database::execute("ALTER TABLE admin_activity_logs CHANGE `activity_description` `action_description` TEXT");
+            }
+            if (in_array('entity_type', $colNames) && !in_array('target_type', $colNames)) {
+                Database::execute("ALTER TABLE admin_activity_logs CHANGE `entity_type` `target_type` VARCHAR(100) NULL");
+            }
+            if (in_array('entity_id', $colNames) && !in_array('target_id', $colNames)) {
+                Database::execute("ALTER TABLE admin_activity_logs CHANGE `entity_id` `target_id` VARCHAR(100) NULL");
+            }
+            if (!in_array('timestamp', $colNames)) {
+                Database::execute("ALTER TABLE admin_activity_logs ADD COLUMN `timestamp` TIMESTAMP DEFAULT CURRENT_TIMESTAMP");
+            }
+            try { Database::execute("CREATE INDEX idx_timestamp ON admin_activity_logs (`timestamp`)"); } catch (Exception $e) {}
+            try { Database::execute("CREATE INDEX idx_admin_user_id ON admin_activity_logs (admin_user_id)"); } catch (Exception $e) {}
+            try { Database::execute("CREATE INDEX idx_action_type ON admin_activity_logs (action_type)"); } catch (Exception $e) {}
         } catch (Exception $e) {
-            error_log("Failed to create admin_activity_logs table: " . $e->getMessage());
+            error_log("Failed to create/migrate admin_activity_logs table: " . $e->getMessage());
         }
     }
 
@@ -75,31 +97,24 @@ class AdminLogger
     public static function logActivity($activityType, $category, $description, $entityType = null, $entityId = null, $oldValues = null, $newValues = null)
     {
         try {
+            $actionDescription = $description;
+            if ($category) {
+                $actionDescription = ($description ? ($description . ' ') : '') . "[category: $category]";
+            }
+
             $result = Database::execute(
-                "INSERT INTO admin_activity_logs (\n                    user_id, session_id, activity_type, activity_category, \n                    activity_description, entity_type, entity_id, \n                    old_values, new_values, ip_address, user_agent\n                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "INSERT INTO admin_activity_logs (admin_user_id, action_type, action_description, target_type, target_id, ip_address) VALUES (?, ?, ?, ?, ?, ?)",
                 [
                     self::$userId,
-                    self::$sessionId,
                     $activityType,
-                    $category,
-                    $description,
+                    $actionDescription,
                     $entityType,
                     $entityId,
-                    $oldValues ? json_encode($oldValues) : null,
-                    $newValues ? json_encode($newValues) : null,
-                    self::$ipAddress,
-                    self::$userAgent
+                    self::$ipAddress
                 ]
             );
 
-            // Also log to file for backup
-            Logger::info("Admin Activity: $activityType", [
-                'category' => $category,
-                'description' => $description,
-                'entity_type' => $entityType,
-                'entity_id' => $entityId,
-                'user_id' => self::$userId
-            ]);
+            Logger::info("Admin Activity: $activityType", [ 'category' => $category, 'description' => $description, 'entity_type' => $entityType, 'entity_id' => $entityId, 'user_id' => self::$userId ]);
 
             return $result;
         } catch (Exception $e) {

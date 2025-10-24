@@ -515,6 +515,8 @@ if (__WF_IS_ADMIN) {
             try { import('./global-notifications.js').catch(() => {}); } catch (_) {}
             // Load admin-specific notification system for persistent toasts with actions
             try { import('./admin-notifications.js').catch(() => {}); } catch (_) {}
+            // Ensure branded confirmation modal is available on admin pages
+            try { import('./global-modals.js').catch(() => {}); } catch (_) {}
 
             // Optional hint handling (arrivals from Health modal or elsewhere)
             try {
@@ -729,7 +731,7 @@ if (__WF_IS_ADMIN) {
                         el.setAttribute('tabindex','-1');
                         el.setAttribute('aria-labelledby','cssCatalogTitle');
                         el.innerHTML = `
-                          <div class="admin-modal admin-modal-content admin-modal--lg">
+                          <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
                             <div class="modal-header">
                               <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>
                               <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>

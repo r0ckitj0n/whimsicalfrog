@@ -1,4 +1,6 @@
 <?php
+require_once dirname(__DIR__) . '/includes/auth.php';
+requireAdmin(false);
 // Admin Settings (JS-powered). Renders the wrapper the module expects and seeds minimal context.
 // Guard auth if helper exists - TEMPORARILY DISABLED FOR DEVELOPMENT
 // if (function_exists('isLoggedIn') && !isLoggedIn()) {
@@ -81,11 +83,14 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
   <!-- STATIC: Shipping & Distance Settings Modal (outside <noscript>) -->
   <div id="shippingSettingsModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shippingSettingsTitle">
-    <div class="admin-modal admin-modal-content">
-      <div class="modal-header flex items-center justify-between">
+    <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
+      <div class="modal-header">
         <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings</h2>
+        <div class="modal-header-actions">
+          <span class="text-sm text-gray-600" id="shippingSettingsStatus" aria-live="polite"></span>
+          <button type="button" class="btn btn-primary btn-sm" id="shippingSettingsSaveBtn">Save Settings</button>
+        </div>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
-        <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"></span>
       </div>
       <div class="modal-body">
         <form id="shippingSettingsFormStatic" data-action="prevent-submit" class="wf-modal-form space-y-4">
@@ -106,6 +111,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
                 <input id="upsSecret" type="password" class="form-input w-full" placeholder="optional" />
               </div>
             </div>
+
           </fieldset>
           <fieldset class="border rounded p-3">
             <legend class="text-sm font-semibold">FedEx</legend>
@@ -128,9 +134,162 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
           <div class="wf-modal-actions">
             <button type="button" class="btn wf-modal-button admin-modal-close">Cancel</button>
-            <button type="button" class="btn btn-primary wf-modal-button" id="shippingSettingsSaveBtn">Save Settings</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Colors & Fonts Modal (branding settings moved here) -->
+    <div id="colorsFontsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="colorsFontsTitle">
+      <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="colorsFontsTitle" class="admin-card-title">🎨 Colors &amp; Fonts</h2>
+          <div class="modal-header-actions">
+            <span id="colorsFontsStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+            <button type="button" class="btn btn-primary btn-sm" data-action="business-save-branding">Save</button>
+          </div>
+          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body">
+          <form id="colorsFontsForm" data-action="prevent-submit" class="space-y-4">
+            <div class="grid gap-4 md:grid-cols-2">
+              <div class="md:col-span-2">
+                <div id="brandPreviewCard" class="rounded border p-3">
+                  <div id="brandPreviewTitle" class="font-bold mb-1">Brand Backup</div>
+                  <div id="brandPreviewText" class="text-sm"><span class="text-gray-600">Saved:</span> <span id="brandBackupSavedAt">Never</span></div>
+                  <div id="brandPreviewSwatches" class="flex items-center gap-2 mt-2" aria-hidden="true"></div>
+                  <div class="flex items-center gap-2 mt-3">
+                    <button type="button" class="btn-secondary" data-action="business-backup-open">Create/Replace Backup</button>
+                    <button type="button" class="btn-secondary" data-action="business-reset-branding">Reset Branding</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t pt-4 mt-4">
+              <h3 class="text-sm font-semibold mb-2">Brand Fonts</h3>
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label class="block text-sm font-medium mb-1">Primary Font</label>
+                  <div class="flex items-center gap-2">
+                    <input id="brandFontPrimary" type="hidden" />
+                    <span id="brandFontPrimaryLabel" class="font-preview-label font-preview-label--primary">System UI (Sans-serif)</span>
+                    <button type="button" class="btn btn-secondary btn-sm" data-action="open-font-picker" data-font-target="primary">Edit</button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium mb-1">Secondary Font</label>
+                  <div class="flex items-center gap-2">
+                    <input id="brandFontSecondary" type="hidden" />
+                    <span id="brandFontSecondaryLabel" class="font-preview-label font-preview-label--secondary">Merriweather (Serif)</span>
+                    <button type="button" class="btn btn-secondary btn-sm" data-action="open-font-picker" data-font-target="secondary">Edit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t pt-4 mt-4">
+              <h3 class="text-sm font-semibold mb-2">Brand Colors</h3>
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label for="brandPrimary" class="block text-sm font-medium mb-1">Primary Color</label>
+                  <input id="brandPrimary" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="brandSecondary" class="block text-sm font-medium mb-1">Secondary Color</label>
+                  <input id="brandSecondary" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="brandAccent" class="block text-sm font-medium mb-1">Accent Color</label>
+                  <input id="brandAccent" type="color" class="form-input w-16" />
+                </div>
+                <div class="md:col-span-2">
+                  <h4 class="text-xs font-semibold text-gray-600 mt-2">Admin Site Colors</h4>
+                </div>
+                <div>
+                  <label for="brandBackground" class="block text-sm font-medium mb-1">Background Color</label>
+                  <input id="brandBackground" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="brandText" class="block text-sm font-medium mb-1">Text Color</label>
+                  <input id="brandText" type="color" class="form-input w-16" />
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t pt-4 mt-4">
+              <h3 class="text-sm font-semibold mb-2">Public Site Colors</h3>
+              <div class="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label for="publicHeaderBg" class="block text-sm font-medium mb-1">Header Background</label>
+                  <input id="publicHeaderBg" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="publicHeaderText" class="block text-sm font-medium mb-1">Header Text</label>
+                  <input id="publicHeaderText" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="publicModalBg" class="block text-sm font-medium mb-1">Modal Background</label>
+                  <input id="publicModalBg" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="publicModalText" class="block text-sm font-medium mb-1">Modal Text</label>
+                  <input id="publicModalText" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="publicPageBg" class="block text-sm font-medium mb-1">Page Background</label>
+                  <input id="publicPageBg" type="color" class="form-input w-16" />
+                </div>
+                <div>
+                  <label for="publicPageText" class="block text-sm font-medium mb-1">Page Text</label>
+                  <input id="publicPageText" type="color" class="form-input w-16" />
+                </div>
+              </div>
+            </div>
+
+            <div class="border-t pt-4 mt-4">
+              <h3 class="text-sm font-semibold mb-2">Brand Palette</h3>
+              <div id="brandPaletteContainer" class="mb-2"></div>
+              <div class="flex items-center gap-2">
+                <input id="newPaletteName" type="text" class="form-input flex-grow" placeholder="--css-variable-name" />
+                <input id="newPaletteHex" type="color" class="form-input w-16" value="#000000" />
+                <button type="button" class="btn btn-secondary" data-action="business-palette-add">Add</button>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label for="customCssVars" class="block text-sm font-medium mb-1">Custom CSS Variables</label>
+              <textarea id="customCssVars" class="form-textarea w-full" rows="3" placeholder="--brand-border: #cccccc;"></textarea>
+            </div>
+
+            <div class="wf-modal-actions">
+              <button type="button" class="btn btn-primary" data-action="business-save-branding">Save Branding</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branding Backup Confirm Modal -->
+    <div id="brandingBackupModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="brandingBackupTitle">
+      <div class="admin-modal admin-modal-content max-w-xl admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="brandingBackupTitle" class="admin-card-title">Confirm Branding Backup</h2>
+          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body space-y-3">
+          <p class="text-sm text-gray-700">
+            Creating a new backup will <strong>replace the existing backup</strong>. The current CSS settings (colors, fonts, custom variables, and palette) will be saved as the new backup.
+          </p>
+          <div class="rounded border p-3 bg-gray-50">
+            <div class="font-semibold mb-1 text-sm">Backup Preview</div>
+            <div id="brandingBackupSummary" class="text-sm text-gray-700">Loading…</div>
+          </div>
+        </div>
+        <div class="modal-footer flex items-center justify-end gap-2">
+          <button type="button" class="btn btn-secondary" data-action="close-admin-modal">Cancel</button>
+          <button type="button" class="btn btn-primary" data-action="business-backup-confirm">Create Backup</button>
+        </div>
       </div>
     </div>
   </div>
@@ -216,9 +375,13 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     }
   ?>
   <div id="shoppingCartModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shoppingCartSettingsTitle">
-    <div class="admin-modal admin-modal-content">
+    <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="shoppingCartSettingsTitle" class="admin-card-title">🛒 Shopping Cart Settings</h2>
+        <div class="modal-header-actions">
+          <span id="shoppingCartStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+          <button type="button" class="btn btn-primary btn-sm" id="saveCartSettingsBtn">Save</button>
+        </div>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
@@ -285,17 +448,14 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               <p class="text-xs text-gray-500 mt-2">No sales recorded yet. Upsells will populate automatically once orders are placed.</p>
             <?php endif; ?>
           </div>
-          <div class="mt-3 flex items-center justify-end gap-2">
-            <button type="button" class="btn btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal">Close</button>
-            <button type="button" class="btn btn-primary wf-admin-nav-button" id="saveCartSettingsBtn">Save</button>
-          </div>
+          
         </form>
       </div>
     </div>
   </div>
   <!-- STATIC: Address Diagnostics Modal (outside <noscript>) -->
   <div id="addressDiagnosticsModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="addressDiagnosticsTitle">
-    <div class="admin-modal admin-modal-content admin-modal--lg">
+    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -308,7 +468,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
   <!-- STATIC: Size/Color Redesign Tool Modal -->
   <div id="sizeColorRedesignModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="sizeColorRedesignTitle">
-    <div class="admin-modal admin-modal-content admin-modal--lg">
+    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="sizeColorRedesignTitle" class="admin-card-title">🧩 Size/Color System Redesign</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
@@ -333,114 +493,81 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
   <!-- Customer Messages Modal: Shop Encouragement Phrases -->
   <div id="customerMessagesModal" class="admin-modal-overlay wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="customerMessagesTitle">
-    <div class="admin-modal admin-modal-content">
+    <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="customerMessagesTitle" class="admin-card-title">💬 Customer Messages</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body">
-        <div class="form-control">
-          <label for="shopEncouragementPhrases" class="block text-sm font-medium mb-1">Shop Encouragement Phrases</label>
-          <textarea id="shopEncouragementPhrases" class="form-textarea w-full" rows="8" placeholder="One phrase per line (max 50)"></textarea>
-          <p class="text-sm text-gray-600 mt-1">These phrases appear as badges on recommended items in the shop when fuzzy recommendations are shown.</p>
+      <div class="modal-body admin-modal-body--xl">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div class="rounded border p-3 text-center">
+            <div class="text-2xl font-bold">53</div>
+            <div class="text-xs text-gray-600">AI Suggestions</div>
+          </div>
+          <div class="rounded border p-3 text-center">
+            <div class="text-2xl font-bold">3</div>
+            <div class="text-xs text-gray-600">Campaigns</div>
+          </div>
+          <div class="rounded border p-3 text-center">
+            <div class="text-2xl font-bold">2.4%</div>
+            <div class="text-xs text-gray-600">Conversion</div>
+          </div>
+          <div class="rounded border p-3 text-center">
+            <div class="text-2xl font-bold">15</div>
+            <div class="text-xs text-gray-600">Emails Sent</div>
+          </div>
         </div>
-        <div class="mt-3 flex items-center justify-end gap-2">
-          <span id="customerMessagesStatus" class="text-sm text-gray-600" aria-live="polite"></span>
-          <button type="button" class="btn btn-secondary wf-admin-nav-button admin-modal-close" data-action="close-admin-modal" id="customerMessagesCancelBtn">Cancel</button>
-          <button type="button" class="btn btn-primary wf-admin-nav-button" id="customerMessagesSaveBtn">Save Phrases</button>
+        <div class="grid gap-4 md:grid-cols-2 mb-3">
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-receipt-messages">Receipt Messages Manager</button>
+            <p class="text-sm text-gray-600 mt-1">Set the messages shown on printed and emailed receipts (thank-you notes, policies, contact info).</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-template-manager">Email Templates</button>
+            <p class="text-sm text-gray-600 mt-1">Edit the content and layout for system emails like order confirmations and password resets.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-cart-button-texts">Cart Button Texts</button>
+            <p class="text-sm text-gray-600 mt-1">Customize labels such as Add to Cart, View Cart, Checkout, and Continue Shopping.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-shop-encouragements">Shop Encouragement Phrases</button>
+            <p class="text-sm text-gray-600 mt-1">Manage short phrases that motivate shoppers across the site (e.g., specials, free shipping notes).</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-social-posts">Social Media Posts</button>
+            <p class="text-sm text-gray-600 mt-1">Create and organize social posts to share items and promotions on connected accounts.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-ai-suggestions">AI Item Suggestions</button>
+            <p class="text-sm text-gray-600 mt-1">Generate and apply item titles, descriptions, price and cost.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-content-generator">AI Content Generator</button>
+            <p class="text-sm text-gray-600 mt-1">Draft item or marketing copy from item context.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-newsletters">Newsletters Manager</button>
+            <p class="text-sm text-gray-600 mt-1">Create, schedule, and review newsletters.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-automation">Automation Manager</button>
+            <p class="text-sm text-gray-600 mt-1">Set up flows and triggers.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-discounts">Discount Codes Manager</button>
+            <p class="text-sm text-gray-600 mt-1">Generate and manage discount codes.</p>
+          </div>
+          <div>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="open-coupons">Coupons Manager</button>
+            <p class="text-sm text-gray-600 mt-1">Create printable or digital coupons.</p>
+          </div>
         </div>
+        <!-- Encouragement phrases moved to dedicated modal (see: Shop Encouragement Phrases button above) -->
       </div>
     </div>
   </div>
 
-  <script>
-  (function(){
-    const textarea = document.getElementById('shopEncouragementPhrases');
-    const saveBtn = document.getElementById('customerMessagesSaveBtn');
-    const cancelBtn = document.getElementById('customerMessagesCancelBtn');
-    const statusEl = document.getElementById('customerMessagesStatus');
-
-    if (!textarea || !saveBtn || !cancelBtn) return;
-
-    const setStatus = (msg, ok) => {
-      if (!statusEl) return;
-      statusEl.textContent = msg || '';
-      statusEl.style.color = ok ? '#065f46' : '#b91c1c';
-    };
-
-    async function loadPhrases(){
-      try {
-        setStatus('Loading…', true);
-        const origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
-        const res = await fetch(origin.replace(/\/$/, '') + '/api/encouragements.php', { credentials: 'include' });
-        const data = await res.json();
-        const arr = Array.isArray(data && data.phrases) ? data.phrases : [];
-        textarea.value = arr.join('\n');
-        setStatus('Loaded', true);
-      } catch (e) {
-        setStatus('Load failed', false);
-      }
-    }
-
-    function parseTextarea(){
-      const raw = (textarea.value || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-      const out = [];
-      for (let i = 0; i < raw.length && out.length < 50; i++) {
-        if (!out.includes(raw[i])) out.push(raw[i]);
-      }
-      return out;
-    }
-
-    function validate(arr){
-      if (!arr.length) return { ok:false, err:'Please enter at least one phrase.' };
-      for (const s of arr) { if (s.length > 200) return { ok:false, err:'Phrases must be 200 characters or fewer.' }; }
-      return { ok:true };
-    }
-
-    async function save(){
-      const phrases = parseTextarea();
-      const v = validate(phrases);
-      if (!v.ok) { setStatus(v.err, false); return; }
-      try {
-        setStatus('Saving…', true);
-        const origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
-        const res = await fetch(origin.replace(/\/$/, '') + '/api/save_messages.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phrases }),
-          credentials: 'include'
-        });
-        const data = await res.json();
-        if (data && data.success) {
-          if (window.wfNotifications && typeof window.wfNotifications.success === 'function') window.wfNotifications.success('Phrases saved');
-          else if (typeof window.showNotification === 'function') window.showNotification('Phrases saved', 'success');
-          else alert('Phrases saved');
-          setStatus('Saved', true);
-        } else {
-          const msg = (data && data.error) ? String(data.error) : 'Failed to save';
-          if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error(msg);
-          else if (typeof window.showNotification === 'function') window.showNotification(msg, 'error');
-          else alert(msg);
-          setStatus('Save failed', false);
-        }
-      } catch (e) {
-        if (window.wfNotifications && typeof window.wfNotifications.error === 'function') window.wfNotifications.error('Save failed');
-        else alert('Save failed');
-        setStatus('Save failed', false);
-      }
-    }
-
-    saveBtn.addEventListener('click', function(ev){ ev.preventDefault(); save(); });
-    cancelBtn.addEventListener('click', function(ev){ ev.preventDefault(); loadPhrases(); setStatus('Reverted', true); });
-
-    // Initial load
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadPhrases, { once: true });
-    } else {
-      loadPhrases();
-    }
-  })();
-  </script>
 
   <!-- Delegated click handler so buttons work regardless of when they are rendered -->
   <script>
@@ -617,42 +744,54 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     try {
       function showOverlay(el){
         if (!el) return;
-        try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_){}
-        el.classList.remove('hidden');
-        el.classList.add('show');
-        el.setAttribute('aria-hidden','false');
+        try { el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); } catch(_){}
         el.style.pointerEvents = 'auto';
       }
+      function closeOverlay(el){
+        try { el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); } catch(_){}
+        el.style.pointerEvents = 'none';
+      }
+
       function ensureBgManager(){
-        let el = document.getElementById('backgroundManagerModal');
-        if (el) return el;
-        el = document.createElement('div');
-        el.id = 'backgroundManagerModal';
-        el.className = 'admin-modal-overlay hidden';
-        el.setAttribute('aria-hidden','true');
-        el.setAttribute('role','dialog');
-        el.setAttribute('aria-modal','true');
-        el.setAttribute('tabindex','-1');
-        el.setAttribute('aria-labelledby','backgroundManagerTitle');
-        el.innerHTML = '\n      <div class="admin-modal admin-modal-content admin-modal--lg">\n        <div class="modal-header">\n          <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body"></div>\n      </div>';
-        try { document.body.appendChild(el); } catch(_){ }
-        return el;
+        var modal = document.getElementById('backgroundManagerModal');
+        if (!modal){
+          var html = '\n      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">\n        <div class="modal-header">\n          <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body"></div>\n      </div>';
+          modal = document.createElement('div');
+          modal.id = 'backgroundManagerModal';
+          modal.className = 'admin-modal-overlay hidden';
+          modal.setAttribute('aria-hidden','true');
+          modal.setAttribute('role','dialog');
+          modal.setAttribute('aria-modal','true');
+          modal.setAttribute('tabindex','-1');
+          modal.setAttribute('aria-labelledby','backgroundManagerTitle');
+          modal.innerHTML = html;
+          try { document.body.appendChild(modal); } catch(_){ }
+        }
+        var frame = modal.querySelector('iframe');
+        if (frame && !frame.getAttribute('src')){ frame.setAttribute('src', frame.getAttribute('data-src') || '/sections/tools/background_manager.php?modal=1'); }
+        showOverlay(modal);
       }
+
       function ensureCssCatalog(){
-        let el = document.getElementById('cssCatalogModal');
-        if (el) return el;
-        el = document.createElement('div');
-        el.id = 'cssCatalogModal';
-        el.className = 'admin-modal-overlay hidden';
-        el.setAttribute('aria-hidden','true');
-        el.setAttribute('role','dialog');
-        el.setAttribute('aria-modal','true');
-        el.setAttribute('tabindex','-1');
-        el.setAttribute('aria-labelledby','cssCatalogTitle');
-        el.innerHTML = '\n      <div class="admin-modal admin-modal-content admin-modal--lg">\n        <div class="modal-header">\n          <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body">\n          <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>\n        </div>\n      </div>';
-        try { document.body.appendChild(el); } catch(_){}
-        return el;
+        var modal = document.getElementById('cssCatalogModal');
+        if (!modal){
+          var html = '\n      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">\n        <div class="modal-header">\n          <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>\n          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body">\n          <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>\n        </div>\n      </div>';
+          modal = document.createElement('div');
+          modal.id = 'cssCatalogModal';
+          modal.className = 'admin-modal-overlay hidden';
+          modal.setAttribute('aria-hidden','true');
+          modal.setAttribute('role','dialog');
+          modal.setAttribute('aria-modal','true');
+          modal.setAttribute('tabindex','-1');
+          modal.setAttribute('aria-labelledby','cssCatalogTitle');
+          modal.innerHTML = html;
+          try { document.body.appendChild(modal); } catch(_){ }
+        }
+        var frame = modal.querySelector('iframe');
+        if (frame && !frame.getAttribute('src')){ frame.setAttribute('src', frame.getAttribute('data-src') || '/sections/tools/css_catalog.php?modal=1'); }
+        showOverlay(modal);
       }
+
       function primeIframe(id){
         try {
           const f = document.getElementById(id);
@@ -779,7 +918,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Dev Status Dashboard Modal (iframe embed) -->
     <div id="devStatusModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
-      <div class="admin-modal admin-modal-content admin-modal--lg">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="devStatusTitle" class="admin-card-title">🧪 Dev Status Dashboard</h2>
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -794,7 +933,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Attributes Management Modal (iframe embed) -->
     <div id="attributesModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="attributesTitle">
-      <div class="admin-modal admin-modal-content admin-modal--attributes">
+      <div class="admin-modal admin-modal-content admin-modal--attributes admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="attributesTitle" class="admin-card-title">🧩 Genders, Sizes, &amp; Colors</h2>
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -805,12 +944,19 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     </div>
 
-  <!-- Runtime hardening + modal creators (outside <noscript>) -->
-  <style id="wf-settings-runtime-hardening">
-    .admin-modal-overlay { z-index: 10100 !important; pointer-events: auto !important; }
-    #addressDiagnosticsModal { z-index: 10110 !important; }
-    #shippingSettingsModal { z-index: 10110 !important; }
-  </style>
+  <!-- Reports & Documentation Browser Modal (iframe embed) -->
+  <div id="reportsBrowserModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="reportsBrowserTitle">
+    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+      <div class="modal-header">
+        <h2 id="reportsBrowserTitle" class="admin-card-title">Reports &amp; Documentation Browser</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body admin-modal-body--lg">
+        <iframe id="reportsBrowserFrame" title="Reports &amp; Documentation Browser" src="about:blank" data-src="/sections/tools/reports_browser.php?modal=1" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  </div>
+
   <script>
   (function(){
     function $(id){ return document.getElementById(id); }
@@ -819,76 +965,25 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     function openOverlay(el){ try { el.classList.remove('hidden'); el.setAttribute('aria-hidden','false'); } catch(_){} }
     function closeOverlay(el){ try { el.classList.add('hidden'); el.setAttribute('aria-hidden','true'); } catch(_){} }
 
-    function ensureAddressDiagnosticsModal(){
-      var modal = $('addressDiagnosticsModal');
+    function ensureReportsBrowserModal(){
+      var modal = $('reportsBrowserModal');
       if (!modal){
-        var html = '\n      <div class="admin-modal admin-modal-content admin-modal--lg">\n        <div class="modal-header">\n          <h2 id="addressDiagnosticsTitle" class="admin-card-title">📍 Address Diagnostics<\/h2>\n          <button type="button" class="admin-modal-close" aria-label="Close">×<\/button>\n        <\/div>\n        <div class="modal-body">\n          <iframe id="addressDiagnosticsFrame" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"><\/iframe>\n        <\/div>\n      <\/div>';
-        modal = createEl('div', { id:'addressDiagnosticsModal', class:'admin-modal-overlay wf-modal-closable hidden', role:'dialog', 'aria-modal':'true', tabindex:'-1', 'aria-labelledby':'addressDiagnosticsTitle' }, html);
+        var html = '\n      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">\n        <div class="modal-header">\n          <h2 id="reportsBrowserTitle" class="admin-card-title">Reports &amp; Documentation Browser</h2>\n          <button type="button" class="admin-modal-close" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body admin-modal-body--lg">\n          <iframe id="reportsBrowserFrame" title="Reports &amp; Documentation Browser" src="about:blank" data-src="/sections/tools/reports_browser.php?modal=1" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>\n        </div>\n      </div>';
+        modal = createEl('div', { id:'reportsBrowserModal', class:'admin-modal-overlay over-header wf-modal-closable hidden', role:'dialog', 'aria-modal':'true', tabindex:'-1', 'aria-labelledby':'reportsBrowserTitle' }, html);
         ensureContainer().appendChild(modal);
         try { modal.querySelector('.admin-modal-close').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}}
       }
-      var frame = $('addressDiagnosticsFrame');
-      if (frame && !frame.getAttribute('src')){ frame.setAttribute('src', frame.getAttribute('data-src') || '/sections/tools/address_diagnostics.php?modal=1'); }
+      var frame = $('reportsBrowserFrame');
+      if (frame && !frame.getAttribute('src')){ frame.setAttribute('src', frame.getAttribute('data-src') || '/sections/tools/reports_browser.php?modal=1'); }
       openOverlay(modal);
     }
-
-    function ensureShippingSettingsModal(){
-      var modal = $('shippingSettingsModal');
-      if (!modal){
-        var html = '\n      <div class="admin-modal admin-modal-content">\n        <div class="modal-header">\n          <h2 id="shippingSettingsTitle" class="admin-card-title">🚚 Shipping &amp; Distance Settings<\/h2>\n          <button type="button" class="admin-modal-close" aria-label="Close">×<\/button>\n          <span class="modal-status-chip" id="shippingSettingsStatus" aria-live="polite"><\/span>\n        <\/div>\n        <div class="modal-body">\n          <form id="shippingSettingsForm" data-action="prevent-submit" class="space-y-4">\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">USPS<\/legend>\n              <label class="block text-sm font-medium mb-1" for="uspsUserId">USPS Web Tools USERID<\/label>\n              <input id="uspsUserId" type="text" class="form-input w-full" placeholder="(required for USPS live rates)" \/>\n            <\/fieldset>\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">UPS<\/legend>\n              <div class="grid gap-3 md:grid-cols-2">\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="upsAccessKey">UPS Access Key<\/label>\n                  <input id="upsAccessKey" type="text" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="upsSecret">UPS Secret<\/label>\n                  <input id="upsSecret" type="password" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n              <\/div>\n            <\/fieldset>\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">FedEx<\/legend>\n              <div class="grid gap-3 md:grid-cols-2">\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="fedexKey">FedEx Key<\/label>\n                  <input id="fedexKey" type="text" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n                <div>\n                  <label class="block text-sm font-medium mb-1" for="fedexSecret">FedEx Secret<\/label>\n                  <input id="fedexSecret" type="password" class="form-input w-full" placeholder="optional" \/>\n                <\/div>\n              <\/div>\n            <\/fieldset>\n            <fieldset class="border rounded p-3">\n              <legend class="text-sm font-semibold">Driving Distance<\/legend>\n              <label class="block text-sm font-medium mb-1" for="orsKey">OpenRouteService API Key<\/label>\n              <input id="orsKey" type="text" class="form-input w-full" placeholder="optional (used for driving miles)" \/>\n            <\/fieldset>\n            <div class="flex items-center justify-between pt-2">\n              <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.<\/div>\n              <div class="flex gap-2">\n                <button type="button" class="btn-secondary" data-action="close-shipping-settings">Close<\/button>\n                <button type="button" class="btn-brand" id="shippingSettingsSaveBtn">Save Settings<\/button>\n              <\/div>\n            <\/div>\n          <\/form>\n        <\/div>\n      <\/div>';
-        modal = createEl('div', { id:'shippingSettingsModal', class:'admin-modal-overlay wf-modal-closable hidden', role:'dialog', 'aria-modal':'true', tabindex:'-1', 'aria-labelledby':'shippingSettingsTitle' }, html);
-        ensureContainer().appendChild(modal);
-        try { modal.querySelector('.admin-modal-close').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}
-        try { modal.querySelector('[data-action="close-shipping-settings"]').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}
-      }
-      // Load settings values
-      (async function(){
-        var status = $('shippingSettingsStatus'); if (status) status.textContent = 'Loading…';
-        try {
-          const r = await fetch('/api/business_settings.php?action=get_by_category&category=shipping', { credentials:'include' });
-          const j = r.ok ? await r.json() : null;
-          const list = (j && j.success && Array.isArray(j.data?.settings)) ? j.data.settings : (j?.data?.settings || []);
-          const map = {}; (list||[]).forEach(row => { if (row && row.setting_key) map[row.setting_key] = row.setting_value; });
-          const set = (id, v) => { var el=$(id); if (el) el.value = v || ''; };
-          set('uspsUserId', map['usps_webtools_userid'] || '');
-          set('upsAccessKey', map['ups_access_key'] || '');
-          set('upsSecret', map['ups_secret'] || '');
-          set('fedexKey', map['fedex_key'] || '');
-          set('fedexSecret', map['fedex_secret'] || '');
-          set('orsKey', map['ors_api_key'] || '');
-          if (status) { status.textContent = 'Loaded'; status.className = 'modal-status-chip text-green-700'; }
-        } catch(e){ if (status) { status.textContent = 'Load failed'; status.className = 'modal-status-chip'; } }
-      })();
-      // Wire save
-      (function(){
-        var btn = $('shippingSettingsSaveBtn'); if (!btn || btn.__wfBound) return; btn.__wfBound = true;
-        btn.addEventListener('click', async function(){
-          var status = $('shippingSettingsStatus'); if (status) status.textContent = 'Saving…';
-          const get = (id)=>($(id)?$(id).value.trim():'');
-          const payload = { action:'upsert_settings', category:'shipping', settings:{ usps_webtools_userid:get('uspsUserId'), ups_access_key:get('upsAccessKey'), ups_secret:get('upsSecret'), fedex_key:get('fedexKey'), fedex_secret:get('fedexSecret'), ors_api_key:get('orsKey') } };
-          try {
-            const res = await fetch('/api/business_settings.php?action=upsert_settings', { method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-            const j = res.ok ? await res.json() : null;
-            if (j && j.success) { if (status) { status.textContent='Saved'; status.className='modal-status-chip text-green-700'; } setTimeout(function(){ closeOverlay($('shippingSettingsModal')); }, 600); }
-            else { if (status) { status.textContent='Save failed'; status.className='modal-status-chip'; } }
-          } catch(e){ if (status) { status.textContent='Save failed'; status.className='modal-status-chip'; } }
-        });
-      })();
-      openOverlay(modal);
-    }
-
-    // Expose creators globally for delegated handlers added later
-    try { window.__wfEnsureAddressDiagnosticsModal = ensureAddressDiagnosticsModal; } catch(_){}
-    try { window.__wfEnsureShippingSettingsModal = ensureShippingSettingsModal; } catch(_){}
 
     // Bind buttons
     try {
       var diagBtn = $('addressDiagBtn'); if (diagBtn && !diagBtn.__wfClickBound){ diagBtn.__wfClickBound = true; diagBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); ensureAddressDiagnosticsModal(); }); }
       var shipBtn = $('shippingSettingsBtn'); if (shipBtn && !shipBtn.__wfClickBound){ shipBtn.__wfClickBound = true; shipBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); ensureShippingSettingsModal(); }); }
-    } catch(_){}
-
-    // Kill any stray room modal overlay that might steal clicks
-    try { var ro = $('roomModalOverlay'); if (ro) { ro.style.display='none'; ro.classList.remove('show'); ro.style.pointerEvents='none'; } } catch(_){}
+      var repBtn = $('reportsBrowserBtn'); if (repBtn && !repBtn.__wfClickBound){ repBtn.__wfClickBound = true; repBtn.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); try { var m = $('reportsBrowserModal'); if (m){ var f=$('reportsBrowserFrame'); if (f && (!f.getAttribute('src') || f.getAttribute('src')==='about:blank')){ f.setAttribute('src', f.getAttribute('data-src')||'/sections/tools/reports_browser.php?modal=1'); } openOverlay(m); } } catch(_){} }); }
+    } catch(_){}}
   })();
   </script>
 
@@ -901,42 +996,42 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         <button type="button" id="categoriesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-categories">Category Management</button>
         <button type="button" id="dashboardConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-dashboard-config">Dashboard Configuration</button>
         <button type="button" id="attributesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-attributes">Genders, Sizes, &amp; Colors</button>
-        <button type="button" id="shoppingCartBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shopping-cart" onclick="(function(b){try{var m=document.getElementById('shoppingCartModal');if(m){if(m.parentElement&&m.parentElement!==document.body){document.body.appendChild(m);}m.classList.add('over-header');m.classList.remove('hidden');m.classList.add('show');m.setAttribute('aria-hidden','false');m.style.pointerEvents='auto';}}catch(e){}})(this); return false;">Shopping Cart</button>
-      <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-blue', 'Content Management', 'Organize products, categories, and room content', $__content); ?>
+        <button type="button" id="shoppingCartBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shopping-cart">Shopping Cart</button>
+      <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-blue', 'Content Management', 'Organize items, categories, and room content', $__content); ?>
 
       <?php // Visual & Design ?>
       <?php ob_start(); ?>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-colors-fonts">Colors &amp; Fonts</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-area-item-mapper">Area-Item Mapper</button>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-background-manager">Background Manager</button>
-        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-editor">Room Map Editor</button>
+        <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-room-map-manager">Room Map Manager</button>
+        <button type="button" id="actionIconsToggleBtn" class="admin-settings-button btn-primary btn-full-width" data-action="toggle-action-icons" title="Toggle icon-only actions in admin tables">Action Buttons: Text Labels</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-purple', 'Visual & Design', 'Customize appearance and interactive elements', $__content); ?>
 
       <?php // Business & Analytics ?>
       <?php ob_start(); ?>
-        <button type="button" id="addressDiagBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-address-diagnostics" onclick="try{if(window.__wfEnsureAddressDiagnosticsModal){window.__wfEnsureAddressDiagnosticsModal(); return false;}}catch(e){} var m=document.getElementById('addressDiagnosticsModal'); if(m){m.style.display='flex'; m.classList.remove('hidden'); m.classList.add('show'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents='auto';} return false;">Address Diagnostics</button>
+        <button type="button" id="addressDiagBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-address-diagnostics">Address Diagnostics</button>
         <button type="button" id="aiToolsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-tools">AI &amp; Automation Tools</button>
         <button type="button" id="aiSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-ai-settings">AI Provider</button>
         <button type="button" id="businessInfoBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-business-info">Business Information</button>
         <button type="button" id="squareSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-square-settings">Configure Square</button>
-        <button type="button" id="shippingSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shipping-settings" onclick="try{if(window.__wfEnsureShippingSettingsModal){window.__wfEnsureShippingSettingsModal(); return false;}}catch(e){} var m=document.getElementById('shippingSettingsModal'); if(m){m.style.display='flex'; m.classList.remove('hidden'); m.classList.add('show'); m.setAttribute('aria-hidden','false'); m.style.pointerEvents='auto';} return false;">Shipping &amp; Distance Settings</button>
+        <button type="button" id="shippingSettingsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-shipping-settings">Shipping &amp; Distance Settings</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-emerald', 'Business & Analytics', 'Manage sales, promotions, and business insights', $__content); ?>
 
       <?php // Communication ?>
       <?php ob_start(); ?>
-        <button type="button" id="templateManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-template-manager">Email Templates</button>
         <button type="button" id="customerMessagesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-customer-messages">Customer Messages</button>
         <button type="button" id="emailConfigBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-settings">Email Configuration</button>
         <button type="button" id="emailHistoryBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-history">Email History</button>
-        <button type="button" id="loggingStatusBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-logging-status">Logging Status</button>
-        <button type="button" id="receiptMessagesBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-receipt-messages">Receipt Messages</button>
-        <button type="button" id="emailTestBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-email-test">Send Sample Email</button>
+        <button type="button" id="loggingStatusBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-logging-status">View Logs</button>
+        <button type="button" id="socialMediaManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-social-media-manager">Social Media Manager</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-orange', 'Communication', 'Email configuration and customer messaging', $__content); ?>
 
       <?php // Technical & System ?>
       <?php ob_start(); ?>
         <button type="button" class="admin-settings-button btn-primary btn-full-width" data-action="open-cost-breakdown">Cost Breakdown Manager</button>
-        <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Health & Diagnostics</button>
-        <a class="admin-settings-button btn-primary btn-full-width" href="/sections/admin_router.php?section=reports-browser">Reports &amp; Documentation Browser</a>
+        <button type="button" id="healthDiagnosticsBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-health-diagnostics">Health &amp; Diagnostics</button>
+        <button type="button" id="reportsBrowserBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-reports-browser">Reports &amp; Documentation Browser</button>
         
         <button type="button" id="secretsManagerBtn" class="admin-settings-button btn-primary btn-full-width" data-action="open-secrets-modal">Secrets Manager</button>
       <?php $__content = ob_get_clean(); echo wf_render_settings_card('card-theme-red', 'Technical & System', 'System tools and advanced configuration', $__content); ?>
@@ -944,7 +1039,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Health & Diagnostics Modal (hidden by default) -->
     <div id="healthModal" class="admin-modal-overlay wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="healthTitle">
-      <div class="admin-modal admin-modal-content">
+      <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="healthTitle" class="admin-card-title">🩺 Health &amp; Diagnostics</h2>
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -993,7 +1088,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Area-Item Mapper Modal (hidden by default) -->
     <div id="areaItemMapperModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="areaItemMapperTitle">
-      <div class="admin-modal admin-modal-content admin-modal--lg">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area-Item Mapper</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1006,9 +1101,95 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
 
 
+    <!-- AI Tools Proxies (each deep-links into marketing sub-modals) -->
+    <div id="marketingSuggestionsProxyModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="marketingSuggestionsProxyTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="marketingSuggestionsProxyTitle" class="admin-card-title">🤖 AI Item Suggestions</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body admin-modal-body--lg">
+          <iframe id="marketingSuggestionsProxyFrame" title="AI Item Suggestions" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=suggestions" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div id="contentGeneratorProxyModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="contentGeneratorProxyTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="contentGeneratorProxyTitle" class="admin-card-title">✍️ AI Content Generator</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body admin-modal-body--lg">
+          <iframe id="contentGeneratorProxyFrame" title="AI Content Generator" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=content" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div id="newslettersProxyModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="newslettersProxyTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="newslettersProxyTitle" class="admin-card-title">📧 Newsletters</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body admin-modal-body--lg">
+          <iframe id="newslettersProxyFrame" title="Newsletters" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=newsletters" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div id="automationProxyModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="automationProxyTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="automationProxyTitle" class="admin-card-title">⚙️ Automation</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body admin-modal-body--lg">
+          <iframe id="automationProxyFrame" title="Automation" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=automation" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div id="discountsProxyModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="discountsProxyTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="discountsProxyTitle" class="admin-card-title">💸 Discount Codes</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body admin-modal-body--lg">
+          <iframe id="discountsProxyFrame" title="Discount Codes" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=discounts" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div id="couponsProxyModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="couponsProxyTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="couponsProxyTitle" class="admin-card-title">🎟️ Coupons</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body admin-modal-body--lg">
+          <iframe id="couponsProxyFrame" title="Coupons" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=coupons" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Media Manager Modal (iframe embed, deep-link to social section) -->
+    <div id="socialMediaManagerModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialMediaManagerTitle">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="socialMediaManagerTitle" class="admin-card-title">📱 Social Media Manager</h2>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+        </div>
+        <div class="modal-body admin-modal-body--lg">
+          <iframe id="socialMediaManagerFrame" title="Social Media Manager" src="about:blank" data-src="/sections/admin_marketing.php?modal=1&amp;tool=social-media" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        </div>
+      </div>
+    </div>
+
     <!-- Template Manager Modal (iframe embed) -->
     <div id="templateManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="templateManagerTitle">
-      <div class="admin-modal admin-modal-content">
+      <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="templateManagerTitle" class="admin-card-title">📁 Template Manager</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1020,9 +1201,23 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     </div>
 
+    <!-- Social Media Posts Templates Modal (iframe embed) -->
+    <div id="socialPostsManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialPostsManagerTitle">
+      <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
+        <div class="modal-header">
+          <h2 id="socialPostsManagerTitle" class="admin-card-title">📝 Social Media Posts</h2>
+          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+          <span class="modal-status-chip" aria-live="polite"></span>
+        </div>
+        <div class="modal-body">
+          <iframe id="socialPostsManagerFrame" title="Social Media Posts" src="about:blank" data-src="/sections/tools/social_posts_manager.php?modal=1" class="wf-admin-embed-frame"></iframe>
+        </div>
+      </div>
+    </div>
+
     <!-- Cost Breakdown Manager Modal (iframe embed) -->
     <div id="costBreakdownModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="costBreakdownTitle">
-      <div class="admin-modal admin-modal-content admin-modal--lg">
+      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="costBreakdownTitle" class="admin-card-title">💲 Cost Breakdown Manager</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1036,7 +1231,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Font Picker Modal -->
     <div id="fontPickerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="fontPickerTitle">
-      <div class="admin-modal admin-modal-content max-w-4xl">
+      <div class="admin-modal admin-modal-content max-w-4xl admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="fontPickerTitle" class="admin-card-title">Font Library</h2>
           <button type="button" class="admin-modal-close" data-action="close-font-picker" aria-label="Close">×</button>
@@ -1073,13 +1268,16 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     </div>
 
-    <!-- Business Info Modal (native form, best practice) -->
+    <!-- Business Info Modal (native form, branding removed) -->
     <div id="businessInfoModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="businessInfoTitle">
-      <div class="admin-modal admin-modal-content">
+      <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="businessInfoTitle" class="admin-card-title">🏢 Business Information</h2>
+          <div class="modal-header-actions">
+            <span id="businessInfoStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+            <button type="button" class="btn btn-primary btn-sm" data-action="business-save">Save</button>
+          </div>
           <button type="button" class="admin-modal-close" data-action="close-business-info" aria-label="Close">×</button>
-          <span class="modal-status-chip" aria-live="polite"></span>
         </div>
         <div class="modal-body">
           <form id="businessInfoForm" data-action="prevent-submit" class="space-y-4">
@@ -1092,45 +1290,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
                 <label for="bizEmail" class="block text-sm font-medium mb-1">Business Email</label>
                 <input id="bizEmail" type="email" class="form-input w-full" placeholder="(ie: info@yourdomain.com)" />
               </div>
-              <div class="mt-4 flex items-center justify-between">
-                <div id="brandPreviewCard" class="rounded border p-3">
-                  <div id="brandPreviewTitle" class="font-bold mb-1">Brand Preview Title</div>
-                  <div id="brandPreviewText" class="text-sm">This is sample content using your brand fonts and colors.</div>
-                  <div id="brandPreviewSwatches" class="flex gap-2 mt-2">
-                    <div title="Primary"></div>
-                    <div title="Secondary"></div>
-                    <div title="Accent"></div>
-                  </div>
-                </div>
-                <div class="flex flex-col gap-2">
-                    <button type="button" class="btn-secondary" data-action="business-reset-branding">Reset Branding</button>
-                  </div>
-              </div>
             </div>
 
-            <div class="border-t pt-4 mt-4">
-              <h3 class="text-sm font-semibold mb-2">Brand Fonts</h3>
-              <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label class="block text-sm font-medium mb-1">Primary Font</label>
-                  <div class="flex items-center gap-2">
-                    <input id="brandFontPrimary" type="hidden" />
-                    <span id="brandFontPrimaryLabel" class="font-preview-label font-preview-label--primary">System UI (Sans-serif)</span>
-                    <button type="button" class="btn btn-secondary btn-sm" data-action="open-font-picker" data-font-target="primary">Edit</button>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium mb-1">Secondary Font</label>
-                  <div class="flex items-center gap-2">
-                    <input id="brandFontSecondary" type="hidden" />
-                    <span id="brandFontSecondaryLabel" class="font-preview-label font-preview-label--secondary">Merriweather (Serif)</span>
-                    <button type="button" class="btn btn-secondary btn-sm" data-action="open-font-picker" data-font-target="secondary">Edit</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-                        <div class="grid gap-4 md:grid-cols-2">
+            <div class="grid gap-4 md:grid-cols-2">
               <div>
                 <label for="bizWebsite" class="block text-sm font-medium mb-1">Website</label>
                 <input id="bizWebsite" type="url" class="form-input w-full" placeholder="(ie: https://yourdomain.com)" />
@@ -1196,32 +1358,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
                 <input id="bizSupportPhone" type="text" class="form-input w-full" placeholder="(555) 555-5556" />
               </div>
             </div>
-            <div class="grid gap-4 md:grid-cols-3">
-              <div>
-                <label for="bizFacebook" class="block text-sm font-medium mb-1">Facebook URL</label>
-                <input id="bizFacebook" type="url" class="form-input w-full" placeholder="https://facebook.com/yourpage" />
-              </div>
-              <div>
-                <label for="bizInstagram" class="block text-sm font-medium mb-1">Instagram URL</label>
-                <input id="bizInstagram" type="url" class="form-input w-full" placeholder="https://instagram.com/yourhandle" />
-              </div>
-              <div>
-                <label for="bizTwitter" class="block text-sm font-medium mb-1">Twitter/X URL</label>
-                <input id="bizTwitter" type="url" class="form-input w-full" placeholder="https://x.com/yourhandle" />
-              </div>
-              <div>
-                <label for="bizTikTok" class="block text-sm font-medium mb-1">TikTok URL</label>
-                <input id="bizTikTok" type="url" class="form-input w-full" placeholder="https://tiktok.com/@yourhandle" />
-              </div>
-              <div>
-                <label for="bizYouTube" class="block text-sm font-medium mb-1">YouTube URL</label>
-                <input id="bizYouTube" type="url" class="form-input w-full" placeholder="https://youtube.com/@yourchannel" />
-              </div>
-              <div>
-                <label for="bizLinkedIn" class="block text-sm font-medium mb-1">LinkedIn URL</label>
-                <input id="bizLinkedIn" type="url" class="form-input w-full" placeholder="https://linkedin.com/company/yourco" />
-              </div>
-            </div>
+            
             <div class="grid gap-4 md:grid-cols-3">
               <div>
                 <label for="bizTermsUrl" class="block text-sm font-medium mb-1">Terms URL</label>
@@ -1288,10 +1425,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
                 </div>
               </div>
             </div>
-            <div class="flex items-center justify-between">
-              <div id="businessInfoStatus" class="text-sm text-gray-600"></div>
-              <button type="button" class="btn btn-primary" data-action="business-save">Save</button>
-            </div>
+            
           </form>
         </div>
       </div>
@@ -1299,7 +1433,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Email Settings Modal (lightweight shell; bridge populates) -->
     <div id="emailSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="emailSettingsTitle">
-      <div class="admin-modal">
+      <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
           <button type="button" class="admin-modal-close" data-action="close-email-settings" aria-label="Close">×</button>
@@ -1387,7 +1521,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Email History Modal (dedicated UI) -->
     <div id="emailHistoryModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="emailHistoryTitle">
-      <div class="admin-modal admin-modal-content">
+      <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="emailHistoryTitle" class="admin-card-title">📬 Email History</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1467,11 +1601,14 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Square Settings Modal (hidden by default) -->
     <div id="squareSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="squareSettingsTitle">
-      <div class="admin-modal">
+      <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="squareSettingsTitle" class="admin-card-title">🟩 Square Settings</h2>
+          <div class="modal-header-actions">
+            <span id="squareSettingsStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+            <button id="saveSquareSettingsBtn" type="button" class="btn btn-primary btn-sm" data-action="square-save-settings">Save Settings</button>
+          </div>
           <button type="button" class="admin-modal-close" data-action="close-square-settings" aria-label="Close">×</button>
-          <span class="modal-status-chip" aria-live="polite"></span>
         </div>
         <div class="modal-body">
           <div class="flex items-center justify-between mb-2">
@@ -1550,7 +1687,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
             <!-- Actions -->
             <div class="flex flex-wrap items-center gap-3">
-              <button id="saveSquareSettingsBtn" type="button" class="btn btn-primary" data-action="square-save-settings">Save Settings</button>
               <button type="button" class="btn btn-secondary btn--square-action" data-action="square-test-connection">Test Connection</button>
               <button type="button" class="btn btn-secondary btn--square-action" data-action="square-sync-items">Sync Items</button>
               <button type="button" class="btn-danger btn--square-action" data-action="square-clear-token">Clear Token</button>
@@ -1564,7 +1700,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Account Settings Modal (iframe embed) -->
     <div id="adminAccountSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
-      <div class="admin-modal admin-modal-content">
+      <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="accountSettingsTitle" class="admin-card-title">👤 Account Settings</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1576,37 +1712,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     </div>
 
-    <!-- AI Settings Modal (iframe embed) -->
-    <div id="aiSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="aiSettingsTitle">
-      <div class="admin-modal admin-modal-content">
-        <div class="modal-header">
-          <h2 id="aiSettingsTitle" class="admin-card-title">🤖 AI Provider</h2>
-          <button type="button" class="admin-modal-close" data-action="close-ai-settings" aria-label="Close">×</button>
-          <span class="modal-status-chip" aria-live="polite"></span>
-        </div>
-        <div class="modal-body">
-          <iframe id="categoriesFrame" title="Category Management" src="about:blank" data-src="/sections/admin_categories.php?modal=1" class="wf-admin-embed-frame"></iframe>
-        </div>
-      </div>
-    </div>
-
-    <!-- AI Tools Modal (iframe embed) -->
-    <div id="aiToolsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="aiToolsTitle">
-      <div class="admin-modal admin-modal-content">
-        <div class="modal-header">
-          <h2 id="aiToolsTitle" class="admin-card-title">🛠️ AI &amp; Automation Tools</h2>
-          <button type="button" class="admin-modal-close" data-action="close-ai-tools" aria-label="Close">×</button>
-          <span class="modal-status-chip" aria-live="polite"></span>
-        </div>
-        <div class="modal-body">
-          <iframe id="aiToolsFrame" title="AI &amp; Automation Tools" src="about:blank" data-src="/sections/admin_router.php?section=marketing&modal=1" class="wf-admin-embed-frame"></iframe>
-        </div>
-      </div>
-    </div>
-
     <!-- Categories Modal (hidden by default) -->
     <div id="categoriesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="categoriesTitle">
-      <div class="admin-modal admin-modal-content admin-modal--lg-narrow">
+      <div class="admin-modal admin-modal-content admin-modal--lg-narrow admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="categoriesTitle" class="admin-card-title">📂 Category Management</h2>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -1625,7 +1733,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- CSS Rules Modal (hidden by default) -->
     <div id="cssRulesModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="cssRulesTitle">
-      <div class="admin-modal">
+      <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="cssRulesTitle" class="admin-card-title">🎨 CSS Rules</h2>
           <button type="button" class="admin-modal-close" data-action="close-css-rules" aria-label="Close">×</button>
@@ -1657,11 +1765,14 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     <!-- All modal logic handled by Vite bridge -->
     <!-- Dashboard Configuration Modal (hidden by default) -->
     <div id="dashboardConfigModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="dashboardConfigTitle">
-      <div class="admin-modal admin-modal-content admin-modal--dashboard-config">
+      <div class="admin-modal admin-modal-content admin-modal--dashboard-config admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="dashboardConfigTitle" class="admin-card-title">⚙️ Dashboard Configuration</h2>
+          <div class="modal-header-actions">
+            <span id="dashboardConfigResult" class="text-sm text-gray-500" aria-live="polite"></span>
+            <button type="button" class="btn btn-primary btn-sm" data-action="dashboard-config-save">Save</button>
+          </div>
           <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
-          <span class="modal-status-chip" aria-live="polite"></span>
         </div>
         <div class="modal-body">
           <div class="space-y-4">
@@ -1683,12 +1794,10 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
                 <tbody id="dashboardSectionsBody"></tbody>
               </table>
             </div>
-            <div class="flex justify-between items-center">
-              <div id="dashboardConfigResult" class="text-sm text-gray-500"></div>
+            <div class="flex justify-end items-center">
               <div class="flex items-center gap-2">
                 <button type="button" class="btn" data-action="dashboard-config-reset">Reset to defaults</button>
                 <button type="button" class="btn btn-secondary" data-action="dashboard-config-refresh">Refresh</button>
-                <button type="button" class="btn btn-primary" data-action="dashboard-config-save">Save</button>
               </div>
             </div>
           </div>
@@ -1698,9 +1807,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Logging Status Modal (hidden by default) -->
     <div id="loggingStatusModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
-      <div class="admin-modal">
+      <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
-          <h2 class="admin-card-title">📜 Logging Status</h2>
+          <h2 class="admin-card-title">📜 View Logs</h2>
           <button type="button" class="admin-modal-close" data-action="close-logging-status" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
@@ -1711,6 +1820,12 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               <button type="button" class="btn-secondary" data-action="logging-open-file">Open Latest Log File</button>
               <button type="button" class="btn-danger" data-action="logging-clear-logs">Clear Logs</button>
             </div>
+            <div id="loggingShortcuts" class="border-t pt-3 mt-3">
+              <div id="loggingShortcutsList" class="space-y-2"></div>
+              <div class="mt-3 flex items-center gap-2">
+                <button type="button" class="btn btn-secondary" data-action="logging-download-all">Download All Log Files (zip)</button>
+              </div>
+            </div>
             <div id="loggingStatusResult" class="status status--info"></div>
           </div>
         </div>
@@ -1719,7 +1834,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 
     <!-- Secrets Manager Modal (hidden by default) -->
     <div id="secretsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
-      <div class="admin-modal">
+      <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 class="admin-card-title">🔒 Secrets Manager</h2>
           <button type="button" class="admin-modal-close" data-action="close-secrets-modal" aria-label="Close">×</button>
@@ -1740,10 +1855,14 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     <!-- AI Settings Modal (hidden by default) -->
     <div id="aiSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
-      <div class="admin-modal">
+      <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 class="admin-card-title">🤖 AI Settings</h2>
-          <button type="button" class="admin-modal-close" data-action="close-ai-settings" aria-label="Close">×</button>
+          <div class="modal-header-actions">
+            <span id="aiSettingsResult" class="text-sm text-gray-500" aria-live="polite"></span>
+            <button type="button" class="btn btn-primary btn-sm" data-action="save-ai-settings">Save Settings</button>
+          </div>
+          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
           <form id="aiSettingsForm" class="space-y-4">
@@ -1788,7 +1907,6 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               <div id="aiSettingsResult" class="text-sm text-gray-500"></div>
               <div class="flex items-center gap-2">
                 <button type="button" class="btn btn-secondary" data-action="test-ai-provider">Test Provider</button>
-                <button type="button" class="btn btn-primary" data-action="save-ai-settings">Save Settings</button>
               </div>
             </div>
           </form>

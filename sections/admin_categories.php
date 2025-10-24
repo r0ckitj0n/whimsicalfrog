@@ -287,6 +287,46 @@ $messageType = $_GET['type'] ?? '';
           {btn: 'tabBtnAssignments', panel: 'tabPanelAssignments'},
           {btn: 'tabBtnSkuRules', panel: 'tabPanelSkuRules'}
         ];
+        async function brandedConfirm(message, options){
+          try {
+            if (window.parent && typeof window.parent.showConfirmationModal === 'function') {
+              return await window.parent.showConfirmationModal({
+                title: (options && options.title) || 'Please confirm',
+                message,
+                confirmText: (options && options.confirmText) || 'Confirm',
+                confirmStyle: (options && options.confirmStyle) || 'confirm',
+                icon: (options && options.icon) || '⚠️',
+                iconType: (options && options.iconType) || 'warning'
+              });
+            }
+            if (typeof window.showConfirmationModal === 'function') {
+              return await window.showConfirmationModal({
+                title: (options && options.title) || 'Please confirm',
+                message,
+                confirmText: (options && options.confirmText) || 'Confirm',
+                confirmStyle: (options && options.confirmStyle) || 'confirm',
+                icon: (options && options.icon) || '⚠️',
+                iconType: (options && options.iconType) || 'warning'
+              });
+            }
+          } catch(_) {}
+          try {
+            if (window.parent && window.parent.wfNotifications && typeof window.parent.wfNotifications.show === 'function') { window.parent.wfNotifications.show('Confirmation UI unavailable. Action canceled.', 'error'); }
+            else if (window.parent && typeof window.parent.showNotification === 'function') { window.parent.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); }
+            else if (typeof window.showNotification === 'function') { window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); }
+          } catch(_) {}
+          return false;
+        }
+        function notify(msg, type){
+          try {
+            if (window.parent && window.parent.wfNotifications && typeof window.parent.wfNotifications.show === 'function') { window.parent.wfNotifications.show(msg, type || 'info'); return; }
+            if (window.parent && typeof window.parent.showNotification === 'function') { window.parent.showNotification(msg, type || 'info'); return; }
+            if (typeof window.showNotification === 'function') { window.showNotification(msg, type || 'info'); return; }
+            if (type === 'error' && typeof window.showError === 'function') { window.showError(msg); return; }
+            if (type === 'success' && typeof window.showSuccess === 'function') { window.showSuccess(msg); return; }
+          } catch(_) {}
+          try { alert(msg); } catch(_) {}
+        }
         // Canonical categories for inline editing in Assignments
         const CANONICAL_CATEGORIES = <?php echo json_encode($canonicalCategories, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE); ?>;
         const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
@@ -313,8 +353,8 @@ $messageType = $_GET['type'] ?? '';
             try {
               const res = await fetchJSON('/api/category_manager.php', { method: 'POST', body: { action: 'add_category', name } });
               if (res?.success) { window.location.reload(); }
-              else { alert('Add failed'); }
-            } catch (err) { alert('Error: ' + err.message); }
+              else { notify('Add failed', 'error'); }
+            } catch (err) { notify('Error: ' + err.message, 'error'); }
           });
         })();
           if (key === 'tabPanelOverview') loadOverview();
@@ -537,26 +577,26 @@ $messageType = $_GET['type'] ?? '';
             });
             if (bulkDeleteBtn) bulkDeleteBtn.addEventListener('click', async () => {
               const ids = getSelectedIds();
-              if (!ids.length) return alert('Select one or more assignments');
-              if (!confirm('Delete selected assignments?')) return;
+              if (!ids.length) return notify('Select one or more assignments', 'error');
+              if (!await brandedConfirm('Delete selected assignments?', { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' })) return;
               try {
                 for (const id of ids) {
                   await fetchJSON('/api/room_category_assignments.php', { method: 'DELETE', body: { assignment_id: id } });
                 }
                 loadAssignments();
-              } catch (err) { alert('Error deleting: ' + err.message); }
+              } catch (err) { notify('Error deleting: ' + err.message, 'error'); }
             });
             if (bulkMoveBtn) bulkMoveBtn.addEventListener('click', async () => {
               const ids = getSelectedIds();
               const room = Number(bulkMoveSel?.value || 0);
-              if (!ids.length) return alert('Select one or more assignments');
-              if (!room) return alert('Choose a target room');
+              if (!ids.length) return notify('Select one or more assignments', 'error');
+              if (!room) return notify('Choose a target room', 'error');
               try {
                 for (const id of ids) {
                   await fetchJSON('/api/room_category_assignments.php', { method: 'PUT', body: { action: 'update_assignment', id, room_number: room } });
                 }
                 loadAssignments();
-              } catch (err) { alert('Error moving: ' + err.message); }
+              } catch (err) { notify('Error moving: ' + err.message, 'error'); }
             });
 
             document.getElementById('addAssignmentForm').addEventListener('submit', async (e) => {
@@ -572,10 +612,10 @@ $messageType = $_GET['type'] ?? '';
                 if (result.success) {
                   loadAssignments();
                 } else {
-                  alert('Failed to add assignment: ' + result.message);
+                  notify('Failed to add assignment: ' + result.message, 'error');
                 }
               } catch (err) {
-                alert('An error occurred: ' + err.message);
+                notify('An error occurred: ' + err.message, 'error');
               }
             });
 
@@ -584,7 +624,7 @@ $messageType = $_GET['type'] ?? '';
               const action = e.target.dataset.action;
               if (action === 'delete-assignment') {
                 const id = e.target.dataset.id;
-                if (confirm('Are you sure you want to delete this assignment?')) {
+                if (await brandedConfirm('Are you sure you want to delete this assignment?', { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' })) {
                   try {
                     const result = await fetchJSON('/api/room_category_assignments.php', {
                         method: 'DELETE',
@@ -593,10 +633,10 @@ $messageType = $_GET['type'] ?? '';
                     if (result.success) {
                       loadAssignments();
                     } else {
-                      alert('Failed to delete assignment: ' + result.message);
+                      notify('Failed to delete assignment: ' + result.message, 'error');
                     }
                   } catch (err) {
-                    alert('An error occurred: ' + err.message);
+                    notify('An error occurred: ' + err.message, 'error');
                   }
                 }
               } else if (action === 'set-primary') {
@@ -605,7 +645,7 @@ $messageType = $_GET['type'] ?? '';
                 try {
                   const res = await fetchJSON('/api/room_category_assignments.php', { method: 'POST', body: { action: 'set_primary', room_number: room, category_id: categoryId } });
                   if (res?.success || res?.message) loadAssignments();
-                } catch (err) { alert('Error setting primary: ' + err.message); }
+                } catch (err) { notify('Error setting primary: ' + err.message, 'error'); }
               } else if (action === 'order-up' || action === 'order-down') {
                 const id = e.target.dataset.id;
                 const current = Number(e.target.dataset.order) || 0;
@@ -613,7 +653,7 @@ $messageType = $_GET['type'] ?? '';
                 try {
                   const res = await fetchJSON('/api/room_category_assignments.php', { method: 'PUT', body: { action: 'update_single_order', assignment_id: id, display_order: next } });
                   if (res?.success || res?.message) loadAssignments();
-                } catch (err) { alert('Error updating order: ' + err.message); }
+                } catch (err) { notify('Error updating order: ' + err.message, 'error'); }
               } else if (action === 'edit-assignment') {
                 const row = e.target.closest('tr');
                 if (!row) return;
@@ -703,7 +743,7 @@ $messageType = $_GET['type'] ?? '';
                 try {
                   const res = await fetchJSON('/api/room_category_assignments.php', { method: 'PUT', body: payload });
                   if (res?.success || res?.message) loadAssignments();
-                } catch (err) { alert('Error saving: ' + err.message); }
+                } catch (err) { notify('Error saving: ' + err.message, 'error'); }
               } else if (action === 'cancel-edit') {
                 loadAssignments();
               }
@@ -777,13 +817,13 @@ $messageType = $_GET['type'] ?? '';
                 const row = delBtn.closest('tr');
                 const id = Number(row?.getAttribute('data-category-id')) || 0;
                 const name = row?.getAttribute('data-category') || '';
-                if (!confirm('Delete this category? This also removes related assignments and SKU rule.')) return;
+                if (!await brandedConfirm('Delete this category? This also removes related assignments and SKU rule.', { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' })) return;
                 (async () => {
                     try {
                         const res = await fetchJSON('/api/category_manager.php', { method: 'POST', body: { action: 'delete_category', id, name } });
                         if (res?.success) { window.location.reload(); }
-                        else { alert('Delete failed'); }
-                    } catch (err) { alert('Error: ' + err.message); }
+                        else { notify('Delete failed', 'error'); }
+                    } catch (err) { notify('Error: ' + err.message, 'error'); }
                 })();
                 return;
             }
@@ -854,11 +894,11 @@ $messageType = $_GET['type'] ?? '';
                             revertUI();
                         }
                     } else {
-                        alert('Update failed: ' + response.message);
+                        notify('Update failed: ' + response.message, 'error');
                         revertUI();
                     }
                 } catch (error) {
-                    alert('An error occurred: ' + error.message);
+                    notify('An error occurred: ' + error.message, 'error');
                     revertUI();
                 }
             };
@@ -873,12 +913,12 @@ $messageType = $_GET['type'] ?? '';
               const row = deleteBtn.closest('tr');
               const id = Number(row?.dataset.ruleId);
               if (!id) return;
-              if (!confirm('Delete this SKU rule?')) return;
+              if (!await brandedConfirm('Delete this SKU rule?', { confirmText: 'Delete', confirmStyle: 'danger', iconType: 'danger' })) return;
               try {
                 await fetchJSON('/api/sku_rules.php', { method: 'DELETE', body: { id } });
                 loadSkuRules();
               } catch (err) {
-                alert('Error deleting rule: ' + err.message);
+                notify('Error deleting rule: ' + err.message, 'error');
               }
               return;
             }
@@ -967,7 +1007,7 @@ $messageType = $_GET['type'] ?? '';
                 }
                 revert();
               } catch (err) {
-                alert('Error updating rule: ' + err.message);
+                notify('Error updating rule: ' + err.message, 'error');
                 revert();
               }
             });
@@ -989,7 +1029,7 @@ $messageType = $_GET['type'] ?? '';
               if (prefixInput) prefixInput.value = '';
               loadSkuRules();
             } catch (err) {
-              alert('Error adding rule: ' + err.message);
+              notify('Error adding rule: ' + err.message, 'error');
             }
           });
         }

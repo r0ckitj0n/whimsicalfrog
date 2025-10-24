@@ -436,7 +436,11 @@ import { ApiClient } from '../core/api-client.js';
       e.preventDefault();
       const userId = getUserId();
       const id = requireString(t.getAttribute('data-id'), 'Address id');
-      if (!confirm('Delete this address?')) return;
+      if (typeof window.showConfirmationModal !== 'function') { try { window.showNotification && window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); } catch(_) {} return; }
+      {
+        const ok = await window.showConfirmationModal({ title: 'Delete Address', message: 'Delete this address?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' });
+        if (!ok) return;
+      }
       try {
         const res = await ApiClient.get(`/api/customer_addresses.php?action=delete_address&id=${encodeURIComponent(id)}`);
         if (!res || res.success !== true) throw new Error(res?.error || 'Failed to delete address');

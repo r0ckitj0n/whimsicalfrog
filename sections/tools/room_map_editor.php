@@ -26,8 +26,8 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
     <div class="rme-layout">
       <aside class="rme-sidebar">
         <section id="rmeIntroSection" class="rme-panel">
-          <h2 class="rme-panel-title">🗺️ Room Map Editor <span class="rme-title-badge">[NEW DESIGN]</span></h2>
-          <p class="rme-panel-subtitle">Select a room, load its map, and drag the area boxes to adjust clickable regions.</p>
+          <h2 class="rme-panel-title">🗺️ Room Map Manager <span class="rme-title-badge">[NEW]</span></h2>
+          <p class="rme-panel-subtitle">Select a room, load or manage saved maps, and drag the area boxes to adjust clickable regions.</p>
           <p id="rmeIntroHint" class="rme-panel-subtitle hidden">ℹ️ No map found for this room yet. Click "Add New Area" to get started!</p>
         </section>
         <section id="rmeRoomBgSection" class="rme-panel">
@@ -55,6 +55,15 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
             <button id="rmeUndoPointBtn" class="btn hidden">Undo Point</button>
             <button id="rmeClearBtn" class="btn btn-danger" title="Remove all areas from the map">🗑️ Clear All Areas</button>
           </div>
+        </section>
+
+        <section id="rmeSavedMapsSection" class="rme-panel">
+          <h2 class="rme-panel-title">Saved Maps</h2>
+          <div class="flex items-center justify-between mb-2">
+            <p class="rme-panel-subtitle">Apply or delete saved maps for the selected room.</p>
+            <button id="rmeLoadMapsBtn" class="btn btn-xs">Reload</button>
+          </div>
+          <div id="rmeMapsList" class="border rounded overflow-hidden"></div>
         </section>
 
         <section id="rmeSnapGridSection" class="rme-panel">

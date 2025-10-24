@@ -7,53 +7,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 function wf_fetch_area_mappings($roomNumber)
 {
-    $aliases = wf_room_aliases($roomNumber);
-    if (empty($aliases)) {
+    // Normalize to canonical value (e.g., 'A' for Landing, '0' for Main)
+    $canonical = wf_normalize_room_number($roomNumber);
+    if ($canonical === null || $canonical === '') {
         return [];
     }
 
-    $placeholders = implode(',', array_fill(0, count($aliases), '?'));
-    $params = $aliases;
-
-    $sql = "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active FROM area_mappings";
-    $conditions = ["room_number IN ($placeholders)"];
-
+    // Build legacy alias list only for room_type fallback
+    $aliases = wf_room_aliases($canonical);
     $hasRoomType = wf_has_column('area_mappings', 'room_type');
-    if ($hasRoomType) {
-        $conditions[] = "room_type IN ($placeholders)";
-        $params = array_merge($params, $aliases);
-    }
-
-    $sql .= ' AND (' . implode(' OR ', $conditions) . ') ORDER BY is_active DESC, display_order, id';
 
     try {
-        return Database::queryAll($sql, $params);
-    } catch (Throwable $e) {
-        // Fallback: try without room_type clause in case column is missing or query failed
-        try {
+        // 1) Prefer canonical room_number rows (active only)
+        $primary = Database::queryAll(
+            "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active
+             FROM area_mappings
+             WHERE is_active = 1 AND room_number = ?
+             ORDER BY display_order, id",
+            [$canonical]
+        );
+        if (!empty($primary)) {
+            return $primary;
+        }
+
+        // 2) Fallback to legacy room_type aliases ONLY if no canonical rows exist
+        if ($hasRoomType && !empty($aliases)) {
+            $placeholders = implode(',', array_fill(0, count($aliases), '?'));
             return Database::queryAll(
-                "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active FROM area_mappings WHERE room_number IN ($placeholders) ORDER BY is_active DESC, display_order, id",
+                "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active
+                 FROM area_mappings
+                 WHERE is_active = 1 AND room_type IN ($placeholders)
+                 ORDER BY display_order, id",
                 $aliases
             );
-        } catch (Throwable $inner) {
-            if ($hasRoomType) {
-                try {
-                    return Database::queryAll(
-                        "SELECT id, room_number, area_selector, mapping_type, item_id, item_sku, category_id, display_order, is_active FROM area_mappings WHERE room_type IN ($placeholders) ORDER BY is_active DESC, display_order, id",
-                        $aliases
-                    );
-                } catch (Throwable $fallback) {
-                    return [];
-                }
-            if (empty($items) && $categoryId) {
-                $items = Database::queryAll(
-                    "SELECT sku, name FROM items WHERE category_id = ? ORDER BY sku ASC",
-                    [$categoryId]
-                );
-            }
-            }
-            return [];
         }
+
+        return [];
+    } catch (Throwable $e) {
+        // As a last resort, return empty on query failure
+        return [];
     }
 }
 

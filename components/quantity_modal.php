@@ -16,7 +16,7 @@
             <div class="product-summary">
                 <img id="modalProductImage" class="modal-product-image" src="" alt="">
                 <div class="product-info">
-                    <h4 id="modalProductName" class="product-name">Product Name</h4>
+                    <h4 id="modalProductName" class="product-name">Item Name</h4>
                     <p id="modalProductPrice" class="product-price">$0.00</p>
                 </div>
             </div>

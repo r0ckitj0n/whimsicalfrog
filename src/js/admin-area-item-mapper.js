@@ -228,9 +228,15 @@ import { ApiClient } from '../core/api-client.js';
         await updateMapping(id);
         break;
       case 'aim-delete':
-        if (confirm('Are you sure you want to delete this mapping?')) {
-          await deleteMapping(id);
+        if (typeof window.showConfirmationModal !== 'function') {
+          if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error');
+          return;
         }
+        {
+          const ok = await window.showConfirmationModal({ title: 'Delete Mapping', message: 'Are you sure you want to delete this mapping?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' });
+          if (!ok) return;
+        }
+        await deleteMapping(id);
         break;
       case 'aim-add-explicit':
         await addMapping();

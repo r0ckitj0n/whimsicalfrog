@@ -294,7 +294,7 @@ try {
             const act = t.getAttribute('data-action');
             if (act==='aim-add-explicit'){ e.preventDefault(); addExplicit(); }
             if (act==='aim-save'){ e.preventDefault(); const id=t.getAttribute('data-id'); if (id) saveExplicit(id); }
-            if (act==='aim-delete'){ e.preventDefault(); const id=t.getAttribute('data-id'); if (id && confirm('Delete this mapping?')) deleteExplicit(id); }
+            if (act==='aim-delete'){ e.preventDefault(); const id=t.getAttribute('data-id'); if (!id) return; if (typeof window.showConfirmationModal !== 'function') { msg('Confirmation UI unavailable. Action canceled.', 'error'); return; } const ok = await window.showConfirmationModal({ title: 'Delete Mapping', message: 'Delete this mapping?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' }); if (!ok) return; deleteExplicit(id); }
             if (act==='aim-convert'){ e.preventDefault(); const area=t.getAttribute('data-area'); const sku=t.getAttribute('data-sku'); convertDerived(area, sku); }
           });
           // Auto-run if a value is preselected

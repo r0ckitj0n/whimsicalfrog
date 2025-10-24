@@ -132,15 +132,11 @@ formData.append('background_file', file);
 formData.append('room_type', 'room2');
 formData.append('background_name', 'custom_bg');
 
-fetch('/api/upload_background.php', {
-    method: 'POST',
-    body: formData
-})
-.then(response => response.json())
-.then(data => {
+ApiClient.post('/api/upload_background.php', formData)
+  .then((data) => {
     console.log('Formats created:', data.processing_info.formats_created);
     console.log('File sizes:', data.processing_info.file_sizes);
-});
+  });
 ```
 
 ### 2. Smart Image Serving

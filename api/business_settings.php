@@ -446,6 +446,13 @@ function getBusinessInfo()
         'business_brand_accent' => $brandAccent,
         'business_brand_background' => $brandBackground,
         'business_brand_text' => $brandText,
+        // Public site colors (optional)
+        'business_public_header_bg' => $get('business_public_header_bg'),
+        'business_public_header_text' => $get('business_public_header_text'),
+        'business_public_modal_bg' => $get('business_public_modal_bg'),
+        'business_public_modal_text' => $get('business_public_modal_text'),
+        'business_public_page_bg' => $get('business_public_page_bg'),
+        'business_public_page_text' => $get('business_public_page_text'),
         'business_footer_note' => $get('business_footer_note'),
         'business_footer_html' => $get('business_footer_html'),
         'business_policy_return' => $get('business_policy_return'),

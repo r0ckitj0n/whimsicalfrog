@@ -83,7 +83,7 @@ if (!empty($categories)) {
             <!-- All Products button first -->
             <button type="button" class="category-btn btn-chip shop-filter-btn active"
                     data-category="all">
-                All Products
+                All Items
             </button>
             <!-- Then individual categories in order -->
             <?php foreach ($categories as $slug => $catData): ?>
@@ -123,7 +123,7 @@ foreach ($categories as $slug => $catData):
         }
 
         // Simple product details without complex processing
-        $productName = htmlspecialchars($product['productName'] ?? 'Unknown Product');
+        $productName = htmlspecialchars($product['productName'] ?? 'Unknown Item');
         $sku = htmlspecialchars($product['sku'] ?? 'NO-SKU');
         $price = htmlspecialchars($product['price'] ?? '0.00');
         $stock = (int)($product['stock'] ?? 0);
@@ -131,9 +131,10 @@ foreach ($categories as $slug => $catData):
         $shortDescription = substr($rawDescription, 0, 100);
         $hasMore = strlen($rawDescription) > strlen($shortDescription);
 
-        // Get custom button text or use default
-        $customButtonText = !empty($product['custom_button_text']) ?
-            htmlspecialchars($product['custom_button_text']) : 'Add to Cart';
+        // Get custom button text or use random site-level variation when not provided
+        $customButtonText = !empty($product['custom_button_text'])
+            ? htmlspecialchars($product['custom_button_text'])
+            : htmlspecialchars(getRandomCartButtonText());
 
         // Get primary image
         $primaryImageData = getPrimaryImageBySku($sku);

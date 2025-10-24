@@ -14,6 +14,21 @@ body[data-page='admin/settings'] #fontPickerModal .font-picker-card {
   position: relative;
 }
 
+/* When a modal opts into header actions layout, place Save and Close side-by-side */
+body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .modal-header {
+  position: static !important;
+  padding-right: 0 !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto auto !important; /* title | actions | close */
+  align-items: center !important;
+  gap: 8px !important;
+}
+body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-modal-close {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+}
+
 body[data-page='admin/settings'] #fontPickerModal .font-picker-card:hover {
   border-color: rgba(59, 130, 246, 0.55);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12);
@@ -216,11 +231,11 @@ body[data-page='admin/settings'] .settings-page {
 }
 
 /* Admin Settings: place close X in top-right of modal header */
-body[data-page^='admin'] .admin-modal .modal-header {
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .modal-header {
   position: relative !important;
   padding-right: 40px; /* make space for X */
 }
-body[data-page^='admin'] .admin-modal .admin-modal-close {
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .admin-modal-close {
   position: absolute !important;
   top: 8px !important;
   right: 10px !important;
@@ -234,11 +249,11 @@ body[data-page^='admin'] .admin-modal .admin-modal-close {
   color: #6b7280; /* gray-500 */
   cursor: pointer;
 }
-body[data-page^='admin'] .admin-modal .admin-modal-close:hover {
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .admin-modal-close:hover {
   background: #f3f4f6; /* gray-100 */
   color: #111827; /* gray-900 */
 }
-body[data-page^='admin'] .admin-modal .admin-modal-close:focus {
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .admin-modal-close:focus {
   outline: none;
 }
 

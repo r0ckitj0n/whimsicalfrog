@@ -44,10 +44,15 @@ export class UIComponents {
       show() {
         if (!this.element) this.render();
 
-        this.element.classList.add('show');
+        if (this.options.variant === 'admin') {
+          this.element.classList.remove('hidden');
+          this.element.classList.add('show');
+          this.element.setAttribute('aria-hidden', 'false');
+        } else {
+          this.element.classList.add('show');
+        }
         document.body.classList.add('modal-open');
 
-        // Focus management
         const focusable = this.element.querySelector('[autofocus], input, button, [tabindex="0"]');
         if (focusable) focusable.focus();
 
@@ -57,7 +62,13 @@ export class UIComponents {
       hide() {
         if (!this.element) return;
 
-        this.element.classList.remove('show');
+        if (this.options.variant === 'admin') {
+          this.element.classList.add('hidden');
+          this.element.classList.remove('show');
+          this.element.setAttribute('aria-hidden', 'true');
+        } else {
+          this.element.classList.remove('show');
+        }
         document.body.classList.remove('modal-open');
 
         this.dispatchEvent('hide');
@@ -72,7 +83,7 @@ export class UIComponents {
       },
 
       setTitle(title) {
-        const titleElement = this.element?.querySelector('.modal-title');
+        const titleElement = this.element?.querySelector('.modal-title, .admin-card-title');
         if (titleElement) {
           titleElement.textContent = title;
         }
@@ -99,23 +110,54 @@ export class UIComponents {
 
         const modalElement = document.createElement('div');
         modalElement.id = modalId;
-        modalElement.className = `modal-overlay ${this.options.size ? `modal-${this.options.size}` : ''}`;
-        modalElement.innerHTML = `
-          <div class="modal-container">
-            <div class="modal-header">
-              <h3 class="modal-title">${this.options.title}</h3>
-              ${this.options.closable ? '<button class="modal-close" aria-label="Close">&times;</button>' : ''}
-            </div>
-            <div class="modal-body">
-              ${this.options.content}
-            </div>
-            ${this.options.footer ? `
-              <div class="modal-footer">
-                ${this.options.footer}
+
+        if (this.options.variant === 'admin') {
+          // Admin-styled modal overlay and container with brand close X
+          modalElement.className = 'admin-modal-overlay hidden';
+          modalElement.setAttribute('aria-hidden', 'true');
+          modalElement.setAttribute('role', 'dialog');
+          modalElement.setAttribute('aria-modal', 'true');
+          modalElement.setAttribute('tabindex', '-1');
+          modalElement.setAttribute('aria-labelledby', `${modalId}_title`);
+
+          const adminSize = this.options.adminSize || 'admin-modal--lg';
+          modalElement.innerHTML = `
+            <div class="admin-modal admin-modal-content ${adminSize} admin-modal--actions-in-header">
+              <div class="modal-header">
+                <h2 id="${modalId}_title" class="admin-card-title">${this.options.title}</h2>
+                ${this.options.headerActions ? `<div class="modal-header-actions">${this.options.headerActions}</div>` : ''}
+                ${this.options.closable !== false ? '<button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>' : ''}
               </div>
-            ` : ''}
-          </div>
-        `;
+              <div class="modal-body">
+                ${this.options.content}
+              </div>
+              ${this.options.footer ? `
+                <div class="modal-footer">
+                  ${this.options.footer}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        } else {
+          // Default generic modal
+          modalElement.className = `modal-overlay ${this.options.size ? `modal-${this.options.size}` : ''}`;
+          modalElement.innerHTML = `
+            <div class="modal-container">
+              <div class="modal-header">
+                <h3 class="modal-title">${this.options.title}</h3>
+                ${this.options.closable ? '<button class="modal-close" aria-label="Close">&times;</button>' : ''}
+              </div>
+              <div class="modal-body">
+                ${this.options.content}
+              </div>
+              ${this.options.footer ? `
+                <div class="modal-footer">
+                  ${this.options.footer}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }
 
         document.body.appendChild(modalElement);
         this.element = modalElement;
@@ -124,8 +166,8 @@ export class UIComponents {
       },
 
       bindEvents() {
-        // Close button
-        const closeBtn = this.element.querySelector('.modal-close');
+        // Close button (support admin and default variants)
+        const closeBtn = this.element.querySelector('.admin-modal-close, .modal-close');
         if (closeBtn) {
           closeBtn.addEventListener('click', () => this.hide());
         }
@@ -163,6 +205,21 @@ export class UIComponents {
 
     this.components.set(modalId, modal);
     return modal;
+  }
+
+  /**
+   * Convenience: create an Admin-styled modal with brand close X
+   * @param {Object} options
+   * @returns {Object} Modal instance
+   */
+  createAdminModal(options = {}) {
+    const o = options || {};
+    return this.createModal({
+      ...o,
+      variant: 'admin',
+      adminSize: o.adminSize || 'admin-modal--lg',
+      headerActions: o.headerActions ?? o.actions ?? ''
+    });
   }
 
   /**
@@ -820,6 +877,7 @@ export class UIComponents {
     // Make globally available
     window.UIComponents = components;
     window.createModal = (options) => components.createModal(options);
+    window.createAdminModal = (options) => components.createAdminModal(options);
     window.showToast = (message, type, options) => components.showToast(message, type, options);
     window.showSpinner = (options) => components.showSpinner(options);
 

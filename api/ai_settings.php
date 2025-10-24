@@ -7,6 +7,7 @@
 require_once 'config.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once 'ai_providers.php';
+require_once __DIR__ . '/../includes/secret_store.php';
 
 // Check if user is admin
 
@@ -144,6 +145,22 @@ function getAISettings()
         error_log("Error loading AI settings: " . $e->getMessage());
     }
 
+    // Never return actual API keys; report presence only
+    $defaults['openai_key_present'] = secret_has('openai_api_key');
+    $defaults['anthropic_key_present'] = secret_has('anthropic_api_key');
+    $defaults['google_key_present'] = secret_has('google_api_key');
+    $defaults['meta_key_present'] = secret_has('meta_api_key');
+
+    $defaults['openai_api_key'] = '';
+    $defaults['anthropic_api_key'] = '';
+    $defaults['google_api_key'] = '';
+    // Meta optional in defaults but ensure masked key field exists in response when used elsewhere
+    if (!array_key_exists('meta_api_key', $defaults)) {
+        $defaults['meta_api_key'] = '';
+    } else {
+        $defaults['meta_api_key'] = '';
+    }
+
     return $defaults;
 }
 
@@ -165,12 +182,29 @@ function updateAISettings($settings, $pdo)
         'ai_cost_plus_weight', 'ai_value_based_weight'
     ];
 
+    $secretKeys = [
+        'openai_api_key',
+        'anthropic_api_key',
+        'google_api_key',
+        'meta_api_key',
+    ];
+
     foreach ($settings as $key => $value) {
         if (!in_array($key, $validSettings)) {
             continue;
         }
 
-        // Convert values to strings for storage
+        // Route secrets to secret store and mask DB value
+        if (in_array($key, $secretKeys, true)) {
+            if (is_string($value) && $value !== '') {
+                // Store in secrets vault
+                secret_set($key, $value);
+            }
+            // Do not store actual secret in business_settings
+            $value = '';
+        }
+
+        // Convert values to strings for storage (non-secret handling and masked secrets)
         if (is_bool($value)) {
             $value = $value ? '1' : '0';
             $settingType = 'boolean';

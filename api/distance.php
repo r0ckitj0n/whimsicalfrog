@@ -5,6 +5,7 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/business_settings_helper.php';
 require_once __DIR__ . '/../includes/response.php';
+require_once __DIR__ . '/../includes/secret_store.php';
 
 function haversineMiles($lat1, $lon1, $lat2, $lon2) {
     $earthRadiusMi = 3958.8;
@@ -57,6 +58,10 @@ try {
     }
 
     $orsKey = (string) BusinessSettings::get('ors_api_key', '');
+    try {
+        $sec = secret_get('ors_api_key');
+        if (is_string($sec) && $sec !== '') $orsKey = $sec;
+    } catch (Exception $e) {}
     $miles = null;
     $estimated = false;
 

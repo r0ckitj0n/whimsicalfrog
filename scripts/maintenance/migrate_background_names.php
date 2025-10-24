@@ -25,6 +25,11 @@ $mappings = [
     'background-home.webp' => 'background-roomA.webp',
     'background-room-main.png' => 'background-room0.png',
     'background-room-main.webp' => 'background-room0.webp',
+    // Normalize legacy shop/settings filenames to new schema
+    'background-shop.png' => 'background-roomS.png',
+    'background-shop.webp' => 'background-roomS.webp',
+    'background-settings.png' => 'background-roomX.png',
+    'background-settings.webp' => 'background-roomX.webp',
 ];
 
 $renamed = [];
@@ -98,16 +103,31 @@ if ($hasM) {
 }
 
 // Seed Shop (S)
-$shopPng = 'backgrounds/background-shop.png';
-$shopWebp = 'backgrounds/background-shop.webp';
-$shopHas = is_file(path_join($imagesRoot, $shopPng)) || is_file(path_join($imagesRoot, $shopWebp));
+// Prefer new schema filenames background-roomS.*; fall back to legacy background-shop.*
+$shopPngNew = 'backgrounds/background-roomS.png';
+$shopWebpNew = 'backgrounds/background-roomS.webp';
+$shopPngOld = 'backgrounds/background-shop.png';
+$shopWebpOld = 'backgrounds/background-shop.webp';
+$shopHas =
+    is_file(path_join($imagesRoot, $shopPngNew)) ||
+    is_file(path_join($imagesRoot, $shopWebpNew)) ||
+    is_file(path_join($imagesRoot, $shopPngOld)) ||
+    is_file(path_join($imagesRoot, $shopWebpOld));
 if ($shopHas) {
     $r = Database::queryOne("SELECT id FROM backgrounds WHERE room_number = 'S' LIMIT 1");
     if (!$r) {
-        $img = is_file(path_join($imagesRoot, $shopPng)) ? $shopPng : ($shopWebp ?: '');
+        // pick best available file with preference: new png > new webp > old png > old webp
+        $img = is_file(path_join($imagesRoot, $shopPngNew)) ? $shopPngNew
+             : (is_file(path_join($imagesRoot, $shopWebpNew)) ? $shopWebpNew
+             : (is_file(path_join($imagesRoot, $shopPngOld)) ? $shopPngOld
+             : (is_file(path_join($imagesRoot, $shopWebpOld)) ? $shopWebpOld : '')));
+        $png = is_file(path_join($imagesRoot, $shopPngNew)) ? $shopPngNew
+             : (is_file(path_join($imagesRoot, $shopPngOld)) ? $shopPngOld : '');
+        $webp = is_file(path_join($imagesRoot, $shopWebpNew)) ? $shopWebpNew
+              : (is_file(path_join($imagesRoot, $shopWebpOld)) ? $shopWebpOld : '');
         Database::execute(
             "INSERT INTO backgrounds (room_number, background_name, image_filename, png_filename, webp_filename, is_active) VALUES ('S', ?, ?, ?, ?, 1)",
-            ['Shop Default', $img, is_file(path_join($imagesRoot, $shopPng)) ? $shopPng : '', is_file(path_join($imagesRoot, $shopWebp)) ? $shopWebp : '']
+            ['Shop Default', $img, $png, $webp]
         );
     }
 }
@@ -116,16 +136,30 @@ if ($shopHas) {
 Database::execute("UPDATE backgrounds SET room_number = 'X' WHERE room_number = 'SET'");
 
 // Seed Settings (X) if files exist
-$setPng = 'backgrounds/background-settings.png';
-$setWebp = 'backgrounds/background-settings.webp';
-$setHas = is_file(path_join($imagesRoot, $setPng)) || is_file(path_join($imagesRoot, $setWebp));
+// Prefer new schema filenames background-roomX.*; fall back to legacy background-settings.*
+$setPngNew = 'backgrounds/background-roomX.png';
+$setWebpNew = 'backgrounds/background-roomX.webp';
+$setPngOld = 'backgrounds/background-settings.png';
+$setWebpOld = 'backgrounds/background-settings.webp';
+$setHas =
+    is_file(path_join($imagesRoot, $setPngNew)) ||
+    is_file(path_join($imagesRoot, $setWebpNew)) ||
+    is_file(path_join($imagesRoot, $setPngOld)) ||
+    is_file(path_join($imagesRoot, $setWebpOld));
 if ($setHas) {
     $r = Database::queryOne("SELECT id FROM backgrounds WHERE room_number = 'X' LIMIT 1");
     if (!$r) {
-        $img = is_file(path_join($imagesRoot, $setPng)) ? $setPng : ($setWebp ?: '');
+        $img = is_file(path_join($imagesRoot, $setPngNew)) ? $setPngNew
+             : (is_file(path_join($imagesRoot, $setWebpNew)) ? $setWebpNew
+             : (is_file(path_join($imagesRoot, $setPngOld)) ? $setPngOld
+             : (is_file(path_join($imagesRoot, $setWebpOld)) ? $setWebpOld : '')));
+        $png = is_file(path_join($imagesRoot, $setPngNew)) ? $setPngNew
+             : (is_file(path_join($imagesRoot, $setPngOld)) ? $setPngOld : '');
+        $webp = is_file(path_join($imagesRoot, $setWebpNew)) ? $setWebpNew
+              : (is_file(path_join($imagesRoot, $setWebpOld)) ? $setWebpOld : '');
         Database::execute(
             "INSERT INTO backgrounds (room_number, background_name, image_filename, png_filename, webp_filename, is_active) VALUES ('X', ?, ?, ?, ?, 1)",
-            ['Settings Default', $img, is_file(path_join($imagesRoot, $setPng)) ? $setPng : '', is_file(path_join($imagesRoot, $setWebp)) ? $setWebp : '']
+            ['Settings Default', $img, $png, $webp]
         );
     }
 }

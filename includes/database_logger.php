@@ -78,17 +78,17 @@ class DatabaseLogger
 
             'error_logs' => "CREATE TABLE IF NOT EXISTS error_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                error_level VARCHAR(20) NOT NULL DEFAULT 'ERROR',
-                error_message TEXT NOT NULL,
+                error_type VARCHAR(100) NOT NULL DEFAULT 'ERROR',
+                message TEXT NOT NULL,
+                context_data JSON,
+                user_id INT NULL,
                 file_path VARCHAR(500),
                 line_number INT,
-                stack_trace TEXT,
-                user_id INT NULL,
-                session_id VARCHAR(255),
-                request_uri VARCHAR(500),
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_timestamp (timestamp),
-                INDEX idx_error_level (error_level),
+                ip_address VARCHAR(45),
+                user_agent TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_created_at (created_at),
+                INDEX idx_error_type (error_type),
                 INDEX idx_file_path (file_path)
             )",
 
@@ -124,7 +124,7 @@ class DatabaseLogger
 
             'order_logs' => "CREATE TABLE IF NOT EXISTS order_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                order_id INT NOT NULL,
+                order_id VARCHAR(50) NOT NULL,
                 user_id INT NULL,
                 action VARCHAR(100) NOT NULL,
                 log_message TEXT,
@@ -139,7 +139,7 @@ class DatabaseLogger
 
             'inventory_logs' => "CREATE TABLE IF NOT EXISTS inventory_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
-                item_id INT NOT NULL,
+                item_sku VARCHAR(50) NOT NULL,
                 action_type VARCHAR(100) NOT NULL,
                 change_description TEXT,
                 old_quantity INT,
@@ -148,7 +148,7 @@ class DatabaseLogger
                 new_price DECIMAL(10,2),
                 user_id INT NULL,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_item_id (item_id),
+                INDEX idx_item_sku (item_sku),
                 INDEX idx_timestamp (timestamp),
                 INDEX idx_action_type (action_type)
             )",
@@ -157,7 +157,7 @@ class DatabaseLogger
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 to_email VARCHAR(255) NOT NULL,
                 from_email VARCHAR(255),
-                subject VARCHAR(500),
+                email_subject VARCHAR(500),
                 email_type VARCHAR(100),
                 status VARCHAR(50) DEFAULT 'sent',
                 error_message TEXT NULL,
@@ -362,7 +362,7 @@ class DatabaseLogger
 
         try {
             $stmt = $this->pdo->prepare("
-                INSERT INTO email_logs (to_email, from_email, subject, email_type, status, error_message)
+                INSERT INTO email_logs (to_email, from_email, email_subject, email_type, status, error_message)
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
 
@@ -384,73 +384,37 @@ class DatabaseLogger
      */
     public static function logAnalyticsEvent($eventType, $eventData = [])
     {
-        if (!$this->pdo) {
+        $inst = self::getInstance();
+        if (!$inst || !$inst->pdo) {
             return;
         }
 
         try {
-            $stmt = $this->pdo->prepare("
+            $stmt = $inst->pdo->prepare("
                 INSERT INTO analytics_logs (user_id, session_id, page_url, event_type, event_data, user_agent, ip_address)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
             ");
 
             $stmt->execute([
-                $this->userId,
-                $this->sessionId,
+                $inst->userId,
+                $inst->sessionId,
                 $_SERVER['REQUEST_URI'] ?? 'unknown',
                 $eventType,
                 json_encode($eventData),
-                $this->userAgent,
-                $this->ipAddress
+                $inst->userAgent,
+                $inst->ipAddress
             ]);
         } catch (Exception $e) {
             error_log("Failed to log analytics event: " . $e->getMessage());
         }
     }
-}
 
-// Auto-initialize if database is available
-if (class_exists('Database')) {
-    try {
-        DatabaseLogger::getInstance()->logError('INFO', 'DatabaseLogger initialized');
-    } catch (Exception $e) {
-        // Fail silently if database is not available
+    public static function __callStatic($name, $arguments)
+    {
+        $inst = self::getInstance();
+        if ($inst && method_exists($inst, $name)) {
+            return $inst->$name(...$arguments);
+        }
+        throw new BadMethodCallException("Method $name does not exist on DatabaseLogger");
     }
 }
-
-// Global error handler to capture PHP errors
-function whimsicalfrog_error_handler($severity, $message, $file, $line)
-{
-    $errorLevel = 'ERROR';
-    switch ($severity) {
-        case E_WARNING:
-        case E_USER_WARNING:
-            $errorLevel = 'WARNING';
-            break;
-        case E_NOTICE:
-        case E_USER_NOTICE:
-            $errorLevel = 'INFO';
-            break;
-        case E_ERROR:
-        case E_USER_ERROR:
-        case E_RECOVERABLE_ERROR:
-            $errorLevel = 'ERROR';
-            break;
-    }
-
-    DatabaseLogger::getInstance()->logError($errorLevel, $message, $file, $line);
-
-    // Don't prevent normal error handling
-    return false;
-}
-
-// Global exception handler
-function whimsicalfrog_exception_handler($exception)
-{
-    $logger = DatabaseLogger::getInstance();
-    $logger->logError('ERROR', 'Uncaught exception: ' . $exception->getMessage() . ' in ' . $exception->getFile() . ' on line ' . $exception->getLine());
-}
-
-// Set error and exception handlers
-set_error_handler('whimsicalfrog_error_handler');
-set_exception_handler('whimsicalfrog_exception_handler');

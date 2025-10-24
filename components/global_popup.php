@@ -24,16 +24,16 @@ function renderGlobalPopup()
             
             <!-- Product Image -->
             <div class="popup-image-container">
-                <img id="popupImage" class="popup-image" alt="Product Image" loading="lazy">
+                <img id="popupImage" class="popup-image" alt="Item Image" loading="lazy">
                 <!-- Badge overlay container (badges positioned absolutely over the image) -->
                 <div id="popupBadgeContainer" class="popup-badge-container" aria-hidden="true"></div>
             </div>
             
             <!-- Product Info -->
             <div class="popup-info">
-                <h3 id="popupTitle" class="popup-title">Product Name</h3>
+                <h3 id="popupTitle" class="popup-title">Item Name</h3>
                 <div id="popupStock" class="popup-stock-info">In Stock</div>
-                <p id="popupDescription" class="popup-description">Product description</p>
+                <p id="popupDescription" class="popup-description">Item description</p>
                 
                 <!-- Price Section -->
                 <div id="popupPriceSection" class="popup-price-section">

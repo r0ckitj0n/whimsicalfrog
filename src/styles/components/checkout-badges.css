@@ -48,7 +48,7 @@
 
 /* Optional non-SVG text fallback inside badge */
 .shipping-badge .label {
-  font-family: 'Merienda', 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: var(--font-primary, 'Merienda', cursive);
   font-weight: 700;
   font-size: 12px;
   line-height: 1.05;

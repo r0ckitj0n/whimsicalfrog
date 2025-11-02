@@ -6,16 +6,16 @@
   inset: 0;
   width: 100vw;
   height: 100vh;
-  /* Dynamic viewport on modern mobile browsers */
-  width: 100dvw;
-  height: 100dvh;
   overscroll-behavior: contain;
   pointer-events: auto; /* make overlay capture events */
 }
+@supports (width: 100dvw) {
+  #cartModalOverlay { width: 100dvw; height: 100dvh; }
+}
 #cartModalOverlay .confirmation-modal {
   width: 100%;
-  max-width: min(100dvw - 24px, 60rem);
-  max-height: calc(100dvh - 24px);
+  max-width: min(100vw - 24px, 60rem);
+  max-height: calc(100vh - 24px);
   height: auto;
   margin: 0 12px;
   pointer-events: auto;
@@ -24,7 +24,13 @@
 #cartModalOverlay .confirmation-modal {
   display: flex;
   flex-direction: column;
-  max-width: min(100dvw - 24px, 60rem);
+  max-width: min(100vw - 24px, 60rem);
+}
+@supports (width: 100dvw) {
+  #cartModalOverlay .confirmation-modal {
+    max-width: min(100dvw - 24px, 60rem);
+    max-height: calc(100dvh - 24px);
+  }
 }
 #cartModalOverlay .confirmation-modal > div {
   display: grid;
@@ -32,11 +38,15 @@
   /* Fallback first, then modern dynamic viewport units */
   height: 90vh; /* fallback for older browsers */
   max-height: 90vh;
-  height: 90dvh; /* dynamic viewport height for mobile/browser chrome */
-  max-height: 90dvh; /* cap to viewport */
   min-height: 0; /* allow children to shrink and enable overflow */
   width: 100%;
   overflow: hidden; /* confine scroll to #cartModalItems */
+}
+@supports (height: 100dvh) {
+  #cartModalOverlay .confirmation-modal > div {
+    height: 90dvh; /* dynamic viewport height for mobile/browser chrome */
+    max-height: 90dvh; /* cap to viewport */
+  }
 }
 #cartModalOverlay .cart-modal .room-title {
   font-size: 1.25rem;

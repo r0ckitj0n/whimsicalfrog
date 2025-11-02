@@ -5,7 +5,6 @@
   "rules": {
     "value-keyword-case": null,
     "selector-not-notation": null,
-    "declaration-block-no-duplicate-properties": null,
     "declaration-property-value-keyword-no-deprecated": null,
     "no-empty-source": null,
     "no-duplicate-selectors": null,

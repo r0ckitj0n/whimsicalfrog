@@ -70,10 +70,10 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   /* Ensure grid layout and card styling in modal context */
   /* html/body intrinsic sizing is governed by embed-iframe.css via app.js */
   html, body { height:auto !important; min-height:auto !important; margin:0; background:transparent; overflow:visible !important; }
-  #admin-section-content { display:inline-block; width:auto; max-width:none; height:auto !important; max-height:none !important; overflow:visible !important; overflow-y: visible !important; overflow-x: visible !important; }
-  .attributes-grid { display: grid; grid-template-columns: repeat(3, max-content); grid-auto-rows: min-content; align-items: start; justify-content: start; gap: 16px; padding-bottom: 0; margin-top: 10px; position: relative; z-index: 0; }
+  #admin-section-content { display:block; width:100%; max-width:none; height:auto !important; max-height:none !important; overflow:visible !important; overflow-y: visible !important; overflow-x: hidden !important; }
+  .attributes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); grid-auto-rows: min-content; align-items: start; justify-content: stretch; gap: 16px; padding-bottom: 0; margin-top: 10px; position: relative; z-index: 0; }
   .attributes-grid { min-height:auto; height:auto; align-content: start; }
-  .attributes-grid > .card { height: auto; width: max-content; min-width: 280px; }
+  .attributes-grid > .card { height: auto; width: 100%; min-width: 0; }
   /* Remove trailing bottom whitespace from collapsed margins in modal context */
   #admin-section-content > *:last-child { margin-bottom: 0 !important; }
   .attributes-grid { margin-bottom: 0 !important; }

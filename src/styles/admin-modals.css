@@ -809,17 +809,34 @@ body[data-page^='admin'] .admin-modal.admin-modal--room-map {
 
 /* Strongest enforcement: ensure Attributes modal expands up to 95vw before any internal truncation/wrap */
 body[data-page^='admin'] #attributesModal .admin-modal {
-  --admin-modal-width: 95vw;
+  --admin-modal-width: auto;
   --admin-modal-max-width: 95vw;
-  width: 95vw !important;
+  width: auto !important;
   max-width: 95vw !important;
-  min-width: 95vw !important;
+  min-width: 0 !important;
   box-sizing: border-box !important;
 }
 
 #attributesModal.admin-modal-overlay { padding-left: 0 !important; padding-right: 0 !important; }
 
 /* (cleanup) rely on the admin-scoped rule above for width enforcement */
+
+/* Attributes modal: prevent auto-fill behavior so panel width follows content */
+#attributesModal .modal-body {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+#attributesModal .modal-body > iframe,
+#attributesModal .modal-body > .wf-admin-embed-frame {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  display: inline-block !important;
+}
 
 .admin-modal .modal-body {
   flex: 1 1 auto;

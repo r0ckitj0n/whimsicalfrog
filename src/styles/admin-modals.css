@@ -487,7 +487,7 @@ body:has(.admin-modal-overlay.show) {
 
 .col-36px { width: 36px !important; }
 .col-48px { width: 48px !important; }
-.wf-log-console { background:#0b1020; color:#d1e7ff; border-radius:6px; padding:10px; min-height:140px; max-height:300px; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:12px; }
+.wf-log-console { background:#0b1020; color:#d1e7ff; border-radius:6px; padding:10px; min-height:140px; max-height:300px; overflow:auto; font-family: var(--font-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace); font-size:12px; }
 .leading-155 { line-height: 1.55 !important; }
 .bottom--100 { bottom: -100px !important; }
 
@@ -673,7 +673,15 @@ body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
 #backgroundManagerModal .admin-modal,
 #receiptMessagesModal .admin-modal {
   width: auto !important;
-  max-width: 90vw !important;
+  max-width: 95vw !important;
+}
+
+/* Attributes modal: prioritize filling up to 95% viewport width before truncation/wrap */
+#attributesModal .admin-modal {
+  --admin-modal-width: clamp(900px, 95vw, 1800px);
+  --admin-modal-max-width: 95vw;
+  width: var(--admin-modal-width, clamp(900px, 95vw, 1800px)) !important;
+  max-width: var(--admin-modal-max-width, 95vw) !important;
 }
 
 /* Attributes: remove inner padding so panel height equals header + iframe exactly */
@@ -798,6 +806,20 @@ body[data-page^='admin'] .admin-modal.admin-modal--room-map {
 .admin-modal.admin-modal-content {
   padding: var(--admin-modal-panel-padding, 0.25rem) !important;
 }
+
+/* Strongest enforcement: ensure Attributes modal expands up to 95vw before any internal truncation/wrap */
+body[data-page^='admin'] #attributesModal .admin-modal {
+  --admin-modal-width: 95vw;
+  --admin-modal-max-width: 95vw;
+  width: 95vw !important;
+  max-width: 95vw !important;
+  min-width: 95vw !important;
+  box-sizing: border-box !important;
+}
+
+#attributesModal.admin-modal-overlay { padding-left: 0 !important; padding-right: 0 !important; }
+
+/* (cleanup) rely on the admin-scoped rule above for width enforcement */
 
 .admin-modal .modal-body {
   flex: 1 1 auto;

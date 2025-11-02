@@ -874,8 +874,8 @@ body[data-page^='admin'] #attributesModal .admin-modal {
   display: flex !important;
   flex-direction: column !important;
   /* Allow content-driven height; clamp only by max-height */
-  width: auto !important;
-  max-width: 70vw !important;
+  width: var(--admin-modal-width, clamp(900px, 95vw, 1400px)) !important;
+  max-width: 95vw !important;
   height: auto !important;
   max-height: 95vh !important;
 }

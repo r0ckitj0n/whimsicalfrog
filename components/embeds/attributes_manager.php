@@ -71,7 +71,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   /* html/body intrinsic sizing is governed by embed-iframe.css via app.js */
   html, body { height:auto !important; min-height:auto !important; margin:0; background:transparent; overflow:visible !important; }
   #admin-section-content { display:block; width:100%; max-width:none; height:auto !important; max-height:none !important; overflow:visible !important; overflow-y: visible !important; overflow-x: hidden !important; }
-  .attributes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); grid-auto-rows: min-content; align-items: start; justify-content: stretch; gap: 16px; padding-bottom: 0; margin-top: 10px; position: relative; z-index: 0; }
+  .attributes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: min-content; align-items: start; justify-content: stretch; gap: 16px; padding-bottom: 0; margin-top: 10px; position: relative; z-index: 0; }
   .attributes-grid { min-height:auto; height:auto; align-content: start; }
   .attributes-grid > .card { height: auto; width: 100%; min-width: 0; }
   /* Remove trailing bottom whitespace from collapsed margins in modal context */
@@ -83,12 +83,14 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   .card-body { padding: 10px 12px; max-height: unset; overflow: visible; flex: 0 0 auto; min-height: 0; }
   .attributes-grid .card-body ul.simple li {
     display:grid;
-    grid-template-columns: minmax(220px, 1fr) auto;
+    grid-template-columns: minmax(240px, 1fr) max-content; /* wider min ensures labels remain visible */
     align-items:center;
     gap:8px;
   }
   .attributes-grid .card-body ul.simple li > span:first-child {
+    display: inline-block;
     min-width: 0; /* allow ellipsis */
+    max-width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -99,17 +101,17 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   .muted { color: #6b7280; font-size: 12px; }
   ul.simple { list-style: none; padding-left: 0; margin: 0; }
   ul.simple li { padding: 6px 4px; border-bottom: 1px dashed #f1f5f9; display:flex; justify-content: space-between; gap:10px; }
-  /* Re-assert grid layout for attribute rows to preserve label width */
-  .attributes-grid .card-body ul.simple li { display:grid !important; grid-template-columns: minmax(220px, 1fr) auto !important; align-items:center !important; gap:8px !important; }
+  /* Re-assert grid layout for attribute rows to preserve label visibility */
+  .attributes-grid .card-body ul.simple li { display:grid !important; grid-template-columns: minmax(240px, 1fr) max-content !important; align-items:center !important; gap:8px !important; }
   .attributes-grid .card-body ul.simple li > span:first-child { min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
   .attributes-grid .card-body ul.simple li .row-actions { white-space: nowrap !important; justify-self: end !important; }
   .pill { font-size: 11px; background: #f3f4f6; color: #374151; padding: 2px 6px; border-radius: 12px; }
   .toolbar { position:absolute; right:12px; top:50%; transform:translateY(-50%); display:flex; gap:6px; }
   .row-actions { display:flex; gap:6px; }
-  @media (max-width: 540px) {
+  @media (max-width: 740px) {
     .attributes-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   }
-  @media (max-width: 380px) {
+  @media (max-width: 520px) {
     .attributes-grid { grid-template-columns: 1fr; }
   }
   /* Inline modal helpers */

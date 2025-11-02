@@ -266,7 +266,7 @@
 .item-popup-legacy.oos .popup-image-container::after {
   content: 'OUT OF STOCK';
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  z-index: 100500 !important;
+  z-index: var(--z-index-global-popup, 100500) !important;
   background: rgba(17, 24, 39, 0.6);
   color: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.35);
   padding: 8px 14px; text-transform: uppercase; font-weight: 900;
@@ -339,7 +339,9 @@
   min-height: auto !important;
   height: auto !important;
   max-width: calc(100vw - 16px) !important;
+  max-width: calc(100dvw - 16px) !important;
   max-height: calc(100vh - 16px) !important;
+  max-height: calc(100dvh - 16px) !important;
   /* Ensure popup participates in stacking context and layers above base UIs */
   position: absolute;
   z-index: var(--z-global-popup, var(--z-index-global-popup, 100200)) !important;

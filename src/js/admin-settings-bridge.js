@@ -3,6 +3,7 @@ import { ApiClient } from '../core/api-client.js';
 // are installed whenever the bridge loads on admin routes.
 // This module sets up delegated click handlers and lazy modal factories used by settings cards.
 import '../modules/admin-settings-lightweight.js';
+import '../js/admin-settings-fallbacks.js';
 function byId(id){ return document.getElementById(id); }
 
 const FONT_LIBRARY = [
@@ -362,10 +363,10 @@ function ensureBackgroundManagerModal() {
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'backgroundManagerTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+    <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="backgroundManagerTitle" class="admin-card-title">🖼️ Background Manager</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body"></div>
     </div>`;
@@ -435,6 +436,7 @@ function applyBusinessCssToRoot(s){
     if (s.business_brand_accent)    vars.push(`--brand-accent: ${s.business_brand_accent};`);
     if (s.business_brand_background)vars.push(`--brand-bg: ${s.business_brand_background};`);
     if (s.business_brand_text)      vars.push(`--brand-text: ${s.business_brand_text};`);
+    if (s.business_toast_text)      vars.push(`--toast-text: ${s.business_toast_text};`);
     if (s.business_brand_font_primary) {
       vars.push(`--brand-font-primary: ${s.business_brand_font_primary};`);
       vars.push(`--font-primary: ${s.business_brand_font_primary};`);
@@ -476,7 +478,7 @@ function applyBusinessCssToRoot(s){
 }
 
 function wireBrandingLivePreview() {
-  const ids = ['brandPrimary','brandSecondary','brandAccent','brandBackground','brandText','publicHeaderBg','publicHeaderText','publicModalBg','publicModalText','publicPageBg','publicPageText'];
+  const ids = ['brandPrimary','brandSecondary','brandAccent','brandBackground','brandText','cssToastText','publicHeaderBg','publicHeaderText','publicModalBg','publicModalText','publicPageBg','publicPageText'];
   ids.forEach((id) => {
     const el = document.getElementById(id);
     if (!el || el.__wfBound) return;
@@ -600,22 +602,25 @@ function applyBusinessInfo(s) {
     set('returnPolicy', s.business_policy_return || '');
     set('shippingPolicy', s.business_policy_shipping || '');
     set('warrantyPolicy', s.business_policy_warranty || '');
+    set('aboutPageTitle', s.about_page_title || '');
+    set('aboutPageContent', s.about_page_content || '');
+    set('privacyPolicyContent', s.privacy_policy_content || '');
+    set('termsOfServiceContent', s.terms_of_service_content || '');
+    set('storePoliciesContent', s.store_policies_content || '');
     set('brandPrimary', s.business_brand_primary || '#87ac3a');
     set('brandSecondary', s.business_brand_secondary || '#BF5700');
     set('brandAccent', s.business_brand_accent || '#22c55e');
     set('brandBackground', s.business_brand_background || '#ffffff');
     set('brandText', s.business_brand_text || '#111827');
-    // Public site colors (defaults chosen to match current styling without forcing changes)
-    // Keep header background unset by default to preserve gradient
-    set('publicHeaderBg', s.business_public_header_bg || '');
-    // Header text should match brand primary by default
-    set('publicHeaderText', s.business_public_header_text || s.business_brand_primary || '#87ac3a');
-    // Public modals are white with dark text by default
+    // Toast / notifications text color (maps to --toast-text)
+    set('cssToastText', s.business_toast_text || '#ffffff');
+    // Public site colors: default to simple white backgrounds and black text
+    set('publicHeaderBg', s.business_public_header_bg || '#ffffff');
+    set('publicHeaderText', s.business_public_header_text || '#000000');
     set('publicModalBg', s.business_public_modal_bg || '#ffffff');
-    set('publicModalText', s.business_public_modal_text || '#111827');
-    // Public pages default to white with dark text (most pages)
+    set('publicModalText', s.business_public_modal_text || '#000000');
     set('publicPageBg', s.business_public_page_bg || '#ffffff');
-    set('publicPageText', s.business_public_page_text || '#111827');
+    set('publicPageText', s.business_public_page_text || '#000000');
     set('customCssVars', s.business_css_vars || '');
 
     try {
@@ -653,6 +658,7 @@ function collectBusinessInfo() {
         business_brand_accent: get('brandAccent'),
         business_brand_background: get('brandBackground'),
         business_brand_text: get('brandText'),
+        business_toast_text: get('cssToastText'),
         business_css_vars: get('customCssVars'),
         // Public site colors
         business_public_header_bg: get('publicHeaderBg'),
@@ -681,6 +687,11 @@ function collectBusinessInfo() {
         business_policy_return: get('returnPolicy'),
         business_policy_shipping: get('shippingPolicy'),
         business_policy_warranty: get('warrantyPolicy'),
+        about_page_title: get('aboutPageTitle'),
+        about_page_content: get('aboutPageContent'),
+        privacy_policy_content: get('privacyPolicyContent'),
+        terms_of_service_content: get('termsOfServiceContent'),
+        store_policies_content: get('storePoliciesContent'),
     };
 }
 
@@ -721,9 +732,19 @@ function buildBrandingSnapshot() {
     business_brand_accent: s.business_brand_accent,
     business_brand_background: s.business_brand_background,
     business_brand_text: s.business_brand_text,
+    business_toast_text: s.business_toast_text,
     business_brand_font_primary: s.business_brand_font_primary,
     business_brand_font_secondary: s.business_brand_font_secondary,
     business_css_vars: s.business_css_vars,
+    // Public site colors (include in snapshot for full-fidelity restore)
+    business_public_header_bg: s.business_public_header_bg,
+    business_public_header_text: s.business_public_header_text,
+    business_public_modal_bg: s.business_public_modal_bg,
+    business_public_modal_text: s.business_public_modal_text,
+    business_public_page_bg: s.business_public_page_bg,
+    business_public_page_text: s.business_public_page_text,
+    // Palette (store as array; source is JSON string)
+    palette: (function(){ try { return JSON.parse(s.business_brand_palette || '[]'); } catch(_) { return []; } })(),
   };
 }
 
@@ -845,12 +866,20 @@ function applyBrandingSnapshotToForm(snap) {
   set('brandAccent', snap.business_brand_accent || '#22c55e');
   set('brandBackground', snap.business_brand_background || '#ffffff');
   set('brandText', snap.business_brand_text || '#111827');
+  set('cssToastText', (snap.business_toast_text != null ? snap.business_toast_text : '#ffffff'));
   set('customCssVars', snap.business_css_vars || '');
   // Fonts via setFontField to update labels
   setFontField('primary', snap.business_brand_font_primary || '');
   set('brandFontPrimary', byId('brandFontPrimary')?.value || '');
   setFontField('secondary', snap.business_brand_font_secondary || '');
   set('brandFontSecondary', byId('brandFontSecondary')?.value || '');
+  // Public site colors: default to white backgrounds and black text when absent
+  set('publicHeaderBg', (snap.business_public_header_bg != null ? snap.business_public_header_bg : '#ffffff'));
+  set('publicHeaderText', (snap.business_public_header_text != null ? snap.business_public_header_text : '#000000'));
+  set('publicModalBg', (snap.business_public_modal_bg != null ? snap.business_public_modal_bg : '#ffffff'));
+  set('publicModalText', (snap.business_public_modal_text != null ? snap.business_public_modal_text : '#000000'));
+  set('publicPageBg', (snap.business_public_page_bg != null ? snap.business_public_page_bg : '#ffffff'));
+  set('publicPageText', (snap.business_public_page_text != null ? snap.business_public_page_text : '#000000'));
   // Palette
   brandPalette = Array.isArray(snap.palette) ? snap.palette.slice() : [];
   renderBrandPalette();
@@ -971,6 +1000,11 @@ document.addEventListener('click', async (e) => {
         const ds = frame.getAttribute('data-src') || '/sections/tools/cost_breakdown_manager.php?modal=1';
         frame.setAttribute('src', ds);
       }
+      // Ensure autosize flags and fallback
+      try { if (frame && !frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1'); } catch(_) {}
+      try { if (frame && frame.classList) frame.classList.remove('wf-admin-embed-frame--tall','wf-embed--fill'); } catch(_) {}
+      try { if (modal) { if (typeof markOverlayResponsive === 'function') markOverlayResponsive(modal); } } catch(_) {}
+      try { if (frame && modal && typeof attachSameOriginFallback === 'function') attachSameOriginFallback(frame, modal); } catch(_) {}
       if (typeof window.showModal === 'function' && modal) window.showModal('costBreakdownModal');
       else if (modal) {
         modal.classList.remove('hidden');
@@ -997,6 +1031,8 @@ document.addEventListener('click', async (e) => {
     } catch (err) {
       console.error('Failed to load Background Manager module', err);
     }
+    // Ensure native modal obeys responsive autosize
+    try { if (modal && typeof markOverlayResponsive === 'function') markOverlayResponsive(modal); } catch(_) {}
     if (typeof window.showModal === 'function') window.showModal('backgroundManagerModal');
     else {
       modal.classList.remove('hidden');

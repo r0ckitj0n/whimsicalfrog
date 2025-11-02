@@ -65,6 +65,86 @@ try {
 
 if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
 ?>
+<?php if ($inModal): ?>
+<style>
+  /* Ensure grid layout and card styling in modal context */
+  /* html/body intrinsic sizing is governed by embed-iframe.css via app.js */
+  html, body { height:auto !important; min-height:auto !important; margin:0; background:transparent; overflow:visible !important; }
+  #admin-section-content { display:inline-block; width:auto; max-width:none; height:auto !important; max-height:none !important; overflow:visible !important; overflow-y: visible !important; overflow-x: visible !important; }
+  .attributes-grid { display: grid; grid-template-columns: repeat(3, max-content); grid-auto-rows: min-content; align-items: start; justify-content: start; gap: 16px; padding-bottom: 0; margin-top: 10px; position: relative; z-index: 0; }
+  .attributes-grid { min-height:auto; height:auto; align-content: start; }
+  .attributes-grid > .card { height: auto; width: max-content; min-width: 280px; }
+  /* Remove trailing bottom whitespace from collapsed margins in modal context */
+  #admin-section-content > *:last-child { margin-bottom: 0 !important; }
+  .attributes-grid { margin-bottom: 0 !important; }
+  .admin-card.my-2 { margin-bottom: 0 !important; }
+  .card { border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; display:flex; flex-direction:column; overflow:hidden; padding: 0 !important; }
+  .card-header { position:relative; z-index:1; background:#fff !important; padding: 12px 48px 12px 14px !important; min-height: 44px; line-height: 1.3; font-weight: 600; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:flex-start; gap:8px; text-align:left; margin: 0 !important; }
+  .card-body { padding: 10px 12px; max-height: unset; overflow: visible; flex: 0 0 auto; min-height: 0; }
+  .attributes-grid .card-body ul.simple li {
+    display:grid;
+    grid-template-columns: minmax(220px, 1fr) auto;
+    align-items:center;
+    gap:8px;
+  }
+  .attributes-grid .card-body ul.simple li > span:first-child {
+    min-width: 0; /* allow ellipsis */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .attributes-grid .card-body ul.simple li .row-actions {
+    white-space: nowrap;
+  }
+  .muted { color: #6b7280; font-size: 12px; }
+  ul.simple { list-style: none; padding-left: 0; margin: 0; }
+  ul.simple li { padding: 6px 4px; border-bottom: 1px dashed #f1f5f9; display:flex; justify-content: space-between; gap:10px; }
+  /* Re-assert grid layout for attribute rows to preserve label width */
+  .attributes-grid .card-body ul.simple li { display:grid !important; grid-template-columns: minmax(220px, 1fr) auto !important; align-items:center !important; gap:8px !important; }
+  .attributes-grid .card-body ul.simple li > span:first-child { min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+  .attributes-grid .card-body ul.simple li .row-actions { white-space: nowrap !important; justify-self: end !important; }
+  .pill { font-size: 11px; background: #f3f4f6; color: #374151; padding: 2px 6px; border-radius: 12px; }
+  .toolbar { position:absolute; right:12px; top:50%; transform:translateY(-50%); display:flex; gap:6px; }
+  .row-actions { display:flex; gap:6px; }
+  @media (max-width: 540px) {
+    .attributes-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  }
+  @media (max-width: 380px) {
+    .attributes-grid { grid-template-columns: 1fr; }
+  }
+  /* Inline modal helpers */
+  .attr-modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,.6); display:none; z-index: 2147483000; }
+  .attr-modal-overlay.show { display:block; }
+  .attr-modal { position: absolute; top: 6vh; bottom: 6vh; left: 6vw; right: 6vw; max-width: 1100px; margin: 0 auto; background:#fff; border-radius:10px; box-shadow: 0 20px 50px rgba(0,0,0,.35); display:flex; flex-direction:column; border: none; overflow:hidden; }
+  .attr-modal-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#fff; }
+  .attr-modal-title { font-weight:600; font-size:14px; }
+  .attr-modal-body { overflow-y:auto; overflow-x:hidden; padding:12px 14px; height:100%; background:#fff; }
+  #admin-section-content.dimmed { filter: blur(1px) brightness(.85); }
+  .editor.loading { pointer-events:none; opacity:.7; }
+  .spinner { display:inline-block; width:14px; height:14px; border:2px solid #cbd5e1; border-top-color:#2563eb; border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .color-swatch { background-color: var(--swatch-color, #000); }
+  .flex-row-6 { display:flex; gap:6px; align-items:center; }
+  .grid-2-2-1-auto { display:grid; grid-template-columns: 2fr 2fr 1fr auto; gap:8px; align-items:center; }
+  .move { display:flex; gap:4px; }
+  .is-hidden { display:none; }
+  .editor .items .row { display:grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap:8px; align-items:center; padding:4px 0; border-bottom:1px dashed #f1f5f9; }
+  .editor .grid { display:grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap:8px; align-items:center; }
+  .editor .grid.header { font-size:11px; color:#6b7280; }
+  .editor input { width:100%; padding:4px 6px; border:1px solid #e5e7eb; border-radius:6px; font-size:12px; }
+  .inline-actions { display:flex; gap:8px; margin-top:8px; }
+  .apply-box { margin-top:12px; padding:10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; }
+  .apply-box .row { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:8px; align-items:end; }
+  .empty { padding: 8px; color: #6b7280; font-size: 13px; }
+  .admin-actions-icons .btn { background: #2563eb; color: #fff; border-color: #1d4ed8; }
+  .admin-actions-icons .btn:hover { filter: brightness(0.95); }
+  .admin-actions-icons .btn.btn-danger { background:#ef4444; border-color:#dc2626; }
+  .admin-actions-icons .btn.btn-secondary { background:#111827; color:#fff; border-color:#111827; }
+  .toast { position: fixed; top: 12px; right: 12px; color:#fff; padding:10px 12px; border-radius:8px; font-size:12px; z-index: 99999; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+  .toast-ok { background:#065f46; }
+  .toast-err { background:#991b1b; }
+</style>
+<?php endif; ?>
 <?php if (!$inModal): ?>
 <!doctype html>
 <html>
@@ -75,11 +155,11 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   /* Hide global header and admin tabs inside the iframe */
   .site-header, .universal-page-header, .admin-tab-navigation { display: none !important; }
   html, body { background: #fff !important; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, Noto Sans, 'Apple Color Emoji','Segoe UI Emoji'; height: 100%; overflow: hidden; }
-  #admin-section-content { padding: 8px 12px 0 !important; height: 100%; max-height: 100vh; overflow: auto; box-sizing: border-box; }
-  .attributes-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; padding-bottom: 0; }
-  .card { border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
-  .card-header { padding: 10px 12px; font-weight: 600; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; gap:8px; }
-  .card-body { padding: 10px 12px; max-height: unset; overflow: visible; }
+  #admin-section-content { padding: 8px 12px 0 !important; height: 100%; max-height: 100vh; overflow: hidden; box-sizing: border-box; display:flex; flex-direction:column; }
+  .attributes-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); grid-auto-rows: 1fr; align-items: stretch; gap: 16px; padding-bottom: 0; flex:1; min-height:0; }
+  .card { border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; display:flex; flex-direction:column; overflow:hidden; padding: 0 !important; }
+  .card-header { position:relative; z-index:1; background:#fff !important; padding: 12px 48px 12px 14px !important; min-height: 44px; line-height: 1.3; font-weight: 600; border-bottom: 1px solid #e5e7eb; display:flex; align-items:center; justify-content:flex-start; gap:8px; text-align:left; margin: 0 !important; }
+  .card-body { padding: 10px 12px; max-height: unset; overflow: auto; flex:1; min-height:0; }
   .muted { color: #6b7280; font-size: 12px; }
   ul.simple { list-style: none; padding-left: 0; margin: 0; }
   ul.simple li { padding: 6px 4px; border-bottom: 1px dashed #f1f5f9; display:flex; justify-content: space-between; gap:10px; }
@@ -102,6 +182,8 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   .apply-box { margin-top:12px; padding:10px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; }
   .apply-box .row { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:8px; align-items:end; }
   .toast { position: fixed; top: 12px; right: 12px; background:#111827; color:#fff; padding:10px 12px; border-radius:8px; font-size:12px; z-index: 99999; box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+  .toast-ok { background:#065f46; }
+  .toast-err { background:#991b1b; }
   .invalid { border-color:#ef4444 !important; background:#fef2f2; }
   .editor.loading { pointer-events:none; opacity:.7; }
   .spinner { display:inline-block; width:14px; height:14px; border:2px solid #cbd5e1; border-top-color:#2563eb; border-radius:50%; animation:spin 1s linear infinite; }
@@ -145,7 +227,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     <div class="card">
       <div class="card-header">Genders <span class="muted">(distinct across catalog)</span>
         <div class="toolbar">
-          <button class="btn btn-primary" data-action="gender-add">Add</button>
+          <button class="btn-icon btn-icon--add" data-action="gender-add" title="Add" aria-label="Add"></button>
         </div>
       </div>
       <div class="card-body">
@@ -156,8 +238,8 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                 <li>
                   <span><?= htmlspecialchars((string)$g) ?></span>
                   <span class="row-actions">
-                    <button class="btn" data-action="gender-rename" title="Edit" data-gender="<?= htmlspecialchars((string)$g) ?>">Rename</button>
-                    <button class="btn btn-danger" data-action="gender-delete" title="Delete" data-gender="<?= htmlspecialchars((string)$g) ?>">Delete</button>
+                    <button class="btn-icon btn-icon--edit" data-action="gender-rename" title="Rename" aria-label="Rename" data-gender="<?= htmlspecialchars((string)$g) ?>"></button>
+                    <button class="btn-icon btn-icon--delete" data-action="gender-delete" title="Delete" aria-label="Delete" data-gender="<?= htmlspecialchars((string)$g) ?>"></button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -172,7 +254,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     <div class="card">
       <div class="card-header">Sizes <span class="muted">(templates)</span>
         <div class="toolbar">
-          <button class="btn btn-primary" data-action="size-new">New Template</button>
+          <button class="btn-icon btn-icon--add" data-action="size-new" title="New Template" aria-label="New Template"></button>
         </div>
       </div>
       <div class="card-body">
@@ -184,9 +266,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                   <span><?= htmlspecialchars((string)($t['template_name'] ?? '')) ?><?= $t['category'] ? ' · '.htmlspecialchars((string)$t['category']) : '' ?></span>
                   <span class="row-actions">
                     <span class="pill"><?=(int)($t['size_count'] ?? 0)?> sizes</span>
-                    <button class="btn" data-action="size-edit" title="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>">Edit</button>
-                    <button class="btn" data-action="size-dup" title="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>">Duplicate</button>
-                    <button class="btn btn-danger" data-action="size-delete" title="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>">Delete</button>
+                    <button class="btn-icon btn-icon--edit" data-action="size-edit" title="Edit" aria-label="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn-icon btn-icon--duplicate" data-action="size-dup" title="Duplicate" aria-label="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn-icon btn-icon--delete" data-action="size-delete" title="Delete" aria-label="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -202,7 +284,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     <div class="card">
       <div class="card-header">Colors <span class="muted">(templates)</span>
         <div class="toolbar">
-          <button class="btn btn-primary" data-action="color-new">New Template</button>
+          <button class="btn-icon btn-icon--add" data-action="color-new" title="New Template" aria-label="New Template"></button>
         </div>
       </div>
       <div class="card-body">
@@ -214,9 +296,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                   <span><?= htmlspecialchars((string)($t['template_name'] ?? '')) ?><?= $t['category'] ? ' · '.htmlspecialchars((string)$t['category']) : '' ?></span>
                   <span class="row-actions">
                     <span class="pill"><?=(int)($t['color_count'] ?? 0)?> colors</span>
-                    <button class="btn" data-action="color-edit" title="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>">Edit</button>
-                    <button class="btn" data-action="color-dup" title="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>">Duplicate</button>
-                    <button class="btn btn-danger" data-action="color-delete" title="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>">Delete</button>
+                    <button class="btn-icon btn-icon--edit" data-action="color-edit" title="Edit" aria-label="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn-icon btn-icon--duplicate" data-action="color-dup" title="Duplicate" aria-label="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn-icon btn-icon--delete" data-action="color-delete" title="Delete" aria-label="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -235,7 +317,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   <div class="attr-modal">
     <div class="attr-modal-header">
       <div class="attr-modal-title" id="attrEditorTitle">Edit Template</div>
-      <button type="button" class="attr-modal-close" data-action="attr-modal-close" aria-label="Close">×</button>
+      <button type="button" class="attr-modal-close admin-modal-close wf-admin-nav-button" data-action="attr-modal-close" aria-label="Close">×</button>
     </div>
     <div class="attr-modal-body">
       <div id="attrEditorMount"></div>
@@ -282,8 +364,8 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         <li>
           <span>${escapeHtml(g)}</span>
           <span class="row-actions">
-            <button class="btn" data-action="gender-rename" title="Edit" data-gender="${escapeAttr(g)}">Rename</button>
-            <button class="btn btn-danger" data-action="gender-delete" title="Delete" data-gender="${escapeAttr(g)}">Delete</button>
+            <button class="btn-icon btn-icon--edit" data-action="gender-rename" title="Rename" aria-label="Rename" data-gender="${escapeAttr(g)}"></button>
+            <button class="btn-icon btn-icon--delete" data-action="gender-delete" title="Delete" aria-label="Delete" data-gender="${escapeAttr(g)}"></button>
           </span>
         </li>`).join('');
       wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No genders found.</div>';
@@ -300,9 +382,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         <span>${escapeHtml(t.template_name||'')}${t.category ? ' · '+escapeHtml(t.category) : ''}</span>
         <span class="row-actions">
           <span class="pill">${Number(t.size_count||0)} sizes</span>
-          <button class="btn" data-action="size-edit" title="Edit" data-id="${t.id}">Edit</button>
-          <button class="btn" data-action="size-dup" title="Duplicate" data-id="${t.id}">Duplicate</button>
-          <button class="btn btn-danger" data-action="size-delete" title="Delete" data-id="${t.id}">Delete</button>
+          <button class="btn-icon btn-icon--edit" data-action="size-edit" title="Edit" aria-label="Edit" data-id="${t.id}"></button>
+          <button class="btn-icon btn-icon--duplicate" data-action="size-dup" title="Duplicate" aria-label="Duplicate" data-id="${t.id}"></button>
+          <button class="btn-icon btn-icon--delete" data-action="size-delete" title="Delete" aria-label="Delete" data-id="${t.id}"></button>
         </span>
       </li>`).join('');
     wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No size templates found.</div>';
@@ -318,9 +400,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         <span>${escapeHtml(t.template_name||'')}${t.category ? ' · '+escapeHtml(t.category) : ''}</span>
         <span class="row-actions">
           <span class="pill">${Number(t.color_count||0)} colors</span>
-          <button class="btn" data-action="color-edit" title="Edit" data-id="${t.id}">Edit</button>
-          <button class="btn" data-action="color-dup" title="Duplicate" data-id="${t.id}">Duplicate</button>
-          <button class="btn btn-danger" data-action="color-delete" title="Delete" data-id="${t.id}">Delete</button>
+          <button class="btn-icon btn-icon--edit" data-action="color-edit" title="Edit" aria-label="Edit" data-id="${t.id}"></button>
+          <button class="btn-icon btn-icon--duplicate" data-action="color-dup" title="Duplicate" aria-label="Duplicate" data-id="${t.id}"></button>
+          <button class="btn-icon btn-icon--delete" data-action="color-delete" title="Delete" aria-label="Delete" data-id="${t.id}"></button>
         </span>
       </li>`).join('');
     wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No color templates found.</div>';
@@ -433,8 +515,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   function toast(msg, ok=true){
     try {
       const t = document.createElement('div');
-      t.className = 'toast';
-      t.style.background = ok ? '#065f46' : '#991b1b';
+      t.className = 'toast ' + (ok ? 'toast-ok' : 'toast-err');
       t.textContent = msg;
       document.body.appendChild(t);
       setTimeout(()=>{ try{ t.remove(); }catch(_){ } }, 1800);
@@ -467,7 +548,6 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                   pd.body.appendChild(m);
                 }
                 m.classList.add('over-header');
-                m.style.removeProperty('z-index');
               } catch(_) {}
               try {
                 const f = pd.getElementById('sizeColorRedesignFrame');
@@ -479,7 +559,8 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
               m.classList.remove('hidden');
               m.classList.add('show');
               m.setAttribute('aria-hidden','false');
-              m.style.pointerEvents = 'auto';
+              m.classList.remove('pointer-events-none');
+              m.classList.add('pointer-events-auto');
             } else {
               // Fallback: open tool directly if parent modal not found
               try { window.open('/sections/tools/size_color_redesign.php?modal=1', '_blank', 'noreferrer'); } catch(__) {}
@@ -638,9 +719,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
             <input data-field="price_adjustment" type="number" step="0.01" value="0" />
             <input data-field="display_order" type="number" value="${idx}" />
             <div class="move">
-              <button class="btn" data-action="row-up">▲</button>
-              <button class="btn" data-action="row-down">▼</button>
-              <button class="btn btn-danger" data-action="row-del">✕</button>
+              <button class="btn-icon btn-icon--up" data-action="row-up" title="Move up" aria-label="Move up"></button>
+              <button class="btn-icon btn-icon--down" data-action="row-down" title="Move down" aria-label="Move down"></button>
+              <button class="btn-icon btn-icon--delete" data-action="row-del" title="Remove" aria-label="Remove"></button>
             </div>
           </div>`);
       } else if (action === 'color-row-add') {
@@ -649,16 +730,16 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         const idx = rows.children.length + 1;
         rows.insertAdjacentHTML('beforeend', `
           <div class=\"row grid-2-2-1-auto\" data-index=\"${idx}\">
-            <input data-field="color_name" placeholder="Color (e.g., Royal Blue)" />
+            <input data-field=\"color_name\" placeholder=\"Color (e.g., Royal Blue)\" />
             <div class=\"flex-row-6\">
-              <input class="color-swatch" type="color" value="#000000" />
-              <input data-field="color_code" placeholder="#RRGGBB or name" />
+              <input class=\"color-swatch\" type=\"color\" value=\"#000000\" />
+              <input data-field=\"color_code\" placeholder=\"#RRGGBB or name\" />
             </div>
-            <input data-field="display_order" type="number" value="${idx}" />
-            <div class="move">
-              <button class="btn" data-action="row-up">▲</button>
-              <button class="btn" data-action="row-down">▼</button>
-              <button class="btn btn-danger" data-action="row-del">✕</button>
+            <input data-field=\"display_order\" type=\"number\" value=\"${idx}\" />
+            <div class=\"move\">
+              <button class=\"btn-icon btn-icon--up\" data-action=\"row-up\" title=\"Move up\" aria-label=\"Move up\"></button>
+              <button class=\"btn-icon btn-icon--down\" data-action=\"row-down\" title=\"Move down\" aria-label=\"Move down\"></button>
+              <button class=\"btn-icon btn-icon--delete\" data-action=\"row-del\" title=\"Remove\" aria-label=\"Remove\"></button>
             </div>
           </div>`);
       }
@@ -840,9 +921,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                 <input data-field="price_adjustment" type="number" step="0.01" value="${escapeAttr(s.price_adjustment||0)}" />
                 <input data-field="display_order" type="number" value="${escapeAttr(s.display_order||idx)}" />
                 <div class="move">
-                  <button class="btn" data-action="row-up">▲</button>
-                  <button class="btn" data-action="row-down">▼</button>
-                  <button class="btn btn-danger" data-action="row-del">✕</button>
+                  <button class="btn btn-icon btn-icon--up" data-action="row-up" aria-label="Move up" title="Move up"></button>
+                  <button class="btn btn-icon btn-icon--down" data-action="row-down" aria-label="Move down" title="Move down"></button>
+                  <button class="btn btn-icon btn-icon--delete" data-action="row-del" aria-label="Remove" title="Remove"></button>
                 </div>
               </div>`).join('')}
           </div>
@@ -901,9 +982,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                 </div>
                 <input data-field="display_order" type="number" value="${escapeAttr(c.display_order||idx+1)}" />
                 <div class="move">
-                  <button class="btn" data-action="row-up">▲</button>
-                  <button class="btn" data-action="row-down">▼</button>
-                  <button class="btn btn-danger" data-action="row-del">✕</button>
+                  <button class="btn btn-icon btn-icon--up" data-action="row-up" aria-label="Move up" title="Move up"></button>
+                  <button class="btn btn-icon btn-icon--down" data-action="row-down" aria-label="Move down" title="Move down"></button>
+                  <button class="btn btn-icon btn-icon--delete" data-action="row-del" aria-label="Remove" title="Remove"></button>
                 </div>
               </div>`).join('')}
           </div>

@@ -12,6 +12,7 @@ function initPaymentModal() {
       overlay: null,
       container: null,
       keydownHandler: null,
+      previouslyFocusedElement: null,
     };
 
     function currency(v) {
@@ -89,8 +90,7 @@ function initPaymentModal() {
       const overlay = document.createElement('div');
       overlay.id = 'paymentModalOverlay';
       overlay.className = 'confirmation-modal-overlay checkout-overlay';
-      overlay.setAttribute('role', 'dialog');
-      overlay.setAttribute('aria-modal', 'true');
+      try { overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); } catch(_) {}
 
       const modal = document.createElement('div');
       modal.className = 'confirmation-modal payment-modal animate-slide-in-up';
@@ -113,13 +113,35 @@ function initPaymentModal() {
         };
         document.addEventListener('keydown', state.keydownHandler);
       }
+
+      try {
+        if (!overlay._wfFocusTrap) {
+          overlay._wfFocusTrap = (e) => {
+            if (e.key !== 'Tab') return;
+            if (!state.overlay || !state.overlay.classList.contains('show')) return;
+            const scope = state.container || state.overlay;
+            const nodes = scope.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+            const focusables = Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null);
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            if (e.shiftKey) {
+              if (active === first || !scope.contains(active)) { last.focus(); e.preventDefault(); }
+            } else {
+              if (active === last || !scope.contains(active)) { first.focus(); e.preventDefault(); }
+            }
+          };
+          overlay.addEventListener('keydown', overlay._wfFocusTrap, true);
+        }
+      } catch(_) {}
     }
 
     function render() {
       // Full checkout scaffold inside modal (scoped IDs with pm- prefix)
       state.container.innerHTML = `
         <div class="payment-header">
-          <h3 class="payment-title">Checkout</h3>
+          <h3 class="payment-title" id="paymentModalTitle">Checkout</h3>
         </div>
         <div class="payment-body">
           <div class="payment-grid">
@@ -231,8 +253,8 @@ function initPaymentModal() {
       `;
 
       setupController();
-
-      // Layout is enforced via CSS in ../styles/payment-modal.css
+      try { state.overlay && state.overlay.setAttribute('aria-labelledby', 'paymentModalTitle'); } catch(_) {}
+      try { state.container.querySelector('#pm-placeOrderBtn').focus(); } catch(_) {}
     }
 
     function setupController() {
@@ -1140,26 +1162,47 @@ function initPaymentModal() {
       render();
       // Ensure modal elements are attached to body
       try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
+      // Capture focus target before blurring
+      try { state.previouslyFocusedElement = document.activeElement; } catch(_) {}
       // Blur any currently focused element to avoid aria-hidden focus retention issues
       try { const ae = document.activeElement; if (ae && typeof ae.blur === 'function') ae.blur(); } catch(_) {}
       // Proactively close other overlays that could sit above or trap focus
       try { window.WF_CartModal && typeof window.WF_CartModal.close === 'function' && window.WF_CartModal.close(); } catch(_) {}
       try {
-        const cartOv = document.getElementById('cartModalOverlay');
-        if (cartOv) { cartOv.classList.remove('show'); cartOv.setAttribute('aria-hidden', 'true'); cartOv.setAttribute('inert', ''); }
+        if (typeof window.hideModal === 'function') {
+          window.hideModal('cartModalOverlay');
+        } else {
+          const cartOv = document.getElementById('cartModalOverlay');
+          if (cartOv) { cartOv.classList.remove('show'); cartOv.setAttribute('aria-hidden', 'true'); cartOv.setAttribute('inert', ''); }
+        }
       } catch(_) {}
       try {
-        const roomOv = document.getElementById('roomModalOverlay');
-        if (roomOv) { roomOv.classList.remove('show'); roomOv.setAttribute('aria-hidden', 'true'); roomOv.setAttribute('inert', ''); }
+        if (typeof window.hideModal === 'function') {
+          window.hideModal('roomModalOverlay');
+        } else {
+          const roomOv = document.getElementById('roomModalOverlay');
+          if (roomOv) { roomOv.classList.remove('show'); roomOv.setAttribute('aria-hidden', 'true'); roomOv.setAttribute('inert', ''); }
+        }
       } catch(_) {}
       // Normalize overlay classes (remove legacy under-header, ensure checkout-overlay)
       try { state.overlay.classList.remove('under-header'); } catch(_) {}
       try { state.overlay.classList.add('checkout-overlay'); } catch(_) {}
-      // Make overlay visible
-      try { state.overlay.classList.add('show'); } catch(_) {}
-      try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-      // Lock background scroll via CSS class
-      try { lockScrollCss(); } catch(_) {}
+      // Make overlay visible via ModalManager when available
+      if (typeof window.showModal === 'function') {
+        window.showModal('paymentModalOverlay');
+      } else {
+        try { state.overlay.classList.add('show'); } catch(_) {}
+        try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
+        try { lockScrollCss(); } catch(_) {}
+      }
+      try {
+        const scope = state.container || state.overlay;
+        const target = scope.querySelector('#pm-placeOrderBtn, #pm-cancelBtn, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const focusIt = () => { try { target && typeof target.focus === 'function' && target.focus(); } catch(_) {} };
+        focusIt();
+        try { requestAnimationFrame(() => { focusIt(); requestAnimationFrame(focusIt); }); } catch(_) {}
+        setTimeout(focusIt, 150);
+      } catch(_) {}
       // Mark body so the dedicated /payment page can be hidden beneath the modal
       try {
         document.body?.setAttribute('data-checkout-modal-open', '1');
@@ -1204,16 +1247,24 @@ function initPaymentModal() {
 
     function close() {
       if (!state.overlay) return;
-      state.overlay.classList.remove('show');
-      try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-      // Unlock background scroll via CSS class
-      try { unlockScrollCss(); } catch(_) {}
+      if (typeof window.hideModal === 'function') {
+        window.hideModal('paymentModalOverlay');
+      } else {
+        state.overlay.classList.remove('show');
+        try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+        try {
+          if (window.WFModals && window.WFModals.unlockScrollIfNoneOpen) { window.WFModals.unlockScrollIfNoneOpen(); }
+          else { unlockScrollCss(); }
+        } catch(_){ }
+      }
       // Restore underlying page visibility
       try {
         document.body?.removeAttribute('data-checkout-modal-open');
         const mainEl = document.querySelector('main');
         if (mainEl) mainEl.removeAttribute('aria-hidden');
       } catch(_) {}
+      try { if (state.previouslyFocusedElement) state.previouslyFocusedElement.focus(); } catch(_) {}
+      try { state.previouslyFocusedElement = null; } catch(_) {}
     }
 
     window.WF_PaymentModal = {

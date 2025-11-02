@@ -8,17 +8,27 @@ require_once dirname(__DIR__, 2) . '/includes/functions.php';
 require_once dirname(__DIR__, 2) . '/includes/auth.php';
 require_once dirname(__DIR__, 2) . '/includes/auth_helper.php';
 AuthHelper::requireAdmin();
-$page = 'admin';
-include dirname(__DIR__, 2) . '/partials/header.php';
+
+$__wf_modal = isset($_GET['modal']) && $_GET['modal'] !== '0';
+if ($__wf_modal) {
+    // Minimal header enables embed child autosize and trims default chrome
+    include dirname(__DIR__, 2) . '/partials/modal_header.php';
+} else {
+    $page = 'admin';
+    include dirname(__DIR__, 2) . '/partials/header.php';
+}
 ?>
+<?php if ($__wf_modal): ?>
 <style>
-/* Hide global header and admin tabs inside the iframe */
-.site-header, .universal-page-header, .admin-tab-navigation { display: none !important; }
-html, body { background: transparent !important; }
-#admin-section-content { padding: 6px 12px 12px !important; }
-/* Maximize space: hide page-level headers inside embeds */
-.admin-header-section { display: none !important; }
+  /* Hide global chrome inside iframe and remove trailing gaps */
+  .site-header, .universal-page-header, .admin-tab-navigation { display: none !important; }
+  html, body { background: transparent !important; margin:0 !important; height:auto !important; min-height:auto !important; overflow:visible !important; }
+  #admin-section-content { padding: 6px 12px 12px !important; display:block; height:auto !important; max-height:none !important; overflow:visible !important; }
+  .admin-header-section { display: none !important; }
+  /* Eliminate bottom whitespace from collapsed margins */
+  #admin-section-content > *:last-child { margin-bottom: 0 !important; }
 </style>
+<?php endif; ?>
 <div id="admin-section-content">
 <?php
 // Render the Inventory Admin page; the hash will focus the attributes section
@@ -34,4 +44,4 @@ include dirname(__DIR__, 2) . '/sections/admin_inventory.php';
   } catch(_) {}
 })();
 </script>
-<?php include dirname(__DIR__, 2) . '/partials/footer.php'; ?>
+<?php if (!$__wf_modal) { include dirname(__DIR__, 2) . '/partials/footer.php'; } ?>

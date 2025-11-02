@@ -151,17 +151,17 @@ class BusinessSettings
      */
     public static function getBusinessName()
     {
-        return self::get('business_name', 'WhimsicalFrog');
+        return (string) self::get('business_name', '');
     }
 
     public static function getBusinessDomain()
     {
-        return self::get('business_domain', 'whimsicalfrog.us');
+        return (string) self::get('business_domain', '');
     }
 
     public static function getBusinessEmail()
     {
-        return self::get('business_email', 'orders@whimsicalfrog.us');
+        return (string) self::get('business_email', '');
     }
 
     /**
@@ -219,7 +219,7 @@ class BusinessSettings
 
     public static function getAdminEmail()
     {
-        return self::get('admin_email', 'admin@whimsicalfrog.us');
+        return (string) self::get('admin_email', '');
     }
 
     public static function getPrimaryColor()
@@ -232,7 +232,7 @@ class BusinessSettings
         if (is_string($legacy) && trim($legacy) !== '') {
             return trim($legacy);
         }
-        return '#87ac3a';
+        return '';
     }
 
     public static function getSecondaryColor()
@@ -245,37 +245,42 @@ class BusinessSettings
         if (is_string($legacy) && trim($legacy) !== '') {
             return trim($legacy);
         }
-        return '#BF5700';
+        return '';
     }
 
     public static function getPaymentMethods()
     {
-        return self::get('payment_methods', ['Credit Card', 'PayPal', 'Check', 'Cash']);
+        $val = self::get('payment_methods', []);
+        return is_array($val) ? $val : [];
     }
 
     public static function getShippingMethods()
     {
-        return self::get('shipping_methods', ['Customer Pickup', 'Local Delivery', 'USPS', 'FedEx', 'UPS']);
+        $val = self::get('shipping_methods', []);
+        return is_array($val) ? $val : [];
     }
 
     public static function getPaymentStatuses()
     {
-        return self::get('payment_statuses', ['Pending', 'Processing', 'Received', 'Refunded', 'Failed']);
+        $val = self::get('payment_statuses', []);
+        return is_array($val) ? $val : [];
     }
 
     public static function getOrderStatuses()
     {
-        return self::get('order_statuses', ['Pending', 'Processing', 'Completed', 'Cancelled', 'Refunded']);
+        $val = self::get('order_statuses', []);
+        return is_array($val) ? $val : [];
     }
 
     public static function getTaxRate()
     {
-        return self::get('tax_rate', 0.00);
+        return self::get('tax_rate', null);
     }
 
     public static function isTaxEnabled()
     {
-        return self::get('tax_enabled', false);
+        $raw = self::get('tax_enabled', null);
+        return ($raw === null || $raw === '') ? null : self::getBooleanSetting('tax_enabled', false);
     }
 
     public static function isMaintenanceMode()
@@ -407,12 +412,10 @@ class BusinessSettings
     public static function getSiteUrl($path = '')
     {
         $domain = self::getBusinessDomain();
-        $protocol = 'https://';
-
-        if (strpos($domain, 'localhost') !== false || strpos($domain, '127.0.0.1') !== false) {
-            $protocol = 'http://';
+        if ($domain === '') {
+            throw new RuntimeException('Business domain is not configured.');
         }
-
+        $protocol = (strpos($domain, 'localhost') !== false || strpos($domain, '127.0.0.1') !== false) ? 'http://' : 'https://';
         $url = $protocol . $domain;
         if ($path && $path[0] !== '/') {
             $url .= '/';

@@ -11,7 +11,9 @@ import { ApiClient } from '../core/api-client.js';
       if (!command) return;
       runCommand(command);
     } catch (err) {
-      alert('Invalid command parameters');
+      if (typeof window.showAlertModal === 'function') {
+        window.showAlertModal({ title: 'Invalid Parameters', message: 'Invalid command parameters' });
+      } else { alert('Invalid command parameters'); }
     }
   }
 
@@ -49,13 +51,19 @@ import { ApiClient } from '../core/api-client.js';
             out.textContent = JSON.stringify(data.data, null, 2);
           }
         }
-        alert(data.message || (data.success ? 'Command executed' : 'Command failed'));
+        const msg = data.message || (data.success ? 'Command executed' : 'Command failed');
+        if (typeof window.showAlertModal === 'function') {
+          window.showAlertModal({ title: 'Database Tools', message: msg, icon: data.success ? '✅' : '⚠️', iconType: data.success ? 'success' : 'warning' });
+        } else { alert(msg); }
         if (data.success && (cmd === 'test-css' || cmd === 'generate-css')) {
           location.reload();
         }
       })
       .catch((error) => {
-        alert('Error: ' + (error?.message || String(error)));
+        const emsg = 'Error: ' + (error?.message || String(error));
+        if (typeof window.showAlertModal === 'function') {
+          window.showAlertModal({ title: 'Database Tools', message: emsg, icon: '⚠️', iconType: 'warning' });
+        } else { alert(emsg); }
       });
   }
 

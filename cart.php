@@ -24,11 +24,8 @@
       // window.location.href = '/';
     }
   });
-  // Ensure body has a minimal height so the page doesn't look empty behind the modal
-  document.documentElement.style.minHeight = '100%';
-  document.body.style.minHeight = '100%';
-  document.body.style.backgroundColor = 'transparent';
-  document.body.style.margin = '0';
-  document.body.style.padding = '0';
+  // Ensure minimal height and neutral background without inline styles
+  try { document.documentElement.classList.add('wf-cart-route'); } catch(_) {}
+  try { document.body.classList.add('wf-cart-route-body'); } catch(_) {}
   // No additional content needed – header/footer are already included by index.php
 </script>

@@ -4,13 +4,12 @@ const __wfEnsureRoomMapEditorModal = () => {
   let el = document.getElementById('roomMapManagerModal');
   // ALWAYS force recreation to pick up template changes
   if (el) {
-    console.log('[RoomMapManager] Removing existing modal to force refresh');
     el.remove();
     el = null;
   }
   el = document.createElement('div');
   el.id = 'roomMapManagerModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -20,15 +19,122 @@ const __wfEnsureRoomMapEditorModal = () => {
     <div class="admin-modal admin-modal-content admin-modal--room-map admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="roomMapManagerTitle" class="admin-card-title">🗺️ Room Map Manager (New Design)</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body rme-modal-body">
-        <iframe id="roomMapManagerFrame" title="Room Map Manager" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/room_map_editor.php?modal=1&amp;vite=dev" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body rme-modal-body wf-modal-body--fill">
+        <iframe id="roomMapManagerFrame" title="Room Map Manager" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-src="/sections/tools/room_map_editor.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
   document.body.appendChild(el);
-  console.log('[RoomMapManager] New modal created with iframe');
+  try { wireOverlay(el); } catch(_) {}
+  return el;
+};
+
+ 
+
+const __wfAI_fetchAndPopulateModels = async (provider, force, source) => {
+  try {
+    const prov = provider || 'jons_ai';
+    const sel = document.getElementById(`${prov}_model`);
+    if (!sel) return false;
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Loading models…</option>';
+    const src = (typeof source === 'string' && source) ? source : (() => { try { const s = document.getElementById(`${prov}_model_source`); return s ? s.value : ''; } catch(_) { return ''; } })();
+    const url = '/api/ai_settings.php?action=list_models&provider=' + encodeURIComponent(prov) + (src === 'openrouter' ? '&source=openrouter' : '') + (force ? '&force=1' : '') + '&_=' + Date.now();
+    const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
+    let data = null;
+    try {
+      if (window.ApiClient && typeof window.ApiClient.request === 'function') {
+        data = await window.ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
+      } else {
+        const res = await fetch(url, { credentials: 'include', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
+        data = await res.json().catch(() => ({}));
+      }
+    } catch (e) {
+      data = null;
+    }
+    const models = (data && data.success && Array.isArray(data.models)) ? data.models : [];
+    if (!models.length) {
+      __wfAI_populateModelDropdown(prov, prev || '');
+      return false;
+    }
+    sel.innerHTML = '';
+    for (const m of models) {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = (m.name && m.description) ? `${m.name} - ${m.description}` : (m.name || m.id);
+      if (prev && prev === m.id) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    if (prev && !sel.querySelector(`option[value="${prev}"]`)) sel.selectedIndex = 0;
+    return true;
+  } catch(_) { return false; }
+};
+
+const __wfAI_describePersonality = (num) => {
+  const v = Number(num);
+  if (!isFinite(v)) return '';
+  if (v <= 0.33) return 'Reserved';
+  if (v >= 0.75) return 'Adventurous';
+  return 'Balanced';
+};
+
+const __wfAI_updatePersonalityDisplay = () => {
+  try {
+    const t = document.getElementById('aiTemperature');
+    const tv = document.getElementById('aiTemperatureValue');
+    if (!t || !tv) return;
+    const desc = __wfAI_describePersonality(t.value);
+    tv.textContent = `${Number(t.value).toFixed(2)} • ${desc}`;
+  } catch(_) {}
+};
+
+// Lazy modal factory: Action Icons Manager (configure icon legend)
+const __wfEnsureActionIconsManagerModal = () => {
+  let el = document.getElementById('actionIconsManagerModal');
+  if (el) {
+    try {
+      if (!el.classList.contains('wf-modal--content-scroll')) el.classList.add('wf-modal--content-scroll');
+      const panel = el.querySelector('.admin-modal');
+      if (panel) {
+        panel.classList.add('admin-modal--actions-in-header');
+        panel.classList.remove('admin-modal--sm');
+        panel.classList.add('admin-modal--lg');
+      }
+      const body = el.querySelector('.modal-body');
+      if (body && !body.classList.contains('wf-modal-body--fill')) body.classList.add('wf-modal-body--fill');
+      const frame = el.querySelector('#actionIconsManagerFrame');
+      if (frame && !frame.classList.contains('wf-embed--fill')) frame.classList.add('wf-embed--fill');
+    } catch(_) {}
+    return el;
+  }
+  el = document.createElement('div');
+  el.id = 'actionIconsManagerModal';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'actionIconsManagerTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+      <div class="modal-header">
+        <h2 id="actionIconsManagerTitle" class="admin-card-title">🧰 Button Manager</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body wf-modal-body--fill">
+        <iframe id="actionIconsManagerFrame" title="Button Manager" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-src="/sections/tools/action_icons_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  try {
+    const body = el.querySelector('.modal-body');
+    if (body) body.classList.add('wf-modal-body--fill');
+    const frame = el.querySelector('#actionIconsManagerFrame');
+    if (frame) { frame.classList.add('wf-embed--fill'); }
+  } catch(_) {}
   return el;
 };
 
@@ -38,7 +144,7 @@ const __wfEnsureReportsBrowserModal = () => {
   if (el) return el;
   el = document.createElement('div');
   el.id = 'reportsBrowserModal';
-  el.className = 'admin-modal-overlay hidden over-header';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden over-header';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -48,10 +154,10 @@ const __wfEnsureReportsBrowserModal = () => {
     <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="reportsBrowserTitle" class="admin-card-title">Reports &amp; Documentation Browser</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body admin-modal-body--lg">
-        <iframe id="reportsBrowserFrame" title="Reports &amp; Documentation Browser" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/reports_browser.php?modal=1" referrerpolicy="no-referrer"></iframe>
+        <iframe id="reportsBrowserFrame" title="Reports &amp; Documentation Browser" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-autosize="1" data-src="/sections/tools/reports_browser.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -65,7 +171,7 @@ const __wfEnsureModalMarkupGuideModal = () => {
   if (el) return el;
   el = document.createElement('div');
   el.id = 'modalMarkupGuideModal';
-  el.className = 'admin-modal-overlay hidden over-header';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden over-header';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -75,10 +181,10 @@ const __wfEnsureModalMarkupGuideModal = () => {
     <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="modalMarkupGuideTitle" class="admin-card-title">Admin Modal Markup Guide</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
-        <iframe id="modalMarkupGuideFrame" title="Admin Modal Markup Guide" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/md_viewer.php?modal=1&amp;file=documentation/ADMIN_MODAL_MARKUP_GUIDE.md" referrerpolicy="no-referrer"></iframe>
+        <iframe id="modalMarkupGuideFrame" title="Admin Modal Markup Guide" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-autosize="1" data-src="/sections/tools/md_viewer.php?modal=1&amp;file=documentation/ADMIN_MODAL_MARKUP_GUIDE.md" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -86,66 +192,27 @@ const __wfEnsureModalMarkupGuideModal = () => {
   return el;
 };
 
-// --- Global Action Icons preference (icon-only buttons in Actions column) ---
-const __wfACTION_ICONS_KEY = 'wf_admin_actions_icons';
-const __wfUpdateActionIconsToggleLabel = () => {
-  try {
-    const btn = document.getElementById('actionIconsToggleBtn');
-    if (!btn) return;
-    const on = (localStorage.getItem(__wfACTION_ICONS_KEY) || '') === '1';
-    btn.textContent = on ? 'Action Buttons: Icons' : 'Action Buttons: Text Labels';
-    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    btn.title = on ? 'Switch to text labels in Actions columns' : 'Switch to icon-only in Actions columns';
-  } catch(_) {}
-};
-// Initialize label immediately
-try { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __wfUpdateActionIconsToggleLabel, { once: true }); else __wfUpdateActionIconsToggleLabel(); } catch(_) {}
-
-// Apply the document-level class from stored preference
-const __wfApplyActionIconsClass = () => {
-  try {
-    const on = (localStorage.getItem(__wfACTION_ICONS_KEY) || '') === '1';
-    const root = document.documentElement;
-    if (root && root.classList) {
-      if (on) root.classList.add('admin-actions-icons'); else root.classList.remove('admin-actions-icons');
-    }
-  } catch(_) {}
-};
-try { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', __wfApplyActionIconsClass, { once: true }); else __wfApplyActionIconsClass(); } catch(_) {}
-
-// Toggle preference and refresh UI
-const __wfToggleActionIcons = () => {
-  try {
-    const on = (localStorage.getItem(__wfACTION_ICONS_KEY) || '') === '1';
-    if (on) {
-      try { localStorage.removeItem(__wfACTION_ICONS_KEY); } catch(_) {}
-    } else {
-      try { localStorage.setItem(__wfACTION_ICONS_KEY, '1'); } catch(_) {}
-    }
-    __wfApplyActionIconsClass();
-    __wfUpdateActionIconsToggleLabel();
-  } catch(_) {}
-};
 // Lazy modal factory: Area-Item Mapper
 const __wfEnsureAreaItemMapperModal = () => {
   let el = document.getElementById('areaItemMapperModal');
-  if (el) return el;
+  // ALWAYS force recreation to pick up template/style changes
+  if (el) { try { el.remove(); } catch(_) {}; el = null; }
   el = document.createElement('div');
   el.id = 'areaItemMapperModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'areaItemMapperTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+    <div class="admin-modal admin-modal-content admin-modal--actions-in-header admin-modal--responsive">
       <div class="modal-header">
-        <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area-Item Mapper</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area Mappings</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body">
-        <iframe id="areaItemMapperFrame" title="Area-Item Mapper" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--autoheight">
+        <iframe id="areaItemMapperFrame" title="Area Mappings" class="wf-admin-embed-frame" data-autosize="1" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -156,27 +223,40 @@ const __wfEnsureAreaItemMapperModal = () => {
 // Lazy modal factory: Email Settings (iframe to standalone settings page)
 const __wfEnsureEmailSettingsModal = () => {
   let el = document.getElementById('emailSettingsModal');
-  if (el) return el;
+  // ALWAYS force recreation to pick up template/style changes
+  if (el) { try { el.remove(); } catch(_) {} el = null; }
   el = document.createElement('div');
   el.id = 'emailSettingsModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.setAttribute('data-modal', 'emailSettingsModal');
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'emailSettingsTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+    <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--responsive admin-modal--actions-in-header" id="wf-panel-auto-35">
       <div class="modal-header">
         <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body">
-        <iframe id="emailSettingsFrame" title="Email Settings" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_settings.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--autoheight">
+        <iframe id="emailSettingsFrame" title="Email Settings" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-autosize="1" data-resize-on-load="1" data-src="/sections/tools/email_settings.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
   document.body.appendChild(el);
+  try { wireOverlay(el); } catch(_) {}
+  const iframe = el.querySelector('#emailSettingsFrame');
+  if (iframe) {
+    iframe.addEventListener('load', () => {
+      try {
+        if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') {
+          window.__wfEmbedAutosize.resize(iframe);
+        }
+      } catch (_) {}
+    });
+  }
   return el;
 };
 
@@ -195,7 +275,7 @@ const __wfEnsureReceiptMessagesModal = () => {
   }
   el = document.createElement('div');
   el.id = 'receiptMessagesModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -209,10 +289,10 @@ const __wfEnsureReceiptMessagesModal = () => {
           <span id="receiptMessagesStatus" class="text-sm text-gray-600" aria-live="polite"></span>
           <button type="button" id="receiptMessagesSave" class="btn btn-primary btn-sm">Save</button>
         </div>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body">
-        <iframe id="receiptMessagesFrame" title="Receipt Messages" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/receipt_messages_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--fill">
+        <iframe id="receiptMessagesFrame" title="Receipt Messages" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-src="/sections/tools/receipt_messages_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -236,7 +316,11 @@ const __wfEnsureReceiptMessagesModal = () => {
         try {
           const d = ev && ev.data; if (!d || d.source !== 'wf-rm' || d.type !== 'status') return;
           const s = document.getElementById('receiptMessagesStatus');
-          if (s) { s.textContent = d.message || ''; s.style.color = d.ok ? '#065f46' : '#b91c1c'; }
+          if (s) {
+            s.textContent = d.message || '';
+            s.classList.remove('text-green-700','text-red-700');
+            s.classList.add(d.ok ? 'text-green-700' : 'text-red-700');
+          }
         } catch (_) {}
       });
       window.__wfRMStatusListener = true;
@@ -255,16 +339,12 @@ const __wfEnsureCartButtonTextsModal = () => {
         panel.classList.remove('admin-modal--lg','admin-modal--lg-narrow','admin-modal--md','admin-modal--xl','admin-modal--full','admin-modal--sm','admin-modal--xs','admin-modal--square-200','admin-modal--square-260');
         panel.classList.add('admin-modal--square-300');
       }
-      const body = el.querySelector('.modal-body');
-      if (body) { body.style.padding = '0'; body.style.overflow = 'hidden'; body.style.display = 'flex'; body.style.minHeight = '0'; }
-      const frame = el.querySelector('#cartButtonTextsFrame');
-      if (frame) { frame.style.width = '100%'; frame.style.height = '100%'; frame.style.border = '0'; frame.style.display = 'block'; }
     } catch(_) {}
     return el;
   }
   el = document.createElement('div');
   el.id = 'cartButtonTextsModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -274,14 +354,14 @@ const __wfEnsureCartButtonTextsModal = () => {
     <div class="admin-modal admin-modal-content admin-modal--square-300 admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="cartButtonTextsTitle" class="admin-card-title">🛒 Cart Button Texts</h2>
-        <div class="modal-header-actions">
-          <span id="cartButtonTextsStatus" class="text-sm text-gray-600" aria-live="polite"></span>
-          <button type="button" id="cartButtonTextsSave" class="btn btn-primary btn-sm">Save</button>
+          <div class="modal-header-actions">
+            <span id="cartButtonTextsStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+            <button type="button" id="cartButtonTextsSave" class="btn btn-primary btn-sm">Save</button>
+          </div>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <iframe id="cartButtonTextsFrame" title="Cart Button Texts" class="wf-admin-embed-frame" data-src="/sections/tools/cart_button_texts.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--fill">
+        <iframe id="cartButtonTextsFrame" title="Cart Button Texts" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-src="/sections/tools/cart_button_texts.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -306,7 +386,11 @@ const __wfEnsureCartButtonTextsModal = () => {
         try {
           const d = ev && ev.data; if (!d || d.source !== 'wf-cbt' || d.type !== 'status') return;
           const s = document.getElementById('cartButtonTextsStatus');
-          if (s) { s.textContent = d.message || ''; s.style.color = d.ok ? '#065f46' : '#b91c1c'; }
+          if (s) {
+            s.textContent = d.message || '';
+            s.classList.remove('text-green-700','text-red-700');
+            s.classList.add(d.ok ? 'text-green-700' : 'text-red-700');
+          }
         } catch (_) {}
       });
       window.__wfCBTStatusListener = true;
@@ -331,7 +415,7 @@ const __wfEnsureShopEncouragementsModal = () => {
   }
   el = document.createElement('div');
   el.id = 'shopEncouragementsModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -341,14 +425,14 @@ const __wfEnsureShopEncouragementsModal = () => {
     <div class="admin-modal admin-modal-content admin-modal--square-300 admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="shopEncouragementsTitle" class="admin-card-title">🏷️ Shop Encouragement Phrases</h2>
-        <div class="modal-header-actions">
-          <span id="shopEncouragementsStatus" class="text-sm text-gray-600" aria-live="polite"></span>
-          <button type="button" id="shopEncouragementsSave" class="btn btn-primary btn-sm">Save</button>
+          <div class="modal-header-actions">
+            <span id="shopEncouragementsStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+            <button type="button" id="shopEncouragementsSave" class="btn btn-primary btn-sm">Save</button>
+          </div>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
-      </div>
-      <div class="modal-body">
-        <iframe id="shopEncouragementsFrame" title="Shop Encouragement Phrases" class="wf-admin-embed-frame" data-src="/sections/tools/shop_encouragement_phrases.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--fill">
+        <iframe id="shopEncouragementsFrame" title="Shop Encouragement Phrases" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-src="/sections/tools/shop_encouragement_phrases.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -373,7 +457,11 @@ const __wfEnsureShopEncouragementsModal = () => {
         try {
           const d = ev && ev.data; if (!d || d.source !== 'wf-sep' || d.type !== 'status') return;
           const s = document.getElementById('shopEncouragementsStatus');
-          if (s) { s.textContent = d.message || ''; s.style.color = d.ok ? '#065f46' : '#b91c1c'; }
+          if (s) {
+            s.textContent = d.message || '';
+            s.classList.remove('text-green-700','text-red-700');
+            s.classList.add(d.ok ? 'text-green-700' : 'text-red-700');
+          }
         } catch (_) {}
       });
       window.__wfSEPStatusListener = true;
@@ -393,33 +481,29 @@ const __wfEnsureTemplateManagerModal = () => {
   }
   el = document.createElement('div');
   el.id = 'templateManagerModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'templateManagerTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+    <div class="admin-modal admin-modal-content admin-modal--responsive admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="templateManagerTitle" class="admin-card-title">📧 Email Templates</h2>
         <div class="modal-header-actions">
           <span id="templateManagerStatus" class="text-sm text-gray-600" aria-live="polite"></span>
           <button type="button" id="templateManagerSave" class="btn btn-primary btn-sm">Save</button>
         </div>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body">
-        <iframe id="templateManagerFrame" title="Email Templates" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/template_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--autoheight">
+        <iframe id="templateManagerFrame" title="Email Templates" class="wf-admin-embed-frame" data-autosize="1" data-src="/sections/tools/template_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
   document.body.appendChild(el);
   try {
-    const body = el.querySelector('.modal-body');
-    if (body) body.classList.add('wf-modal-body--fill');
-    const frame = el.querySelector('#templateManagerFrame');
-    if (frame) frame.classList.add('wf-embed--fill');
     const saveBtn = el.querySelector('#templateManagerSave');
     if (saveBtn) {
       saveBtn.addEventListener('click', (e) => {
@@ -429,18 +513,61 @@ const __wfEnsureTemplateManagerModal = () => {
       });
     }
   } catch(_) {}
+  try { wireOverlay(el); } catch(_) {}
   try {
     if (!window.__wfTMStatusListener) {
       window.addEventListener('message', (ev) => {
         try {
           const d = ev && ev.data; if (!d || d.source !== 'wf-tm' || d.type !== 'status') return;
           const s = document.getElementById('templateManagerStatus');
-          if (s) { s.textContent = d.message || ''; s.style.color = d.ok ? '#065f46' : '#b91c1c'; }
+          if (s) {
+            s.textContent = d.message || '';
+            s.classList.remove('text-green-700','text-red-700');
+            s.classList.add(d.ok ? 'text-green-700' : 'text-red-700');
+          }
         } catch (_) {}
       });
       window.__wfTMStatusListener = true;
     }
   } catch(_) {}
+  return el;
+};
+
+// Lazy modal factory: Automation Manager (direct, no proxy)
+const __wfEnsureAutomationModal = () => {
+  let el = document.getElementById('automationModal');
+  if (el) {
+    try {
+      const panel = el.querySelector('.admin-modal');
+      if (panel) panel.classList.add('admin-modal--lg','admin-modal--actions-in-header');
+      const body = el.querySelector('.modal-body');
+      if (body) body.classList.add('wf-modal-body--fill');
+      const frame = el.querySelector('#automationFrame');
+      if (frame) frame.classList.add('wf-embed--fill');
+    } catch(_) {}
+    return el;
+  }
+  el = document.createElement('div');
+  el.id = 'automationModal';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'automationTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content admin-modal--responsive admin-modal--actions-in-header">
+      <div class="modal-header">
+        <h2 id="automationTitle" class="admin-card-title">⚙️ Automation</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body wf-modal-body--autoheight">
+        <iframe id="automationFrame" title="Automation" class="wf-admin-embed-frame" data-autosize="1" data-src="/sections/tools/automation_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  try { wireOverlay(el); } catch(_) {}
   return el;
 };
 
@@ -453,31 +580,40 @@ const __wfEnsureEmailHistoryModal = () => {
     if (!existingIframe) {
       const body = el.querySelector('.modal-body');
       if (body) {
-        body.innerHTML = '<iframe id="emailHistoryFrame" title="Email History" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_history.php?modal=1" referrerpolicy="no-referrer"></iframe>';
+        body.innerHTML = '<iframe id="emailHistoryFrame" title="Email History" class="wf-admin-embed-frame" data-autosize="1" data-src="/sections/tools/email_history.php?modal=1" referrerpolicy="no-referrer"></iframe>';
       }
     }
+    // Normalize panel size classes to smaller MD variant
+    try {
+      const panel = el.querySelector('.admin-modal');
+      if (panel) {
+        panel.classList.remove('admin-modal--lg','admin-modal--lg-narrow','admin-modal--xl','admin-modal--full','admin-modal--md','admin-modal--xs');
+        panel.classList.add('admin-modal--sm');
+      }
+    } catch(_) {}
     return el;
   }
   el = document.createElement('div');
   el.id = 'emailHistoryModal';
-  el.className = 'admin-modal-overlay hidden';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'emailHistoryTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+    <div class="admin-modal admin-modal-content admin-modal--responsive admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="emailHistoryTitle" class="admin-card-title">📬 Email History</h2>
-        <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body">
-        <iframe id="emailHistoryFrame" title="Email History" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_history.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--autoheight">
+        <iframe id="emailHistoryFrame" title="Email History" class="wf-admin-embed-frame" data-autosize="1" data-src="/sections/tools/email_history.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
   document.body.appendChild(el);
+  try { wireOverlay(el); } catch(_) {}
   return el;
 };
 // Admin Settings Entry Point - Lightweight
@@ -500,32 +636,533 @@ import '../modules/utilities.js';
 
 // Import the coordinator module
 import '../modules/admin-settings-coordinator.js';
+// Standardized embed autosize controller (parent side)
+import { initEmbedAutosizeParent, attachSameOriginFallback, markOverlayResponsive, initOverlayAutoWire, wireOverlay } from '../modules/embed-autosize-parent.js';
+
+// Initialize global message listener and auto-wire overlays once
+try { initEmbedAutosizeParent(); } catch(_) {}
+try { initOverlayAutoWire(); } catch(_) {}
 
 // Immediately install lightweight modal helpers
 const __wfShowModal = (id) => {
   const el = document.getElementById(id);
   if (!el) return false;
-  el.removeAttribute('hidden'); // Remove HTML hidden attribute
-  el.classList.remove('hidden');
-  el.classList.add('show');
-  el.setAttribute('aria-hidden', 'false');
-  if (el.hasAttribute('style')) {
-    const attr = el.getAttribute('style');
-    if (!attr || /display\s*:/.test(attr)) {
-      el.removeAttribute('style');
-    }
+  try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+  try {
+    const panel = el.querySelector('.admin-modal');
+    const body = panel ? panel.querySelector('.modal-body') : null;
+    markOverlayResponsive(el);
+    if (body) body.classList.remove('wf-modal-body--fill');
+  } catch(_) {}
+  if (typeof window.showModal === 'function') {
+    window.showModal(id);
   }
+  // Ensure visual state regardless of which show path was used
+  // Only add content-scroll helper for non-responsive overlays
+  try {
+    const panel = el.querySelector('.admin-modal');
+    const isResponsive = panel && panel.classList && panel.classList.contains('admin-modal--responsive');
+    if (!isResponsive && !el.classList.contains('wf-modal--content-scroll')) el.classList.add('wf-modal--content-scroll');
+    if (isResponsive) el.classList.remove('wf-modal--content-scroll');
+  } catch(_) {}
+  try { el.removeAttribute('hidden'); } catch(_) {}
+  try { el.classList.remove('hidden'); } catch(_) {}
+  try { el.classList.add('show'); } catch(_) {}
+  try { el.setAttribute('aria-hidden', 'false'); } catch(_) {}
+  // Post-show layout helpers kept for wide/auto-grid behavior
+  try {
+    const apply = () => {
+      try {
+        const noAuto = (el.classList && el.classList.contains('wf-no-autosize')) || el.hasAttribute('data-no-autosize');
+        if (noAuto) return;
+        const panel = el.querySelector('.admin-modal');
+        if (!panel) return;
+        const isResponsive = panel.classList.contains('admin-modal--responsive');
+        const body = panel.querySelector('.modal-body');
+        if (!body) return;
+        // If responsive modal with autosize iframe, prefer autoheight by default to avoid initial scrollbars
+        if (isResponsive) {
+          try {
+            const frame = body.querySelector('iframe[data-autosize], .wf-admin-embed-frame[data-autosize]');
+            if (frame) {
+              body.classList.add('wf-modal-body--autoheight');
+              body.classList.remove('wf-modal-body--scroll');
+              frame.classList.remove('wf-embed--fill');
+              body.classList.remove('wf-modal-body--fill');
+              // Remove legacy auto panel helper if present
+              try { panel.classList.remove('wf-modal-auto'); } catch(_) {}
+              // Overlay-level helper can force scroll; disable it for responsive modals
+              try { el.classList.remove('wf-modal--body-scroll'); } catch(_) {}
+              // Standardized parent fallback + responsive mark
+              try { markOverlayResponsive(el); } catch(_) {}
+              try { attachSameOriginFallback(frame, el); } catch(_) {}
+            }
+          } catch(_) {}
+        }
+        try {
+          const onlyChild = body.children && body.children.length === 1 ? body.children[0] : null;
+          const isIframe = onlyChild && (onlyChild.tagName === 'IFRAME' || onlyChild.classList.contains('wf-admin-embed-frame'));
+          if (isIframe && !isResponsive) {
+            if (!body.classList.contains('wf-modal-body--fill')) body.classList.add('wf-modal-body--fill');
+            if (!onlyChild.classList.contains('wf-embed--fill')) onlyChild.classList.add('wf-embed--fill');
+          }
+        } catch(_) {}
+        const findFlattenEl = (container) => {
+          try {
+            const innerModal = container.querySelector(':scope > .admin-modal.admin-modal-content');
+            if (innerModal) return innerModal;
+            const direct = container.querySelectorAll(':scope > .rounded.border.p-3, :scope > .admin-card, :scope > .wf-modal-section, :scope > .modal-section, :scope > .card');
+            const viaForm = (!direct.length) ? container.querySelectorAll(':scope > form > .rounded.border.p-3, :scope > form > .admin-card, :scope > form > .wf-modal-section, :scope > form > .modal-section, :scope > form > .card') : [];
+            const list = direct.length ? direct : viaForm;
+            if (list.length === 1) {
+              const s = list[0];
+              const cls = s.className || '';
+              if (!/\bgrid\b/.test(cls) && !/\bgrid-cols-([2-9]|1[0-9])\b/.test(cls) && !/\bmd:grid-cols-([2-9]|1[0-9])\b/.test(cls)) {
+                return s;
+              }
+            }
+          } catch(_) {}
+          return null;
+        };
+        const flattenTarget = findFlattenEl(body);
+        if (flattenTarget) { body.classList.add('wf-modal-body--flat'); try { flattenTarget.classList.add('wf-modal-flatten-target'); } catch(_) {} }
+        const singleIframe = (body.children && body.children.length === 1 && body.querySelector('iframe')) ? true : false;
+        const over = body.scrollHeight > (body.clientHeight + 4);
+        if (over && !singleIframe && !body.classList.contains('wf-modal-body--flat')) {
+          body.classList.add('wf-modal-body--autogrid');
+        }
+        const wireAll = () => {
+          try {
+            const panel = el.querySelector('.admin-modal');
+            const bodyEl = panel ? panel.querySelector('.modal-body') : null;
+            try { markOverlayResponsive(el); } catch(_) {}
+            try { if (bodyEl && bodyEl.classList) bodyEl.classList.remove('wf-modal-body--fill'); } catch(_) {}
+            const list = el.querySelectorAll('iframe, .wf-admin-embed-frame');
+            let any = false;
+            list.forEach((f) => {
+              try { if (f && f.dataset && f.dataset.wfWired === '1') return; } catch(_) {}
+              any = true;
+              try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
+              try { if (f) f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
+              try { if (f) attachSameOriginFallback(f, el); } catch(_) {}
+              try { if (f && f.classList) f.classList.remove('wf-embed--fill'); } catch(_) {}
+              try { if (f && f.dataset) f.dataset.wfWired = '1'; } catch(_) {}
+            });
+            if (any) { /* already marked above */ }
+          } catch(_) {}
+        };
+        wireAll();
+        try {
+          if (!el.__wfEmbedMO) {
+            const mo = new MutationObserver((muts) => {
+              try {
+                for (const m of muts) {
+                  try {
+                    if (!m || !m.addedNodes) continue;
+                    m.addedNodes.forEach((n) => {
+                      try {
+                        if (!n || n.nodeType !== 1) return;
+                        const frames = (n.matches && n.matches('iframe, .wf-admin-embed-frame')) ? [n] : (n.querySelectorAll ? n.querySelectorAll('iframe, .wf-admin-embed-frame') : []);
+                        if (!frames || frames.length === 0) return;
+                        frames.forEach((f) => {
+                          try { if (f && f.dataset && f.dataset.wfWired === '1') return; } catch(_) {}
+                          try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
+                          try { if (f) f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
+                          try { if (f) attachSameOriginFallback(f, el); } catch(_) {}
+                          try { if (f && f.classList) f.classList.remove('wf-embed--fill'); } catch(_) {}
+                          try { if (f && f.dataset) f.dataset.wfWired = '1'; } catch(_) {}
+                        });
+                        try { markOverlayResponsive(el); } catch(_) {}
+                        try { const panel2 = el.querySelector('.admin-modal'); const body2 = panel2 ? panel2.querySelector('.modal-body') : null; if (body2 && body2.classList) body2.classList.remove('wf-modal-body--fill'); } catch(_) {}
+                      } catch(_) {}
+                    });
+                  } catch(_) {}
+                }
+              } catch(_) {}
+            });
+            mo.observe(el, { childList: true, subtree: true });
+            el.__wfEmbedMO = mo;
+          }
+        } catch(_) {}
+      } catch(_) {}
+    };
+    if ('requestAnimationFrame' in window) requestAnimationFrame(() => apply()); else setTimeout(apply, 0);
+  } catch(_) {}
   return true;
 };
+
+// Expose helpers globally for callers that expect them
+try { window.__wfShowModal = __wfShowModal; } catch(_) {}
 
 const __wfHideModal = (id) => {
   const el = document.getElementById(id);
   if (!el) return false;
-  try { el.setAttribute('hidden', ''); } catch(_) {}
-  el.classList.add('hidden');
-  el.classList.remove('show');
-  el.setAttribute('aria-hidden', 'true');
+  if (typeof window.hideModal === 'function') {
+    window.hideModal(id);
+  } else {
+    try { el.setAttribute('hidden', ''); } catch(_) {}
+    el.classList.add('hidden');
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden', 'true');
+  }
   return true;
+};
+
+// Lightweight generic status modal (for transient operations like provider tests)
+const __wfEnsureStatusModal = () => {
+  let el = document.getElementById('wfStatusModal');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'wfStatusModal';
+  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden over-header';
+  el.setAttribute('aria-hidden', 'true');
+  el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-modal', 'true');
+  el.setAttribute('tabindex', '-1');
+  el.setAttribute('aria-labelledby', 'wfStatusTitle');
+  el.innerHTML = `
+    <div class="admin-modal admin-modal-content admin-modal--sm admin-modal--actions-in-header">
+      <div class="modal-header">
+        <h2 id="wfStatusTitle" class="admin-card-title">Status</h2>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="wfStatusBody" class="text-sm text-gray-700">Working…</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(el);
+  return el;
+};
+
+const __wfShowStatusModal = (title, message) => {
+  const m = __wfEnsureStatusModal();
+  try { m.querySelector('#wfStatusTitle').textContent = title || 'Status'; } catch(_) {}
+  try { m.querySelector('#wfStatusBody').textContent = message || ''; } catch(_) {}
+  __wfShowModal('wfStatusModal');
+};
+
+const __wfUpdateStatusModal = (message) => {
+  try {
+    const b = document.getElementById('wfStatusBody');
+    if (b) b.textContent = message || '';
+  } catch(_) {}
+};
+
+// Inject minimal CSS fallback into admin iframes so variant-only buttons still layout
+(function registerIframeBtnFallback(){
+  const CSS = `
+    /* Button/size normalization inside iframes */
+    body :is(.btn-primary, .btn-secondary, .btn-danger, .btn-success, .btn-warning, .btn-info, .btn-light, .btn-outline, .btn-link):not(.btn) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2, 0.5rem);
+      font-family: var(--font-primary, inherit);
+      font-weight: 500;
+      text-decoration: none;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    body :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Auto-grid within iframe content to reduce internal scroll */
+    .wf-embed-autogrid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+      gap: 12px !important;
+      align-content: start !important;
+    }
+    .wf-embed-autogrid > form { display: contents !important; }
+    .wf-embed-autogrid > fieldset,
+    .wf-embed-autogrid > .admin-card,
+    .wf-embed-autogrid > .rounded,
+    .wf-embed-autogrid > .modal-section,
+    .wf-embed-autogrid > .wf-modal-section,
+    .wf-embed-autogrid > .rounded.border.p-3 {
+      min-width: 0 !important;
+    }
+    @media (min-width: 1536px) {
+      .wf-embed-autogrid { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)) !important; }
+    }
+
+    /* Flatten one-column iframe content by removing inner card chrome */
+    .wf-embed-flat { display: block !important; }
+    .wf-embed-flat > .rounded.border.p-3,
+    .wf-embed-flat > .admin-card,
+    .wf-embed-flat > .wf-modal-section,
+    .wf-embed-flat > .modal-section,
+    .wf-embed-flat > form > .rounded.border.p-3,
+    .wf-embed-flat > form > .admin-card,
+    .wf-embed-flat > form > .wf-modal-section,
+    .wf-embed-flat > form > .modal-section,
+    .wf-embed-flat .rounded.border.p-3.wf-embed-flatten-target {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+    }
+    /* Also flatten any inner admin-modal chrome under flat root */
+    .wf-embed-flat .admin-modal.admin-modal-content { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+    .wf-embed-flat .admin-modal.admin-modal-content > .modal-header { background: transparent !important; border: 0 !important; box-shadow: none !important; padding-left: 0 !important; padding-right: 0 !important; margin: 0 0 8px 0 !important; }
+    .wf-embed-flat .admin-modal.admin-modal-content > .modal-header .admin-card-title { display: none !important; }
+  `;
+  function inject(doc){
+    try {
+      if (!doc) return;
+      {
+        let style = doc.getElementById('wf-admin-btn-fallback');
+        if (!style) {
+          style = doc.createElement('style');
+          style.id = 'wf-admin-btn-fallback';
+          (doc.head || doc.documentElement || doc.body).appendChild(style);
+        }
+        try { style.textContent = CSS; } catch(_) {}
+      }
+      // Apply flatten for one-column content or autogrid if overflow
+      try {
+        const pickRoot = (d) => {
+          return d.querySelector('.admin-marketing-page, .wf-modal-section-root, .admin-card-container, main, .content, .container') || d.body;
+        };
+        const findFlattenEl = (root) => {
+          try {
+            // 1) If the root has a direct inner admin-modal, flatten that panel
+            const directInnerModal = root.querySelector(':scope > .admin-modal.admin-modal-content');
+            if (directInnerModal) return directInnerModal;
+            // 2) Otherwise, if there's exactly one single-column wrapper, flatten the root content
+            const direct = root.querySelectorAll(':scope > .rounded.border.p-3, :scope > .admin-card, :scope > .wf-modal-section, :scope > .modal-section, :scope > .card');
+            const viaForm = (!direct.length) ? root.querySelectorAll(':scope > form > .rounded.border.p-3, :scope > form > .admin-card, :scope > form > .wf-modal-section, :scope > form > .modal-section, :scope > form > .card') : [];
+            const list = direct.length ? direct : viaForm;
+            if (list.length === 1) {
+              const el = list[0];
+              const cls = el.className || '';
+              if (!/\bgrid\b/.test(cls) && !/\bgrid-cols-([2-9]|1[0-9])\b/.test(cls) && !/\bmd:grid-cols-([2-9]|1[0-9])\b/.test(cls)) {
+                return el;
+              }
+            }
+          } catch(_) {}
+          return null;
+        };
+        const applyLayout = (d) => {
+          try {
+            const root = pickRoot(d);
+            if (!root) return;
+            const target = findFlattenEl(root);
+            if (target) { root.classList.add('wf-embed-flat'); target.classList.add('wf-embed-flatten-target'); return; }
+            const docEl = d.documentElement || d.body;
+            const over = (docEl && (docEl.scrollHeight > (docEl.clientHeight + 4))) || (d.body && (d.body.scrollHeight > (d.body.clientHeight + 4)));
+            if (over && !root.classList.contains('wf-embed-flat')) root.classList.add('wf-embed-autogrid');
+          } catch(_) {}
+        };
+        if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', () => applyLayout(doc), { once: true }); } else { applyLayout(doc); }
+        // Re-check after a tick for late content
+        setTimeout(() => { try { applyLayout(doc); } catch(_){} }, 100);
+        // Re-check on resize within iframe
+        try { doc.defaultView && doc.defaultView.addEventListener('resize', () => applyLayout(doc)); } catch(_){}
+      } catch(_) {}
+    } catch(_) {}
+  }
+  function attachToIframe(ifr){
+    try {
+      if (!ifr || ifr.__wfBtnFb) return;
+      ifr.__wfBtnFb = true;
+      ifr.addEventListener('load', () => {
+        try { inject(ifr.contentDocument || ifr.contentWindow?.document); } catch(_) {}
+      });
+      // If already loaded and same-origin, inject immediately
+      try { inject(ifr.contentDocument || ifr.contentWindow?.document); } catch(_) {}
+    } catch(_) {}
+  }
+  function scan(root){
+    try {
+      (root || document).querySelectorAll('iframe.wf-admin-embed-frame, .admin-modal iframe, iframe[id$="Frame"]').forEach(attachToIframe);
+    } catch(_) {}
+  }
+  try {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => scan(document), { once: true });
+    } else {
+      scan(document);
+    }
+  } catch(_) {}
+  try {
+    const target = document.body || document;
+    const mo = new MutationObserver((muts)=>{
+      for (const m of muts){
+        if (!m.addedNodes) continue;
+        m.addedNodes.forEach((n)=>{
+          if (n && n.nodeType === 1){
+            if (n.tagName === 'IFRAME') attachToIframe(n);
+            scan(n);
+          }
+        });
+      }
+    });
+    mo.observe(target, { subtree: true, childList: true });
+    window.__wfIframeBtnFallbackObserver = mo;
+  } catch(_) {}
+})();
+
+// Listen for requests from embedded marketing tools to open AI Provider
+try {
+  if (!window.__wfAIProviderOpenListener) {
+    window.__wfAIProviderOpenListener = true;
+    window.addEventListener('message', (ev) => {
+      try {
+        const d = ev && ev.data; if (!d || d.source !== 'wf-ai' || d.type !== 'open-provider') return;
+        const unified = document.getElementById('aiUnifiedModal');
+        if (unified) { try { __wfHideModal('aiUnifiedModal'); } catch(_) {} }
+        const modal = document.getElementById('aiSettingsModal');
+        if (modal) {
+          try { if (modal.parentElement && modal.parentElement !== document.body) document.body.appendChild(modal); } catch(_) {}
+          modal.classList.add('over-header');
+          __wfShowModal('aiSettingsModal');
+          try { if (typeof window !== 'undefined' && typeof window.loadAISettings === 'function') window.loadAISettings(); else if (typeof __wfAI_loadSettingsAndRender === 'function') __wfAI_loadSettingsAndRender(); } catch(_) {}
+          try { if (typeof window !== 'undefined' && typeof window.loadAIProviders === 'function') window.loadAIProviders(); } catch(_) {}
+        }
+      } catch(_) {}
+    });
+  }
+} catch(_) {}
+
+// Parent-side iframe autosize: legacy listener (DISABLED when primary autosize module is present)
+try {
+  if (!window.__wfEmbedSizeListener && !window.__wfEmbedAutosizePrimary) {
+    window.__wfEmbedSizeListener = true;
+    window.addEventListener('message', (ev) => {
+      try {
+        // Accept same-origin, same-host (different port) in dev, and browser-reported null/empty origins
+        const okOrigin = (() => {
+          try {
+            if (!ev || !('origin' in ev) || !ev.origin || ev.origin === 'null') return true;
+            if (ev.origin === window.location.origin) return true;
+            const childHost = new URL(ev.origin).hostname;
+            const parentHost = window.location.hostname;
+            return !!childHost && !!parentHost && childHost === parentHost;
+          } catch(_) { return false; }
+        })();
+        if (!okOrigin) return;
+        const d = ev && ev.data; if (!d || d.source !== 'wf-embed-size') return;
+        // Find the active autosize iframe and its overlay reliably
+        let frame = document.querySelector('.admin-modal-overlay:not([hidden]) iframe[data-autosize]');
+        if (!frame) frame = document.querySelector('.admin-modal-overlay.show:not(.hidden) iframe[data-autosize]');
+        if (!frame) frame = document.querySelector('iframe[data-autosize]');
+        if (!frame) return;
+        const overlay = frame.closest('.admin-modal-overlay') || document.querySelector('.admin-modal-overlay');
+        if (!overlay) return;
+        const panel = overlay.querySelector('.admin-modal');
+        if (!panel || !panel.classList.contains('admin-modal--responsive')) return;
+        const body = overlay.querySelector('.modal-body');
+        if (!body || !frame) return;
+        const header = overlay.querySelector('.modal-header');
+        const maxVh = 0.95; // sync with CSS 95vh
+        const maxPanel = Math.floor(window.innerHeight * maxVh);
+        const headerH = header ? header.offsetHeight : 0;
+        let padY = 0; try { const cs = getComputedStyle(body); padY = (parseFloat(cs.paddingTop)||0)+(parseFloat(cs.paddingBottom)||0); } catch(_) {}
+        const available = Math.max(120, maxPanel - headerH - padY);
+        // Message-based intrinsic content height from child
+        const contentH = Math.max(0, Number(d.height || 0));
+        const safety = 0; // no ratchet
+        let desired = Math.max(80, Math.min(contentH + safety, available));
+        // Mark message sizing active and stop fallback observer
+        try { frame.dataset.wfUseMsgSizing = '1'; } catch(_) {}
+        try { if (frame.__wfEmbedRO && typeof frame.__wfEmbedRO.disconnect === 'function') frame.__wfEmbedRO.disconnect(); } catch(_) {}
+        // Guard: do not shrink below current rendered height; child can under-report early
+        try {
+          const currentH = Math.round(frame.getBoundingClientRect().height);
+          if (currentH) desired = Math.max(desired, currentH);
+        } catch(_) {}
+        // Epsilon guard to avoid needless updates/oscillations
+        // Ignore suspiciously tiny reports when we already have a larger size
+        try {
+          const last = Number(frame.getAttribute('data-wf-last-height') || '0');
+          if (contentH && contentH < 120 && last > 0) desired = Math.max(desired, last);
+        } catch(_) {}
+        // Use a dynamic stylesheet rule per iframe id (avoid inline styles)
+        const idRaw = frame.getAttribute('id') || 'wf-embed-current';
+        const esc = (s) => {
+          try { return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/[^\w-]/g, '\\$&'); } catch(_) { return String(s).replace(/[^\w-]/g, '\\$&'); }
+        };
+        const styleId = 'wf-embed-dynamic-heights';
+        let styleTag = document.getElementById(styleId);
+        if (!styleTag) { styleTag = document.createElement('style'); styleTag.id = styleId; document.head.appendChild(styleTag); }
+        // Epsilon guard to avoid needless updates/oscillations
+        try {
+          const last = Number(frame.getAttribute('data-wf-last-height') || '0');
+          if (last && Math.abs(desired - last) < 1) return;
+        } catch(_) {}
+        const css = `#${esc(idRaw)}{height:${Math.round(desired)}px !important;}`;
+        // Maintain only the active rule for simplicity
+        try { styleTag.textContent = css; } catch(_) { styleTag.innerText = css; }
+        try { frame.setAttribute('data-wf-last-height', String(Math.round(desired))); } catch(_) {}
+        // Toggle modal-body autoheight vs scroll depending on overflow
+        const fits = (contentH + safety) <= available;
+        try {
+          body.classList.toggle('wf-modal-body--autoheight', fits);
+          body.classList.toggle('wf-modal-body--scroll', !fits);
+          // Clear conflicting fill classes to prevent overrides
+          frame.classList.remove('wf-embed--fill');
+          body.classList.remove('wf-modal-body--fill');
+          // Remove seed height class if present
+          frame.classList.remove('wf-embed-h-s', 'wf-embed-h-m', 'wf-embed-h-l', 'wf-embed-h-xl', 'wf-embed-h-xxl');
+          try { if (window.__WF_DEBUG) console.debug('[wf-embed-size] parent-message', { h: contentH, available, desired, fits }); } catch(_) {}
+        } catch(_) {}
+      } catch(_) {}
+    });
+  }
+} catch(_) {}
+
+// Prime Colors & Fonts modal inputs using current CSS variables
+const __wfInitColorsFontsModal = () => {
+  try {
+    const css = (name, fallback) => {
+      try {
+        const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return v || fallback;
+      } catch(_) { return fallback; }
+    };
+    const ensureHex = (v, fallback) => {
+      if (!v) return fallback;
+      const t = v.trim();
+      if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(t)) return t;
+      // Try rgb/rgba(…)
+      const m = t.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+      if (m) {
+        const r = (parseInt(m[1],10)||0).toString(16).padStart(2,'0');
+        const g = (parseInt(m[2],10)||0).toString(16).padStart(2,'0');
+        const b = (parseInt(m[3],10)||0).toString(16).padStart(2,'0');
+        return `#${r}${g}${b}`;
+      }
+      return fallback;
+    };
+
+    const map = {
+      brandPrimary: ensureHex(css('--brand-primary', '#0ea5e9'), '#0ea5e9'),
+      brandSecondary: ensureHex(css('--brand-secondary', '#6366f1'), '#6366f1'),
+      brandAccent: ensureHex(css('--brand-accent', '#22c55e'), '#22c55e'),
+      brandBackground: ensureHex(css('--brand-bg', '#ffffff'), '#ffffff'),
+      brandText: ensureHex(css('--brand-text', '#111827'), '#111827'),
+      publicHeaderBg: ensureHex(css('--public-header-bg', css('--brand-primary', '#0ea5e9')), '#0ea5e9'),
+      publicHeaderText: ensureHex(css('--public-header-text', '#ffffff'), '#ffffff'),
+      publicModalBg: ensureHex(css('--public-modal-bg', '#ffffff'), '#ffffff'),
+      publicModalText: ensureHex(css('--public-modal-text', '#111827'), '#111827'),
+      publicPageBg: ensureHex(css('--site-page-bg', css('--brand-bg', '#ffffff')), '#ffffff'),
+      publicPageText: ensureHex(css('--site-page-text', css('--brand-text', '#111827')), '#111827'),
+    };
+
+    Object.entries(map).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el && el.type === 'color' && (!el.value || el.value === '#000000')) {
+        try { el.value = val; } catch(_) {}
+      }
+    });
+
+    // Font preview labels are handled by Initialization.applyBusinessCssToRoot()
+  } catch (_) {}
 };
 
 const __wfGetTriggerLabel = (node) => {
@@ -551,6 +1188,8 @@ const __wfSetModalHeaderFromTrigger = (trigger, modal) => {
 const __wfAI_fallbackModels = {
   openai: [
     { id: 'gpt-4o', name: 'GPT-4o', description: 'Latest and most capable model' },
+    { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: 'Cheaper, fast variant of 4o' },
+    { id: 'o3-mini', name: 'o3-mini', description: 'Reasoning-optimized, lightweight' },
     { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', description: 'Fast and capable' },
     { id: 'gpt-4', name: 'GPT-4', description: 'Highly capable model' },
     { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', description: 'Fast and affordable' }
@@ -608,6 +1247,10 @@ const __wfAI_renderProviderUI = (provider, settings) => {
       '    <input id="openai_api_key" type="password" class="form-input w-full" placeholder="sk-..." autocomplete="off" />',
       '  </div>',
       '  <div>',
+      '    <label for="openai_model_source" class="block text-sm font-medium mb-1">Model Source</label>',
+      '    <select id="openai_model_source" class="form-select w-full"><option value="local">Local (Static)</option><option value="openrouter">OpenRouter (Live)</option></select>',
+      '  </div>',
+      '  <div>',
       '    <label for="openai_model" class="block text-sm font-medium mb-1">OpenAI Model</label>',
       '    <select id="openai_model" class="form-select w-full"></select>',
       '  </div>',
@@ -619,6 +1262,10 @@ const __wfAI_renderProviderUI = (provider, settings) => {
       '  <div>',
       '    <label for="anthropic_api_key" class="block text-sm font-medium mb-1">Anthropic API Key</label>',
       '    <input id="anthropic_api_key" type="password" class="form-input w-full" placeholder="anthropic-key" autocomplete="off" />',
+      '  </div>',
+      '  <div>',
+      '    <label for="anthropic_model_source" class="block text-sm font-medium mb-1">Model Source</label>',
+      '    <select id="anthropic_model_source" class="form-select w-full"><option value="local">Local (Static)</option><option value="openrouter">OpenRouter (Live)</option></select>',
       '  </div>',
       '  <div>',
       '    <label for="anthropic_model" class="block text-sm font-medium mb-1">Anthropic Model</label>',
@@ -634,6 +1281,10 @@ const __wfAI_renderProviderUI = (provider, settings) => {
       '    <input id="google_api_key" type="password" class="form-input w-full" placeholder="AIza..." autocomplete="off" />',
       '  </div>',
       '  <div>',
+      '    <label for="google_model_source" class="block text-sm font-medium mb-1">Model Source</label>',
+      '    <select id="google_model_source" class="form-select w-full"><option value="local">Local (Static)</option><option value="openrouter">OpenRouter (Live)</option></select>',
+      '  </div>',
+      '  <div>',
       '    <label for="google_model" class="block text-sm font-medium mb-1">Google Model</label>',
       '    <select id="google_model" class="form-select w-full"></select>',
       '  </div>',
@@ -647,6 +1298,10 @@ const __wfAI_renderProviderUI = (provider, settings) => {
       '    <input id="meta_api_key" type="password" class="form-input w-full" placeholder="..." autocomplete="off" />',
       '  </div>',
       '  <div>',
+      '    <label for="meta_model_source" class="block text-sm font-medium mb-1">Model Source</label>',
+      '    <select id="meta_model_source" class="form-select w-full"><option value="local">Local (Static)</option><option value="openrouter">OpenRouter (Live)</option></select>',
+      '  </div>',
+      '  <div>',
       '    <label for="meta_model" class="block text-sm font-medium mb-1">Meta Model</label>',
       '    <select id="meta_model" class="form-select w-full"></select>',
       '  </div>',
@@ -656,8 +1311,42 @@ const __wfAI_renderProviderUI = (provider, settings) => {
     html = '<div class="text-sm text-gray-500">Using local AI. No keys required.</div>';
   }
   container.innerHTML = html;
+  // Initialize Model Source selector (persist to localStorage)
+  try {
+    const srcSel = document.getElementById(`${prov}_model_source`);
+    if (srcSel) {
+      const key = `wf_ai_model_source_${prov}`;
+      try {
+        const saved = localStorage.getItem(key);
+        if (saved) srcSel.value = saved;
+      } catch(_) {}
+      try {
+        srcSel.addEventListener('change', () => {
+          try { localStorage.setItem(key, srcSel.value); } catch(_) {}
+          __wfAI_fetchAndPopulateModels(prov, true, srcSel.value);
+        });
+      } catch(_) {}
+    }
+  } catch(_) {}
+
   // Populate fallback models
   __wfAI_populateModelDropdown(prov, (s && s[`${prov}_model`]) || '');
+
+  try {
+    const srcSel = document.getElementById(`${prov}_model_source`);
+    __wfAI_fetchAndPopulateModels(prov, true, srcSel ? srcSel.value : '');
+  } catch(_) {}
+
+  try {
+    const modelSel = document.getElementById(`${prov}_model`);
+    const srcSel = document.getElementById(`${prov}_model_source`);
+    if (modelSel && !modelSel.__wfLiveModelsWired) {
+      const trigger = () => { __wfAI_fetchAndPopulateModels(prov, true, (srcSel ? srcSel.value : '')); };
+      try { modelSel.addEventListener('focus', trigger); } catch(_) {}
+      try { modelSel.addEventListener('mousedown', trigger); } catch(_) {}
+      modelSel.__wfLiveModelsWired = true;
+    }
+  } catch(_) {}
 
   // Add "Saved" badge if secret present (from settings presence flags)
   try {
@@ -673,6 +1362,73 @@ const __wfAI_renderProviderUI = (provider, settings) => {
     if (prov === 'anthropic' && s.anthropic_key_present) addBadge('anthropic_api_key');
     if (prov === 'google' && s.google_key_present) addBadge('google_api_key');
     if (prov === 'meta' && s.meta_key_present) addBadge('meta_api_key');
+  } catch(_) {}
+
+  try {
+    const setKeyUi = (id) => {
+      const inp = container.querySelector(`#${id}`);
+      if (!inp) return;
+      const has = (
+        (prov === 'openai' && s.openai_key_present) ||
+        (prov === 'anthropic' && s.anthropic_key_present) ||
+        (prov === 'google' && s.google_key_present) ||
+        (prov === 'meta' && s.meta_key_present)
+      );
+      if (has) {
+        inp.placeholder = 'Saved — leave blank to keep';
+      }
+      inp.setAttribute('title', 'We never show your secret. Leave blank to keep the current one; paste a new one to replace it.');
+    };
+    const setModelUi = (id) => {
+      const sel = container.querySelector(`#${id}`);
+      if (sel) sel.setAttribute('title', 'Pick your preferred brain flavor for this provider.');
+    };
+    const setSourceUi = (forId) => {
+      const lbl = container.querySelector(`label[for="${forId}"]`);
+      if (lbl) lbl.setAttribute('title', 'Local = our trusty offline cheat sheet. OpenRouter = live buffet of fresh models.');
+    };
+    if (prov === 'openai') { setKeyUi('openai_api_key'); setModelUi('openai_model'); }
+    if (prov === 'anthropic') { setKeyUi('anthropic_api_key'); setModelUi('anthropic_model'); }
+    if (prov === 'google') { setKeyUi('google_api_key'); setModelUi('google_model'); }
+    if (prov === 'meta') { setKeyUi('meta_api_key'); setModelUi('meta_model'); }
+    // Source tooltips on labels
+    if (prov === 'openai') setSourceUi('openai_model_source');
+    if (prov === 'anthropic') setSourceUi('anthropic_model_source');
+    if (prov === 'google') setSourceUi('google_model_source');
+    if (prov === 'meta') setSourceUi('meta_model_source');
+  } catch(_) {}
+
+  try { __wfAI_applyTooltips(prov); } catch(_) {}
+};
+
+const __wfAI_applyTooltips = (_provider) => {
+  try {
+    const pSel = document.getElementById('aiProvider');
+    if (pSel) pSel.setAttribute('title', 'Pick your AI overlord. Choose wisely.');
+  } catch(_) {}
+  try {
+    const t = document.getElementById('aiTemperature');
+    const lbl = document.querySelector('label[for="aiTemperature"]');
+    if (lbl) {
+      lbl.textContent = 'Personality';
+      const hint = document.createElement('span');
+      hint.className = 'ml-2 text-xs text-gray-500';
+      hint.textContent = '(Reserved ↔ Adventurous)';
+      lbl.appendChild(hint);
+    }
+    if (t) t.setAttribute('title', 'Reserved = careful librarian; Adventurous = caffeinated poet. Choose your vibe.');
+  } catch(_) {}
+  try {
+    const mt = document.getElementById('aiMaxTokens');
+    if (mt) mt.setAttribute('title', 'How long the model can ramble before we cut it off. Bigger costs more.');
+  } catch(_) {}
+  try {
+    const to = document.getElementById('aiTimeout');
+    if (to) to.setAttribute('title', "How long we wait before declaring the AI took a nap.");
+  } catch(_) {}
+  try {
+    const fbl = document.getElementById('fallbackToLocal');
+    if (fbl) fbl.setAttribute('title', 'If the cloud is cranky, ask the local gremlin to help.');
   } catch(_) {}
 };
 
@@ -690,10 +1446,46 @@ const __wfAI_loadSettingsAndRender = async () => {
     const provider = (sel && sel.value) || 'jons_ai';
     let settings = {};
     try {
-      const j = await window.ApiClient.get('/api/ai_settings.php?action=get_settings');
-      if (j && j.success) settings = j.settings || {};
+      const url = '/api/ai_settings.php?action=get_settings&_=' + Date.now();
+      const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
+      const j = await window.ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
+      if (j && j.success) {
+        settings = j.settings || {};
+        try { console.log('[AI Settings] get_settings response:', settings); } catch(_) {}
+      }
     } catch(_) { settings = {}; }
-    __wfAI_renderProviderUI(provider, settings);
+    // Apply server defaults to form controls
+    try {
+      const prov = settings.ai_provider || provider || 'jons_ai';
+      if (sel) sel.value = prov;
+      const t = document.getElementById('aiTemperature');
+      const tv = document.getElementById('aiTemperatureValue');
+      if (t) {
+        t.value = (typeof settings.ai_temperature === 'number' ? settings.ai_temperature : 0.7);
+        if (tv) {
+          try { __wfAI_updatePersonalityDisplay(); } catch(_) { tv.textContent = String(t.value); }
+        }
+        if (!t.__wfPersonalityWired) {
+          try { t.addEventListener('input', __wfAI_updatePersonalityDisplay); } catch(_) {}
+          try { t.addEventListener('change', __wfAI_updatePersonalityDisplay); } catch(_) {}
+          t.__wfPersonalityWired = true;
+        }
+      }
+      const mt = document.getElementById('aiMaxTokens');
+      if (mt) mt.value = (typeof settings.ai_max_tokens === 'number' ? settings.ai_max_tokens : 1000);
+      const to = document.getElementById('aiTimeout');
+      if (to) to.value = (typeof settings.ai_timeout === 'number' ? settings.ai_timeout : 30);
+      const fbl = document.getElementById('fallbackToLocal');
+      if (fbl) fbl.checked = !!settings.fallback_to_local;
+      // Legacy radio support
+      try {
+        const sp = document.querySelector('input[name="ai_provider"][value="' + prov + '"]');
+        if (sp) sp.checked = true;
+      } catch(_) {}
+      __wfAI_renderProviderUI(prov, settings);
+    } catch(_) {
+      __wfAI_renderProviderUI(provider, settings);
+    }
     if (sel && !sel.__wfAIChangeWired) {
       sel.__wfAIChangeWired = true;
       sel.addEventListener('change', () => __wfAI_renderProviderUI(sel.value || 'jons_ai', settings));
@@ -747,17 +1539,31 @@ const __wfAI_loadSettingsAndRender = async () => {
         return;
       }
 
+      // Open Action Icons Manager
+      if (closest('[data-action="open-action-icons-manager"], #actionIconsManagerBtn')) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const m = __wfEnsureActionIconsManagerModal();
+        if (m) {
+          try { __wfSetModalHeaderFromTrigger(closest('[data-action="open-action-icons-manager"], #actionIconsManagerBtn'), m); } catch(_) {}
+          const f = m.querySelector('#actionIconsManagerFrame');
+          try { if (f && !f.getAttribute('src')) f.setAttribute('src', f.getAttribute('data-src') || '/sections/tools/action_icons_manager.php?modal=1'); } catch(_) {}
+          __wfShowModal('actionIconsManagerModal');
+        }
+        return;
+      }
+
       // Open Reports & Documentation Browser (iframe)
       if (closest('[data-action="open-reports-browser"]')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureReportsBrowserModal();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-reports-browser"]'), document.getElementById('reportsBrowserModal'));
-        __wfShowModal('reportsBrowserModal');
         const iframe = document.getElementById('reportsBrowserFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
           iframe.src = iframe.dataset.src;
         }
+        __wfShowModal('reportsBrowserModal');
         return;
       }
 
@@ -767,11 +1573,11 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureModalMarkupGuideModal();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-modal-markup-guide"], #modalMarkupGuideBtn'), document.getElementById('modalMarkupGuideModal'));
-        __wfShowModal('modalMarkupGuideModal');
         const iframe = document.getElementById('modalMarkupGuideFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
           iframe.src = iframe.dataset.src;
         }
+        __wfShowModal('modalMarkupGuideModal');
         return;
       }
 
@@ -813,11 +1619,13 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureEmailSettingsModal();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-email-settings"]'), document.getElementById('emailSettingsModal'));
-        __wfShowModal('emailSettingsModal');
         const iframe = document.getElementById('emailSettingsFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.src = iframe.dataset.src;
+        if (iframe) {
+          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : (iframe.src || '/sections/tools/email_settings.php?modal=1');
+          const sep = base.includes('?') ? '&' : '?';
+          iframe.src = base + sep + '_=' + Date.now();
         }
+        __wfShowModal('emailSettingsModal');
         return;
       }
 
@@ -827,11 +1635,11 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureReceiptMessagesModal();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-receipt-messages"]'), document.getElementById('receiptMessagesModal'));
-        __wfShowModal('receiptMessagesModal');
         const iframe = document.getElementById('receiptMessagesFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
           iframe.src = iframe.dataset.src;
         }
+        __wfShowModal('receiptMessagesModal');
         return;
       }
 
@@ -841,11 +1649,11 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureCartButtonTextsModal();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-cart-button-texts"]'), document.getElementById('cartButtonTextsModal'));
-        __wfShowModal('cartButtonTextsModal');
         const iframe = document.getElementById('cartButtonTextsFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
           iframe.src = iframe.dataset.src;
         }
+        __wfShowModal('cartButtonTextsModal');
         return;
       }
 
@@ -855,11 +1663,11 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureShopEncouragementsModal();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-shop-encouragements"]'), document.getElementById('shopEncouragementsModal'));
-        __wfShowModal('shopEncouragementsModal');
         const iframe = document.getElementById('shopEncouragementsFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
           iframe.src = iframe.dataset.src;
         }
+        __wfShowModal('shopEncouragementsModal');
         return;
       }
 
@@ -879,11 +1687,11 @@ const __wfAI_loadSettingsAndRender = async () => {
           // z-index and pointer-events are controlled via CSS classes rather than inline styles
         } catch (_) {}
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-template-manager"]'), el);
-        __wfShowModal('templateManagerModal');
         const iframe = document.getElementById('templateManagerFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
           iframe.src = iframe.dataset.src;
         }
+        __wfShowModal('templateManagerModal');
         return;
       }
 
@@ -893,13 +1701,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureEmailHistoryModal();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-email-history"]'), document.getElementById('emailHistoryModal'));
-        __wfShowModal('emailHistoryModal');
         const iframe = document.getElementById('emailHistoryFrame');
         if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
           const base = iframe.dataset.src;
-          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
-          iframe.src = base + bust;
+          iframe.src = base;
         }
+        __wfShowModal('emailHistoryModal');
         return;
       }
 
@@ -917,13 +1724,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-ai-suggestions"]'), document.getElementById('marketingSuggestionsProxyModal'));
-        __wfShowModal('marketingSuggestionsProxyModal');
         const iframe = document.getElementById('marketingSuggestionsProxyFrame');
         if (iframe) {
           const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
-          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
-          iframe.src = base + bust;
+          iframe.src = base;
         }
+        __wfShowModal('marketingSuggestionsProxyModal');
         return;
       }
 
@@ -932,13 +1738,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-content-generator"]'), document.getElementById('contentGeneratorProxyModal'));
-        __wfShowModal('contentGeneratorProxyModal');
         const iframe = document.getElementById('contentGeneratorProxyFrame');
         if (iframe) {
           const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
-          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
-          iframe.src = base + bust;
+          iframe.src = base;
         }
+        __wfShowModal('contentGeneratorProxyModal');
         return;
       }
 
@@ -947,28 +1752,27 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-newsletters"]'), document.getElementById('newslettersProxyModal'));
-        __wfShowModal('newslettersProxyModal');
         const iframe = document.getElementById('newslettersProxyFrame');
         if (iframe) {
           const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
-          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
-          iframe.src = base + bust;
+          iframe.src = base;
         }
+        __wfShowModal('newslettersProxyModal');
         return;
       }
 
-      // Open Automation (proxy)
+      // Open Automation (direct)
       if (closest('[data-action="open-automation"]')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfSetModalHeaderFromTrigger(closest('[data-action="open-automation"]'), document.getElementById('automationProxyModal'));
-        __wfShowModal('automationProxyModal');
-        const iframe = document.getElementById('automationProxyFrame');
-        if (iframe) {
-          const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
-          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
-          iframe.src = base + bust;
+        const el = __wfEnsureAutomationModal();
+        __wfSetModalHeaderFromTrigger(closest('[data-action="open-automation"]'), el);
+        const iframe = document.getElementById('automationFrame');
+        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
+          const base = iframe.dataset.src;
+          iframe.src = base;
         }
+        __wfShowModal('automationModal');
         return;
       }
 
@@ -977,13 +1781,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-discounts"]'), document.getElementById('discountsProxyModal'));
-        __wfShowModal('discountsProxyModal');
         const iframe = document.getElementById('discountsProxyFrame');
         if (iframe) {
           const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
-          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
-          iframe.src = base + bust;
+          iframe.src = base;
         }
+        __wfShowModal('discountsProxyModal');
         return;
       }
 
@@ -992,13 +1795,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-coupons"]'), document.getElementById('couponsProxyModal'));
-        __wfShowModal('couponsProxyModal');
         const iframe = document.getElementById('couponsProxyFrame');
         if (iframe) {
           const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : iframe.src || '';
-          const bust = (base.includes('?') ? '&' : '?') + '_v=' + Date.now();
-          iframe.src = base + bust;
+          iframe.src = base;
         }
+        __wfShowModal('couponsProxyModal');
         return;
       }
 
@@ -1011,18 +1813,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         return;
       }
 
-      // Open Address Diagnostics modal (iframe)
+      // Address Diagnostics now lives inside Shipping Settings modal
       if (closest('[data-action="open-address-diagnostics"], #addressDiagBtn')) {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfSetModalHeaderFromTrigger(closest('[data-action="open-address-diagnostics"], #addressDiagBtn'), document.getElementById('addressDiagnosticsModal'));
-        __wfShowModal('addressDiagnosticsModal');
-        const iframe = document.getElementById('addressDiagnosticsFrame');
-        if (iframe) {
-          const needsSrc = (!iframe.src || iframe.src === 'about:blank');
-          const ds = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : '/sections/tools/address_diagnostics.php?modal=1';
-          if (needsSrc) { iframe.src = ds; }
-        }
+        __wfSetModalHeaderFromTrigger(closest('[data-action="open-address-diagnostics"], #addressDiagBtn'), document.getElementById('shippingSettingsModal'));
+        __wfShowModal('shippingSettingsModal');
         return;
       }
 
@@ -1059,12 +1855,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (el) {
           try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
           __wfSetModalHeaderFromTrigger(closest('[data-action="open-categories"], #categoriesBtn'), el);
-          __wfShowModal('categoriesModal');
           const f = el.querySelector('iframe');
           if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
             const ds = f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
             f.setAttribute('src', ds);
           }
+          __wfShowModal('categoriesModal');
         }
         return;
       }
@@ -1076,12 +1872,24 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (el) {
           try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
           __wfSetModalHeaderFromTrigger(closest('[data-action="open-attributes"], #attributesBtn'), el);
-          __wfShowModal('attributesModal');
-          const f = document.getElementById('attributesFrame');
+          const f = document.getElementById('attributesFrame') || el.querySelector('iframe');
           if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
             const ds = f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
             f.setAttribute('src', ds);
           }
+          __wfShowModal('attributesModal');
+          // Enable standardized autosize
+          try { if (f && f.classList) f.classList.remove('wf-admin-embed-frame--tall','wf-embed--fill'); } catch(_) {}
+          try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
+          try { markOverlayResponsive(el); } catch(_) {}
+          try { if (f) attachSameOriginFallback(f, el); } catch(_) {}
+          // Recompute after paint to capture header height and paddings
+          try {
+            const ov = el;
+            const rerun = () => { try { markOverlayResponsive(ov); } catch(_) {} };
+            try { requestAnimationFrame(rerun); } catch(_) { setTimeout(rerun, 0); }
+            setTimeout(rerun, 200);
+          } catch(_) {}
         }
         return;
       }
@@ -1109,12 +1917,16 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (el) {
           try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
           __wfSetModalHeaderFromTrigger(closest('[data-action="open-size-color-redesign"], #sizeColorRedesignBtn'), el);
-          __wfShowModal('sizeColorRedesignModal');
           const f = document.getElementById('sizeColorRedesignFrame');
           if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
             const ds = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
             f.setAttribute('src', ds);
           }
+          __wfShowModal('sizeColorRedesignModal');
+          // Enable standardized autosize
+          try { const fx = document.getElementById('sizeColorRedesignFrame') || el.querySelector('iframe'); if (fx && !fx.hasAttribute('data-autosize')) fx.setAttribute('data-autosize','1'); } catch(_) {}
+          try { markOverlayResponsive(el); } catch(_) {}
+          try { const fx = document.getElementById('sizeColorRedesignFrame') || el.querySelector('iframe'); if (fx) attachSameOriginFallback(fx, el); } catch(_) {}
         }
         return;
       }
@@ -1133,39 +1945,54 @@ const __wfAI_loadSettingsAndRender = async () => {
         return;
       }
 
-      // AI Tools modal (iframe)
+      // AI Tools (legacy) → route to unified modal Tools tab
       if (closest('[data-action="open-ai-tools"], #aiToolsBtn')) {
         e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        const el = document.getElementById('aiToolsModal');
+        try { __wfOpenUnifiedAIModal('tools', closest('[data-action="open-ai-tools"], #aiToolsBtn')); } catch(_) { __wfOpenUnifiedAIModal('tools'); }
+        return;
+      }
+
+      // AI Settings: open dedicated Provider modal
+      if (closest('[data-action="open-ai-settings"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const el = document.getElementById('aiSettingsModal');
         if (el) {
           try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
-          __wfSetModalHeaderFromTrigger(closest('[data-action="open-ai-tools"], #aiToolsBtn'), el);
-          __wfShowModal('aiToolsModal');
-          const f = document.getElementById('aiToolsFrame');
-          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
-            const ds = f.getAttribute('data-src') || '/sections/admin_marketing.php?modal=1';
-            f.setAttribute('src', ds);
-          }
+          try { el.classList.add('over-header'); } catch(_) {}
+          __wfSetModalHeaderFromTrigger(closest('[data-action="open-ai-settings"]'), el);
+          try { __wfHideModal('aiUnifiedModal'); } catch(_) {}
+          __wfShowModal('aiSettingsModal');
+          try { if (typeof window !== 'undefined' && typeof window.loadAISettings === 'function') window.loadAISettings(); else if (typeof __wfAI_loadSettingsAndRender === 'function') __wfAI_loadSettingsAndRender(); } catch(_) {}
+          try { if (typeof window !== 'undefined' && typeof window.loadAIProviders === 'function') window.loadAIProviders(); } catch(_) {}
         }
         return;
       }
 
-      // AI Settings modal (iframe)
-      if (closest('[data-action="open-ai-settings"], #aiSettingsBtn')) {
+      // Artificial Intelligence (Unified) modal opener (Tools-first)
+      if (closest('[data-action="open-ai-unified"]')) {
         e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        const el = document.getElementById('aiSettingsModal');
-        if (el) {
-          try {
-            if (el.parentElement && el.parentElement !== document.body) {
-              document.body.appendChild(el);
-            }
-            el.classList.add('over-header');
-          } catch(_) {}
-          __wfSetModalHeaderFromTrigger(closest('[data-action="open-ai-settings"], #aiSettingsBtn'), el);
-          __wfShowModal('aiSettingsModal');
-          try { if (typeof window !== 'undefined' && typeof window.loadAISettings === 'function') window.loadAISettings(); else __wfAI_loadSettingsAndRender(); } catch(_) { __wfAI_loadSettingsAndRender(); }
-          try { if (typeof window !== 'undefined' && typeof window.loadAIProviders === 'function') window.loadAIProviders(); } catch(_) {}
-        }
+        __wfOpenUnifiedAIModal('tools', closest('[data-action="open-ai-unified"]'));
+        return;
+      }
+
+      // Unified AI modal legacy tab switching (no-op if tabs removed)
+      if (closest('[data-action="ai-unified-tab"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        const btn = closest('[data-action="ai-unified-tab"]');
+        const tab = btn && btn.getAttribute('data-tab') ? btn.getAttribute('data-tab') : 'settings';
+        __wfAIModalSetView(tab);
+        return;
+      }
+
+      // Unified AI modal header view toggles
+      if (closest('[data-action="ai-view-tools"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfAIModalSetView('tools');
+        return;
+      }
+      if (closest('[data-action="ai-view-settings"]')) {
+        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+        __wfAIModalSetView('settings');
         return;
       }
 
@@ -1173,9 +2000,8 @@ const __wfAI_loadSettingsAndRender = async () => {
       if (closest('[data-action="save-ai-settings"]')) {
         e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         const q = (id) => document.getElementById(id);
-        const sp = document.querySelector('input[name="ai_provider"]:checked');
         const sel = q('aiProvider');
-        const provider = (sp && sp.value) || (sel && sel.value) || 'jons_ai';
+        const provider = (sel && sel.value) || 'jons_ai'; // sole source-of-truth
         const settings = {
           ai_provider: provider,
           openai_api_key: (q('openai_api_key') && q('openai_api_key').value) || '',
@@ -1202,18 +2028,31 @@ const __wfAI_loadSettingsAndRender = async () => {
           ai_value_based_weight: parseFloat((q('ai_value_based_weight') && q('ai_value_based_weight').value) || 0.3)
         };
         const notify = (title, msg, type) => { try { if (typeof window.showNotification === 'function') window.showNotification(title, msg, type); } catch(_) {} };
+        try { console.log('[AI Settings] Saving payload:', settings); } catch(_) {}
         notify('Saving AI Settings', 'Saving…', 'info');
         const doPost = async () => {
           try {
-            const r = await window.ApiClient.post('/api/ai_settings.php?action=update_settings', settings);
+            const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
+            const options = isLocal ? { headers: { 'X-WF-Dev-Admin': '1' } } : {};
+            const r = await window.ApiClient.post('/api/ai_settings.php?action=update_settings', settings, options);
             if (r && r.success) {
               notify('AI Settings Saved', 'AI settings saved successfully!', 'success');
+              // Immediately reflect the newly selected provider in UI
+              try {
+                const sel = document.getElementById('aiProvider');
+                if (sel) sel.value = settings.ai_provider;
+              } catch(_) {}
               try { __wfAI_loadSettingsAndRender(); } catch(_) {}
             } else {
               notify('AI Settings Error', (r && (r.error || r.message)) || 'Failed to save AI settings', 'error');
             }
           } catch (err) {
-            notify('AI Settings Error', (err && err.message) || 'Request failed', 'error');
+            const msg = (err && err.message) ? String(err.message) : '';
+            if (/\b403\b/.test(msg)) {
+              notify('AI Settings Error', 'Admin access required to save AI settings. Please log in and try again.', 'error');
+            } else {
+              notify('AI Settings Error', msg || 'Request failed', 'error');
+            }
           }
         };
         doPost();
@@ -1223,26 +2062,32 @@ const __wfAI_loadSettingsAndRender = async () => {
       // Test AI Provider
       if (closest('[data-action="test-ai-provider"]')) {
         e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        const sp = document.querySelector('input[name="ai_provider"]:checked');
         const sel = document.getElementById('aiProvider');
-        const provider = (sp && sp.value) || (sel && sel.value) || 'jons_ai';
-        const notify = (title, msg, type) => { try { if (typeof window.showNotification === 'function') window.showNotification(title, msg, type); } catch(_) {} };
-        notify('Testing AI Provider', 'Testing ' + provider + '…', 'info');
+        const provider = (sel && sel.value) || 'jons_ai'; // sole source-of-truth
+        __wfShowStatusModal('AI Provider Test', 'Testing ' + provider + '…');
         const url = '/api/ai_settings.php?action=test_provider&provider=' + encodeURIComponent(provider);
+        try { console.log('[AI Settings] Testing provider:', provider, 'GET', url); } catch(_) {}
         const doGet = async () => {
           try {
-            if (typeof window.ApiClient !== 'undefined' && window.ApiClient && typeof window.ApiClient.get === 'function') {
-              const r = await window.ApiClient.get(url);
-              if (r && r.success) notify('AI Provider Test', '✅ ' + provider + ' provider test successful!', 'success');
-              else notify('AI Provider Test', '❌ ' + provider + ' provider test failed' + (r && r.message ? ': ' + r.message : ''), 'error');
+            const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
+            if (typeof window.ApiClient !== 'undefined' && window.ApiClient && typeof window.ApiClient.request === 'function') {
+              const r = await window.ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
+              if (r && r.success) {
+                __wfUpdateStatusModal('✅ ' + provider + ' provider test successful!');
+              } else {
+                __wfUpdateStatusModal('❌ ' + provider + ' provider test failed' + (r && r.message ? ': ' + r.message : ''));
+              }
             } else {
-              const res = await fetch(url, { credentials: 'include' });
+              const res = await fetch(url, { credentials: 'include', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
               const j = await res.json().catch(() => ({}));
-              if (j && j.success) notify('AI Provider Test', '✅ ' + provider + ' provider test successful!', 'success');
-              else notify('AI Provider Test', '❌ ' + provider + ' provider test failed' + (j && j.message ? ': ' + j.message : ''), 'error');
+              if (j && j.success) {
+                __wfUpdateStatusModal('✅ ' + provider + ' provider test successful!');
+              } else {
+                __wfUpdateStatusModal('❌ ' + provider + ' provider test failed' + (j && j.message ? ': ' + j.message : ''));
+              }
             }
           } catch (err) {
-            notify('AI Provider Test', '❌ Test failed: ' + ((err && err.message) || 'Request error'), 'error');
+            __wfUpdateStatusModal('❌ Test failed: ' + ((err && err.message) || 'Request error'));
           }
         };
         doGet();
@@ -1295,15 +2140,12 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureRoomMapEditorModal();
-        __wfSetModalHeaderFromTrigger(closest('[data-action="open-room-map-manager"]'), document.getElementById('roomMapManagerModal'));
-        __wfShowModal('roomMapManagerModal');
+        __wfSetModalHeaderFromTrigger(closest('[data-action=\"open-room-map-manager\"]'), document.getElementById('roomMapManagerModal'));
         const iframe = document.getElementById('roomMapManagerFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src) {
-          const target = iframe.dataset.src;
-          // ALWAYS reload with fresh cache-busting parameter
-          const bust = (target.includes('?') ? '&' : '?') + '_v=' + Date.now() + '&_r=' + Math.random();
-          iframe.setAttribute('src', target + bust);
+        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
+          iframe.setAttribute('src', iframe.dataset.src);
         }
+        __wfShowModal('roomMapManagerModal');
         return;
       }
 
@@ -1312,31 +2154,90 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault();
         if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfEnsureAreaItemMapperModal();
-        __wfSetModalHeaderFromTrigger(closest('[data-action="open-area-item-mapper"]'), document.getElementById('areaItemMapperModal'));
-        __wfShowModal('areaItemMapperModal');
+        __wfSetModalHeaderFromTrigger(closest('[data-action=\"open-area-item-mapper\"]'), document.getElementById('areaItemMapperModal'));
         const iframe = document.getElementById('areaItemMapperFrame');
-        if (iframe && iframe.dataset) {
-          if (iframe.dataset.loaded === '1' || iframe.dataset.loading === '1') {
-            return;
-          }
-          const needsSrc = (!iframe.src || iframe.src === 'about:blank');
-          const ds = iframe.dataset.src;
-          if (needsSrc && ds) {
-            iframe.dataset.loading = '1';
-            iframe.addEventListener('load', () => { try { iframe.dataset.loaded = '1'; iframe.dataset.loading = '0'; } catch(_) {} }, { once: true });
-            iframe.src = ds;
-          }
+        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
+          iframe.dataset.loading = '1';
+          iframe.dataset.loaded = '0';
+          iframe.addEventListener('load', () => { try { iframe.dataset.loaded = '1'; iframe.dataset.loading = '0'; } catch(_) {} }, { once: true });
+          iframe.src = iframe.dataset.src;
         }
+        __wfShowModal('areaItemMapperModal');
+        // Ensure standardized autosize
+        try { const ov = document.getElementById('areaItemMapperModal'); if (ov) markOverlayResponsive(ov); } catch(_) {}
+        try { const ov = document.getElementById('areaItemMapperModal'); if (iframe && ov) attachSameOriginFallback(iframe, ov); } catch(_) {}
+        try {
+          const ov = document.getElementById('areaItemMapperModal');
+          const rerun = () => { try { markOverlayResponsive(ov); } catch(_) {} };
+          try { requestAnimationFrame(rerun); } catch(_) { setTimeout(rerun, 0); }
+          setTimeout(rerun, 200);
+        } catch(_) {}
         return;
       }
-
     } catch (_) {}
   };
-
   // Register both capture and bubble to be resilient
   document.addEventListener('click', handler, true);
   document.addEventListener('click', handler);
 })();
+
+function __wfSelectAITab(tab) {
+  try {
+    const settingsPanel = document.getElementById('aiUnifiedSettingsPanel');
+    const toolsPanel = document.getElementById('aiUnifiedToolsPanel');
+    const btnSettings = document.getElementById('aiTabSettings');
+    const btnTools = document.getElementById('aiTabTools');
+    const isTools = String(tab || 'tools') === 'tools';
+    if (settingsPanel && toolsPanel) {
+      if (isTools) { toolsPanel.classList.remove('hidden'); settingsPanel.classList.add('hidden'); }
+      else { settingsPanel.classList.remove('hidden'); toolsPanel.classList.add('hidden'); }
+    }
+    if (btnSettings && btnTools) {
+      btnSettings.classList.remove('is-active');
+      btnTools.classList.remove('is-active');
+      if (isTools) btnTools.classList.add('is-active'); else btnSettings.classList.add('is-active');
+      try { btnSettings.setAttribute('aria-selected', !isTools ? 'true' : 'false'); } catch(_) {}
+      try { btnTools.setAttribute('aria-selected', isTools ? 'true' : 'false'); } catch(_) {}
+    }
+    if (isTools) {
+      const f = document.getElementById('aiUnifiedToolsFrame');
+      if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
+        const ds = f.getAttribute('data-src') || '/sections/admin_marketing.php?modal=1';
+        f.setAttribute('src', ds);
+      }
+      // Ensure autosize is enabled and fallback attached when switching to Tools
+      try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
+      // Clear message-based sizing flag so fallback can take effect if needed
+      try { if (f) f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
+      try {
+        const overlay = document.getElementById('aiUnifiedModal');
+        if (overlay) {
+          markOverlayResponsive(overlay);
+          attachSameOriginFallback(f, overlay);
+        }
+      } catch(_) {}
+    } else {
+      try { if (typeof window !== 'undefined' && typeof window.loadAISettings === 'function') window.loadAISettings(); else if (typeof __wfAI_loadSettingsAndRender === 'function') __wfAI_loadSettingsAndRender(); } catch(_) {}
+      try { if (typeof window !== 'undefined' && typeof window.loadAIProviders === 'function') window.loadAIProviders(); } catch(_) {}
+    }
+  } catch(_) {}
+}
+
+// ... (rest of the code remains the same)
+function __wfOpenUnifiedAIModal(initialTab, triggerEl) {
+  try {
+    const el = document.getElementById('aiUnifiedModal');
+    if (!el) return;
+    try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+    try { if (typeof __wfSetModalHeaderFromTrigger === 'function') __wfSetModalHeaderFromTrigger(triggerEl || null, el); } catch(_) {}
+    __wfShowModal('aiUnifiedModal');
+    // Standardized autosize wiring for AI Tools iframe and responsive overlay
+    try { const f = document.getElementById('aiUnifiedToolsFrame'); if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
+    try { markOverlayResponsive(el); } catch(_) {}
+    try { const f = document.getElementById('aiUnifiedToolsFrame'); if (f) { try { f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}; attachSameOriginFallback(f, el); } } catch(_) {}
+    __wfSelectAITab(String(initialTab || 'tools'));
+  } catch(_) {}
+}
 
 // Export for potential use by other modules
 export { __wfShowModal, __wfHideModal };

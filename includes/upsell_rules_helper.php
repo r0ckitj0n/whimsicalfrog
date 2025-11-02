@@ -5,6 +5,53 @@ declare(strict_types=1);
 require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/stock_manager.php';
 
+function wf_resolve_item_image_path(string $sku): string
+{
+    $sku = trim($sku);
+    if ($sku === '') return '/images/items/placeholder.webp';
+    $projectRoot = dirname(__DIR__, 1);
+    $dir = $projectRoot . '/images/items';
+    $bases = [];
+    $push = static function(string $b) use (&$bases): void { if ($b !== '' && !in_array($b, $bases, true)) $bases[] = $b; };
+    $push($sku);
+    $push(strtoupper($sku));
+    $push(strtolower($sku));
+    $push(str_replace('-', '_', $sku));
+    $push(str_replace('_', '-', $sku));
+    $push(str_replace(['-', '_'], '', $sku));
+    $push(str_replace(['-', '_'], '', strtolower($sku)));
+    $trimVariants = static function(string $s) use (&$push): void {
+        $cur = $s;
+        for ($i = 0; $i < 4; $i++) {
+            $m = strrpos($cur, '-');
+            $n = strrpos($cur, '_');
+            $idx = max($m === false ? -1 : $m, $n === false ? -1 : $n);
+            if ($idx <= 0) break;
+            $cur = substr($cur, 0, $idx);
+            $push($cur);
+            $push(strtolower($cur));
+            $push(str_replace('-', '_', $cur));
+            $push(str_replace('_', '-', $cur));
+        }
+    };
+    $trimVariants($sku);
+    $trimVariants(strtolower($sku));
+    foreach ($bases as $b) {
+        $cands = [
+            $b . '.webp', $b . '.png',
+            $b . 'A.webp', $b . 'A.png', $b . 'a.webp', $b . 'a.png',
+            $b . 'B.webp', $b . 'B.png', $b . 'b.webp', $b . 'b.png',
+        ];
+        foreach ($cands as $fn) {
+            $abs = $dir . '/' . $fn;
+            if (is_file($abs)) {
+                return '/images/items/' . $fn;
+            }
+        }
+    }
+    return '/images/items/placeholder.webp';
+}
+
 function wf_generate_cart_upsell_rules(): array
 {
     static $cache = null;
@@ -256,11 +303,15 @@ function wf_resolve_cart_upsells(array $skus, int $limit = 4): array
             continue;
         }
         $meta = $products[$candidateSku];
+        $img = isset($meta['image']) && $meta['image'] !== '' ? (string)$meta['image'] : '';
+        if ($img === '' || stripos($img, 'placeholder') !== false) {
+            $img = wf_resolve_item_image_path($candidateSku);
+        }
         $results[] = [
             'sku' => $candidateSku,
             'name' => isset($meta['name']) && $meta['name'] !== '' ? $meta['name'] : $candidateSku,
             'price' => isset($meta['price']) ? (float)$meta['price'] : 0.0,
-            'image' => isset($meta['image']) && $meta['image'] !== '' ? $meta['image'] : '/images/items/placeholder.webp',
+            'image' => $img,
             'category' => isset($meta['category']) ? (string)$meta['category'] : '',
             'units' => isset($meta['units']) ? (float)$meta['units'] : 0.0,
             'revenue' => isset($meta['revenue']) ? (float)$meta['revenue'] : 0.0,
@@ -294,11 +345,15 @@ function wf_resolve_cart_upsells(array $skus, int $limit = 4): array
                 continue;
             }
             $meta = $products[$sku];
+            $img2 = isset($meta['image']) && $meta['image'] !== '' ? (string)$meta['image'] : '';
+            if ($img2 === '' || stripos($img2, 'placeholder') !== false) {
+                $img2 = wf_resolve_item_image_path($sku);
+            }
             $results[] = [
                 'sku' => $sku,
                 'name' => isset($meta['name']) && $meta['name'] !== '' ? $meta['name'] : $sku,
                 'price' => isset($meta['price']) ? (float)$meta['price'] : 0.0,
-                'image' => isset($meta['image']) && $meta['image'] !== '' ? $meta['image'] : '/images/items/placeholder.webp',
+                'image' => $img2,
                 'category' => isset($meta['category']) ? (string)$meta['category'] : '',
                 'units' => isset($meta['units']) ? (float)$meta['units'] : 0.0,
                 'revenue' => isset($meta['revenue']) ? (float)$meta['revenue'] : 0.0,

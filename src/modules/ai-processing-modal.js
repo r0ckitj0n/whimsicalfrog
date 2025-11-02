@@ -1,4 +1,4 @@
-import { ApiClient } from '../../core/api-client.js';
+import { ApiClient } from '../core/api-client.js';
 // AI Processing Modal Module (Vite-managed)
 // Initializes the AIProcessingModal class if the modal exists on the page
 // Runtime-injected width classes for AI progress bar (no inline styles)
@@ -52,20 +52,26 @@ class AIProcessingModal {
 
   show() {
     if (!this.modal) return;
-    try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(this.modal); } catch(_) {}
-    this.modal.classList.remove('hidden');
-    this.modal.classList.add('show');
-    try { this.modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
-    try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_) {}
+    try { if (this.modal.parentElement && this.modal.parentElement !== document.body) document.body.appendChild(this.modal); } catch(_) {}
+    if (typeof window.showModal === 'function') {
+      window.showModal('aiProcessingModal');
+    } else {
+      this.modal.classList.remove('hidden');
+      this.modal.classList.add('show');
+      try { this.modal.setAttribute('aria-hidden', 'false'); } catch(_) {}
+    }
     this.reset();
   }
 
   hide() {
     if (!this.modal) return;
-    this.modal.classList.remove('show');
-    this.modal.classList.add('hidden');
-    try { this.modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
-    try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_) {}
+    if (typeof window.hideModal === 'function') {
+      window.hideModal('aiProcessingModal');
+    } else {
+      this.modal.classList.remove('show');
+      this.modal.classList.add('hidden');
+      try { this.modal.setAttribute('aria-hidden', 'true'); } catch(_) {}
+    }
   }
 
   close() {

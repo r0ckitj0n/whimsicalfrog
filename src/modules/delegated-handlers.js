@@ -2,6 +2,34 @@
 // Handles all click events with data-action attributes
 
 import { ApiClient } from '../core/api-client.js';
+import { attachSameOriginFallback, markOverlayResponsive } from '../modules/embed-autosize-parent.js';
+
+function wfWireOverlay(overlay) {
+  try {
+    const el = (typeof overlay === 'string') ? document.getElementById(overlay) : overlay;
+    if (!el) return;
+    try { markOverlayResponsive(el); } catch(_) {}
+    const frames = el.querySelectorAll('iframe, .wf-admin-embed-frame');
+    frames.forEach((f) => {
+      try { if (!f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
+      try { f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
+      try { attachSameOriginFallback(f, el); } catch(_) {}
+    });
+  } catch(_) {}
+}
+
+function wfShowModalCentral(id) {
+  try {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    wfWireOverlay(el);
+    if (window.__wfShowModal) { window.__wfShowModal(id); return true; }
+    if (window.WFModalUtils && typeof window.WFModalUtils.showModalById === 'function') { window.WFModalUtils.showModalById(id); return true; }
+    if (typeof window.showModal === 'function') { window.showModal(id); return true; }
+    el.classList.remove('hidden'); el.classList.add('show'); try { el.setAttribute('aria-hidden','false'); } catch(_) {}
+    return true;
+  } catch(_) { return false; }
+}
 
 document.addEventListener('click', async (e) => {
   const t = e.target;
@@ -44,20 +72,13 @@ document.addEventListener('click', async (e) => {
           modal.classList.add('over-header');
           const frame = modal.querySelector('#socialMediaManagerFrame');
           if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
-            const ds = frame.getAttribute('data-src') || '/sections/tools/social_manager.php?modal=1&vite=dev';
+            const ds = frame.getAttribute('data-src') || '/sections/tools/social_manager.php?modal=1';
             frame.setAttribute('src', ds);
           }
         } catch (_) {}
-        // Show via utils if present
-        if (window.WFModalUtils && typeof window.WFModalUtils.showModalById === 'function') {
-          window.WFModalUtils.showModalById(id);
-        } else if (typeof window.showModal === 'function') {
-          window.showModal(id);
-        } else {
-          modal.classList.remove('hidden');
-          modal.classList.add('show');
-          try { modal.setAttribute('aria-hidden','false'); } catch(_) {}
-        }
+        // Wire responsive autosize then show
+        try { wfWireOverlay(modal); } catch(_) {}
+        wfShowModalCentral(id);
       }
     } catch (error) {
       console.error('Error opening Social Media Manager modal:', error);
@@ -83,6 +104,8 @@ document.addEventListener('click', async (e) => {
             frame.setAttribute('src', ds);
           }
         } catch (_) {}
+        // Wire responsive autosize then show
+        try { wfWireOverlay(modal); } catch(_) {}
         if (window.WFModalUtils && typeof window.WFModalUtils.showModalById === 'function') {
           window.WFModalUtils.showModalById(id);
         } else if (typeof window.showModal === 'function') {
@@ -124,14 +147,27 @@ document.addEventListener('click', async (e) => {
     e.stopPropagation();
     try {
       const id = 'categoriesModal';
-      // Prime iframe inside the target modal
+      // Prime iframe, normalize overlay, and wire autosize
       try {
         const modal = document.getElementById(id);
         if (modal) {
           const frame = modal.querySelector('iframe');
-          if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
-            const ds = frame.getAttribute('data-src') || frame.getAttribute('src') || '/sections/admin_categories.php?modal=1';
-            if (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank') {
+          if (frame) {
+            try { if (!frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1'); } catch(_) {}
+            // Ensure initial resize on load
+            try {
+              frame.addEventListener('load', () => {
+                try {
+                  if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') {
+                    window.__wfEmbedAutosize.resize(frame);
+                  }
+                } catch(_) {}
+              }, { once: false });
+            } catch(_) {}
+            // Prime src (no cache-busting; rely on natural load)
+            const current = frame.getAttribute('src');
+            if (!current || current === 'about:blank') {
+              const ds = frame.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
               frame.setAttribute('src', ds);
             }
           }
@@ -142,23 +178,13 @@ document.addEventListener('click', async (e) => {
             }
             modal.classList.add('over-header');
           } catch (_) {}
+          // Wire responsive + fallback sizing
+          try { wfWireOverlay(modal); } catch(_) {}
         }
       } catch (_) {}
 
-      // Show modal (prefer standardized utils)
-      if (window.WFModalUtils && typeof window.WFModalUtils.showModalById === 'function') {
-        window.WFModalUtils.showModalById(id);
-      } else if (typeof window.showModal === 'function') {
-        window.showModal(id);
-      } else {
-        const el = document.getElementById(id);
-        if (el) {
-          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
-          el.classList.remove('hidden');
-          el.classList.add('show');
-          try { el.setAttribute('aria-hidden', 'false'); } catch(_) {}
-        }
-      }
+      // Centralized show (also rewires if needed)
+      wfShowModalCentral(id);
     } catch (error) {
       console.error('Error opening categories modal:', error);
     }
@@ -172,22 +198,35 @@ document.addEventListener('click', async (e) => {
     try {
       const modal = document.getElementById('attributesModal');
       if (modal) {
-        // Ensure the iframe src is set once
+        // Ensure the iframe src is set once and autosize is enabled
         const frame = modal.querySelector('#attributesFrame');
-        if (frame && !frame.getAttribute('src')) {
-          const ds = frame.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
-          frame.setAttribute('src', ds);
+        if (frame) {
+          try { if (!frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1'); } catch(_) {}
+          try {
+            frame.addEventListener('load', () => {
+              try {
+                if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') {
+                  window.__wfEmbedAutosize.resize(frame);
+                }
+              } catch(_) {}
+            }, { once: false });
+          } catch(_) {}
+          const current = frame.getAttribute('src');
+          if (!current || current === 'about:blank') {
+            const ds = frame.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
+            frame.setAttribute('src', ds);
+          }
         }
-        // Bring modal to front and show
+        // Bring modal to front and wire responsive autosize
         try {
           if (modal.parentElement && modal.parentElement !== document.body) {
             document.body.appendChild(modal);
           }
           modal.classList.add('over-header');
         } catch (_) {}
-        modal.classList.remove('hidden');
-        modal.classList.add('show');
-        modal.setAttribute('aria-hidden', 'false');
+        try { wfWireOverlay(modal); } catch(_) {}
+        // Centralized show
+        wfShowModalCentral('attributesModal');
       }
     } catch (error) {
       console.error('Error opening attributes modal:', error);
@@ -195,21 +234,59 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // Email Settings Modal
+  // Email Settings Modal (iframe)
   if (closest('[data-action="open-email-settings"]')) {
     e.preventDefault();
     e.stopPropagation();
     try {
-      // Load email configuration data
-      const data = await ApiClient.get('/api/email_config.php?action=get');
-      console.log('Email config data:', data);
-
-      // Show modal
-      if (window.showModal) {
+      // Recreate to pick up latest template/styles
+      let el = document.getElementById('emailSettingsModal');
+      if (el) { try { el.remove(); } catch(_) {} el = null; }
+      el = document.createElement('div');
+      el.id = 'emailSettingsModal';
+      el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+      el.setAttribute('data-modal', 'emailSettingsModal');
+      el.setAttribute('aria-hidden', 'true');
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-modal', 'true');
+      el.setAttribute('tabindex', '-1');
+      el.setAttribute('aria-labelledby', 'emailSettingsTitle');
+      el.innerHTML = `
+        <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--responsive admin-modal--actions-in-header" id="wf-panel-auto-35">
+          <div class="modal-header">
+            <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
+            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+          </div>
+          <div class="modal-body wf-modal-body--autoheight">
+            <iframe id="emailSettingsFrame" title="Email Settings" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-autosize="1" data-resize-on-load="1" data-src="/sections/tools/email_settings.php?modal=1" referrerpolicy="no-referrer"></iframe>
+          </div>
+        </div>`;
+      document.body.appendChild(el);
+      try { wfWireOverlay(el); } catch(_) {}
+      const iframe = el.querySelector('#emailSettingsFrame');
+      if (iframe) {
+        iframe.addEventListener('load', () => {
+          try {
+            if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') {
+              window.__wfEmbedAutosize.resize(iframe);
+            }
+          } catch (_) {}
+        });
+        // Prime iframe with cache-busting
+        const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : (iframe.src || '/sections/tools/email_settings.php?modal=1');
+        const sep = base.includes('?') ? '&' : '?';
+        iframe.src = base + sep + '_=' + Date.now();
+      }
+      // Show modal using utilities when available
+      if (typeof window.__wfShowModal === 'function') {
+        window.__wfShowModal('emailSettingsModal');
+      } else if (typeof window.showModal === 'function') {
         window.showModal('emailSettingsModal');
+      } else {
+        wfShowModalCentral('emailSettingsModal');
       }
     } catch (error) {
-      console.error('Error loading email settings:', error);
+      console.error('Error opening Email Settings modal:', error);
     }
     return;
   }
@@ -263,6 +340,52 @@ document.addEventListener('click', async (e) => {
       }
     } catch (error) {
       console.error('Error opening AI tools modal:', error);
+    }
+    return;
+  }
+
+  // Intent Heuristics Manager Modal (iframe)
+  if (closest('[data-action="open-intent-heuristics"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      let el = document.getElementById('intentHeuristicsModal');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'intentHeuristicsModal';
+        el.className = 'admin-modal-overlay hidden';
+        el.setAttribute('aria-hidden', 'true');
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-modal', 'true');
+        el.setAttribute('tabindex', '-1');
+        el.setAttribute('aria-labelledby', 'emailSettingsTitle');
+        el.innerHTML = `
+          <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+            <div class="modal-header">
+              <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
+              <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+              <iframe id="emailSettingsFrame" title="Email Settings" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_settings.php?modal=1" referrerpolicy="no-referrer"></iframe>
+            </div>
+          </div>`;
+        document.body.appendChild(el);
+        try {
+          const body = el.querySelector('.modal-body');
+          if (body) body.classList.add('wf-modal-body--fill');
+          const frame = el.querySelector('#intentHeuristicsFrame');
+          if (frame) frame.classList.add('wf-embed--fill');
+        } catch(_) {}
+      }
+      wfShowModalCentral('intentHeuristicsModal');
+      // Prime iframe
+      const iframe = document.getElementById('intentHeuristicsFrame');
+      if (iframe) {
+        const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : (iframe.src || '/sections/tools/intent_heuristics_manager.php?modal=1');
+        iframe.src = base;
+      }
+    } catch (error) {
+      console.error('Error opening Intent Heuristics modal:', error);
     }
     return;
   }
@@ -705,15 +828,49 @@ document.addEventListener('click', async (e) => {
         targetPath = 'logs/php_error.log';
       }
 
-      const a = document.createElement('a');
-      a.href = `/api/admin_file_proxy.php?path=${encodeURIComponent(targetPath)}`;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Open inside Log File Viewer modal
+      const frame = document.getElementById('logFileViewerFrame');
+      if (frame) {
+        frame.src = `/api/admin_file_proxy.php?path=${encodeURIComponent(targetPath)}`;
+      }
+      const titleEl = document.getElementById('logFileViewerTitle');
+      if (titleEl) {
+        const base = String(targetPath).split('/').pop();
+        titleEl.textContent = `🪟 Log Viewer — ${base || ''}`;
+      }
+      if (window.showModal) {
+        window.showModal('logFileViewerModal');
+      }
     } catch (error) {
       console.error('Error opening latest log preview:', error);
+    }
+    return;
+  }
+
+  // Open a specific file log in the Log File Viewer modal
+  if (closest('[data-action="logging-view-file"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const btn = closest('[data-action="logging-view-file"]');
+      const encoded = btn && btn.dataset ? (btn.dataset.encodedPath || '') : '';
+      const raw = btn && btn.dataset ? (btn.dataset.path || '') : '';
+      const pathParam = encoded || encodeURIComponent(raw);
+      if (!pathParam) return;
+      const frame = document.getElementById('logFileViewerFrame');
+      if (frame) {
+        frame.src = `/api/admin_file_proxy.php?path=${pathParam}`;
+      }
+      const titleEl = document.getElementById('logFileViewerTitle');
+      if (titleEl) {
+        const base = (raw || decodeURIComponent(encoded || '')).split('/').pop();
+        titleEl.textContent = `🪟 Log Viewer — ${base || ''}`;
+      }
+      if (window.showModal) {
+        window.showModal('logFileViewerModal');
+      }
+    } catch (error) {
+      console.error('Error opening file log in modal:', error);
     }
     return;
   }
@@ -919,8 +1076,8 @@ const DelegatedHandlers = {
                 <div class="text-xs text-gray-500 mt-0.5">Size: ${size || '—'} • Last Modified: ${last}</div>
               </div>
               <div class="flex items-center gap-2 flex-shrink-0">
-                <a class="btn btn-secondary btn-sm" href="/api/admin_file_proxy.php?path=${safePath}" target="_blank" rel="noopener">Open</a>
-                <a class="btn btn-secondary btn-sm" href="/api/admin_file_proxy.php?path=${safePath}" download>Download</a>
+                <button class="btn-icon btn-icon--view" data-action="logging-view-file" data-encoded-path="${safePath}" aria-label="View" title="View"></button>
+                <a class="btn-icon btn-icon--download" href="/api/admin_file_proxy.php?path=${safePath}" download aria-label="Download" title="Download"></a>
               </div>
             </div>
           `;
@@ -934,8 +1091,8 @@ const DelegatedHandlers = {
               <div class="text-xs text-gray-500 mt-0.5">Entries: ${count} • Last: ${last}</div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-              <button class="btn btn-secondary btn-sm" data-action="logging-preview-log" data-type="${type}">Preview</button>
-              <button class="btn btn-secondary btn-sm" data-action="logging-download-log" data-type="${type}">Download CSV</button>
+              <button class="btn-icon btn-icon--preview" data-action="logging-preview-log" data-type="${type}" aria-label="Preview" title="Preview"></button>
+              <a class="btn-icon btn-icon--download" href="/api/website_logs.php?action=download_log&type=${encodeURIComponent(type)}" target="_blank" rel="noopener" aria-label="Download CSV" title="Download CSV"></a>
             </div>
           </div>
           <div id="logPreview_${type}" class="hidden border-l-4 border-gray-200 pl-3 ml-2 mt-1" style="max-height: 360px; overflow:auto;"></div>
@@ -1228,8 +1385,8 @@ const DelegatedHandlers = {
         <tr class="border-b hover:bg-gray-50" draggable="true" data-section-key="${section.section_key}">
           <td class="p-2">
             <div class="flex items-center gap-1">
-              <button class="text-xs p-1 hover:bg-gray-200" data-action="move-up" data-key="${section.section_key}" ${index === 0 ? 'disabled' : ''}>▲</button>
-              <button class="text-xs p-1 hover:bg-gray-200" data-action="move-down" data-key="${section.section_key}" ${index === data.sections.length - 1 ? 'disabled' : ''}>▼</button>
+              <button class="admin-action-button btn btn-xs btn-icon btn-icon--up" data-action="move-up" data-key="${section.section_key}" ${index === 0 ? 'disabled' : ''} aria-label="Move Up" title="Move Up"></button>
+              <button class="admin-action-button btn btn-xs btn-icon btn-icon--down" data-action="move-down" data-key="${section.section_key}" ${index === data.sections.length - 1 ? 'disabled' : ''} aria-label="Move Down" title="Move Down"></button>
               <span class="ml-1 text-gray-500">${section.display_order || index + 1}</span>
             </div>
           </td>

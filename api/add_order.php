@@ -246,11 +246,19 @@ try {
     if (!isset($hasShippingAddressCol)) {
         $hasShippingAddressCol = false;
     }
+    // Detect presence of paymentStatus column
+    try {
+        $cols = Database::queryAll("SHOW COLUMNS FROM orders LIKE 'paymentStatus'");
+        $hasPaymentStatusCol = count($cols) > 0;
+    } catch (Exception $e) {
+        $hasPaymentStatusCol = false;
+    }
     if (!empty($debug)) {
         $debugData['schema'] = [
             'order_items.size' => (bool)$hasSizeCol,
             'orders.shippingMethod' => (bool)$hasShippingMethodCol,
             'orders.shippingAddress' => (bool)$hasShippingAddressCol,
+            'orders.paymentStatus' => (bool)$hasPaymentStatusCol,
         ];
     }
 
@@ -683,8 +691,12 @@ try {
             $orderCols[] = 'shippingAddress';
             $orderVals[] = $shippingAddressJson;
         }
-        $orderCols = array_merge($orderCols, ['order_status','date','paymentStatus']);
-        $orderVals = array_merge($orderVals, [$orderStatus, $date, $paymentStatus]);
+        $orderCols = array_merge($orderCols, ['order_status','date']);
+        $orderVals = array_merge($orderVals, [$orderStatus, $date]);
+        if (!empty($hasPaymentStatusCol)) {
+            $orderCols[] = 'paymentStatus';
+            $orderVals[] = $paymentStatus;
+        }
         $placeholders = implode(',', array_fill(0, count($orderCols), '?'));
         $sql = "INSERT INTO orders (" . implode(',', $orderCols) . ") VALUES ($placeholders)";
         if (!empty($debug)) {
@@ -714,9 +726,30 @@ try {
             }
         }
 
+        // Detect order_items.id column type to decide whether to provide string IDs or use auto-increment
+        $useStringOrderItemIds = false;
+        try {
+            $idCol = Database::queryAll("SHOW COLUMNS FROM order_items LIKE 'id'");
+            if ($idCol) {
+                $idType = isset($idCol[0]['Type']) ? strtolower($idCol[0]['Type']) : '';
+                // Treat any char/varchar as string id; numeric types will use auto-increment
+                if (strpos($idType, 'char') !== false) {
+                    $useStringOrderItemIds = true;
+                }
+            }
+        } catch (Exception $e) {
+            // Default false -> use auto-increment when uncertain
+            $useStringOrderItemIds = false;
+        }
+
         // Prepare order_items insert logic; include size only if column exists
-        $orderItemSqlWithSize = "INSERT INTO order_items (id, orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $orderItemSqlNoSize   = "INSERT INTO order_items (id, orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?, ?)";
+        if ($useStringOrderItemIds) {
+            $orderItemSqlWithSize = "INSERT INTO order_items (id, orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $orderItemSqlNoSize   = "INSERT INTO order_items (id, orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?, ?)";
+        } else {
+            $orderItemSqlWithSize = "INSERT INTO order_items (orderId, sku, quantity, price, color, size) VALUES (?, ?, ?, ?, ?, ?)";
+            $orderItemSqlNoSize   = "INSERT INTO order_items (orderId, sku, quantity, price, color) VALUES (?, ?, ?, ?, ?)";
+        }
 
         // Process each item (SKU)
         for ($i = 0; $i < count($itemIds); $i++) {
@@ -809,17 +842,37 @@ try {
                     $price = 0.00;  // Fallback price
                 }
 
-                // Generate order item ID using the next sequence number
-                $orderItemId = 'OI' . str_pad($nextSequence + $i, 10, '0', STR_PAD_LEFT);
+                // Generate order item ID using the next sequence number when the schema uses string IDs
+                $orderItemId = null;
+                if ($useStringOrderItemIds) {
+                    $orderItemId = 'OI' . str_pad($nextSequence + $i, 10, '0', STR_PAD_LEFT);
+                }
 
                 // Insert order item with color and size information (store effective SKU)
                 if (class_exists('Logger')) {
-                    Logger::debug('Inserting order item', ['endpoint' => 'add-order', 'orderItemId' => $orderItemId, 'orderId' => $orderId, 'sku' => $effectiveSku, 'origSku' => $sku, 'qty' => $quantity, 'price' => $price, 'color' => $color, 'size' => $size]);
+                    Logger::debug('Inserting order item', [
+                        'endpoint' => 'add-order',
+                        'orderItemId' => $orderItemId ?? 'AUTO',
+                        'orderId' => $orderId,
+                        'sku' => $effectiveSku,
+                        'origSku' => $sku,
+                        'qty' => $quantity,
+                        'price' => $price,
+                        'color' => $color,
+                        'size' => $size
+                    ]);
                 }
+
                 if (!empty($hasSizeCol)) {
-                    Database::execute($orderItemSqlWithSize, [$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color, $size]);
+                    $params = $useStringOrderItemIds
+                        ? [$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color, $size]
+                        : [$orderId, $effectiveSku, $quantity, $price, $color, $size];
+                    Database::execute($orderItemSqlWithSize, $params);
                 } else {
-                    Database::execute($orderItemSqlNoSize, [$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color]);
+                    $params = $useStringOrderItemIds
+                        ? [$orderItemId, $orderId, $effectiveSku, $quantity, $price, $color]
+                        : [$orderId, $effectiveSku, $quantity, $price, $color];
+                    Database::execute($orderItemSqlNoSize, $params);
                 }
 
                 // Handle stock reduction - prioritize size-specific, then color-specific, then general
@@ -895,15 +948,18 @@ try {
         Database::commit();
 
         try {
-            DatabaseLogger::logOrderActivity(
-                $orderId,
-                'order_created',
-                'Order created',
-                null,
-                $orderStatus ?? null,
-                isset($input['customerId']) ? $input['customerId'] : null,
-                null
-            );
+            $dbLogger = class_exists('DatabaseLogger') ? DatabaseLogger::getInstance() : null;
+            if ($dbLogger) {
+                $dbLogger->logOrderActivity(
+                    $orderId,
+                    'order_created',
+                    'Order created',
+                    null,
+                    $orderStatus ?? null,
+                    isset($input['customerId']) ? $input['customerId'] : null,
+                    null
+                );
+            }
         } catch (Exception $e) {}
 
         // Send order confirmation emails (non-fatal)

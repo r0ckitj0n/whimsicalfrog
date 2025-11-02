@@ -54,7 +54,39 @@ export class ApiClient {
     const _fetch = (typeof window !== 'undefined' && window.__wfOriginalFetch) ? window.__wfOriginalFetch : fetch;
     const response = await _fetch(url, config);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Attempt to read server-provided error payload for richer diagnostics
+      let serverMsg = '';
+      let detailsStr = '';
+      try {
+        const ct = response.headers.get('content-type') || '';
+        const bodyText = await response.text();
+        if (ct.includes('application/json')) {
+          try {
+            const obj = bodyText ? JSON.parse(bodyText) : null;
+            const msg = obj && (obj.error || obj.message || (obj.data && (obj.data.error || obj.data.message)));
+            if (msg) serverMsg = String(msg);
+            // Include details if present (stringify safely)
+            const det = obj && (obj.details || (obj.data && obj.data.details));
+            if (det) {
+              try { detailsStr = ` details=${JSON.stringify(det).slice(0, 400)}`; } catch(_) { /* noop */ }
+            }
+            // Surface debug block to console for developers
+            const dbg = (obj && obj.debug) || (obj && obj.data && obj.data.debug);
+            if (dbg) {
+              try { console.info('[ApiClient] server debug ->', dbg); } catch(_) {}
+            }
+          } catch (_) {
+            // JSON parse failed; fall back to text snippet
+            if (bodyText) serverMsg = bodyText.slice(0, 200);
+          }
+        } else if (bodyText) {
+          serverMsg = bodyText.slice(0, 200);
+        }
+      } catch (_) { /* ignore body read errors */ }
+
+      const baseMsg = `HTTP ${response.status}: ${response.statusText}`;
+      const combined = serverMsg ? `${baseMsg} - ${serverMsg}${detailsStr}` : baseMsg;
+      throw new Error(combined);
     }
 
     // Robust parsing: tolerate empty JSON bodies and non-JSON responses.

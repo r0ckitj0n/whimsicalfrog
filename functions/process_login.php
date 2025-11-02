@@ -187,14 +187,16 @@ try {
         } catch (\Throwable $e) {
         }
 
-        // Log successful login
-        DatabaseLogger::logUserActivity(
-            'login',
-            'User logged in successfully',
-            'user',
-            $user['id'],
-            $user['id']
-        );
+        // Log successful login (use instance method)
+        try {
+            DatabaseLogger::getInstance()->logUserActivity(
+                'login',
+                'User logged in successfully',
+                'user',
+                $user['id'],
+                $user['id']
+            );
+        } catch (\Throwable $e) { /* non-fatal */ }
 
         // Compute cookie context once
         try {
@@ -261,15 +263,17 @@ try {
         ]);
         exit;
     } else {
-        // Log failed login attempt
+        // Log failed login attempt (use instance method)
         if (class_exists('DatabaseLogger')) {
-            DatabaseLogger::logUserActivity(
-                'login_failed',
-                "Failed login attempt for username: $username",
-                'user',
-                null,
-                null
-            );
+            try {
+                DatabaseLogger::getInstance()->logUserActivity(
+                    'login_failed',
+                    "Failed login attempt for username: $username",
+                    'user',
+                    null,
+                    null
+                );
+            } catch (\Throwable $e) { /* non-fatal */ }
         }
 
         // Safe trace for failure reason

@@ -162,8 +162,8 @@ import { ApiClient } from '../core/api-client.js';
               </div>
               <div class="flex items-center">
                 <span class="font-semibold">$${parseFloat(m.cost).toFixed(2)}</span>
-                <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"material","id":${m.id}}' title="Edit Material">✏️</button>
-                <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"material","id":${m.id},"name":"${this.escapeHtml(m.name)}"}' title="Delete Material">🗑️</button>
+                <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="openEditModal" data-params='{"type":"material","id":${m.id}}' title="Edit Material" aria-label="Edit Material"></button>
+                <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="openDeleteModal" data-params='{"type":"material","id":${m.id},"name":"${this.escapeHtml(m.name)}"}' title="Delete Material" aria-label="Delete Material"></button>
               </div>`;
             materialsList.appendChild(div);
           });
@@ -187,8 +187,8 @@ import { ApiClient } from '../core/api-client.js';
               </div>
               <div class="flex items-center">
                 <span class="font-semibold">$${parseFloat(l.cost).toFixed(2)}</span>
-                <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"labor","id":${l.id}}' title="Edit Labor">✏️</button>
-                <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"labor","id":${l.id},"name":"${this.escapeHtml(l.description)}"}' title="Delete Labor">🗑️</button>
+                <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="openEditModal" data-params='{"type":"labor","id":${l.id}}' title="Edit Labor" aria-label="Edit Labor"></button>
+                <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="openDeleteModal" data-params='{"type":"labor","id":${l.id},"name":"${this.escapeHtml(l.description)}"}' title="Delete Labor" aria-label="Delete Labor"></button>
               </div>`;
             laborList.appendChild(div);
           });
@@ -212,8 +212,8 @@ import { ApiClient } from '../core/api-client.js';
               </div>
               <div class="flex items-center">
                 <span class="font-semibold">$${parseFloat(e.cost).toFixed(2)}</span>
-                <button class="text-green-600 hover:text-green-800" data-action="openEditModal" data-params='{"type":"energy","id":${e.id}}' title="Edit Energy">✏️</button>
-                <button class="text-red-600 hover:text-red-800" data-action="openDeleteModal" data-params='{"type":"energy","id":${e.id},"name":"${this.escapeHtml(e.description)}"}' title="Delete Energy">🗑️</button>
+                <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="openEditModal" data-params='{"type":"energy","id":${e.id}}' title="Edit Energy" aria-label="Edit Energy"></button>
+                <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="openDeleteModal" data-params='{"type":"energy","id":${e.id},"name":"${this.escapeHtml(e.description)}"}' title="Delete Energy" aria-label="Delete Energy"></button>
               </div>`;
             energyList.appendChild(div);
           });

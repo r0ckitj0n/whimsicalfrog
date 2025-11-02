@@ -4,11 +4,36 @@ import "../styles/main.css";
 import "../styles/site-base.css";
 import "../styles/admin-modals.css";
 import "../js/account-settings-modal.js";
+import "../ui/icons.js";
 import { normalizeAssetUrl, attachStrictImageGuards, removeBrokenImage } from "../core/asset-utils.js";
+// Standardize admin buttons (icons + tooltips) globally
+import "../modules/admin-button-standardizer.js";
 // Global item popup (must load before delegated listeners attach)
 import "../ui/global-popup.js";
 // Install global delegated hover/click listeners for item icons across pages
 import "../room/event-manager.js";
+// Ensure storefront modals are available on all pages (for automated smoke tests and global shortcuts)
+import "../js/checkout-modal.js";
+import "../js/receipt-modal.js";
+// Admin delegated handlers (modal openers, autosize wiring)
+import "../modules/delegated-handlers.js";
+
+// Ensure admin modal autosizing is always available (parent side)
+try {
+  const mod = await import('../modules/embed-autosize-parent.js');
+  try { mod.initEmbedAutosizeParent && mod.initEmbedAutosizeParent(); } catch(_) {}
+  try { mod.initOverlayAutoWire && mod.initOverlayAutoWire(); } catch(_) {}
+} catch (_) {}
+
+// If this page is rendered inside an admin modal iframe, enable intrinsic sizing and child autosize emitter
+try {
+  const isEmbed = (document.body && document.body.getAttribute('data-embed') === '1');
+  if (isEmbed) {
+    // Import CSS first to ensure proper intrinsic sizing
+    await import('../styles/embed-iframe.css');
+    await import('../modules/embed-autosize-child.js');
+  }
+} catch (_) {}
 
 // Fallback CSS neutralizer in case legacy bundle overrides coordinates or pointer-events
 try {
@@ -146,6 +171,215 @@ try {
           once: true,
         });
       } catch (_) {}
+
+    // Policy modal: intercept privacy/terms/policy links and open in a brand-styled modal
+    try {
+      (function installPolicyModal(){
+        if (window.__WF_POLICY_MODAL_INSTALLED) return; window.__WF_POLICY_MODAL_INSTALLED = true;
+        const STYLE_ID = 'wf-policy-modal-styles';
+        function injectStyles(){
+          if (document.getElementById(STYLE_ID)) return;
+          const css = `
+            #wfPolicyModalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;z-index:11050}
+            #wfPolicyModalOverlay.show{opacity:1;visibility:visible}
+            #wfPolicyModal{background:linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #BF5700));color:#fff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);width:min(96vw,1100px);max-width:min(96vw,1100px);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+            #wfPolicyModal .policy-modal-header{background:transparent;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-weight:700}
+            #wfPolicyModal .policy-modal-title{margin:0;font-size:1.1rem}
+            #wfPolicyModal .policy-modal-close{background:none;border:0;color:#fff;font-size:22px;cursor:pointer}
+            #wfPolicyModal .policy-modal-body{padding:16px;height:auto;max-height:calc(92vh - 46px);overflow:auto}
+            #wfPolicyModalContent{line-height:1.6;color:#fff}
+            #wfPolicyModalContent .policy-panel{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.15) inset, 0 10px 30px rgba(0,0,0,.15);border-radius:12px;padding:18px}
+            #wfPolicyModalContent h1,#wfPolicyModalContent h2,#wfPolicyModalContent h3,#wfPolicyModalContent h4,#wfPolicyModalContent h5,#wfPolicyModalContent h6{color:#fff;margin:0 0 .5rem}
+            #wfPolicyModalContent p{margin:.5rem 0}
+            #wfPolicyModalContent a{color:#fff;text-decoration:underline}
+            #wfPolicyModalContent ul{margin:.5rem 0 0 1rem}
+            #wfPolicyModalContent .wf-cloud-title{color:#fff}
+          `;
+          const style = document.createElement('style'); style.id = STYLE_ID; style.textContent = css; (document.head||document.documentElement).appendChild(style);
+        }
+        function ensureModal(){
+          let overlay = document.getElementById('wfPolicyModalOverlay');
+          if (overlay) return overlay;
+          overlay = document.createElement('div'); overlay.id='wfPolicyModalOverlay'; overlay.className = 'overlay'; overlay.setAttribute('role','dialog'); overlay.setAttribute('aria-hidden','true');
+          const modal = document.createElement('div'); modal.id='wfPolicyModal'; modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-label','Policy');
+          const header = document.createElement('div'); header.className='policy-modal-header';
+          const title = document.createElement('h3'); title.className='policy-modal-title'; title.textContent='Policy';
+          const close = document.createElement('button'); close.className='policy-modal-close'; close.type='button'; close.setAttribute('aria-label','Close'); close.textContent='×';
+          header.appendChild(title); header.appendChild(close);
+          const body = document.createElement('div'); body.className='policy-modal-body';
+          const content = document.createElement('div'); content.id='wfPolicyModalContent'; body.appendChild(content);
+          modal.appendChild(header); modal.appendChild(body);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          function getFocusables(){
+            return overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          }
+          function trap(e){
+            if (e.key !== 'Tab') return;
+            const focusables = Array.from(getFocusables()).filter(el=>!el.hasAttribute('disabled') && el.offsetParent !== null);
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length-1];
+            if (e.shiftKey){
+              if (document.activeElement === first){ e.preventDefault(); last.focus(); }
+            } else {
+              if (document.activeElement === last){ e.preventDefault(); first.focus(); }
+            }
+          }
+          function hide(){ overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); try{ window.WFModals&&WFModals.unlockScrollIfNoneOpen&&WFModals.unlockScrollIfNoneOpen(); }catch(_){} document.removeEventListener('keydown', trap, true); try{ overlay.__wfLastFocus && overlay.__wfLastFocus.focus && overlay.__wfLastFocus.focus(); } catch(_){} }
+          close.addEventListener('click', hide);
+          overlay.addEventListener('click', (e)=>{ if (e.target===overlay) hide(); });
+          document.addEventListener('keydown', (e)=>{ if (e.key==='Escape' && overlay.classList.contains('show')) hide(); });
+          overlay.__wfPolicyHide = hide;
+          overlay.__wfPolicyTrap = trap;
+          overlay.__wfPolicyRememberFocus = ()=>{ try{ overlay.__wfLastFocus = document.activeElement; }catch(_){} };
+          overlay.__wfPolicyRestoreFocus = ()=>{ try{ overlay.__wfLastFocus && overlay.__wfLastFocus.focus && overlay.__wfLastFocus.focus(); }catch(_){} };
+          return overlay;
+        }
+        function openPolicy(url,label){
+          injectStyles();
+          const overlay = ensureModal();
+          const t = overlay.querySelector('.policy-modal-title'); if (t) t.textContent = label || 'Policy';
+          const content = overlay.querySelector('#wfPolicyModalContent');
+          try{ window.WFModals&&WFModals.lockScroll&&WFModals.lockScroll(); }catch(_){}
+          overlay.classList.add('show'); overlay.setAttribute('aria-hidden','false');
+          if (content) content.innerHTML = '<div class="policy-panel" style="opacity:.85">Loading…</div>';
+          // Remember focus and start trap
+          if (overlay.__wfPolicyRememberFocus) overlay.__wfPolicyRememberFocus();
+          document.addEventListener('keydown', overlay.__wfPolicyTrap, true);
+          // Focus the close button
+          try { (overlay.querySelector('.policy-modal-close')||overlay).focus(); } catch(_) {}
+          const target = url + (url.indexOf('?')>-1?'&':'?') + 'modal=1';
+          fetch(target, { credentials: 'include' })
+            .then(r=>r.text())
+            .then(html=>{
+              try {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const contentNode = doc.querySelector('.wf-cloud-card .content') || doc.querySelector('.page-content .wf-cloud-card .content') || doc.querySelector('.page-content') || doc.body;
+                const inner = contentNode ? contentNode.innerHTML : html;
+                if (content) content.innerHTML = '<div class="policy-panel">'+ inner +'</div>';
+              } catch(_) { if (content) content.innerHTML = html; }
+            })
+            .catch(()=>{ if (content) content.textContent = 'Failed to load.'; });
+        }
+        window.openPolicyModal = openPolicy;
+        document.addEventListener('click', (e)=>{
+          try {
+            if (e.defaultPrevented) return;
+            // Ignore modified clicks
+            if (e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0) return;
+            const a = e.target && e.target.closest && e.target.closest('a[href]');
+            if (!a) return;
+            // Avoid triggering inside the modal itself
+            if (a.closest && a.closest('#wfPolicyModalOverlay')) return;
+            const href = (a.getAttribute('href')||'').toLowerCase();
+            if (!href) return;
+            // Match internal policy pages or explicit data-open-policy triggers
+            const isPolicyLink = (a.hasAttribute && a.hasAttribute('data-open-policy')) || /(\/privacy(\.php)?(\?|$)|\/terms(\.php)?(\?|$)|\/policy(\.php)?(\?|$))/i.test(href);
+            if (isPolicyLink){
+              e.preventDefault();
+              const label = (a.textContent||'').trim() || 'Policy';
+              try { openPolicy(href, label); } catch(_) { try{ window.location.href = href; } catch(__){} }
+            }
+          } catch(_) {}
+        }, true);
+      })();
+    } catch (_) {}
+
+    // Ensure policy modal is installed even if fallback IIFE exits early
+    try {
+      (function ensurePolicyModalInstalled(){
+        if (window.__WF_POLICY_MODAL_INSTALLED) return; // already installed by earlier block
+        const STYLE_ID = 'wf-policy-modal-styles';
+        function injectStyles(){
+          if (document.getElementById(STYLE_ID)) return;
+          const css = `
+            #wfPolicyModalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility .2s ease;z-index:var(--z-overlay-topmost, var(--z-index-cart-overlay, 10080))}
+            #wfPolicyModalOverlay.show{opacity:1;visibility:visible}
+            #wfPolicyModal{background:linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #BF5700));color:#fff;border-radius:12px;box-shadow:0 25px 50px -12px rgba(0,0,0,.25);width:min(96vw,1100px);max-width:min(96vw,1100px);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+            #wfPolicyModal .policy-modal-header{background:transparent;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-weight:700}
+            #wfPolicyModal .policy-modal-title{margin:0;font-size:1.1rem}
+            #wfPolicyModal .policy-modal-close{background:none;border:0;color:#fff;font-size:22px;cursor:pointer}
+            #wfPolicyModal .policy-modal-body{padding:16px;height:auto;max-height:calc(92vh - 46px);overflow:auto}
+            #wfPolicyModalContent{line-height:1.6;color:#fff}
+            #wfPolicyModalContent .policy-panel{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 30px rgba(0,0,0,.15) inset, 0 10px 30px rgba(0,0,0,.15);border-radius:12px;padding:18px}
+            #wfPolicyModalContent h1,#wfPolicyModalContent h2,#wfPolicyModalContent h3,#wfPolicyModalContent h4,#wfPolicyModalContent h5,#wfPolicyModalContent h6{color:#fff;margin:0 0 .5rem}
+            #wfPolicyModalContent p{margin:.5rem 0}
+            #wfPolicyModalContent a{color:#fff;text-decoration:underline}
+            #wfPolicyModalContent ul{margin:.5rem 0 0 1rem}
+            #wfPolicyModalContent .wf-cloud-title{color:#fff}
+          `;
+          const style = document.createElement('style'); style.id = STYLE_ID; style.textContent = css; (document.head||document.documentElement).appendChild(style);
+        }
+        function ensureModal(){
+          let overlay = document.getElementById('wfPolicyModalOverlay');
+          if (overlay) return overlay;
+          overlay = document.createElement('div'); overlay.id='wfPolicyModalOverlay';
+          const modal = document.createElement('div'); modal.id='wfPolicyModal'; modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true'); modal.setAttribute('aria-label','Policy');
+          const header = document.createElement('div'); header.className='policy-modal-header';
+          const title = document.createElement('h3'); title.className='policy-modal-title'; title.textContent='Policy';
+          const close = document.createElement('button'); close.className='policy-modal-close'; close.type='button'; close.setAttribute('aria-label','Close'); close.textContent='×';
+          header.appendChild(title); header.appendChild(close);
+          const body = document.createElement('div'); body.className='policy-modal-body';
+          const content = document.createElement('div'); content.id='wfPolicyModalContent'; body.appendChild(content);
+          modal.appendChild(header); modal.appendChild(body);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+          function getFocusables(){ return overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'); }
+          function trap(e){ if (e.key !== 'Tab') return; const focusables = Array.from(getFocusables()).filter(el=>!el.hasAttribute('disabled') && el.offsetParent !== null); if (!focusables.length) return; const first = focusables[0]; const last = focusables[focusables.length-1]; if (e.shiftKey){ if (document.activeElement === first){ e.preventDefault(); last.focus(); } } else { if (document.activeElement === last){ e.preventDefault(); first.focus(); } } }
+          function hide(){ overlay.classList.remove('show'); try{ window.WFModals&&WFModals.unlockScrollIfNoneOpen&&WFModals.unlockScrollIfNoneOpen(); }catch(_){} document.removeEventListener('keydown', trap, true); try{ overlay.__wfLastFocus && overlay.__wfLastFocus.focus && overlay.__wfLastFocus.focus(); } catch(_){} }
+          close.addEventListener('click', hide);
+          overlay.addEventListener('click', (e)=>{ if (e.target===overlay) hide(); });
+          document.addEventListener('keydown', (e)=>{ if (e.key==='Escape' && overlay.classList.contains('show')) hide(); });
+          overlay.__wfPolicyHide = hide;
+          overlay.__wfPolicyTrap = trap;
+          overlay.__wfPolicyRememberFocus = ()=>{ try{ overlay.__wfLastFocus = document.activeElement; }catch(_){} };
+          return overlay;
+        }
+        function openPolicy(url,label){
+          injectStyles();
+          const overlay = ensureModal();
+          const t = overlay.querySelector('.policy-modal-title'); if (t) t.textContent = label || 'Policy';
+          const content = overlay.querySelector('#wfPolicyModalContent');
+          try{ window.WFModals&&WFModals.lockScroll&&WFModals.lockScroll(); }catch(_){}
+          overlay.classList.add('show');
+          if (content) content.innerHTML = '<div class="policy-panel" style="opacity:.85">Loading…</div>';
+          if (overlay.__wfPolicyRememberFocus) overlay.__wfPolicyRememberFocus();
+          document.addEventListener('keydown', overlay.__wfPolicyTrap, true);
+          try { (overlay.querySelector('.policy-modal-close')||overlay).focus(); } catch(_) {}
+          const target = url + (url.indexOf('?')>-1?'&':'?') + 'modal=1';
+          fetch(target, { credentials: 'include' })
+            .then(r=>r.text())
+            .then(html=>{
+              try {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const contentNode = doc.querySelector('.wf-cloud-card .content') || doc.querySelector('.page-content .wf-cloud-card .content') || doc.querySelector('.page-content') || doc.body;
+                const inner = contentNode ? contentNode.innerHTML : html;
+                if (content) content.innerHTML = '<div class="policy-panel">'+ inner +'</div>';
+              } catch(_) { if (content) content.innerHTML = html; }
+            })
+            .catch(()=>{ if (content) content.textContent = 'Failed to load.'; });
+        }
+        window.openPolicyModal = openPolicy;
+        document.addEventListener('click', (e)=>{
+          try {
+            if (e.defaultPrevented) return;
+            if (e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0) return;
+            const a = e.target && e.target.closest && e.target.closest('a[href]');
+            if (!a) return;
+            if (a.closest && a.closest('#wfPolicyModalOverlay')) return;
+            const href = (a.getAttribute('href')||'').toLowerCase();
+            if (!href) return;
+            const isPolicyLink = (a.hasAttribute && a.hasAttribute('data-open-policy')) || /(\/privacy(\.php)?(\?|$)|\/terms(\.php)?(\?|$)|\/policy(\.php)?(\?|$))/i.test(href);
+            if (isPolicyLink){
+              e.preventDefault();
+              const label = (a.textContent||'').trim() || 'Policy';
+              openPolicy(href, label);
+            }
+          } catch(_) {}
+        }, true);
+      })();
+    } catch (_) {}
 
       // Try immediately, then on DOM ready, then periodically for dynamically inserted DOM
       const tryBind = () => {

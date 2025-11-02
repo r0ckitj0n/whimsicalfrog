@@ -22,7 +22,10 @@ export class CostBreakdownModalManagers {
    */
   openModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
+    if (!modal) return;
+    if (typeof window.showModal === 'function') {
+      window.showModal(modalId);
+    } else {
       modal.classList.add('show');
     }
   }
@@ -33,7 +36,10 @@ export class CostBreakdownModalManagers {
    */
   closeModal(modalId) {
     const modal = document.getElementById(modalId);
-    if (modal) {
+    if (!modal) return;
+    if (typeof window.hideModal === 'function') {
+      window.hideModal(modalId);
+    } else {
       modal.classList.remove('show');
     }
   }

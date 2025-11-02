@@ -21,7 +21,7 @@ if (!$inModal) {
   <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
     <div class="modal-header">
       <h2 id="suggestionsManagerTitle" class="admin-card-title">🤖 Suggestions Manager</h2>
-      <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
       <div id="suggestionsManagerContent" class="text-sm text-gray-700">Loading…</div>

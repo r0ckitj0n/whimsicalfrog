@@ -222,7 +222,7 @@ function invSortIndicator($column, $currentSort, $currentDir) {
             </select>
             <span class="admin-actions">
                 <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
-                <button type="button" data-action="refresh-categories" class="btn btn-secondary admin-filter-button btn-icon" title="Refresh Categories">🔄</button>
+                <button type="button" data-action="refresh-categories" class="admin-action-button btn btn-xs btn-icon btn-icon--refresh" title="Refresh Categories" aria-label="Refresh Categories"></button>
                 <a href="/admin/inventory?add=1" class="btn btn-primary admin-filter-button">Add New Item</a>
             </span>
         </form>
@@ -296,9 +296,9 @@ function invSortIndicator($column, $currentSort, $currentDir) {
                             <div class="admin-actions">
                                 <?php $viewHref = '/admin/inventory?' . http_build_query(array_merge($linkBase, ['view' => ($item['sku'] ?? '')])); ?>
                                 <?php $editHref = '/admin/inventory?' . http_build_query(array_merge($linkBase, ['edit' => ($item['sku'] ?? '')])); ?>
-                                <a href="<?= htmlspecialchars($viewHref) ?>" class="text-blue-600 hover:text-blue-800" title="View Item">👁️</a>
-                                <a href="<?= htmlspecialchars($editHref) ?>" class="text-green-600 hover:text-green-800" title="Edit Item">✏️</a>
-                                <button data-action="delete-item" class="text-red-600 hover:text-red-800" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item">🗑️</button>
+                                <a href="<?= htmlspecialchars($viewHref) ?>" class="admin-action-button btn btn-xs btn-icon btn-icon--view" title="View Item" aria-label="View Item"></a>
+                                <a href="<?= htmlspecialchars($editHref) ?>" class="admin-action-button btn btn-xs btn-icon btn-icon--edit" title="Edit Item" aria-label="Edit Item"></a>
+                                <button data-action="delete-item" class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-sku="<?= htmlspecialchars($item['sku'] ?? '') ?>" title="Delete Item" aria-label="Delete Item"></button>
                             </div>
                         </td>
                     </tr>

@@ -72,7 +72,7 @@ if (!empty($categories)) {
             ?>
         <!-- Left Column: Back to Main Room text button (styled like category filters) -->
         <div class="room-main-nav-container">
-            <a href="/room_main" class="category-btn btn-chip shop-filter-btn room-main-nav-link" title="Back to Main Room">
+            <a href="/room_main" class="category-btn btn-chip pill-ring pill-ring-secondary shop-filter-btn room-main-nav-link" title="Back to Main Room">
                 Back to Main Room
             </a>
         </div>
@@ -81,13 +81,13 @@ if (!empty($categories)) {
         <!-- Middle Column: Category Filter Buttons (center-aligned within column) -->
         <div class="category-navigation">
             <!-- All Products button first -->
-            <button type="button" class="category-btn btn-chip shop-filter-btn active"
+            <button type="button" class="category-btn btn-chip pill-ring pill-ring-secondary shop-filter-btn active"
                     data-category="all">
                 All Items
             </button>
             <!-- Then individual categories in order -->
             <?php foreach ($categories as $slug => $catData): ?>
-                <button type="button" class="category-btn btn-chip shop-filter-btn"
+                <button type="button" class="category-btn btn-chip pill-ring pill-ring-secondary shop-filter-btn"
                         data-category="<?php echo htmlspecialchars($slug); ?>">
                     <?php echo htmlspecialchars($catData['label']); ?>
                 </button>

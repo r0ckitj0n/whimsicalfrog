@@ -10,10 +10,15 @@
     top: var(--wf-header-offset, 0) !important;
     bottom: auto !important; /* override Tailwind's inset-0 bottom */
     height: calc(100vh - var(--wf-header-offset, 0)) !important;
+    height: calc(100dvh - var(--wf-header-offset, 0)) !important;
     padding-top: 0 !important;
     display: flex !important;
     align-items: flex-start !important;
     justify-content: center !important;
+}
+
+.detailed-item-modal .modal-footer {
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* ==============================================
@@ -72,6 +77,7 @@
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Ensure modal content doesn't overflow */
@@ -264,12 +270,14 @@
     cursor: zoom-in !important;
     /* About 50px less than the current available modal viewport */
     max-height: calc(95vh - var(--wf-header-offset, 0) - 50px) !important;
+    max-height: calc(95dvh - var(--wf-header-offset, 0) - 50px) !important;
 }
 
 /* Override the aspect-square wrapper for the main image so it shrinks with the image */
 .detailed-item-modal .aspect-square {
     aspect-ratio: auto !important;
     max-height: calc(95vh - var(--wf-header-offset, 0) - 50px) !important;
+    max-height: calc(95dvh - var(--wf-header-offset, 0) - 50px) !important;
 }
 
 /* Overlay must span the full viewport so background clicks reach it */
@@ -277,18 +285,23 @@
     /* Let Tailwind's fixed inset-0 provide full-viewport hit area */
     width: 100vw !important;
     max-width: 100vw !important;
+    width: 100dvw !important;
+    max-width: 100dvw !important;
     height: auto; /* actual height is controlled by .show rules above */
     margin: 0 !important;
     /* Provide a subtle backdrop so users can see the clickable overlay */
     background: rgba(0, 0, 0, 0.35);
     /* Must be above hover popup and room overlay */
     z-index: var(--z-detailed-item-modal, 100300) !important;
+    overscroll-behavior: contain;
 }
 
 /* Constrain only the inner modal container, not the overlay */
 .detailed-item-modal .detailed-item-modal-container {
     max-width: min(90vw, 1400px) !important;
+    max-width: min(90dvw, 1400px) !important;
     width: min(90vw, 1400px) !important;
+    width: min(90dvw, 1400px) !important;
     margin: 0 auto !important;
     overflow-x: hidden !important;
     overflow-y: auto !important;
@@ -446,7 +459,9 @@
 
 .image-viewer-overlay img {
     max-width: 95vw !important;
+    max-width: 95dvw !important;
     max-height: calc(100vh - var(--wf-header-offset, 0) - 20px) !important;
+    max-height: calc(100dvh - var(--wf-header-offset, 0) - 20px) !important;
     width: auto !important;
     height: auto !important;
     object-fit: contain !important;

@@ -11,6 +11,7 @@ import apiClient from './api-client.js';
       overlay: null,
       container: null,
       keydownHandler: null,
+      previouslyFocusedElement: null,
     };
 
     function currency(v) { return `$${(parseFloat(v) || 0).toFixed(2)}`; }
@@ -27,6 +28,7 @@ import apiClient from './api-client.js';
       const overlay = document.createElement('div');
       overlay.id = 'paymentModalOverlay';
       overlay.className = 'confirmation-modal-overlay checkout-overlay';
+      try { overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); } catch(_) {}
 
       const modal = document.createElement('div');
       modal.className = 'confirmation-modal payment-modal animate-slide-in-up';
@@ -49,13 +51,35 @@ import apiClient from './api-client.js';
         };
         document.addEventListener('keydown', state.keydownHandler);
       }
+
+      try {
+        if (!overlay._wfFocusTrap) {
+          overlay._wfFocusTrap = (e) => {
+            if (e.key !== 'Tab') return;
+            if (!state.overlay || !state.overlay.classList.contains('show')) return;
+            const scope = state.container || state.overlay;
+            const nodes = scope.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+            const focusables = Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null);
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            if (e.shiftKey) {
+              if (active === first || !scope.contains(active)) { last.focus(); e.preventDefault(); }
+            } else {
+              if (active === last || !scope.contains(active)) { first.focus(); e.preventDefault(); }
+            }
+          };
+          overlay.addEventListener('keydown', overlay._wfFocusTrap, true);
+        }
+      } catch(_) {}
     }
 
     function render() {
       // Full checkout scaffold inside modal (scoped IDs with pm- prefix)
       state.container.innerHTML = `
         <div class="payment-header">
-          <h3 class="payment-title">Checkout</h3>
+          <h3 class="payment-title" id="paymentModalTitle">Checkout</h3>
           <p class="payment-subtitle">Complete your purchase without leaving the page</p>
         </div>
         <div class="payment-body">
@@ -176,6 +200,12 @@ import apiClient from './api-client.js';
       `;
 
       setupController();
+      try { state.overlay && state.overlay.setAttribute('aria-labelledby', 'paymentModalTitle'); } catch(_) {}
+      try {
+        const scope = state.container || state.overlay;
+        const target = scope.querySelector('#pm-placeOrderBtn, #pm-cancelBtn, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (target && typeof target.focus === 'function') target.focus();
+      } catch(_) {}
     }
 
     function setupController() {
@@ -630,18 +660,20 @@ import apiClient from './api-client.js';
           payload.debug = true;
           const res = await apiClient.post('/api/checkout_pricing.php', payload);
           console.debug('[PaymentModal] pricing request ->', payload, 'response ->', res);
-          if (res && res.success && res.pricing) {
-            pricing = res.pricing;
+          const data = (res && typeof res === 'object' && ('data' in res)) ? res.data : res;
+          if (data && data.pricing) {
+            pricing = data.pricing;
             if (orderSubtotalEl) orderSubtotalEl.textContent = currency(pricing.subtotal);
             if (orderShippingEl) orderShippingEl.textContent = currency(pricing.shipping);
             if (orderTaxEl) orderTaxEl.textContent = currency(pricing.tax);
             if (orderTotalEl) orderTotalEl.textContent = currency(pricing.total);
-            if (res.debug) {
-              console.info('[PaymentModal] pricing debug ->', res.debug);
+            const __dbg = (res && res.debug) || (data && data.debug);
+            if (__dbg) {
+              console.info('[PaymentModal] pricing debug ->', __dbg);
             }
             // Toggle badges and USPS promo hint
             try {
-              const methodNow = shipMethodSel?.value || res.pricing.shippingMethod || 'USPS';
+              const methodNow = shipMethodSel?.value || pricing.shippingMethod || 'USPS';
               updateShippingBadges(methodNow);
               if (methodNow === 'USPS') { pmShowShippingBenefitNote('Free USPS shipping on orders over $50!'); }
               else { pmHideShippingBenefitNote(); }
@@ -745,19 +777,22 @@ import apiClient from './api-client.js';
           }
           const res = await apiClient.post('/api/add_order.php', payload);
           console.debug('[PaymentModal] order request ->', payload, 'response ->', res);
-          if (res && res.debug) {
-            console.info('[PaymentModal] order debug ->', res.debug);
+          const __data = (res && typeof res === 'object' && ('data' in res)) ? res.data : res;
+          const __dbg = (res && res.debug) || (__data && __data.debug);
+          if (__dbg) {
+            console.info('[PaymentModal] order debug ->', __dbg);
           }
-          if (res && res.success && res.orderId) {
+          const __orderId = (__data && __data.orderId) || (res && res.orderId);
+          if (__orderId) {
             // Open receipt first so the global flag is set before cart events fire
-            try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(res.orderId); } catch(_) {}
+            try { window.WF_ReceiptModal && window.WF_ReceiptModal.open && window.WF_ReceiptModal.open(__orderId); } catch(_) {}
             // Defer cart clear to the next tick to ensure the receipt flag is active
             try { setTimeout(() => { cartApi.clearCart && cartApi.clearCart(); }, 0); } catch(_) {}
             // Close the payment modal UI
             try { close(); } catch(_) {}
             return;
           }
-          const serverMsg = (res && typeof res === 'object' && res.error) ? res.error : (typeof res === 'string' ? res : null);
+          const serverMsg = (res && typeof res === 'object' && (res.error || res.message)) ? (res.error || res.message) : (__data && (__data.error || __data.message)) || (typeof res === 'string' ? res : null);
           throw new Error(serverMsg || 'Failed to create order.');
         } catch (e) {
           console.error('[PaymentModal] Order failed', e);
@@ -831,25 +866,44 @@ import apiClient from './api-client.js';
       render();
       // Ensure modal elements are attached to body
       try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
+      // Capture focus target before blurring
+      try { state.previouslyFocusedElement = document.activeElement; } catch(_) {}
       // Blur any currently focused element to avoid aria-hidden focus retention issues
       try { const ae = document.activeElement; if (ae && typeof ae.blur === 'function') ae.blur(); } catch(_) {}
       // Proactively close other overlays that could sit above or trap focus
       try { window.WF_CartModal && typeof window.WF_CartModal.close === 'function' && window.WF_CartModal.close(); } catch(_) {}
       try {
-        const cartOv = document.getElementById('cartModalOverlay');
-        if (cartOv) { cartOv.classList.remove('show'); cartOv.setAttribute('aria-hidden', 'true'); cartOv.setAttribute('inert', ''); }
+        if (typeof window.hideModal === 'function') {
+          window.hideModal('cartModalOverlay');
+        } else {
+          const cartOv = document.getElementById('cartModalOverlay');
+          if (cartOv) { cartOv.classList.remove('show'); cartOv.setAttribute('aria-hidden', 'true'); cartOv.setAttribute('inert', ''); }
+        }
       } catch(_) {}
       try {
-        const roomOv = document.getElementById('roomModalOverlay');
-        if (roomOv) { roomOv.classList.remove('show'); roomOv.setAttribute('aria-hidden', 'true'); roomOv.setAttribute('inert', ''); }
+        if (typeof window.hideModal === 'function') {
+          window.hideModal('roomModalOverlay');
+        } else {
+          const roomOv = document.getElementById('roomModalOverlay');
+          if (roomOv) { roomOv.classList.remove('show'); roomOv.setAttribute('aria-hidden', 'true'); roomOv.setAttribute('inert', ''); }
+        }
       } catch(_) {}
       // Normalize overlay classes (remove legacy under-header, ensure checkout-overlay)
       try { state.overlay.classList.remove('under-header'); } catch(_) {}
       try { state.overlay.classList.add('checkout-overlay'); } catch(_) {}
-      // Make overlay visible
-      try { state.overlay.classList.add('show'); } catch(_) {}
-      try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-      try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
+      // Make overlay visible via ModalManager when available
+      if (typeof window.showModal === 'function') {
+        window.showModal('paymentModalOverlay');
+      } else {
+        try { state.overlay.classList.add('show'); } catch(_) {}
+        try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
+        try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
+      }
+      try {
+        const scope = state.container || state.overlay;
+        const target = scope.querySelector('#pm-placeOrderBtn, #pm-cancelBtn, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (target && typeof target.focus === 'function') target.focus();
+      } catch(_) {}
       // Mark body so the dedicated /payment page can be hidden beneath the modal
       try {
         document.body?.setAttribute('data-checkout-modal-open', '1');
@@ -894,15 +948,21 @@ import apiClient from './api-client.js';
 
     function close() {
       if (!state.overlay) return;
-      state.overlay.classList.remove('show');
-      try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-      try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
+      if (typeof window.hideModal === 'function') {
+        window.hideModal('paymentModalOverlay');
+      } else {
+        state.overlay.classList.remove('show');
+        try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+        try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
+      }
       // Restore underlying page visibility
       try {
         document.body?.removeAttribute('data-checkout-modal-open');
         const mainEl = document.querySelector('main');
         if (mainEl) mainEl.removeAttribute('aria-hidden');
       } catch(_) {}
+      try { if (state.previouslyFocusedElement) state.previouslyFocusedElement.focus(); } catch(_) {}
+      try { state.previouslyFocusedElement = null; } catch(_) {}
     }
 
     window.WF_PaymentModal = {

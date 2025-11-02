@@ -7,6 +7,7 @@ import { ApiClient } from '../core/api-client.js';
     content: null,
     header: null,
     orderId: null,
+    previouslyFocusedElement: null,
   };
 
   function ensureOverlay() {
@@ -19,6 +20,7 @@ import { ApiClient } from '../core/api-client.js';
     overlay.id = 'receiptModalOverlay';
     // High z-index via checkout-overlay; vertical offset handled by CSS on inner modal
     overlay.className = 'confirmation-modal-overlay checkout-overlay receipt-overlay';
+    try { overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); overlay.setAttribute('tabindex', '-1'); } catch(_) {}
 
     const modal = document.createElement('div');
     modal.className = 'confirmation-modal receipt-modal animate-slide-in-up';
@@ -27,7 +29,7 @@ import { ApiClient } from '../core/api-client.js';
     header.className = 'confirmation-modal-header receipt-modal-header';
     header.innerHTML = `
       <div class="left">
-        <h3 class="title">Order Receipt</h3>
+        <h3 class="title" id="receiptModalTitle">Order Receipt</h3>
       </div>
       <div class="right actions">
         <button type="button" class="btn-secondary btn-print">Print</button>
@@ -52,6 +54,31 @@ import { ApiClient } from '../core/api-client.js';
     state.container = modal;
     state.content = content;
     state.header = header;
+
+    try { overlay.setAttribute('aria-labelledby', 'receiptModalTitle'); } catch(_) {}
+
+    // Focus trap scoped to the overlay
+    try {
+      if (!overlay._wfFocusTrap) {
+        overlay._wfFocusTrap = (e) => {
+          if (e.key !== 'Tab') return;
+          if (!state.overlay || !state.overlay.classList.contains('show')) return;
+          const scope = state.container || state.overlay;
+          const nodes = scope.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+          const focusables = Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null);
+          if (!focusables.length) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          const active = document.activeElement;
+          if (e.shiftKey) {
+            if (active === first || !scope.contains(active)) { last.focus(); e.preventDefault(); }
+          } else {
+            if (active === last || !scope.contains(active)) { first.focus(); e.preventDefault(); }
+          }
+        };
+        overlay.addEventListener('keydown', overlay._wfFocusTrap, true);
+      }
+    } catch(_) {}
   }
 
   async function loadReceipt(orderId) {
@@ -88,10 +115,41 @@ import { ApiClient } from '../core/api-client.js';
 
     state.content.innerHTML = '<div class="receipt-loading">Loading receipt…</div>';
     try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
-    state.overlay.classList.add('show');
-    try { state.overlay.setAttribute('data-force-visible', '1'); } catch(_) {}
-    try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-    try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_) {}
+    try { state.previouslyFocusedElement = document.activeElement; } catch(_) {}
+    if (typeof window.showModal === 'function') {
+      window.showModal('receiptModalOverlay');
+      try { state.overlay.setAttribute('data-force-visible', '1'); } catch(_) {}
+    } else {
+      state.overlay.classList.add('show');
+      try { state.overlay.setAttribute('data-force-visible', '1'); } catch(_) {}
+      try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
+      try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_) {}
+    }
+    // Focus-in guard and robust initial focus
+    try {
+      if (!state._focusinGuard) {
+        state._focusinGuard = (e) => {
+          try {
+            if (!state.overlay || !state.overlay.classList.contains('show')) return;
+            const t = e && e.target;
+            if (t && state.overlay && !state.overlay.contains(t)) {
+              const scope = state.container || state.overlay;
+              const target = scope.querySelector('.btn-close, .btn-print, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+              setTimeout(() => { try { (target && target.focus) ? target.focus() : (state.overlay && state.overlay.focus && state.overlay.focus()); } catch(_) {} }, 0);
+            }
+          } catch(_) {}
+        };
+        document.addEventListener('focusin', state._focusinGuard, true);
+      }
+    } catch(_) {}
+    try {
+      const scope = state.container || state.overlay;
+      const target = scope.querySelector('.btn-close, .btn-print, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const focusIt = () => { try { (target && target.focus) ? target.focus() : (state.overlay && state.overlay.focus && state.overlay.focus()); } catch(_) {} };
+      focusIt();
+      try { requestAnimationFrame(() => { focusIt(); requestAnimationFrame(focusIt); }); } catch(_) {}
+      setTimeout(focusIt, 150);
+    } catch(_) {}
 
     try {
       const html = await loadReceipt(orderId);
@@ -106,13 +164,21 @@ import { ApiClient } from '../core/api-client.js';
 
   function close() {
     if (!state.overlay) return;
-    state.overlay.classList.remove('show');
-    try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+    if (typeof window.hideModal === 'function') {
+      window.hideModal('receiptModalOverlay');
+    } else {
+      state.overlay.classList.remove('show');
+      try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+      try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_) {}
+    }
     try { state.overlay.removeAttribute('data-force-visible'); } catch(_) {}
-    try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_) {}
     // Unset receipt open flag and notify listeners that the modal closed
     try { window.__wfReceiptOpen = false; } catch(_) {}
     try { window.dispatchEvent(new CustomEvent('receiptModalClosed')); } catch(_) {}
+    try { if (state.previouslyFocusedElement) state.previouslyFocusedElement.focus(); } catch(_) {}
+    try { state.previouslyFocusedElement = null; } catch(_) {}
+    // Remove focus-in guard
+    try { if (state._focusinGuard) { document.removeEventListener('focusin', state._focusinGuard, true); state._focusinGuard = null; } } catch(_) {}
   }
 
   // expose

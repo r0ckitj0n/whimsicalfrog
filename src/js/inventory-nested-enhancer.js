@@ -31,14 +31,23 @@ import { ApiClient } from '../core/api-client.js';
         const rawCode = codeSpan && codeSpan.textContent ? codeSpan.textContent.trim() : '';
         const hex = toHex(rawCode || '#888888');
 
-        // Insert small swatch beside color name
+        // Insert small swatch beside color name (inline SVG circle with fill)
         if (!headerTitleRow.querySelector('.wf-inline-swatch')) {
-          const sw = document.createElement('span');
-          sw.className = 'wf-inline-swatch inline-block w-4 h-4 rounded border';
-          sw.title = hex;
-          // eslint-disable-next-line no-restricted-syntax
-          sw.style.background = hex;
-          headerTitleRow.insertBefore(sw, headerTitleRow.children[1] || null);
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('viewBox', '0 0 16 16');
+          svg.setAttribute('width', '16');
+          svg.setAttribute('height', '16');
+          svg.setAttribute('aria-hidden', 'true');
+          svg.className = 'wf-inline-swatch inline-block w-4 h-4 rounded border';
+          svg.setAttribute('title', hex);
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', '8');
+          circle.setAttribute('cy', '8');
+          circle.setAttribute('r', '7');
+          circle.setAttribute('fill', hex);
+          circle.setAttribute('stroke', 'currentColor');
+          svg.appendChild(circle);
+          headerTitleRow.insertBefore(svg, headerTitleRow.children[1] || null);
         }
 
         // Insert color input before hex label on the right
@@ -58,8 +67,11 @@ import { ApiClient } from '../core/api-client.js';
               // Update label and swatch
               if (codeSpan) codeSpan.textContent = value;
               const swatch = headerTitleRow.querySelector('.wf-inline-swatch');
-              // eslint-disable-next-line no-restricted-syntax
-              if (swatch) swatch.style.background = value;
+              if (swatch) {
+                const c = swatch.querySelector('circle');
+                if (c) c.setAttribute('fill', value);
+                try { swatch.setAttribute('title', value); } catch(_) {}
+              }
               if (typeof window.showNotification === 'function') {
                 window.showNotification('Color updated', 'success');
               }

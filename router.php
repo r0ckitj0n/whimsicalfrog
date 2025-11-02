@@ -7,6 +7,16 @@ $requestedUri = $_SERVER['REQUEST_URI'];
 // Remove query string from the path
 $requestedPath = strtok($requestedUri, '?');
 
+// Map Square webhooks pretty paths to PHP endpoints (development/router context)
+if ($requestedPath === '/square/webhooks') {
+    require __DIR__ . '/square/webhooks.php';
+    return true;
+}
+if ($requestedPath === '/square/webhooksfinal') {
+    require __DIR__ . '/square/webhooksfinal.php';
+    return true;
+}
+
 // If Vite hot file exists, proxy Vite dev asset paths via same-origin proxy to avoid CORS/TLS issues
 $hotPath = __DIR__ . '/hot';
 $disableDevByFlag = file_exists(__DIR__ . '/.disable-vite-dev');

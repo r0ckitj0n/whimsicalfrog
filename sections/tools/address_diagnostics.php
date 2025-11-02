@@ -6,61 +6,58 @@ if (!defined('INCLUDED_FROM_INDEX')) {
     define('INCLUDED_FROM_INDEX', true);
 }
 require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
+require_once dirname(__DIR__, 2) . '/includes/vite_helper.php';
 
-?><!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8" />
-<title>Address Diagnostics</title>
-<style>
- body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; padding: 16px; }
- .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 16px; }
- .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
- .label { font-weight: 600; color: #374151; margin-bottom: 4px; display: block; }
- .input { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; }
- .btn { padding: 8px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #2563eb; background: #3b82f6; color: #fff; }
- .btn.secondary { background: #fff; color: #1f2937; border-color: #9ca3af; }
- .muted { color: #6b7280; font-size: 12px; }
- pre { background: #f9fafb; padding: 8px; border-radius: 6px; overflow: auto; max-height: 200px; }
- .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-</style>
-</head>
-<body>
-  <div class="card">
-    <h2>Canonical Business Address</h2>
-    <div id="bizBlock" class="mono"></div>
-    <div class="muted">Sourced from business_info: business_address, business_address2, business_city, business_state, business_postal.</div>
+$isModal = isset($_GET['modal']) && $_GET['modal'] == '1';
+if ($isModal) {
+    include dirname(__DIR__, 2) . '/partials/modal_header.php';
+} else {
+    if (!defined('WF_LAYOUT_BOOTSTRAPPED')) {
+        $page = 'admin';
+        include dirname(__DIR__, 2) . '/partials/header.php';
+        if (!function_exists('__wf_addr_diag_footer_shutdown')) {
+            function __wf_addr_diag_footer_shutdown(){ @include __DIR__ . '/../../partials/footer.php'; }
+        }
+        register_shutdown_function('__wf_addr_diag_footer_shutdown');
+    }
+}
+?>
+<div class="p-4">
+  <div class="admin-card mb-4">
+    <h2 class="admin-card-title mb-2">Canonical Business Address</h2>
+    <div id="bizBlock" class="font-mono text-sm"></div>
+    <div class="text-sm text-gray-600">Sourced from business_info: business_address, business_address2, business_city, business_state, business_postal.</div>
   </div>
 
-  <div class="card">
-    <h2>Compute Miles To Target</h2>
-    <div class="row">
+  <div class="admin-card">
+    <h2 class="admin-card-title mb-2">Compute Miles To Target</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div>
-        <label class="label" for="toAddress">Address Line 1</label>
-        <input id="toAddress" class="input" placeholder="91 Singletree Ln" />
+        <label class="block font-semibold text-gray-700 mb-1" for="toAddress">Address Line 1</label>
+        <input id="toAddress" class="form-input" placeholder="91 Singletree Ln" />
       </div>
       <div>
-        <label class="label" for="toCity">City</label>
-        <input id="toCity" class="input" placeholder="Dawsonville" />
+        <label class="block font-semibold text-gray-700 mb-1" for="toCity">City</label>
+        <input id="toCity" class="form-input" placeholder="Dawsonville" />
       </div>
       <div>
-        <label class="label" for="toState">State</label>
-        <input id="toState" class="input" placeholder="GA" />
+        <label class="block font-semibold text-gray-700 mb-1" for="toState">State</label>
+        <input id="toState" class="form-input" placeholder="GA" />
       </div>
       <div>
-        <label class="label" for="toZip">ZIP</label>
-        <input id="toZip" class="input" placeholder="30534" />
+        <label class="block font-semibold text-gray-700 mb-1" for="toZip">ZIP</label>
+        <input id="toZip" class="form-input" placeholder="30534" />
       </div>
     </div>
-    <div class="flex-row mt-10">
-      <button id="btnCompute" class="btn">Compute Miles</button>
-      <button id="btnUseSample" class="btn secondary">Use Sample Address</button>
-      <span id="status" class="muted"></span>
+    <div class="flex items-center gap-2 mt-3">
+      <button id="btnCompute" class="btn btn-primary">Compute Miles</button>
+      <button id="btnUseSample" class="btn btn-secondary">Use Sample Address</button>
+      <span id="status" class="text-sm text-gray-600"></span>
     </div>
-    <div id="result" class="mt-10"></div>
+    <div id="result" class="mt-3"></div>
     <details class="mt-2">
       <summary>Debug</summary>
-      <pre id="debugOut"></pre>
+      <pre id="debugOut" class="bg-gray-50 p-2 rounded max-h-64 overflow-auto"></pre>
     </details>
   </div>
 
@@ -161,5 +158,4 @@ require_once dirname(__DIR__, 2) . '/api/business_settings_helper.php';
   });
 })();
 </script>
-</body>
-</html>
+<?php if (!$isModal) { /* footer via shutdown */ } ?>

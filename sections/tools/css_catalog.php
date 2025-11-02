@@ -76,6 +76,9 @@ if (!$isModal) {
     // Admin tabs
     $section = 'settings';
     include_once $root . '/components/admin_nav_tabs.php';
+} else {
+    // Modal context: minimal header for Vite dev/prod assets
+    include $root . '/partials/modal_header.php';
 }
 ?>
 <?php if (!$isModal): ?>
@@ -90,8 +93,8 @@ if (!$isModal) {
   </div>
   <div class="mb-3">
     <div class="inline-flex gap-2">
-      <button type="button" id="tabCatalog" class="btn btn-secondary" data-tab="catalog">Catalog</button>
-      <button type="button" id="tabEditable" class="btn" data-tab="editable">Editable Settings</button>
+      <button type="button" id="tabCatalog" class="btn btn-secondary tab-outline" data-tab="catalog" aria-selected="true">Catalog</button>
+      <button type="button" id="tabEditable" class="btn tab-outline" data-tab="editable" aria-selected="false">Editable Settings</button>
     </div>
   </div>
   <div class="mb-3 grid gap-2 md:grid-cols-2">
@@ -264,6 +267,9 @@ if (!$isModal) {
     panelEditable.classList.toggle('hidden', isCat);
     tabCatalog.classList.toggle('btn-secondary', isCat);
     tabEditable.classList.toggle('btn-secondary', !isCat);
+    // Reflect selection for outline utility
+    tabCatalog.setAttribute('aria-selected', isCat ? 'true' : 'false');
+    tabEditable.setAttribute('aria-selected', isCat ? 'false' : 'true');
   }
   tabCatalog && tabCatalog.addEventListener('click', () => setTab('catalog'));
   tabEditable && tabEditable.addEventListener('click', () => setTab('editable'));

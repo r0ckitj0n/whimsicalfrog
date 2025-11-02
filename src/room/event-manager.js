@@ -109,7 +109,7 @@ export function attachDelegatedItemEvents() {
           const posClass = p.dataset.wfGpPosClass;
           // If a detailed item modal is visible, do not force the popup
           const detailed = document.getElementById('detailedItemModal');
-          const detailedVisible = !!(detailed && detailed.getAttribute('aria-hidden') !== 'true' && detailed.style.display !== 'none');
+          const detailedVisible = !!(detailed && detailed.getAttribute('aria-hidden') !== 'true' && !(detailed.classList && detailed.classList.contains('hidden')));
           if (suppressed || !posClass || detailedVisible) return;
           if (!p.classList.contains('visible')) {
             try { p.classList.remove('hidden', 'measuring'); } catch(_) {}

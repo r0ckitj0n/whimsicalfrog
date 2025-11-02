@@ -54,7 +54,7 @@ function generateTooltip(elementId, context, currentContent) {
       'Pings the service with your settings. If it responds, we\'re friends.',
       'Runs diagnostics. Better to find issues here than in front of customers.',
       'Validates configuration. Two minutes now saves two hours later.',
-      'Sends a test signal. If it answers with wisdom, you\\'re set.'
+      'Sends a test signal. If it answers with wisdom, you\'re set.'
     ],
     // Import actions
     'import': [
@@ -99,7 +99,7 @@ function generateTooltip(elementId, context, currentContent) {
     // Refresh actions
     'refresh|reload': [
       'Reloads the current view. Catch fresh data without page gymnastics.',
-      'Refreshes the list. Because stale data is nobody's friend.',
+      'Refreshes the list. Because stale data is nobody\'s friend.',
       'Pulls the latest. Stay current without full page reloads.',
       'Updates the display. See what changed without losing your place.',
       'Syncs with the server. Fresh data, same spot.'
@@ -134,7 +134,7 @@ function generateTooltip(elementId, context, currentContent) {
       'Displays the full record. Clarity first, actions second.',
       'Shows the details. Peek inside without spawning fifteen tabs.',
       'Opens for viewing. Read-only mode for curious minds.',
-      'Displays the item. Look, learn, decide what's next.'
+      'Displays the item. Look, learn, decide what\'s next.'
     ],
     // Print actions
     'print': [
@@ -162,7 +162,7 @@ function generateTooltip(elementId, context, currentContent) {
     ],
     // Help actions
     'help|documentation|docs': [
-      'Opens contextual help. Quick pointers when you want them; respectful silence when you don't.',
+      'Opens contextual help. Quick pointers when you want them; respectful silence when you don\'t.',
       'Shows documentation. When guesswork gets old, answers live here.',
       'Opens the help docs. Faster than pinging a group chat at 11pm.',
       'Displays guidance. Tips, patterns, and the occasional pep talk.',
@@ -183,11 +183,11 @@ function generateTooltip(elementId, context, currentContent) {
   // Context-specific defaults if no pattern matches
   const contextDefaults = {
     settings: 'Adjusts a system setting. Change thoughtfully, test quickly, and keep receipts.',
-    inventory: 'Manages product data. Keep it accurate so shoppers see what's real.',
+    inventory: 'Manages product data. Keep it accurate so shoppers see what\'s real.',
     orders: 'Handles order processing. Make it smooth, make it fast, make it feel effortless.',
     customers: 'Manages customer data. Treat their info with respect and accuracy.',
     marketing: 'Controls marketing tools. Be helpful, be genuine, be strategic.',
-    reports: 'Shows business metrics. The numbers don't lie, but they might hurt your feelings.',
+    reports: 'Shows business metrics. The numbers don\'t lie, but they might hurt your feelings.',
     pos: 'Point-of-sale control. In-person checkout that behaves.',
     dashboard: 'Dashboard widget. Your daily pulse check on what matters.',
     admin: 'Admin control. Hover around—each button has a job and an attitude.',

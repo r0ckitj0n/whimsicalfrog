@@ -28,10 +28,18 @@
 #brandPreviewText {
   font-family: var(--brand-font-secondary, inherit);
 }
+/* Smaller swatch sizes to fit more samples */
+#brandPreviewSwatches { gap: 4px !important; }
 #brandPreviewSwatches > div {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   border-radius: 2px;
+}
+/* Ensure dynamic brand palette swatches are also small */
+#brandPreviewSwatches .brand-swatch {
+  width: 14px !important;
+  height: 14px !important;
+  border-width: 1px !important;
 }
 #brandPreviewSwatches > div:nth-child(1) { background: var(--brand-primary, #0ea5e9); }
 #brandPreviewSwatches > div:nth-child(2) { background: var(--brand-secondary, #6366f1); }
@@ -39,3 +47,29 @@
 
 /* Email history test endpoint input size */
 #ehdEndpoint { min-width: 260px; }
+
+/* ---- Admin: Shopping Cart Settings modal layout tweaks ---- */
+/* Make the shopper profile panel skinny and give more space to recommendations */
+#shoppingCartModal #cartSimulationPanels {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem; /* ~12px */
+}
+#shoppingCartModal #cartSimulationPanels > :first-child {
+  width: 10rem; /* 160px on small screens */
+  max-width: 12rem; /* do not grow past this */
+  flex-shrink: 0;
+  padding: 0.25rem; /* p-1 */
+}
+@media (min-width: 768px) {
+  #shoppingCartModal #cartSimulationPanels > :first-child { width: 12rem; } /* 192px on md+ */
+}
+#shoppingCartModal #cartSimulationPanels > :nth-child(2) {
+  flex: 1 1 auto; /* expand recommendations */
+  min-width: 0; /* allow grid to compress nicely */
+}
+
+/* Slightly smaller text inside the profile panel for compactness */
+#shoppingCartModal #cartSimulationProfile { font-size: 0.75rem; /* text-xs */ }
+#shoppingCartModal #cartSimulationProfile ul { list-style: none; padding-left: 0; margin: 0; }
+#shoppingCartModal #cartSimulationProfile li { margin: 0.125rem 0; }

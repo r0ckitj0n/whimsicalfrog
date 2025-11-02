@@ -46,7 +46,7 @@ export class RoomSettingsManager {
       <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
         <div class="modal-header admin-modal-header">
           <h2>Enhanced Room Settings</h2>
-          <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body">
           <div class="loading-message">
@@ -55,8 +55,8 @@ export class RoomSettingsManager {
           </div>
           <div id="roomSettingsContent" class="hidden">
             <div class="settings-tabs">
-              <button class="tab-button active" data-tab="rooms">Room Configuration</button>
-              <button class="tab-button" data-tab="display">Display Settings</button>
+              <button class="tab-button tab-outline active" data-tab="rooms">Room Configuration</button>
+              <button class="tab-button tab-outline" data-tab="display">Display Settings</button>
             </div>
             <div class="tab-content">
               <div id="rooms-tab" class="tab-panel active">

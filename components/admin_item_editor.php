@@ -29,7 +29,7 @@ if (!function_exists('renderAdminItemEditor')) {
         $description = htmlspecialchars($editItem['description'] ?? '', ENT_QUOTES, 'UTF-8');
         ?>
 
-        <div id="inventoryModalOuter" class="admin-modal-overlay topmost show">
+        <div id="inventoryModalOuter" class="admin-modal-overlay wf-modal--content-scroll topmost show">
             <?php $modeParam = $isEdit ? 'edit' : ($isView ? 'view' : ''); $linkBase = $_GET; unset($linkBase['view'],$linkBase['edit'],$linkBase['add']);
                 $selfSku = ($editItem['sku'] ?? '');
                 $prevHref = $modeParam ? ('/admin/inventory?' . http_build_query(array_merge($linkBase, [$modeParam => ($prevSku ?: $selfSku)]))) : null;
@@ -45,7 +45,7 @@ if (!function_exists('renderAdminItemEditor')) {
                     <path d="M9 5l7 7-7 7" />
                 </svg>
             </a>
-            <div class="admin-modal admin-modal-content wf-admin-panel-visible show relative bg-white rounded-lg shadow-xl w-full max-w-5xl">
+            <div class="admin-modal admin-modal-content admin-modal--actions-in-header wf-admin-panel-visible show relative bg-white rounded-lg shadow-xl w-full max-w-5xl">
                 <div class="modal-header flex items-center justify-between gap-3 border-b border-gray-100">
                     <h2 class="text-lg font-bold text-green-700">
                         <?= $isView ? 'View Item' : ($isEdit ? 'Edit Item' : 'Add New Inventory Item') ?><?= ($isEdit || $isView) && $name ? ' (' . $name . ')' : '' ?>
@@ -55,6 +55,7 @@ if (!function_exists('renderAdminItemEditor')) {
                     <?php elseif ($isEdit): ?>
                         <button type="submit" class="btn btn-primary btn-sm" form="inventoryForm" data-action="save-inventory">Save</button>
                     <?php endif; ?>
+                    <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-editor" aria-label="Close">×</button>
                 </div>
 
                 <div class="modal-body">
@@ -415,11 +416,11 @@ if (!function_exists('renderAdminItemEditor')) {
                 </div>
             </form>
                 <!-- Cost Item Modal -->
-                <div id="costItemModal" class="admin-modal-overlay hidden fixed inset-0 flex items-start justify-center overflow-y-auto" role="dialog" aria-modal="true" aria-hidden="true">
+                <div id="costItemModal" class="admin-modal-overlay wf-modal--content-scroll hidden fixed inset-0 flex items-start justify-center overflow-y-auto" role="dialog" aria-modal="true" aria-hidden="true">
                     <div class="admin-modal relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-md">
                         <div class="modal-header flex justify-between items-center p-3 border-b border-gray-200">
                             <h4 id="costItemModalTitle" class="text-base font-semibold text-gray-800">Add Cost Item</h4>
-                            <button type="button" class="modal-close-btn" data-action="close-cost-modal" aria-label="Close">×</button>
+                            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-cost-modal" aria-label="Close">×</button>
                         </div>
                         <div class="modal-body p-4 space-y-3">
                             <div>
@@ -443,7 +444,7 @@ if (!function_exists('renderAdminItemEditor')) {
                     <div class="admin-modal relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-2xl">
                         <div class="modal-header flex justify-between items-center p-3 border-b border-gray-200">
                             <h4 class="text-base font-semibold text-gray-800">AI Cost Suggestions</h4>
-                            <button type="button" class="modal-close-btn" data-action="close-cost-suggestion-choice-dialog" aria-label="Close">×</button>
+                            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-cost-suggestion-choice-dialog" aria-label="Close">×</button>
                         </div>
                         <div class="modal-body p-4">
                             <div id="costSuggestionChoices" class="space-y-3"></div>
@@ -480,7 +481,7 @@ if (!function_exists('renderAdminItemEditor')) {
                     <h4 class="text-base font-semibold text-gray-800">AI Marketing Manager</h4>
                     <div class="flex items-center gap-2">
                         <span id="currentEditingSku" class="text-sm text-gray-600">SKU: <?= $sku ?></span>
-                        <button type="button" class="modal-close-btn" data-action="close-marketing-manager" aria-label="Close">×</button>
+                        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-marketing-manager" aria-label="Close">×</button>
                     </div>
                 </div>
                 <div class="modal-body p-4 space-y-4">

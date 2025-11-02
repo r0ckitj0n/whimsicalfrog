@@ -127,8 +127,8 @@ import { ApiClient } from '../core/api-client.js';
             </div>
             <div class="flex items-center gap-2">
               <span class="font-semibold">$${parseFloat(material.cost).toFixed(2)}</span>
-              <button class="text-green-600 hover:text-green-800 js-edit" title="Edit Material">✏️</button>
-              <button class="text-red-600 hover:text-red-800 js-delete" title="Delete Material">🗑️</button>
+              <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit js-edit" title="Edit Material" aria-label="Edit Material"></button>
+              <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete js-delete" title="Delete Material" aria-label="Delete Material"></button>
             </div>`;
           div.querySelector('.js-edit').addEventListener('click', () => openEditModal('material', material.id));
           div.querySelector('.js-delete').addEventListener('click', () => openDeleteModal('material', material.id, material.name));
@@ -154,8 +154,8 @@ import { ApiClient } from '../core/api-client.js';
             </div>
             <div class="flex items-center gap-2">
               <span class="font-semibold">$${parseFloat(labor.cost).toFixed(2)}</span>
-              <button class="text-green-600 hover:text-green-800 js-edit" title="Edit Labor">✏️</button>
-              <button class="text-red-600 hover:text-red-800 js-delete" title="Delete Labor">🗑️</button>
+              <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit js-edit" title="Edit Labor" aria-label="Edit Labor"></button>
+              <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete js-delete" title="Delete Labor" aria-label="Delete Labor"></button>
             </div>`;
           div.querySelector('.js-edit').addEventListener('click', () => openEditModal('labor', labor.id));
           div.querySelector('.js-delete').addEventListener('click', () => openDeleteModal('labor', labor.id, labor.description));
@@ -181,8 +181,8 @@ import { ApiClient } from '../core/api-client.js';
             </div>
             <div class="flex items-center gap-2">
               <span class="font-semibold">$${parseFloat(energy.cost).toFixed(2)}</span>
-              <button class="text-green-600 hover:text-green-800 js-edit" title="Edit Energy">✏️</button>
-              <button class="text-red-600 hover:text-red-800 js-delete" title="Delete Energy">🗑️</button>
+              <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit js-edit" title="Edit Energy" aria-label="Edit Energy"></button>
+              <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete js-delete" title="Delete Energy" aria-label="Delete Energy"></button>
             </div>`;
           div.querySelector('.js-edit').addEventListener('click', () => openEditModal('energy', energy.id));
           div.querySelector('.js-delete').addEventListener('click', () => openDeleteModal('energy', energy.id, energy.description));

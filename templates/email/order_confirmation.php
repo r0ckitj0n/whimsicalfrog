@@ -12,6 +12,10 @@ $businessName = BusinessSettings::getBusinessName();
 $businessAddressBlock = BusinessSettings::getBusinessAddressBlock();
 $businessPhone = BusinessSettings::get('business_phone', '');
 $businessUrl = BusinessSettings::getSiteUrl('');
+$supportEmail = BusinessSettings::get('business_support_email', BusinessSettings::getBusinessEmail());
+$privacyUrl = BusinessSettings::get('business_privacy_url', '');
+$termsUrl = BusinessSettings::get('business_terms_url', '');
+$policyUrl = BusinessSettings::get('business_policy_url', '');
 ?>
 <!-- WF_GUARD_TEMPLATES_CSS_IGNORE -->
 <!DOCTYPE html>
@@ -52,6 +56,17 @@ $businessUrl = BusinessSettings::getSiteUrl('');
     </div>
 
     <p class="muted">If you have any questions, just reply to this email.</p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;">
+    <p class="muted" style="margin:0;">
+      <?php if (!empty($policyUrl)): ?><a href="<?= htmlspecialchars($policyUrl) ?>">Policies</a><?php endif; ?>
+      <?php if (!empty($policyUrl) && (!empty($privacyUrl) || !empty($termsUrl))): ?> • <?php endif; ?>
+      <?php if (!empty($privacyUrl)): ?><a href="<?= htmlspecialchars($privacyUrl) ?>">Privacy</a><?php endif; ?>
+      <?php if (!empty($privacyUrl) && !empty($termsUrl)): ?> • <?php endif; ?>
+      <?php if (!empty($termsUrl)): ?><a href="<?= htmlspecialchars($termsUrl) ?>">Terms</a><?php endif; ?>
+      <?php if (!empty($supportEmail)): ?>
+        <br>Support: <a href="mailto:<?= htmlspecialchars($supportEmail) ?>"><?= htmlspecialchars($supportEmail) ?></a>
+      <?php endif; ?>
+    </p>
   </div>
 </body>
 </html>

@@ -388,7 +388,7 @@ if (!$EMBED && file_exists($headerPath)) require $headerPath;
       </div>
       <div class="admin-scrollbox admin-scrollbox--md border rounded">
         <table class="adm-table w-full text-sm">
-          <thead><tr><th style="width:48px"></th><th>Path</th></tr></thead>
+          <thead><tr><th class="w-12"></th><th>Path</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
@@ -484,7 +484,7 @@ function renderPlannerTable(items){
     </div>
     <div class="admin-scrollbox admin-scrollbox--md border rounded">
       <table class="adm-table w-full text-sm">
-        <thead><tr><th style="width:48px"></th><th>Path</th></tr></thead>
+        <thead><tr><th class="w-12"></th><th>Path</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>

@@ -4,6 +4,11 @@
 import { ApiClient } from '../core/api-client.js';
 
 export const Initialization = {
+  // Lazy-load Business Settings API to avoid mixed static/dynamic imports
+  async getBusinessSettingsAPI() {
+    const mod = await import('../modules/business-settings-api.js');
+    return mod?.default || mod?.BusinessSettingsAPI;
+  },
   // Main initialization function
   init() {
     console.log('[AdminSettings] Initializing system...');
@@ -105,7 +110,6 @@ export const Initialization = {
         window.saveBusinessInfo = this.saveBusinessInfo.bind(this);
       }
 
-      // Load initial business info
       await this.loadBusinessInfo();
     } catch (error) {
       console.error('Failed to initialize business settings:', error);
@@ -114,37 +118,138 @@ export const Initialization = {
 
   // Utility methods (these would contain the actual implementation)
   renderBrandPalette() {
-    console.log('renderBrandPalette called');
-    // Implementation would populate brand palette UI
+    try {
+      const container = document.getElementById('brandPaletteContainer');
+      if (!container) return;
+      const palette = (window.brandPalette || []).slice(0);
+      container.innerHTML = palette.map((p, i) => (
+        `<div class="inline-flex items-center gap-2 mr-2 mb-2"><span class="w-6 h-6 rounded border" style="background:${p.hex}"></span><span class="text-xs">${p.name}</span><button type="button" class="btn btn-secondary btn-xs" data-action="business-palette-delete" data-index="${i}">Remove</button></div>`
+      )).join('');
+    } catch (_) {}
   },
 
   collectBusinessInfo() {
-    console.log('collectBusinessInfo called');
-    // Collect form data and return as object
-    const form = document.getElementById('businessInfoForm');
-    if (!form) return {};
-
-    const formData = new FormData(form);
-    return Object.fromEntries(formData.entries());
+    try {
+      const getVal = (id, d='') => { const el = document.getElementById(id); return el ? (el.value || d) : d; };
+      return {
+        business_brand_primary: getVal('brandPrimary'),
+        business_brand_secondary: getVal('brandSecondary'),
+        business_brand_accent: getVal('brandAccent'),
+        business_brand_background: getVal('brandBackground'),
+        business_brand_text: getVal('brandText'),
+        business_public_header_bg: getVal('publicHeaderBg'),
+        business_public_header_text: getVal('publicHeaderText'),
+        business_public_modal_bg: getVal('publicModalBg'),
+        business_public_modal_text: getVal('publicModalText'),
+        business_public_page_bg: getVal('publicPageBg'),
+        business_public_page_text: getVal('publicPageText'),
+        business_brand_font_primary: getVal('brandFontPrimary'),
+        business_brand_font_secondary: getVal('brandFontSecondary'),
+        business_css_vars: (document.getElementById('customCssVars')?.value || ''),
+      };
+    } catch (_) { return {}; }
   },
 
-  applyBusinessCssToRoot() {
-    console.log('applyBusinessCssToRoot called');
-    // Apply business branding to CSS root variables
+  applyBusinessCssToRoot(data) {
+    try {
+      const d = data || this.collectBusinessInfo();
+      const ensureStyleEl = () => {
+        let el = document.getElementById('wf-brand-live');
+        if (!el) { el = document.createElement('style'); el.id = 'wf-brand-live'; document.head.appendChild(el); }
+        return el;
+      };
+      const cssSafe = (v) => (v == null ? '' : String(v));
+      const s = ensureStyleEl();
+      const css = [
+        ':root{',
+        `--brand-primary:${cssSafe(d.business_brand_primary || '')};`,
+        `--brand-secondary:${cssSafe(d.business_brand_secondary || '')};`,
+        `--brand-accent:${cssSafe(d.business_brand_accent || '')};`,
+        `--brand-bg:${cssSafe(d.business_brand_background || '')};`,
+        `--brand-text:${cssSafe(d.business_brand_text || '')};`,
+        `--brand-font-primary:${cssSafe(d.business_brand_font_primary || '')};`,
+        `--brand-font-secondary:${cssSafe(d.business_brand_font_secondary || '')};`,
+        d.business_public_header_bg ? `--public-header-bg:${cssSafe(d.business_public_header_bg)};` : '',
+        d.business_public_header_text ? `--public-header-text:${cssSafe(d.business_public_header_text)};` : '',
+        d.business_public_modal_bg ? `--public-modal-bg:${cssSafe(d.business_public_modal_bg)};` : '',
+        d.business_public_modal_text ? `--public-modal-text:${cssSafe(d.business_public_modal_text)};` : '',
+        d.business_public_page_bg ? `--site-page-bg:${cssSafe(d.business_public_page_bg)};` : '',
+        d.business_public_page_text ? `--site-page-text:${cssSafe(d.business_public_page_text)};` : '',
+        '}',
+      ].join('');
+      s.textContent = css;
+      const fp = cssSafe(d.business_brand_font_primary || '');
+      const fs = cssSafe(d.business_brand_font_secondary || '');
+      let fpStyle = document.getElementById('wf-brand-font-preview');
+      if (!fpStyle) { fpStyle = document.createElement('style'); fpStyle.id = 'wf-brand-font-preview'; document.head.appendChild(fpStyle); }
+      fpStyle.textContent = [
+        fp ? `#brandFontPrimaryLabel{font-family:${fp}}` : '',
+        fs ? `#brandFontSecondaryLabel{font-family:${fs}}` : '',
+      ].filter(Boolean).join('\n');
+    } catch (_) {}
   },
 
   async loadBusinessInfo() {
-    console.log('loadBusinessInfo called');
+    try {
+      const BusinessSettingsAPI = await this.getBusinessSettingsAPI();
+      const info = await BusinessSettingsAPI.getBusinessInfo();
+      if (info && info.success) {
+        this.applyBusinessInfo(info);
+        return info;
+      }
+    } catch (_) {}
     return {};
   },
 
   applyBusinessInfo(info) {
-    console.log('applyBusinessInfo called', info);
+    try {
+      const d = info && info.data ? info.data : info;
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v != null && v !== '') { try { el.value = v; } catch(_) {} } };
+      set('brandPrimary', d.business_brand_primary || '');
+      set('brandSecondary', d.business_brand_secondary || '');
+      set('brandAccent', d.business_brand_accent || '');
+      set('brandBackground', d.business_brand_background || '');
+      set('brandText', d.business_brand_text || '');
+      set('publicHeaderBg', d.business_public_header_bg || '');
+      set('publicHeaderText', d.business_public_header_text || '');
+      set('publicModalBg', d.business_public_modal_bg || '');
+      set('publicModalText', d.business_public_modal_text || '');
+      set('publicPageBg', d.business_public_page_bg || '');
+      set('publicPageText', d.business_public_page_text || '');
+      set('brandFontPrimary', d.business_brand_font_primary || '');
+      set('brandFontSecondary', d.business_brand_font_secondary || '');
+      const cv = document.getElementById('customCssVars'); if (cv && d.business_css_vars) cv.value = d.business_css_vars;
+      this.applyBusinessCssToRoot({
+        business_brand_primary: d.business_brand_primary,
+        business_brand_secondary: d.business_brand_secondary,
+        business_brand_accent: d.business_brand_accent,
+        business_brand_background: d.business_brand_background,
+        business_brand_text: d.business_brand_text,
+        business_public_header_bg: d.business_public_header_bg,
+        business_public_header_text: d.business_public_header_text,
+        business_public_modal_bg: d.business_public_modal_bg,
+        business_public_modal_text: d.business_public_modal_text,
+        business_public_page_bg: d.business_public_page_bg,
+        business_public_page_text: d.business_public_page_text,
+        business_brand_font_primary: d.business_brand_font_primary,
+        business_brand_font_secondary: d.business_brand_font_secondary,
+      });
+    } catch (_) {}
   },
 
   async saveBusinessInfo(info) {
-    console.log('saveBusinessInfo called', info);
-    return { success: true };
+    try {
+      const data = info && Object.keys(info).length ? info : this.collectBusinessInfo();
+      const BusinessSettingsAPI = await this.getBusinessSettingsAPI();
+      const res = await BusinessSettingsAPI.upsert('business', data);
+      if (res && res.success) {
+        this.applyBusinessCssToRoot(data);
+        return res;
+      }
+      return res || { success: false };
+    } catch (e) {
+      return { success: false, error: e && e.message ? e.message : 'save failed' };
+    }
   },
 
   async fetchGlobalAttributes() {
@@ -201,7 +306,7 @@ export const Initialization = {
         genderList.innerHTML = genders.map(gender => `
           <li class="flex justify-between items-center py-1">
             <span>${gender.name}</span>
-            <button class="btn btn-sm btn-danger" data-action="attr-delete" data-type="gender" data-id="${gender.id}">Delete</button>
+            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="attr-delete" data-type="gender" data-id="${gender.id}" aria-label="Delete" title="Delete"></button>
           </li>
         `).join('');
       }
@@ -212,7 +317,7 @@ export const Initialization = {
         sizeList.innerHTML = sizes.map(size => `
           <li class="flex justify-between items-center py-1">
             <span>${size.name} (${size.code})</span>
-            <button class="btn btn-sm btn-danger" data-action="attr-delete" data-type="size" data-id="${size.id}">Delete</button>
+            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="attr-delete" data-type="size" data-id="${size.id}" aria-label="Delete" title="Delete"></button>
           </li>
         `).join('');
       }
@@ -223,7 +328,7 @@ export const Initialization = {
         colorList.innerHTML = colors.map(color => `
           <li class="flex justify-between items-center py-1">
             <span>${color.name}</span>
-            <button class="btn btn-sm btn-danger" data-action="attr-delete" data-type="color" data-id="${color.id}">Delete</button>
+            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="attr-delete" data-type="color" data-id="${color.id}" aria-label="Delete" title="Delete"></button>
           </li>
         `).join('');
       }

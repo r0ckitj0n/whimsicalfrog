@@ -87,7 +87,7 @@ if ($isModal) {
 <section class="page-content" id="mdViewer">
   <div class="container mx-auto p-4">
     <h1 class="text-2xl font-semibold mb-4"><?php echo htmlspecialchars($title); ?></h1>
-    <article class="prose max-w-none" style="line-height:1.55">
+    <article class="prose max-w-none leading-155">
       <?php echo $html; ?>
     </article>
   </div>

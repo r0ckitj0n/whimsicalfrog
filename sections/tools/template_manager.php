@@ -102,10 +102,10 @@ if ($inModal) {
           <div class="mt-2 text-sm text-gray-600">Manage templates below, then use "Edit Assignments" to map them to email types.</div>
         </div>
         <div id="tmEmailToolbar" class="admin-form-inline">
-          <button id="tmRefresh" class="btn btn-secondary btn-sm">Refresh</button>
-          <button id="tmNew" class="btn btn-primary btn-sm">New Template</button>
-          <button id="tmAssignEdit" class="btn btn-secondary btn-sm" title="Map templates to email types">Edit Assignments</button>
-          <button id="tmSeedDefaults" class="btn btn-secondary btn-sm" data-action="tm-seed-defaults" title="Create default templates for all categories">Create Defaults</button>
+          <button id="tmRefresh" class="btn-icon btn-icon--refresh" title="Refresh" aria-label="Refresh"></button>
+          <button id="tmNew" class="btn-icon btn-icon--add" title="New Template" aria-label="New Template"></button>
+          <button id="tmAssignEdit" class="btn-icon btn-icon--settings" title="Edit Assignments" aria-label="Edit Assignments"></button>
+          <button id="tmSeedDefaults" class="btn-icon btn-icon--sparkles" data-action="tm-seed-defaults" title="Create Defaults" aria-label="Create Defaults"></button>
         </div>
       </div>
     </div>
@@ -164,7 +164,7 @@ if ($inModal) {
     <div class="admin-modal admin-modal-content admin-modal--lg">
       <div class="modal-header">
         <h2 id="tmEditorTitle" class="admin-card-title">Template Editor</h2>
-        <button type="button" class="admin-modal-close" data-action="tm-editor-close" aria-label="Close">×</button>
+        <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="tm-editor-close" aria-label="Close">×</button>
       </div>
       <div class="modal-body">
         <form id="tmEditorForm" class="space-y-2" data-action="prevent-submit">
@@ -336,12 +336,12 @@ if ($inModal) {
           <td class="p-2">${active}</td>
           <td class="p-2">${assignedBadges}</td>
           <td class="p-2">
-            <button class="btn btn-secondary btn-sm" data-action="tm-preview" data-id="${id}" title="Open a new window with rendered HTML">Preview HTML</button>
-            <button class="btn btn-secondary btn-sm" data-action="tm-preview-inline" data-id="${id}" title="Preview inside a modal">Preview Inline</button>
-            <button class="btn btn-secondary btn-sm" data-action="tm-send-test" data-id="${id}" title="Send a test email using this template">Send Test…</button>
-            <button class="btn btn-secondary btn-sm" data-action="tm-edit" data-id="${id}" title="Edit template fields">Edit</button>
-            <button class="btn btn-secondary btn-sm" data-action="tm-duplicate" data-id="${id}" title="Create a copy of this template">Duplicate</button>
-            <button class="btn btn-secondary btn-sm" data-action="tm-archive" data-id="${id}" title="Archive (set inactive)">Archive</button>
+            <button class="btn-icon btn-icon--preview" data-action="tm-preview" data-id="${id}" title="Preview HTML" aria-label="Preview HTML"></button>
+            <button class="btn-icon btn-icon--preview-inline" data-action="tm-preview-inline" data-id="${id}" title="Preview Inline" aria-label="Preview Inline"></button>
+            <button class="btn-icon btn-icon--send" data-action="tm-send-test" data-id="${id}" title="Send Test" aria-label="Send Test"></button>
+            <button class="btn-icon btn-icon--edit" data-action="tm-edit" data-id="${id}" title="Edit" aria-label="Edit"></button>
+            <button class="btn-icon btn-icon--duplicate" data-action="tm-duplicate" data-id="${id}" title="Duplicate" aria-label="Duplicate"></button>
+            <button class="btn-icon btn-icon--archive" data-action="tm-archive" data-id="${id}" title="Archive" aria-label="Archive"></button>
           </td>
         </tr>`;
       }).join('');
@@ -409,7 +409,11 @@ if ($inModal) {
       } else if (action === 'tm-send-test') {
         ev.preventDefault();
         const id = btn.getAttribute('data-id');
-        const email = window.prompt('Send test to email address:');
+        const email = (window.parent && typeof window.parent.showPromptModal === 'function')
+          ? await window.parent.showPromptModal({ title: 'Send Test', message: 'Send test to email address:', inputType: 'email', placeholder: 'name@example.com', confirmText: 'Send', cancelText: 'Cancel' })
+          : (typeof window.showPromptModal === 'function'
+              ? await window.showPromptModal({ title: 'Send Test', message: 'Send test to email address:', inputType: 'email', placeholder: 'name@example.com', confirmText: 'Send', cancelText: 'Cancel' })
+              : window.prompt('Send test to email address:'));
         if (!email) return;
         try {
           const j = await apiPost('/api/email_templates.php?action=send_test', { template_id: id, test_email: email });
@@ -546,9 +550,42 @@ if ($inModal) {
     } catch(_) {}
 
     // Editor helpers
+    function __tmFindParentOverlay(){
+      try {
+        const pd = window.parent && window.parent.document;
+        if (!pd) return null;
+        const ifr = Array.from(pd.querySelectorAll('iframe')).find(f => {
+          try { return f.contentWindow === window; } catch(_) { return false; }
+        });
+        if (!ifr) return null;
+        const overlay = ifr.closest('.admin-modal-overlay');
+        return overlay || null;
+      } catch(_) { return null; }
+    }
+    function __tmEnsureParentOpen(dim){
+      try {
+        const ov = __tmFindParentOverlay();
+        if (!ov) return;
+        if (ov.id && window.parent && typeof window.parent.showModal === 'function') {
+          try { window.parent.showModal(ov.id); } catch(_){}
+        }
+        if (dim) {
+          try { ov.classList.add('wf-dim-backdrop'); } catch(_){}
+        }
+      } catch(_){}
+    }
+    function __tmClearParentDimIfNone(){
+      try {
+        const anyOpen = (editorOverlay && !editorOverlay.classList.contains('hidden')) || (previewOverlay && !previewOverlay.classList.contains('hidden'));
+        if (anyOpen) return;
+        const ov = __tmFindParentOverlay();
+        if (ov) { try { ov.classList.remove('wf-dim-backdrop'); } catch(_){} }
+      } catch(_){}
+    }
     function openEditor(t){
       try {
         if (editorOverlay.parentElement !== document.body) document.body.appendChild(editorOverlay);
+        __tmEnsureParentOpen(true);
         editorOverlay.classList.add('show');
         editorOverlay.classList.remove('hidden');
         editorOverlay.setAttribute('aria-hidden','false');
@@ -567,6 +604,7 @@ if ($inModal) {
       editorOverlay.classList.add('hidden');
       editorOverlay.classList.remove('show');
       editorOverlay.setAttribute('aria-hidden','true');
+      __tmClearParentDimIfNone();
     }
     editorForm?.addEventListener('submit', async (ev) => {
       ev.preventDefault();
@@ -648,7 +686,7 @@ if ($inModal) {
       // Business context
       const brand = 'Whimsical Frog';
       const brandUrl = 'https://whimsicalfrog.us';
-      const footer = `<p style="margin-top:24px;color:#6b7280;font-size:12px">— ${brand} • <a href="${brandUrl}" style="color:#2563eb">${brandUrl}</a></p>`;
+      const footer = `<p>— ${brand} • <a href="${brandUrl}">${brandUrl}</a></p>`;
 
       const defs = [
         {
@@ -656,15 +694,15 @@ if ($inModal) {
           name: 'WF Order Confirmation (Default)',
           subject: 'Thank you for your order, {customer_name}! Order {order_id}',
           html: `
-            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
-              <h1 style="margin:0 0 8px;font-size:20px">Thank you for your order!</h1>
-              <p style="margin:0 0 12px">Hi {customer_name}, we received your order <strong>{order_id}</strong> placed on {order_date}.</p>
-              <p style="margin:0 0 12px">Order total: <strong>{order_total}</strong></p>
-              <h2 style="margin:16px 0 8px;font-size:16px">Items</h2>
-              <ul style="margin:0 0 12px;padding-left:16px">{items}</ul>
-              <h2 style="margin:16px 0 8px;font-size:16px">Shipping Address</h2>
-              <p style="white-space:pre-line;margin:0 0 12px">{shipping_address}</p>
-              <p style="margin:12px 0">We'll email you a tracking link once your package ships.</p>
+            <div>
+              <h1>Thank you for your order!</h1>
+              <p>Hi {customer_name}, we received your order <strong>{order_id}</strong> placed on {order_date}.</p>
+              <p>Order total: <strong>{order_total}</strong></p>
+              <h2>Items</h2>
+              <ul>{items}</ul>
+              <h2>Shipping Address</h2>
+              <pre>{shipping_address}</pre>
+              <p>We'll email you a tracking link once your package ships.</p>
               ${footer}
             </div>
           `,
@@ -676,13 +714,13 @@ if ($inModal) {
           name: 'WF Admin Notification (Default)',
           subject: 'New order {order_id} from {customer_name}',
           html: `
-            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
-              <h1 style="margin:0 0 8px;font-size:20px">New Order</h1>
-              <p style="margin:0 0 8px"><strong>Order:</strong> {order_id} on {order_date}</p>
-              <p style="margin:0 0 8px"><strong>Customer:</strong> {customer_name} ({customer_email})</p>
-              <p style="margin:0 0 8px"><strong>Total:</strong> {order_total}</p>
-              <h2 style="margin:16px 0 8px;font-size:16px">Items</h2>
-              <ul style="margin:0 0 12px;padding-left:16px">{items}</ul>
+            <div>
+              <h1>New Order</h1>
+              <p><strong>Order:</strong> {order_id} on {order_date}</p>
+              <p><strong>Customer:</strong> {customer_name} ({customer_email})</p>
+              <p><strong>Total:</strong> {order_total}</p>
+              <h2>Items</h2>
+              <ul>{items}</ul>
               ${footer}
             </div>
           `,
@@ -694,10 +732,10 @@ if ($inModal) {
           name: 'WF Welcome (Default)',
           subject: 'Welcome to '+brand+', {customer_name}',
           html: `
-            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
-              <h1 style="margin:0 0 8px;font-size:20px">Welcome to ${brand}!</h1>
-              <p style="margin:0 0 12px">We're glad you're here, {customer_name}. Click below to activate your account and start exploring new arrivals and specials.</p>
-              <p style="margin:16px 0"><a href="{activation_url}" style="background:#111827;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none">Activate Account</a></p>
+            <div>
+              <h1>Welcome to ${brand}!</h1>
+              <p>We're glad you're here, {customer_name}. Click below to activate your account and start exploring new arrivals and specials.</p>
+              <p><a href="{activation_url}">Activate Account</a></p>
               ${footer}
             </div>
           `,
@@ -709,11 +747,11 @@ if ($inModal) {
           name: 'WF Password Reset (Default)',
           subject: brand+': Reset your password',
           html: `
-            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
-              <h1 style="margin:0 0 8px;font-size:20px">Reset your password</h1>
-              <p style="margin:0 0 12px">We received a request to reset your password. If you didn't request this, you can ignore this message.</p>
-              <p style="margin:16px 0"><a href="{reset_url}" style="background:#111827;color:#fff;padding:10px 14px;border-radius:6px;text-decoration:none">Reset Password</a></p>
-              <p style="margin:0 0 12px;color:#6b7280;font-size:12px">This link may expire soon for your security.</p>
+            <div>
+              <h1>Reset your password</h1>
+              <p>We received a request to reset your password. If you didn't request this, you can ignore this message.</p>
+              <p><a href="{reset_url}">Reset Password</a></p>
+              <p>This link may expire soon for your security.</p>
               ${footer}
             </div>
           `,
@@ -725,9 +763,9 @@ if ($inModal) {
           name: 'WF Custom (Default)',
           subject: 'A note from '+brand,
           html: `
-            <div style="font-family:var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif);padding:20px">
-              <h1 style="margin:0 0 8px;font-size:20px">Hello from ${brand}</h1>
-              <p style="margin:0 0 12px">{body}</p>
+            <div>
+              <h1>Hello from ${brand}</h1>
+              <p>{body}</p>
               ${footer}
             </div>
           `,
@@ -771,14 +809,137 @@ if ($inModal) {
     const previewOverlay = document.getElementById('tmPreviewModal');
     const previewTitle = document.getElementById('tmPreviewTitle');
     const previewBody = document.getElementById('tmPreviewBody');
+    let previewLast = { title: '', html: '' };
+    let previewOptions = (function(){
+      try {
+        const o = JSON.parse(localStorage.getItem('wfEmailPreviewOptions')||'null');
+        if (o && typeof o==='object') return {
+          theme: (o.theme==='dark'?'dark':'light'),
+          device: (o.device==='mobile' || o.device==='tablet' || o.device==='custom') ? o.device : 'desktop',
+          customWidth: (typeof o.customWidth==='number' && o.customWidth>0 ? o.customWidth : 640),
+          zoom: (o.zoom===0.8 || o.zoom===1 || o.zoom===1.2) ? o.zoom : 1,
+          brand: (o.brand && typeof o.brand==='object') ? o.brand : null
+        };
+      } catch(_){ }
+      return { theme:'light', device:'desktop', customWidth:640, zoom:1, brand:null };
+    })();
+
+    function updatePreviewControls(){
+      try {
+        const th = document.getElementById('tmPrevTheme');
+        if (th) {
+          th.setAttribute('aria-pressed', previewOptions.theme === 'dark' ? 'true' : 'false');
+          th.textContent = previewOptions.theme === 'dark' ? '🌙 Dark' : '☀️ Light';
+        }
+        const bd = document.getElementById('tmPrevDesktop');
+        const bt = document.getElementById('tmPrevTablet');
+        const bm = document.getElementById('tmPrevMobile');
+        const bc = document.getElementById('tmPrevCustom');
+        if (bd) { bd.setAttribute('aria-pressed', previewOptions.device==='desktop' ? 'true' : 'false'); bd.textContent = '🖥️ Desktop'; }
+        if (bt) { bt.setAttribute('aria-pressed', previewOptions.device==='tablet' ? 'true' : 'false'); bt.textContent = '📒 Tablet'; }
+        if (bm) { bm.setAttribute('aria-pressed', previewOptions.device==='mobile' ? 'true' : 'false'); bm.textContent = '📱 Mobile'; }
+        if (bc) { bc.setAttribute('aria-pressed', previewOptions.device==='custom' ? 'true' : 'false'); bc.textContent = '📏 Custom'; }
+        const w = document.getElementById('tmPrevWidth');
+        if (w) { w.value = String(previewOptions.customWidth||640); w.disabled = previewOptions.device!=='custom'; }
+        const z80 = document.getElementById('tmPrevZoom80');
+        const z100 = document.getElementById('tmPrevZoom100');
+        const z120 = document.getElementById('tmPrevZoom120');
+        if (z80) z80.setAttribute('aria-pressed', previewOptions.zoom===0.8 ? 'true':'false');
+        if (z100) z100.setAttribute('aria-pressed', previewOptions.zoom===1 ? 'true':'false');
+        if (z120) z120.setAttribute('aria-pressed', previewOptions.zoom===1.2 ? 'true':'false');
+      } catch(_) {}
+    }
     function openPreview(title, html){
       try {
         if (previewOverlay.parentElement !== document.body) document.body.appendChild(previewOverlay);
         previewTitle.textContent = title || 'Preview';
-        previewBody.innerHTML = '<iframe class="w-full h-full border" srcdoc="'+ (html||'').replaceAll('"','&quot;') +'"></iframe>';
+        const content = String(html || '');
+        previewLast = { title: String(title||'Preview'), html: content };
+        const bodyClass = [
+          'email-preview',
+          (previewOptions.theme === 'dark' ? 'theme-dark' : ''),
+          (previewOptions.device==='mobile' ? 'emulate-mobile' : (previewOptions.device==='tablet' ? 'emulate-tablet' : (previewOptions.device==='custom' ? 'emulate-custom' : ''))),
+          (previewOptions.zoom===0.8 ? 'zoom-80' : (previewOptions.zoom===1.2 ? 'zoom-120' : 'zoom-100'))
+        ].filter(Boolean).join(' ');
+        // Attempt to read brand colors from parent document CSS variables
+        let brandCSSRoot = ':root{--brand:#2563eb;--text:#111827;--muted:#6b7280;--bg:#f3f4f6;--panel:#ffffff;--border:#e5e7eb}';
+        try {
+          const rs = getComputedStyle(document.documentElement);
+          const b = (rs.getPropertyValue('--brand-color')||'').trim() || (rs.getPropertyValue('--wf-brand')||'').trim();
+          const t = (rs.getPropertyValue('--text-color')||'').trim();
+          const m = (rs.getPropertyValue('--muted-color')||'').trim();
+          const bg = (rs.getPropertyValue('--email-bg')||'').trim();
+          const panel = (rs.getPropertyValue('--email-panel')||'').trim();
+          const border = (rs.getPropertyValue('--email-border')||'').trim();
+          const v = {
+            brand: b || '#2563eb',
+            text: t || '#111827',
+            muted: m || '#6b7280',
+            bg: bg || '#f3f4f6',
+            panel: panel || '#ffffff',
+            border: border || '#e5e7eb'
+          };
+          // Apply preview brand overrides if provided
+          if (previewOptions.brand && typeof previewOptions.brand==='object') {
+            if (previewOptions.brand.brand) v.brand = previewOptions.brand.brand;
+            if (previewOptions.brand.text) v.text = previewOptions.brand.text;
+            if (previewOptions.brand.muted) v.muted = previewOptions.brand.muted;
+            if (previewOptions.brand.bg) v.bg = previewOptions.brand.bg;
+            if (previewOptions.brand.panel) v.panel = previewOptions.brand.panel;
+            if (previewOptions.brand.border) v.border = previewOptions.brand.border;
+          }
+          brandCSSRoot = `:root{--brand:${v.brand};--text:${v.text};--muted:${v.muted};--bg:${v.bg};--panel:${v.panel};--border:${v.border}}`;
+        } catch(_) { }
+        const doc = '<!doctype html>'+
+          '<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'+
+          '<style>'+[
+            brandCSSRoot,
+            'body.theme-dark{--brand:#60a5fa;--text:#e5e7eb;--muted:#9ca3af;--bg:#0b1220;--panel:#0f172a;--border:#1f2937}',
+            'html,body{height:auto;min-height:100%}',
+            'body{margin:0;padding:24px;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif;line-height:1.6}',
+            '.email-container{max-width:640px;margin:0 auto;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);padding:24px;box-sizing:border-box}',
+            'body.emulate-mobile .email-container{max-width:420px}',
+            'body.emulate-tablet .email-container{max-width:768px}',
+            `body.emulate-custom .email-container{max-width:${Number(previewOptions.customWidth||640)}px}`,
+            'body.zoom-80 .email-container{transform:scale(0.8);transform-origin:top center}',
+            'body.zoom-100 .email-container{transform:scale(1);transform-origin:top center}',
+            'body.zoom-120 .email-container{transform:scale(1.2);transform-origin:top center}',
+            'h1{margin:0 0 12px;font-size:24px;line-height:1.25}',
+            'h2{margin:20px 0 10px;font-size:18px;line-height:1.4}',
+            'h3{margin:16px 0 8px;font-size:16px;line-height:1.4}',
+            'p{margin:0 0 12px}',
+            'small, .muted{color:var(--muted)}',
+            'ul,ol{margin:0 0 12px;padding-left:20px}',
+            'li{margin:4px 0}',
+            'a{color:var(--brand);text-decoration:none}',
+            'a:hover{text-decoration:underline}',
+            'hr{border:0;border-top:1px solid var(--border);margin:16px 0}',
+            'pre{white-space:pre-line;margin:0 0 12px;padding:0}',
+            'code, kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,\'Liberation Mono\',\'Courier New\',monospace;background:#f9fafb;border:1px solid var(--border);border-radius:4px;padding:2px 4px}',
+            'table{width:100%;border-collapse:collapse;margin:12px 0;border:1px solid var(--border)}',
+            'th,td{padding:8px 10px;border-top:1px solid var(--border);text-align:left;vertical-align:top}',
+            'thead th{background:#f9fafb;border-bottom:1px solid var(--border)}',
+            'img{max-width:100%;height:auto;border:0}',
+            'blockquote{margin:12px 0;padding:10px 12px;border-left:4px solid var(--brand);background:#f9fafb;border-radius:6px;color:#111827}',
+            '.badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}',
+            '.btn{display:inline-block;padding:10px 14px;border-radius:6px;background:#111827;color:#fff;text-decoration:none}',
+            '.btn:hover{opacity:.9}',
+            '.email-footer, footer{margin-top:24px;color:var(--muted);font-size:12px}',
+            '@media print{',
+              'body{background:#ffffff !important;color:#000000 !important;padding:0}',
+              '.email-container{box-shadow:none;border:0;max-width:none;border-radius:0}',
+              'a{color:#000;text-decoration:underline}',
+              'a[href]::after{content:" (" attr(href) ")";font-size:12px;color:#6b7280}',
+              'img{max-width:100%;height:auto}',
+              'p,li{word-break:break-word}',
+            '}'
+          ].join('')+'</style></head><body class="'+ bodyClass +'"><div class="email-container">'+ content +'</div></body></html>';
+        previewBody.innerHTML = '<iframe class="w-full h-full border" srcdoc="'+ doc.replaceAll('"','&quot;') +'"></iframe>';
+        __tmEnsureParentOpen(true);
         previewOverlay.classList.add('show');
         previewOverlay.classList.remove('hidden');
         previewOverlay.setAttribute('aria-hidden','false');
+        updatePreviewControls();
       } catch(_) {}
     }
     function closePreview(){
@@ -786,12 +947,161 @@ if ($inModal) {
       previewOverlay.classList.remove('show');
       previewOverlay.setAttribute('aria-hidden','true');
       previewBody.innerHTML = '';
+      __tmClearParentDimIfNone();
     }
     document.addEventListener('click', (ev)=>{
       const a = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-close"]') : null;
       if (!a) return;
       ev.preventDefault();
       closePreview();
+    });
+
+    document.addEventListener('click', (ev)=>{
+      const t = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-toggle-theme"]') : null;
+      if (!t) return;
+      ev.preventDefault();
+      previewOptions.theme = (previewOptions.theme === 'dark') ? 'light' : 'dark';
+      try { localStorage.setItem('wfEmailPreviewOptions', JSON.stringify(previewOptions)); } catch(_) {}
+      updatePreviewControls();
+      openPreview(previewLast.title, previewLast.html);
+    });
+    document.addEventListener('click', (ev)=>{
+      const t = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-set-device"]') : null;
+      if (!t) return;
+      ev.preventDefault();
+      const d = t.getAttribute('data-device');
+      if (!d) return;
+      previewOptions.device = (d==='mobile' || d==='tablet' || d==='custom') ? d : 'desktop';
+      try { localStorage.setItem('wfEmailPreviewOptions', JSON.stringify(previewOptions)); } catch(_) {}
+      updatePreviewControls();
+      openPreview(previewLast.title, previewLast.html);
+    });
+
+    document.addEventListener('input', (ev)=>{
+      const inp = ev.target && ev.target.closest ? ev.target.closest('#tmPrevWidth') : null;
+      if (!inp) return;
+      try {
+        const n = Math.max(280, Math.min(2000, parseInt(inp.value||'640',10)));
+        if (!isNaN(n)) {
+          previewOptions.customWidth = n;
+          try { localStorage.setItem('wfEmailPreviewOptions', JSON.stringify(previewOptions)); } catch(_) {}
+          updatePreviewControls();
+          openPreview(previewLast.title, previewLast.html);
+        }
+      } catch(_) {}
+    });
+
+    document.addEventListener('click', (ev)=>{
+      const t = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-open"]') : null;
+      if (!t) return;
+      ev.preventDefault();
+      try {
+        const win = window.open('', '_blank');
+        if (win) {
+          const content = String(previewLast.html||'');
+          // Rebuild doc with current options
+          const iframeDoc = (function(){
+            const bodyClass = 'email-preview' + (previewOptions.theme === 'dark' ? ' theme-dark' : '') + (previewOptions.device==='mobile' ? ' emulate-mobile' : (previewOptions.device==='tablet' ? ' emulate-tablet' : ''));
+            let brandCSSRoot = ':root{--brand:#2563eb;--text:#111827;--muted:#6b7280;--bg:#f3f4f6;--panel:#ffffff;--border:#e5e7eb}';
+            try {
+              const rs = getComputedStyle(document.documentElement);
+              const b = (rs.getPropertyValue('--brand-color')||'').trim() || (rs.getPropertyValue('--wf-brand')||'').trim();
+              const t = (rs.getPropertyValue('--text-color')||'').trim();
+              const m = (rs.getPropertyValue('--muted-color')||'').trim();
+              const bg = (rs.getPropertyValue('--email-bg')||'').trim();
+              const panel = (rs.getPropertyValue('--email-panel')||'').trim();
+              const border = (rs.getPropertyValue('--email-border')||'').trim();
+              const v = { brand: b||'#2563eb', text: t||'#111827', muted: m||'#6b7280', bg: bg||'#f3f4f6', panel: panel||'#ffffff', border: border||'#e5e7eb' };
+              brandCSSRoot = `:root{--brand:${v.brand};--text:${v.text};--muted:${v.muted};--bg:${v.bg};--panel:${v.panel};--border:${v.border}}`;
+            } catch(_){ }
+            const css = [
+              brandCSSRoot,
+              'body.theme-dark{--brand:#60a5fa;--text:#e5e7eb;--muted:#9ca3af;--bg:#0b1220;--panel:#0f172a;--border:#1f2937}',
+              'html,body{height:auto;min-height:100%}',
+              'body{margin:0;padding:24px;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,\\'Segoe UI\\',Roboto,Arial,sans-serif;line-height:1.6}',
+              '.email-container{max-width:640px;margin:0 auto;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -2px rgba(0,0,0,.05);padding:24px;box-sizing:border-box}',
+              'body.emulate-mobile .email-container{max-width:420px}','body.emulate-tablet .email-container{max-width:768px}', `body.emulate-custom .email-container{max-width:${Number(previewOptions.customWidth||640)}px}`,
+              'body.zoom-80 .email-container{transform:scale(0.8);transform-origin:top center}','body.zoom-100 .email-container{transform:scale(1);transform-origin:top center}','body.zoom-120 .email-container{transform:scale(1.2);transform-origin:top center}',
+              'h1{margin:0 0 12px;font-size:24px;line-height:1.25}','h2{margin:20px 0 10px;font-size:18px;line-height:1.4}','h3{margin:16px 0 8px;font-size:16px;line-height:1.4}',
+              'p{margin:0 0 12px}','small, .muted{color:var(--muted)}','ul,ol{margin:0 0 12px;padding-left:20px}','li{margin:4px 0}',
+              'a{color:var(--brand);text-decoration:none}','a:hover{text-decoration:underline}','hr{border:0;border-top:1px solid var(--border);margin:16px 0}',
+              'pre{white-space:pre-line;margin:0 0 12px;padding:0}','code, kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,\\'Liberation Mono\\',\\'Courier New\\',monospace;background:#f9fafb;border:1px solid var(--border);border-radius:4px;padding:2px 4px}',
+              'table{width:100%;border-collapse:collapse;margin:12px 0;border:1px solid var(--border)}','th,td{padding:8px 10px;border-top:1px solid var(--border);text-align:left;vertical-align:top}','thead th{background:#f9fafb;border-bottom:1px solid var(--border)}',
+              'img{max-width:100%;height:auto;border:0}','blockquote{margin:12px 0;padding:10px 12px;border-left:4px solid var(--brand);background:#f9fafb;border-radius:6px;color:#111827}',
+              '.badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}','.btn{display:inline-block;padding:10px 14px;border-radius:6px;background:#111827;color:#fff;text-decoration:none}','.btn:hover{opacity:.9}',
+              '.email-footer, footer{margin-top:24px;color:var(--muted);font-size:12px}',
+              '@media print{body{background:#ffffff !important;color:#000000 !important;padding:0}.email-container{box-shadow:none;border:0;max-width:none;border-radius:0}a{color:#000;text-decoration:underline}a[href]::after{content:" (" attr(href) ")";font-size:12px;color:#6b7280}img{max-width:100%;height:auto}p,li{word-break:break-word}}'
+            ].join('');
+            return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>'+css+'</style></head><body class="'+ bodyClass +'"><div class="email-container">'+ content +'</div></body></html>';
+          })();
+          win.document.open();
+          win.document.write(iframeDoc);
+          win.document.close();
+        }
+      } catch(_) {}
+    });
+
+    document.addEventListener('click', (ev)=>{
+      const t = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-print"]') : null;
+      if (!t) return;
+      ev.preventDefault();
+      try {
+        const iframe = document.querySelector('#tmPreviewBody iframe');
+        if (iframe && iframe.contentWindow) { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
+      } catch(_) {}
+    });
+
+    document.addEventListener('click', (ev)=>{
+      const t = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-zoom"]') : null;
+      if (!t) return;
+      ev.preventDefault();
+      const z = t.getAttribute('data-zoom');
+      const map = { '0.8':0.8, '1':1, '1.2':1.2 };
+      if (!(z in map)) return;
+      previewOptions.zoom = map[z];
+      try { localStorage.setItem('wfEmailPreviewOptions', JSON.stringify(previewOptions)); } catch(_) {}
+      updatePreviewControls();
+      openPreview(previewLast.title, previewLast.html);
+    });
+
+    document.addEventListener('click', async (ev)=>{
+      const t = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-brand"]') : null;
+      if (!t) return;
+      ev.preventDefault();
+      try {
+        const promptFn = (window.parent && typeof window.parent.showPromptModal==='function') ? window.parent.showPromptModal : (typeof window.showPromptModal==='function' ? window.showPromptModal : null);
+        const current = previewOptions.brand ? JSON.stringify(previewOptions.brand, null, 2) : '{\n  "brand": "#2563eb",\n  "text": "#111827",\n  "muted": "#6b7280",\n  "bg": "#f3f4f6",\n  "panel": "#ffffff",\n  "border": "#e5e7eb"\n}';
+        let value = null;
+        if (promptFn) {
+          value = await promptFn({ title:'Brand Overrides (JSON)', message:'Set preview-only brand variables (JSON object). Keys: brand, text, muted, bg, panel, border', inputType:'textarea', placeholder: current, initialValue: current, confirmText:'Apply' });
+        } else {
+          value = window.prompt('Brand overrides (JSON):', current);
+        }
+        if (!value) return;
+        try {
+          const obj = JSON.parse(value);
+          if (obj && typeof obj==='object') {
+            previewOptions.brand = obj;
+            try { localStorage.setItem('wfEmailPreviewOptions', JSON.stringify(previewOptions)); } catch(_) {}
+            openPreview(previewLast.title, previewLast.html);
+          }
+        } catch(_) {}
+      } catch(_) {}
+    });
+
+    document.addEventListener('click', async (ev)=>{
+      const t = ev.target && ev.target.closest ? ev.target.closest('[data-action="tm-preview-copy-html"]') : null;
+      if (!t) return;
+      ev.preventDefault();
+      try {
+        const txt = String(previewLast.html||'');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(txt);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        }
+      } catch(_) {}
     });
   })();
   </script>
@@ -802,7 +1112,31 @@ if ($inModal) {
   <div class="admin-modal admin-modal-content admin-modal--lg">
     <div class="modal-header">
       <h2 id="tmPreviewTitle" class="admin-card-title">Preview</h2>
-      <button type="button" class="admin-modal-close" data-action="tm-preview-close" aria-label="Close">×</button>
+      <div class="admin-form-inline ml-auto flex items-center gap-2">
+        <div class="flex items-center gap-1">
+          <button type="button" id="tmPrevTheme" class="admin-action-button btn btn-xs btn-icon btn-icon--theme" data-action="tm-preview-toggle-theme" aria-pressed="false" title="Toggle theme" aria-label="Toggle theme"></button>
+        </div>
+        <div class="flex items-center gap-1" role="group" aria-label="Device presets">
+          <button type="button" id="tmPrevDesktop" class="admin-action-button btn btn-xs btn-icon btn-icon--desktop" data-action="tm-preview-set-device" data-device="desktop" aria-pressed="false" title="Desktop width" aria-label="Desktop width"></button>
+          <button type="button" id="tmPrevTablet" class="admin-action-button btn btn-xs btn-icon btn-icon--tablet" data-action="tm-preview-set-device" data-device="tablet" aria-pressed="false" title="Tablet width" aria-label="Tablet width"></button>
+          <button type="button" id="tmPrevMobile" class="admin-action-button btn btn-xs btn-icon btn-icon--mobile" data-action="tm-preview-set-device" data-device="mobile" aria-pressed="false" title="Mobile width" aria-label="Mobile width"></button>
+          <button type="button" id="tmPrevCustom" class="admin-action-button btn btn-xs btn-icon btn-icon--ruler" data-action="tm-preview-set-device" data-device="custom" aria-pressed="false" title="Custom width" aria-label="Custom width"></button>
+          <label for="tmPrevWidth" class="sr-only">Custom width (px)</label>
+          <input id="tmPrevWidth" type="number" min="280" max="2000" step="10" class="form-input w-24" value="640" aria-label="Custom width in pixels" />
+        </div>
+        <div class="flex items-center gap-1" role="group" aria-label="Zoom">
+          <button type="button" id="tmPrevZoom80" class="btn btn-secondary btn-xs" data-action="tm-preview-zoom" data-zoom="0.8" aria-pressed="false" title="Zoom 80%" aria-label="Zoom 80%">80%</button>
+          <button type="button" id="tmPrevZoom100" class="btn btn-secondary btn-xs" data-action="tm-preview-zoom" data-zoom="1" aria-pressed="true" title="Zoom 100%" aria-label="Zoom 100%">100%</button>
+          <button type="button" id="tmPrevZoom120" class="btn btn-secondary btn-xs" data-action="tm-preview-zoom" data-zoom="1.2" aria-pressed="false" title="Zoom 120%" aria-label="Zoom 120%">120%</button>
+        </div>
+        <div class="flex items-center gap-1">
+          <button type="button" class="admin-action-button btn btn-xs btn-icon btn-icon--brand" data-action="tm-preview-brand" title="Brand overrides" aria-label="Brand overrides"></button>
+          <button type="button" class="admin-action-button btn btn-xs btn-icon btn-icon--copy" data-action="tm-preview-copy-html" title="Copy HTML" aria-label="Copy HTML"></button>
+          <button type="button" class="admin-action-button btn btn-xs btn-icon btn-icon--external" data-action="tm-preview-open" title="Open in new window" aria-label="Open in new window"></button>
+          <button type="button" class="admin-action-button btn btn-xs btn-icon btn-icon--print" data-action="tm-preview-print" title="Print" aria-label="Print"></button>
+        </div>
+      </div>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="tm-preview-close" aria-label="Close">×</button>
     </div>
     <div class="modal-body p-0 site-modal-body--xl">
       <div id="tmPreviewBody" class="w-full"></div>

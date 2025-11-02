@@ -1,0 +1,270 @@
+/* Admin action icon buttons (shared, icon-only) */
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid #d1d5db; /* gray-300 */
+  background: #fff;
+  color: #374151; /* gray-700 */
+  cursor: pointer;
+  transition: background-color .15s ease, box-shadow .15s ease, transform .05s ease, border-color .15s ease;
+}
+.btn-icon:hover { background: #f9fafb; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+.btn-icon:active { transform: scale(0.98); }
+.btn-icon:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.25); }
+.btn-icon[disabled], .btn-icon[aria-disabled="true"] { opacity: .6; cursor: not-allowed; box-shadow: none; }
+
+.btn-icon::before {
+  font-size: 16px; /* emoji/text icon size */
+  line-height: 1;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Noto Emoji", "EmojiOne Color", "Twemoji Mozilla", system-ui, sans-serif;
+}
+
+/* Variants (emoji-based to match Inventory actions style) */
+.btn-icon--add { color: #065f46; border-color: #d1fae5; background: #ecfdf5; }
+.btn-icon--add:hover { background: #d1fae5; }
+.btn-icon--add::before { content: '➕'; }
+
+.btn-icon--edit { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.btn-icon--edit:hover { background: #dbeafe; }
+.btn-icon--edit::before { content: '✏️'; }
+
+.btn-icon--duplicate { color: #6d28d9; border-color: #ede9fe; background: #f5f3ff; }
+.btn-icon--duplicate:hover { background: #ede9fe; }
+.btn-icon--duplicate::before { content: '📄'; }
+
+.btn-icon--delete { color: #b91c1c; border-color: #fee2e2; background: #fef2f2; }
+.btn-icon--delete:hover { background: #fee2e2; }
+.btn-icon--delete::before { content: '🗑️'; }
+
+.btn-icon--view { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--view:hover { background: #f3f4f6; }
+.btn-icon--view::before { content: '👁️'; }
+
+.btn-icon--up { color: var(--admin-icon-accent, #374151); }
+.btn-icon--up::before { content: '▲'; }
+
+.btn-icon--down { color: var(--admin-icon-accent, #374151); }
+.btn-icon--down::before { content: '▼'; }
+
+/* Additional common actions */
+.btn-icon--refresh { color: #065f46; border-color: #d1fae5; background: #ecfdf5; }
+.btn-icon--refresh:hover { background: #d1fae5; }
+.btn-icon--refresh::before { content: '🔄'; }
+
+.btn-icon--save { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.btn-icon--save:hover { background: #dbeafe; }
+.btn-icon--save::before { content: '💾'; }
+
+.btn-icon--send { color: #1f2937; border-color: #e5e7eb; background: #f9fafb; }
+.btn-icon--send:hover { background: #eef2f7; }
+.btn-icon--send::before { content: '📤'; }
+
+.btn-icon--archive { color: #92400e; border-color: #fef3c7; background: #fffbeb; }
+.btn-icon--archive:hover { background: #fef3c7; }
+.btn-icon--archive::before { content: '🗄️'; }
+
+.btn-icon--settings { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--settings:hover { background: #f3f4f6; }
+.btn-icon--settings::before { content: '⚙️'; }
+
+.btn-icon--download { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.btn-icon--download:hover { background: #dbeafe; }
+.btn-icon--download::before { content: '⬇️'; }
+
+.btn-icon--upload { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.btn-icon--upload:hover { background: #dbeafe; }
+.btn-icon--upload::before { content: '⬆️'; }
+
+.btn-icon--preview { color: #fff; border-color: color-mix(in srgb, var(--brand-primary, #2563eb), #000 10%); background: var(--brand-primary, #2563eb); }
+.btn-icon--preview:hover { filter: brightness(0.95); }
+.btn-icon--preview::before { content: '👁️'; }
+
+.btn-icon--preview-inline { color: #fff; border-color: color-mix(in srgb, var(--brand-primary, #2563eb), #000 10%); background: var(--brand-primary, #2563eb); }
+.btn-icon--preview-inline:hover { filter: brightness(0.95); }
+.btn-icon--preview-inline::before { content: '🪟'; }
+
+/* Additional variants used by Room Map Editor */
+.btn-icon--undo { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--undo:hover { background: #f3f4f6; }
+.btn-icon--undo::before { content: '↩'; }
+
+.btn-icon--fullscreen { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--fullscreen:hover { background: #f3f4f6; }
+.btn-icon--fullscreen::before { content: '⛶'; }
+
+.btn-icon--sparkles { color: #6d28d9; border-color: #ede9fe; background: #f5f3ff; }
+.btn-icon--sparkles:hover { background: #ede9fe; }
+.btn-icon--sparkles::before { content: '✨'; }
+
+/* New set per request */
+.btn-icon--external { color: #1f2937; border-color: #e5e7eb; background: #fff; }
+.btn-icon--external:hover { background: #f3f4f6; }
+.btn-icon--external::before { content: '↗️'; }
+
+.btn-icon--link { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.btn-icon--link:hover { background: #dbeafe; }
+.btn-icon--link::before { content: '🔗'; }
+
+.btn-icon--info { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.btn-icon--info:hover { background: #dbeafe; }
+.btn-icon--info::before { content: 'ℹ️'; }
+
+.btn-icon--help { color: #6b7280; border-color: #e5e7eb; background: #fff; }
+.btn-icon--help:hover { background: #f3f4f6; }
+.btn-icon--help::before { content: '❓'; }
+
+.btn-icon--print { color: #1f2937; border-color: #e5e7eb; background: #fff; }
+.btn-icon--print:hover { background: #f3f4f6; }
+.btn-icon--print::before { content: '🖨️'; }
+
+/* Marketing and CTAs */
+.btn-icon--email { color: #1f2937; border-color: #e5e7eb; background: #fff; }
+.btn-icon--email:hover { background: #f3f4f6; }
+.btn-icon--email::before { content: '📧'; }
+
+.btn-icon--tag { color: #1f2937; border-color: #e5e7eb; background: #fff; }
+.btn-icon--tag:hover { background: #f3f4f6; }
+.btn-icon--tag::before { content: '🏷️'; }
+
+/* Payments */
+.btn-icon--cash { color: #065f46; border-color: #d1fae5; background: #ecfdf5; }
+.btn-icon--cash:hover { background: #d1fae5; }
+.btn-icon--cash::before { content: '💵'; }
+
+.btn-icon--card { color: #1d4ed8; border-color: #dbeafe; background: #eff6ff; }
+.btn-icon--card:hover { background: #dbeafe; }
+.btn-icon--card::before { content: '💳'; }
+
+/* Close button (vector X) */
+.btn-icon--close { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--close:hover { background: #f3f4f6; }
+/* Draw two bars to form a crisp X */
+.btn-icon--close::before,
+.btn-icon--close::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: 1px;
+  transform-origin: center;
+  /* Prevent any injected text content from showing if external CSS sets content */
+  font-size: 0 !important;
+  line-height: 0 !important;
+}
+.btn-icon--close::before { transform: translate(-50%, -50%) rotate(45deg); }
+.btn-icon--close::after  { transform: translate(-50%, -50%) rotate(-45deg); }
+
+/* Template/Preview toolbar icons */
+.btn-icon--desktop { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--desktop:hover { background: #f3f4f6; }
+.btn-icon--desktop::before { content: '🖥️'; }
+
+.btn-icon--tablet { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--tablet:hover { background: #f3f4f6; }
+.btn-icon--tablet::before { content: '📒'; }
+
+.btn-icon--mobile { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--mobile:hover { background: #f3f4f6; }
+.btn-icon--mobile::before { content: '📱'; }
+
+.btn-icon--ruler { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--ruler:hover { background: #f3f4f6; }
+.btn-icon--ruler::before { content: '📏'; }
+
+.btn-icon--brand { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--brand:hover { background: #f3f4f6; }
+.btn-icon--brand::before { content: '🎨'; }
+
+.btn-icon--copy { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--copy:hover { background: #f3f4f6; }
+.btn-icon--copy::before { content: '📋'; }
+
+.btn-icon--theme { color: #374151; border-color: #e5e7eb; background: #fff; }
+.btn-icon--theme:hover { background: #f3f4f6; }
+.btn-icon--theme::before { content: '🌓'; }
+
+/* Marketing page: ensure icon-only gear/plus/yield buttons show labels */
+.admin-marketing-page .btn-icon.btn-icon--settings,
+.admin-marketing-page .btn-icon.btn-icon--add,
+.admin-marketing-page .btn-icon.btn-icon--up {
+  width: auto;
+  padding: 0 10px;
+  gap: 6px;
+}
+.admin-marketing-page .btn-icon.btn-icon--settings[aria-label]::after,
+.admin-marketing-page .btn-icon.btn-icon--add[aria-label]::after,
+.admin-marketing-page .btn-icon.btn-icon--up[aria-label]::after {
+  content: " " attr(aria-label);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+}
+.admin-marketing-page .btn-icon.btn-icon--settings:not([aria-label])[title]::after,
+.admin-marketing-page .btn-icon.btn-icon--add:not([aria-label])[title]::after,
+.admin-marketing-page .btn-icon.btn-icon--up:not([aria-label])[title]::after {
+  content: " " attr(title);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+/* Remove grey secondary buttons on admin: restyle as brand primary */
+body[data-page^='admin'] .btn.btn-secondary {
+  background-color: var(--brand-primary, #2563eb) !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--brand-primary, #2563eb), #000 10%) !important;
+}
+body[data-page^='admin'] .btn.btn-secondary:hover {
+  filter: brightness(0.95) !important;
+}
+
+/* Some templates use .btn-secondary without .btn wrapper */
+body[data-page^='admin'] .btn-secondary {
+  background-color: var(--brand-primary, #2563eb) !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--brand-primary, #2563eb), #000 10%) !important;
+}
+body[data-page^='admin'] .btn-secondary:hover {
+  filter: brightness(0.95) !important;
+}
+
+/* Catch-all: on admin pages, any generic button that isn't primary, danger, or an icon becomes brand-primary */
+body[data-page^='admin'] .btn:not(.btn-primary):not(.btn-danger):not(.btn-icon) {
+  background-color: var(--brand-primary, #2563eb) !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--brand-primary, #2563eb), #000 10%) !important;
+}
+body[data-page^='admin'] .btn:not(.btn-primary):not(.btn-danger):not(.btn-icon):hover {
+  filter: brightness(0.95) !important;
+}
+
+/* Transparent backgrounds for all icon buttons */
+.btn-icon,
+.btn-icon[class*="btn-icon--"] {
+  background: transparent !important;
+}
+.btn-icon:hover,
+.btn-icon[class*="btn-icon--"]:hover {
+  background: transparent !important;
+}
+
+/* Ensure up/down arrows remain visible on light backgrounds in all contexts */
+.btn-icon.btn-icon--up,
+.btn-icon.btn-icon--down {
+  color: var(--admin-icon-accent, #374151) !important;
+  border-color: #e5e7eb !important;
+}
+.btn-icon.btn-icon--up::before,
+.btn-icon.btn-icon--down::before {
+  color: inherit !important;
+}

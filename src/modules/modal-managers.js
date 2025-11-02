@@ -6,10 +6,29 @@ export const ModalManager = {
   show(id) {
     const el = document.getElementById(id);
     if (!el) return false;
+    // Ensure overlays are direct children of <body> to avoid ancestor scroll/transform issues
+    try {
+      if (el.parentElement && el.parentElement !== document.body) {
+        document.body.appendChild(el);
+      }
+    } catch(_) {}
     try { el.removeAttribute('hidden'); } catch(_) {}
     el.classList.remove('hidden');
     el.classList.add('show');
+    try {
+      const hasResponsivePanel = !!el.querySelector('.admin-modal.admin-modal--responsive');
+      if (!hasResponsivePanel) {
+        el.classList.add('wf-modal--body-scroll');
+      } else {
+        el.classList.remove('wf-modal--body-scroll');
+      }
+    } catch(_) { try { el.classList.add('wf-modal--body-scroll'); } catch(_) {} }
     el.setAttribute('aria-hidden', 'false');
+    // Lock underlying page scroll for cross-browser support
+    try {
+      document.documentElement.classList.add('modal-open');
+      document.body.classList.add('modal-open', 'wf-no-scroll');
+    } catch(_) {}
     return true;
   },
 
@@ -18,8 +37,16 @@ export const ModalManager = {
     if (!el) return false;
     try { el.setAttribute('hidden', ''); } catch(_) {}
     el.classList.add('hidden');
-    el.classList.remove('show');
+    el.classList.remove('show', 'wf-modal--body-scroll');
     el.setAttribute('aria-hidden', 'true');
+    // If no other admin overlays are visible, unlock page scroll
+    try {
+      const anyOpen = document.querySelector('.admin-modal-overlay.show');
+      if (!anyOpen) {
+        document.documentElement.classList.remove('modal-open');
+        document.body.classList.remove('modal-open', 'wf-no-scroll');
+      }
+    } catch(_) {}
     return true;
   },
 

@@ -41,6 +41,44 @@ import { ApiClient } from '../core/api-client.js';
       cls = 'text-green-700 bg-green-50 border-green-200';
       icon = '✅';
     }
+
+  async function _promoteActiveToOriginal(){
+    const roomVal = (byId('rmeRoomSelect') && byId('rmeRoomSelect').value || '').trim();
+    if (!roomVal) { setMsg('Select a room first.', 'error'); return; }
+    const roomParam = normalizeRoomForApi(roomVal);
+    if (roomParam === null) { setMsg('This room type is not supported for maps. Please choose a numbered room.', 'error'); return; }
+    let ok = true;
+    if (typeof window.showConfirmationModal === 'function'){
+      ok = await window.showConfirmationModal({
+        title: 'Promote Active to Original',
+        message: 'Rename the active map to "Original" and purge other Original maps for this room?',
+        confirmText: 'Promote',
+        confirmStyle: 'confirm',
+        icon: '⚠️',
+        iconType: 'warning',
+        iconKey: 'sparkles'
+      });
+    } else {
+      ok = window.confirm('Rename the active map to "Original" and purge other Original maps for this room?');
+    }
+    if (!ok) return;
+    try{
+      const { data } = await fetchJSON('/api/room_maps.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'promote_active_to_original', room: roomParam })
+      });
+      if (data && data.success){
+        setMsg('Active map promoted to Original. Duplicates removed.', 'ok');
+        await loadActive();
+        await loadSavedMaps();
+      } else {
+        setMsg('Failed to promote map' + (data&&data.message? ': ' + data.message : ''), 'error');
+      }
+    } catch (e){
+      setMsg('Failed to promote map: ' + (e && e.message ? e.message : 'Unknown error'), 'error');
+    }
+  }
     el.innerHTML = `<div class="border ${cls} rounded px-3 py-2 text-sm">${icon} ${html}</div>`;
   }
 
@@ -197,6 +235,20 @@ import { ApiClient } from '../core/api-client.js';
     applyCanvasBgFromData();
   }
 
+  // Apply shared SVG icons and ensure aria-label/title when provided
+  function enforceIconOnly(scope){
+    const root = scope || document;
+    const btns = root.querySelectorAll('button[data-icon]');
+    btns.forEach(btn => {
+      const label = btn.getAttribute('data-label') || '';
+      if (label) {
+        btn.setAttribute('aria-label', label);
+        if (!btn.getAttribute('title')) btn.setAttribute('title', label);
+      }
+    });
+    try { if (window.WF_Icons && typeof window.WF_Icons.applyIcons === 'function') { window.WF_Icons.applyIcons(root); } } catch(_) {}
+  }
+
   // Ensure the canvas frame uses the same viewport aspect ratio as the live page
   let __rmeDynStyle = null;
   function ensureDynStyle(){
@@ -303,14 +355,15 @@ import { ApiClient } from '../core/api-client.js';
           <div class="text-xs text-gray-500">(${Math.round(r.left)},${Math.round(r.top)}) ${Math.round(r.width)}×${Math.round(r.height)}</div>
         </div>
         <div class="flex gap-1">
-          <button class="btn btn-xs" data-action="rme-up" data-id="${r.id}" title="Move Up">↑</button>
-          <button class="btn btn-xs" data-action="rme-down" data-id="${r.id}" title="Move Down">↓</button>
-          <button class="btn btn-xs" data-action="rme-dup" data-id="${r.id}" title="Duplicate">⧉</button>
-          <button class="btn btn-xs" data-action="rme-select" data-id="${r.id}">Select</button>
-          <button class="btn btn-xs btn-danger" data-action="rme-delete" data-id="${r.id}">Delete</button>
+          <button class="admin-action-button btn btn-xs btn-icon btn-icon--up" data-action="rme-up" data-id="${r.id}" aria-label="Move Up" title="Move Up"></button>
+          <button class="admin-action-button btn btn-xs btn-icon btn-icon--down" data-action="rme-down" data-id="${r.id}" aria-label="Move Down" title="Move Down"></button>
+          <button class="admin-action-button btn btn-xs btn-icon btn-icon--duplicate" data-action="rme-dup" data-id="${r.id}" aria-label="Duplicate" title="Duplicate"></button>
+          <button class="admin-action-button btn btn-xs btn-icon btn-icon--view" data-action="rme-select" data-id="${r.id}" aria-label="Select" title="Select"></button>
+          <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="rme-delete" data-id="${r.id}" aria-label="Delete" title="Delete"></button>
         </div>
       </div>`;
     }).join('');
+    enforceIconOnly(list);
   }
 
   function redraw(){
@@ -598,15 +651,20 @@ import { ApiClient } from '../core/api-client.js';
       setMsg('No areas to clear.', 'info');
       return;
     }
-    if (typeof window.showConfirmationModal !== 'function') { setMsg('Confirmation UI unavailable. Action canceled.', 'error'); return; }
-    const ok = await window.showConfirmationModal({
-      title: 'Clear All Areas',
-      message: `Are you sure you want to remove all ${state.rectangles.length} area(s)? This cannot be undone.`,
-      confirmText: 'Clear All',
-      confirmStyle: 'danger',
-      icon: '⚠️',
-      iconType: 'danger'
-    });
+    let ok = true;
+    if (typeof window.showConfirmationModal === 'function') {
+      ok = await window.showConfirmationModal({
+        title: 'Clear All Areas',
+        message: `Are you sure you want to remove all ${state.rectangles.length} area(s)? This cannot be undone.`,
+        confirmText: 'Clear All',
+        confirmStyle: 'danger',
+        icon: '⚠️',
+        iconType: 'danger',
+        iconKey: 'delete'
+      });
+    } else {
+      ok = window.confirm(`Remove all ${state.rectangles.length} area(s)? This cannot be undone.`);
+    }
     if (!ok) return;
     state.rectangles = [];
     setSelection([]);
@@ -744,21 +802,45 @@ import { ApiClient } from '../core/api-client.js';
       host.innerHTML = '<div class="p-3 text-gray-500">No maps yet for this room.</div>';
       return;
     }
+    const originals = maps.filter(m => String(m.map_name||'').toLowerCase() === 'original');
+    const hasDupOriginals = originals.length > 1;
     const rows = maps.map(m => {
-      const active = m.is_active ? '<span class="ml-2 px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">Active</span>' : '';
-      const name = (m.map_name || 'Untitled').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      return `<div class="flex items-center justify-between px-3 py-2 border-b">
+      const isActive = !!m.is_active;
+      const activeBadge = isActive ? '<span class="ml-2 px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">Active</span>' : '';
+      const rawName = String(m.map_name || '').trim();
+      let displayName;
+      if (rawName.toLowerCase() === 'original') {
+        displayName = 'Original';
+      } else {
+        const ts = m.updated_at || m.created_at;
+        const iso = ts ? String(ts).replace(' ', 'T') : '';
+        const d = iso ? new Date(iso) : null;
+        displayName = (d && !isNaN(d.getTime())) ? d.toLocaleString() : 'Saved Map';
+      }
+      const name = displayName.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const rowCls = isActive ? 'rme-map-row is-active' : 'rme-map-row';
+      return `<div class="${rowCls}">
         <div>
-          <div class="font-medium">${name} ${active}</div>
-          <div class="text-xs text-gray-500">#${m.id}</div>
+          <div class="font-medium">${name} ${activeBadge}</div>
         </div>
         <div class="flex gap-2">
-          <button class="btn btn-xs" data-action="rme-apply-map" data-id="${m.id}">Apply</button>
-          <button class="btn btn-xs btn-danger" data-action="rme-delete-map" data-id="${m.id}">Delete</button>
+          <button class="admin-action-button btn btn-xs btn-icon btn-icon--view" data-action="rme-apply-map" data-id="${m.id}" aria-label="Apply" title="Apply"></button>
+          <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="rme-delete-map" data-id="${m.id}" aria-label="Delete" title="Delete"></button>
         </div>
       </div>`;
     }).join('');
-    host.innerHTML = `<div class="border rounded">${rows}</div>`;
+    const headerNote = hasDupOriginals ? '<div class="rme-maps-note">Multiple "Original" maps detected. Use Promote to rename the active map to Original and purge duplicates.</div>' : '';
+    const header = `
+      <div class="rme-maps-header">
+        <div class="rme-maps-title">Saved Maps</div>
+        <div class="rme-maps-actions">
+          <button class="admin-action-button btn btn-xs btn-icon btn-icon--sparkles" data-action="rme-promote-original" aria-label="Promote Active to Original" title="Promote Active to Original"></button>
+        </div>
+      </div>
+      ${headerNote}
+    `;
+    host.innerHTML = `${header}<div class="border rounded">${rows}</div>`;
+    enforceIconOnly(host);
   }
 
   async function loadSavedMaps(){
@@ -770,6 +852,39 @@ import { ApiClient } from '../core/api-client.js';
     const { data } = await fetchJSON(`/api/room_maps.php?room=${encodeURIComponent(room)}`);
     if (data && data.success) {
       const maps = (data.data && data.data.maps) || data.maps || [];
+      // Auto-purge duplicate inactive "Original" maps
+      const originals = maps.filter(m => String(m.map_name||'').toLowerCase() === 'original');
+      const originalsInactive = originals.filter(m => !m.is_active);
+      const hasActive = maps.some(m => !!m.is_active);
+      if (originalsInactive.length > 0) {
+        let cleanupPayload = null;
+        if (hasActive) {
+          // If there is an active map, let backend rename it to Original and purge duplicates
+          cleanupPayload = { action: 'promote_active_to_original', room: room };
+        } else if (originals.length > 1) {
+          // No active map: promote the most recently updated 'Original' by id/time
+          const pick = originals
+            .slice()
+            .sort((a,b)=>{
+              const at = (a.updated_at||a.created_at||'').replace(' ','T');
+              const bt = (b.updated_at||b.created_at||'').replace(' ','T');
+              const ad = at ? new Date(at) : new Date(0);
+              const bd = bt ? new Date(bt) : new Date(0);
+              return bd - ad; // newest first
+            })[0];
+          if (pick && pick.id) cleanupPayload = { action: 'promote_active_to_original', map_id: pick.id };
+        }
+        if (cleanupPayload) {
+          const res2 = await fetchJSON('/api/room_maps.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cleanupPayload) });
+          if (res2 && res2.data && res2.data.success) {
+            // Re-fetch after cleanup
+            const again = await fetchJSON(`/api/room_maps.php?room=${encodeURIComponent(room)}`);
+            const maps2 = (again.data && (again.data.data && again.data.data.maps || again.data.maps)) || [];
+            renderSavedMapsList(maps2);
+            return;
+          }
+        }
+      }
       renderSavedMapsList(maps);
     } else {
       list.innerHTML = '<div class="p-3 text-red-600">Failed to load maps.</div>';
@@ -793,15 +908,20 @@ import { ApiClient } from '../core/api-client.js';
 
   async function deleteSavedMap(id){
     if (!id) return;
-    if (typeof window.showConfirmationModal !== 'function') { setMsg('Confirmation UI unavailable. Action canceled.', 'error'); return; }
-    const ok = await window.showConfirmationModal({
-      title: 'Delete Map',
-      message: 'Delete this saved map?',
-      confirmText: 'Delete',
-      confirmStyle: 'danger',
-      icon: '⚠️',
-      iconType: 'danger'
-    });
+    let ok = true;
+    if (typeof window.showConfirmationModal === 'function') {
+      ok = await window.showConfirmationModal({
+        title: 'Delete Map',
+        message: 'Delete this saved map?',
+        confirmText: 'Delete',
+        confirmStyle: 'danger',
+        icon: '⚠️',
+        iconType: 'danger',
+        iconKey: 'delete'
+      });
+    } else {
+      ok = window.confirm('Delete this saved map?');
+    }
     if (!ok) return;
     const { data } = await fetchJSON('/api/room_maps.php', { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ map_id: id }) });
     if (data && data.success) {
@@ -1088,24 +1208,19 @@ import { ApiClient } from '../core/api-client.js';
     document.addEventListener('click', onClick);
     document.addEventListener('change', onChange);
     document.addEventListener('keydown', onKeyDown);
-    // Saved maps actions (delegated to list container)
-    const mapsList = byId('rmeMapsList');
-    if (mapsList) {
-      mapsList.addEventListener('click', (e) => {
-        const btn = e.target.closest('[data-action]'); if (!btn) return;
-        const act = btn.getAttribute('data-action');
-        const id = btn.getAttribute('data-id');
-        if (act === 'rme-apply-map') { e.preventDefault(); applySavedMap(id); }
-        if (act === 'rme-delete-map') { e.preventDefault(); deleteSavedMap(id); }
-      });
-    }
+    // Saved maps actions (robust delegation)
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]'); if (!btn) return;
+      const act = btn.getAttribute('data-action');
+      const id = btn.getAttribute('data-id');
+      if (act === 'rme-apply-map') { e.preventDefault(); applySavedMap(id); }
+      if (act === 'rme-delete-map') { e.preventDefault(); deleteSavedMap(id); }
+      if (act === 'rme-promote-original') { e.preventDefault(); _promoteActiveToOriginal(); }
+    });
     window.addEventListener('resize', () => { refreshFrameAspect(); setTimeout(redraw, 0); });
-    // Simplify button labels for shop owners
+    // Ensure icon-only policy and accessibility on initial buttons
     const startBtn = byId('rmeStartPolyBtn');
-    if (startBtn) {
-      startBtn.textContent = '➕ Add New Area';
-      startBtn.title = 'Click on the map to draw a new clickable area';
-    }
+    if (startBtn) { startBtn.title = 'Click on the map to draw a new clickable area'; }
     
     // These buttons are hidden in the template but ensure they stay hidden
     const finishBtn = byId('rmeFinishPolyBtn'); if (finishBtn) finishBtn.classList.add('hidden');
@@ -1134,6 +1249,46 @@ import { ApiClient } from '../core/api-client.js';
     }
 
     ensureToolbar();
+    initCollapsibles();
+    enforceIconOnly();
+  }
+
+  function initCollapsibles(){
+    const cfg = [
+      { id: 'rmeSnapGridSection', open: false },
+      { id: 'rmeAreasSection', open: false },
+      { id: 'rmeCoordsSection', open: false },
+    ];
+    cfg.forEach(({id, open}) => {
+      const sec = byId(id); if (!sec) return;
+      const title = sec.querySelector('.rme-panel-title') || sec.firstElementChild; if (!title) return;
+      const header = document.createElement('div');
+      header.className = 'rme-collapsible-header';
+      title.parentNode.insertBefore(header, title);
+      header.appendChild(title);
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'rme-collapsible-toggle';
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.innerHTML = '<span class="rme-chevron" aria-hidden="true">▸</span>';
+      header.appendChild(btn);
+      const content = document.createElement('div');
+      content.className = 'rme-collapsible-content';
+      content.setAttribute('aria-hidden', open ? 'false' : 'true');
+      while (header.nextSibling) content.appendChild(header.nextSibling);
+      sec.appendChild(content);
+      const update = () => {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        content.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+        header.classList.toggle('is-open', expanded);
+      };
+      btn.addEventListener('click', () => {
+        const cur = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', cur ? 'false' : 'true');
+        update();
+      });
+      update();
+    });
   }
 
   function ensureToolbar(){

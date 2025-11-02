@@ -70,7 +70,7 @@ body.modal-open #itemPopup.in-room-modal {
    MERGED: ROOM MODAL CONTAINER SYSTEM (from legacy_missing_room_modal.css)
    ============================================== */
 .room-modal-overlay {
-  padding-bottom: 0 !important;
+  padding-bottom: 0 !important; /* prevent stray white bar at bottom */
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.8);
@@ -83,6 +83,7 @@ body.modal-open #itemPopup.in-room-modal {
   visibility: hidden;
   pointer-events: none; /* do not intercept clicks when hidden */
   transition: all 0.3s ease;
+  overscroll-behavior: contain;
 }
 
 .room-modal-overlay.show {
@@ -97,6 +98,9 @@ body.modal-open #itemPopup.in-room-modal {
   margin-bottom: 0 !important; /* prevent stray white bar at bottom */
   position: relative;
   width: min(95vw, min(95vh * 1.43, 1200px));
+  width: min(95dvw, min(95dvh * 1.43, 1200px));
+  height: auto !important;
+  aspect-ratio: auto !important;
   background: white;
   border-radius: 12px;
   overflow: hidden;
@@ -105,6 +109,7 @@ body.modal-open #itemPopup.in-room-modal {
   transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .room-modal-overlay.show .room-modal-container { transform: scale(1); }
@@ -277,7 +282,7 @@ body.modal-open #itemPopup.in-room-modal {
    MERGED: ROOM MODAL RESPONSIVE DESIGN (from legacy_missing_room_modal.css)
    ============================================== */
 @media (max-width: 768px) {
-    .room-modal-container { width: min(98vw, min(98vh * 1.43, 800px)); aspect-ratio: 1280 / 896; }
+    .room-modal-container { width: min(98vw, min(98vh * 1.43, 800px)); width: min(98dvw, min(98dvh * 1.43, 800px)); aspect-ratio: 1280 / 896; }
     .room-modal-close { width: 36px; height: 36px; font-size: 18px; }
     .room-modal-nav { width: 44px; height: 44px; font-size: 18px; }
     .room-title-overlay { max-width: 250px; padding: 0.5rem 0.75rem; top: 0.75rem; left: 0.75rem; }
@@ -286,7 +291,7 @@ body.modal-open #itemPopup.in-room-modal {
 }
 
 @media (max-width: 480px) {
-    .room-modal-container { width: min(96vw, min(96vh * 1.43, 600px)); aspect-ratio: 1280 / 896; }
+    .room-modal-container { width: min(96vw, min(96vh * 1.43, 600px)); width: min(96dvw, min(96dvh * 1.43, 600px)); aspect-ratio: 1280 / 896; }
     .room-modal-nav { width: 40px; height: 40px; font-size: 16px; }
     .room-title-overlay { position: static; margin: 0.5rem; max-width: none; }
 }

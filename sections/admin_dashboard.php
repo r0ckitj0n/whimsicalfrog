@@ -355,8 +355,14 @@ if (empty($dashboardConfig)) {
                             </div>
                             <div class="text-center space-y-2">
                                 <div class="flex gap-2 justify-center">
-                                    <a href="/admin/marketing" class="bg-orange-600 hover:bg-orange-700 text-white text-xs rounded">📧 Email</a>
-                                    <a href="/admin/marketing" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded">🏷️ Discounts</a>
+                                    <a href="/admin/marketing" class="bg-orange-600 hover:bg-orange-700 text-white text-xs rounded inline-flex items-center gap-1 px-2 py-1" title="Open Email Marketing" aria-label="Open Email Marketing">
+                                        <span class="btn-icon btn-icon--email" aria-hidden="true"></span>
+                                        <span>Email</span>
+                                    </a>
+                                    <a href="/admin/marketing" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded inline-flex items-center gap-1 px-2 py-1" title="Open Discounts" aria-label="Open Discounts">
+                                        <span class="btn-icon btn-icon--tag" aria-hidden="true"></span>
+                                        <span>Discounts</span>
+                                    </a>
                                 </div>
                             </div>
                         </div>

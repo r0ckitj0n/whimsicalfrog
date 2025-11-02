@@ -31,7 +31,7 @@
     modal.className = 'wf-revealco-modal';
     modal.innerHTML = `
       <div class="wf-revealco-card">
-        <button type="button" class="wf-revealco-close" aria-label="Close">×</button>
+        <button type="button" class="wf-revealco-close btn btn-icon btn-icon--close" aria-label="Close"></button>
         <h3 class="wf-revealco-title">Company Information</h3>
         <div class="wf-revealco-body" id="wfRevealCoBody"></div>
       </div>

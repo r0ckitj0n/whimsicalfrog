@@ -11,6 +11,216 @@ class AIProviders
     private $pdo;
     private $settings;
     // __construct function moved to constructor_manager.php for centralization
+    public function __construct()
+    {
+        // Ensure settings are available even if external constructor manager isn't included
+        try {
+            require_once __DIR__ . '/../includes/ai_manager.php';
+        } catch (\Throwable $e) { /* ignore */ }
+        try {
+            if (function_exists('loadAISettings')) {
+                $this->settings = loadAISettings();
+            } else {
+                $this->settings = [
+                    'ai_provider' => 'jons_ai',
+                    'ai_temperature' => 0.7,
+                    'ai_max_tokens' => 1000,
+                    'fallback_to_local' => true,
+                ];
+            }
+        } catch (\Throwable $e) {
+            $this->settings = [
+                'ai_provider' => 'jons_ai',
+                'ai_temperature' => 0.7,
+                'ai_max_tokens' => 1000,
+                'fallback_to_local' => true,
+            ];
+        }
+    }
+
+    /**
+     * Generate item shipping dimensions and weight suggestions.
+     * Returns array: [ 'weight_oz' => float, 'dimensions_in' => ['length' => float, 'width' => float, 'height' => float] ]
+     */
+    public function generateDimensionsSuggestion($name, $description, $category)
+    {
+        $provider = $this->settings['ai_provider'];
+
+        try {
+            switch ($provider) {
+                case 'openai':
+                    return $this->generateDimensionsWithOpenAI($name, $description, $category);
+                case 'anthropic':
+                    return $this->generateDimensionsWithAnthropic($name, $description, $category);
+                case 'google':
+                    return $this->generateDimensionsWithGoogle($name, $description, $category);
+                case 'meta':
+                    return $this->generateDimensionsWithMeta($name, $description, $category);
+                case 'jons_ai':
+                default:
+                    return $this->generateDimensionsWithLocal($name, $description, $category);
+            }
+        } catch (Exception $e) {
+            // Fallback to local if enabled
+            if ($this->settings['fallback_to_local'] && $provider !== 'jons_ai') {
+                return $this->generateDimensionsWithLocal($name, $description, $category);
+            }
+            // Return a conservative default on failure
+            return $this->generateDimensionsWithLocal($name, $description, $category);
+        }
+    }
+
+    private function buildDimensionsPrompt($name, $description, $category)
+    {
+        $n = trim((string)$name);
+        $d = trim((string)$description);
+        $c = trim((string)$category);
+        $ctx = "You are a shipping analyst. Based on the item details, suggest reasonable industry-standard shipping weight (ounces) and package dimensions (inches). Respond ONLY with strict JSON in the format: {\"weight_oz\": <number>, \"dimensions_in\": {\"length\": <number>, \"width\": <number>, \"height\": <number>}}. Aim for conservative but realistic sizes for e-commerce parcel shipping.";
+        $item = "Item name: {$n}\nCategory: {$c}\nDescription: {$d}";
+        return $ctx . "\n\n" . $item;
+    }
+
+    private function parseDimensionsResponse($content)
+    {
+        $decoded = is_array($content) ? $content : json_decode((string)$content, true);
+        if (is_array($decoded)) {
+            $w = isset($decoded['weight_oz']) ? (float)$decoded['weight_oz'] : null;
+            $dim = isset($decoded['dimensions_in']) && is_array($decoded['dimensions_in']) ? $decoded['dimensions_in'] : [];
+            $L = isset($dim['length']) ? (float)$dim['length'] : null;
+            $W = isset($dim['width']) ? (float)$dim['width'] : null;
+            $H = isset($dim['height']) ? (float)$dim['height'] : null;
+            if ($w && $L && $W && $H) {
+                return [ 'weight_oz' => max(0.1, $w), 'dimensions_in' => [ 'length' => max(0.1, $L), 'width' => max(0.1, $W), 'height' => max(0.1, $H) ] ];
+            }
+        }
+        return null;
+    }
+
+    private function generateDimensionsWithOpenAI($name, $description, $category)
+    {
+        $apiKey = $this->settings['openai_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("OpenAI API key not configured");
+        }
+        $prompt = $this->buildDimensionsPrompt($name, $description, $category);
+        $data = [
+            'model' => $this->settings['openai_model'],
+            'messages' => [
+                [ 'role' => 'system', 'content' => 'You are a helpful assistant that responds strictly with valid JSON only.' ],
+                [ 'role' => 'user', 'content' => $prompt ],
+            ],
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'max_tokens' => 200,
+        ];
+        $response = $this->makeAPICall(
+            'https://api.openai.com/v1/chat/completions',
+            $data,
+            [ 'Authorization: Bearer ' . $apiKey, 'Content-Type: application/json' ]
+        );
+        if (!$response || !isset($response['choices'][0]['message']['content'])) {
+            throw new Exception('Invalid OpenAI response');
+        }
+        $parsed = $this->parseDimensionsResponse($response['choices'][0]['message']['content']);
+        if ($parsed) return $parsed;
+        throw new Exception('OpenAI dimensions parse failed');
+    }
+
+    private function generateDimensionsWithAnthropic($name, $description, $category)
+    {
+        $apiKey = $this->settings['anthropic_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Anthropic API key not configured");
+        }
+        $prompt = $this->buildDimensionsPrompt($name, $description, $category);
+        $data = [
+            'model' => $this->settings['anthropic_model'],
+            'max_tokens' => 200,
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'messages' => [ [ 'role' => 'user', 'content' => $prompt ] ],
+        ];
+        $response = $this->makeAPICall(
+            'https://api.anthropic.com/v1/messages',
+            $data,
+            [ 'x-api-key: ' . $apiKey, 'Content-Type: application/json', 'anthropic-version: 2023-06-01' ]
+        );
+        if (!$response || !isset($response['content'][0]['text'])) {
+            throw new Exception('Invalid Anthropic response');
+        }
+        $parsed = $this->parseDimensionsResponse($response['content'][0]['text']);
+        if ($parsed) return $parsed;
+        throw new Exception('Anthropic dimensions parse failed');
+    }
+
+    private function generateDimensionsWithGoogle($name, $description, $category)
+    {
+        $apiKey = $this->settings['google_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Google API key not configured");
+        }
+        $prompt = $this->buildDimensionsPrompt($name, $description, $category);
+        $data = [
+            'contents' => [ [ 'parts' => [ ['text' => $prompt] ] ] ],
+            'generationConfig' => [ 'temperature' => (float)$this->settings['ai_temperature'], 'maxOutputTokens' => 200 ],
+        ];
+        $model = $this->settings['google_model'];
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
+        $response = $this->makeAPICall($url, $data, ['Content-Type: application/json']);
+        if (!$response || !isset($response['candidates'][0]['content']['parts'][0]['text'])) {
+            throw new Exception('Invalid Google AI response');
+        }
+        $parsed = $this->parseDimensionsResponse($response['candidates'][0]['content']['parts'][0]['text']);
+        if ($parsed) return $parsed;
+        throw new Exception('Google dimensions parse failed');
+    }
+
+    private function generateDimensionsWithMeta($name, $description, $category)
+    {
+        $apiKey = $this->settings['meta_api_key'];
+        if (empty($apiKey)) {
+            throw new Exception("Meta API key not configured");
+        }
+        $prompt = $this->buildDimensionsPrompt($name, $description, $category);
+        $data = [
+            'model' => $this->settings['meta_model'],
+            'messages' => [
+                [ 'role' => 'system', 'content' => 'Respond strictly with valid JSON only.' ],
+                [ 'role' => 'user', 'content' => $prompt ],
+            ],
+            'temperature' => (float)$this->settings['ai_temperature'],
+            'max_tokens' => 200,
+        ];
+        $response = $this->makeAPICall(
+            'https://openrouter.ai/api/v1/chat/completions',
+            $data,
+            [ 'Authorization: Bearer ' . $apiKey, 'Content-Type: application/json', 'HTTP-Referer: https://whimsicalfrog.us', 'X-Title: WhimsicalFrog AI Assistant' ]
+        );
+        if (!$response || !isset($response['choices'][0]['message']['content'])) {
+            throw new Exception('Invalid Meta response');
+        }
+        $parsed = $this->parseDimensionsResponse($response['choices'][0]['message']['content']);
+        if ($parsed) return $parsed;
+        throw new Exception('Meta dimensions parse failed');
+    }
+
+    private function generateDimensionsWithLocal($name, $description, $category)
+    {
+        // Conservative defaults by category
+        $cat = strtoupper((string)$category);
+        if (strpos($cat, 'TUMBLER') !== false) {
+            return [ 'weight_oz' => 12.0, 'dimensions_in' => [ 'length' => 10.0, 'width' => 4.0, 'height' => 4.0 ] ];
+        }
+        if (strpos($cat, 'SHIRT') !== false || strpos($cat, 'TEE') !== false || strpos($cat, 'T-SHIRT') !== false || strpos($cat, 'TS') !== false) {
+            return [ 'weight_oz' => 5.0, 'dimensions_in' => [ 'length' => 10.0, 'width' => 8.0, 'height' => 1.0 ] ];
+        }
+        if (strpos($cat, 'ART') !== false) {
+            return [ 'weight_oz' => 16.0, 'dimensions_in' => [ 'length' => 12.0, 'width' => 9.0, 'height' => 2.0 ] ];
+        }
+        if (strpos($cat, 'WRAP') !== false) {
+            return [ 'weight_oz' => 10.0, 'dimensions_in' => [ 'length' => 12.0, 'width' => 3.0, 'height' => 3.0 ] ];
+        }
+        // Generic fallback
+        return [ 'weight_oz' => 8.0, 'dimensions_in' => [ 'length' => 8.0, 'width' => 6.0, 'height' => 4.0 ] ];
+    }
 
     /**
      * Get PDO connection (lazy loading)

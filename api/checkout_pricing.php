@@ -118,8 +118,7 @@ try {
         $subtotal += ((float)$price) * $qty;
     }
 
-    // Shipping rates and logic (non-strict: allow sensible defaults during development)
-    // We intentionally avoid throwing here to prevent checkout from failing when settings are missing.
+    // Shipping rates and logic (non-strict): base + weight component when item weights are available
     $shipCfg = BusinessSettings::getShippingConfig(false);
     $freeThreshold   = (float)$shipCfg['free_shipping_threshold'];
     $localDeliveryFee = (float)$shipCfg['local_delivery_fee'];
@@ -127,29 +126,101 @@ try {
     $rateFedEx       = (float)$shipCfg['shipping_rate_fedex'];
     $rateUPS         = (float)$shipCfg['shipping_rate_ups'];
 
+    // Optional per-pound rates pulled from settings if present, else sane defaults
+    $ppUSPS = (float) (BusinessSettings::get('shipping_rate_per_lb_usps', 1.50) ?: 1.50);
+    $ppFed  = (float) (BusinessSettings::get('shipping_rate_per_lb_fedex', 2.00) ?: 2.00);
+    $ppUPS  = (float) (BusinessSettings::get('shipping_rate_per_lb_ups', 2.00) ?: 2.00);
+
+    // Compute total shipment weight (in ounces) if weight columns exist; fallback by category when missing
+    $hasWeightCols = false;
+    try {
+        $col = Database::queryAll("SHOW COLUMNS FROM items LIKE 'weight_oz'");
+        $hasWeightCols = !empty($col);
+    } catch (Exception $e) { $hasWeightCols = false; }
+
+    $totalWeightOz = 0.0;
+    $weightsDebug = [];
+    if (count($itemIds) > 0) {
+        for ($i = 0; $i < count($itemIds); $i++) {
+            $sku = $itemIds[$i];
+            $qty = (int)($quantities[$i] ?? 0);
+            if (!$sku || $qty <= 0) continue;
+            // Match effective SKU used for pricing when possible
+            $lookupSku = $itemsDebug[$i]['lookupSku'] ?? $sku;
+            $wRow = Database::queryOne("SELECT weight_oz, package_length_in, package_width_in, package_height_in, category FROM items WHERE sku = ?", [$lookupSku]);
+            $wOz = $wRow && isset($wRow['weight_oz']) && is_numeric($wRow['weight_oz']) ? (float)$wRow['weight_oz'] : null;
+            // Category defaults from settings (JSON map), then heuristic fallbacks
+            if ($wOz === null || $wOz <= 0) {
+                $cat = $wRow['category'] ?? '';
+                $catU = strtoupper((string)$cat);
+                $map = [];
+                try { $raw = BusinessSettings::get('shipping_category_weight_defaults', []); $map = is_array($raw) ? $raw : []; } catch (\Throwable $____) { $map = []; }
+                $norm = [];
+                foreach ($map as $k => $v) {
+                    $kk = strtoupper(trim((string)$k)); if ($kk==='') continue;
+                    $val = null;
+                    if (is_array($v) && isset($v['weight_oz']) && is_numeric($v['weight_oz'])) { $val = (float)$v['weight_oz']; }
+                    elseif (is_numeric($v)) { $val = (float)$v; }
+                    if ($val !== null) { $norm[$kk] = $val; }
+                }
+                $mapHit = null;
+                if (isset($norm[$catU])) { $wOz = (float)$norm[$catU]; $mapHit = $catU; }
+                if (($wOz === null || $wOz <= 0) && !empty($norm)) {
+                    foreach ($norm as $key => $valW) {
+                        if ($key === 'DEFAULT') continue;
+                        if (strpos($catU, $key) !== false) { $wOz = (float)$valW; $mapHit = $key; break; }
+                    }
+                }
+                if (($wOz === null || $wOz <= 0) && isset($norm['DEFAULT'])) { $wOz = (float)$norm['DEFAULT']; $mapHit = $mapHit ?: 'DEFAULT'; }
+
+                // Heuristic fallback if still not set
+                if ($wOz === null || $wOz <= 0) {
+                    if (strpos($catU, 'TUMBLER') !== false) {
+                        $wOz = 12.0; // typical 20oz tumbler ~ 12 oz
+                    } elseif (strpos($catU, 'SHIRT') !== false || strpos($catU, 'TEE') !== false || strpos($catU, 'T-SHIRT') !== false || strpos($catU, 'TS') !== false) {
+                        $wOz = 5.0; // cotton tee ~ 5 oz
+                    } elseif (strpos($catU, 'ART') !== false) {
+                        $wOz = 16.0; // framed print ~ 1 lb
+                    } elseif (strpos($catU, 'WRAP') !== false) {
+                        $wOz = 10.0; // vinyl wrap roll
+                    } else {
+                        $wOz = 8.0; // generic fallback
+                    }
+                }
+            }
+            $lineOz = max(0.0, (float)$wOz) * $qty;
+            $totalWeightOz += $lineOz;
+            if ($debug) {
+                $weightsDebug[] = [ 'sku' => (string)$sku, 'lookupSku' => (string)$lookupSku, 'qty' => $qty, 'weight_oz' => (float)$wOz, 'line_oz' => (float)$lineOz ];
+            }
+        }
+    }
+
     $shipping = 0.0;
     $method = (string)$shippingMethod;
 
-    // Shipping rules:
-    // - Customer Pickup: always free ($0)
-    // - Local Delivery: flat fee (override to 75.00 regardless of free threshold)
-    // - USPS: eligible for free shipping threshold
-    // - FedEx/UPS: NOT eligible for free shipping threshold
+    // Shipping rules with weight component
     if ($method === 'Customer Pickup') {
         $shipping = 0.0;
     } elseif ($method === 'Local Delivery') {
         $shipping = 75.00; // Flat fee, never free
     } elseif ($method === 'USPS' && $subtotal >= $freeThreshold && $freeThreshold > 0) {
         $shipping = 0.0;
-    } elseif ($method === 'USPS') {
-        $shipping = $rateUSPS;
-    } elseif ($method === 'FedEx') {
-        $shipping = $rateFedEx;
-    } elseif ($method === 'UPS') {
-        $shipping = $rateUPS;
     } else {
-        // Unknown method -> default to flat USPS rate
-        $shipping = $rateUSPS;
+        // Weight-based scaling atop base rate when weight known (> 0)
+        $weightLb = max(0.0, ceil($totalWeightOz / 16.0));
+        if ($method === 'USPS') {
+            $shipping = $rateUSPS + ($weightLb > 1 ? ($weightLb - 1) * $ppUSPS : 0.0);
+        } elseif ($method === 'FedEx') {
+            $shipping = $rateFedEx + ($weightLb > 0 ? $weightLb * $ppFed : 0.0);
+        } elseif ($method === 'UPS') {
+            $shipping = $rateUPS + ($weightLb > 0 ? $weightLb * $ppUPS : 0.0);
+        } else {
+            // Unknown method -> default to USPS style
+            $shipping = $rateUSPS + ($weightLb > 1 ? ($weightLb - 1) * $ppUSPS : 0.0);
+        }
+        // Ensure non-negative and sensible rounding
+        $shipping = max(0.0, round($shipping, 2));
     }
 
     // Tax logic (non-strict: allow operation even if some settings are missing)
@@ -219,6 +290,11 @@ try {
             'method' => $method,
             'freeShippingThreshold' => $freeThreshold,
             'items' => $itemsDebug,
+            'weights' => [
+                'totalWeightOz' => round($totalWeightOz, 2),
+                'perItem' => $weightsDebug,
+                'perPoundRates' => [ 'USPS' => $ppUSPS, 'FedEx' => $ppFed, 'UPS' => $ppUPS ],
+            ],
             // Which shipping settings fell back to defaults (if any)
             'shippingUsedDefaults' => isset($shipCfg['usedDefaults']) ? (array)$shipCfg['usedDefaults'] : [],
             'hasTaxShippingKey' => isset($taxCfg['hasTaxShippingKey']) ? (bool)$taxCfg['hasTaxShippingKey'] : null,

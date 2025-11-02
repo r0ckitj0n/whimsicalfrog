@@ -63,13 +63,15 @@ if (!$isModal && !function_exists('__wf_admin_root_footer_shutdown')) {
     $__wf_included_layout = true;
 }
 ?>
-<section class="page-content admin-actions-icons" id="adminReportsBrowser">
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-semibold mb-4">Reports &amp; Documentation Browser</h1>
+<section class="page-content admin-actions-icons<?php echo $isModal ? ' wf-embed-toptight-section' : ''; ?>" id="adminReportsBrowser">
+  <div class="container mx-auto p-4<?php echo $isModal ? ' wf-embed-toptight-inner' : ''; ?>">
+    <?php if (!$isModal): ?>
+      <h1 class="text-2xl font-semibold mb-4">Reports &amp; Documentation Browser</h1>
+    <?php endif; ?>
 
     <div class="mb-4 flex gap-2">
-      <a class="btn-chip<?php echo $baseKey === 'documentation' ? ' active' : ''; ?>" href="?base=documentation<?php echo $isModal ? '&amp;modal=1' : ''; ?>">documentation/</a>
-      <a class="btn-chip<?php echo $baseKey === 'reports' ? ' active' : ''; ?>" href="?base=reports<?php echo $isModal ? '&amp;modal=1' : ''; ?>">reports/</a>
+      <a class="btn-chip pill-ring<?php echo $baseKey === 'documentation' ? ' active' : ''; ?>" href="?base=documentation<?php echo $isModal ? '&amp;modal=1' : ''; ?>">documentation/</a>
+      <a class="btn-chip pill-ring<?php echo $baseKey === 'reports' ? ' active' : ''; ?>" href="?base=reports<?php echo $isModal ? '&amp;modal=1' : ''; ?>">reports/</a>
     </div>
 
     <div class="mb-4 text-sm">
@@ -86,7 +88,7 @@ if (!$isModal && !function_exists('__wf_admin_root_footer_shutdown')) {
       <div class="mb-4">
         <?php $parent = dirname($dirRel);
         $upDir = $parent === '.' ? '' : $parent; ?>
-        <a class="btn-chip" href="?base=<?php echo urlencode($baseKey); ?>&amp;dir=<?php echo urlencode($upDir); ?><?php echo $isModal ? '&amp;modal=1' : ''; ?>">&larr; Up one level</a>
+        <a class="btn-chip pill-ring" href="?base=<?php echo urlencode($baseKey); ?>&amp;dir=<?php echo urlencode($upDir); ?><?php echo $isModal ? '&amp;modal=1' : ''; ?>">&larr; Up one level</a>
       </div>
     <?php endif; ?>
 
@@ -109,7 +111,7 @@ if (!$isModal && !function_exists('__wf_admin_root_footer_shutdown')) {
               </div>
               <?php if (!$e['isDir']): ?>
                 <div class="ml-2">
-                  <a class="btn-chip" href="<?php echo htmlspecialchars($href); ?>" download title="Download">Download</a>
+                  <a class="btn-chip pill-ring" href="<?php echo htmlspecialchars($href); ?>" download title="Download">Download</a>
                 </div>
               <?php endif; ?>
             </div>

@@ -62,11 +62,3 @@ function loadAISettings()
     return $defaults;
 }
 
-/**
- * Get AI providers list
- * @return array
- */
-function getAIProviders()
-{
-    return $GLOBALS['aiProviders'] ?? [];
-}

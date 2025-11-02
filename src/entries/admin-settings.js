@@ -1,7 +1,7 @@
 // Vite entry: admin-settings.js
-// Ensure lightweight handlers and modal factories are available immediately
-import '../modules/admin-settings-lightweight.js';
-import '../js/admin-settings-fallbacks.js';
+// Use the bridge (includes lightweight handlers and fallbacks)
+import '../js/admin-settings-bridge.js';
+import '../styles/components/tabs.css';
 try {
   await import('../js/admin-settings.js');
 } catch (e) {
@@ -65,4 +65,34 @@ try {
   } catch(_) {
     try { window.__wfSortSettingsButtons = sortSettingsCardButtons; } catch(_) {}
   }
+})();
+
+(function(){
+  const variants = ['btn-primary','btn-secondary','btn-danger','btn-info','btn-warning','btn-success','btn-link','btn-xs','btn-sm','btn-lg'];
+  function ensureBtnBase(el){
+    if (!el || !el.classList) return;
+    if (el.classList.contains('btn')) return;
+    for (const v of variants){ if (el.classList.contains(v)) { el.classList.add('btn'); break; } }
+  }
+  function scan(root){
+    try {
+      const nodes = root.querySelectorAll('button, a[role="button"], a.btn-primary, a.btn-secondary, a.btn-danger, a.btn-info, a.btn-warning, a.btn-success');
+      nodes.forEach(ensureBtnBase);
+    } catch(_){ }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => scan(document), { once: true });
+  } else {
+    scan(document);
+  }
+  try {
+    const root = document.getElementById('adminSettingsRoot') || document;
+    const obs = new MutationObserver((muts)=>{
+      for (const m of muts){
+        m.addedNodes && m.addedNodes.forEach(n=>{ if (n.nodeType===1){ ensureBtnBase(n); try { scan(n); } catch(_){} } });
+      }
+    });
+    obs.observe(root, { subtree: true, childList: true });
+    window.__wfEnsureBtnBase = () => scan(document);
+  } catch(_){ try { window.__wfEnsureBtnBase = () => scan(document); } catch(_){} }
 })();

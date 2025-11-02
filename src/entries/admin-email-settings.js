@@ -1,4 +1,5 @@
 // Vite entry: admin-email-settings.js
+import '../styles/admin/email-settings.css';
 try {
   await import('../js/admin-email-settings.js');
 } catch (e) {

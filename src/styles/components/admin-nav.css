@@ -34,11 +34,17 @@
   outline: none !important;
 }
 
+/* Make center container the positioning context for underline (feature-flag) */
+.admin-tab-navigation.admin-tabs--underline .wf-nav-center {
+  position: relative;
+  padding-bottom: 8px; /* space for underline */
+}
+
 /* Also target common utility wrappers used in markup to ensure centering */
 .admin-tab-navigation > .flex,
 .admin-tab-navigation > .tabs-row { justify-content: center !important; align-items: center !important; gap: 12px; }
 
-/* Base tab: big colored pill with white text */
+/* Base tab: colored pill with white text */
 .admin-tab-navigation .admin-nav-tab {
   display: inline-flex;
   align-items: center;
@@ -48,23 +54,23 @@
   user-select: none;
   white-space: nowrap;
   border-radius: 9999px; /* pill */
-  padding: 10px 18px; /* larger padding */
-  min-height: 36px; /* taller tabs */
+  padding: 10px 18px; /* comfortable hit area */
+  min-height: 36px;
   line-height: 1;
-  font-size: 16px; /* larger text */
+  font-size: 16px;
   font-weight: 700;
   color: #ffffff !important;
-  background: var(--tab-bg, var(--brand-primary, #87ac3a));
-  border: 1px solid color-mix(in srgb, var(--tab-bg, var(--brand-primary, #87ac3a)) 80%, #000 20%);
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--tab-bg, #87ac3a) 20%, transparent); /* larger shadow */
-  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 80ms ease, filter 120ms ease;
-  position: relative; /* needed for starburst positioning */
-  overflow: visible; /* allow starburst halo to extend beyond pill */
-  z-index: var(--z-index-base, 1); /* keep tab above its halo */
+  background: var(--tab-bg, var(--brand-primary, #87ac3a)) !important;
+  border: 1px solid color-mix(in srgb, var(--tab-bg, var(--brand-primary, #87ac3a)) 82%, #000 18%) !important;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--tab-bg, #87ac3a) 22%, transparent);
+  transition: box-shadow 140ms ease, transform 80ms ease, filter 120ms ease, border-color 140ms ease;
+  position: relative;
+  overflow: visible;
+  z-index: var(--z-index-base, 1);
 }
 
 /* Do not change colors on hover; keep only subtle elevation if needed */
-.admin-tab-navigation .admin-nav-tab:hover { filter: none; }
+.admin-tab-navigation .admin-nav-tab:hover { filter: brightness(0.98); }
 
 /* Lock background/text/border across all states to prevent color shifts */
 .admin-tab-navigation .admin-nav-tab,
@@ -74,7 +80,7 @@
 .admin-tab-navigation .admin-nav-tab.active {
   background: var(--tab-bg, var(--brand-primary, #87ac3a)) !important;
   color: #ffffff !important;
-  border: 1px solid color-mix(in srgb, var(--tab-bg, var(--brand-primary, #87ac3a)) 80%, #000 20%) !important;
+  border-color: color-mix(in srgb, var(--tab-bg, var(--brand-primary, #87ac3a)) 82%, #000 18%) !important;
 }
 
 .admin-tab-navigation .admin-nav-tab:active {
@@ -82,29 +88,14 @@
 }
 /* Active tab: slightly darker same color */
 .admin-tab-navigation .admin-nav-tab.active {
-  /* Keep exact same color; do not adjust brightness */
   filter: none;
-  /* stronger ambient ring without altering tab color */
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--tab-bg, #87ac3a) 26%, transparent),
-              0 0 0 12px color-mix(in srgb, var(--tab-bg, #87ac3a) 20%, transparent); /* larger ring for bigger tabs */
+  box-shadow: var(--pill-ring-shadow, none), 0 8px 22px color-mix(in srgb, var(--tab-bg, #87ac3a) 28%, transparent);
+  border-color: color-mix(in srgb, var(--tab-bg, var(--brand-primary, #87ac3a)) 86%, #000 14%) !important;
 }
 
 /* Do not dim/brighten when hovering the active tab */
-.admin-tab-navigation .admin-nav-tab.active:hover { filter: none; }
-.admin-tab-navigation .admin-nav-tab.active::before {
-  content: "";
-  position: absolute;
-  inset: -20px; /* extend beyond pill for more pronounced glow - adjusted for larger tabs */
-  border-radius: 9999px;
-  z-index: var(--z-index-flat, 0); /* render behind the tab but above wrapper */
-  pointer-events: none;
-  /* soft radial glow using current tab color variable */
-  background: radial-gradient(closest-side,
-    color-mix(in srgb, var(--tab-bg, #87ac3a) 65%, transparent) 0%,
-    color-mix(in srgb, var(--tab-bg, #87ac3a) 42%, transparent) 52%,
-    transparent 82%
-  );
-}
+.admin-tab-navigation .admin-nav-tab.active:hover { filter: brightness(0.99); }
+.admin-tab-navigation .admin-nav-tab.active::before { content: none; }
 
 /* Per-tab brand accents (optional; retains white text) */
 .admin-tab-dashboard { --tab-bg: #4f46e5; } /* indigo */
@@ -118,6 +109,23 @@
 
 /* Ensure row width doesn't constrain centering on narrow screens */
 .admin-tab-navigation > div { width: 100%; }
+
+/* Underline slider element (active only when feature flag class is present) */
+.admin-tab-navigation.admin-tabs--underline .admin-tabs-underline {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: var(--brand-primary, #0ea5e9);
+  border-radius: 3px;
+  transform: translateX(0);
+  transition: transform 180ms ease, width 180ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-tab-navigation.admin-tabs--underline .admin-tabs-underline { transition: none; }
+}
 
 /* Help button spacing and tooltips */
 .wf-toggle-spacer {

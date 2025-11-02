@@ -131,7 +131,12 @@ const AdminMarketingModule = {
         updatePreview();
 
         const generateAll = async () => {
-            if (!current) { alert('Please choose an item'); return; }
+            if (!current) {
+                if (typeof window.showAlertModal === 'function') {
+                    await window.showAlertModal({ title: 'Select Item', message: 'Please choose an item.' });
+                } else { alert('Please choose an item'); }
+                return;
+            }
             setStatus('Generating content…');
             editor.classList.remove('hidden');
             // Run marketing + cost in parallel first
@@ -280,7 +285,12 @@ const AdminMarketingModule = {
             // Bind buttons
             el.querySelector('#cg-generate')?.addEventListener('click', async () => {
                 const opt = select.options[select.selectedIndex];
-                if (!opt || !opt.value) { alert('Please choose an item'); return; }
+                if (!opt || !opt.value) {
+                    if (typeof window.showAlertModal === 'function') {
+                        await window.showAlertModal({ title: 'Select Item', message: 'Please choose an item.' });
+                    } else { alert('Please choose an item'); }
+                    return;
+                }
                 const sku = opt.value;
                 const name = opt.getAttribute('data-name') || sku;
                 const category = opt.getAttribute('data-category') || '';
@@ -422,6 +432,27 @@ const AdminMarketingModule = {
         this.showOverlay(modalId);
     },
 
+    // --------- Intent Heuristics Manager (iframe page) ---------
+    openIntentHeuristicsManager() {
+        const modalId = 'intentHeuristicsManagerModal';
+        try {
+            const frame = document.getElementById('intentHeuristicsManagerFrame');
+            if (frame) {
+                const base = (frame.getAttribute('data-src') || frame.getAttribute('src') || '/sections/tools/intent_heuristics_manager.php?modal=1');
+                frame.setAttribute('src', base);
+            }
+        } catch(_) {}
+        this.showOverlay(modalId);
+    },
+
+    // --------- Marketing Overview (Charts) ---------
+    openMarketingOverview() {
+        const modalId = 'marketingOverviewModal';
+        this.showOverlay(modalId);
+        // Initialize charts using data embedded in page JSON
+        try { this.initializeCharts(document); } catch (_) {}
+    },
+
     // Generic small list manager UI
     renderListManager(kind, items, fields) {
         const rows = (items || []).map((it, idx) => {
@@ -480,7 +511,13 @@ const AdminMarketingModule = {
             if (t.matches(`[data-action="save-${kind}"]`)) {
                 ev.preventDefault();
                 syncInputs();
-                try { await onSave(items); alert('Saved'); } catch (e) { alert('Save failed'); }
+                try { await onSave(items); 
+                    if (typeof window.showAlertModal === 'function') { await window.showAlertModal({ title: 'Saved', message: 'Changes saved.' }); }
+                    else { alert('Saved'); }
+                } catch (e) {
+                    if (typeof window.showAlertModal === 'function') { await window.showAlertModal({ title: 'Save Failed', message: 'Unable to save changes.', icon: '⚠️', iconType: 'warning' }); }
+                    else { alert('Save failed'); }
+                }
                 return;
             }
         });
@@ -505,44 +542,25 @@ const AdminMarketingModule = {
         this.bindEventListeners();
         this.initializeCharts(marketingPage);
 
-        // Deep-link support: open the appropriate manager via ?tool=...
-        try {
-            const params = new URLSearchParams(window.location.search || '');
-            const tool = (params.get('tool') || '').toLowerCase();
-            if (tool) {
-                switch (tool) {
-                    case 'social-media':
-                        this.openSocialManager();
-                        break;
-                    case 'newsletters':
-                        this.openNewslettersManager();
-                        break;
-                    case 'automation':
-                        this.openAutomationManager();
-                        break;
-                    case 'discounts':
-                        this.openDiscountsManager();
-                        break;
-                    case 'coupons':
-                        this.openCouponsManager();
-                        break;
-                    case 'suggestions':
-                        if (typeof this.openSuggestionsManager === 'function') { this.openSuggestionsManager(); }
-                        else { this.showOverlay('suggestionsManagerModal'); }
-                        break;
-                    case 'content':
-                        this.openContentGenerator();
-                        break;
-                    default:
-                        break;
-                }
-            }
-        } catch (_) {}
+        // Deep-link support removed; marketing overview does not auto-open sub-modals.
     },
 
     bindEventListeners() {
         document.body.addEventListener('click', (e) => {
             const target = e.target;
+
+            const overlayEl = target.closest('.admin-modal-overlay');
+            if (overlayEl && !target.closest('.admin-modal')) {
+                e.preventDefault();
+                if (overlayEl.id) {
+                    this.hideOverlay(overlayEl.id);
+                } else {
+                    // Fallback: close known marketing overlays
+                    ['socialManagerModal','newsletterManagerModal','automationManagerModal','discountManagerModal','couponManagerModal','suggestionsManagerModal','contentGeneratorModal','intentHeuristicsManagerModal','marketingOverviewModal']
+                        .forEach(id => this.hideOverlay(id));
+                }
+                return;
+            }
 
             // Tool section toggles
             const toolButton = target.closest('[data-tool]');
@@ -592,6 +610,11 @@ const AdminMarketingModule = {
                 this.openAutomationManager();
                 return;
             }
+            if (target.closest('[data-action="open-marketing-overview"]')) {
+                e.preventDefault();
+                this.openMarketingOverview();
+                return;
+            }
             if (target.closest('[data-action="open-discounts-manager"]')) {
                 e.preventDefault();
                 this.openDiscountsManager();
@@ -600,6 +623,16 @@ const AdminMarketingModule = {
             if (target.closest('[data-action="open-coupons-manager"]')) {
                 e.preventDefault();
                 this.openCouponsManager();
+                return;
+            }
+            if (target.closest('[data-action="open-intent-heuristics-manager"]')) {
+                e.preventDefault();
+                this.openIntentHeuristicsManager();
+                return;
+            }
+            if (target.closest('[data-action="open-ai-provider-parent"]')) {
+                e.preventDefault();
+                try { if (window.parent && window.parent !== window) { window.parent.postMessage({ source: 'wf-ai', type: 'open-provider' }, '*'); } } catch(_) {}
                 return;
             }
             if (target.closest('[data-action="open-suggestions-manager"]')) {
@@ -716,7 +749,9 @@ const AdminMarketingModule = {
 
     async manageSocialAccount(_accountId) {
         // Open social account management modal
-        alert('Social account management coming soon!');
+        if (typeof window.showAlertModal === 'function') {
+            await window.showAlertModal({ title: 'Coming Soon', message: 'Social account management is coming soon.' });
+        } else { alert('Social account management coming soon!'); }
     },
 
     toggleForm(formId) {
@@ -797,7 +832,9 @@ const AdminMarketingModule = {
     async initializeMarketingTables() {
         // This function would contain the logic to create marketing tables via an API call.
         // For now, it just shows an alert as a placeholder.
-        alert('Initializing marketing tables...');
+        if (typeof window.showAlertModal === 'function') {
+            await window.showAlertModal({ title: 'Initializing', message: 'Initializing marketing tables...' });
+        } else { alert('Initializing marketing tables...'); }
     }
     ,
     async generateSuggestionsFallback() {
@@ -806,7 +843,9 @@ const AdminMarketingModule = {
         const resultDiv = document.getElementById('suggestions-result');
         if (!resultDiv) return;
         if (!sku) {
-            alert('Please enter a product SKU');
+            if (typeof window.showAlertModal === 'function') {
+                await window.showAlertModal({ title: 'Missing SKU', message: 'Please enter a product SKU.' });
+            } else { alert('Please enter a product SKU'); }
             return;
         }
         resultDiv.innerHTML = '<div class="text-center">Generating AI suggestions...</div>';
@@ -840,3 +879,64 @@ if (document.readyState === 'loading') {
 } else {
     try { AdminMarketingModule.init(); } catch(_) {}
 }
+
+// When embedded in an admin modal (iframe + ?modal=1), emit size to parent for responsive height
+(() => {
+  try {
+    const isEmbed = (window.parent && window.parent !== window);
+    const isModalCtx = /[?&]modal=1\b/.test(String(window.location.search || ''));
+    if (!isEmbed || !isModalCtx) return;
+    // Break any 100%/100vh coupling: in modal context, force intrinsic heights
+    try {
+      const s = document.createElement('style');
+      s.id = 'wf-marketing-modal-height-reset';
+      s.textContent = `
+        /* Break viewport coupling for marketing page when embedded */
+        html, body { height: auto !important; min-height: auto !important; overflow: visible !important; }
+        body[data-page='admin/marketing'] { height: auto !important; min-height: auto !important; overflow: visible !important; }
+        html:has(body[data-page='admin/marketing']) { height: auto !important; overflow: visible !important; }
+        .admin-marketing-page { height: auto !important; min-height: 0 !important; }
+      `;
+      document.head.appendChild(s);
+    } catch(_) {}
+    const pickContentNode = () => {
+      try {
+        const root = document.querySelector('.admin-marketing-page');
+        if (!root) return document.body;
+        // Prefer a single main card container within the marketing page
+        const card = root.querySelector(':scope > .admin-card') || root.querySelector('.admin-card');
+        return card || root;
+      } catch(_) { return document.body; }
+    };
+    const outerHeight = (el) => {
+      try {
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        const mt = parseFloat(cs.marginTop)||0, mb = parseFloat(cs.marginBottom)||0;
+        return Math.ceil((r.height||0) + mt + mb);
+      } catch(_) { return 0; }
+    };
+    const emit = () => {
+      try {
+        const node = pickContentNode();
+        // Measure a stable content container; avoid viewport-coupled values
+        let h = outerHeight(node);
+        if (!h || h < 1) {
+          const root = document.querySelector('.admin-marketing-page') || document.body;
+          h = Math.ceil(root.scrollHeight || 0);
+        }
+        h = Math.max(0, h);
+        try { if (window.__WF_DEBUG) console.debug('[wf-embed-size] child ->', h); } catch(_) {}
+        window.parent.postMessage({ source: 'wf-embed-size', height: h }, '*');
+      } catch(_) {}
+    };
+    try { window.addEventListener('load', emit, { once: false }); } catch(_) {}
+    try { emit(); } catch(_) {}
+    try {
+      const target = pickContentNode();
+      const ro = new ResizeObserver(() => emit());
+      ro.observe(target);
+      window.__wfMarketingRO = ro;
+    } catch(_) { setInterval(emit, 1000); }
+  } catch(_) {}
+})();

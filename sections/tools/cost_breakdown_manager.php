@@ -53,6 +53,10 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
     include dirname(__DIR__, 2) . '/partials/header.php';
     $__wf_included_layout = true;
 }
+if ($is_modal_context) {
+    // Minimal modal header to enable embed autosize child and shared styles
+    include dirname(__DIR__, 2) . '/partials/modal_header.php';
+}
 ?>
     <!-- Toast Notification -->
     <div id="toast" class="toast-notification"></div>
@@ -118,44 +122,36 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
                 </div>
             </div>
             
-            <!-- Cost Breakdown Sections -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Left Column: Materials and Labor -->
+            <!-- Cost Breakdown Sections in 3 columns -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Column 1: Materials -->
                 <div>
-                    <!-- Materials Section -->
                     <div class="card-standard">
                         <div class="flex justify-between items-center">
                             <h3 class="text-brand-primary">Materials</h3>
-                            <button id="addMaterialBtn" class="btn btn-primary btn-sm">
-                                + Add Material
-                            </button>
+                            <button id="addMaterialBtn" class="btn btn-primary btn-sm">+ Add Material</button>
                         </div>
-                        
                         <div id="materialsList" class="mt-4 space-y-2">
-                            <div class="text-center text-gray-500 italic" id="noMaterialsMsg">
-                                No materials added yet
-                            </div>
+                            <div class="text-center text-gray-500 italic" id="noMaterialsMsg">No materials added yet</div>
                         </div>
                     </div>
-                    
-                    <!-- Labor Section -->
+                </div>
+
+                <!-- Column 2: Labor -->
+                <div>
                     <div class="card-standard">
                         <div class="flex justify-between items-center">
                             <h3 class="text-brand-primary">Labor</h3>
                             <button id="addLaborBtn" class="btn btn-primary btn-sm">+ Add Labor</button>
                         </div>
-                        
                         <div id="laborList" class="divide-y divide-gray-200">
-                            <div class="text-center text-gray-500 italic" id="noLaborMsg">
-                                No labor costs added yet
-                            </div>
+                            <div class="text-center text-gray-500 italic" id="noLaborMsg">No labor costs added yet</div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Right Column: Totals and Energy -->
+
+                <!-- Column 3: Summary and Energy -->
                 <div>
-                    <!-- Cost Summary -->
                     <div class="card-standard">
                         <h3 class="text-brand-primary">Cost Summary</h3>
                         <div class="space-y-2 mt-4">
@@ -188,9 +184,7 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
                             </div>
                         </div>
                     </div>
-
-                    <!-- Energy Section -->
-                    <div class="card-standard">
+                    <div class="card-standard mt-6">
                         <div class="flex justify-between items-center">
                             <h3 class="text-brand-primary">Energy</h3>
                             <button id="addEnergyBtn" class="btn btn-primary btn-sm">Add Energy</button>
@@ -295,8 +289,8 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
                         <div><span class="font-medium">${escapeHtml(material.name)}</span></div>
                         <div class="flex items-center">
                             <span class="font-semibold">$${parseFloat(material.cost).toFixed(2)}</span>
-                            <button class="btn btn-sm btn-secondary" data-action="openEditModal" data-params='{"type":"material","id":${material.id}}' title="Edit Material">✏️</button>
-                            <button class="btn btn-sm btn-danger" data-action="openDeleteModal" data-params='{"type":"material","id":${material.id},"name":"${escapeHtml(material.name)}"}' title="Delete Material">🗑️</button>
+                            <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="openEditModal" data-params='{"type":"material","id":${material.id}}' title="Edit Material" aria-label="Edit Material"></button>
+                            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="openDeleteModal" data-params='{"type":"material","id":${material.id},"name":"${escapeHtml(material.name)}"}' title="Delete Material" aria-label="Delete Material"></button>
                         </div>`;
                     materialsList.appendChild(el);
                 });
@@ -315,8 +309,8 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
                         <div><span class="font-medium">${escapeHtml(labor.description)}</span></div>
                         <div class="flex items-center">
                             <span class="font-semibold">$${parseFloat(labor.cost).toFixed(2)}</span>
-                            <button class="btn btn-sm btn-secondary" data-action="openEditModal" data-params='{"type":"labor","id":${labor.id}}' title="Edit Labor">✏️</button>
-                            <button class="btn btn-sm btn-danger" data-action="openDeleteModal" data-params='{"type":"labor","id":${labor.id},"name":"${escapeHtml(labor.description)}"}' title="Delete Labor">🗑️</button>
+                            <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="openEditModal" data-params='{"type":"labor","id":${labor.id}}' title="Edit Labor" aria-label="Edit Labor"></button>
+                            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="openDeleteModal" data-params='{"type":"labor","id":${labor.id},"name":"${escapeHtml(labor.description)}"}' title="Delete Labor" aria-label="Delete Labor"></button>
                         </div>`;
                     laborList.appendChild(el);
                 });
@@ -335,8 +329,8 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
                         <div><span class="font-medium">${escapeHtml(energy.description)}</span></div>
                         <div class="flex items-center">
                             <span class="font-semibold">$${parseFloat(energy.cost).toFixed(2)}</span>
-                            <button class="btn btn-sm btn-secondary" data-action="openEditModal" data-params='{"type":"energy","id":${energy.id}}' title="Edit Energy">✏️</button>
-                            <button class="btn btn-sm btn-danger" data-action="openDeleteModal" data-params='{"type":"energy","id":${energy.id},"name":"${escapeHtml(energy.description)}"}' title="Delete Energy">🗑️</button>
+                            <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="openEditModal" data-params='{"type":"energy","id":${energy.id}}' title="Edit Energy" aria-label="Edit Energy"></button>
+                            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="openDeleteModal" data-params='{"type":"energy","id":${energy.id},"name":"${escapeHtml(energy.description)}"}' title="Delete Energy" aria-label="Delete Energy"></button>
                         </div>`;
                     energyList.appendChild(el);
                 });
@@ -472,8 +466,34 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
         }
 
         // Helpers
-        function openModal(id){ document.getElementById(id).classList.add('show'); }
-        function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+        function __wfFindParentOverlay(){
+            try {
+                const pd = window.parent && window.parent.document;
+                if (!pd) return null;
+                const ifr = Array.from(pd.querySelectorAll('iframe')).find(f => { try { return f.contentWindow === window; } catch(_) { return false; } });
+                if (!ifr) return null;
+                return ifr.closest('.admin-modal-overlay');
+            } catch(_) { return null; }
+        }
+        function openModal(id){
+            try {
+                const ov = __wfFindParentOverlay();
+                if (ov && ov.id && window.parent && typeof window.parent.showModal === 'function') { try { window.parent.showModal(ov.id); } catch(_){} }
+                if (ov) { try { ov.classList.add('wf-dim-backdrop'); } catch(_){} }
+            } catch(_){}
+            const el = document.getElementById(id);
+            if (el) el.classList.add('show');
+        }
+        function closeModal(id){
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('show');
+            try {
+                const anyOpen = !!document.querySelector('.admin-modal-overlay.show');
+                if (anyOpen) return;
+                const ov = __wfFindParentOverlay();
+                if (ov) { try { ov.classList.remove('wf-dim-backdrop'); } catch(_){} }
+            } catch(_){}
+        }
         function resetForm(type){ if(type==='material'){ materialName.value=''; materialCost.value=''; } if(type==='labor'){ laborDescription.value=''; laborCost.value=''; } if(type==='energy'){ energyDescription.value=''; energyCost.value=''; } }
         function showLoading(){}
         function hideLoading(){}
@@ -488,11 +508,5 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
 } ?>
 
 <?php if ($is_modal_context): ?>
-<style>
-  body { margin: 0; padding: 16px; background: #fff; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-  .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
-  .bg-gray-100 { background: #fff !important; }
-  h1 { font-size: 20px !important; margin: 0 0 8px !important; }
-  .card-standard { box-shadow: none !important; }
-</style>
+<?php /* embed resets handled by body[data-embed] utilities */ ?>
 <?php endif; ?>

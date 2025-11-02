@@ -105,6 +105,9 @@ if (!$inModal) {
   }
   $section = 'settings';
   include_once $root . '/components/admin_nav_tabs.php';
+} else {
+  // Modal context: include minimal header to load Vite dev/prod assets
+  include $root . '/partials/modal_header.php';
 }
 ?>
 <?php if (!$inModal): ?>
@@ -112,7 +115,7 @@ if (!$inModal) {
   <div id="admin-section-content">
 <?php endif; ?>
 
-<div class="container mx-auto p-4 bg-white">
+<div class="container mx-auto p-3 bg-white">
   <div class="flex items-center justify-between mb-4">
     <?php if (!$inModal): ?>
     <h1 class="text-2xl font-bold">Email History</h1>
@@ -121,7 +124,7 @@ if (!$inModal) {
       <?php if ($inModal): ?><input type="hidden" name="modal" value="1"><?php endif; ?>
       <input type="hidden" name="page" value="1" />
       <input type="search" name="q" value="<?= htmlspecialchars($q) ?>" class="form-input" placeholder="Search recipient, sender, subject, order ID" />
-      <button type="submit" class="btn btn-secondary">Search</button>
+      <button type="submit" class="btn btn-primary btn-sm">Search</button>
       <details class="ml-2" <?= $advancedOpen ? 'open' : '' ?>>
         <summary class="cursor-pointer select-none text-xs text-gray-600">Advanced filters</summary>
         <div class="mt-2 flex flex-wrap items-center gap-2">
@@ -166,10 +169,10 @@ if (!$inModal) {
           ?>
           <div class="flex items-center gap-1 text-xs">
             <span class="text-gray-500 mr-1">Quick ranges:</span>
-            <a class="link" href="<?= $mk($p7) ?>">7d</a>
-            <a class="link" href="<?= $mk($p30) ?>">30d</a>
-            <a class="link" href="<?= $mk($p90) ?>">90d</a>
-            <a class="link" href="<?= $mk($pAll) ?>">All</a>
+            <a class="btn btn-link btn-sm" href="<?= $mk($p7) ?>">7d</a>
+            <a class="btn btn-link btn-sm" href="<?= $mk($p30) ?>">30d</a>
+            <a class="btn btn-link btn-sm" href="<?= $mk($p90) ?>">90d</a>
+            <a class="btn btn-link btn-sm" href="<?= $mk($pAll) ?>">All</a>
           </div>
           <?php
             // CSV export URL (map q->search; include from/to or all)
@@ -183,7 +186,7 @@ if (!$inModal) {
             ];
             $exportUrl = '/api/email_history.php?' . http_build_query($exportParams);
           ?>
-          <a href="<?= htmlspecialchars($exportUrl) ?>" target="_blank" rel="noopener" class="btn btn-secondary">Download CSV</a>
+          <a href="<?= htmlspecialchars($exportUrl) ?>" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">Download CSV</a>
         </div>
       </details>
     </form>
@@ -243,12 +246,10 @@ if (!$inModal) {
     };
   ?>
   <div class="flex items-center justify-between mt-3 text-xs text-gray-700">
-    <div>
-      Page <?= (int)$page ?> of <?= (int)$totalPages ?> • <?= (int)$total ?> total
-    </div>
+    <div>Page <?= (int)$page ?> of <?= (int)$totalPages ?> • <?= (int)$total ?> total</div>
     <div class="flex items-center gap-2">
-      <a class="btn btn-secondary <?= $page <= 1 ? 'opacity-50 pointer-events-none' : '' ?>" href="<?= $page <= 1 ? '#' : $mkp($prevPage) ?>">Prev</a>
-      <a class="btn btn-secondary <?= $page >= $totalPages ? 'opacity-50 pointer-events-none' : '' ?>" href="<?= $page >= $totalPages ? '#' : $mkp($nextPage) ?>">Next</a>
+      <a class="btn btn-secondary btn-sm <?= $page <= 1 ? 'opacity-50 pointer-events-none' : '' ?>" href="<?= $page <= 1 ? '#' : $mkp($prevPage) ?>">Prev</a>
+      <a class="btn btn-secondary btn-sm <?= $page >= $totalPages ? 'opacity-50 pointer-events-none' : '' ?>" href="<?= $page >= $totalPages ? '#' : $mkp($nextPage) ?>">Next</a>
     </div>
   </div>
 

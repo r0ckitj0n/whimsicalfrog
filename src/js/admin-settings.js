@@ -1,4 +1,5 @@
 import { ApiClient } from '../core/api-client.js';
+import { attachSameOriginFallback, markOverlayResponsive } from '../modules/embed-autosize-parent.js';
 function __unusedDelegatedPreamble(e, closest, target) {
         // Deprecated: legacy delegated preamble is no longer used
         // note: deprecated; kept for backward compatibility (no early return to satisfy ESLint no-unreachable)
@@ -457,20 +458,36 @@ function _wfToastErr(message = 'Request failed') {
         // Open Attributes Modal
         const openAttributes = closest('[data-action="open-attributes"]');
         if (openAttributes) {
-            e.preventDefault();
-            try {
-                const modal = document.getElementById('attributesModal');
-                if (modal) {
-                    modal.classList.remove('hidden');
-                    modal.classList.add('show');
-                    modal.setAttribute('aria-hidden', 'false');
-                    // Call the initializer if it exists
-                    if (typeof window.initAttributesModal === 'function') {
-                        window.initAttributesModal(modal);
-                    }
+          e.preventDefault();
+          try {
+            const modal = document.getElementById('attributesModal');
+            if (modal) {
+              modal.classList.remove('hidden');
+              modal.classList.add('show');
+              modal.setAttribute('aria-hidden', 'false');
+              // Call the initializer if it exists
+              if (typeof window.initAttributesModal === 'function') {
+                window.initAttributesModal(modal);
+              }
+              // Ensure iframe is primed and overlay is responsive for autosize
+              try {
+                const frame = modal.querySelector('#attributesFrame') || modal.querySelector('iframe');
+                if (frame) {
+                  if (!frame.getAttribute('src')) {
+                    const ds = frame.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
+                    frame.setAttribute('src', ds);
+                  }
+                  try { frame.classList.remove('wf-admin-embed-frame--tall','wf-embed--fill'); } catch(_) {}
+                  try { if (!frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1'); } catch(_) {}
+                  try { markOverlayResponsive(modal); } catch(_) {}
+                  try { attachSameOriginFallback(frame, modal); } catch(_) {}
+                } else {
+                  try { markOverlayResponsive(modal); } catch(_) {}
                 }
-            } catch (_) {}
-            return;
+              } catch(_) {}
+            }
+          } catch (_) {}
+          return;
         }
 
         // Execute Database-only Backup
@@ -663,7 +680,7 @@ function showContentToneModal() {
       <div class="admin-modal admin-modal--md bg-white rounded-lg flex flex-col" role="dialog" aria-modal="true" aria-labelledby="contentToneTitle">
         <div class="flex justify-between items-center border-b p-4">
           <h3 id="contentToneTitle" class="text-lg font-semibold text-gray-800">Manage Content Tone Options</h3>
-          <button type="button" class="text-gray-500 hover:text-gray-700 text-xl" data-action="content-tone-close" aria-label="Close">&times;</button>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="content-tone-close" aria-label="Close">×</button>
         </div>
         <div class="flex-1 overflow-y-auto p-4">
           <div class="space-y-4">
@@ -886,7 +903,7 @@ function showBrandVoiceModal() {
       <div class="admin-modal admin-modal--md bg-white rounded-lg flex flex-col" role="dialog" aria-modal="true" aria-labelledby="brandVoiceTitle">
         <div class="flex justify-between items-center border-b p-4">
           <h3 id="brandVoiceTitle" class="text-lg font-semibold text-gray-800">Manage Brand Voice Options</h3>
-          <button type="button" class="text-gray-500 hover:text-gray-700 text-xl" data-action="brand-voice-close" aria-label="Close">&times;</button>
+          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="brand-voice-close" aria-label="Close">×</button>
         </div>
         <div class="flex-1 overflow-y-auto p-4">
           <div class="space-y-4">
@@ -2748,7 +2765,7 @@ function showTestEmailModal(templateId) {
           <div class="admin-modal bg-white rounded-lg w-full max-w-lg shadow-xl" role="dialog" aria-modal="true" aria-labelledby="testEmailTitle">
             <div class="flex items-center justify-between p-4 border-b">
               <h3 id="testEmailTitle" class="text-lg font-semibold text-gray-800">Send Test Email</h3>
-              <button type="button" class="admin-modal-close text-gray-700 hover:text-gray-900" data-action="close-admin-modal" aria-label="Close">&times;</button>
+              <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="p-4 space-y-3">
               <p class="text-sm text-gray-700">Enter an email address to send a test of this template.</p>
@@ -2878,7 +2895,7 @@ function showTestEmailModal(templateId) {
           window.confirmSendTestEmail = confirmSendTestEmail;
       }
   } catch (_) {}
- 
+
   // Delegated handlers for Test Email modal
   document.addEventListener('click', function(ev) {
       const t = ev.target;
@@ -2915,7 +2932,7 @@ function showTestEmailModal(templateId) {
         <div class="admin-modal admin-modal-content admin-modal--lg bg-white rounded-lg flex flex-col shadow-xl" role="dialog" aria-modal="true" aria-labelledby="emailTemplateEditTitle">
           <div class="flex items-center justify-between p-4 border-b">
             <h3 id="emailTemplateEditTitle" class="text-lg font-semibold text-gray-800">Edit Email Template</h3>
-            <button type="button" class="admin-modal-close admin-modal-close--tight text-gray-700 hover:text-gray-900" data-action="close-admin-modal" aria-label="Close">&times;</button>
+            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
           </div>
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3076,7 +3093,6 @@ function showTestEmailModal(templateId) {
           const prevText = saveBtn ? saveBtn.textContent : '';
           if (saveBtn) { saveBtn.disabled = true; saveBtn.setAttribute('aria-busy', 'true'); saveBtn.textContent = 'Saving...'; }
           const payload = {
-              template_id: id || undefined,
               template_name: name,
               template_type: type,
               subject,
@@ -3086,8 +3102,9 @@ function showTestEmailModal(templateId) {
               variables: [],
               is_active: isActive ? 1 : 0
           };
+          if (id) payload.template_id = parseInt(id);
           const action = id ? 'update' : 'create';
-          const data = await ApiClient.post(`/api/email_templates.php?action=${encodeURIComponent(action)}`, payload);
+          const data = await ApiClient.post(`/api/email_templates.php?action=${action}`, payload);
           if (data && data.success) {
               if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(id ? 'Template updated' : 'Template created');
               closeEmailTemplateEditModal();
@@ -3172,7 +3189,7 @@ function showTestEmailModal(templateId) {
         <div class="admin-modal bg-white rounded-lg w-full max-w-md shadow-xl" role="dialog" aria-modal="true" aria-labelledby="templateAssignmentTitle">
           <div class="flex items-center justify-between p-4 border-b">
             <h3 id="templateAssignmentTitle" class="text-lg font-semibold text-gray-800">Assign Email Template</h3>
-            <button type="button" class="admin-modal-close text-gray-600 hover:text-gray-900 text-28 leading-1 p-6px" data-action="close-admin-modal" aria-label="Close">&times;</button>
+            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
           </div>
           <div class="p-4 space-y-3">
             <div>
@@ -3534,13 +3551,13 @@ function showTestEmailModal(templateId) {
  function createColorTemplateEditModal() {
      const modalHTML = `
          <div id="colorTemplateEditModal" class="admin-modal-overlay hidden" data-action="close-color-template-modal">
-             <div class="admin-modal-content content-section">
-                 <div class="admin-modal-header section-header">
-                     <h2 id="colorTemplateEditTitle" class="modal-title">Edit Color Template</h2>
-                     <button data-action="close-color-template-modal" class="modal-close">&times;</button>
-                 </div>
-                 <div class="modal-body">
-                     <form id="colorTemplateEditForm" data-action="save-color-template">
+            <div class="admin-modal-content content-section">
+                <div class="admin-modal-header section-header">
+                    <h2 id="colorTemplateEditTitle" class="modal-title">Edit Color Template</h2>
+                    <button data-action="close-color-template-modal" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
+                </div>
+                <div class="modal-body">
+                    <form id="colorTemplateEditForm" data-action="save-color-template">
                          <input type="hidden" id="colorTemplateId" name="template_id">
                          <div>
                              <h4 class="text-lg font-semibold text-gray-800">Template Details</h4>
@@ -3717,333 +3734,6 @@ function showTestEmailModal(templateId) {
      } catch (err) {
          console.error('Error saving color template:', err);
          if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error saving color template');
-     }
- }
- 
- // ---------- Size Templates ----------
- let sizeTemplatesCache = [];
- let sizeTemplateIndex = 0;
- 
- async function loadSizeTemplates() {
-     const loading = document.getElementById('sizeTemplatesLoading');
-     const list = document.getElementById('sizeTemplatesList');
-     if (!loading || !list) return;
-     if (loading.classList) loading.classList.remove('hidden');
-     if (list.classList) list.classList.add('hidden');
-     try {
-         const data = await ApiClient.get('/api/size_templates.php?action=get_all');
-         if (data.success) {
-             renderSizeTemplates(data.templates);
-             loadSizeTemplateCategories(data.templates);
-         } else {
-             throw new Error(data.message || 'Failed to load size templates');
-         }
-     } catch (error) {
-         console.error('Error loading size templates:', error);
-         if (list) list.innerHTML = '<div class="text-red-600 text-center">Failed to load size templates</div>';
-     } finally {
-         if (loading && loading.classList) loading.classList.add('hidden');
-         if (list && list.classList) list.classList.remove('hidden');
-     }
- }
- 
- function loadSizeTemplateCategories(templates) {
-     const categorySelect = document.getElementById('sizeTemplateCategoryFilter');
-     if (!categorySelect) return;
-     const categories = [...new Set((templates || []).map(t => t.category))].sort();
-     categorySelect.innerHTML = '<option value="">All Categories</option>';
-     categories.forEach(category => {
-         const option = document.createElement('option');
-         option.value = category;
-         option.textContent = category;
-         categorySelect.appendChild(option);
-     });
- }
- 
- function filterSizeTemplates() {
-     renderSizeTemplates();
- }
- 
- function renderSizeTemplates(templates = null) {
-     const list = document.getElementById('sizeTemplatesList');
-     if (!list) return;
-     if (!templates) {
-         templates = sizeTemplatesCache || [];
-     } else {
-         sizeTemplatesCache = templates;
-         if (typeof window !== 'undefined') window.sizeTemplatesCache = templates;
-     }
-     const selectedCategory = document.getElementById('sizeTemplateCategoryFilter')?.value || '';
-     const filtered = selectedCategory ? templates.filter(t => t.category === selectedCategory) : templates;
-     if (filtered.length === 0) {
-         list.innerHTML = '<div class="text-gray-500 text-center">No size templates found. Create your first template!</div>';
-         return;
-     }
-     list.innerHTML = filtered.map(template => `
-         <div class="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-             <div class="flex items-start justify-between">
-                 <div>
-                     <h5 class="font-semibold text-gray-800">${template.template_name}</h5>
-                     <p class="text-sm text-gray-600">${template.description || 'No description'}</p>
-                     <div class="flex items-center space-x-4 text-xs text-gray-500">
-                         <span class="bg-blue-100 text-blue-800 rounded">${template.category}</span>
-                         <span>${template.size_count} sizes</span>
-                         <span>Created: ${new Date(template.created_at).toLocaleDateString()}</span>
-                     </div>
-                 </div>
-                 <div class="flex space-x-2">
-                     <button data-action="tm-edit-size-template" data-id="${template.id}" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
-                     <button data-action="tm-delete-size-template" data-id="${template.id}" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
-                 </div>
-             </div>
-             <div class="template-preview" id="sizePreview${template.id}">
-                 <div class="text-xs text-gray-500">Loading sizes...</div>
-             </div>
-         </div>
-     `).join('');
-     filtered.forEach(t => loadSizeTemplatePreview(t.id));
- }
- 
- async function loadSizeTemplatePreview(templateId) {
-     try {
-         const data = await ApiClient.get(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
-         if (data.success && data.template.sizes) {
-             const el = document.getElementById(`sizePreview${templateId}`);
-             if (el) {
-                 el.innerHTML = `
-                     <div class="flex flex-wrap gap-2">
-                         ${data.template.sizes.map(size => `
-                             <span class="inline-block bg-gray-100 text-gray-700 text-xs rounded">
-                                 ${size.size_name} (${size.size_code})${size.price_adjustment > 0 ? ' +$' + size.price_adjustment : size.price_adjustment < 0 ? ' $' + size.price_adjustment : ''}
-                             </span>
-                         `).join('')}
-                     </div>
-                 `;
-             }
-         }
-     } catch (err) {
-         console.error('Error loading size template preview:', err);
-     }
- }
- 
- function createNewSizeTemplate() { showSizeTemplateEditModal(); }
- 
- async function editSizeTemplate(templateId) {
-     try {
-         const data = await ApiClient.get(`/api/size_templates.php?action=get_template&template_id=${templateId}`);
-         if (data.success) {
-             showSizeTemplateEditModal(data.template);
-         } else {
-             if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to load template: ' + data.message);
-             else console.error('Failed to load template:', data.message);
-         }
-     } catch (err) {
-         console.error('Error loading size template:', err);
-         if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error loading size template');
-     }
- }
- 
- async function deleteSizeTemplate(templateId) {
-    if (typeof window.showConfirmationModal !== 'function') { 
-        if (typeof window !== 'undefined' && typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error'); 
-        return; 
-    }
-   const ok = await window.showConfirmationModal({
-          title: 'Delete Size Template',
-          message: 'Are you sure you want to delete this size template? This action cannot be undone.',
-          confirmText: 'Delete',
-          confirmStyle: 'danger',
-          icon: '⚠️',
-          iconType: 'danger'
-   });
-   if (!ok) return;
-    try {
-        const data = await ApiClient.get('/api/size_templates.php', {
-            method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: `action=delete_template&template_id=${templateId}`
-        });
-        if (data.success) {
-             if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess('Size template deleted successfully!');
-             loadSizeTemplates();
-         } else {
-             if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to delete template: ' + data.message);
-         }
-     } catch (err) {
-         console.error('Error deleting size template:', err);
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error deleting size template'); } catch (_) {}
-     }
- }
- 
- function createSizeTemplateEditModal() {
-     const modalHTML = `
-         <div id="sizeTemplateEditModal" class="admin-modal-overlay hidden" data-action="close-size-template-modal">
-             <div class="admin-modal-content content-section">
-                 <div class="admin-modal-header section-header">
-                     <h2 id="sizeTemplateEditTitle" class="modal-title">Edit Size Template</h2>
-                     <button data-action="close-size-template-modal" class="modal-close">&times;</button>
-                 </div>
-                 <div class="modal-body">
-                     <form id="sizeTemplateEditForm" data-action="save-size-template">
-                         <input type="hidden" id="sizeTemplateId" name="template_id">
-                         <div>
-                             <h4 class="text-lg font-semibold text-gray-800">Template Details</h4>
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                 <div>
-                                     <label class="block text-sm font-medium text-gray-700">Template Name *</label>
-                                     <input type="text" id="sizeTemplateName" name="template_name" required class="modal-input" placeholder="e.g., T-Shirt Sizes">
-                                 </div>
-                                 <div>
-                                     <label class="block text-sm font-medium text-gray-700">Category</label>
-                                     <select id="sizeTemplateCategory" name="category" class="modal-select">
-                                         <option value="General">General</option>
-                                         <option value="T-Shirts">T-Shirts</option>
-                                         <option value="Tumblers">Tumblers</option>
-                                         <option value="Artwork">Artwork</option>
-                                         <option value="Sublimation">Sublimation</option>
-                                         <option value="Window Wraps">Window Wraps</option>
-                                     </select>
-                                 </div>
-                             </div>
-                             <div>
-                                 <label class="block text-sm font-medium text-gray-700">Description</label>
-                                 <textarea id="sizeTemplateDescription" name="description" rows="2" class="modal-input" placeholder="Optional description of this size template"></textarea>
-                             </div>
-                         </div>
-                         <div>
-                             <div class="flex items-center justify-between">
-                                 <h4 class="text-lg font-semibold text-gray-800">Sizes</h4>
-                                 <button type="button" data-action="size-template-add-size" class="btn btn-primary">
-                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                     </svg>
-                                     Add Size
-                                 </button>
-                             </div>
-                             <div id="sizeTemplateSizes" class="space-y-3"></div>
-                         </div>
-                     </form>
-                 </div>
-                 <div class="modal-footer">
-                     <button type="button" data-action="close-size-template-modal" class="btn btn-secondary">Cancel</button>
-                     <button type="submit" form="sizeTemplateEditForm" class="btn btn-primary">Save Template</button>
-                 </div>
-             </div>
-         </div>`;
-     document.body.insertAdjacentHTML('beforeend', modalHTML);
- }
- 
- function showSizeTemplateEditModal(template = null) {
-     if (!document.getElementById('sizeTemplateEditModal')) createSizeTemplateEditModal();
-     const modal = document.getElementById('sizeTemplateEditModal');
-     const form = document.getElementById('sizeTemplateEditForm');
-     const modalTitle = document.getElementById('sizeTemplateEditTitle');
-     const sizesContainer = document.getElementById('sizeTemplateSizes');
-     if (!modal || !form || !modalTitle || !sizesContainer) return;
-     form.reset();
-     sizesContainer.innerHTML = '';
-     sizeTemplateIndex = 0;
-     if (template) {
-         modalTitle.textContent = 'Edit Size Template';
-         document.getElementById('sizeTemplateId').value = template.id;
-         document.getElementById('sizeTemplateName').value = template.template_name;
-         document.getElementById('sizeTemplateDescription').value = template.description || '';
-         document.getElementById('sizeTemplateCategory').value = template.category || 'General';
-         if (template.sizes && template.sizes.length > 0) template.sizes.forEach(sz => addSizeToTemplate(sz));
-     } else {
-         modalTitle.textContent = 'Create New Size Template';
-         document.getElementById('sizeTemplateId').value = '';
-         addSizeToTemplate();
-     }
-     modal.classList.remove('hidden');
-     updateModalScrollLock();
- }
- 
- function closeSizeTemplateEditModal() {
-     const modal = document.getElementById('sizeTemplateEditModal');
-     if (modal) { modal.classList.add('hidden'); updateModalScrollLock(); }
- }
- 
- function addSizeToTemplate(sizeData = null) {
-     const container = document.getElementById('sizeTemplateSizes');
-     if (!container) return;
-     const index = sizeTemplateIndex++;
-     const sizeHTML = `
-         <div class="size-template-item border border-gray-200 rounded-lg bg-gray-50" data-index="${index}">
-             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                 <div>
-                     <label class="block text-sm font-medium text-gray-700">Size Name *</label>
-                     <input type="text" name="sizes[${index}][size_name]" required class="w-full border border-gray-300 rounded text-sm" placeholder="e.g., Small" value="${sizeData?.size_name || ''}">
-                 </div>
-                 <div>
-                     <label class="block text-sm font-medium text-gray-700">Size Code *</label>
-                     <input type="text" name="sizes[${index}][size_code]" required class="w-full border border-gray-300 rounded text-sm" placeholder="e.g., S" value="${sizeData?.size_code || ''}">
-                 </div>
-                 <div>
-                     <label class="block text-sm font-medium text-gray-700">Price Adjustment</label>
-                     <input type="number" name="sizes[${index}][price_adjustment]" step="0.01" class="w-full border border-gray-300 rounded text-sm" placeholder="0.00" value="${sizeData?.price_adjustment || '0.00'}">
-                 </div>
-                 <div>
-                     <label class="block text-sm font-medium text-gray-700">Display Order</label>
-                     <input type="number" name="sizes[${index}][display_order]" min="0" class="w-full border border-gray-300 rounded text-sm" value="${sizeData?.display_order || index}">
-                 </div>
-                 <div class="flex items-end">
-                     <button type="button" data-action="size-template-remove-size" data-index="${index}" class="bg-red-500 text-white rounded text-sm hover:bg-red-600">Remove</button>
-                 </div>
-             </div>
-         </div>`;
-     container.insertAdjacentHTML('beforeend', sizeHTML);
- }
- 
- function removeSizeFromTemplate(index) {
-     const item = document.querySelector(`[data-index="${index}"]`);
-     if (item) item.remove();
- }
- 
- async function saveSizeTemplate(event) {
-     event.preventDefault();
-     const form = event.target;
-     const formData = new FormData(form);
-     const templateId = formData.get('template_id');
-     const isEdit = templateId && templateId !== '';
-     const sizes = [];
-     const sizeItems = document.querySelectorAll('.size-template-item');
-     sizeItems.forEach((item, idx) => {
-         const sizeName = item.querySelector('input[name*="[size_name]"]')?.value;
-         const sizeCode = item.querySelector('input[name*="[size_code]"]')?.value;
-         const priceAdjustment = item.querySelector('input[name*="[price_adjustment]"]')?.value;
-         const displayOrder = item.querySelector('input[name*="[display_order]"]')?.value;
-         if (sizeName && sizeCode) {
-             sizes.push({
-                 size_name: sizeName,
-                 size_code: sizeCode,
-                 price_adjustment: parseFloat(priceAdjustment) || 0,
-                 display_order: parseInt(displayOrder) || idx
-             });
-         }
-     });
-     if (sizes.length === 0) {
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Please add at least one size to the template'); } catch (_) {}
-         return;
-     }
-     const payload = {
-         template_name: formData.get('template_name'),
-         description: formData.get('description'),
-         category: formData.get('category'),
-         sizes
-     };
-     if (isEdit) payload.template_id = parseInt(templateId);
-     try {
-         const action = isEdit ? 'update_template' : 'create_template';
-         const data = await ApiClient.post(`/api/size_templates.php?action=${action}`, payload);
-         if (data.success) {
-             try { if (typeof window !== 'undefined' && typeof window.showSuccess === 'function') window.showSuccess(isEdit ? 'Size template updated successfully!' : 'Size template created successfully!'); } catch (_) {}
-             closeSizeTemplateEditModal();
-             loadSizeTemplates();
-         } else {
-             try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Failed to save template: ' + data.message); } catch (_) {}
-         }
-     } catch (err) {
-         console.error('Error saving size template:', err);
-         try { if (typeof window !== 'undefined' && typeof window.showError === 'function') window.showError('Error saving size template'); } catch (_) {}
      }
  }
  
@@ -4793,7 +4483,7 @@ function initAdminSettingsDelegatedListeners() {
           <div class="admin-modal admin-modal--lg">
             <div class="modal-header">
               <h3 class="modal-title">${(name || 'Preview').replace(/</g,'&lt;')}</h3>
-              <button class="admin-modal-close" data-action="close-preview" aria-label="Close">&times;</button>
+              <button class="admin-modal-close wf-admin-nav-button" data-action="close-preview" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
               <div class="p-3 flex items-center justify-center"><img src="${imageUrl}" alt="${(name||'').replace(/</g,'&lt;')}" class="max-w-full h-auto"></div>

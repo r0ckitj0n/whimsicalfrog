@@ -126,7 +126,7 @@ export class UIComponents {
               <div class="modal-header">
                 <h2 id="${modalId}_title" class="admin-card-title">${this.options.title}</h2>
                 ${this.options.headerActions ? `<div class="modal-header-actions">${this.options.headerActions}</div>` : ''}
-                ${this.options.closable !== false ? '<button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>' : ''}
+                ${this.options.closable !== false ? '<button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>' : ''}
               </div>
               <div class="modal-body">
                 ${this.options.content}
@@ -145,7 +145,7 @@ export class UIComponents {
             <div class="modal-container">
               <div class="modal-header">
                 <h3 class="modal-title">${this.options.title}</h3>
-                ${this.options.closable ? '<button class="modal-close" aria-label="Close">&times;</button>' : ''}
+                ${this.options.closable ? '<button class="modal-close btn btn-icon btn-icon--close" aria-label="Close"></button>' : ''}
               </div>
               <div class="modal-body">
                 ${this.options.content}
@@ -675,6 +675,26 @@ export class UIComponents {
         font-size: 1.25rem;
         cursor: pointer;
         padding: 0;
+        line-height: 1;
+      }
+
+      /* Minimal icon button fallback for generic (non-admin) modals */
+      .modal-container .btn.btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        background: #fff;
+        color: #374151;
+        cursor: pointer;
+      }
+      .modal-container .btn-icon--close::before {
+        content: '×';
+        font-size: 16px;
         line-height: 1;
       }
 

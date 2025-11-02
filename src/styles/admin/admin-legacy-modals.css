@@ -99,7 +99,7 @@
   position: fixed;
   right: 16px;
   bottom: 16px;
-  z-index: 100000; /* above admin panels */
+  z-index: var(--z-overlay-topmost, 100000); /* above admin panels */
   display: flex;
   flex-direction: column;
   gap: 8px;

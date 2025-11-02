@@ -22,6 +22,105 @@ import './header-auth-sync.js';
   } else { init(); }
 })();
 
+// Admin navbar underline slider (runs independently of tooltip bootstrap)
+(function initAdminNavUnderline(){
+  try {
+    const isAdminRoute = (() => {
+      try { return /^\/admin(\/|$)/i.test(location.pathname) || /admin_router\.php$/i.test(location.pathname); } catch(_) { return false; }
+    })();
+    if (!isAdminRoute) return;
+
+    const container = document.querySelector('.admin-tab-navigation');
+    if (!container || !container.classList.contains('admin-tabs--underline')) return;
+    const nav = container.querySelector('.wf-nav-center');
+    if (!nav) return;
+
+    // Create underline element if missing
+    let underline = nav.querySelector('.admin-tabs-underline');
+    if (!underline) {
+      underline = document.createElement('div');
+      underline.className = 'admin-tabs-underline';
+      nav.appendChild(underline);
+    }
+
+    const tabs = Array.from(nav.querySelectorAll('.admin-nav-tab[href]'));
+    if (!tabs.length) return;
+
+    // Determine active tab: prefer .active; fallback to URL match
+    let activeTab = nav.querySelector('.admin-nav-tab.active');
+    if (!activeTab) {
+      const path = location.pathname.replace(/\/*$/, '');
+      const found = tabs.find(a => {
+        try {
+          const href = a.getAttribute('href') || '';
+          if (!href) return false;
+          const url = new URL(href, location.origin);
+          return url.pathname.replace(/\/*$/, '') === path;
+        } catch(_) { return false; }
+      });
+      if (found) activeTab = found;
+    }
+
+    let styleEl;
+    function ensureStyleEl(){
+      if (!styleEl) {
+        styleEl = document.getElementById('wf-admin-tabs-underline-style');
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = 'wf-admin-tabs-underline-style';
+          document.head.appendChild(styleEl);
+        }
+      }
+      return styleEl;
+    }
+    function applyUnderlineRule(widthPx, leftPx){
+      const se = ensureStyleEl();
+      const w = Math.max(0, Math.round(widthPx)) + 'px';
+      const l = Math.max(0, Math.round(leftPx)) + 'px';
+      se.textContent = '.admin-tab-navigation .admin-tabs-underline{width:'+w+';transform:translateX('+l+')}';
+    }
+    function positionUnderline(el) {
+      try {
+        if (!el || !underline) return;
+        const navRect = nav.getBoundingClientRect();
+        const rect = el.getBoundingClientRect();
+        const left = rect.left - navRect.left;
+        const width = rect.width;
+        applyUnderlineRule(width, left);
+      } catch(_) {}
+    }
+
+    // Initial position
+    const initial = activeTab || tabs[0];
+    positionUnderline(initial);
+
+    // Hover to preview
+    tabs.forEach(tab => {
+      tab.addEventListener('mouseenter', () => positionUnderline(tab));
+      tab.addEventListener('focus', () => positionUnderline(tab));
+      tab.addEventListener('mouseleave', () => positionUnderline(activeTab || initial));
+      tab.addEventListener('blur', () => positionUnderline(activeTab || initial));
+      tab.addEventListener('click', () => {
+        activeTab = tab;
+        try { tabs.forEach(t => t.classList.toggle('active', t === tab)); } catch(_) {}
+        positionUnderline(activeTab);
+      });
+    });
+
+    // Keep positioned on resize and when fonts load
+    const onResize = () => positionUnderline(activeTab || initial);
+    window.addEventListener('resize', onResize);
+    if (document.fonts && typeof document.fonts.addEventListener === 'function') {
+      try { document.fonts.addEventListener('loadingdone', onResize); } catch(_) {}
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', onResize, { once: true });
+    } else {
+      setTimeout(onResize, 0);
+    }
+  } catch(_) { /* noop */ }
+})();
+
 // Global Help & Hints toggle (admin header)
 function __wfGetHintsEnabled() {
   try {

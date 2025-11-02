@@ -113,41 +113,47 @@ export class RoomModalManager {
     this.isLoading = true;
 
     document.body.classList.add('room-modal-open');
-    if (window.WFModals && typeof WFModals.lockScroll === 'function') {
-      WFModals.lockScroll();
-    } else {
-      document.body.classList.add('modal-open');
-      document.documentElement.classList.add('modal-open');
-    }
-
     this.loadRoom(roomNumber);
     setTimeout(() => {
-      this.overlay.classList.add('show');
+      if (typeof window.showModal === 'function') {
+        try { window.showModal('roomModalOverlay'); } catch(_) {}
+      } else {
+        this.overlay.classList.add('show');
+        if (window.WFModals && typeof WFModals.lockScroll === 'function') {
+          WFModals.lockScroll();
+        } else {
+          document.body.classList.add('modal-open');
+          document.documentElement.classList.add('modal-open');
+        }
+      }
       this.isLoading = false;
     }, 10);
   }
 
   hide() {
-    this.overlay.classList.remove('show');
-    // Always remove the specific room modal flag
-    document.body.classList.remove('room-modal-open');
-
-    // Only remove global scroll lock if no other modals are open
-    if (window.WFModals && typeof WFModals.unlockScrollIfNoneOpen === 'function') {
-      WFModals.unlockScrollIfNoneOpen();
+    if (typeof window.hideModal === 'function') {
+      try { window.hideModal('roomModalOverlay'); } catch(_) {}
+      document.body.classList.remove('room-modal-open');
     } else {
-      const anyOpen = document.querySelector(
-        '.room-modal-overlay.show, ' +
-        '.wf-revealco-overlay.show, ' +
-        '#global-confirmation-modal.show, ' +
-        '.image-viewer-modal-open, ' +
-        '.confirmation-modal-overlay.show, ' +
-        '#searchModal.show, ' +
-        '.wf-login-overlay.show'
-      );
-      if (!anyOpen) {
-        document.body.classList.remove('modal-open');
-        document.documentElement.classList.remove('modal-open');
+      this.overlay.classList.remove('show');
+      document.body.classList.remove('room-modal-open');
+      // Only remove global scroll lock if no other modals are open
+      if (window.WFModals && typeof WFModals.unlockScrollIfNoneOpen === 'function') {
+        WFModals.unlockScrollIfNoneOpen();
+      } else {
+        const anyOpen = document.querySelector(
+          '.room-modal-overlay.show, ' +
+          '.wf-revealco-overlay.show, ' +
+          '#global-confirmation-modal.show, ' +
+          '.image-viewer-modal-open, ' +
+          '.confirmation-modal-overlay.show, ' +
+          '#searchModal.show, ' +
+          '.wf-login-overlay.show'
+        );
+        if (!anyOpen) {
+          document.body.classList.remove('modal-open');
+          document.documentElement.classList.remove('modal-open');
+        }
       }
     }
 

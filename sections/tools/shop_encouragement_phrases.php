@@ -26,7 +26,7 @@ if ($inModal) {
   <div id="admin-section-content">
 <?php endif; ?>
 
-<div class="p-3"<?php echo $inModal ? ' style="position:absolute;inset:0;height:100%;padding:0;margin:0;box-sizing:border-box;"' : ''; ?>>
+<div class="p-3<?php echo $inModal ? ' modal-absolute-fill wf-flex-col wf-panel-fill' : ''; ?>">
   <?php if (!$inModal): ?>
   <div class="admin-card">
     <h1 class="admin-card-title">Shop Encouragement Phrases</h1>
@@ -34,21 +34,10 @@ if ($inModal) {
   </div>
   <?php endif; ?>
 
-  <div class="admin-card"<?php echo $inModal ? ' style="padding:0;"' : ''; ?>>
+  <div class="admin-card<?php echo $inModal ? ' p-0 wf-card-fill' : ''; ?>">
     <?php if ($inModal): ?>
-      <style>
-        html, body { height: 100%; }
-        body { margin: 0; overflow: hidden; }
-        .p-3 { display: flex; flex-direction: column; }
-        .admin-card { flex: 1 1 auto; height: 100%; display: flex; flex-direction: column; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; }
-        #sepForm { height: 100%; display: flex; flex-direction: column; margin: 0; }
-        #sepTextarea { flex: 1 1 auto; min-height: 0 !important; height: 100% !important; width: 100%; display: block; box-sizing: border-box; border-radius: 0; resize: none; }
-        /* Hide inner label/actions in modal context; header provides Save/status */
-        #sepForm label, #sepForm .flex.items-center.justify-end { display: none !important; }
-        .admin-card .form-textarea { margin: 0 !important; padding: 6px !important; }
-      </style>
-      <form id="sepForm" data-action="prevent-submit">
-        <textarea id="sepTextarea" class="form-textarea w-full" placeholder="e.g. Staff Favorite\nTrending\nGreat Gift"></textarea>
+      <form id="sepForm" data-action="prevent-submit" class="wf-panel-fill wf-flex-col">
+        <textarea id="sepTextarea" class="form-textarea w-full wf-textarea-fill wf-form-textarea-tight" placeholder="e.g. Staff Favorite\nTrending\nGreat Gift"></textarea>
       </form>
     <?php else: ?>
       <form id="sepForm" class="space-y-3" data-action="prevent-submit">

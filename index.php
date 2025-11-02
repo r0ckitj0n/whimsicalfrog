@@ -170,14 +170,21 @@ ob_start();
 $__wf_skip_layout = false;
 try {
     $p = strtolower((string)($page ?? ''));
-    if ($p === 'receipt') {
-        $qs = $_GET ?? [];
+    $p_base = preg_replace('/\.php$/', '', $p);
+    $qs = $_GET ?? [];
+    if ($p_base === 'receipt') {
         $__wf_skip_layout = (
             (isset($qs['bare']) && $qs['bare'] === '1') ||
             (isset($qs['embed']) && $qs['embed'] === '1') ||
             (isset($qs['modal']) && $qs['modal'] === '1') ||
             (isset($qs['print']) && $qs['print'] === '1')
         );
+    }
+    // Also support modal rendering for public policy pages
+    if (isset($qs['modal']) && $qs['modal'] === '1') {
+        if (in_array($p_base, ['privacy', 'terms', 'policy'], true)) {
+            $__wf_skip_layout = true;
+        }
     }
 } catch (\Throwable $e) { $__wf_skip_layout = false; }
 
@@ -195,8 +202,8 @@ if (file_exists($page_path)) {
     include __DIR__ . '/under_construction.php';
 }
 
-// Include the footer unless skipping layout for a bare receipt render
-if (!$__wf_skip_layout) {
+// Include the footer unless skipping layout or explicitly skipped by page
+if (!$__wf_skip_layout && (empty($__wf_skip_footer) || $__wf_skip_footer === false)) {
     include __DIR__ . '/partials/footer.php';
 }
 

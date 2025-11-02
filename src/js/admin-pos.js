@@ -102,7 +102,17 @@ const POSModule = {
     toggleFullscreen() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch(err => {
-                alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                if (typeof window.showAlertModal === 'function') {
+                    window.showAlertModal({
+                        title: 'Fullscreen Error',
+                        message: `Error attempting to enable full-screen mode: ${err.message} (${err.name})`,
+                        icon: '⚠️',
+                        iconType: 'warning',
+                        confirmText: 'OK'
+                    });
+                } else {
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                }
             });
         } else {
             document.exitFullscreen();
@@ -338,7 +348,18 @@ const POSModule = {
     },
 
     async emailReceipt(orderId) {
-        const email = prompt('Enter customer email address:');
+        const email = (typeof window.showPromptModal === 'function')
+            ? await window.showPromptModal({
+                title: 'Email Receipt',
+                message: 'Enter customer email address:',
+                placeholder: 'name@example.com',
+                inputType: 'email',
+                confirmText: 'Send',
+                cancelText: 'Cancel',
+                icon: '✉️',
+                iconType: 'info'
+              })
+            : prompt('Enter customer email address:');
         if (!email || !/^[\S]+@[\S]+\.[\S]+$/.test(email)) {
             this.showPOSModal('Invalid Email', 'Please enter a valid email address.', 'error');
             return;
@@ -400,6 +421,18 @@ const POSModule = {
     },
 
     showPOSConfirm(title, message, confirmText = 'OK', cancelText = 'Cancel') {
+        if (typeof window.showConfirmationModal === 'function') {
+            return window.showConfirmationModal({
+                title,
+                message,
+                confirmText,
+                cancelText,
+                icon: '⚠️',
+                iconType: 'warning',
+                confirmStyle: 'confirm'
+            });
+        }
+        // Fallback to local POS-styled modal if global modal isn't available
         return new Promise(resolve => {
             const modalHTML = `
                 <div class="pos-modal-content pos-modal-small">
@@ -422,9 +455,9 @@ const POSModule = {
         const message = `
             <h3>Total Due: $${total.toFixed(2)}</h3>
             <div class="payment-methods">
-                <button class="payment-btn payment-method-btn cash" data-method="Cash">💵 Cash</button>
-                <button class="payment-btn payment-method-btn card" data-method="Card">💳 Card</button>
-                <button class="payment-btn payment-method-btn other" data-method="Other">📱 Other</button>
+                <button class="payment-btn payment-method-btn cash" data-method="Cash" title="Cash" aria-label="Cash"><span class="btn-icon btn-icon--cash" aria-hidden="true"></span> <span>Cash</span></button>
+                <button class="payment-btn payment-method-btn card" data-method="Card" title="Card" aria-label="Card"><span class="btn-icon btn-icon--card" aria-hidden="true"></span> <span>Card</span></button>
+                <button class="payment-btn payment-method-btn other" data-method="Other" title="Other" aria-label="Other"><span class="btn-icon btn-icon--mobile" aria-hidden="true"></span> <span>Other</span></button>
             </div>`;
         return new Promise(resolve => {
             this.showPOSModal('Select Payment Method', message, 'info');

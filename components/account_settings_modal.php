@@ -8,11 +8,11 @@ if (!function_exists('renderAccountSettingsModal')) {
     function renderAccountSettingsModal(): string {
         ob_start();
         ?>
-<div id="accountSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
+<div id="accountSettingsModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
   <div class="admin-modal admin-modal-content admin-modal--md admin-modal--actions-in-header overflow-hidden">
     <div class="modal-header">
       <h2 id="accountSettingsTitle" class="admin-card-title">Account Settings</h2>
-      <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
     </div>
     <div class="modal-body overflow-auto p-4 space-y-4">
       <div id="accountSettingsAlerts" class="space-y-2">

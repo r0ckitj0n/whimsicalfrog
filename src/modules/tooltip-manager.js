@@ -129,6 +129,8 @@ function computeTooltipPosition(target, tip, position, { isFixed = true } = {}) 
 function attachTooltip(target, tipData) {
   if (!target || __wfAttachedTooltipTargets.has(target)) return;
   __wfAttachedTooltipTargets.add(target);
+  try { if (target.hasAttribute && target.hasAttribute('title')) { target.setAttribute('data-wf-orig-title', target.getAttribute('title') || ''); target.removeAttribute('title'); } } catch(_){
+  }
   let tip;
   let showTimer = null;
   let posClass = null; let posRuleIndex = -1;
@@ -177,6 +179,7 @@ function isRelevantTooltipTarget(el) {
     if (el.matches && el.matches('button, a, [role="button"]')) return true;
     // Elements with button-like classes
     if (el.matches && el.matches('.btn, .wf-admin-nav-button, .wf-modal-button')) return true;
+    if (el.matches && el.matches('label, .field-label, [data-field-label]')) return true;
     // Exclude common form fields
     if (el.matches && el.matches('input, select, textarea')) return false;
     // Exclude generic containers (forms/divs) unless they are explicitly button-like
@@ -185,6 +188,34 @@ function isRelevantTooltipTarget(el) {
     if (el.closest && el.closest('button, [role="button"], .btn, .wf-admin-nav-button, .wf-modal-button')) return true;
   } catch(_) {}
   return false;
+}
+
+function remapToLabelTarget(el) {
+  try {
+    if (!el) return null;
+    if (el.matches && el.matches('label, .field-label, [data-field-label]')) return el;
+    if (el.matches && el.matches('input, select, textarea')) {
+      const id = el.id || '';
+      if (id) {
+        const byFor = document.querySelector(`label[for="${CSS.escape(id)}"]`);
+        if (byFor) return byFor;
+      }
+      const group = el.closest('.form-group, .field, .input-group, .form-row, .wf-field');
+      if (group) {
+        const lbl = group.querySelector('label, .field-label, [data-field-label]');
+        if (lbl) return lbl;
+      }
+      const prev = el.previousElementSibling;
+      if (prev && prev.matches && prev.matches('label, .field-label, [data-field-label]')) return prev;
+      const parent = el.parentElement;
+      if (parent) {
+        const lbl = parent.querySelector('label, .field-label, [data-field-label]');
+        if (lbl) return lbl;
+      }
+      return null;
+    }
+    return el;
+  } catch(_) { return el; }
 }
 
 function mapSettingsSelectors(elementId) {
@@ -419,8 +450,10 @@ async function loadTooltips() {
       // Additional cap: limit attachments per tooltip row to keep DOM light on admin pages
       if (targets.length > MAX_ATTACH_PER_TOOLTIP) targets = targets.slice(0, MAX_ATTACH_PER_TOOLTIP);
       for (const t of targets) {
-        if (!isRelevantTooltipTarget(t)) continue;
-        attachTooltip(t, data);
+        const mapped = remapToLabelTarget(t);
+        if (!mapped) continue;
+        if (!isRelevantTooltipTarget(mapped) && !(mapped.matches && mapped.matches('label, .field-label, [data-field-label]'))) continue;
+        attachTooltip(mapped, data);
         attached++;
         uniqueTargets.add(t);
         perIdAttachedCount[tt.element_id] = (perIdAttachedCount[tt.element_id] || 0) + 1;
@@ -515,8 +548,10 @@ async function loadTooltips() {
           }
           const data = { title: tt.title, content: tt.content, position: tt.position || 'top' };
           for (const t of targets) {
-            if (!isRelevantTooltipTarget(t)) continue;
-            attachTooltip(t, data);
+            const mapped = remapToLabelTarget(t);
+            if (!mapped) continue;
+            if (!isRelevantTooltipTarget(mapped) && !(mapped.matches && mapped.matches('label, .field-label, [data-field-label]'))) continue;
+            attachTooltip(mapped, data);
             attached++;
             uniqueTargets.add(t);
             perIdAttachedCount[tt.element_id] = (perIdAttachedCount[tt.element_id] || 0) + 1;
@@ -629,7 +664,7 @@ export default function initializeTooltipManager() {
     suggest(pageCtxOverride) {
       try {
         const pageCtx = String(pageCtxOverride || ((document.body && document.body.dataset && document.body.dataset.page) || 'settings')).toLowerCase();
-        const candidates = Array.from(document.querySelectorAll('button, a, [role="button"], [data-action]'))
+        const candidates = Array.from(document.querySelectorAll('button, a, [role="button"], [data-action], label'))
           .filter(el => !el.disabled && el.offsetParent !== null);
         const getId = (el) => el.id || el.getAttribute('data-help-id') || el.getAttribute('data-action') || '';
         const textOf = (el) => (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\s+/g,' ').slice(0,120);
@@ -661,7 +696,15 @@ export default function initializeTooltipManager() {
         ]);
         const suggestions = [];
         for (const el of candidates) {
-          const id = getId(el);
+          let id = getId(el);
+          if (!id && el.matches && el.matches('label')) {
+            const forId = el.getAttribute('for');
+            if (forId) id = `label[for="${forId}"]`;
+          }
+          if (el.matches && el.matches('input, select, textarea')) {
+            const fid = el.id || '';
+            if (fid) id = `label[for="${fid}"]`;
+          }
           if (!id) continue;
           if (blacklisted.has(id)) continue;
           if (existing.has(id)) continue;

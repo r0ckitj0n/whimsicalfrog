@@ -30,7 +30,24 @@ try {
             $placeholders = str_repeat('?,', count($skus) - 1) . '?';
 
             // Query to get specific items by SKU with primary image from item_images table
-            $sql = "SELECT 
+            $sqlDims = "SELECT 
+                        i.sku,
+                        i.name,
+                        i.category,
+                        i.description,
+                        i.stockLevel,
+                        i.reorderPoint,
+                        i.costPrice,
+                        i.retailPrice,
+                        i.weight_oz,
+                        i.package_length_in,
+                        i.package_width_in,
+                        i.package_height_in,
+                        COALESCE(img.image_path, i.imageUrl) as imageUrl
+                    FROM items i 
+                    LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
+                    WHERE i.sku IN ($placeholders)";
+            $sqlBase = "SELECT 
                         i.sku,
                         i.name,
                         i.category,
@@ -44,7 +61,11 @@ try {
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.sku IN ($placeholders)";
 
-            $items = Database::queryAll($sql, $skus);
+            try {
+                $items = Database::queryAll($sqlDims, $skus);
+            } catch (Exception $e) {
+                $items = Database::queryAll($sqlBase, $skus);
+            }
 
             // Format the data
             foreach ($items as &$item) {
@@ -64,7 +85,24 @@ try {
     } else {
         // GET request - return all items or by category
         if (isset($_GET['category']) && !empty($_GET['category'])) {
-            $sql = "SELECT 
+            $sqlDims = "SELECT 
+                        i.sku,
+                        i.name,
+                        i.category,
+                        i.description,
+                        i.stockLevel,
+                        i.reorderPoint,
+                        i.costPrice,
+                        i.retailPrice,
+                        i.weight_oz,
+                        i.package_length_in,
+                        i.package_width_in,
+                        i.package_height_in,
+                        COALESCE(img.image_path, i.imageUrl) as imageUrl
+                    FROM items i
+                    LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
+                    WHERE i.category = ?";
+            $sqlBase = "SELECT 
                         i.sku,
                         i.name,
                         i.category,
@@ -77,10 +115,30 @@ try {
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1
                     WHERE i.category = ?";
-            $items = Database::queryAll($sql, [$_GET['category']]);
+            try {
+                $items = Database::queryAll($sqlDims, [$_GET['category']]);
+            } catch (Exception $e) {
+                $items = Database::queryAll($sqlBase, [$_GET['category']]);
+            }
         } else {
             // Return all items if no category specified
-            $sql = "SELECT 
+            $sqlDims = "SELECT 
+                        i.sku,
+                        i.name,
+                        i.category,
+                        i.description,
+                        i.stockLevel,
+                        i.reorderPoint,
+                        i.costPrice,
+                        i.retailPrice,
+                        i.weight_oz,
+                        i.package_length_in,
+                        i.package_width_in,
+                        i.package_height_in,
+                        COALESCE(img.image_path, i.imageUrl) as imageUrl
+                    FROM items i
+                    LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1";
+            $sqlBase = "SELECT 
                         i.sku,
                         i.name,
                         i.category,
@@ -92,7 +150,11 @@ try {
                         COALESCE(img.image_path, i.imageUrl) as imageUrl
                     FROM items i
                     LEFT JOIN item_images img ON i.sku = img.sku AND img.is_primary = 1";
-            $items = Database::queryAll($sql);
+            try {
+                $items = Database::queryAll($sqlDims);
+            } catch (Exception $e) {
+                $items = Database::queryAll($sqlBase);
+            }
         }
 
 

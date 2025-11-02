@@ -10,6 +10,15 @@ require_once __DIR__ . '/../includes/secret_store.php';
 try {
     // Load from database (single source of truth)
     $settings = BusinessSettings::getByCategory('email');
+    // Enforce DB availability and required Business Information presence (no static fallbacks)
+    if (!class_exists('Database') || !method_exists('Database', 'isAvailableQuick') || !Database::isAvailableQuick(0.6)) {
+        throw new Exception('Database is not accessible. This endpoint requires a live DB connection.');
+    }
+    $be = (string) BusinessSettings::get('business_email', '');
+    $bn = (string) BusinessSettings::get('business_name', '');
+    if ($be === '' || $bn === '') {
+        throw new Exception('Required Business Information is missing: business_email and/or business_name.');
+    }
     // Normalize and map keys expected by the admin UI
     // Normalize boolean for smtpEnabled reliably (handles boolean true/false and common string values)
     $smtpEnabledVal = isset($settings['smtp_enabled']) ? $settings['smtp_enabled'] : false;
@@ -19,10 +28,21 @@ try {
         $smtpEnabled = in_array(strtolower((string)$smtpEnabledVal), ['true','1','yes'], true);
     }
 
+    $siteUrl = '';
+    try {
+        $siteUrl = BusinessSettings::getSiteUrl('');
+    } catch (\Throwable $__) {
+        // leave blank if not configured
+    }
     $config = [
-        'fromEmail'      => isset($settings['from_email']) ? (string)$settings['from_email'] : '',
-        'fromName'       => isset($settings['from_name']) ? (string)$settings['from_name'] : '',
-        'adminEmail'     => isset($settings['admin_email']) ? (string)$settings['admin_email'] : '',
+        // Always sourced from Business Information (single source of truth)
+        'fromEmail'      => $be,
+        'fromName'       => $bn,
+        'adminEmail'     => (string) BusinessSettings::get('admin_email', ''),
+        'supportEmail'   => (string) BusinessSettings::get('business_support_email', ''),
+        'businessDomain' => (string) BusinessSettings::get('business_domain', ''),
+        'businessWebsite'=> (string) BusinessSettings::get('business_website', ''),
+        'siteUrl'        => $siteUrl,
         'bccEmail'       => isset($settings['bcc_email']) ? (string)$settings['bcc_email'] : '',
         'replyTo'        => isset($settings['reply_to']) ? (string)$settings['reply_to'] : '',
         'smtpEnabled'    => $smtpEnabled,
@@ -46,24 +66,27 @@ try {
             $s = strtolower((string)$val);
             return in_array($s, ['1','true','yes','on'], true);
         })(isset($settings['smtp_debug']) ? $settings['smtp_debug'] : null),
+        // Advanced headers and DKIM
+        'returnPath'     => isset($settings['return_path']) ? (string)$settings['return_path'] : '',
+        'dkimDomain'     => isset($settings['dkim_domain']) ? (string)$settings['dkim_domain'] : '',
+        'dkimSelector'   => isset($settings['dkim_selector']) ? (string)$settings['dkim_selector'] : '',
+        'dkimIdentity'   => isset($settings['dkim_identity']) ? (string)$settings['dkim_identity'] : '',
+        'smtpAllowSelfSigned' => (function($val){
+            if ($val === null) return false;
+            if (is_bool($val)) return $val;
+            $s = strtolower((string)$val);
+            return in_array($s, ['1','true','yes','on'], true);
+        })(isset($settings['smtp_allow_self_signed']) ? $settings['smtp_allow_self_signed'] : null),
         // Display-only business info (for hydration and status)
-        'businessEmail'  => (string) BusinessSettings::get('business_email', ''),
-        'businessName'   => (string) BusinessSettings::get('business_name', ''),
+        'businessEmail'  => $be,
+        'businessName'   => $bn,
         // Secret presence flags for UI badges
         'secretUsernamePresent' => (function(){ try { $u = secret_get('smtp_username'); return is_string($u) && trim($u) !== ''; } catch (\Throwable $__) { return false; } })(),
         'secretPasswordPresent' => (function(){ try { $p = secret_get('smtp_password'); return is_string($p) && trim($p) !== ''; } catch (\Throwable $__) { return false; } })(),
+        'dkimPrivateKeyPresent' => (function(){ try { $k = secret_get('dkim_private_key'); return is_string($k) && trim($k) !== ''; } catch (\Throwable $__) { return false; } })(),
     ];
 
-    // Display-only fallbacks: if email category is empty, show sensible legacy/global defaults
-    if ($config['fromEmail'] === '') {
-        $config['fromEmail'] = BusinessSettings::get('business_email', $config['fromEmail']);
-    }
-    if ($config['adminEmail'] === '') {
-        $config['adminEmail'] = BusinessSettings::get('admin_email', $config['adminEmail']);
-    }
-    if ($config['fromName'] === '') {
-        $config['fromName'] = BusinessSettings::get('business_name', $config['fromName']);
-    }
+    // fromEmail/fromName/adminEmail already sourced from Business Information
 
     // Effective status summary for UI
     $config['usingSmtp'] = (bool)$config['smtpEnabled'];

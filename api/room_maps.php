@@ -122,6 +122,48 @@ try {
                     Database::rollBack();
                     Response::serverError('Failed to upsert original: ' . $e->getMessage());
                 }
+            } elseif ($action === 'promote_active_to_original') {
+                // Promote the active map to 'Original' and purge other Original maps for the room
+                // Params: room (or room_number). Optional: map_id to explicitly promote that map.
+                try {
+                    Database::beginTransaction();
+                    $rn = normalize_room_number($input['room'] ?? ($input['room_number'] ?? ''));
+                    $mapId = isset($input['map_id']) ? (int)$input['map_id'] : 0;
+
+                    if ($mapId > 0 && $rn === '') {
+                        // Derive room from the specified map id if room omitted
+                        $row = Database::queryOne("SELECT room_number FROM room_maps WHERE id = ?", [$mapId]);
+                        if (!$row || empty($row['room_number'])) { throw new Exception('Map not found for provided map_id'); }
+                        $rn = (string)$row['room_number'];
+                    }
+
+                    if ($rn === '') { throw new Exception('room is required'); }
+
+                    // Resolve the map to promote: explicit map_id or current active
+                    if ($mapId > 0) {
+                        $promo = Database::queryOne("SELECT * FROM room_maps WHERE id = ? AND room_number = ?", [$mapId, $rn]);
+                        if (!$promo) throw new Exception('Specified map not found for this room');
+                    } else {
+                        $promo = Database::queryOne("SELECT * FROM room_maps WHERE room_number = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$rn]);
+                        if (!$promo) throw new Exception('No active map to promote');
+                        $mapId = (int)$promo['id'];
+                    }
+
+                    // Rename the chosen map to 'Original' and set active
+                    Database::execute("UPDATE room_maps SET map_name = 'Original', is_active = TRUE WHERE id = ?", [$mapId]);
+
+                    // Deactivate all other maps for this room
+                    Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_number = ? AND id <> ?", [$rn, $mapId]);
+
+                    // Delete other 'Original' maps (duplicates) for this room, keeping the promoted one
+                    Database::execute("DELETE FROM room_maps WHERE room_number = ? AND map_name = 'Original' AND id <> ?", [$rn, $mapId]);
+
+                    Database::commit();
+                    Response::success(['message' => 'Active map promoted to Original and duplicates purged', 'map_id' => $mapId, 'room' => $rn]);
+                } catch (Exception $e) {
+                    Database::rollBack();
+                    Response::serverError('Failed to promote active to Original: ' . $e->getMessage());
+                }
             } elseif ($action === 'restore') {
                 // Restore a historical map (create a new map based on an old one)
                 Database::beginTransaction();

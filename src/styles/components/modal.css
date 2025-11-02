@@ -9,6 +9,9 @@
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
+    width: 100dvw !important;
+    height: 100dvh !important;
+    overscroll-behavior: contain;
     z-index: var(--z-overlay-topmost, 1600) !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -18,6 +21,7 @@
 /* Ensure standard overlays sit above header/admin nav */
 .modal-overlay {
     z-index: var(--z-overlay,  10050);
+    overscroll-behavior: contain;
 }
 
 /* Fix for Why You'll Love This section */
@@ -223,22 +227,26 @@
     display: flex;
     flex-direction: column;
     max-height: 90vh;
+    max-height: 90dvh;
     max-width: 75vw !important;  /* Exactly 75% of viewport width */
     overflow-x: hidden !important;
     margin: 0 auto;  /* Center the modal */
+    overscroll-behavior: contain;
 }
 
-.detailed-item-modal-container .modal-content {
+.detailed-item-modal .modal-content {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden !important;
     padding: 1.5rem;
     max-width: 100%;
+    scrollbar-gutter: stable both-edges;
 }
 
 /* Prevent horizontal overflow in modal body */
 .detailed-item-modal .modal-body {
     max-height: 80vh;
+    max-height: 80dvh;
     overflow-y: auto;
     padding-bottom: 2rem;
     overflow-x: hidden !important;
@@ -291,6 +299,7 @@ div[class*="admin-modal"][class*="wf-admin-panel-visible"] {
 /* Constrain modal sidebar and order history to prevent scrollbar */
 .modal-sidebar {
     max-height: 75vh !important;
+    max-height: 75dvh !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
@@ -312,8 +321,15 @@ div[class*="admin-modal"][class*="wf-admin-panel-visible"] {
 .order-history-content {
     flex: 1 !important;
     max-height: 45vh !important;
+    max-height: 45dvh !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+    scrollbar-gutter: stable both-edges;
+}
+
+/* Generic modal footer safe-area padding */
+.modal-footer {
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .order-history-item {

@@ -24,7 +24,7 @@ if ($inModal) { include $root . '/partials/modal_header.php'; }
   <div id="admin-section-content">
 <?php endif; ?>
 
-<div class="p-3 admin-actions-icons" id="receiptMessagesManagerRoot"<?php echo $inModal ? ' style="position:absolute;inset:0;height:100%;padding:0;margin:0;box-sizing:border-box;"' : ''; ?>>
+<div class="p-3 admin-actions-icons<?php echo $inModal ? ' modal-absolute-fill' : ''; ?>" id="receiptMessagesManagerRoot">
   <?php if (!$inModal): ?>
   <div class="admin-card">
     <h1 class="admin-card-title">Receipt Messages Manager</h1>
@@ -64,21 +64,11 @@ if ($inModal) { include $root . '/partials/modal_header.php'; }
         <h3 class="admin-card-title">Sales Verbiage</h3>
         <div class="text-sm text-gray-600">Shown below the main receipt message when available.</div>
       </div>
-      <div class="admin-card"<?php echo $inModal ? ' style="padding:0;"' : ''; ?>>
+      <div class="admin-card<?php echo $inModal ? ' p-0 wf-card-fill' : ''; ?>">
         <?php if ($inModal): ?>
-        <style>
-          html, body { height: 100%; }
-          body { margin: 0; overflow: hidden; }
-          #receiptMessagesManagerRoot.p-3 { display:flex; flex-direction:column; }
-          .admin-card { flex: 1 1 auto; display:flex; flex-direction:column; }
-          #salesVerbiageForm { flex: 1 1 auto; display:flex; flex-direction:column; margin:0; }
-          #salesVerbiageForm > div { margin: 0 0 .5rem 0; }
-          #salesVerbiageForm textarea.form-textarea { flex: 1 1 auto; min-height: 0; }
-          /* Hide footer Save/status inside iframe; header provides these */
-          #salesVerbiageForm .flex.items-center.justify-end { display: none !important; }
-        </style>
+        <?php /* modal: rely on reusable utilities for layout/fill */ ?>
         <?php endif; ?>
-        <form id="salesVerbiageForm" class="space-y-3" data-action="prevent-submit">
+        <form id="salesVerbiageForm" class="space-y-3<?php echo $inModal ? ' wf-panel-fill wf-flex-col' : ''; ?>" data-action="prevent-submit">
           <div>
             <label class="block text-xs font-semibold mb-1" for="rmThankYou">Thank You Message</label>
             <textarea id="rmThankYou" class="form-textarea w-full" rows="2"></textarea>
@@ -95,7 +85,7 @@ if ($inModal) { include $root . '/partials/modal_header.php'; }
             <label class="block text-xs font-semibold mb-1" for="rmReturn">Return Customer</label>
             <textarea id="rmReturn" class="form-textarea w-full" rows="2"></textarea>
           </div>
-          <div class="flex items-center justify-end gap-2">
+          <div class="flex items-center justify-end gap-2<?php echo $inModal ? ' wf-hidden' : ''; ?>">
             <span id="rmSalesStatus" class="text-sm text-gray-500" aria-live="polite"></span>
             <button type="button" id="rmSalesSave" class="btn btn-primary btn-sm">Save</button>
           </div>
@@ -110,7 +100,7 @@ if ($inModal) { include $root . '/partials/modal_header.php'; }
   <div class="admin-modal admin-modal-content">
     <div class="modal-header">
       <h2 id="rmRuleTitle" class="admin-card-title">Receipt Rule</h2>
-      <button type="button" class="admin-modal-close" data-action="rm-close" aria-label="Close">×</button>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="rm-close" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
       <form id="rmRuleForm" class="space-y-3" data-action="prevent-submit">
@@ -214,8 +204,35 @@ if ($inModal) { include $root . '/partials/modal_header.php'; }
   const setSalesStatus = (m, ok) => { if (!svStatus) return; svStatus.textContent = m||''; svStatus.style.color = ok ? '#065f46' : '#b91c1c'; };
   const sendStatus = (m, ok) => { try { if (window.parent && window.parent !== window) window.parent.postMessage({ source:'wf-rm', type:'status', message: m||'', ok: !!ok }, '*'); } catch(_) {} };
 
-  function showOverlay(el){ el.classList.remove('hidden'); el.classList.add('show'); el.setAttribute('aria-hidden','false'); }
-  function hideOverlay(el){ el.classList.add('hidden'); el.classList.remove('show'); el.setAttribute('aria-hidden','true'); }
+  function showOverlay(el){
+    try {
+      const pd = window.parent && window.parent.document;
+      if (pd) {
+        const ifr = Array.from(pd.querySelectorAll('iframe')).find(f => { try { return f.contentWindow === window; } catch(_) { return false; } });
+        const ov = ifr ? ifr.closest('.admin-modal-overlay') : null;
+        if (ov && ov.id && typeof window.parent.showModal === 'function') { try { window.parent.showModal(ov.id); } catch(_){} }
+        if (ov) { try { ov.classList.add('wf-dim-backdrop'); } catch(_){} }
+      }
+    } catch(_) {}
+    el.classList.remove('hidden');
+    el.classList.add('show');
+    el.setAttribute('aria-hidden','false');
+  }
+  function hideOverlay(el){
+    el.classList.add('hidden');
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden','true');
+    try {
+      const anyOpen = !!document.querySelector('.admin-modal-overlay.show');
+      if (anyOpen) return;
+      const pd = window.parent && window.parent.document;
+      if (pd) {
+        const ifr = Array.from(pd.querySelectorAll('iframe')).find(f => { try { return f.contentWindow === window; } catch(_) { return false; } });
+        const ov = ifr ? ifr.closest('.admin-modal-overlay') : null;
+        if (ov) { try { ov.classList.remove('wf-dim-backdrop'); } catch(_){} }
+      }
+    } catch(_) {}
+  }
 
   async function loadRules(){
     if (!rulesBody) return;
@@ -236,8 +253,8 @@ if ($inModal) { include $root . '/partials/modal_header.php'; }
           <td class="p-2">${escapeHtml(title)}</td>
           <td class="p-2">${escapeHtml(content)}</td>
           <td class="p-2">
-            <button class="btn btn-secondary btn-xs" data-action="rm-edit" title="Edit" data-id="${id}">Edit</button>
-            <button class="btn btn-secondary btn-xs" data-action="rm-delete" title="Delete" data-id="${id}">Delete</button>
+            <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="rm-edit" title="Edit" aria-label="Edit" data-id="${id}"></button>
+            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="rm-delete" title="Delete" aria-label="Delete" data-id="${id}"></button>
           </td>
         </tr>`);
       };

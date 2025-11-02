@@ -546,7 +546,11 @@ class AdminInventoryModule {
         // Ensure modal is visible even if API calls fail
         const modalOverlay = document.getElementById('inventoryModalOuter');
         if (modalOverlay && !modalOverlay.classList.contains('show')) {
-            modalOverlay.classList.add('show');
+            if (typeof window.showModal === 'function') {
+                window.showModal('inventoryModalOuter');
+            } else {
+                modalOverlay.classList.add('show');
+            }
         }
 
         // Bind delegated keydown handler for inline editing
@@ -1048,7 +1052,11 @@ class AdminInventoryModule {
                     // Ensure modal is visible even if we're already on the correct page
                     const modalOverlay = document.getElementById('inventoryModalOuter');
                     if (modalOverlay) {
-                        modalOverlay.classList.add('show');
+                        if (typeof window.showModal === 'function') {
+                            window.showModal('inventoryModalOuter');
+                        } else {
+                            modalOverlay.classList.add('show');
+                        }
                         // Also ensure the body doesn't have modal-open class to prevent background scrolling issues
                         document.body.classList.add('modal-open');
                     }
@@ -1230,8 +1238,12 @@ class AdminInventoryModule {
         try {
             const overlay = document.getElementById('inventoryModalOuter');
             if (overlay) {
-                overlay.classList.add('hidden');
-                overlay.classList.remove('show');
+                if (typeof window.hideModal === 'function') {
+                    window.hideModal('inventoryModalOuter');
+                } else {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('show');
+                }
             }
         } catch (_) {}
         try {
@@ -1430,7 +1442,7 @@ class AdminInventoryModule {
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 id="colorModalTitle">Add New Color</h2>
-                    <button type="button" class="modal-close" data-action="close-color-modal">&times;</button>
+                    <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-color-modal" aria-label="Close">×</button>
                 </div>
                 <div class="modal-body">
                     <form id="colorForm">
@@ -1443,7 +1455,7 @@ class AdminInventoryModule {
                                         <option value="">Choose a color...</option>
                                     </select>
                                     <div class="text-xs">
-                                        <a href="#" data-action="open-global-colors-management" class="text-blue-600 hover:text-blue-800">⚙️ Manage Global Colors in Settings</a>
+                                        <a href="#" data-action="open-global-colors-management" class="text-blue-600 hover:text-blue-800"><span class="btn-icon btn-icon--settings" aria-hidden="true"></span> Manage Global Colors in Settings</a>
                                     </div>
                                 </div>
                                 <input type="hidden" id="colorName" name="colorName">
@@ -1890,7 +1902,7 @@ class AdminInventoryModule {
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 id="sizeModalTitle" class="text-xl font-semibold text-gray-800">Add New Size</h2>
-                    <button type="button" data-action="close-size-modal" class="modal-close">&times;</button>
+                    <button type="button" data-action="close-size-modal" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
                 </div>
                 <div class="modal-body">
                     <form id="sizeForm">
@@ -2139,13 +2151,19 @@ class AdminInventoryModule {
                     }
                     this.itemToDeleteSku = sku;
                     const modal = document.getElementById('deleteConfirmModal');
-                    if (modal) modal.classList.add('show');
+                    if (modal) {
+                        if (typeof window.showModal === 'function') window.showModal('deleteConfirmModal');
+                        else modal.classList.add('show');
+                    }
                 }
                 break;
             case 'close-delete-modal':
                 {
                     const modal = document.getElementById('deleteConfirmModal');
-                    if (modal) modal.classList.remove('show');
+                    if (modal) {
+                        if (typeof window.hideModal === 'function') window.hideModal('deleteConfirmModal');
+                        else modal.classList.remove('show');
+                    }
                     this.itemToDeleteSku = null;
                 }
                 break;
@@ -2658,11 +2676,7 @@ class AdminInventoryModule {
             <div class="modal-content" >
                 <div class="modal-header">
                     <h2 class="text-xl font-bold text-gray-800">🎨 Color Templates</h2>
-                    <button type="button" data-action="close-color-template-modal" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
+                    <button type="button" data-action="close-color-template-modal" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
                 </div>
                 <div class="modal-body">
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -2888,11 +2902,7 @@ class AdminInventoryModule {
             <div class="modal-content" >
                 <div class="modal-header">
                     <h2 class="text-xl font-bold text-gray-800">📏 Size Templates</h2>
-                    <button type="button" data-action="close-size-template-modal" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
+                    <button type="button" data-action="close-size-template-modal" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>
                 </div>
                 <div class="modal-body" >
                     <div class="space-y-4">
@@ -3971,7 +3981,10 @@ class AdminInventoryModule {
             if (!sku) return;
             // Close modal immediately for responsiveness
             const modal = document.getElementById('deleteConfirmModal');
-            if (modal) modal.classList.remove('show');
+            if (modal) {
+                if (typeof window.hideModal === 'function') window.hideModal('deleteConfirmModal');
+                else modal.classList.remove('show');
+            }
             const data = await ApiClient.request(`/functions/process_inventory_update.php?action=delete&sku=${encodeURIComponent(sku)}`, {
                 method: 'DELETE'
             });
@@ -4461,7 +4474,7 @@ class AdminInventoryModule {
             <div class="admin-modal relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-4xl">
                 <div class="modal-header flex justify-between items-center p-3 border-b border-gray-200">
                     <h4 class="text-base font-semibold text-gray-800">AI Comparison</h4>
-                    <button type="button" class="modal-close-btn" data-action="close-ai-comparison" aria-label="Close">×</button>
+                    <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-ai-comparison" aria-label="Close">×</button>
                 </div>
                 <div class="modal-body p-4">
                     <div id="aiProgressText" class="text-sm text-gray-500"></div>

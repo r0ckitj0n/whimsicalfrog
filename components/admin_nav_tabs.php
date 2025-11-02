@@ -43,7 +43,7 @@ $tooltipIds = [
             ?>
             <a href="<?= $href ?>"
                id="<?= $tooltipId ?>"
-               class="admin-nav-tab <?= $cssClass ?> <?= ($section === $key || ($key === '' && !$section)) ? 'active' : '' ?>">
+               class="admin-nav-tab pill-ring <?= $cssClass ?> <?= ($section === $key || ($key === '' && !$section)) ? 'active' : '' ?>">
                 <?= htmlspecialchars($label) ?>
             </a>
         <?php endforeach; ?>
@@ -79,7 +79,7 @@ $tooltipIds = [
             <iframe id="adminHelpDocsFrame" title="Admin Help Documentation" src="about:blank" data-src="/help.php" class="wf-admin-embed-frame"></iframe>
         </div>
         <div class="flex items-center justify-end gap-2 p-3 border-t pb-4">
-            <button type="button" class="modal-close-btn absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl leading-none" data-action="close-admin-help-modal" aria-label="Close">×</button>
+            <button type="button" class="admin-modal-close wf-admin-nav-button absolute top-2 right-2" data-action="close-admin-help-modal" aria-label="Close">×</button>
             <a href="/help.php" target="_blank" rel="noopener" class="btn btn-secondary">Open in new tab</a>
             <button type="button" class="btn btn-primary" data-action="close-admin-help-modal">Close</button>
         </div>

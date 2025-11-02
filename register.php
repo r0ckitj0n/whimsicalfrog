@@ -7,62 +7,62 @@
     <div id="registerSuccessMessage" class="hidden bg-green-100 border-l-4 border-green-500 text-green-700 rounded" role="alert">
         Registration successful! You can now <a href="/?page=login" class="underline">login</a>.
     </div>
-    <form id="registerForm">
+    <form id="registerForm" autocomplete="on">
         <div class="">
             <label for="registerUsername" class="block text-sm font-medium text-gray-700">Username:</label>
-            <input type="text" id="registerUsername" name="username" required 
+            <input type="text" id="registerUsername" name="username" required autocomplete="username"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="">
             <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email:</label>
-            <input type="email" id="registerEmail" name="email" required 
+            <input type="email" id="registerEmail" name="email" required autocomplete="email"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="">
             <label for="registerPassword" class="block text-sm font-medium text-gray-700">Password:</label>
-            <input type="password" id="registerPassword" name="password" required 
+            <input type="password" id="registerPassword" name="password" required autocomplete="new-password"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="">
             <label for="registerFirstName" class="block text-sm font-medium text-gray-700">First Name:</label>
-            <input type="text" id="registerFirstName" name="firstName" 
+            <input type="text" id="registerFirstName" name="firstName" autocomplete="given-name"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="">
             <label for="registerLastName" class="block text-sm font-medium text-gray-700">Last Name:</label>
-            <input type="text" id="registerLastName" name="lastName" 
+            <input type="text" id="registerLastName" name="lastName" autocomplete="family-name"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="">
             <label for="registerPhone" class="block text-sm font-medium text-gray-700">Phone Number:</label>
-            <input type="tel" id="registerPhone" name="phoneNumber" 
+            <input type="tel" id="registerPhone" name="phoneNumber" autocomplete="tel"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="">
             <label for="registerAddress1" class="block text-sm font-medium text-gray-700">Address Line 1:</label>
-            <input type="text" id="registerAddress1" name="addressLine1" 
+            <input type="text" id="registerAddress1" name="addressLine1" autocomplete="address-line1"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="">
             <label for="registerAddress2" class="block text-sm font-medium text-gray-700">Address Line 2 (Optional):</label>
-            <input type="text" id="registerAddress2" name="addressLine2" 
+            <input type="text" id="registerAddress2" name="addressLine2" autocomplete="address-line2"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label for="registerCity" class="block text-sm font-medium text-gray-700">City:</label>
-                <input type="text" id="registerCity" name="city" 
+                <input type="text" id="registerCity" name="city" autocomplete="address-level2"
                        class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
             </div>
             <div>
                 <label for="registerState" class="block text-sm font-medium text-gray-700">State:</label>
-                <input type="text" id="registerState" name="state" 
+                <input type="text" id="registerState" name="state" autocomplete="address-level1"
                        class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
             </div>
         </div>
         <div class="">
             <label for="registerZipCode" class="block text-sm font-medium text-gray-700">Zip Code:</label>
-            <input type="text" id="registerZipCode" name="zipCode" 
+            <input type="text" id="registerZipCode" name="zipCode" autocomplete="postal-code"
                    class="block w-full border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#BF5700] focus:border-[#BF5700] sm:text-sm">
         </div>
         <button type="submit" 

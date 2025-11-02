@@ -255,14 +255,16 @@ const AdminCustomersModule = {
         if (modal && messageEl && customerIdInput) {
             messageEl.textContent = `Are you sure you want to delete ${customerName}? This action cannot be undone.`;
             customerIdInput.value = customerId;
-            modal.classList.add('show');
+            if (typeof window.showModal === 'function') window.showModal('deleteConfirmModal');
+            else modal.classList.add('show');
         }
     },
 
     closeDeleteModal() {
         const modal = document.getElementById('deleteConfirmModal');
         if (modal) {
-            modal.classList.remove('show');
+            if (typeof window.hideModal === 'function') window.hideModal('deleteConfirmModal');
+            else modal.classList.remove('show');
         }
     },
 
@@ -515,10 +517,14 @@ const AdminCustomersModule = {
         try {
             const overlay = document.getElementById('customerModalOuter');
             if (!overlay) return;
-            overlay.classList.remove('hidden');
-            overlay.classList.add('show', 'topmost');
-            document.documentElement.classList.add('modal-open');
-            document.body.classList.add('modal-open');
+            if (typeof window.showModal === 'function') {
+                window.showModal('customerModalOuter');
+            } else {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('show', 'topmost');
+                document.documentElement.classList.add('modal-open');
+                document.body.classList.add('modal-open');
+            }
             const panel = overlay.querySelector('.admin-modal');
             if (panel) {
                 panel.classList.add('wf-admin-panel-visible');

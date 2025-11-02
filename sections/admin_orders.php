@@ -180,7 +180,7 @@ if (defined('WF_PARTIAL_REQUEST') && ($_GET['wf_partial'] ?? '') === 'order_moda
         // debug output removed
         // Output only the modal HTML fragment
         ?>
-<div class="admin-modal-overlay topmost over-header order-modal show" id="orderModal" data-action="close-order-editor-on-overlay">
+<div class="admin-modal-overlay wf-modal--content-scroll topmost over-header order-modal show" id="orderModal" data-action="close-order-editor-on-overlay">
     <?php 
         $linkBase = $_GET; unset($linkBase['view'], $linkBase['edit']);
         $prevTarget = $prevOrderId ?: $orderId;
@@ -200,7 +200,7 @@ if (defined('WF_PARTIAL_REQUEST') && ($_GET['wf_partial'] ?? '') === 'order_moda
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
     </a>
-    <div class="admin-modal admin-modal-content admin-modal--order-editor wf-admin-panel-visible show">
+    <div class="admin-modal admin-modal-content admin-modal--order-editor admin-modal--actions-in-header wf-admin-panel-visible show">
         <div class="modal-header">
             <h2 class="modal-title">
                 <?= $modalState['mode'] === 'view' ? 'View' : 'Edit' ?> Order: <?= htmlspecialchars($orderId) ?>
@@ -212,6 +212,7 @@ if (defined('WF_PARTIAL_REQUEST') && ($_GET['wf_partial'] ?? '') === 'order_moda
             <?php elseif ($orderData && $modalState['mode'] === 'edit'): ?>
             <button type="submit" form="orderForm" class="btn btn-primary btn-sm" data-action="save-order">Save</button>
             <?php endif; ?>
+            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-order-editor" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
             <?php if ($orderData): ?>
@@ -503,13 +504,13 @@ function ordSortIndicator($column, $currentSort, $currentDir)
                     <td>
                         <div class="admin-actions">
                             <a href="/admin/orders?view=<?= $order['id'] ?>" 
-                               class="text-blue-600 hover:text-blue-800" title="View Order">👁️</a>
+                               class="admin-action-button btn btn-xs btn-icon btn-icon--view" title="View Order" aria-label="View Order"></a>
                             <a href="/admin/orders?edit=<?= $order['id'] ?>" 
-                               class="text-green-600 hover:text-green-800" title="Edit Order">✏️</a>
+                               class="admin-action-button btn btn-xs btn-icon btn-icon--edit" title="Edit Order" aria-label="Edit Order"></a>
                             <button data-action="show-receipt" data-order-id="<?= htmlspecialchars($order['id']) ?>"
-                                    class="text-purple-600 hover:text-purple-800" title="Print Receipt">🖨️</button>
+                                    class="admin-action-button btn btn-xs btn-icon btn-icon--print" title="Print Receipt" aria-label="Print Receipt"></button>
                             <button data-action="confirm-delete" data-order-id="<?= htmlspecialchars($order['id']) ?>"
-                                    class="text-red-600 hover:text-red-800" title="Delete Order">🗑️</button>
+                                    class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" title="Delete Order" aria-label="Delete Order"></button>
                         </div>
                     </td>
                 </tr>
@@ -554,7 +555,7 @@ function ordSortIndicator($column, $currentSort, $currentDir)
     }
     ?>
 
-<div class="admin-modal-overlay topmost over-header order-modal show" id="orderModal" data-action="close-order-editor-on-overlay">
+<div class="admin-modal-overlay wf-modal--content-scroll topmost over-header order-modal show" id="orderModal" data-action="close-order-editor-on-overlay">
     <!-- Navigation Arrows -->
     <?php $linkBase = $_GET; unset($linkBase['view'], $linkBase['edit']);
           $prevTarget = $prevOrderId ?: $orderId;
@@ -575,7 +576,7 @@ function ordSortIndicator($column, $currentSort, $currentDir)
         </svg>
     </a>
 
-    <div class="admin-modal admin-modal-content admin-modal--order-editor wf-admin-panel-visible show">
+    <div class="admin-modal admin-modal-content admin-modal--order-editor admin-modal--actions-in-header wf-admin-panel-visible show">
         <!-- Modal Header -->
         <div class="modal-header">
             <h2 class="modal-title">
@@ -588,6 +589,7 @@ function ordSortIndicator($column, $currentSort, $currentDir)
             <?php elseif ($orderData && $modalState['mode'] === 'edit'): ?>
             <button type="submit" form="orderForm" class="btn btn-primary btn-sm" data-action="save-order">Save</button>
             <?php endif; ?>
+            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-order-editor" aria-label="Close">×</button>
         </div>
 
         <!-- Modal Body -->
@@ -810,7 +812,7 @@ function ordSortIndicator($column, $currentSort, $currentDir)
     <div class="admin-modal admin-modal--receipt">
         <div class="modal-header">
             <h3 id="receiptTitle">Order Receipt</h3>
-            <button type="button" class="admin-modal-close" data-action="close-receipt-modal" aria-label="Close">×</button>
+            <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-receipt-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body" id="receiptContent"></div>
         <div class="modal-footer">

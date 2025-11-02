@@ -578,4 +578,20 @@ $remitAddressFormatted = trim((string)$businessAddress);
     <?php endif; ?>
 
     </div>
-</div> 
+    <?php
+      try {
+        $privacyUrl = BusinessSettings::get('business_privacy_url', '');
+        $termsUrl   = BusinessSettings::get('business_terms_url', '');
+        $policyUrl  = BusinessSettings::get('business_policy_url', '');
+        if ($privacyUrl !== '' || $termsUrl !== '' || $policyUrl !== '') {
+            echo '<div class="text-center text-xs text-gray-600 mt-6">';
+            $links = [];
+            if ($policyUrl !== '')  { $links[] = '<a class="link-brand" href="' . htmlspecialchars($policyUrl, ENT_QUOTES, 'UTF-8') . '">Policies</a>'; }
+            if ($privacyUrl !== '') { $links[] = '<a class="link-brand" href="' . htmlspecialchars($privacyUrl, ENT_QUOTES, 'UTF-8') . '">Privacy</a>'; }
+            if ($termsUrl !== '')   { $links[] = '<a class="link-brand" href="' . htmlspecialchars($termsUrl,   ENT_QUOTES, 'UTF-8') . '">Terms</a>'; }
+            echo implode('<span class="mx-1">•</span>', $links);
+            echo '</div>';
+        }
+      } catch (\Throwable $e) { /* noop */ }
+    ?>
+</div>

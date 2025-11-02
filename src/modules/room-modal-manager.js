@@ -692,25 +692,22 @@ class RoomModalManager {
     }
 
     show() {
-        // Store the previously focused element for restoration later
         this.previouslyFocusedElement = document.activeElement;
-
-        // Toggle CSS-driven visibility
-        this.overlay.classList.add('show');
-        document.body.classList.add('modal-open', 'room-modal-open');
-
-        // Force reflow (optional)
-        this.overlay.offsetHeight;
-        // Global scroll lock via centralized helper (with fallback)
-        if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
-            window.WFModals.lockScroll();
+        try { document.body.classList.add('room-modal-open'); } catch(_) {}
+        if (typeof window.showModal === 'function') {
+            try { window.showModal('roomModalOverlay'); } catch(_) {}
         } else {
-            // Fallback scroll lock
-            document.documentElement.classList.add('modal-open');
+            this.overlay.classList.add('show');
             document.body.classList.add('modal-open');
+            // Force reflow (optional)
+            this.overlay.offsetHeight;
+            if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
+                window.WFModals.lockScroll();
+            } else {
+                document.documentElement.classList.add('modal-open');
+                document.body.classList.add('modal-open');
+            }
         }
-
-        // Set focus to the back button for accessibility (close button removed)
         setTimeout(() => {
             const backBtn = this.overlay.querySelector('.room-modal-back-btn');
             if (backBtn) backBtn.focus();
@@ -718,40 +715,37 @@ class RoomModalManager {
     }
 
     close() {
-        // Clean up listeners created during modal content initialization
         if (this._resizeHandler) {
             window.removeEventListener('resize', this._resizeHandler);
             this._resizeHandler = null;
         }
-
-        // Remove the .show class to trigger CSS transition
-        this.overlay.classList.remove('show');
-        document.body.classList.remove('modal-open', 'room-modal-open');
-
-        setTimeout(() => {
-            // Remove scroll lock only if no other modals are open
-            if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
-                window.WFModals.unlockScrollIfNoneOpen();
-            } else {
-                // Fallback unlock
-                document.documentElement.classList.remove('modal-open');
-                document.body.classList.remove('modal-open');
-                console.log('[RoomModalManager] Using fallback scroll unlock');
-            }
-
-            // Restore focus to the previously focused element for accessibility
+        if (typeof window.hideModal === 'function') {
+            try { window.hideModal('roomModalOverlay'); } catch(_) {}
+            try { document.body.classList.remove('room-modal-open'); } catch(_) {}
             if (this.previouslyFocusedElement) {
-                this.previouslyFocusedElement.focus();
+                try { this.previouslyFocusedElement.focus(); } catch(_) {}
                 this.previouslyFocusedElement = null;
             }
-
-        }, 300);
-
-        // Emit room closed event
+        } else {
+            this.overlay.classList.remove('show');
+            document.body.classList.remove('modal-open', 'room-modal-open');
+            setTimeout(() => {
+                if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
+                    window.WFModals.unlockScrollIfNoneOpen();
+                } else {
+                    document.documentElement.classList.remove('modal-open');
+                    document.body.classList.remove('modal-open');
+                    console.log('[RoomModalManager] Using fallback scroll unlock');
+                }
+                if (this.previouslyFocusedElement) {
+                    try { this.previouslyFocusedElement.focus(); } catch(_) {}
+                    this.previouslyFocusedElement = null;
+                }
+            }, 300);
+        }
         if (window.WhimsicalFrog) {
             window.WhimsicalFrog.emit('room:closed', { roomNumber: this.currentRoomNumber });
         }
-
         this.currentRoomNumber = null;
     }
 

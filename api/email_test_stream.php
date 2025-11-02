@@ -47,14 +47,19 @@ try {
     require_once __DIR__ . '/business_settings_helper.php';
     require_once __DIR__ . '/../includes/email_helper.php';
     require_once __DIR__ . '/../includes/secret_store.php';
+    $autoload = __DIR__ . '/../vendor/autoload.php';
+    if (file_exists($autoload)) { require_once $autoload; }
 
+    $mode = isset($_GET['mode']) ? strtolower(trim((string)$_GET['mode'])) : '';
     $to = isset($_GET['to']) ? trim((string)$_GET['to']) : '';
-    if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
-        $send('error', [ 'message' => 'Invalid or missing ?to=email@example.com' ]);
-        exit;
+    if ($mode !== 'preflight') {
+        if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            $send('error', [ 'message' => 'Invalid or missing ?to=email@example.com' ]);
+            exit;
+        }
     }
 
-    $send('start', [ 'message' => 'Starting email configuration test', 'to' => $to ]);
+    $send('start', [ 'message' => ($mode === 'preflight' ? 'Starting SMTP preflight (no email will be sent)' : 'Starting email configuration test'), 'to' => $to ]);
 
     // Load configuration from DB and secrets
     $settings = BusinessSettings::getByCategory('email') ?: [];
@@ -92,22 +97,42 @@ try {
         }
     ]);
 
-    $subject = 'Live Email Test - WhimsicalFrog';
-    $body = '<html><body><p>This is a live test email from WhimsicalFrog.</p><p>Sent at ' . date('c') . '</p></body></html>';
-
-    $send('progress', [ 'message' => 'Sending test email…' ]);
-
-    $ok = false; $err = null;
-    try {
-        $ok = EmailHelper::send($to, $subject, $body, [ 'is_html' => true ]);
-    } catch (Throwable $e) {
-        $err = $e->getMessage();
-    }
-
-    if ($ok) {
-        $send('done', [ 'success' => true, 'message' => '✅ Test email sent successfully.' ]);
+    if ($mode === 'preflight') {
+        $send('progress', [ 'message' => 'Connecting to SMTP…' ]);
+        $ok = false; $err = null;
+        try {
+            // Ensure EmailHelper uses debug sink to stream logs
+            EmailHelper::configure([
+                'smtp_debug' => 2,
+                'smtp_debug_sink' => function($str, $level) use ($send) { $send('smtp', [ 'level' => (int)$level, 'msg' => (string)$str ]); }
+            ]);
+            $ok = EmailHelper::preflightSMTP();
+        } catch (Throwable $e) {
+            $err = $e->getMessage();
+        }
+        if ($ok) {
+            $send('done', [ 'success' => true, 'message' => '✅ SMTP connection successful.' ]);
+        } else {
+            $send('done', [ 'success' => false, 'message' => '❌ SMTP connection failed', 'error' => $err ?: 'Unknown error' ]);
+        }
     } else {
-        $send('done', [ 'success' => false, 'message' => '❌ Failed to send test email', 'error' => $err ?: 'Unknown error' ]);
+        $subject = 'Live Email Test - WhimsicalFrog';
+        $body = '<html><body><p>This is a live test email from WhimsicalFrog.</p><p>Sent at ' . date('c') . '</p></body></html>';
+
+        $send('progress', [ 'message' => 'Sending test email…' ]);
+
+        $ok = false; $err = null;
+        try {
+            $ok = EmailHelper::send($to, $subject, $body, [ 'is_html' => true ]);
+        } catch (Throwable $e) {
+            $err = $e->getMessage();
+        }
+
+        if ($ok) {
+            $send('done', [ 'success' => true, 'message' => '✅ Test email sent successfully.' ]);
+        } else {
+            $send('done', [ 'success' => false, 'message' => '❌ Failed to send test email', 'error' => $err ?: 'Unknown error' ]);
+        }
     }
 
 } catch (Throwable $e) {

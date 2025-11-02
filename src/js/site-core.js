@@ -323,10 +323,9 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
         images.forEach(img => {
             const height = parseInt(img.getAttribute('data-height'), 10);
             if (Number.isFinite(height)) {
-                // Remove previous class and any inline height, then apply class-based height
+                // Remove previous class, then apply class-based height
                 const prev = img.dataset.wfImgHClass;
                 if (prev) img.classList.remove(prev);
-                img.style.removeProperty('height');
                 const cls = imgHClassName(height);
                 imgHEnsureRule(cls, height);
                 img.classList.add(cls);

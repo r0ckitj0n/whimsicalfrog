@@ -87,7 +87,7 @@
 #dashboardSectionsTable col:nth-child(5) { width: 90px; }
 
 /* Z-index helpers for modals */
-.z-10110 { z-index: 10110; }
+.z-10110 { z-index: var(--z-index-admin-tools, 10110); }
 .cursor-pointer { cursor: pointer !important; }
 
 /* Flex helpers */
@@ -106,7 +106,7 @@
   color: #fff;
   padding: 16px;
   position: relative;
-  z-index: 10100;
+  z-index: var(--z-index-admin-tools, 10100);
   background: var(--brand-primary, #87ac3a);
 }
 .wf-success-notification {

@@ -9,6 +9,7 @@
       overlay: null,
       container: null,
       keydownHandler: null,
+      previouslyFocusedElement: null,
     };
 
     function currency(v) { return `$${(parseFloat(v) || 0).toFixed(2)}`; }
@@ -20,6 +21,7 @@
       const overlay = document.createElement('div');
       overlay.id = 'checkoutModalOverlay';
       overlay.className = 'confirmation-modal-overlay';
+      try { overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); overlay.setAttribute('tabindex', '-1'); } catch(_) {}
 
       const modal = document.createElement('div');
       modal.className = 'confirmation-modal checkout-modal animate-slide-in-up';
@@ -32,6 +34,29 @@
 
       // Close on overlay click
       overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+      // aria-labelledby is set after render in open()
+
+      // Focus trap
+      if (!overlay._wfFocusTrap) {
+        overlay._wfFocusTrap = (e) => {
+          if (e.key !== 'Tab') return;
+          if (!state.overlay || !state.overlay.classList.contains('show')) return;
+          const scope = state.container || state.overlay;
+          const nodes = scope.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+          const focusables = Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null);
+          if (!focusables.length) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          const active = document.activeElement;
+          if (e.shiftKey) {
+            if (active === first || !scope.contains(active)) { last.focus(); e.preventDefault(); }
+          } else {
+            if (active === last || !scope.contains(active)) { first.focus(); e.preventDefault(); }
+          }
+        };
+        overlay.addEventListener('keydown', overlay._wfFocusTrap, true);
+      }
 
       // ESC to close
       if (!state.keydownHandler) {
@@ -104,16 +129,41 @@
       if (!state.overlay) createOverlay();
       render();
       try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
-      state.overlay.classList.add('show');
-      try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-      try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
+      try { state.previouslyFocusedElement = document.activeElement; } catch(_) {}
+      // Ensure aria-labelledby references the actual title rendered
+      try {
+        const t = state.container && state.container.querySelector && state.container.querySelector('.confirmation-modal-title');
+        if (t && !t.id) t.id = 'checkoutModalTitle';
+        if (t && t.id) state.overlay.setAttribute('aria-labelledby', t.id);
+      } catch(_) {}
+      if (typeof window.showModal === 'function') {
+        window.showModal('checkoutModalOverlay');
+      } else {
+        state.overlay.classList.add('show');
+        try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
+        try { window.WFModals && window.WFModals.lockScroll && window.WFModals.lockScroll(); } catch(_){ }
+      }
+      try {
+        const scope = state.container || state.overlay;
+        const target = scope.querySelector('#checkout-continue, #checkout-cancel, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const focusIt = () => { try { (target && typeof target.focus === 'function') ? target.focus() : (state.overlay && state.overlay.focus && state.overlay.focus()); } catch(_) {} };
+        focusIt();
+        try { requestAnimationFrame(() => { focusIt(); requestAnimationFrame(focusIt); }); } catch(_) {}
+        setTimeout(focusIt, 150);
+      } catch(_) {}
     }
 
     function close() {
       if (!state.overlay) return;
-      state.overlay.classList.remove('show');
-      try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-      try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
+      if (typeof window.hideModal === 'function') {
+        window.hideModal('checkoutModalOverlay');
+      } else {
+        state.overlay.classList.remove('show');
+        try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+        try { window.WFModals && window.WFModals.unlockScrollIfNoneOpen && window.WFModals.unlockScrollIfNoneOpen(); } catch(_){ }
+      }
+      try { if (state.previouslyFocusedElement) state.previouslyFocusedElement.focus(); } catch(_) {}
+      try { state.previouslyFocusedElement = null; } catch(_) {}
     }
 
     window.WF_CheckoutModal = {

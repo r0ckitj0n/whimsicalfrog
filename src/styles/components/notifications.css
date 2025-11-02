@@ -25,7 +25,7 @@
     cursor: pointer;
     padding: 16px;
     background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #BF5700));
-    color: white;
+    color: var(--toast-text, #ffffff);
     border-color: var(--brand-secondary, #BF5700);
     z-index: var(--z-global-popup, 100200) !important; /* Ensure above overlays via variable */
 }
@@ -72,7 +72,7 @@
     right: 8px;
     background: none;
     border: none;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--toast-text, #ffffff);
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
@@ -89,7 +89,7 @@
 .wf-success-notification {
     background: linear-gradient(135deg, var(--brand-primary, #87ac3a), var(--brand-secondary, #BF5700));
     border-color: var(--brand-secondary, #BF5700);
-    color: white;
+    color: var(--toast-text, #ffffff);
 }
 
 .wf-success-notification .wf-notification-close {
@@ -100,7 +100,7 @@
 .wf-error-notification {
     background: linear-gradient(135deg, #dc2626, #b91c1c);
     border-color: #dc2626;
-    color: white;
+    color: var(--toast-text, #ffffff);
 }
 
 .wf-error-notification .wf-notification-close {

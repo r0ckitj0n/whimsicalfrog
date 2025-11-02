@@ -12,6 +12,9 @@ ErrorDocument 403 /router.php
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  # Map Square webhooks pretty paths to PHP endpoints
+  RewriteRule ^square/webhooks$ /square/webhooks.php [L]
+  RewriteRule ^square/webhooksfinal$ /square/webhooksfinal.php [L]
   # Ensure /dist/* requests are never rewritten to index.php.
   # This lets Apache 404 missing hashed chunks so ErrorDocument routes to router.php,
   # which returns a plain-text 404 instead of HTML, avoiding MIME mismatches.

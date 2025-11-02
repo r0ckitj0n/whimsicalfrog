@@ -270,17 +270,17 @@ export class CostBreakdownCoordinator {
           </div>
           <div class="flex items-center">
             <span class="font-semibold">$${parseFloat(item.cost).toFixed(2)}</span>
-            <button class="btn btn-sm btn-secondary" data-action="openEditModal"
+            <button class="admin-action-button btn btn-xs btn-icon btn-icon--edit" data-action="openEditModal" aria-label="Edit" title="Edit"
                     data-params='${JSON.stringify({
                       type: this.getCostTypeFromSelector(listSelector),
                       id: item.id
-                    })}' title="Edit">✏️</button>
-            <button class="btn btn-sm btn-danger" data-action="openDeleteModal"
+                    })}'></button>
+            <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="openDeleteModal" aria-label="Delete" title="Delete"
                     data-params='${JSON.stringify({
                       type: this.getCostTypeFromSelector(listSelector),
                       id: item.id,
                       name: listSelector.includes('materials') ? item.name : item.description
-                    })}' title="Delete">🗑️</button>
+                    })}'></button>
           </div>`;
         list.appendChild(div);
       });

@@ -65,9 +65,28 @@ function renderList(container, items, roomNumber) {
         isActive ? h('span', { class: 'wf-bg-active-chip', title: 'Active' }, 'Active') : null,
       ]),
       h('div', { class: 'wf-bg-actions' }, [
-        h('button', { class: 'btn btn-primary', 'data-bg-id': String(bg.id || ''), 'data-room': String(roomNumber) }, isActive ? 'Reapply' : 'Set Active'),
-        h('button', { class: 'btn btn-secondary', 'data-action': 'rename-bg', 'data-id': String(bg.id || ''), 'data-name': String(bg.background_name || '') }, 'Rename'),
-        h('button', { class: 'btn btn-danger', 'data-action': 'delete-bg', 'data-id': String(bg.id || '') }, 'Delete')
+        h('button', {
+          class: 'btn-icon btn-icon--save',
+          'data-bg-id': String(bg.id || ''),
+          'data-room': String(roomNumber),
+          title: isActive ? 'Reapply background' : 'Set as active',
+          'aria-label': isActive ? 'Reapply background' : 'Set as active'
+        }),
+        h('button', {
+          class: 'btn-icon btn-icon--edit',
+          'data-action': 'rename-bg',
+          'data-id': String(bg.id || ''),
+          'data-name': String(bg.background_name || ''),
+          title: 'Rename background',
+          'aria-label': 'Rename background'
+        }),
+        h('button', {
+          class: 'btn-icon btn-icon--delete',
+          'data-action': 'delete-bg',
+          'data-id': String(bg.id || ''),
+          title: 'Delete background',
+          'aria-label': 'Delete background'
+        })
       ]),
     ]);
     grid.appendChild(card);
@@ -86,6 +105,10 @@ function injectStylesOnce() {
   .wf-bg-active-chip{margin-left:8px;font-size:12px;color:#065f46;background:#d1fae5;border:1px solid #10b981;border-radius:10px;padding:2px 6px}
   .wf-bg-room-select{display:flex;align-items:center;gap:8px;margin-bottom:10px}
   .wf-bg-room-select select{border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:6px 10px;min-width:220px}
+  .wf-bg-upload{display:flex;align-items:center;gap:8px;margin:8px 0 12px}
+  .wf-file-name{font-size:14px;color:#374151}
+  /* Widen the Choose File trigger for readability */
+  #wfBgUploadTrigger{min-width:160px;padding-left:14px;padding-right:14px;flex:0 0 auto}
   `;
   const style = document.createElement('style');
   style.id = 'wf-bg-manager-style';
@@ -139,10 +162,22 @@ export function init(modalEl) {
   selectorWrap.appendChild(selectorLabel);
   selectorWrap.appendChild(selector);
   container.appendChild(selectorWrap);
+  const nameInput = h('input', { type: 'text', id: 'wfBgUploadName', placeholder: 'Background name', class: 'form-input' });
+  const fileInput = h('input', {
+    type: 'file',
+    id: 'wfBgUploadFile',
+    accept: 'image/*',
+    style: { position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }
+  });
+  const fileTrigger = h('label', { for: 'wfBgUploadFile', class: 'btn btn-secondary', id: 'wfBgUploadTrigger' }, 'Choose File');
+  const fileNameLbl = h('span', { class: 'wf-file-name', id: 'wfBgFileName' }, 'No file chosen');
+  const uploadBtn = h('button', { type: 'submit', class: 'btn btn-primary' }, 'Upload');
   const uploadForm = h('form', { id: 'wfBgUploadForm', class: 'wf-bg-upload' }, [
-    h('input', { type: 'text', id: 'wfBgUploadName', placeholder: 'Background name', class: 'input' }),
-    h('input', { type: 'file', id: 'wfBgUploadFile', accept: 'image/*', class: 'input' }),
-    h('button', { type: 'submit', class: 'btn btn-primary' }, 'Upload')
+    nameInput,
+    fileTrigger,
+    fileNameLbl,
+    uploadBtn,
+    fileInput
   ]);
   container.appendChild(uploadForm);
   container.appendChild(listWrap);
@@ -168,7 +203,9 @@ export function init(modalEl) {
     if (renameBtn) {
       const id = renameBtn.getAttribute('data-id');
       const currentName = renameBtn.getAttribute('data-name') || '';
-      const name = window.prompt('Rename background', currentName);
+      const name = (typeof window.showPromptModal === 'function')
+        ? await window.showPromptModal({ title: 'Rename Background', message: 'Enter a new name:', placeholder: 'Background name', defaultValue: currentName, inputType: 'text', confirmText: 'Rename', cancelText: 'Cancel', icon: '✏️', iconType: 'info', iconKey: 'edit' })
+        : window.prompt('Rename background', currentName);
       if (name && name.trim()) {
         try {
           const res = await ApiClient.post('/api/backgrounds.php', { action: 'rename', id, background_name: name.trim() });
@@ -189,7 +226,7 @@ export function init(modalEl) {
         if (typeof window.showNotification === 'function') window.showNotification({ type: 'error', title: 'Action canceled', message: 'Confirmation UI unavailable.' });
         return;
       }
-      const okConfirm = await window.showConfirmationModal({ title: 'Delete Background', message: 'Delete this background?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' });
+      const okConfirm = await window.showConfirmationModal({ title: 'Delete Background', message: 'Delete this background?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger', iconKey: 'delete' });
       if (!okConfirm) return;
       try {
         const res = await ApiClient.delete('/api/backgrounds.php', { body: JSON.stringify({ background_id: id }) });
@@ -207,10 +244,9 @@ export function init(modalEl) {
     const id = btn.getAttribute('data-bg-id');
     const roomRaw = btn.getAttribute('data-room') || String(currentRoom);
     const room = normalizeApiRoomValue(roomRaw);
-    const orig = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Applying…';
+    btn.disabled = true; btn.setAttribute('aria-busy', 'true');
     const ok = await applyBackground(room, id);
-    btn.disabled = false; btn.textContent = orig;
+    btn.disabled = false; btn.removeAttribute('aria-busy');
     if (ok) {
       if (typeof window.showNotification === 'function') {
         window.showNotification({ type: 'success', title: 'Background Updated', message: `Applied to room ${room}.` });
@@ -241,6 +277,12 @@ export function init(modalEl) {
       if (res && res.success) {
         if (typeof window.showNotification === 'function') window.showNotification({ type: 'success', title: 'Uploaded', message: 'Background uploaded.' });
         if (fileEl) fileEl.value = '';
+        try {
+          const nameOut = uploadForm.querySelector('#wfBgFileName');
+          const trig = uploadForm.querySelector('#wfBgUploadTrigger');
+          if (nameOut) nameOut.textContent = 'No file chosen';
+          if (trig) trig.textContent = 'Choose File';
+        } catch(_) {}
         if (nameEl) nameEl.value = '';
         loadRoom(currentRoom);
       }
@@ -250,6 +292,16 @@ export function init(modalEl) {
       btn.disabled = false; btn.textContent = orig;
     }
   });
+
+  try {
+    fileInput.addEventListener('change', () => {
+      const f = fileInput && fileInput.files && fileInput.files[0];
+      const out = uploadForm.querySelector('#wfBgFileName');
+      const trig = uploadForm.querySelector('#wfBgUploadTrigger');
+      if (out) out.textContent = f ? (f.name || '1 file selected') : 'No file chosen';
+      if (trig) trig.textContent = f ? 'Change File' : 'Choose File';
+    });
+  } catch(_) {}
 
   
   (async () => {

@@ -177,11 +177,21 @@ class AdminOrdersModule {
 
     // Small helpers to normalize overlay visibility across CSS guards
     showModal(el) {
+        if (!el) return;
+        if (el.id && typeof window.showModal === 'function') {
+            window.showModal(el.id);
+            return;
+        }
         try { el.classList.remove('hidden'); } catch(_) {}
         try { el.classList.add('show'); } catch(_) {}
     }
 
     hideModal(el) {
+        if (!el) return;
+        if (el.id && typeof window.hideModal === 'function') {
+            window.hideModal(el.id);
+            return;
+        }
         try { el.classList.add('hidden'); } catch(_) {}
         try { el.classList.remove('show'); } catch(_) {}
     }
@@ -348,7 +358,7 @@ class AdminOrdersModule {
                   <div class="admin-modal admin-modal-content admin-modal--order-editor admin-modal--actions-in-header wf-admin-panel-visible show">
                     <div class="modal-header">
                       <h2 class="modal-title">Loading order…</h2>
-                      <a href="/admin/orders" class="admin-modal-close" data-action="close-order-editor" aria-label="Close">×</a>
+                      <a href="/admin/orders" class="admin-modal-close wf-admin-nav-button" data-action="close-order-editor" aria-label="Close">×</a>
                     </div>
                     <div class="modal-body">
                       <div class="p-4">Please wait…</div>
@@ -539,7 +549,8 @@ class AdminOrdersModule {
             confirmText: 'Remove',
             confirmStyle: 'danger',
             icon: '⚠️',
-            iconType: 'danger'
+            iconType: 'danger',
+            iconKey: 'delete'
         });
         if (!ok) return;
 
@@ -561,7 +572,8 @@ class AdminOrdersModule {
             confirmText: 'Impersonate',
             confirmStyle: 'confirm',
             icon: 'ℹ️',
-            iconType: 'info'
+            iconType: 'info',
+            iconKey: 'info'
         });
         if (!ok) return;
         window.location.href = `/?impersonate=${userId}`; // Note: impersonate may need to remain as query param

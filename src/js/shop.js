@@ -97,7 +97,7 @@ const ShopPage = {
         const mkBtn = (slug, label, isActive=false) => {
             const b = document.createElement('button');
             b.type = 'button';
-            b.className = 'category-btn btn-chip shop-filter-btn' + (isActive ? ' active' : '');
+            b.className = 'category-btn btn-chip pill-ring pill-ring-secondary shop-filter-btn' + (isActive ? ' active' : '');
             b.dataset.category = slug;
             b.textContent = label;
             return b;

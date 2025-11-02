@@ -7,6 +7,7 @@
 import '../styles/main.css';
 import '../styles/site-base.css';
 import '../styles/admin-hints.css';
+import '../ui/icons.js';
 import '../core/action-registry.js';
 import './body-background-from-data.js';
 // Install global delegated hover/click listeners for item icons across pages
@@ -33,6 +34,27 @@ try { import('./account-settings-modal.js').catch(() => {}); } catch (_) {}
 // unnecessary work on admin routes.
 
 console.log('app.js loaded');
+
+document.addEventListener('click', (e) => {
+    try {
+        const t = e.target;
+        const overlay = t && t.closest ? t.closest('.admin-modal-overlay') : null;
+        if (!overlay) return;
+        if (t.closest('.admin-modal')) return;
+        e.preventDefault();
+        const id = overlay.id;
+        if (id && window.WFModalUtils && typeof window.WFModalUtils.hideModalById === 'function') {
+            window.WFModalUtils.hideModalById(id);
+        } else if (typeof window.hideModal === 'function' && id) {
+            window.hideModal(id);
+        } else {
+            overlay.classList.remove('show');
+            overlay.classList.add('hidden');
+            try { overlay.setAttribute('aria-hidden','true'); } catch(_) {}
+            try { if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') window.WFModals.unlockScrollIfNoneOpen(); } catch(_) {}
+        }
+    } catch(_) {}
+}, true);
 
 // --- Lightweight UI helpers migrated from main-application.js ---
 // Dedupe duplicate <nav class="main-nav"> elements that may appear
@@ -175,7 +197,9 @@ function __wfIsAdminPage() {
     try {
         const path = (window.location && window.location.pathname) ? window.location.pathname : '';
         // e.g., /admin/settings, /admin/index.php, /admin OR the centralized admin router
-        return (/^\/?admin(\/|$)/i.test(path)) || (/^\/sections\/admin_router\.php$/i.test(path));
+        return (/^\/?admin(\/|$)/i.test(path))
+            || (/^\/sections\/admin_router\.php$/i.test(path))
+            || (/^\/admin_router\.php$/i.test(path));
     } catch (_) { return false; }
 }
 const __WF_IS_ADMIN = __wfIsAdminPage();
@@ -198,7 +222,9 @@ async function initializeCoreSystemsApp() {
         import('../modules/utilities.js'),
     ]);
 
-    // Always use modern room modal manager (statically imported at top)
+    // Always use modern room modal manager (dynamically imported to avoid globals/races)
+    const RoomModalManagerMod = await import('../modules/room-modal-manager.js').catch(() => ({}));
+    const RoomModalManager = (RoomModalManagerMod && (RoomModalManagerMod.default || RoomModalManagerMod.RoomModalManager)) || undefined;
     const CartSystem = CartSystemMod.default;
     const SearchSystem = SearchSystemMod.default;
     const SalesSystem = SalesSystemMod.default;
@@ -210,6 +236,9 @@ async function initializeCoreSystemsApp() {
         import('./modal-manager.js'),
         import('./global-notifications.js'),
         import('./api-aliases.js'),
+        // Ensure storefront modals are available quickly on public pages
+        import('./checkout-modal.js'),
+        import('./receipt-modal.js'),
     ]).catch(err => console.warn('[App] Non-fatal: minimal side-effect imports failed', err));
 
     // Defer non-critical UX/analytics modules to idle time to speed initial render
@@ -300,13 +329,17 @@ async function initializeCoreSystemsApp() {
     
     // Initialize room modal manager
     console.log('[App] Creating RoomModalManager instance...');
-    const roomModalManager = new RoomModalManager();
-    window.WF_RoomModal = roomModalManager;
-    window.roomModalManager = roomModalManager;  // Also expose as lowercase for compatibility
-    if (window.WhimsicalFrog && WhimsicalFrog.registerModule) {
-        WhimsicalFrog.registerModule('room-modal-manager', roomModalManager);
+    if (typeof RoomModalManager === 'function') {
+        const roomModalManager = new RoomModalManager();
+        window.WF_RoomModal = roomModalManager;
+        window.roomModalManager = roomModalManager;  // Also expose as lowercase for compatibility
+        if (window.WhimsicalFrog && WhimsicalFrog.registerModule) {
+            WhimsicalFrog.registerModule('room-modal-manager', roomModalManager);
+        }
+        console.log('[App] RoomModalManager created and exposed globally:', roomModalManager);
+    } else {
+        console.warn('[App] RoomModalManager module unavailable; skipping modal manager initialization');
     }
-    console.log('[App] RoomModalManager created and exposed globally:', roomModalManager);
     // Prewarm disabled to avoid saturating single-threaded dev server and inflating TTFB
     
     // Initialize search system
@@ -555,7 +588,7 @@ if (__WF_IS_ADMIN) {
                     banner.id = 'wfBackgroundHintBanner';
                     banner.className = 'wf-admin-hint-banner';
                     banner.innerHTML = `
-                      <div class="wf-banner-icon">ℹ️</div>
+                      <div class="wf-banner-icon"><span class="btn-icon btn-icon--info" aria-hidden="true"></span></div>
                       <div class="wf-banner-content">
                         <div class="wf-banner-title">Background Configuration</div>
                         <div class="wf-banner-text">${room ? `You're setting up a background for room <strong>${r}</strong>.` : 'Select or configure a background for the desired room.'}</div>
@@ -565,7 +598,7 @@ if (__WF_IS_ADMIN) {
                           <a href="/api/admin_file_proxy.php?path=documentation/technical/CUSTOMIZATION_GUIDE.md" class="btn" target="_blank" rel="noopener">Learn more</a>
                         </div>
                       </div>
-                      <button type="button" class="wf-banner-close" aria-label="Dismiss" title="Dismiss">×</button>
+                      <button type="button" class="wf-banner-close btn btn-icon btn-icon--close" aria-label="Dismiss" title="Dismiss"></button>
                     `;
                     const closer = () => {
                       try { if (sessionStorage) sessionStorage.setItem(dismissKey, '1'); } catch(_) {}
@@ -717,8 +750,28 @@ if (__WF_IS_ADMIN) {
             if (section === 'settings' && !window.__WF_SETTINGS_MINI_INSTALLED) {
                 try {
                     window.__WF_SETTINGS_MINI_INSTALLED = true;
-                    const quickShow = (id) => { const el = document.getElementById(id); if (!el) return false; el.classList.remove('hidden'); el.classList.add('show'); el.setAttribute('aria-hidden','false'); return true; };
-                    const quickHide = (id) => { const el = document.getElementById(id); if (!el) return false; el.classList.add('hidden'); el.classList.remove('show'); el.setAttribute('aria-hidden','true'); return true; };
+                    const quickShow = (id) => {
+                        const el = document.getElementById(id);
+                        if (!el) return false;
+                        if (typeof window.showModal === 'function') {
+                            return window.showModal(id);
+                        }
+                        el.classList.remove('hidden');
+                        el.classList.add('show');
+                        el.setAttribute('aria-hidden','false');
+                        return true;
+                    };
+                    const quickHide = (id) => {
+                        const el = document.getElementById(id);
+                        if (!el) return false;
+                        if (typeof window.hideModal === 'function') {
+                            return window.hideModal(id);
+                        }
+                        el.classList.add('hidden');
+                        el.classList.remove('show');
+                        el.setAttribute('aria-hidden','true');
+                        return true;
+                    };
                     const ensureCssCatalogModal = () => {
                         let el = document.getElementById('cssCatalogModal');
                         if (el) return el;
@@ -734,7 +787,7 @@ if (__WF_IS_ADMIN) {
                           <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
                             <div class="modal-header">
                               <h2 id="cssCatalogTitle" class="admin-card-title">🎨 CSS Catalog</h2>
-                              <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                              <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
                             </div>
                             <div class="modal-body">
                               <iframe id="cssCatalogFrame" title="CSS Catalog" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/css_catalog.php?modal=1" referrerpolicy="no-referrer"></iframe>
@@ -845,8 +898,91 @@ if (__WF_IS_ADMIN) {
                                 return;
                             }
                             if (closest('[data-action="open-square-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('squareSettingsModal'); return; }
-                            if (closest('[data-action="open-email-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('emailSettingsModal'); return; }
-                            if (closest('[data-action="open-email-test"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); if (quickShow('emailSettingsModal')) { const test = document.getElementById('testEmailAddress')||document.getElementById('testRecipient'); if (test) setTimeout(()=>test.focus(), 50); } return; }
+                            if (closest('[data-action="open-email-settings"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                // Defer to bridge/lightweight handler if loaded
+                                if (window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) return;
+                                // Ensure Email Settings modal exists with proper iframe
+                                let el = document.getElementById('emailSettingsModal');
+                                if (!el) {
+                                    el = document.createElement('div');
+                                    el.id = 'emailSettingsModal';
+                                    el.className = 'admin-modal-overlay hidden';
+                                    el.setAttribute('aria-hidden','true');
+                                    el.setAttribute('role','dialog');
+                                    el.setAttribute('aria-modal','true');
+                                    el.setAttribute('tabindex','-1');
+                                    el.setAttribute('aria-labelledby','emailSettingsTitle');
+                                    el.innerHTML = `
+                                      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+                                        <div class="modal-header">
+                                          <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
+                                          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+                                        </div>
+                                        <div class="modal-body">
+                                          <iframe id="emailSettingsFrame" title="Email Settings" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_settings.php?modal=1" referrerpolicy="no-referrer"></iframe>
+                                        </div>
+                                      </div>`;
+                                    try { document.body.appendChild(el); } catch(_) {}
+                                }
+                                try {
+                                    const iframe = document.getElementById('emailSettingsFrame');
+                                    if (iframe) {
+                                        const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : (iframe.src || '/sections/tools/email_settings.php?modal=1');
+                                        const sep = base.includes('?') ? '&' : '?';
+                                        iframe.src = base + sep + '_=' + Date.now();
+                                    }
+                                } catch(_) {}
+                                quickShow('emailSettingsModal');
+                                return;
+                            }
+                            if (closest('[data-action="open-email-test"]')) {
+                                e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
+                                // Defer to bridge if available
+                                if (window.__WF_ADMIN_SETTINGS_BRIDGE_INIT) return;
+                                // Ensure modal and iframe then focus test input inside iframe after load
+                                let el = document.getElementById('emailSettingsModal');
+                                if (!el) {
+                                    el = document.createElement('div');
+                                    el.id = 'emailSettingsModal';
+                                    el.className = 'admin-modal-overlay hidden';
+                                    el.setAttribute('aria-hidden','true');
+                                    el.setAttribute('role','dialog');
+                                    el.setAttribute('aria-modal','true');
+                                    el.setAttribute('tabindex','-1');
+                                    el.setAttribute('aria-labelledby','emailSettingsTitle');
+                                    el.innerHTML = `
+                                      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+                                        <div class="modal-header">
+                                          <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
+                                          <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+                                        </div>
+                                        <div class="modal-body">
+                                          <iframe id="emailSettingsFrame" title="Email Settings" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/email_settings.php?modal=1" referrerpolicy="no-referrer"></iframe>
+                                        </div>
+                                      </div>`;
+                                    try { document.body.appendChild(el); } catch(_) {}
+                                }
+                                try {
+                                    const iframe = document.getElementById('emailSettingsFrame');
+                                    if (iframe) {
+                                        const base = (iframe.dataset && iframe.dataset.src) ? iframe.dataset.src : (iframe.src || '/sections/tools/email_settings.php?modal=1');
+                                        const sep = base.includes('?') ? '&' : '?';
+                                        iframe.src = base + sep + '_=' + Date.now();
+                                        // After load, try to focus the test input inside iframe
+                                        iframe.addEventListener('load', function onLoad(){
+                                            try {
+                                                const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                                                const test = doc && (doc.getElementById('testEmail') || doc.getElementById('testRecipient') || doc.getElementById('testEmailAddress'));
+                                                if (test && typeof test.focus === 'function') setTimeout(()=>test.focus(), 50);
+                                            } catch(_) {}
+                                            try { iframe.removeEventListener('load', onLoad); } catch(_) {}
+                                        });
+                                    }
+                                } catch(_) {}
+                                quickShow('emailSettingsModal');
+                                return;
+                            }
                             if (closest('[data-action="open-logging-status"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('loggingStatusModal'); return; }
                             if (closest('[data-action="open-ai-settings"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiSettingsModal'); return; }
                             if (closest('[data-action="open-ai-tools"]')) { e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation(); quickShow('aiToolsModal'); return; }

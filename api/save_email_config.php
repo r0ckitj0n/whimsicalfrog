@@ -65,11 +65,14 @@ function handleTestEmail()
     // Configure EmailHelper strictly from database-backed settings
     EmailHelper::createFromBusinessSettings($pdo);
 
-    // Pull display fields for the email body and headers from DB
+    // Pull display fields (From/Name) from Business Information single source of truth
     $settings = BusinessSettings::getByCategory('email');
-    $fromEmail = isset($settings['from_email']) ? (string)$settings['from_email'] : '';
-    $fromName  = isset($settings['from_name']) ? (string)$settings['from_name'] : '';
-    $smtpEnabled = !empty($settings['smtp_enabled']);
+    $fromEmail = (string) BusinessSettings::get('business_email', '');
+    $fromName  = (string) BusinessSettings::get('business_name', '');
+    // SMTP enabled flag from email settings category with robust parsing
+    $smtpEnabledVal = isset($settings['smtp_enabled']) ? $settings['smtp_enabled'] : false;
+    if (is_bool($smtpEnabledVal)) { $smtpEnabled = $smtpEnabledVal; }
+    else { $smtpEnabled = in_array(strtolower((string)$smtpEnabledVal), ['1','true','yes','on'], true); }
     $bcc = isset($settings['bcc_email']) ? (string)$settings['bcc_email'] : '';
 
     $subject = 'Test Email from WhimsicalFrog';
@@ -121,8 +124,9 @@ function handleSaveConfig()
         // Expose DB target for debugging (from config.php globals)
         global $host, $db, $isLocalhost;
         error_log('[save_email_config] handleSaveConfig start');
-        // Optional validation: only validate email fields if provided (allow blanks)
-        $emailFields = ['fromEmail', 'adminEmail', 'bccEmail'];
+        // Optional validation: only validate email fields managed in this modal (allow blanks)
+        // fromEmail/fromName/adminEmail are managed in Business Information and are not saved here
+        $emailFields = ['bccEmail', 'replyTo'];
         foreach ($emailFields as $field) {
             if (isset($_POST[$field]) && $_POST[$field] !== '') {
                 if (!filter_var($_POST[$field], FILTER_VALIDATE_EMAIL)) {
@@ -148,6 +152,15 @@ function handleSaveConfig()
         if ($smtpPassword !== '') {
             secret_set('smtp_password', $smtpPassword);
         }
+        // DKIM private key secret management
+        $dkimPrivateKey = trim($_POST['dkimPrivateKey'] ?? '');
+        $clearDkimKey = isset($_POST['clear_dkimPrivateKey']) && (string)$_POST['clear_dkimPrivateKey'] === '1';
+        if ($clearDkimKey) {
+            @secret_delete('dkim_private_key');
+        }
+        if ($dkimPrivateKey !== '') {
+            secret_set('dkim_private_key', $dkimPrivateKey);
+        }
         error_log('[save_email_config] secrets updated: user=' . ($clearSecretUser ? 'cleared' : ($smtpUsername !== '' ? 'set' : 'unchanged')) . ' pass=' . ($clearSecretPass ? 'cleared' : ($smtpPassword !== '' ? 'set' : 'unchanged')));
 
         // Load existing settings to preserve values when POST fields are blank
@@ -165,9 +178,7 @@ function handleSaveConfig()
         // Normalize values for DB storage, preserving existing when incoming is blank
         $isFlagOn = function (string $key): bool { return isset($_POST[$key]) && (string)$_POST[$key] === '1'; };
         $map = [
-            'from_email'      => $isFlagOn('clear_fromEmail') ? '' : $prefer('fromEmail', 'from_email'),
-            'from_name'       => $isFlagOn('clear_fromName') ? '' : $prefer('fromName', 'from_name'),
-            'admin_email'     => $isFlagOn('clear_adminEmail') ? '' : $prefer('adminEmail', 'admin_email'),
+            // from_email/from_name/admin_email are sourced from Business Information; do not store duplicates here
             // If explicit clear flag set from UI, force blank; else preserve behavior
             'bcc_email'       => $isFlagOn('clear_bccEmail') ? '' : $prefer('bccEmail', 'bcc_email'),
             'reply_to'        => $isFlagOn('clear_replyTo') ? '' : $prefer('replyTo', 'reply_to'),
@@ -182,6 +193,12 @@ function handleSaveConfig()
             'smtp_auth'       => isset($_POST['smtpAuth']) ? 'true' : (isset($existing['smtp_auth']) ? ((in_array(strtolower((string)$existing['smtp_auth']), ['true','1','yes'], true)) ? 'true' : 'false') : 'true'),
             'smtp_timeout'    => ($isFlagOn('clear_smtpTimeout') ? '' : ($prefer('smtpTimeout', 'smtp_timeout') !== '' ? (string)$prefer('smtpTimeout', 'smtp_timeout') : '')),
             'smtp_debug'      => isset($_POST['smtpDebug']) ? 'true' : (isset($existing['smtp_debug']) ? ((in_array(strtolower((string)$existing['smtp_debug']), ['true','1','yes'], true)) ? 'true' : 'false') : 'false'),
+            // Advanced
+            'return_path'     => $isFlagOn('clear_returnPath') ? '' : $prefer('returnPath', 'return_path'),
+            'dkim_domain'     => $isFlagOn('clear_dkimDomain') ? '' : $prefer('dkimDomain', 'dkim_domain'),
+            'dkim_selector'   => $isFlagOn('clear_dkimSelector') ? '' : $prefer('dkimSelector', 'dkim_selector'),
+            'dkim_identity'   => $isFlagOn('clear_dkimIdentity') ? '' : $prefer('dkimIdentity', 'dkim_identity'),
+            'smtp_allow_self_signed' => isset($_POST['smtpAllowSelfSigned']) ? 'true' : (isset($existing['smtp_allow_self_signed']) ? ((in_array(strtolower((string)$existing['smtp_allow_self_signed']), ['true','1','yes'], true)) ? 'true' : 'false') : 'false'),
         ];
 
         // Validation: if SMTP is enabled, require essential fields to be present (from POST or existing/secret)
@@ -248,6 +265,25 @@ function handleSaveConfig()
             BusinessSettings::clearCache();
         }
 
+        // Purge legacy duplicate fields from 'email' category that should be sourced from Business Information
+        $purgeInfo = ['attempted' => [], 'deleted' => 0];
+        try {
+            $bizEmail = class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_email', '') : '';
+            $bizName  = class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_name', '') : '';
+            // Only purge if canonical business info is present to avoid accidental data loss
+            if ($bizEmail !== '' && $bizName !== '') {
+                $keysToPurge = ['from_email','from_name','admin_email','smtp_password'];
+                $purgeInfo['attempted'] = $keysToPurge;
+                $placeholders = implode(',', array_fill(0, count($keysToPurge), '?'));
+                $purgeInfo['deleted'] = (int) Database::execute(
+                    "DELETE FROM business_settings WHERE category = 'email' AND setting_key IN ($placeholders)",
+                    $keysToPurge
+                );
+            }
+        } catch (Exception $e) {
+            error_log('[save_email_config] purge duplicates warning: ' . $e->getMessage());
+        }
+
         // Verification: re-query latest value per key and compare with what we attempted to write
         // Verification via Database helper
         $mismatches = [];
@@ -272,9 +308,10 @@ function handleSaveConfig()
             $smtpEnabled = in_array(strtolower((string)$smtpEnabledVal), ['true','1','yes'], true);
         }
         $config = [
-            'fromEmail'      => isset($settings['from_email']) ? (string)$settings['from_email'] : '',
-            'fromName'       => isset($settings['from_name']) ? (string)$settings['from_name'] : '',
-            'adminEmail'     => isset($settings['admin_email']) ? (string)$settings['admin_email'] : '',
+            // Always reflect Business Information (single source of truth)
+            'fromEmail'      => (string) BusinessSettings::get('business_email', ''),
+            'fromName'       => (string) BusinessSettings::get('business_name', ''),
+            'adminEmail'     => (function(){ $v = (string) BusinessSettings::get('admin_email', ''); return $v !== '' ? $v : (string) BusinessSettings::get('business_email', ''); })(),
             'bccEmail'       => isset($settings['bcc_email']) ? (string)$settings['bcc_email'] : '',
             'replyTo'        => isset($settings['reply_to']) ? (string)$settings['reply_to'] : '',
             'smtpEnabled'    => $smtpEnabled,
@@ -286,6 +323,12 @@ function handleSaveConfig()
             'smtpAuth'       => (function($val){ if ($val === null) return true; if (is_bool($val)) return $val; $s=strtolower((string)$val); return in_array($s,['1','true','yes','on'],true);} )(isset($settings['smtp_auth']) ? $settings['smtp_auth'] : null),
             'smtpTimeout'    => isset($settings['smtp_timeout']) ? (string)$settings['smtp_timeout'] : '30',
             'smtpDebug'      => (function($val){ if ($val === null) return false; if (is_bool($val)) return $val; $s=strtolower((string)$val); return in_array($s,['1','true','yes','on'],true);} )(isset($settings['smtp_debug']) ? $settings['smtp_debug'] : null),
+            // Advanced
+            'returnPath'     => isset($settings['return_path']) ? (string)$settings['return_path'] : '',
+            'dkimDomain'     => isset($settings['dkim_domain']) ? (string)$settings['dkim_domain'] : '',
+            'dkimSelector'   => isset($settings['dkim_selector']) ? (string)$settings['dkim_selector'] : '',
+            'dkimIdentity'   => isset($settings['dkim_identity']) ? (string)$settings['dkim_identity'] : '',
+            'smtpAllowSelfSigned' => (function($val){ if ($val === null) return false; if (is_bool($val)) return $val; $s=strtolower((string)$val); return in_array($s,['1','true','yes','on'],true);} )(isset($settings['smtp_allow_self_signed']) ? $settings['smtp_allow_self_signed'] : null),
         ];
 
         // Ensure no stray output corrupts JSON
@@ -300,7 +343,8 @@ function handleSaveConfig()
                 'ops' => $ops,
                 'written' => $map,
                 'verify_mismatches' => $mismatches,
-                'db' => [ 'host' => $host ?? null, 'db' => $db ?? null, 'isLocalhost' => $isLocalhost ?? null ]
+                'db' => [ 'host' => $host ?? null, 'db' => $db ?? null, 'isLocalhost' => $isLocalhost ?? null ],
+                'purge' => $purgeInfo
             ]
         ]);
     } catch (Exception $e) {

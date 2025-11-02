@@ -1,7 +1,9 @@
 import { ApiClient } from '../core/api-client.js';
+import './global-modals.js';
 (function(){
   try {
-    if (window.__AIM_LOADED === '1') { console.info('[AIM] Already loaded, skipping duplicate init'); return; }
+    if (window.__AIM_LOADED === '1') { return; }
+    try { window.__AIM_LOADED = '1'; } catch(_) {}
   } catch(_) {}
   const byId = (id) => document.getElementById(id);
   const qs = (sel) => document.querySelector(sel);
@@ -22,6 +24,21 @@ import { ApiClient } from '../core/api-client.js';
     const cls = type === 'error' ? 'text-red-700 bg-red-100 border-red-300' : 'text-green-700 bg-green-100 border-green-300';
     el.innerHTML = `<div class="border ${cls} rounded-md px-4 py-3 text-sm">${html}</div>`;
     setTimeout(() => { el.innerHTML = ''; }, 5000);
+  }
+
+  async function ensureConfirmUi(){
+    try {
+      if (typeof window.showConfirmationModal !== 'function') {
+        await import('./global-modals.js');
+      }
+    } catch(_) {}
+  }
+
+  function notify(type, message){
+    try {
+      if (typeof window.showNotification === 'function') { window.showNotification(message, type === 'error' ? 'error' : (type === 'success' ? 'success' : 'info')); return; }
+      if (window.parent && typeof window.parent.showNotification === 'function') { window.parent.showNotification(message, type === 'error' ? 'error' : (type === 'success' ? 'success' : 'info')); return; }
+    } catch(_) {}
   }
 
   async function fetchJSON(url, opts){
@@ -71,10 +88,10 @@ import { ApiClient } from '../core/api-client.js';
       const typeOpts = `<option value="item" ${m.mapping_type === 'item' ? 'selected' : ''}>Item</option>\n<option value="category" ${m.mapping_type === 'category' ? 'selected' : ''}>Category</option>`;
       const targetPlaceholder = m.mapping_type === 'item' ? 'SKU (e.g., WF-TS-002)' : 'Category ID';
       const targetValue = m.mapping_type === 'item' ? (m.item_sku || '') : (m.category_id || '');
-      return `<tr data-id="${m.id}">\n<td class="p-2"><input class="form-input w-32" data-field="area_selector" value="${m.area_selector || ''}"></td>\n<td class="p-2"><select class="form-input" data-field="mapping_type">${typeOpts}</select></td>\n<td class="p-2"><input class="form-input w-48" data-field="target" placeholder="${targetPlaceholder}" value="${targetValue}"></td>\n<td class="p-2"><input type="number" class="form-input w-20" data-field="display_order" value="${m.display_order || 0}"></td>\n<td class="p-2 whitespace-nowrap">\n<button class="btn btn-xs btn-primary" data-action="aim-save" data-id="${m.id}">Save</button>\n<button class="btn btn-xs btn-danger" data-action="aim-delete" data-id="${m.id}">Delete</button>\n</td>\n</tr>`;
+      return `<tr data-id="${m.id}">\n<td class="p-2"><input class="form-input w-32" data-field="area_selector" value="${m.area_selector || ''}"></td>\n<td class="p-2"><select class="form-input" data-field="mapping_type">${typeOpts}</select></td>\n<td class="p-2"><input class="form-input w-48" data-field="target" placeholder="${targetPlaceholder}" value="${targetValue}"></td>\n<td class="p-2"><input type="number" class="form-input w-20" data-field="display_order" value="${m.display_order || 0}"></td>\n<td class="p-2 whitespace-nowrap">\n<button class="admin-action-button btn btn-xs btn-icon btn-icon--save" data-action="aim-save" data-id="${m.id}" aria-label="Save" title="Save"></button>\n<button class="admin-action-button btn btn-xs btn-icon btn-icon--delete" data-action="aim-delete" data-id="${m.id}" aria-label="Delete" title="Delete"></button>\n</td>\n</tr>`;
     }).join('');
 
-    return `<div class="mb-2 font-semibold">Explicit Mappings</div>\n<div class="overflow-x-auto border rounded-lg">\n<table class="min-w-full text-sm divide-y divide-gray-200">\n<thead class="bg-gray-50">\n<tr>\n<th class="p-2 text-left">Area</th><th class="p-2 text-left">Type</th><th class="p-2 text-left">Target</th><th class="p-2 text-left">Order</th><th class="p-2 text-left">Actions</th>\n</tr>\n</thead>\n<tbody class="divide-y divide-gray-200">${rows}</tbody>\n<tfoot class="bg-gray-50">\n<tr>\n<td class="p-2"><input class="form-input w-32" id="aimNewArea" placeholder=".area-1"></td>\n<td class="p-2"><select class="form-input" id="aimNewType"><option value="item">Item</option><option value="category">Category</option></select></td>\n<td class="p-2"><input class="form-input w-48" id="aimNewTarget" placeholder="SKU or Category ID"></td>\n<td class="p-2"><input type="number" class="form-input w-20" id="aimNewOrder" value="0"></td>\n<td class="p-2"><button class="btn btn-xs btn-success" data-action="aim-add-explicit">Add</button></td>\n</tr>\n</tfoot>\n</table>\n</div>`;
+    return `<div class="mb-2 font-semibold">Explicit Mappings</div>\n<div class="overflow-x-auto border rounded-lg">\n<table class="min-w-full text-sm divide-y divide-gray-200">\n<thead class="bg-gray-50">\n<tr>\n<th class="p-2 text-left">Area</th><th class="p-2 text-left">Type</th><th class="p-2 text-left">Target</th><th class="p-2 text-left">Order</th><th class="p-2 text-left">Actions</th>\n</tr>\n</thead>\n<tbody class="divide-y divide-gray-200">${rows}</tbody>\n<tfoot class="bg-gray-50">\n<tr>\n<td class="p-2"><input class="form-input w-32" id="aimNewArea" placeholder=".area-1"></td>\n<td class="p-2"><select class="form-input" id="aimNewType"><option value="item">Item</option><option value="category">Category</option></select></td>\n<td class="p-2"><input class="form-input w-48" id="aimNewTarget" placeholder="SKU or Category ID"></td>\n<td class="p-2"><input type="number" class="form-input w-20" id="aimNewOrder" value="0"></td>\n<td class="p-2"><button class="admin-action-button btn btn-xs btn-icon btn-icon--add" data-action="aim-add-explicit" aria-label="Add" title="Add"></button></td>\n</tr>\n</tfoot>\n</table>\n</div>`;
   }
 
   function renderDerivedTable(list) {
@@ -83,7 +100,7 @@ import { ApiClient } from '../core/api-client.js';
       const label = m.sku ? `Item SKU ${m.sku}` : (m.item_id ? `Item #${m.item_id}` : 'Item');
       return `<tr>\n<td class="p-2">${m.area_selector || ''}</td>\n<td class="p-2">${label}</td>\n<td class="p-2">${m.display_order || idx + 1}</td>\n<td class="p-2">${m.sku ? `<button class="btn btn-xs btn-secondary" data-action="aim-convert" data-area="${m.area_selector}" data-sku="${m.sku}">Convert to Explicit</button>` : ''}</td>\n</tr>`;
     }).join('');
-    return `<div class="mt-6 mb-2 font-semibold">Live (Derived) View</div>\n<div class="overflow-x-auto border rounded-lg">\n<table class="min-w-full text-sm divide-y divide-gray-200">\n<thead class="bg-gray-50"><tr><th class="p-2 text-left">Area</th><th class="p-2 text-left">Resolved Target</th><th class="p-2 text-left">Order</th><th class="p-2 text-left">Actions</th></tr></thead>\n<tbody class="divide-y divide-gray-200">${rows}</tbody>\n</table>\n</div>`;
+    return `<div class="mt-6 mb-2 font-semibold">Live (Derived) View</div>\n<div class="overflow-x-auto border rounded-lg" style="max-width: 48rem; margin: 0 auto;">\n<table class="w-full text-sm divide-y divide-gray-200">\n<thead class="bg-gray-50"><tr><th class="p-2 text-left">Area</th><th class="p-2 text-left">Resolved Target</th><th class="p-2 text-left">Order</th><th class="p-2 text-left">Actions</th></tr></thead>\n<tbody class="divide-y divide-gray-200">${rows}</tbody>\n</table>\n</div>`;
   }
 
   function renderUnrepresented() {
@@ -131,9 +148,10 @@ import { ApiClient } from '../core/api-client.js';
     if (tabbed) tabbed.classList.remove('hidden');
 
     try {
+      const ts = Date.now();
       const [exp, live] = await Promise.all([
-        fetchJSON(`/api/area_mappings.php?action=get_mappings&room=${encodeURIComponent(room)}`),
-        fetchJSON(`/api/area_mappings.php?action=get_live_view&room=${encodeURIComponent(room)}`)
+        fetchJSON(`/api/area_mappings.php?action=get_mappings&room=${encodeURIComponent(room)}&_=${ts}`),
+        fetchJSON(`/api/area_mappings.php?action=get_live_view&room=${encodeURIComponent(room)}&_=${ts}`)
       ]);
 
       const expPayload = (exp && exp.success) ? (exp.data || exp) : null;
@@ -197,10 +215,14 @@ import { ApiClient } from '../core/api-client.js';
     state.activeTab = tabName;
 
     qsa('.aim-tab').forEach(tab => {
-      tab.classList.toggle('border-indigo-500', tab.dataset.tab === tabName);
-      tab.classList.toggle('text-indigo-600', tab.dataset.tab === tabName);
-      tab.classList.toggle('border-transparent', tab.dataset.tab !== tabName);
-      tab.classList.toggle('text-gray-500', tab.dataset.tab !== tabName);
+      const isActive = tab.dataset.tab === tabName;
+      tab.classList.toggle('border-indigo-500', isActive);
+      tab.classList.toggle('text-indigo-600', isActive);
+      tab.classList.toggle('border-transparent', !isActive);
+      tab.classList.toggle('text-gray-500', !isActive);
+      // Reflect selection for outline utility and a11y
+      try { tab.setAttribute('aria-selected', isActive ? 'true' : 'false'); } catch(_) {}
+      tab.classList.toggle('active', isActive);
     });
 
     qsa('.aim-tab-panel').forEach(panel => {
@@ -227,15 +249,18 @@ import { ApiClient } from '../core/api-client.js';
         await updateMapping(id);
         break;
       case 'aim-delete':
-        if (typeof window.showConfirmationModal !== 'function') {
-          if (typeof window.showNotification === 'function') window.showNotification('Confirmation UI unavailable. Action canceled.', 'error');
-          return;
-        }
+        await ensureConfirmUi();
         {
-          const ok = await window.showConfirmationModal({ title: 'Delete Mapping', message: 'Are you sure you want to delete this mapping?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger' });
+          let ok = true;
+          if (typeof window.showConfirmationModal === 'function') {
+            ok = await window.showConfirmationModal({ title: 'Delete Mapping', message: 'Are you sure you want to delete this mapping?', confirmText: 'Delete', confirmStyle: 'danger', icon: '⚠️', iconType: 'danger', iconKey: 'delete' });
+          } else {
+            ok = window.confirm('Delete this mapping?');
+          }
           if (!ok) return;
+          const success = await deleteMapping(id);
+          if (success) notify('success', 'Mapping deleted.'); else notify('error', 'Failed to delete mapping.');
         }
-        await deleteMapping(id);
         break;
       case 'aim-add-explicit':
         await addMapping();
@@ -251,7 +276,9 @@ import { ApiClient } from '../core/api-client.js';
         }
         const type = action === 'aim-quick-map-item' ? 'item' : 'category';
         const target = type === 'item' ? btn.dataset.sku : btn.dataset.id;
-        const area = prompt(`Enter the area selector to map this ${type} to (e.g., .area-1):`);
+        const area = (typeof window.showPromptModal === 'function')
+          ? await window.showPromptModal({ title: 'Map to Area', message: `Enter the area selector to map this ${type} to (e.g., .area-1):`, placeholder: '.area-1', inputType: 'text', confirmText: 'Map', cancelText: 'Cancel' })
+          : prompt(`Enter the area selector to map this ${type} to (e.g., .area-1):`);
         if (area) {
           await addMapping({ area_selector: area, mapping_type: type, target: target });
         }
@@ -313,12 +340,25 @@ import { ApiClient } from '../core/api-client.js';
   }
 
   async function deleteMapping(id) {
-    const result = await fetchJSON('/api/area_mappings.php', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    const result = await fetchJSON('/api/area_mappings.php?_=' + Date.now(), { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     if (result && result.success) {
       setMsg('Mapping deleted.', 'ok');
+      try { const row = document.querySelector(`tr[data-id="${id}"]`); if (row) row.remove(); } catch(_) {}
+      // Optimistically update local state and re-render immediately
+      try {
+        const before = (state.lastExplicit || []).length;
+        state.lastExplicit = (state.lastExplicit || []).filter(m => String(m.id) !== String(id));
+        if ((state.lastExplicit || []).length !== before) {
+          renderMappings();
+        }
+      } catch(_) {}
       await loadMappings();
+      // Double-check refresh shortly after to avoid any stale cache/race
+      try { setTimeout(() => { try { loadMappings(); } catch(_) {} }, 150); } catch(_) {}
+      return true;
     } else {
       setMsg(result ? result.message : 'Failed to delete mapping.', 'error');
+      return false;
     }
   }
   
@@ -347,7 +387,6 @@ import { ApiClient } from '../core/api-client.js';
   }
 
   function run(){
-    console.info('[AIM] Module initialized');
     document.addEventListener('click', (e) => {
       handleTabClick(e);
       handleAction(e);

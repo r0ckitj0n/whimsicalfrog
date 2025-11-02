@@ -53,8 +53,18 @@
         if (!url) return; // still nothing to apply
       }
       const styleEl = ensureStyleElement();
-      // Create a CSS rule that targets the body via attribute flag instead of element.style
-      styleEl.textContent = `body[data-bg-url][data-bg-applied="1"] { background-image: url(${JSON.stringify(url)}); }`;
+      // Create CSS rules that target the body via attribute flags instead of element.style
+      styleEl.textContent = `
+        body[data-bg-url][data-bg-applied="1"] {
+          background-image: url(${JSON.stringify(url)});
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        }
+        body[data-bg-url][data-bg-applied="1"]:not([data-is-admin="true"]) {
+          min-height: 100vh;
+        }
+      `;
       body.setAttribute('data-bg-applied', '1');
       body.classList.add('wf-bg-applied');
     } catch (e) {

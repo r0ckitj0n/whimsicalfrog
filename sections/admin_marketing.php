@@ -4,8 +4,12 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
 
 // Detect modal context
 $isModal = (isset($_GET['modal']) && $_GET['modal'] == '1');
-$tool = isset($_GET['tool']) ? strtolower((string)$_GET['tool']) : '';
-$suppressMain = ($isModal && $tool !== '');
+
+// In modal context, output minimal header and mark body as embedded
+if ($isModal) {
+    $page = 'admin/marketing';
+    require_once dirname(__DIR__) . '/partials/modal_header.php';
+}
 
 // When not in modal, include full admin layout and navbar
 if (!$isModal) {
@@ -38,17 +42,7 @@ try {
 }
 ?>
 
-<style>
-body[data-page='admin/marketing'] #admin-section-content {
-    margin-top: 0 !important;
-    border-top: none !important;
-}
-.admin-marketing-page {
-    margin-top: 0 !important;
-}
-/* Ensure elements with class 'hidden' are truly hidden inside this iframe */
-.hidden { display: none !important; }
-</style>
+
 
 <div class="admin-marketing-page">
     
@@ -58,11 +52,11 @@ body[data-page='admin/marketing'] #admin-section-content {
         <div class="hidden"></div>
 
     <!-- Sub-modals inside iframe -->
-    <div id="socialManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialManagerTitle">
+    <div id="socialManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="socialManagerTitle" class="admin-card-title">📱 Social Accounts Manager</h2>
-                <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div id="socialManagerContent" class="space-y-2 text-sm text-gray-700">Loading accounts…</div>
@@ -70,11 +64,11 @@ body[data-page='admin/marketing'] #admin-section-content {
         </div>
     </div>
 
-    <div id="newsletterManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="newsletterManagerTitle">
+    <div id="newsletterManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="newsletterManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="newsletterManagerTitle" class="admin-card-title">📧 Newsletter Manager</h2>
-                <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div id="newsletterManagerContent" class="space-y-3 text-sm text-gray-700">Loading newsletters…</div>
@@ -82,11 +76,11 @@ body[data-page='admin/marketing'] #admin-section-content {
         </div>
     </div>
 
-    <div id="automationManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="automationManagerTitle">
+    <div id="automationManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="automationManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="automationManagerTitle" class="admin-card-title">⚙️ Automation Manager</h2>
-                <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div id="automationManagerContent" class="space-y-3 text-sm text-gray-700">Loading automations…</div>
@@ -94,11 +88,11 @@ body[data-page='admin/marketing'] #admin-section-content {
         </div>
     </div>
 
-    <div id="discountManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="discountManagerTitle">
+    <div id="discountManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="discountManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="discountManagerTitle" class="admin-card-title">💸 Discount Codes Manager</h2>
-                <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div id="discountManagerContent" class="space-y-3 text-sm text-gray-700">Loading discounts…</div>
@@ -106,11 +100,11 @@ body[data-page='admin/marketing'] #admin-section-content {
         </div>
     </div>
 
-    <div id="couponManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="couponManagerTitle">
+    <div id="couponManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="couponManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="couponManagerTitle" class="admin-card-title">🎟️ Coupons Manager</h2>
-                <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div id="couponManagerContent" class="space-y-3 text-sm text-gray-700">Loading coupons…</div>
@@ -118,11 +112,11 @@ body[data-page='admin/marketing'] #admin-section-content {
         </div>
     </div>
 
-    <div id="suggestionsManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="suggestionsManagerTitle">
+    <div id="suggestionsManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="suggestionsManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="suggestionsManagerTitle" class="admin-card-title">🤖 Suggestions Manager</h2>
-                <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div id="suggestionsManagerContent" class="text-sm text-gray-700">View and curate AI suggestions. (Coming soon)</div>
@@ -130,11 +124,11 @@ body[data-page='admin/marketing'] #admin-section-content {
         </div>
     </div>
 
-    <div id="contentGeneratorModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="contentGeneratorTitle">
+    <div id="contentGeneratorModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="contentGeneratorTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="contentGeneratorTitle" class="admin-card-title">✍️ Content Generator</h2>
-                <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body">
                 <div id="contentGeneratorContent" class="space-y-3 text-sm text-gray-700">Loading content generator…</div>
@@ -142,200 +136,203 @@ body[data-page='admin/marketing'] #admin-section-content {
         </div>
     </div>
 
-</div>
-    </div>
-
-    <?php if (!$suppressMain): ?>
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="admin-card text-center">
-            <div class="text-2xl font-bold text-blue-600"><?= $suggestionCount ?></div>
-            <div class="text-sm text-gray-600">AI Suggestions</div>
-        </div>
-        <div class="admin-card text-center">
-            <div class="text-2xl font-bold text-green-600">3</div>
-            <div class="text-sm text-gray-600">Campaigns</div>
-        </div>
-        <div class="admin-card text-center">
-            <div class="text-2xl font-bold text-purple-600">2.4%</div>
-            <div class="text-sm text-gray-600">Conversion</div>
-        </div>
-        <div class="admin-card text-center">
-            <div class="text-2xl font-bold text-orange-600">15</div>
-            <div class="text-sm text-gray-600">Emails Sent</div>
+    <div id="intentHeuristicsManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="intentHeuristicsManagerTitle">
+        <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--actions-in-header">
+            <div class="modal-header">
+                <h2 id="intentHeuristicsManagerTitle" class="admin-card-title">🧠 Intent Heuristics Config</h2>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <iframe id="intentHeuristicsManagerFrame" title="Intent Heuristics Config" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/sections/tools/intent_heuristics_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+            </div>
         </div>
     </div>
 
-    <!-- Tools (single list of categories with sub-boxes) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="admin-card">
-            <h3 class="admin-card-title">🤖 AI Tools</h3>
-            <div class="grid gap-3">
-                <div class="border rounded p-3">
-                    <div class="font-medium">Item Suggestions</div>
-                    <div class="text-sm text-gray-600 mb-2">Generate AI content, price, and cost for an item, review/edit, then apply.</div>
-                    <div class="flex gap-2">
-                        <button data-action="open-suggestions-manager" class="btn btn-primary">Open Manager</button>
+    <!-- Marketing Overview (Charts) -->
+    <div id="marketingOverviewModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="marketingOverviewTitle">
+        <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+            <div class="modal-header">
+                <h2 id="marketingOverviewTitle" class="admin-card-title">📈 Marketing Overview</h2>
+                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="rounded border p-2 bg-white">
+                        <div class="text-sm font-medium mb-1">Sales (last 7 days)</div>
+                        <canvas id="salesChart" height="220"></canvas>
+                    </div>
+                    <div class="rounded border p-2 bg-white">
+                        <div class="text-sm font-medium mb-1">Payment Methods</div>
+                        <canvas id="paymentMethodChart" height="220"></canvas>
                     </div>
                 </div>
-                <div class="border rounded p-3">
-                    <div class="font-medium">Content Generator</div>
-                    <div class="text-sm text-gray-600 mb-2">Create AI-assisted marketing content.</div>
-                    <button data-action="open-content-generator" class="btn btn-secondary">Open</button>
-                </div>
-                <div class="border rounded p-3">
-                    <div class="font-medium">Social Media</div>
-                    <div class="text-sm text-gray-600 mb-2">Connect accounts and manage posts.</div>
-                    <button data-action="open-social-manager" class="btn btn-secondary">Open Accounts</button>
-                </div>
-            </div>
-        </div>
-        <div class="admin-card">
-            <h3 class="admin-card-title">📧 Email Marketing</h3>
-            <div class="grid gap-3">
-                <div class="border rounded p-3">
-                    <div class="font-medium">Newsletters</div>
-                    <div class="text-sm text-gray-600 mb-2">Create, schedule, and review newsletters.</div>
-                    <button data-action="open-newsletters-manager" class="btn btn-primary">Open Manager</button>
-                </div>
-                <div class="border rounded p-3">
-                    <div class="font-medium">Automation</div>
-                    <div class="text-sm text-gray-600 mb-2">Set up flows and triggers.</div>
-                    <button data-action="open-automation-manager" class="btn btn-secondary">Open Manager</button>
-                </div>
-            </div>
-        </div>
-        <div class="admin-card">
-            <h3 class="admin-card-title">💰 Promotions</h3>
-            <div class="grid gap-3">
-                <div class="border rounded p-3">
-                    <div class="font-medium">Discount Codes</div>
-                    <div class="text-sm text-gray-600 mb-2">Generate and manage discount codes.</div>
-                    <button data-action="open-discounts-manager" class="btn btn-primary">Open Manager</button>
-                </div>
-                <div class="border rounded p-3">
-                    <div class="font-medium">Coupons</div>
-                    <div class="text-sm text-gray-600 mb-2">Create printable or digital coupons.</div>
-                    <button data-action="open-coupons-manager" class="btn btn-secondary">Open Manager</button>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Intro moved to bottom -->
-    <div class="mt-8 text-sm text-gray-700 space-y-2">
-        <p><strong>AI Tools</strong> help generate item suggestions, content, and manage social media. Use these to speed up marketing tasks and keep your catalog fresh.</p>
-        <p><strong>Email Marketing</strong> handles newsletters and automated sequences so you can nurture customers and announce new items.</p>
-        <p><strong>Promotions</strong> provides discount codes and coupons to drive conversions and reward loyal shoppers.</p>
-        <p>Select a tool below to view its details and available actions.</p>
+</div>
+    </div>
+
+    <?php /* Overview stats are omitted in modal context */ ?>
+    <?php if (!$isModal): ?>
+    <!-- Stats Cards: entire card clickable (compact) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+        <div class="admin-card p-2 cursor-pointer" data-action="open-suggestions-manager" role="button" aria-label="View suggestions">
+            <div class="text-center">
+                <div class="text-xl font-bold text-blue-600"><?php echo $suggestionCount ?></div>
+                <div class="text-xs text-gray-600">AI Suggestions</div>
+            </div>
+        </div>
+        <div class="admin-card p-2 cursor-pointer" data-action="open-newsletters-manager" role="button" aria-label="View campaigns">
+            <div class="text-center">
+                <div class="text-xl font-bold text-green-600">3</div>
+                <div class="text-xs text-gray-600">Campaigns</div>
+            </div>
+        </div>
+        <div class="admin-card p-2 cursor-pointer" data-action="open-marketing-overview" role="button" aria-label="View conversion report">
+            <div class="text-center">
+                <div class="text-xl font-bold text-purple-600">2.4%</div>
+                <div class="text-xs text-gray-600">Conversion</div>
+            </div>
+        </div>
+        <div class="admin-card p-2 cursor-pointer" data-action="open-newsletters-manager" role="button" aria-label="View emails">
+            <div class="text-center">
+                <div class="text-xl font-bold text-orange-600">15</div>
+                <div class="text-xs text-gray-600">Emails Sent</div>
+            </div>
+        </div>
     </div>
     <?php endif; ?>
-</div>
+
+    <!-- Tools (single list of categories with sub-boxes) -->
+    <?php if ($isModal): ?>
+      <div class="admin-card">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="border rounded p-3">
+            <button data-action="open-suggestions-manager" class="btn btn-primary w-full">🤖 Suggestions Manager</button>
+            <div class="text-sm text-gray-600 mt-2">Generate AI content, price, and cost for an item, review/edit, then apply.</div>
+          </div>
+          <div class="border rounded p-3">
+            <button data-action="open-content-generator" class="btn btn-secondary w-full">✍️ Content Generator</button>
+            <div class="text-sm text-gray-600 mt-2">Create AI-assisted marketing content.</div>
+          </div>
+          <div class="border rounded p-3">
+            <button data-action="open-social-manager" class="btn btn-secondary w-full">📱 Social Accounts Manager</button>
+            <div class="text-sm text-gray-600 mt-2">Connect accounts and manage posts.</div>
+          </div>
+          <div class="border rounded p-3">
+            <button data-action="open-intent-heuristics-manager" class="btn btn-secondary w-full">🧠 Intent Heuristics Config</button>
+            <div class="text-sm text-gray-600 mt-2">Tune upsell scoring (weights, budgets, keywords, seasonality).</div>
+          </div>
+          <div class="border rounded p-3">
+            <button data-action="open-automation-manager" class="btn btn-secondary w-full">⚙️ Automation Manager</button>
+            <div class="text-sm text-gray-600 mt-2">Set up flows and triggers.</div>
+          </div>
+          <div class="border rounded p-3 md:col-span-2">
+            <button data-action="open-ai-provider-parent" class="btn btn-secondary w-full">🤖 AI Settings</button>
+            <div class="text-sm text-gray-600 mt-2">Configure provider, models, credentials, and behavior.</div>
+          </div>
+        </div>
+      </div>
+    <?php else: ?>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="admin-card">
+          <h3 class="admin-card-title">🤖 AI Tools</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="border rounded p-3">
+              <button data-action="open-suggestions-manager" class="btn btn-primary w-full">🤖 Suggestions Manager</button>
+              <div class="text-sm text-gray-600 mt-2">Generate AI content, price, and cost for an item, review/edit, then apply.</div>
+            </div>
+            <div class="border rounded p-3">
+              <button data-action="open-content-generator" class="btn btn-secondary w-full">✍️ Content Generator</button>
+              <div class="text-sm text-gray-600 mt-2">Create AI-assisted marketing content.</div>
+            </div>
+            <div class="border rounded p-3">
+              <button data-action="open-social-manager" class="btn btn-secondary w-full">📱 Social Accounts Manager</button>
+              <div class="text-sm text-gray-600 mt-2">Connect accounts and manage posts.</div>
+            </div>
+            <div class="border rounded p-3">
+              <button data-action="open-intent-heuristics-manager" class="btn btn-secondary w-full">🧠 Intent Heuristics Config</button>
+              <div class="text-sm text-gray-600 mt-2">Tune upsell scoring (weights, budgets, keywords, seasonality).</div>
+            </div>
+            <div class="border rounded p-3 md:col-span-2">
+              <button data-action="open-ai-provider-parent" class="btn btn-secondary w-full">🤖 AI Settings</button>
+              <div class="text-sm text-gray-600 mt-2">Configure provider, models, credentials, and behavior.</div>
+            </div>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h3 class="admin-card-title">📧 Email Marketing</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="border rounded p-3">
+              <button data-action="open-newsletters-manager" class="btn btn-primary w-full">📧 Newsletter Manager</button>
+              <div class="text-sm text-gray-600 mt-2">Create, schedule, and review newsletters.</div>
+            </div>
+            <div class="border rounded p-3">
+              <button data-action="open-automation-manager" class="btn btn-secondary w-full">⚙️ Automation Manager</button>
+              <div class="text-sm text-gray-600 mt-2">Set up flows and triggers.</div>
+            </div>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h3 class="admin-card-title">💰 Promotions</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="border rounded p-3">
+              <button data-action="open-discounts-manager" class="btn btn-primary w-full">💸 Discount Codes Manager</button>
+              <div class="text-sm text-gray-600 mt-2">Generate and manage discount codes.</div>
+            </div>
+            <div class="border rounded p-3">
+              <button data-action="open-coupons-manager" class="btn btn-secondary w-full">🎟️ Coupons Manager</button>
+              <div class="text-sm text-gray-600 mt-2">Create printable or digital coupons.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    </div>
 
 <script>
-// Global functions for marketing tools
-async function __wfApiRequest(method, url, data=null, options={}){
-    try {
-        const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
-        const m = String(method||'GET').toUpperCase();
-        if (A && typeof A.request === 'function') {
-            if (m === 'GET') return A.get(url, (options && options.params) || {});
-            if (m === 'POST') return A.post(url, data||{}, options||{});
-            if (m === 'PUT') return A.put(url, data||{}, options||{});
-            if (m === 'DELETE') return A.delete(url, options||{});
-            return A.request(url, { method: m, ...(options||{}) });
-        }
-        const headers = { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
-        const cfg = { credentials:'include', method:m, headers, ...(options||{}) };
-        if (data !== null && typeof cfg.body === 'undefined') cfg.body = JSON.stringify(data);
-        const res = await fetch(url, cfg);
-        return res.json().catch(()=>({}));
-    } catch(_) { return {}; }
-}
-const __wfApiGet = (url, params) => __wfApiRequest('GET', url, null, { params });
-const __wfApiPost = (url, body, options) => __wfApiRequest('POST', url, body, options);
-async function generateSuggestions() {
-    const skuInput = document.getElementById('suggestion-sku');
-    if (!skuInput) {
-        alert('Item SKU selector not found on page.');
-        return;
-    }
-    const sku = (skuInput.value || '').trim();
-    if (!sku) {
-        alert('Please select an Item SKU');
-        return;
-    }
-
-    const resultDiv = document.getElementById('suggestions-result');
-    if (!resultDiv) return;
-    resultDiv.innerHTML = '<div class="text-center">Generating AI suggestions...</div>';
-    resultDiv.classList.remove('hidden');
-
-    try {
-        // suggest_marketing currently requires a non-empty name; use SKU as a minimal name fallback
-        const data = await __wfApiPost('/api/suggest_marketing.php', { sku, name: sku, description: '', category: '' });
-        if (data && data.success === false) {
-            const msg = (data && (data.error || data.message)) || 'Request failed';
-            resultDiv.innerHTML = `<div class="text-red-600">Error: ${msg}</div>`;
-            return;
-        }
-
-        const title = data.title || data.suggested_title || 'N/A';
-        const description = data.description || data.suggested_description || 'N/A';
-        let keywords = [];
-        if (Array.isArray(data.seo_keywords)) {
-            keywords = data.seo_keywords;
-        } else if (typeof data.seo_keywords === 'string') {
-            try { keywords = JSON.parse(data.seo_keywords); } catch (_) { keywords = []; }
-        } else if (Array.isArray(data.keywords)) {
-            keywords = data.keywords;
-        }
-
-        resultDiv.innerHTML = `
-            <h4 class="font-medium mb-2">AI Suggestions for ${sku}</h4>
-            <div class="space-y-2">
-                <div><strong>Title:</strong> ${title}</div>
-                <div><strong>Description:</strong> ${description}</div>
-                <div><strong>Keywords:</strong> ${keywords.length ? keywords.join(', ') : 'N/A'}</div>
-            </div>
-        `;
-    } catch (error) {
-        resultDiv.innerHTML = '<div class="text-red-600">Network error occurred</div>';
-    }
-}
-
-async function loadSocialAccounts() {
-    AdminMarketingModule.loadSocialAccounts();
-}
-
-// Populate the Item SKU dropdown for Item Suggestions
-async function populateSuggestionSkuSelect() {
-    try {
-        const sel = document.getElementById('suggestion-sku');
-        if (!sel) return;
-        const payload = await __wfApiGet('/api/inventory.php');
-        const items = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
-        if (!Array.isArray(items) || !items.length) {
-            sel.innerHTML = '<option value="">No items found</option>';
-            return;
-        }
-        const options = ['<option value="">Select an item…</option>'].concat(
-            items.map(it => {
-                const label = `${(it.sku || '').toString()} — ${(it.name || '').toString()}`.trim();
-                const sku = (it.sku || '').toString().replace(/\"/g,'&quot;');
-                return `<option value="${sku}">${label}</option>`;
-            })
-        );
-        sel.innerHTML = options.join('');
-    } catch (_) {
-        try {
-            const sel = document.getElementById('suggestion-sku');
-            if (sel) sel.innerHTML = '<option value="">Failed to load items</option>';
-        } catch (_) {}
-    }
-}
-
-try { document.addEventListener('DOMContentLoaded', () => { try { populateSuggestionSkuSelect(); } catch (_) {} }); } catch (_) { try { populateSuggestionSkuSelect(); } catch (_) {} }
+// Intentionally left empty: all modal behavior and API calls are handled by Vite modules.
 </script>
+
+<?php
+// Build chart data for Marketing Overview
+try {
+    // Labels for last 7 days including today
+    $labels = [];
+    $totalsMap = [];
+    $start = new DateTime('-6 days');
+    $end = new DateTime('today');
+    $period = new DatePeriod($start, new DateInterval('P1D'), (clone $end)->modify('+1 day'));
+    foreach ($period as $d) {
+        $key = $d->format('Y-m-d');
+        $labels[] = $key;
+        $totalsMap[$key] = 0.0;
+    }
+
+    // Sum order totals by day
+    $rows = Database::queryAll("SELECT DATE(`date`) as day, SUM(total) as sum_total FROM orders WHERE `date` >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(`date`) ORDER BY day ASC");
+    foreach ($rows as $r) {
+        $day = $r['day'] ?? null; $sum = (float)($r['sum_total'] ?? 0);
+        if ($day && isset($totalsMap[$day])) { $totalsMap[$day] = $sum; }
+    }
+    $salesValues = array_values($totalsMap);
+
+    // Payment method distribution
+    $payRows = Database::queryAll("SELECT LOWER(COALESCE(paymentMethod, 'other')) as method, COUNT(*) as cnt FROM orders WHERE `date` >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) GROUP BY LOWER(COALESCE(paymentMethod, 'other')) ORDER BY cnt DESC");
+    $paymentLabels = [];
+    $paymentValues = [];
+    foreach ($payRows as $pr) { $paymentLabels[] = $pr['method']; $paymentValues[] = (int)$pr['cnt']; }
+
+    $chartData = [
+        'sales' => [ 'labels' => $labels, 'values' => $salesValues ],
+        'payments' => [ 'labels' => $paymentLabels, 'values' => $paymentValues ],
+    ];
+} catch (Throwable $e) {
+    $chartData = [ 'sales' => [ 'labels' => [], 'values' => [] ], 'payments' => [ 'labels' => [], 'values' => [] ] ];
+}
+?>
+<script type="application/json" id="marketingChartData"><?php echo json_encode($chartData, JSON_UNESCAPED_UNICODE); ?></script>
 
 <?php echo vite_entry('src/entries/admin-marketing.js'); ?>

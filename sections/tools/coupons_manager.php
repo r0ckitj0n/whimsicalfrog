@@ -13,15 +13,15 @@ if (!$inModal) {
     register_shutdown_function('__wf_coupons_footer_shutdown');
   }
 }
+if ($inModal) {
+  include $root . '/partials/modal_header.php';
+}
 ?>
-<style>
-.hidden{display:none !important}
-</style>
 <div class="admin-marketing-page">
   <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
     <div class="modal-header">
       <h2 id="couponManagerTitle" class="admin-card-title">🎟️ Coupons Manager</h2>
-      <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
       <div id="couponManagerContent" class="space-y-3 text-sm text-gray-700">Loading coupons…</div>

@@ -12,6 +12,7 @@ import { ApiClient } from '../core/api-client.js';
   let modal = null;
   let returnTo = null;
   let lastOpenOptions = {};
+  let previouslyFocusedElement = null;
 
   function ensureElements() {
     if (overlay && modal) return;
@@ -19,13 +20,15 @@ import { ApiClient } from '../core/api-client.js';
     overlay = document.createElement('div');
     overlay.id = 'wf-login-overlay';
     overlay.className = 'wf-login-overlay';
+    try { overlay.setAttribute('role', 'dialog'); overlay.setAttribute('aria-modal', 'true'); } catch(_) {}
+    try { overlay.setAttribute('tabindex', '-1'); } catch(_) {}
 
     modal = document.createElement('div');
     modal.id = 'wf-login-modal';
     modal.className = 'wf-login-modal';
     modal.innerHTML = `
       <div class="wf-login-card">
-        <button type="button" class="wf-login-close" aria-label="Close">×</button>
+        <button type="button" class="wf-login-close btn btn-icon btn-icon--close" aria-label="Close"></button>
         <h3 class="wf-login-title">Sign in</h3>
         <form id="wfLoginForm" class="wf-login-form">
           <label class="wf-field">
@@ -55,6 +58,32 @@ import { ApiClient } from '../core/api-client.js';
     // Submit handler
     const form = modal.querySelector('#wfLoginForm');
     form.addEventListener('submit', onSubmitModalForm);
+
+    try {
+      const title = modal.querySelector('.wf-login-title');
+      if (title && !title.id) title.id = 'wfLoginTitle';
+      overlay.setAttribute('aria-labelledby', (title && title.id) ? title.id : 'wfLoginTitle');
+    } catch(_) {}
+
+    if (!overlay._wfFocusTrap) {
+      overlay._wfFocusTrap = (e) => {
+        if (e.key !== 'Tab') return;
+        if (!overlay || !overlay.classList.contains('show')) return;
+        const scope = modal || overlay;
+        const nodes = scope.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+        const focusables = Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey) {
+          if (active === first || !scope.contains(active)) { last.focus(); e.preventDefault(); }
+        } else {
+          if (active === last || !scope.contains(active)) { first.focus(); e.preventDefault(); }
+        }
+      };
+      overlay.addEventListener('keydown', overlay._wfFocusTrap, true);
+    }
   }
 
   function openModal(desiredReturn, opts) {
@@ -63,20 +92,37 @@ import { ApiClient } from '../core/api-client.js';
     returnTo = desiredReturn || window.location.pathname + window.location.search + window.location.hash;
     try { sessionStorage.setItem('wf_login_return_to', returnTo); } catch (_) {}
     try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(overlay); } catch(_) {}
-    overlay.classList.add('show');
-    try { overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-    // Apply standardized scroll lock via centralized helper
-    WFModals?.lockScroll?.();
+    try { previouslyFocusedElement = document.activeElement; } catch(_) {}
+    if (typeof window.showModal === 'function') {
+      window.showModal('wf-login-overlay');
+    } else {
+      overlay.classList.add('show');
+      try { overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
+      try { window.WFModals?.lockScroll?.(); } catch(_) {}
+    }
     const firstInput = modal.querySelector('input[name="username"]');
-    if (firstInput) firstInput.focus();
+    const focusIt = () => {
+      try {
+        if (firstInput && typeof firstInput.focus === 'function') firstInput.focus();
+        else if (overlay && typeof overlay.focus === 'function') overlay.focus();
+      } catch(_) {}
+    };
+    focusIt();
+    try { requestAnimationFrame(() => { focusIt(); requestAnimationFrame(focusIt); }); } catch(_) {}
+    setTimeout(focusIt, 150);
   }
 
   function closeModal() {
     if (!overlay) return;
-    overlay.classList.remove('show');
-    try { overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-    // Remove scroll lock only if no other modals are open
-    WFModals?.unlockScrollIfNoneOpen?.();
+    if (typeof window.hideModal === 'function') {
+      window.hideModal('wf-login-overlay');
+    } else {
+      overlay.classList.remove('show');
+      try { overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+      try { window.WFModals?.unlockScrollIfNoneOpen?.(); } catch(_) {}
+    }
+    try { if (previouslyFocusedElement) previouslyFocusedElement.focus(); } catch(_) {}
+    try { previouslyFocusedElement = null; } catch(_) {}
   }
 
   async function onSubmitModalForm(e) {
@@ -144,6 +190,9 @@ import { ApiClient } from '../core/api-client.js';
         document.cookie = 'WF_AUTH_V=' + payload + '; Path=/; Domain=' + domain + '; SameSite=None; Secure';
       } catch (_) {}
 
+      // Before notifying listeners, publish the intended redirect so the header safety listener can use it
+      try { window.__wf_desired_return_url = target || '/'; } catch(_) {}
+
       // Notify listeners about successful login
       try {
         window.dispatchEvent(new CustomEvent('wf:login-success', {
@@ -182,7 +231,7 @@ import { ApiClient } from '../core/api-client.js';
         if (window.showSuccess) window.showSuccess('Login successful. Redirecting…');
         // Emit a login-success event so the header safety listener can also trigger sealing
         try {
-          window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: (resolvedUserId != null) ? resolvedUserId : null } }));
+          window.dispatchEvent(new CustomEvent('wf:login-success', { detail: { userId: (resolvedUserId != null) ? resolvedUserId : null, target } }));
         } catch(_){ /* noop */ }
         closeModal();
         // Redirect through sealing endpoint so cookies are set on a full-page response
@@ -257,6 +306,9 @@ import { ApiClient } from '../core/api-client.js';
           try { target = sessionStorage.getItem('wf_login_return_to'); } catch (_) {}
         }
         if (!target) target = '/';
+
+        // Publish the intended redirect so safety listeners can use it
+        try { window.__wf_desired_return_url = target || '/'; } catch(_) {}
 
         // Standardize events and cart refresh for inline login flow as well
         try {

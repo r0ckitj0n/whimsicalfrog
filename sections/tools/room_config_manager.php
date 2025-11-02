@@ -20,6 +20,9 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
     include dirname(__DIR__, 2) . '/partials/header.php';
     $__wf_included_layout = true;
 }
+if ($is_modal_context) {
+    include dirname(__DIR__, 2) . '/partials/modal_header.php';
+}
 ?>
 <div class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
@@ -188,13 +191,7 @@ if (!$is_modal_context && !function_exists('__wf_admin_root_footer_shutdown')) {
 } ?>
 
 <?php if ($is_modal_context): ?>
-<style>
-body { margin: 0; padding: 20px; background: white; font-family: system-ui, sans-serif; }
-.bg-gray-100 { background: white !important; min-height: auto !important; }
-.container { max-width: none !important; margin: 0 !important; padding: 0 !important; }
-.shadow-lg { box-shadow: none !important; }
-h1 { font-size: 20px !important; margin-bottom: 16px !important; }
-</style>
+<?php /* embed resets handled by body[data-embed] utilities */ ?>
 
 <script>(function(){
   var f=document.getElementById('roomConfigForm');
@@ -260,7 +257,13 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
 
   f.addEventListener('submit', function(e){
     e.preventDefault();
-    var room=s.value; if(!room){ alert('Select a room'); return; }
+    var room=s.value; if(!room){
+      if (window.parent && typeof window.parent.showAlertModal === 'function') {
+        window.parent.showAlertModal({ title: 'Missing Room', message: 'Select a room' });
+      } else if (typeof window.showAlertModal === 'function') {
+        window.showAlertModal({ title: 'Missing Room', message: 'Select a room' });
+      } else { alert('Select a room'); }
+      return; }
     var fd=new FormData(f), cfg={};
     fd.forEach(function(v,k){
       if(k==='room_number') return;
@@ -273,9 +276,26 @@ h1 { font-size: 20px !important; margin-bottom: 16px !important; }
     var saveFlags = apiRequest('PUT','/api/room_settings.php', {action:'update_flags', room_number: room, icons_white_background: !!(f.querySelector('#icons_white_background')||{}).checked});
     Promise.all([saveJson, saveFlags]).then(function(results){
       var ok = (results[0]&&results[0].success)!==false && (results[1]&&results[1].success)!==false;
-      if(ok){ alert('Settings saved successfully'); location.reload(); }
-      else { alert('Save failed: ' + (JSON.stringify(results))); }
-    }).catch(function(){ alert('Save failed'); });
+      if(ok){
+        var msg = 'Settings saved successfully';
+        if (window.parent && typeof window.parent.showAlertModal === 'function') {
+          window.parent.showAlertModal({ title: 'Saved', message: msg, icon: '✅', iconType: 'success' }).then(function(){ try{ location.reload(); }catch(_){} });
+        } else if (typeof window.showAlertModal === 'function') {
+          window.showAlertModal({ title: 'Saved', message: msg, icon: '✅', iconType: 'success' }).then(function(){ try{ location.reload(); }catch(_){} });
+        } else { alert(msg); location.reload(); }
+      }
+      else {
+        var emsg = 'Save failed: ' + (JSON.stringify(results));
+        if (window.parent && typeof window.parent.showAlertModal === 'function') { window.parent.showAlertModal({ title: 'Save Failed', message: emsg, icon: '⚠️', iconType: 'warning' }); }
+        else if (typeof window.showAlertModal === 'function') { window.showAlertModal({ title: 'Save Failed', message: emsg, icon: '⚠️', iconType: 'warning' }); }
+        else { alert(emsg); }
+      }
+    }).catch(function(){
+      var emsg = 'Save failed';
+      if (window.parent && typeof window.parent.showAlertModal === 'function') { window.parent.showAlertModal({ title: 'Save Failed', message: emsg, icon: '⚠️', iconType: 'warning' }); }
+      else if (typeof window.showAlertModal === 'function') { window.showAlertModal({ title: 'Save Failed', message: emsg, icon: '⚠️', iconType: 'warning' }); }
+      else { alert(emsg); }
+    });
   });
 
   if(s.value) load(s.value);

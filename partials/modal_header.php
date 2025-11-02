@@ -34,15 +34,17 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
         // Load HMR client and entry
         echo '<script crossorigin="anonymous" type="module" src="' . $o . '/@vite/client"></script>' . "\n";
         echo '<script crossorigin="anonymous" type="module" src="' . $o . '/src/entries/app.js"></script>' . "\n";
-        // Also include CSS directly so iframe styles are immediate
-        echo '<link rel="stylesheet" href="' . $o . '/src/styles/main.css">' . "\n";
-        echo '<link rel="stylesheet" href="' . $o . '/src/styles/site-base.css">' . "\n";
-        echo '<link rel="stylesheet" href="' . $o . '/src/styles/admin-modals.css">' . "\n";
+        // Dynamic icon CSS (admin icon map)
+        echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
     } else {
         // Fall back to production manifest bundles
         echo vite('js/app.js');
     }
     ?>
+    <?php if (isset($extraViteEntry) && is_string($extraViteEntry) && $extraViteEntry !== ''): ?>
+      <?php echo vite_css($extraViteEntry); ?>
+      <?php echo vite($extraViteEntry); ?>
+    <?php endif; ?>
     <?php
     // Inject server-side branding CSS variables just like the main header
     try {
@@ -139,4 +141,11 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
     })();
     </script>
 </head>
-<body>
+<?php
+  // Build optional body attributes for embed context and page tagging
+  $___attrs = [];
+  try { if (isset($_GET['modal']) && $_GET['modal'] == '1') { $___attrs[] = 'data-embed="1"'; } } catch (Throwable $___e) {}
+  try { if (isset($page) && $page) { $___attrs[] = 'data-page="' . htmlspecialchars((string)$page, ENT_QUOTES) . '"'; } } catch (Throwable $___e) {}
+  $___attr_str = empty($___attrs) ? '' : (' ' . implode(' ', $___attrs));
+?>
+<body<?= $___attr_str ?>>

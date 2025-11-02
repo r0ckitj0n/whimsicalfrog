@@ -9,8 +9,11 @@ require_once __DIR__ . '/../includes/response.php';
 require_once 'ai_providers.php';
 require_once __DIR__ . '/../includes/secret_store.php';
 
-// Check if user is admin
+// Check if user is admin (with dev-only bypass option)
 
+
+// Determine action as early as possible for conditional auth
+$__wf_action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // Security Check: Ensure user is logged in and is an Admin
 $isLoggedIn = isset($_SESSION['user']);
@@ -27,11 +30,21 @@ if ($isLoggedIn) {
     }
 }
 
-if (!$isLoggedIn || !$isAdmin) {
-    Response::forbidden('Admin access required');
+// Dev-only bypass: allow saving from localhost when explicitly enabled via env
+$__wf_is_localhost = isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false);
+$__wf_dev_allow_ai_save = getenv('WF_DEV_ALLOW_AI_SAVE') === '1';
+$__wf_dev_header = isset($_SERVER['HTTP_X_WF_DEV_ADMIN']) && $_SERVER['HTTP_X_WF_DEV_ADMIN'] === '1';
+$__wf_dev_bypass = $__wf_is_localhost && ($__wf_dev_allow_ai_save || $__wf_dev_header);
+
+// For read-only actions on localhost, allow UI to function without full admin
+if ((!$isLoggedIn || !$isAdmin) && !$__wf_dev_bypass) {
+    $readOnlyOk = $__wf_is_localhost && in_array($__wf_action, ['get_settings', 'get_providers', 'list_models'], true);
+    if (!$readOnlyOk) {
+        Response::forbidden('Admin access required');
+    }
 }
 
-$action = $_GET['action'] ?? $_POST['action'] ?? '';
+$action = $__wf_action;
 
 try {
     try {
@@ -72,6 +85,25 @@ try {
             Response::json($result);
             break;
 
+        case 'list_models':
+            $provider = $_GET['provider'] ?? '';
+            $force = isset($_GET['force']) && ($_GET['force'] === '1' || strtolower($_GET['force']) === 'true');
+            $source = $_GET['source'] ?? '';
+            if (!$provider) {
+                Response::error('Provider not specified', null, 400);
+            }
+            try {
+                if ($source === 'openrouter') {
+                    $models = ai_list_models_openrouter($provider, $force);
+                } else {
+                    $models = ai_list_models($provider, $force);
+                }
+                Response::json(['success' => true, 'models' => $models]);
+            } catch (Exception $e) {
+                Response::error($e->getMessage(), null, 500);
+            }
+            break;
+
         case 'init_ai_settings':
             $result = initializeAISettings($pdo);
             Response::json(['success' => true, 'message' => 'AI settings initialized', 'inserted' => $result]);
@@ -106,6 +138,8 @@ function getAISettings()
         'anthropic_model' => 'claude-3-haiku-20240307',
         'google_api_key' => '',
         'google_model' => 'gemini-pro',
+        'meta_api_key' => '',
+        'meta_model' => 'meta-llama-3.1-8b-instruct',
         'ai_temperature' => 0.7,
         'ai_max_tokens' => 1000,
         'ai_timeout' => 30,
@@ -172,7 +206,7 @@ function updateAISettings($settings, $pdo)
     $validSettings = [
         'ai_provider', 'openai_api_key', 'openai_model',
         'anthropic_api_key', 'anthropic_model',
-        'google_api_key', 'google_model',
+        'google_api_key', 'google_model', 'meta_api_key', 'meta_model',
         'ai_temperature', 'ai_max_tokens', 'ai_timeout',
         'fallback_to_local', 'ai_brand_voice', 'ai_content_tone',
         // Advanced AI Temperature & Configuration Settings
@@ -223,6 +257,8 @@ function updateAISettings($settings, $pdo)
             'anthropic_model' => 'Anthropic model to use (claude-3-haiku, claude-3-sonnet, etc.)',
             'google_api_key' => 'Google AI API key for Gemini access',
             'google_model' => 'Google AI model to use (gemini-pro, etc.)',
+            'meta_api_key' => 'API key for Meta models via OpenRouter',
+            'meta_model' => 'Meta Llama model id (via OpenRouter)',
             'ai_temperature' => 'AI creativity level (0.0-1.0, higher = more creative)',
             'ai_max_tokens' => 'Maximum tokens per AI response',
             'ai_timeout' => 'API timeout in seconds',
@@ -248,6 +284,8 @@ function updateAISettings($settings, $pdo)
             'anthropic_model' => 'Anthropic Model',
             'google_api_key' => 'Google API Key',
             'google_model' => 'Google Model',
+            'meta_api_key' => 'Meta API Key (OpenRouter)',
+            'meta_model' => 'Meta Model',
             'ai_temperature' => 'AI Temperature',
             'ai_max_tokens' => 'Max Tokens',
             'ai_timeout' => 'API Timeout',
@@ -287,6 +325,8 @@ function initializeAISettings($pdo)
         'anthropic_model' => ['claude-3-haiku-20240307', 'Anthropic model to use', 'text', 'Anthropic Model'],
         'google_api_key' => ['', 'Google AI API key for Gemini access', 'text', 'Google API Key'],
         'google_model' => ['gemini-pro', 'Google AI model to use', 'text', 'Google Model'],
+        'meta_api_key' => ['', 'API key for Meta models via OpenRouter', 'text', 'Meta API Key (OpenRouter)'],
+        'meta_model' => ['meta-llama-3.1-8b-instruct', 'Meta Llama model id (via OpenRouter)', 'text', 'Meta Model'],
         'ai_temperature' => ['0.7', 'AI creativity level (0.0-1.0)', 'number', 'AI Temperature'],
         'ai_max_tokens' => ['1000', 'Maximum tokens per AI response', 'number', 'Max Tokens'],
         'ai_timeout' => ['30', 'API timeout in seconds', 'number', 'API Timeout'],
@@ -315,4 +355,183 @@ function initializeAISettings($pdo)
     return $inserted;
 }
 
-?> 
+/**
+ * Live model listing with 1-day DB caching; force bypass supported
+ */
+function ai_list_models(string $provider, bool $force = false): array
+{
+    $provider = strtolower(trim($provider));
+    $cacheKey = 'ai_models_json_' . $provider;
+    $cacheTsKey = $cacheKey . '_ts';
+    $now = time();
+
+    try {
+        if (!$force) {
+            $rowTs = Database::queryOne("SELECT setting_value FROM business_settings WHERE category='ai' AND setting_key=?", [$cacheTsKey]);
+            $ts = $rowTs ? (int)$rowTs['setting_value'] : 0;
+            if ($ts > 0 && ($now - $ts) < 86400) {
+                $row = Database::queryOne("SELECT setting_value FROM business_settings WHERE category='ai' AND setting_key=?", [$cacheKey]);
+                if ($row && !empty($row['setting_value'])) {
+                    $list = json_decode($row['setting_value'], true);
+                    if (is_array($list)) return $list;
+                }
+            }
+        }
+    } catch (\Throwable $e) { /* cache miss */ }
+
+    // Fetch fresh
+    $models = [];
+    if ($provider === 'openai') {
+        $models = ai_fetch_openai_models();
+    } elseif ($provider === 'google') {
+        $models = ai_fetch_google_models();
+    } elseif ($provider === 'meta') {
+        $models = ai_fetch_openrouter_models('meta');
+    } elseif ($provider === 'anthropic') {
+        $models = ai_fallback_anthropic_models();
+    }
+
+    try {
+        Database::execute("INSERT INTO business_settings (category, setting_key, setting_value) VALUES ('ai', ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)", [$cacheKey, json_encode($models)]);
+        Database::execute("INSERT INTO business_settings (category, setting_key, setting_value) VALUES ('ai', ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)", [$cacheTsKey, (string)$now]);
+    } catch (\Throwable $e) { /* ignore cache write errors */ }
+
+    return $models;
+}
+
+function ai_fetch_openai_models(): array
+{
+    $key = secret_get('openai_api_key');
+    if (!$key) return [];
+    $ch = curl_init('https://api.openai.com/v1/models');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'Authorization: Bearer ' . $key,
+            'Content-Type: application/json',
+        ],
+        CURLOPT_TIMEOUT => 20,
+    ]);
+    $res = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code !== 200 || !$res) return [];
+    $j = json_decode($res, true);
+    $out = [];
+    if (isset($j['data']) && is_array($j['data'])) {
+        foreach ($j['data'] as $m) {
+            $id = $m['id'] ?? '';
+            if (!$id) continue;
+            if (preg_match('/^(gpt-|o3)/i', $id)) {
+                $out[] = [ 'id' => $id, 'name' => $id, 'description' => '' ];
+            }
+        }
+    }
+    return $out;
+}
+
+function ai_fetch_google_models(): array
+{
+    $key = secret_get('google_api_key');
+    if (!$key) return [];
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' . urlencode($key);
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [ CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20 ]);
+    $res = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code !== 200 || !$res) return [];
+    $j = json_decode($res, true);
+    $out = [];
+    if (isset($j['models']) && is_array($j['models'])) {
+        foreach ($j['models'] as $m) {
+            $name = $m['name'] ?? '';
+            $id = $name ? basename($name) : ($m['displayName'] ?? '');
+            if (!$id) continue;
+            if (preg_match('/^gemini/i', $id)) {
+                $out[] = [ 'id' => $id, 'name' => ($m['displayName'] ?? $id), 'description' => ($m['description'] ?? '') ];
+            }
+        }
+    }
+    return $out;
+}
+
+function ai_fetch_openrouter_models(string $filterProvider = ''): array
+{
+    $url = 'https://openrouter.ai/api/v1/models';
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [ CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20 ]);
+    $res = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code !== 200 || !$res) return [];
+    $j = json_decode($res, true);
+    $out = [];
+    if (isset($j['data']) && is_array($j['data'])) {
+        foreach ($j['data'] as $m) {
+            $id = $m['id'] ?? '';
+            if (!$id) continue;
+            if ($filterProvider) {
+                $f = strtolower($filterProvider);
+                $sid = strtolower($id);
+                if ($f === 'meta') {
+                    if (strpos($sid, 'meta-llama') === false) continue;
+                } elseif ($f === 'openai') {
+                    if (!(strpos($sid, 'openai/') === 0 || strpos($sid, 'gpt-') !== false || strpos($sid, 'o3') !== false)) continue;
+                } elseif ($f === 'google') {
+                    if (!(strpos($sid, 'google/') === 0 || strpos($sid, 'gemini') !== false)) continue;
+                } elseif ($f === 'anthropic') {
+                    if (!(strpos($sid, 'anthropic/') === 0 || strpos($sid, 'claude-') !== false)) continue;
+                }
+            }
+            $label = $m['name'] ?? $id;
+            $desc = $m['description'] ?? '';
+            $out[] = [ 'id' => $id, 'name' => $label, 'description' => $desc ];
+        }
+    }
+    return $out;
+}
+
+function ai_fallback_anthropic_models(): array
+{
+    return [
+        [ 'id' => 'claude-3-5-sonnet-20241022', 'name' => 'Claude 3.5 Sonnet', 'description' => '' ],
+        [ 'id' => 'claude-3-5-haiku-20241022', 'name' => 'Claude 3.5 Haiku', 'description' => '' ],
+        [ 'id' => 'claude-3-opus-20240229', 'name' => 'Claude 3 Opus', 'description' => '' ],
+        [ 'id' => 'claude-3-sonnet-20240229', 'name' => 'Claude 3 Sonnet', 'description' => '' ],
+        [ 'id' => 'claude-3-haiku-20240307', 'name' => 'Claude 3 Haiku', 'description' => '' ],
+    ];
+}
+
+function ai_list_models_openrouter(string $provider, bool $force = false): array
+{
+    $provider = strtolower(trim($provider));
+    $cacheKey = 'ai_models_or_json_' . $provider;
+    $cacheTsKey = $cacheKey . '_ts';
+    $now = time();
+
+    try {
+        if (!$force) {
+            $rowTs = Database::queryOne("SELECT setting_value FROM business_settings WHERE category='ai' AND setting_key=?", [$cacheTsKey]);
+            $ts = $rowTs ? (int)$rowTs['setting_value'] : 0;
+            if ($ts > 0 && ($now - $ts) < 86400) {
+                $row = Database::queryOne("SELECT setting_value FROM business_settings WHERE category='ai' AND setting_key=?", [$cacheKey]);
+                if ($row && !empty($row['setting_value'])) {
+                    $list = json_decode($row['setting_value'], true);
+                    if (is_array($list)) return $list;
+                }
+            }
+        }
+    } catch (\Throwable $e) { /* cache miss */ }
+
+    $models = ai_fetch_openrouter_models($provider);
+
+    try {
+        Database::execute("INSERT INTO business_settings (category, setting_key, setting_value) VALUES ('ai', ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)", [$cacheKey, json_encode($models)]);
+        Database::execute("INSERT INTO business_settings (category, setting_key, setting_value) VALUES ('ai', ?, ?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)", [$cacheTsKey, (string)$now]);
+    } catch (\Throwable $e) { /* ignore cache write errors */ }
+
+    return $models;
+}
+
+?>

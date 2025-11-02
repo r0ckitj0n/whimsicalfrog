@@ -130,6 +130,9 @@ function vite(string $entry): string
                 'js/admin-db-status.js' => 'src/entries/admin-db-status.js',
                 'js/header-bootstrap.js' => 'src/entries/header-bootstrap.js',
                 'js/admin-room-map-editor.js' => 'src/entries/admin-room-map-editor.js',
+                'js/area-item-mapper.js' => 'src/entries/area-item-mapper.js',
+                'js/email-settings.js' => 'src/entries/email-settings.js',
+                'js/admin-email-settings.js' => 'src/entries/admin-email-settings.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             $devMarker = "<script>try{console.log('[ViteBoot] DEV emission active', { origin: '" . addslashes($origin) . "', entry: '" . addslashes($devEntry) . "' });}catch(_){}</script>\n";
@@ -191,6 +194,9 @@ function vite(string $entry): string
                 'js/admin-db-status.js' => 'src/entries/admin-db-status.js',
                 'js/header-bootstrap.js' => 'src/entries/header-bootstrap.js',
                 'js/admin-room-map-editor.js' => 'src/entries/admin-room-map-editor.js',
+                'js/area-item-mapper.js' => 'src/entries/area-item-mapper.js',
+                'js/email-settings.js' => 'src/entries/email-settings.js',
+                'js/admin-email-settings.js' => 'src/entries/admin-email-settings.js',
             ];
             $devEntry = $devEntryMap[$entry] ?? $entry;
             return $bootScript .
@@ -405,6 +411,9 @@ function vite_css(string $entry): string
                     'src/styles/components/modal.css',
                     'src/styles/admin-settings.css',
                 ],
+                'js/admin-email-settings.js' => [
+                    'src/styles/admin/email-settings.css',
+                ],
             ];
             $list = $cssMap[$entry] ?? [];
             if (!empty($list)) {
@@ -497,6 +506,9 @@ function vite_css(string $entry): string
                 }
             }
         }
+    } else {
+        // Emit a clear error if manifest not found
+        return '<!-- vite_css error: manifest not found at any candidate path for entry ' . htmlspecialchars($entry) . ' -->';
     }
 
     return '<!-- vite_css: no css resolved for ' . htmlspecialchars($entry) . ' -->';

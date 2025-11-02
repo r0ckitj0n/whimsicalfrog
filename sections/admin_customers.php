@@ -420,11 +420,11 @@ $messageType = $_GET['type'] ?? '';
                                         $viewHref = '/sections/admin_router.php?' . http_build_query(array_merge($linkBaseTbl, ['view' => $customerId]));
                                         $editHref = '/sections/admin_router.php?' . http_build_query(array_merge($linkBaseTbl, ['edit' => $customerId])); ?>
                                         <a href="<?= htmlspecialchars($viewHref) ?>"
-                                           class="text-blue-600 hover:text-blue-800" title="View Customer">👁️</a>
+                                           class="admin-action-button btn btn-xs btn-icon btn-icon--view" title="View Customer" aria-label="View Customer"></a>
                                         <a href="<?= htmlspecialchars($editHref) ?>"
-                                           class="text-green-600 hover:text-green-800" title="Edit Customer">✏️</a>
+                                           class="admin-action-button btn btn-xs btn-icon btn-icon--edit" title="Edit Customer" aria-label="Edit Customer"></a>
                                         <button data-action="confirm-delete" data-customer-id="<?= $customerId ?>" data-customer-name="<?= htmlspecialchars($firstName . ' ' . $lastName) ?>"
-                                                class="text-red-600 hover:text-red-800" title="Delete Customer">🗑️</button>
+                                                class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" title="Delete Customer" aria-label="Delete Customer"></button>
                                     </div>
                                 </td>
                             </tr>
@@ -564,12 +564,12 @@ $messageType = $_GET['type'] ?? '';
                         <div class="form-group">
                             <label for="newPassword" class="form-label">New Password</label>
                             <input type="password" id="newPassword" name="newPassword"
-                                   class="form-input" placeholder="Enter new password (min 6 characters)" minlength="6">
+                                   class="form-input" placeholder="Enter new password (min 6 characters)" minlength="6" autocomplete="new-password">
                         </div>
                         <div class="form-group">
                             <label for="confirmPassword" class="form-label">Confirm New Password</label>
                             <input type="password" id="confirmPassword" name="confirmPassword"
-                                   class="form-input" placeholder="Confirm new password">
+                                   class="form-input" placeholder="Confirm new password" autocomplete="new-password">
                         </div>
                     </div>
                 </div>

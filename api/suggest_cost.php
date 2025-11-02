@@ -4,6 +4,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/ai_providers.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/auth_helper.php';
+require_once __DIR__ . '/../includes/ai_manager.php';
 
 // JSON responses standardized via Response helper
 
@@ -54,7 +55,7 @@ try {
     // Initialize cost analysis using AI provider system
     try {
         $costData = generateAICostSuggestion($name, $description, $category);
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         // Fallback to Jon's AI algorithmic analysis if AI fails
         error_log("AI Cost Provider failed, using Jon's AI fallback: " . $e->getMessage());
         $costData = analyzeCostStructure($name, $description, $category, $pdo);
@@ -115,7 +116,7 @@ try {
 function analyzeCostStructure($name, $description, $category, $pdo)
 {
     // Load AI settings from database
-    $aiSettings = loadAISettings($pdo);
+    $aiSettings = loadAISettings();
 
     // Enhanced AI item analysis
     $analysis = analyzeItemEnhanced($name, $description, $category);

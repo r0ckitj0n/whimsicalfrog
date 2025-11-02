@@ -4,7 +4,7 @@ html,
 body {
   height: 100%;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 body {
@@ -73,8 +73,8 @@ body {
   gap: 0.9rem;
   min-height: 0;
   height: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 .rme-sidebar {
@@ -82,7 +82,7 @@ body {
   flex-direction: column;
   gap: 0.6rem;
   min-height: 0;
-  overflow-y: auto;
+  overflow-y: visible;
   padding-right: 0.15rem;
   scrollbar-width: thin;
 }
@@ -92,8 +92,8 @@ body {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow-x: visible;
+  overflow-y: visible;
 }
 
 .rme-panel {
@@ -137,9 +137,33 @@ body {
 }
 
 .rme-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  align-items: center;
+  overflow-x: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Reorder Quick Actions by likely usage (left → right)
+   1) Save Map, 2) Add New Area, 3) Undo, 4) Finish, 5) Load Map, 6) Fullscreen, 7) Clear All */
+.rme-actions-grid #rmeSaveMapBtn { order: 1; }
+.rme-actions-grid #rmeStartPolyBtn { order: 2; }
+.rme-actions-grid #rmeUndoPointBtn { order: 3; }
+.rme-actions-grid #rmeFinishPolyBtn { order: 4; }
+.rme-actions-grid #rmeLoadActiveBtn { order: 5; }
+.rme-actions-grid #rmeFullscreenBtn { order: 6; }
+.rme-actions-grid #rmeClearBtn { order: 7; }
+
+/* Make Quick Actions buttons compact within the Room Map Editor only */
+.rme-actions-grid .admin-action-button {
+  padding: 6px 8px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  line-height: 1;
+  min-height: 34px;
+  min-width: 34px;
+  justify-self: start; /* avoid stretching to full grid cell width */
 }
 
 .rme-preset-grid {
@@ -158,8 +182,8 @@ body {
 }
 
 .rme-area-list {
-  max-height: 200px;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
   background: #f9fafb;
@@ -270,6 +294,51 @@ body {
   cursor: crosshair;
 }
 
+/* Saved Maps list rows */
+.rme-map-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.rme-map-row:last-of-type {
+  border-bottom: none;
+}
+.rme-map-row.is-active {
+  background: #ecfdf5; /* green-50 */
+  border-left: 3px solid #10b981; /* emerald-500 */
+}
+
+/* Collapsible panels */
+.rme-collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+}
+.rme-collapsible-toggle {
+  appearance: none;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  line-height: 1rem;
+  cursor: pointer;
+}
+.rme-collapsible-toggle:hover { background: #f9fafb; }
+.rme-collapsible-header .rme-chevron {
+  display: inline-block;
+  transform-origin: center;
+  transition: transform 0.15s ease-in-out;
+}
+.rme-collapsible-header.is-open .rme-chevron { transform: rotate(90deg); }
+.rme-collapsible-content[aria-hidden="true"] { display: none; }
+
 .rme-gridline {
   stroke: #e5e7eb;
   stroke-width: 1;
@@ -342,8 +411,8 @@ body {
     padding: 1rem;
   }
 
-  .rme-actions-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  .rme-actions-grid { /* single row maintained; ensure scroll available */
+    overflow-x: visible;
   }
 
   .rme-preset-grid {
@@ -357,6 +426,8 @@ body {
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  width: 100dvw !important; /* dynamic viewport width */
+  height: 100dvh !important; /* dynamic viewport height */
   z-index: var(--z-admin-overlay-content, 10101) !important;
   background: white !important;
 }

@@ -34,13 +34,13 @@
       const active = m.is_active ? '<span class="ml-2 px-2 py-0.5 text-xs rounded bg-green-100 text-green-700">Active<\/span>' : '';
       return `<div class="flex items-center justify-between px-3 py-2 border-b">
         <div>
-          <div class="font-medium">${m.map_name||'Untitled'} ${active}</div>
-          <div class="text-xs text-gray-500">#${m.id}</div>
-        </div>
+          <div class="font-medium">${m.map_name||'Untitled'} ${active}<\/div>
+          <div class="text-xs text-gray-500">#${m.id}<\/div>
+        <\/div>
         <div class="flex gap-2">
-          <button class="btn btn-xs" data-action="rm-apply" data-id="${m.id}">Apply<\/button>
-          <button class="btn btn-xs btn-danger" data-action="rm-delete" data-id="${m.id}">Delete<\/button>
-        </div>
+          <button class="admin-action-button btn btn-xs btn-icon btn-icon--view" data-action="rm-apply" data-id="${m.id}" aria-label="Apply" title="Apply"><\/button>
+          <button class="admin-action-button btn btn-xs btn-danger btn-icon btn-icon--delete" data-action="rm-delete" data-id="${m.id}" aria-label="Delete" title="Delete"><\/button>
+        <\/div>
       <\/div>`;
     }).join('');
     byId('rmMapsList').innerHTML = `<div class="border rounded">${rows}<\/div>`;

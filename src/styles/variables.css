@@ -68,4 +68,15 @@
   --button-bg-primary: var(--brand-primary);
   --button-text-primary: #ffffff;
   --button-bg-primary-hover: var(--brand-secondary); /* use secondary brand on hover */
+
+  /* Form inputs (global defaults) */
+  --form-input-bg: #ffffff;
+  --form-input-color: #111827; /* gray-900 */
+  --form-input-border: 1px solid #d1d5db; /* gray-300 */
+  --form-input-border-focus: 1.5px solid var(--brand-primary, #87ac3a);
+  --form-input-padding: 0.5rem 0.75rem;
+  --form-input-border-radius: 8px;
+  --form-input-placeholder: #6b7280; /* gray-500 */
+  --form-select-bg: #ffffff;
+  --form-select-arrow: none;
 }

@@ -20,6 +20,7 @@ function initCartModal() {
       lockDepth: 0,
       prevHtmlOverflow: '',
       prevBodyOverflow: '',
+      previouslyFocusedElement: null,
       resizeBound: false,
     };
 
@@ -34,6 +35,7 @@ function initCartModal() {
       overlay.className = 'confirmation-modal-overlay';
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-modal', 'true');
+      try { overlay.setAttribute('tabindex', '-1'); } catch(_) {}
 
       // Modal container
       const modal = document.createElement('div');
@@ -76,8 +78,11 @@ function initCartModal() {
       state.upsellWrap = overlay.querySelector('#cartUpsells');
       state.upsellList = overlay.querySelector('#cartUpsellsList');
 
-      // Let clicks inside the modal bubble so global delegated handlers (e.g., remove item) work.
-      // Underlying page is already shielded by the overlay covering the viewport.
+      try {
+        overlay.setAttribute('aria-labelledby', 'cartModalTitle');
+        const t = overlay.querySelector('.cart-modal-title');
+        if (t) t.id = 'cartModalTitle';
+      } catch(_) {}
 
       // Close on overlay click (outside modal content)
       overlay.addEventListener('click', (e) => {
@@ -109,6 +114,28 @@ function initCartModal() {
 
       // Close button
       overlay.querySelector('[data-action="close-cart-modal"]').addEventListener('click', () => close());
+
+      try {
+        if (!overlay._wfFocusTrap) {
+          overlay._wfFocusTrap = (e) => {
+            if (e.key !== 'Tab') return;
+            if (!state.overlay || !state.overlay.classList.contains('show')) return;
+            const scope = state.container || state.overlay;
+            const nodes = scope.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+            const focusables = Array.from(nodes).filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1 && el.offsetParent !== null);
+            if (!focusables.length) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            if (e.shiftKey) {
+              if (active === first || !scope.contains(active)) { last.focus(); e.preventDefault(); }
+            } else {
+              if (active === last || !scope.contains(active)) { first.focus(); e.preventDefault(); }
+            }
+          };
+          overlay.addEventListener('keydown', overlay._wfFocusTrap, true);
+        }
+      } catch(_) {}
 
       // Bind ESC once (global), referencing state.overlay so it always targets current overlay
       if (!state.keydownHandler) {
@@ -162,14 +189,48 @@ function initCartModal() {
         if (state.overlay) {
           try { state.overlay.remove(); } catch(_) {}
           state.overlay = null;
+          state.container = null;
+          state.itemsEl = null;
+          state.upsellWrap = null;
+          state.upsellList = null;
         }
         createOverlay();
       }
+      try { state.previouslyFocusedElement = document.activeElement; } catch(_) {}
       try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(state.overlay); } catch(_) {}
-      state.overlay.classList.add('show');
-      try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-      // Lock background scroll via CSS class
-      try { lockScrollCss(); } catch(_) {}
+      if (typeof window.showModal === 'function') {
+        window.showModal('cartModalOverlay');
+      } else {
+        state.overlay.classList.add('show');
+        try { state.overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
+        try { lockScrollCss(); } catch(_) {}
+      }
+      // Focus-in guard: if anything outside grabs focus, pull it back in
+      try {
+        if (!state._focusinGuard) {
+          state._focusinGuard = (e) => {
+            try {
+              if (!state.overlay || !state.overlay.classList.contains('show')) return;
+              const t = e && e.target;
+              if (t && state.overlay && !state.overlay.contains(t)) {
+                const scope = state.container || state.overlay;
+                const target = scope.querySelector('[data-action="close-cart-modal"], button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                setTimeout(() => { try { (target && target.focus) ? target.focus() : (state.overlay && state.overlay.focus && state.overlay.focus()); } catch(_) {} }, 0);
+              }
+            } catch(_) {}
+          };
+          document.addEventListener('focusin', state._focusinGuard, true);
+        }
+      } catch(_) {}
+      try {
+        const scope = state.container || state.overlay;
+        const target = scope.querySelector('[data-action="close-cart-modal"], button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const focusIt = () => { try { target && typeof target.focus === 'function' && target.focus(); } catch(_) {} };
+        // Try immediately, then schedule for next frames and a short timeout as fallback
+        focusIt();
+        try { requestAnimationFrame(() => { focusIt(); requestAnimationFrame(focusIt); }); } catch(_) {}
+        setTimeout(focusIt, 150);
+      } catch(_) {}
       // Always resync from storage upon open to avoid stale in-memory state
       try { window.WF_Cart?.refreshFromStorage?.(); } catch(_) {}
       // Render into the modal container
@@ -185,10 +246,17 @@ function initCartModal() {
         const ae = document.activeElement;
         if (ae && typeof ae.blur === 'function') ae.blur();
       } catch(_) {}
-      state.overlay.classList.remove('show');
-      try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-      // Unlock background scroll via CSS class
-      try { unlockScrollCss(); } catch(_) {}
+      if (typeof window.hideModal === 'function') {
+        window.hideModal('cartModalOverlay');
+      } else {
+        state.overlay.classList.remove('show');
+        try { state.overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+        try { unlockScrollCss(); } catch(_) {}
+      }
+      try { if (state.previouslyFocusedElement) state.previouslyFocusedElement.focus(); } catch(_) {}
+      try { state.previouslyFocusedElement = null; } catch(_) {}
+      // Remove focus-in guard
+      try { if (state._focusinGuard) { document.removeEventListener('focusin', state._focusinGuard, true); state._focusinGuard = null; } } catch(_) {}
     }
 
     // Public API

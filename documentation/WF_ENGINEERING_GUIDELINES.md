@@ -52,6 +52,7 @@ This document consolidates the standards and preferences established on Whimsica
   - backups/duplicates/: Quarantine copies with trailing suffixes (e.g., file " 2", " 3", *.bak), preserving paths
   - backups/unused_styles/: Archive unused CSS rules/files instead of deleting
   - backups/sql/: Archive SQL files not required at runtime
+  - backups/tooltips/: Tooltip snapshot JSONs (help-tooltips-*.json). All tooltip exports must live here; restore scripts search this path first.
 - reports/: Automated reports (e.g., asset audits, CSS consolidation output)
 - public assets/images: Keep originals; avoid duplication across dist/
 
@@ -175,6 +176,7 @@ This document consolidates the standards and preferences established on Whimsica
 - Guards:
   - `scripts/guard-templates-css.mjs` fails builds on legacy `<link rel="stylesheet">`, `href="*.css"` in templates, or inline style attributes (allow-list emails/backups)
   - `scripts/check-orphaned-css.mjs` to detect unreferenced CSS; archive to `backups/unused_styles/`
+  - `scripts/dev/guard-backups-staged.mjs` blocks staging backup-like files outside `backups/`, and enforces tooltip snapshots under `backups/tooltips/`
 - Pre-commit hook:
   - Block duplicate-suffixed files (" 2", " 3", `*.bak`) outside `backups/duplicates/`
 - Dev scripts and monitors should remain in repo (e.g., do not archive `scripts/start_servers.sh` or `scripts/server_monitor.sh`).

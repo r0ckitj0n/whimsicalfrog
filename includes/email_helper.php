@@ -23,7 +23,13 @@ class EmailHelper
         'from_email' => '',
         'from_name' => '',
         'reply_to' => '',
-        'charset' => 'UTF-8'
+        'charset' => 'UTF-8',
+        'return_path' => '',
+        'dkim_domain' => '',
+        'dkim_selector' => '',
+        'dkim_identity' => '',
+        'dkim_private' => '',
+        'smtp_allow_self_signed' => false
     ];
 
     private static $mailer = null;
@@ -42,6 +48,57 @@ class EmailHelper
         self::$config = array_merge(self::$config, $config);
         // Reset mailer instance so changes apply
         self::$mailer = null;
+    }
+
+    public static function preflightSMTP()
+    {
+        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            throw new Exception('PHPMailer not available. Install via Composer or use mail() function.');
+        }
+        $m = new PHPMailer\PHPMailer\PHPMailer(true);
+        $m->isSMTP();
+        $m->Host = self::$config['smtp_host'];
+        $m->SMTPAuth = (bool) self::$config['smtp_auth'];
+        $m->Username = self::$config['smtp_username'];
+        $m->Password = self::$config['smtp_password'];
+        $m->Port = self::$config['smtp_port'];
+        if (self::$config['smtp_encryption'] === 'ssl') {
+            $m->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        } elseif (self::$config['smtp_encryption'] === 'tls') {
+            $m->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        }
+        if (isset(self::$config['smtp_timeout'])) {
+            $m->Timeout = (int) self::$config['smtp_timeout'];
+        }
+        if (isset(self::$config['smtp_debug'])) {
+            $m->SMTPDebug = (int) self::$config['smtp_debug'];
+            $sink = self::$config['smtp_debug_sink'] ?? null;
+            if (is_callable($sink)) {
+                $m->Debugoutput = function ($str, $level) use ($sink) {
+                    try { $sink($str, $level); } catch (\Throwable $__) { error_log('PHPMailer SMTP debug(' . $level . '): ' . $str); }
+                };
+            } else {
+                $m->Debugoutput = function ($str, $level) {
+                    error_log('PHPMailer SMTP debug(' . $level . '): ' . $str);
+                };
+            }
+        }
+        if (!empty(self::$config['smtp_allow_self_signed'])) {
+            $m->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                ]
+            ];
+        }
+        $m->CharSet = self::$config['charset'];
+        $ok = $m->smtpConnect();
+        if (!$ok) {
+            throw new Exception('SMTP connect failed');
+        }
+        try { $m->smtpClose(); } catch (\Throwable $__) {}
+        return true;
     }
 
     /**
@@ -217,7 +274,26 @@ class EmailHelper
                 }
             }
 
+            if (!empty(self::$config['smtp_allow_self_signed'])) {
+                self::$mailer->SMTPOptions = [
+                  'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true
+                  ]
+                ];
+            }
+
             self::$mailer->CharSet = self::$config['charset'];
+
+            if (!empty(self::$config['dkim_domain']) && !empty(self::$config['dkim_selector']) && !empty(self::$config['dkim_private'])) {
+                self::$mailer->DKIM_domain = self::$config['dkim_domain'];
+                self::$mailer->DKIM_selector = self::$config['dkim_selector'];
+                self::$mailer->DKIM_private = self::$config['dkim_private'];
+                if (!empty(self::$config['dkim_identity'])) {
+                  self::$mailer->DKIM_identity = self::$config['dkim_identity'];
+                }
+            }
         }
 
         // Clear previous recipients
@@ -225,6 +301,9 @@ class EmailHelper
         self::$mailer->clearAttachments();
 
         // Set sender
+        if (!empty(self::$config['return_path'])) {
+          self::$mailer->Sender = self::$config['return_path'];
+        }
         self::$mailer->setFrom($options['from_email'], $options['from_name']);
 
         // Set reply-to
@@ -439,16 +518,27 @@ class EmailHelper
                 $settings[$row['setting_key']] = $row['setting_value'];
             }
 
+            $be = class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_email', '') : (string)($settings['from_email'] ?? '');
+            $bn = class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_name', 'WhimsicalFrog') : (string)($settings['from_name'] ?? 'WhimsicalFrog');
+            $rt = isset($settings['reply_to']) && $settings['reply_to'] !== ''
+                ? (string)$settings['reply_to']
+                : (class_exists('BusinessSettings') ? (string) BusinessSettings::get('business_support_email', $be) : (string)$be);
+
             $config = [
                 'smtp_enabled' => ($settings['smtp_enabled'] ?? 'false') === 'true',
                 'smtp_host' => $settings['smtp_host'] ?? '',
                 'smtp_port' => (int)($settings['smtp_port'] ?? 587),
                 'smtp_username' => $settings['smtp_username'] ?? '',
-                'smtp_password' => $settings['smtp_password'] ?? '',
+                'smtp_password' => '',
                 'smtp_encryption' => $settings['smtp_encryption'] ?? 'tls',
-                'from_email' => $settings['from_email'] ?? '',
-                'from_name' => $settings['from_name'] ?? 'WhimsicalFrog',
-                'reply_to' => $settings['reply_to'] ?? ''
+                'from_email' => $be,
+                'from_name' => $bn,
+                'reply_to' => $rt,
+                'return_path' => $settings['return_path'] ?? '',
+                'dkim_domain' => $settings['dkim_domain'] ?? '',
+                'dkim_selector' => $settings['dkim_selector'] ?? '',
+                'dkim_identity' => $settings['dkim_identity'] ?? '',
+                'smtp_allow_self_signed' => in_array(strtolower((string)($settings['smtp_allow_self_signed'] ?? 'false')), ['1','true','yes','on'], true)
             ];
 
             // Additional SMTP controls (with sane defaults)
@@ -469,6 +559,10 @@ class EmailHelper
             $secUser = secret_get('smtp_username');
             if ($secUser !== null && $secUser !== '') {
                 $config['smtp_username'] = $secUser;
+            }
+            $dkimKey = secret_get('dkim_private_key');
+            if ($dkimKey !== null && $dkimKey !== '') {
+                $config['dkim_private'] = $dkimKey;
             }
 
             self::configure($config);

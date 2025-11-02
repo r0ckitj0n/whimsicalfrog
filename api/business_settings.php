@@ -34,9 +34,6 @@ function ensureEmailSettings($pdo)
     try {
         Database::execute("INSERT INTO business_settings (category, setting_key, setting_value, description, setting_type, display_name)
               VALUES
-              ('email', 'from_email', '', 'Default From email address used for outgoing emails', 'text', 'From Email'),
-              ('email', 'from_name', '', 'Default From name used for outgoing emails', 'text', 'From Name'),
-              ('email', 'admin_email', '', 'Primary admin email address for notifications', 'text', 'Admin Email'),
               ('email', 'bcc_email', '', 'Optional BCC email for order confirmations and notifications', 'text', 'BCC Email'),
               ('email', 'smtp_enabled', 'false', 'Enable SMTP for sending emails (true/false)', 'boolean', 'SMTP Enabled'),
               ('email', 'smtp_host', '', 'SMTP server hostname', 'text', 'SMTP Host'),
@@ -45,10 +42,14 @@ function ensureEmailSettings($pdo)
               ('email', 'reply_to', '', 'Reply-To email address for outgoing emails', 'text', 'Reply-To Email'),
               ('email', 'test_recipient', '', 'Default recipient for test emails', 'text', 'Test Recipient Email'),
               ('email', 'smtp_username', '', 'SMTP username if authentication is required', 'text', 'SMTP Username'),
-              ('email', 'smtp_password', '', 'SMTP password (store securely if supported)', 'text', 'SMTP Password'),
               ('email', 'smtp_auth', 'true', 'Whether SMTP authentication is required', 'boolean', 'SMTP Auth Enabled'),
               ('email', 'smtp_timeout', '30', 'Timeout in seconds for SMTP connections', 'number', 'SMTP Timeout'),
-              ('email', 'smtp_debug', 'false', 'Enable verbose SMTP debug logging', 'boolean', 'SMTP Debug')
+              ('email', 'smtp_debug', 'false', 'Enable verbose SMTP debug logging', 'boolean', 'SMTP Debug'),
+              ('email', 'return_path', '', 'Envelope sender (bounce address) for outgoing emails', 'text', 'Return-Path'),
+              ('email', 'smtp_allow_self_signed', 'false', 'Allow self-signed TLS certificates', 'boolean', 'SMTP Allow Self-Signed'),
+              ('email', 'dkim_domain', '', 'DKIM signing domain', 'text', 'DKIM Domain'),
+              ('email', 'dkim_selector', '', 'DKIM selector for DNS record', 'text', 'DKIM Selector'),
+              ('email', 'dkim_identity', '', 'Optional DKIM identity (email address)', 'text', 'DKIM Identity')
               ON DUPLICATE KEY UPDATE setting_value = setting_value, description = VALUES(description), setting_type = VALUES(setting_type), display_name = VALUES(display_name)");
 
         echo json_encode(['success' => true]);
@@ -459,6 +460,11 @@ function getBusinessInfo()
         'business_policy_shipping' => $get('business_policy_shipping'),
         'business_policy_warranty' => $get('business_policy_warranty'),
         'business_policy_url' => $get('business_policy_url'),
+        'about_page_title' => $get('about_page_title'),
+        'about_page_content' => $get('about_page_content'),
+        'privacy_policy_content' => $get('privacy_policy_content'),
+        'terms_of_service_content' => $get('terms_of_service_content'),
+        'store_policies_content' => $get('store_policies_content'),
         'business_brand_font_primary' => $get('business_brand_font_primary'),
         'business_brand_font_secondary' => $get('business_brand_font_secondary'),
         'business_css_vars' => $get('business_css_vars'),

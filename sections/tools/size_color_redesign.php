@@ -78,7 +78,11 @@ AuthHelper::requireAdmin();
     try { return JSON.parse(text); } catch(e) { return { success: false, raw: text, error: 'Invalid JSON' }; }
   }
   function getQS(name){ try { return new URLSearchParams(window.location.search).get(name); } catch(_) { return null; } }
-  function setStatus(msg, ok){ if (!statusChip) return; statusChip.textContent = msg || ''; statusChip.style.background = ok ? '#e0f2fe' : '#fee2e2'; }
+  function setStatus(msg, ok){
+    if (!statusChip) return;
+    statusChip.textContent = msg || '';
+    try { statusChip.classList.remove('pill-ok','pill-err'); statusChip.classList.add(ok ? 'pill-ok' : 'pill-err'); } catch(_) {}
+  }
   function renderAnalysis(a){
     const sum = document.getElementById('analysisSummary');
     const issues = document.getElementById('analysisIssues');
@@ -95,7 +99,13 @@ AuthHelper::requireAdmin();
     if (!data || !Array.isArray(data.proposedSizes)) { if (meta) meta.textContent = ''; return; }
     if (meta) meta.textContent = data.message || '';
     const rows = data.proposedSizes.map(s => {
-      const colors = (s.colors||[]).map(c => `<span class="pill" title="${(c.color_code||'').replace(/"/g,'&quot;')}"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c.color_code||'#000'};margin-right:6px;vertical-align:-1px;"></span>${(c.color_name||'')}</span>`).join(' ');
+      const colors = (s.colors||[]).map(c => {
+        const code = (c.color_code||'#000');
+        const name = (c.color_name||'');
+        return `<span class="pill" title="${code.replace(/"/g,'&quot;')}">`
+          + `<svg width="12" height="12" viewBox="0 0 12 12" class="inline-block mr-1" aria-hidden="true"><circle cx="6" cy="6" r="5" fill="${code}" stroke="currentColor"/></svg>`
+          + `${name}</span>`;
+      }).join(' ');
       return `<div class="border rounded p-2"><div class="flex items-center justify-between"><div class="font-medium">${s.name||s.size_name||''} <span class="text-xs text-gray-500">${s.code||s.size_code||''}</span></div><div class="text-sm text-gray-600">Price Δ ${Number(s.price_adjustment||0).toFixed(2)}</div></div><div class="mt-2 flex flex-wrap gap-1">${colors||'<span class="text-sm text-gray-500">No colors</span>'}</div></div>`;
     }).join('');
     pv.innerHTML = rows || '<div class="text-sm text-gray-500">No proposal generated yet.</div>';

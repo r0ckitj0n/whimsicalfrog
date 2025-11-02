@@ -54,6 +54,7 @@ export default defineConfig({
         'js/admin-cost-breakdown.js': resolve(__dirname, 'src/entries/admin-cost-breakdown.js'),
         'js/help-documentation.js': resolve(__dirname, 'src/entries/help-documentation.js'),
         'js/admin-room-map-editor.js': resolve(__dirname, 'src/entries/admin-room-map-editor.js'),
+        'js/area-item-mapper.js': resolve(__dirname, 'src/entries/area-item-mapper.js'),
       },
     }
   },

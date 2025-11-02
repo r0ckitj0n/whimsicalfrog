@@ -67,7 +67,7 @@ if ($inModal) {
   <div class="admin-modal admin-modal-content admin-modal--lg">
     <div class="modal-header">
       <h2 id="spmEditorTitle" class="admin-card-title">Post Template</h2>
-      <button type="button" class="admin-modal-close" data-action="spm-editor-close" aria-label="Close">×</button>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="spm-editor-close" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
       <form id="spmEditorForm" class="space-y-2" data-action="prevent-submit">
@@ -438,6 +438,15 @@ if ($inModal) {
 
   function openEditor(t){
     try { if (overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(_){ }
+    try {
+      const pd = window.parent && window.parent.document;
+      if (pd) {
+        const ifr = Array.from(pd.querySelectorAll('iframe')).find(f => { try { return f.contentWindow === window; } catch(_) { return false; } });
+        const ov = ifr ? ifr.closest('.admin-modal-overlay') : null;
+        if (ov && ov.id && typeof window.parent.showModal === 'function') { try { window.parent.showModal(ov.id); } catch(_){} }
+        if (ov) { try { ov.classList.add('wf-dim-backdrop'); } catch(_){} }
+      }
+    } catch(_){}
     overlay.classList.add('show');
     overlay.classList.remove('hidden');
     overlay.setAttribute('aria-hidden','false');
@@ -473,6 +482,16 @@ if ($inModal) {
     overlay.classList.add('hidden');
     overlay.classList.remove('show');
     overlay.setAttribute('aria-hidden','true');
+    try {
+      const anyOpen = !!document.querySelector('.admin-modal-overlay.show');
+      if (anyOpen) return;
+      const pd = window.parent && window.parent.document;
+      if (pd) {
+        const ifr = Array.from(pd.querySelectorAll('iframe')).find(f => { try { return f.contentWindow === window; } catch(_) { return false; } });
+        const ov = ifr ? ifr.closest('.admin-modal-overlay') : null;
+        if (ov) { try { ov.classList.remove('wf-dim-backdrop'); } catch(_){} }
+      }
+    } catch(_){}
   }
 
   document.getElementById('spmRefresh')?.addEventListener('click', loadTemplates);

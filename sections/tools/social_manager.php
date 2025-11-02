@@ -14,14 +14,11 @@ if (!$inModal) {
   }
 }
 ?>
-<style>
-.hidden{display:none !important}
-</style>
 <div class="admin-marketing-page">
   <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
     <div class="modal-header">
       <h2 id="socialManagerTitle" class="admin-card-title">📱 Social Accounts Manager</h2>
-      <button type="button" class="admin-modal-close" data-action="close-admin-modal" aria-label="Close">×</button>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
     </div>
     <div class="modal-body">
       <div id="socialManagerContent" class="space-y-2 text-sm text-gray-700">Loading accounts…</div>

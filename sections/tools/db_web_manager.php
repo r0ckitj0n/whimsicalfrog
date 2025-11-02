@@ -35,7 +35,7 @@ if (!$authenticated) {
             echo "<div class='error'>" . htmlspecialchars($error) . "</div>";
         } ?>
         <form method="post">
-          <input type="password" name="password" placeholder="Password" required class="form-input form-input--narrow">
+          <input type="password" name="password" placeholder="Password" required class="form-input form-input--narrow" autocomplete="current-password">
           <button type="submit" class="btn btn-primary">Login</button>
         </form>
       </div>

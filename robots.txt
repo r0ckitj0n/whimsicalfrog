@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /admin
+Disallow: /sections/admin_router.php
+Disallow: /scripts/
+Disallow: /logs/
+Disallow: /backups/
+Disallow: /reports/
+Disallow: /vendor/
+Allow: /
+
+Sitemap: https://whimsicalfrog.us/sitemap.xml

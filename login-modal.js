@@ -23,7 +23,7 @@
     modal.className = 'wf-login-modal';
     modal.innerHTML = `
       <div class="wf-login-card">
-        <button type="button" class="wf-login-close" aria-label="Close">×</button>
+        <button type="button" class="wf-login-close btn btn-icon btn-icon--close" aria-label="Close"></button>
         <h3 class="wf-login-title">Sign in</h3>
         <form id="wfLoginForm" class="wf-login-form">
           <label class="wf-field">
@@ -61,20 +61,26 @@
     returnTo = desiredReturn || window.location.pathname + window.location.search + window.location.hash;
     try { sessionStorage.setItem('wf_login_return_to', returnTo); } catch (_) {}
     try { window.WFModalUtils && window.WFModalUtils.ensureOnBody && window.WFModalUtils.ensureOnBody(overlay); } catch(_) {}
-    overlay.classList.add('show');
-    try { overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
-    // Apply standardized scroll lock via centralized helper
-    WFModals?.lockScroll?.();
+    if (typeof window.showModal === 'function') {
+      window.showModal('wf-login-overlay');
+    } else {
+      overlay.classList.add('show');
+      try { overlay.setAttribute('aria-hidden', 'false'); } catch(_) {}
+      WFModals?.lockScroll?.();
+    }
     const firstInput = modal.querySelector('input[name="username"]');
     if (firstInput) firstInput.focus();
   }
 
   function closeModal() {
     if (!overlay) return;
-    overlay.classList.remove('show');
-    try { overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
-    // Remove scroll lock only if no other modals are open
-    WFModals?.unlockScrollIfNoneOpen?.();
+    if (typeof window.hideModal === 'function') {
+      window.hideModal('wf-login-overlay');
+    } else {
+      overlay.classList.remove('show');
+      try { overlay.setAttribute('aria-hidden', 'true'); } catch(_) {}
+      WFModals?.unlockScrollIfNoneOpen?.();
+    }
   }
 
   async function onSubmitModalForm(e) {

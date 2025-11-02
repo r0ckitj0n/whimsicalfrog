@@ -101,8 +101,8 @@ const EnhancedRoomSettings = {
           </div>
           <div id="roomSettingsContent" class="hidden">
             <div class="settings-tabs">
-              <button class="tab-button active" data-tab="rooms">Room Configuration</button>
-              <button class="tab-button" data-tab="display">Display Settings</button>
+              <button class="tab-button tab-outline active" data-tab="rooms">Room Configuration</button>
+              <button class="tab-button tab-outline" data-tab="display">Display Settings</button>
             </div>
             <div class="tab-content">
               <div id="rooms-tab" class="tab-panel active">

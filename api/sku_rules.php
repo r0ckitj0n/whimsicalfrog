@@ -5,16 +5,10 @@ require_once __DIR__ . '/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/auth_helper.php';
 
-// Dev-friendly bypass: allow local same-origin iframe/API calls marked by X-WF-ApiClient
-$__host = $_SERVER['HTTP_HOST'] ?? '';
-$__isLocal = (strpos($__host, 'localhost') !== false || strpos($__host, '127.0.0.1') !== false);
-$__hasClient = isset($_SERVER['HTTP_X_WF_APICLIENT']) || isset($_SERVER['HTTP_X_REQUESTED_WITH']);
-if (!($__isLocal && $__hasClient)) {
-    if (!(class_exists('AuthHelper') ? AuthHelper::isLoggedIn() : (function_exists('isLoggedIn') && isLoggedIn()))) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'message' => 'Access denied.']);
-        exit;
-    }
+if (!(class_exists('AuthHelper') ? AuthHelper::isLoggedIn() : (function_exists('isLoggedIn') && isLoggedIn()))) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Access denied.']);
+    exit;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];

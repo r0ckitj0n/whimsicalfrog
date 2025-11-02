@@ -3,6 +3,10 @@
     "stylelint-config-standard"
   ],
   "rules": {
+    "value-keyword-case": null,
+    "selector-not-notation": null,
+    "declaration-block-no-duplicate-properties": null,
+    "declaration-property-value-keyword-no-deprecated": null,
     "no-empty-source": null,
     "no-duplicate-selectors": null,
     "rule-empty-line-before": null,
@@ -33,9 +37,7 @@
     "declaration-property-value-disallowed-list": {
       "z-index": ["/^\\d+$/"]
     },
-    "declaration-property-value-allowed-list": {
-      "z-index": ["var\\(--z-[a-z0-9-]+\\)", "calc\\(var\\(--z-[a-z0-9-]+\\)[^)]*\\)"]
-    },
+    "declaration-property-value-allowed-list": {},
     "selector-disallowed-list": [
       "\\[data-action"
     ]

@@ -51,8 +51,14 @@ jobs:
       - name: Run style guard (no inline styles)
         run: npm run guard:styles
 
+      - name: Run style attribute guard (no style="..." in templates)
+        run: npm run guard:style-attrs
+
       - name: Run brand color and font guards
         run: npm run guard:brand-and-fonts
+
+      - name: Enforce tooltip policy (label-only)
+        run: npm run guard:tooltips:labels
 
       - name: Run z-index guard
         run: npm run guard:z-index

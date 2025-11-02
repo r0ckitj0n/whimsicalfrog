@@ -19,52 +19,7 @@ if (!$isModal) {
 if ($isModal) {
     // Modal context - load minimal header for CSS/JS only
     require_once dirname(__DIR__) . '/partials/modal_header.php';
-    echo '<style>
-        html, body {
-            height: auto !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            overflow-x: hidden !important;
-        }
-        *, *::before, *::after { box-sizing: inherit !important; }
-        body { 
-            background: white !important; 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            font-family: system-ui, -apple-system, sans-serif !important;
-        }
-        #categoryManagementRoot {
-            padding: 12px !important;
-            width: 100% !important;
-            max-width: none !important;
-            display: flex !important;
-            flex-direction: column !important;
-            gap: 0.75rem !important;
-        }
-        #categoryManagementRoot .admin-card {
-            padding: 0.75rem !important;
-            margin-bottom: 0 !important;
-            width: 100% !important;
-        }
-        #categoryManagementRoot .admin-card + .admin-card {
-            margin-top: 0.75rem !important;
-        }
-        #categoryManagementRoot .admin-card .admin-card {
-            margin-top: 1rem !important;
-        }
-        #categoryManagementRoot .admin-form-inline {
-            gap: 6px !important;
-            flex-wrap: wrap !important;
-        }
-        #categoryManagementRoot .admin-table {
-            margin-bottom: 0 !important;
-            width: 100% !important;
-        }
-        .admin-title { 
-            margin-top: 0 !important; 
-            margin-bottom: 0.75rem !important; 
-        }
-    </style>';
+    // Embed layout/styles handled via body[data-embed] and admin utilities (Vite CSS)
 } else {
     // Full page context - load complete admin layout
     require_once dirname(__DIR__) . '/partials/modal_header.php';
@@ -155,10 +110,10 @@ $messageType = $_GET['type'] ?? '';
      <!-- Tabs Navigation -->
     <div class="admin-card my-2">
       <div class="admin-tablist" role="tablist" aria-label="Category Management Tabs">
-        <button type="button" role="tab" id="tabBtnOverview" class="btn btn-primary" aria-selected="true" aria-controls="tabPanelOverview">Overview</button>
-        <button type="button" role="tab" id="tabBtnCategories" class="btn" aria-selected="false" aria-controls="tabPanelCategories">Categories</button>
-        <button type="button" role="tab" id="tabBtnAssignments" class="btn" aria-selected="false" aria-controls="tabPanelAssignments">Assignments</button>
-        <button type="button" role="tab" id="tabBtnSkuRules" class="btn" aria-selected="false" aria-controls="tabPanelSkuRules">SKU Rules</button>
+        <button type="button" role="tab" id="tabBtnOverview" class="btn btn-primary tab-outline" aria-selected="true" aria-controls="tabPanelOverview">Overview</button>
+        <button type="button" role="tab" id="tabBtnCategories" class="btn tab-outline" aria-selected="false" aria-controls="tabPanelCategories">Categories</button>
+        <button type="button" role="tab" id="tabBtnAssignments" class="btn tab-outline" aria-selected="false" aria-controls="tabPanelAssignments">Assignments</button>
+        <button type="button" role="tab" id="tabBtnSkuRules" class="btn tab-outline" aria-selected="false" aria-controls="tabPanelSkuRules">SKU Rules</button>
       </div>
     </div>
 
@@ -212,10 +167,8 @@ $messageType = $_GET['type'] ?? '';
                             </td>
                             <td><span class="code-badge"><?= htmlspecialchars($exampleSku) ?></span></td>
                             <td>
-                                <button class="btn btn-danger btn-sm delete-category-btn" 
-                                        data-category="<?= htmlspecialchars($cat) ?>" title="Delete Category">
-                                    🗑️
-                                </button>
+                                <button class="btn btn-danger btn-sm btn-icon btn-icon--delete delete-category-btn" 
+                                        data-category="<?= htmlspecialchars($cat) ?>" aria-label="Delete Category" title="Delete Category"></button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -246,7 +199,7 @@ $messageType = $_GET['type'] ?? '';
 
       <div class="admin-card">
         <form id="addAssignmentForm" class="admin-form-inline assignment-form">
-          <button type="submit" class="btn btn-primary">Add Assignment</button>
+          <button type="submit" class="btn btn-primary btn-icon btn-icon--add" aria-label="Add Assignment" title="Add Assignment"></button>
           <select id="roomNumber" name="roomNumber" class="form-input assignment-form__select">
             <option value="1">Room 1</option>
             <option value="2">Room 2</option>
@@ -272,7 +225,7 @@ $messageType = $_GET['type'] ?? '';
       </div>
       <div class="admin-card">
         <form id="addSkuRuleForm" class="admin-form-inline assignment-form">
-          <button type="submit" class="btn btn-primary">Add SKU Rule</button>
+          <button type="submit" class="btn btn-primary btn-icon btn-icon--add" aria-label="Add SKU Rule" title="Add SKU Rule"></button>
           <input type="text" id="newSkuCategoryName" placeholder="Category Name" class="form-input assignment-form__select" required>
           <input type="text" id="newSkuPrefix" placeholder="SKU Prefix" class="form-input assignment-form__select" required>
         </form>
@@ -468,8 +421,8 @@ $messageType = $_GET['type'] ?? '';
                   <option value="4">Room 4</option>
                   <option value="5">Room 5</option>
                 </select>
-                <button type="button" id="bulkMoveBtn" class="btn">Move Selected</button>
-                <button type="button" id="bulkDeleteBtn" class="btn btn-danger">Delete Selected</button>
+                <button type="button" id="bulkMoveBtn" class="btn btn-icon btn-icon--link" aria-label="Move Selected" title="Move Selected"></button>
+                <button type="button" id="bulkDeleteBtn" class="btn btn-danger btn-icon btn-icon--delete" aria-label="Delete Selected" title="Delete Selected"></button>
               </div>
             `;
 
@@ -478,7 +431,7 @@ $messageType = $_GET['type'] ?? '';
             table.innerHTML = `
               <thead>
                 <tr>
-                  <th style="width:36px;"><input type="checkbox" id="selectAllAssignmentsHeader"></th>
+                  <th class="col-36px"><input type="checkbox" id="selectAllAssignmentsHeader"></th>
                   <th>Room</th>
                   <th>Category</th>
                   <th>Order</th>
@@ -493,11 +446,11 @@ $messageType = $_GET['type'] ?? '';
                     <td>${escapeHtml(a.category_name)}${Number(a.is_primary) === 1 ? ' <span class="code-badge">Primary</span>' : ''}</td>
                     <td>${a.display_order}</td>
                     <td>
-                      <button class="btn btn-secondary btn-sm" data-action="edit-assignment" data-id="${a.id}">Edit</button>
-                      <button class="btn btn-sm" data-action="order-up" data-id="${a.id}" data-order="${a.display_order}">Up</button>
-                      <button class="btn btn-sm" data-action="order-down" data-id="${a.id}" data-order="${a.display_order}">Down</button>
-                      <button class="btn btn-primary btn-sm" data-action="set-primary" data-room="${a.room_number}" data-category-id="${a.category_id}">Primary</button>
-                      <button class="btn btn-danger btn-sm" data-action="delete-assignment" data-id="${a.id}">Delete</button>
+                      <button class="btn btn-secondary btn-sm btn-icon btn-icon--edit" data-action="edit-assignment" data-id="${a.id}" aria-label="Edit" title="Edit"></button>
+                      <button class="btn btn-sm btn-icon btn-icon--up" data-action="order-up" data-id="${a.id}" data-order="${a.display_order}" aria-label="Move Up" title="Move Up"></button>
+                      <button class="btn btn-sm btn-icon btn-icon--down" data-action="order-down" data-id="${a.id}" data-order="${a.display_order}" aria-label="Move Down" title="Move Down"></button>
+                      <button class="btn btn-primary btn-sm btn-icon btn-icon--sparkles" data-action="set-primary" data-room="${a.room_number}" data-category-id="${a.category_id}" aria-label="Set Primary" title="Set Primary"></button>
+                      <button class="btn btn-danger btn-sm btn-icon btn-icon--delete" data-action="delete-assignment" data-id="${a.id}" aria-label="Delete" title="Delete"></button>
                     </td>
                   </tr>
                 `).join('')}
@@ -506,6 +459,7 @@ $messageType = $_GET['type'] ?? '';
             el.innerHTML = '';
             el.appendChild(toolbar);
             el.appendChild(table);
+            try { if (window.WF_Icons && typeof window.WF_Icons.applyIcons === 'function') { window.WF_Icons.applyIcons(el); } } catch(_) {}
 
             // Drag & Drop within same room
             const tbody = table.querySelector('#assignmentsTbody');
@@ -713,18 +667,22 @@ $messageType = $_GET['type'] ?? '';
                 primaryWrap.appendChild(primaryCb);
                 primaryWrap.appendChild(document.createTextNode(' Primary'));
                 const saveBtn = document.createElement('button');
-                saveBtn.className = 'btn btn-primary btn-sm ml-2';
-                saveBtn.textContent = 'Save';
+                saveBtn.className = 'btn btn-primary btn-sm ml-2 btn-icon btn-icon--save';
+                saveBtn.setAttribute('aria-label', 'Save');
+                saveBtn.title = 'Save';
                 saveBtn.setAttribute('data-action', 'save-assignment');
                 saveBtn.setAttribute('data-id', String(id));
                 const cancelBtn = document.createElement('button');
                 cancelBtn.className = 'btn btn-secondary btn-sm ml-1';
                 cancelBtn.textContent = 'Cancel';
+                cancelBtn.setAttribute('aria-label', 'Cancel');
+                cancelBtn.title = 'Cancel';
                 cancelBtn.setAttribute('data-action', 'cancel-edit');
                 actionsTd.innerHTML = '';
                 actionsTd.appendChild(primaryWrap);
                 actionsTd.appendChild(saveBtn);
                 actionsTd.appendChild(cancelBtn);
+                
 
                 // Save handler (delegated)
               } else if (action === 'save-assignment') {
@@ -786,7 +744,7 @@ $messageType = $_GET['type'] ?? '';
                   </td>
                   <td><span class="code-badge sku-example">${escapeHtml(exampleSku)}</span></td>
                   <td>
-                    <button type="button" class="btn btn-danger btn-sm" data-action="delete-sku-rule">Delete</button>
+                    <button type="button" class="btn btn-danger btn-sm btn-icon btn-icon--delete" data-action="delete-sku-rule" aria-label="Delete Rule" title="Delete Rule"></button>
                   </td>
                 </tr>
               `;
@@ -807,6 +765,7 @@ $messageType = $_GET['type'] ?? '';
                 </tbody>
               </table>
             `;
+            try { if (window.WF_Icons && typeof window.WF_Icons.applyIcons === 'function') { window.WF_Icons.applyIcons(container); } } catch(_) {}
           } catch (e) {
             container.innerHTML = `<div class="text-danger">Error loading SKU rules: ${escapeHtml(e.message)}</div>`;
           }
@@ -946,13 +905,16 @@ $messageType = $_GET['type'] ?? '';
 
             const saveBtn = document.createElement('button');
             saveBtn.type = 'button';
-            saveBtn.className = 'btn btn-primary btn-sm ml-2';
-            saveBtn.textContent = 'Save';
+            saveBtn.className = 'btn btn-primary btn-sm ml-2 btn-icon btn-icon--save';
+            saveBtn.setAttribute('aria-label', 'Save');
+            saveBtn.title = 'Save';
 
             const cancelBtn = document.createElement('button');
             cancelBtn.type = 'button';
             cancelBtn.className = 'btn btn-secondary btn-sm ml-1';
             cancelBtn.textContent = 'Cancel';
+            cancelBtn.setAttribute('aria-label', 'Cancel');
+            cancelBtn.title = 'Cancel';
 
             cell.innerHTML = '';
             cell.appendChild(input);

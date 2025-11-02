@@ -10,7 +10,7 @@
     <div class="room-modal-content">
         <div class="modal-header">
             <h3 class="modal-title">Add to Cart</h3>
-            <button id="closeQuantityModal" class="modal-close-btn">×</button>
+            <button id="closeQuantityModal" class="modal-close-btn btn btn-icon btn-icon--close" aria-label="Close"></button>
         </div>
         <div class="modal-body">
             <div class="product-summary">

@@ -117,17 +117,7 @@ if (empty($paymentLabels)) {
 }
 ?>
 
-<style>
-body[data-page='admin/reports'] #admin-section-content {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-    border-top: none !important;
-}
-.admin-reports-page {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
-</style>
+
 
 <div class="admin-reports-page">
     <div class="flex justify-end items-center mb-6">

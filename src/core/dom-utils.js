@@ -72,10 +72,33 @@ export class DOMUtils {
   }
 
   static async confirm(message, title = 'Confirm') {
+    try {
+      if (typeof window !== 'undefined' && typeof window.showConfirmationModal === 'function') {
+        const ok = await window.showConfirmationModal({
+          title,
+          message,
+          confirmText: 'Confirm',
+          cancelText: 'Cancel',
+          icon: '⚠️',
+          iconType: 'warning',
+          confirmStyle: 'confirm'
+        });
+        return !!ok;
+      }
+    } catch (_) {}
     return new Promise(resolve => {
       const modal = document.createElement('div');
       modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-      modal.innerHTML = `\n                <div class="bg-white rounded-lg p-6 max-w-md mx-4">\n                    <h3 class="text-lg font-semibold mb-4">${DOMUtils.escapeHtml(title)}</h3>\n                    <p class="text-gray-600 mb-6">${DOMUtils.escapeHtml(message)}</p>\n                    <div class="flex justify-end space-x-3">\n                        <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded" data-action="cancel">Cancel</button>\n                        <button class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded" data-action="confirm">Confirm</button>\n                    </div>\n                </div>\n            `;
+      modal.innerHTML = `
+                <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+                    <h3 class="text-lg font-semibold mb-4">${DOMUtils.escapeHtml(title)}</h3>
+                    <p class="text-gray-600 mb-6">${DOMUtils.escapeHtml(message)}</p>
+                    <div class="flex justify-end space-x-3">
+                        <button class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded" data-action="cancel">Cancel</button>
+                        <button class="px-4 py-2 bg-red-500 text-white hover:bg-red-600 rounded" data-action="confirm">Confirm</button>
+                    </div>
+                </div>
+            `;
       document.body.appendChild(modal);
       modal.addEventListener('click', e => {
         if (e.target.dataset.action === 'confirm') {

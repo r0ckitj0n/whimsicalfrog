@@ -106,7 +106,7 @@ async function loadDocsList(){
     if (!j.success) throw new Error(j.error||'Failed');
     const items = (j.documents||[]).map(d => `
       <li class="help-docs__item">
-        <a href="javascript:void(0)" onclick="loadDoc('${d.filename||''}')" class="help-docs__link">${d.title||d.filename}</a>
+        <a href="#" data-file="${d.filename||''}" class="help-docs__link js-doc-link">${d.title||d.filename}</a>
         <div class="help-docs__category">${d.category||''}</div>
       </li>
     `).join('');
@@ -150,18 +150,20 @@ function renderMarkdown(md){
 }
 </script>
     <script>
+        // Delegated click handler for docs links (replaces inline onclick)
+        document.addEventListener('click', function(ev){
+            const a = ev.target && ev.target.closest ? ev.target.closest('.js-doc-link') : null;
+            if (!a) return;
+            ev.preventDefault();
+            const f = a.getAttribute('data-file') || '';
+            if (f) loadDoc(f);
+        });
         function loadHelpSection(sectionId) {
-            // Update active nav
-            document.querySelectorAll('.toc-link').forEach(link => {
-                link.style.color = '#6b7280';
-                link.style.background = 'transparent';
-                link.style.fontWeight = 'normal';
-            });
-            
-            event.target.style.color = '#2563eb';
-            event.target.style.background = '#dbeafe';
-            event.target.style.fontWeight = '500';
-            
+            try {
+                document.querySelectorAll('.toc-link').forEach(link => link.classList.remove('active'));
+                var anchor = document.querySelector('.toc-link[href="#'+sectionId+'"]');
+                if (anchor) anchor.classList.add('active');
+            } catch(_) {}
             // Load content
             const content = {
                 'getting-started': `

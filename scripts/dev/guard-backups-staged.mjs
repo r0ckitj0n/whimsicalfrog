@@ -54,6 +54,8 @@ function isBackupLike(filePath) {
   if (/\.backup(\.|$)/i.test(base)) return true;
   // "name 2.ext" (basename contains space then digits before extension)
   if (/\s\d+\.[^./]+$/i.test(base)) return true;
+  // Tooltip snapshots must live under backups/tooltips
+  if (/^help-tooltips-.*\.json$/i.test(base)) return true;
   return false;
 }
 
@@ -70,7 +72,17 @@ function main() {
 
   const offenders = files
     .map(f => toRepoRelative(f, repoRoot))
-    .filter(f => f && !isInBackups(f, repoRoot) && isBackupLike(f))
+    .filter(f => {
+      if (!f) return false;
+      const backupish = isBackupLike(f);
+      if (!backupish) return false;
+      // Allow tooltips only under backups/tooltips
+      if (/^help-tooltips-.*\.json$/i.test(path.basename(f))) {
+        return !f.startsWith('backups/tooltips/');
+      }
+      // All other backup-like files must live under backups/
+      return !isInBackups(f, repoRoot);
+    })
     .sort();
 
   if (offenders.length) {

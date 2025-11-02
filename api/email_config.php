@@ -16,15 +16,20 @@ if (file_exists($__wf_autoload)) {
 }
 
 // Load dynamic email settings from DB ('email' category) and enforce required presence
+// Require DB availability and live settings (no static fallbacks)
+if (!class_exists('Database') || !method_exists('Database', 'isAvailableQuick') || !Database::isAvailableQuick(0.6)) {
+    throw new RuntimeException('Database is not accessible. Email configuration requires a live DB connection.');
+}
 $__wf_email_cfg = BusinessSettings::getByCategory('email');
 if (!is_array($__wf_email_cfg)) {
     throw new RuntimeException('Email configuration missing: category "email" not found in BusinessSettings');
 }
 
 // Required fields (no masking fallbacks): derive from canonical business info when possible
-$__wf_FROM_EMAIL = (string)(BusinessSettings::getBusinessEmail());
-$__wf_FROM_NAME  = (string)(BusinessSettings::getBusinessName());
-$__wf_ADMIN_EMAIL = (string)(BusinessSettings::getBusinessEmail());
+$__wf_FROM_EMAIL = (string) BusinessSettings::get('business_email', '');
+$__wf_FROM_NAME  = (string) BusinessSettings::get('business_name', '');
+$__wf_ADMIN_EMAIL = (string) BusinessSettings::get('admin_email', '');
+if ($__wf_ADMIN_EMAIL === '') { $__wf_ADMIN_EMAIL = $__wf_FROM_EMAIL; }
 $__wf_BCC_EMAIL  = (string)($__wf_email_cfg['bcc_email'] ?? ''); // optional
 $__wf_SMTP_HOST  = (string)($__wf_email_cfg['smtp_host'] ?? '');
 $__wf_SMTP_PORT  = $__wf_email_cfg['smtp_port'] ?? null;
@@ -38,7 +43,7 @@ $__wf_SMTP_AUTH_VAL  = $__wf_email_cfg['smtp_auth'] ?? true;
 $__wf_SMTP_TIMEOUT_VAL = $__wf_email_cfg['smtp_timeout'] ?? null;
 $__wf_SMTP_DEBUG_VAL = $__wf_email_cfg['smtp_debug'] ?? null;
 
-// Validate presence
+// Validate presence (no fallbacks allowed here)
 if ($__wf_FROM_EMAIL === '' || $__wf_FROM_NAME === '' || $__wf_ADMIN_EMAIL === '') {
     throw new RuntimeException('Email configuration missing: from_email, from_name, and admin_email are required');
 }
@@ -247,11 +252,14 @@ function generateCustomerConfirmationEmail($orderData, $customerData, $orderItem
         $shippingAddress = '<strong>Shipping Address:</strong><br>' . $address;
     }
 
-    // Resolve site base URL from canonical setting (required)
-    $siteBase = (string) BusinessSettings::getSiteUrl('');
-    if ($siteBase === '') {
-        throw new RuntimeException('Site base URL missing: BusinessSettings::getSiteUrl() returned empty');
+    // Resolve site base URL strictly from business_domain (no helper fallbacks)
+    $__wf_domain = (string) BusinessSettings::get('business_domain', '');
+    if ($__wf_domain === '') {
+        throw new RuntimeException('Site base URL missing: business_domain is not configured in Business Settings');
     }
+    $__wf_protocol = (strpos($__wf_domain, 'localhost') !== false || strpos($__wf_domain, '127.0.0.1') !== false) ? 'http://' : 'https://';
+    $siteBase = $__wf_protocol . $__wf_domain;
+
     // Precompute receipt URL using safe builder
     $receiptUrl = wf_url_with_params(rtrim($siteBase, '/') . '/', ['page' => 'receipt', 'orderId' => $orderId]);
 

@@ -22,13 +22,13 @@
   border: 3px solid var(--brand-primary, #87ac3a);
   box-shadow: 0 8px 20px rgba(0,0,0,0.15);
   text-decoration: none;
-  z-index: 2147483647 !important;
+  z-index: var(--z-overlay-topmost, 2147483647) !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
 .admin-modal-overlay .wf-nav-left { left: 14px !important; right: auto !important; }
 .admin-modal-overlay .wf-nav-right { right: 14px !important; left: auto !important; }
-.admin-modal-overlay .wf-nav-arrow svg { width: 32px; height: 32px; stroke: currentColor; }
+.admin-modal-overlay .wf-nav-arrow svg { width: 32px; height: 32px; stroke: currentcolor; }
 @media (max-width: 640px) { .admin-modal-overlay .wf-nav-arrow { width: 52px; height: 52px; } .admin-modal-overlay .wf-nav-arrow svg { width: 26px; height: 26px; } }
 /* Global z-index tokens for overlays/panels (source-level, Vite-managed) */
 :root {
@@ -73,6 +73,7 @@
   position: fixed;
   inset: 0;
   background: rgb(0 0 0 / 60%);
+  overscroll-behavior: contain; /* prevent wheel/touch from propagating to page */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,6 +101,8 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  /* Keep the overlay backdrop fixed; only modal content should scroll */
+  overflow: hidden;
 }
 
 .admin-modal-overlay.topmost { z-index: var(--z-overlay-topmost, 1600) !important; }
@@ -131,6 +134,32 @@
   z-index: var(--z-admin-overlay-content, 1410);
   display: flex;
   flex-direction: column;
+}
+
+/* Global: make modal a flex column so header/footer stay pinned and body scrolls */
+.admin-modal.admin-modal-content {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.admin-modal .modal-header { flex: 0 0 auto !important; }
+/* .modal-body base rules exist below; ensure they apply sitewide */
+
+/* Ensure direct iframe/content frames fill the scrollable body appropriately */
+.admin-modal .modal-body > iframe,
+.admin-modal .modal-body > .wf-admin-embed-frame {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Lock background/page scroll while any admin modal overlay is visible */
+html:has(.admin-modal-overlay.show),
+body:has(.admin-modal-overlay.show) {
+  overflow: hidden !important;
 }
 
 /* Tokenized size presets */
@@ -217,6 +246,45 @@
   overflow-y: hidden !important;
   padding: 0 !important;
 }
+/* Explicit flatten targets (set by JS when exactly one inner card exists anywhere) */
+.wf-modal-flatten-target,
+.wf-embed-flatten-target {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* When flattening an inner admin-modal, remove header/body chrome but keep content/actions */
+.wf-modal-flatten-target > .modal-header,
+.wf-embed-flatten-target > .modal-header {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin: 0 0 8px 0 !important;
+}
+.wf-modal-flatten-target > .modal-header .admin-card-title,
+.wf-embed-flatten-target > .modal-header .admin-card-title {
+  display: none !important;
+}
+.wf-modal-flatten-target > .modal-body,
+.wf-embed-flatten-target > .modal-body {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+/* Also flatten direct nested admin-modal panels when flat mode is active */
+.wf-embed-flat > .admin-modal.admin-modal-content,
+.wf-modal-body--flat > .admin-modal.admin-modal-content {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
 .admin-modal.admin-modal--square-300 .wf-admin-embed-frame {
   width: 100% !important;
   height: 100% !important;
@@ -265,10 +333,166 @@
   padding: 6px !important;
 }
 
+#actionIconsManagerModal .admin-modal { --admin-modal-max-height: 80vh !important; --admin-modal-height: 80vh !important; height: var(--admin-modal-max-height) !important; }
+#actionIconsManagerModal .modal-body { display: flex !important; flex: 1 1 auto !important; min-height: 0 !important; overflow: auto !important; -webkit-overflow-scrolling: touch !important; }
+#actionIconsManagerModal #actionIconsManagerFrame { width: 100% !important; height: 100% !important; min-height: 0 !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
+#actionIconsManagerModal .modal-body > iframe { flex: 1 1 auto !important; min-height: 0 !important; }
+
+/* Enlarge Button Manager width regardless of auto sizing */
+#actionIconsManagerModal .admin-modal {
+  --admin-modal-width: clamp(800px, 80vw, 1200px) !important;
+  --admin-modal-max-width: 95vw !important;
+  width: var(--admin-modal-width, clamp(800px, 80vw, 1200px)) !important;
+}
+
+
+/* Colors & Fonts: guarantee internal scrollbar and reasonable height cap */
+#colorsFontsModal .admin-modal {
+  --admin-modal-max-height: 85vh !important;
+  --admin-modal-width: clamp(1000px, 95vw, 1600px) !important;
+  --admin-modal-max-width: 95vw !important;
+  width: var(--admin-modal-width, clamp(1000px, 95vw, 1600px)) !important;
+  max-width: var(--admin-modal-max-width, 95vw) !important;
+  height: var(--admin-modal-max-height, 85vh) !important;
+}
+#colorsFontsModal .modal-body {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+
+#businessInfoModal .admin-modal {
+  --admin-modal-max-height: 90vh !important;
+  --admin-modal-width: clamp(1000px, 95vw, 1600px) !important;
+  --admin-modal-max-width: 95vw !important;
+  width: var(--admin-modal-width, clamp(1000px, 95vw, 1600px)) !important;
+  max-width: var(--admin-modal-max-width, 95vw) !important;
+}
+
+/* Email Settings modal: match wider business tooling panels */
+#emailSettingsModal .admin-modal {
+  --admin-modal-max-height: 90vh !important;
+  --admin-modal-width: clamp(1000px, 95vw, 1400px) !important;
+  --admin-modal-max-width: 95vw !important;
+  width: var(--admin-modal-width, clamp(1000px, 95vw, 1400px)) !important;
+  max-width: var(--admin-modal-max-width, 95vw) !important;
+}
+
+/* Colors & Fonts: better wide layout fill */
+@media (min-width: 1280px) {
+  #colorsFontsModal #colorsFontsForm .grid { grid-template-columns: repeat(3, minmax(0,1fr)) !important; }
+  #colorsFontsModal #brandPreviewCard { grid-column: 1 / -1 !important; }
+}
+
+#aiUnifiedModal .admin-modal:not(.admin-modal--responsive) { --admin-modal-height: 85vh !important; --admin-modal-max-height: 90vh !important; }
+#aiUnifiedModal .admin-modal:not(.admin-modal--responsive) .modal-body { display: flex !important; flex-direction: column !important; flex: 1 1 auto !important; min-height: 0 !important; overflow: hidden !important; }
+#aiUnifiedModal .modal-body > .wf-tabs { flex: 0 0 auto !important; margin-bottom: 8px !important; }
+#aiUnifiedModal .admin-modal:not(.admin-modal--responsive) #aiUnifiedToolsPanel,
+#aiUnifiedModal .admin-modal:not(.admin-modal--responsive) #aiUnifiedSettingsPanel { flex: 1 1 auto !important; min-height: 0 !important; overflow: auto !important; }
+#aiUnifiedModal #aiUnifiedToolsFrame { width: 100% !important; min-height: 0 !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
+#aiUnifiedModal .admin-modal:not(.admin-modal--responsive) #aiUnifiedToolsFrame { height: 100% !important; }
+
 /* Generic utilities to avoid inline styles in JS */
 .wf-modal-body--fill { padding: 0 !important; overflow: hidden !important; display: flex !important; min-height: 0 !important; }
 .wf-modal-body--scroll { padding: 0 !important; overflow: auto !important; min-height: 0 !important; }
 .wf-embed--fill { width: 100% !important; height: 100% !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
+.modal-absolute-fill { position: absolute !important; inset: 0 !important; height: 100% !important; padding: 0 !important; margin: 0 !important; box-sizing: border-box !important; }
+.admin-modal-overlay.with-offset { padding-top: var(--wf-overlay-offset); }
+.pointer-events-none { pointer-events: none !important; }
+.pointer-events-auto { pointer-events: auto !important; }
+.wf-modal--content-scroll { overflow: hidden !important; }
+.wf-modal--content-scroll .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: var(--admin-modal-max-height, 90vh) !important;
+  overflow: hidden !important;
+  height: var(--admin-modal-max-height, 90vh) !important;
+}
+.wf-modal--content-scroll .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+  overscroll-behavior: contain !important;
+  contain: paint !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.wf-modal--content-scroll .modal-body > * { max-width: 100% !important; box-sizing: border-box !important; }
+.wf-modal--content-scroll :is(img, video, iframe) { max-width: 100% !important; height: auto; }
+
+/* Proactive auto-fill: if a modal body directly contains an iframe or embed frame,
+   make the body a flex container and allow the child to fill available space. */
+.admin-modal .modal-body:has(> iframe),
+.admin-modal .modal-body:has(> .wf-admin-embed-frame) {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+.admin-modal .modal-body:has(> iframe) > iframe,
+.admin-modal .modal-body:has(> .wf-admin-embed-frame) > .wf-admin-embed-frame {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* Auto-grid layout to minimize vertical scrolling in content-dense modals */
+.wf-modal-body--autogrid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+  gap: 12px !important;
+  align-content: start !important;
+}
+.wf-modal-body--autogrid > form { display: contents !important; }
+.wf-modal-body--autogrid > form#shoppingCartSettingsForm { display: block !important; }
+.wf-modal-body--autogrid #cartSettingsTop { grid-column: 1 / -1 !important; }
+.wf-modal-body--autogrid #cartSimulationBox { grid-column: 1 / -1 !important; }
+
+/* Flatten utility: remove inner card when content is truly single-column */
+.wf-modal-body--flat {
+  display: block !important;
+}
+.wf-modal-body--flat > .rounded.border.p-3,
+.wf-modal-body--flat > .admin-card,
+.wf-modal-body--flat > .card,
+.wf-modal-body--flat > .wf-modal-section,
+.wf-modal-body--flat > .modal-section,
+.wf-modal-body--flat > form > .rounded.border.p-3,
+.wf-modal-body--flat > form > .admin-card,
+.wf-modal-body--flat > form > .card,
+.wf-modal-body--flat > form > .wf-modal-section,
+.wf-modal-body--flat > form > .modal-section {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+/* When flattened, keep reasonable spacing between groups */
+.wf-modal-body--flat .space-y-4 { gap: 0 !important; }
+.wf-modal-body--flat .rounded.border.p-3 > .rounded.border.p-3 { padding: 0 !important; }
+.wf-modal-body--autogrid > fieldset,
+.wf-modal-body--autogrid > .admin-card,
+.wf-modal-body--autogrid > .rounded,
+.wf-modal-body--autogrid > .modal-section,
+.wf-modal-body--autogrid > .wf-modal-section,
+.wf-modal-body--autogrid > .rounded.border.p-3 {
+  min-width: 0 !important;
+}
+@media (min-width: 1536px) { /* 2K+ displays: allow slightly wider columns */
+  .wf-modal-body--autogrid {
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)) !important;
+  }
+}
+
+.col-36px { width: 36px !important; }
+.col-48px { width: 48px !important; }
+.wf-log-console { background:#0b1020; color:#d1e7ff; border-radius:6px; padding:10px; min-height:140px; max-height:300px; overflow:auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size:12px; }
+.leading-155 { line-height: 1.55 !important; }
+.bottom--100 { bottom: -100px !important; }
+
+.pill-ok { background: #e0f2fe !important; }
+.pill-err { background: #fee2e2 !important; }
 
 /* Force full-height layout for the square modal body and children */
 #cartButtonTextsModal .admin-modal.admin-modal--square-300 {
@@ -294,8 +518,8 @@
   gap: 8px !important;
   position: static !important;
 }
-.admin-modal.admin-modal--actions-in-header .modal-header { padding-right: 0 !important; }
-body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .modal-header { position: static !important; padding-right: 0 !important; }
+.admin-modal.admin-modal--actions-in-header .modal-header { padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important; }
+body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .modal-header { position: static !important; padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important; }
 .admin-modal--actions-in-header .modal-header > h2 {
   margin: 0 !important;
   min-width: 0 !important; /* allow title to shrink */
@@ -352,6 +576,25 @@ body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-moda
 .admin-modal--actions-in-header .modal-header-actions .btn.btn-primary { color: #fff !important; }
 .admin-modal--actions-in-header .modal-header-actions .btn.btn-primary:hover { filter: brightness(0.96); }
 
+/* Admin-scoped safety net: if a variant is used without the base .btn, apply minimal layout */
+body[data-page^='admin'] :is(.btn-primary, .btn-secondary, .btn-danger, .btn-success, .btn-warning, .btn-info, .btn-light, .btn-outline, .btn-link):not(.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 0.5rem);
+  font-family: var(--font-primary, inherit);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+/* Also normalize size-only classes if used without .btn */
+body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Receipt Messages modal: header/action layout and full-height body */
 #receiptMessagesModal .admin-modal.admin-modal-content { padding: 0 !important; }
 #receiptMessagesModal .modal-header { padding: 6px 8px !important; }
@@ -380,6 +623,114 @@ body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-moda
   --admin-modal-max-width: 95vw;
   --admin-modal-max-height: 95vh;
 }
+.admin-modal.admin-modal--auto {
+  /* Size panel to content but respect viewport constraints */
+  width: fit-content !important;
+  height: auto !important;
+  max-width: 95vw !important;
+  max-height: 90vh !important;
+}
+.admin-modal.admin-modal--responsive {
+  /* Content-driven height with viewport clamp */
+  height: auto !important;
+  max-height: 95vh !important;
+  /* Content-driven width with viewport clamp */
+  width: auto !important;
+  max-width: 90vw !important;
+  /* Ensure helper `.wf-modal--content-scroll .admin-modal { max-height: var(--admin-modal-max-height, 90vh) }`
+     picks up the larger clamp instead of defaulting to 90vh */
+  --admin-modal-max-height: 95vh;
+}
+/* Even under content-scroll helper, responsive panels must keep auto height */
+.wf-modal--content-scroll .admin-modal.admin-modal--responsive { height: auto !important; }
+/* In responsive modals, do not cap iframe max-height so it can match content until panel clamp */
+.admin-modal.admin-modal--responsive .wf-admin-embed-frame { height: auto !important; max-height: none !important; }
+/* Stronger responsive enforcement when legacy helpers linger */
+.admin-modal-overlay .admin-modal.admin-modal--responsive {
+  height: auto !important;
+  max-height: 95vh !important;
+}
+.admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+.admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body > iframe,
+.admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body > .wf-admin-embed-frame {
+  height: auto !important;
+  max-height: none !important;
+}
+/* Discrete iframe height buckets for responsive modals (avoid inline styles) */
+.wf-embed-h-s  { height: 240px !important; }
+.wf-embed-h-m  { height: 360px !important; }
+.wf-embed-h-l  { height: 520px !important; }
+.wf-embed-h-xl { height: 680px !important; }
+.wf-embed-h-xxl { height: 820px !important; }
+
+/* Targeted responsive width for key modals */
+#attributesModal .admin-modal,
+#backgroundManagerModal .admin-modal,
+#receiptMessagesModal .admin-modal {
+  width: auto !important;
+  max-width: 90vw !important;
+}
+
+/* Attributes: remove inner padding so panel height equals header + iframe exactly */
+#attributesModal .admin-modal.admin-modal-content { padding: 0 !important; }
+#attributesModal .modal-body { padding: 0 !important; }
+
+/* Responsive body modes */
+.wf-modal-body--autoheight {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+.wf-modal-body--scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+/* Stronger override when overlay uses content-scroll helper */
+.wf-modal--content-scroll .modal-body.wf-modal-body--autoheight {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+.wf-modal--content-scroll .modal-body.wf-modal-body--scroll {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+
+/* When responsive + autoheight is active, prevent child iframe from flex-filling */
+.admin-modal.admin-modal--responsive .modal-body.wf-modal-body--autoheight > iframe,
+.admin-modal.admin-modal--responsive .modal-body.wf-modal-body--autoheight > .wf-admin-embed-frame {
+  flex: initial !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+}
+/* Highest-specificity override to beat generic :has(> iframe) flex rules */
+.admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body.wf-modal-body--autoheight {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+/* If a size token is present with --auto, prefer the tokenized dimensions */
+.admin-modal.admin-modal--auto.admin-modal--md,
+.admin-modal.admin-modal--auto.admin-modal--lg,
+.admin-modal.admin-modal--auto.admin-modal--xl,
+.admin-modal.admin-modal--auto.admin-modal--full,
+.admin-modal.admin-modal--auto.admin-modal--room-map {
+  width: var(--admin-modal-width, clamp(720px, 90vw, 1200px)) !important;
+  max-width: var(--admin-modal-max-width, 95vw) !important;
+  height: var(--admin-modal-height, auto) !important;
+  max-height: var(--admin-modal-max-height, 90vh) !important;
+}
 .admin-modal.admin-modal--full {
   --admin-modal-width: 95vw;
   --admin-modal-max-width: 95vw;
@@ -389,8 +740,6 @@ body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-moda
 
 /* Semantic aliases (map features to presets/tokens) */
 .admin-modal.admin-modal--attributes {
-  --admin-modal-width: 90vw;
-  --admin-modal-max-width: 95vw;
   --admin-modal-max-height: 90vh;
 }
 .admin-modal.admin-modal--dashboard-config {
@@ -413,13 +762,13 @@ body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-moda
 .admin-modal.admin-modal--room-map {
   --admin-modal-width: 95vw;
   --admin-modal-max-width: 95vw;
-  --admin-modal-height: 95vh;
-  --admin-modal-max-height: 95vh;
+  --admin-modal-height: 98vh;
+  --admin-modal-max-height: 98vh;
   --admin-modal-margin: 0;
   /* Ensure content variant picks up same sizing when both classes are on same element */
   --admin-modal-content-width: 95vw;
   --admin-modal-content-max-width: 95vw;
-  --admin-modal-content-max-height: 95vh;
+  --admin-modal-content-max-height: 98vh;
   --admin-modal-content-padding: 0.5rem;
   --admin-modal-content-margin: 0;
   min-width: 960px;
@@ -442,8 +791,8 @@ body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-moda
 body[data-page^='admin'] .admin-modal.admin-modal--room-map {
   width: 95vw !important;
   max-width: 95vw !important;
-  height: 95vh !important;
-  max-height: 95vh !important;
+  height: 98vh !important;
+  max-height: 98vh !important;
 }
 
 .admin-modal.admin-modal-content {
@@ -553,6 +902,8 @@ html:has(.admin-modal-overlay.show) .admin-tab-navigation {
   transform: none !important;
   overflow: visible !important;
 }
+.admin-modal-overlay.wf-modal--content-scroll .admin-modal { overflow: hidden !important; }
+.admin-modal-overlay.wf-modal--content-scroll .modal-body { overflow: auto !important; }
 
 /* Modal navigation arrows (cartoonish, brand-colored) */
 .nav-arrow {
@@ -572,11 +923,11 @@ html:has(.admin-modal-overlay.show) .admin-tab-navigation {
   text-decoration: none;
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
   /* Ensure absolutely topmost above any overlay variants */
-  z-index: 2147483647 !important;
+  z-index: var(--z-overlay-topmost, 2147483647) !important;
   pointer-events: auto;
 }
 .nav-arrow:hover { transform: translateY(-50%) scale(1.05); box-shadow: 0 10px 24px rgba(0,0,0,0.2); background: #fffef5; }
-.nav-arrow svg { width: 32px; height: 32px; stroke: currentColor; }
+.nav-arrow svg { width: 32px; height: 32px; stroke: currentcolor; }
 .nav-arrow-left { left: 10px !important; right: auto !important; }
 .nav-arrow-right { right: 10px !important; left: auto !important; }
 @media (max-width: 640px) { .nav-arrow { width: 52px; height: 52px; } .nav-arrow svg { width: 26px; height: 26px; } }
@@ -641,6 +992,16 @@ body:has(.admin-modal-overlay.show) {
   height: auto !important;
   max-height: 70vh !important;
   min-height: 220px !important;
+}
+
+.admin-modal-overlay.wf-modal--content-scroll .modal-body {
+  overflow: auto !important;
+  overflow-y: auto !important;
+}
+.admin-modal-overlay.wf-modal--content-scroll .admin-modal.admin-modal--sm .modal-body,
+.admin-modal-overlay.wf-modal--content-scroll .admin-modal.admin-modal--xs .modal-body {
+  overflow: auto !important;
+  overflow-y: auto !important;
 }
 
 /* Normalize inner panel appearance (used by JS instead of inline styles) */
@@ -825,7 +1186,7 @@ body.wf-no-scroll { overflow: hidden !important; }
 
 /* Business Information modal scrollbar */
 #businessInfoModal .modal-body {
-  max-height: 70vh;
+  max-height: 85vh;
   overflow-y: auto;
   padding-right: 0; /* Let scrollbar be flush with modal edge */
 }
@@ -861,6 +1222,88 @@ body.wf-no-scroll { overflow: hidden !important; }
 #customerMessagesModal .modal-body {
   max-height: 85vh;
 }
+/* Reusable admin utilities (source-level, Vite-managed) */
+.wf-grid-md-3 { display: grid; grid-template-columns: repeat(1, minmax(0,1fr)); gap: 12px; }
+@media (min-width: 768px) { .wf-grid-md-3 { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.wf-grid { display: grid; gap: 12px; }
+.wf-grid-md-2 { grid-template-columns: repeat(1, minmax(0,1fr)); }
+@media (min-width: 768px) { .wf-grid-md-2 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (min-width: 1280px) { .wf-grid-xl-3 { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.wf-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.wf-header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+.wf-title { font-size: 20px; font-weight: 700; }
+.wf-row { display:flex; flex-direction:column; gap:6px; }
+.wf-hint { font-size: 12px; color:#6b7280; }
+.wf-section { border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:12px; background:#fafafa; }
+.wf-inline { display:flex; align-items:center; gap:8px; }
+.wf-actions-right { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+
+/* Modal/content fill helpers for tools pages (replace inline styles) */
+.wf-panel-fill { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.wf-card-fill { flex: 1 1 auto; height: 100%; display: flex; flex-direction: column; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; }
+.wf-flex-col { display: flex; flex-direction: column; }
+.wf-flex-1 { flex: 1 1 auto; min-height: 0; }
+.wf-textarea-fill { flex: 1 1 auto; min-height: 0 !important; width: 100% !important; height: 100% !important; display: block !important; box-sizing: border-box !important; border-radius: 0 !important; resize: none !important; }
+.wf-form-textarea-tight { margin: 0 !important; padding: 6px !important; }
+.wf-hidden { display: none !important; }
+/* Common hidden utility (for legacy compatibility) */
+.hidden { display: none !important; }
+/* Generic layout utilities */
+.wf-w-full { width: 100% !important; }
+.wf-max-w-none { max-width: none !important; }
+.wf-overflow-auto { overflow: auto !important; -webkit-overflow-scrolling: touch !important; }
+.wf-overflow-visible { overflow: visible !important; }
+
+/* Embed-friendly defaults when an admin tool is inside a modal iframe */
+body[data-embed="1"] { margin: 0 !important; padding: 0 !important; background: #fff; }
+.wf-embed-toptight-section { margin-top: 0 !important; padding-top: 8px !important; }
+.wf-embed-toptight-inner { margin-top: 0 !important; padding-top: 8px !important; }
+/* Common resets in embed context (modal iframes) */
+body[data-embed="1"] .bg-gray-100 { background: #fff !important; min-height: auto !important; }
+body[data-embed="1"] .container { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+body[data-embed="1"] .shadow, body[data-embed="1"] .shadow-md, body[data-embed="1"] .shadow-lg, body[data-embed="1"] .shadow-xl { box-shadow: none !important; }
+body[data-embed="1"] h1 { font-size: 20px !important; margin-bottom: 16px !important; }
+
+/* Admin pages (replace inline styles) */
+body[data-page='admin/marketing'] #admin-section-content { margin-top: 0 !important; border-top: none !important; }
+.admin-marketing-page { margin-top: 0 !important; }
+
+body[data-page='admin/reports'] #admin-section-content { padding-top: 0 !important; margin-top: 0 !important; border-top: none !important; }
+.admin-reports-page { padding-top: 0 !important; margin-top: 0 !important; }
+
+/* Category Management (embed modal) */
+body[data-embed="1"] #categoryManagementRoot {
+  padding: 12px !important;
+  width: 100% !important;
+  max-width: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+}
+body[data-embed="1"] #categoryManagementRoot .admin-card {
+  padding: 0.75rem !important;
+  margin-bottom: 0 !important;
+  width: 100% !important;
+}
+body[data-embed="1"] #categoryManagementRoot .admin-card + .admin-card { margin-top: 0.75rem !important; }
+body[data-embed="1"] #categoryManagementRoot .admin-card .admin-card { margin-top: 1rem !important; }
+body[data-embed="1"] #categoryManagementRoot .admin-form-inline { gap: 6px !important; flex-wrap: wrap !important; }
+body[data-embed="1"] #categoryManagementRoot .admin-table { margin-bottom: 0 !important; width: 100% !important; }
+body[data-embed="1"] .admin-title { margin-top: 0 !important; margin-bottom: 0.75rem !important; }
+
+/* Intent Heuristics Manager (scoped styles replacing inline CSS) */
+#intentHeuristicsRoot .admin-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.75rem; }
+@media (max-width: 800px){ #intentHeuristicsRoot .admin-form-grid{ grid-template-columns:1fr; } }
+#intentHeuristicsRoot .input{ width:100%; border:1px solid #d1d5db; border-radius:.375rem; padding:.375rem .5rem; font-size:.875rem; }
+#intentHeuristicsRoot .label{ font-size:.75rem; color:#4b5563; margin-bottom:.25rem; display:block; }
+#intentHeuristicsRoot .card{ border:1px solid #e5e7eb; border-radius:.5rem; padding:.75rem; background:#fff; }
+#intentHeuristicsRoot .section-title{ font-weight:600; font-size:.95rem; margin-bottom:.5rem; }
+#intentHeuristicsRoot .help{ font-size:.75rem; color:#6b7280; }
+#intentHeuristicsRoot .btn{ display:inline-flex; align-items:center; gap:.5rem; border:1px solid #d1d5db; border-radius:.375rem; padding:.375rem .625rem; font-size:.875rem; background:#f9fafb; }
+#intentHeuristicsRoot .btn-primary{ background:#111827; color:#fff; border-color:#111827; }
+#intentHeuristicsRoot .btn-row{ display:flex; gap:.5rem; flex-wrap:wrap; }
+#intentHeuristicsRoot .badge{ display:inline-flex; align-items:center; border:1px solid #d1d5db; background:#f3f4f6; color:#374151; padding:.125rem .375rem; border-radius:.375rem; font-size:.7rem; margin-right:.25rem; }
+#intentHeuristicsRoot .toast{ position:fixed; right:12px; bottom:12px; background:#111827; color:#fff; padding:.5rem .75rem; border-radius:.375rem; box-shadow:0 10px 30px rgba(0,0,0,.2); font-size:.85rem; }
 
 #inventoryModalOuter.admin-modal-overlay {
   align-items: stretch !important;
@@ -900,6 +1343,40 @@ body.wf-no-scroll { overflow: hidden !important; }
 .admin-modal-body--lg { --admin-modal-inner-max-height: 60vh; }
 .admin-modal-body--xl { --admin-modal-inner-max-height: 75vh; }
 
+/* Reusable: lock overlay, scroll only the modal body when applied to overlay */
+.admin-modal-overlay.wf-modal--body-scroll { overflow: hidden !important; }
+.admin-modal-overlay.wf-modal--body-scroll .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: var(--admin-modal-max-height, 90vh) !important;
+  overflow: hidden !important;
+}
+.admin-modal-overlay.wf-modal--body-scroll .modal-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: calc(var(--z-admin-overlay-content, 1410) + 1) !important;
+  background: #fff !important;
+}
+.admin-modal-overlay.wf-modal--body-scroll .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+/* When body is explicitly autoheight, disable overlay-enforced scrolling/flex fill */
+.admin-modal-overlay.wf-modal--body-scroll .modal-body.wf-modal-body--autoheight {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+/* Also ensure it wins within responsive panels */
+.admin-modal-overlay.wf-modal--body-scroll .admin-modal.admin-modal--responsive .modal-body.wf-modal-body--autoheight {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
 /* Remove panel bottom padding for inventory modal to let content reach edge */
 #inventoryModalOuter .admin-modal.admin-modal-content {
   padding-bottom: 0 !important;
@@ -935,16 +1412,16 @@ body.wf-no-scroll { overflow: hidden !important; }
 /* Map common actions by data-action (preferred) */
 .admin-actions-icons .admin-table td:last-child .btn[data-action="tm-preview"]::before { content: "👁️"; }
 .admin-actions-icons .admin-table td:last-child .btn[data-action="tm-preview-inline"]::before { content: "🪟"; }
-.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-send-test"]::before { content: "✉️"; }
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-send-test"]::before { content: "📤"; }
 .admin-actions-icons .admin-table td:last-child .btn[data-action="tm-edit"]::before { content: "✏️"; }
-.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-duplicate"]::before { content: "⧉"; }
+.admin-actions-icons .admin-table td:last-child .btn[data-action="tm-duplicate"]::before { content: "📄"; }
 .admin-actions-icons .admin-table td:last-child .btn[data-action="tm-archive"]::before { content: "🗄️"; }
 
 /* Generic fallbacks by title prefix (covers other tables using similar labels) */
 .admin-actions-icons .admin-table td:last-child .btn[title^="Preview"]::before { content: "👁️"; }
-.admin-actions-icons .admin-table td:last-child .btn[title^="Send"]::before { content: "✉️"; }
+.admin-actions-icons .admin-table td:last-child .btn[title^="Send"]::before { content: "📤"; }
 .admin-actions-icons .admin-table td:last-child .btn[title^="Edit"]::before { content: "✏️"; }
-.admin-actions-icons .admin-table td:last-child .btn[title^="Duplicate"]::before { content: "⧉"; }
+.admin-actions-icons .admin-table td:last-child .btn[title^="Duplicate"]::before { content: "📄"; }
 .admin-actions-icons .admin-table td:last-child .btn[title^="Archive"]::before { content: "🗄️"; }
 
 /* Tight spacing between icons */
@@ -987,7 +1464,7 @@ body.wf-no-scroll { overflow: hidden !important; }
   display: inline-block;
   width: 14px;
   height: 14px;
-  background-color: currentColor;
+  background-color: currentcolor;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -1142,6 +1619,9 @@ body.wf-no-scroll { overflow: hidden !important; }
 #receiptContent::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8; /* Darker on hover */
 }
+/* Responsive modals: remove small/xs iframe max-height caps so height can match content until panel clamp */
+.admin-modal.admin-modal--responsive.admin-modal--sm .wf-admin-embed-frame,
+.admin-modal.admin-modal--responsive.admin-modal--xs .wf-admin-embed-frame { max-height: none !important; }
 /* Loading spinner for customer save button */
 .loading-spinner {
     display: inline-block;
@@ -1198,9 +1678,9 @@ body.wf-no-scroll { overflow: hidden !important; }
 /* Let the dashboard sections table size to its content, not stretch full width */
 #dashboardConfigModal .modal-body .overflow-x-auto { width: 100%; }
 #dashboardSectionsTable {
-  width: 100% !important;
+  width: auto !important; /* size to content */
   display: table !important;
-  table-layout: fixed; /* enforce fill using defined widths */
+  table-layout: auto; /* let columns size to content */
   border-collapse: collapse;
 }
 
@@ -1210,10 +1690,10 @@ body.wf-no-scroll { overflow: hidden !important; }
 #dashboardSectionsTable col:nth-child(1) { width: 80px; }
 #dashboardSectionsTable th:nth-child(2),
 #dashboardSectionsTable td:nth-child(2),
-#dashboardSectionsTable col:nth-child(2) { width: 50%; }
+#dashboardSectionsTable col:nth-child(2) { width: auto; }
 #dashboardSectionsTable th:nth-child(3),
 #dashboardSectionsTable td:nth-child(3),
-#dashboardSectionsTable col:nth-child(3) { width: 30%; }
+#dashboardSectionsTable col:nth-child(3) { width: auto; }
 #dashboardSectionsTable th:nth-child(4),
 #dashboardSectionsTable td:nth-child(4),
 #dashboardSectionsTable col:nth-child(4) { width: 120px; }
@@ -1229,7 +1709,9 @@ body.wf-no-scroll { overflow: hidden !important; }
 #dashboardSectionsTable th,
 #dashboardSectionsTable td { padding: 0.5rem 0.6rem; }
 #dashboardSectionsTable td:nth-child(2),
-#dashboardSectionsTable td:nth-child(3) { white-space: normal; overflow-wrap: anywhere; }
+#dashboardSectionsTable td:nth-child(3),
+#dashboardSectionsTable th:nth-child(2),
+#dashboardSectionsTable th:nth-child(3) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Slightly tighter header for dashboard config */
 #dashboardConfigModal .modal-header {

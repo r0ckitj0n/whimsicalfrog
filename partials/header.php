@@ -123,12 +123,21 @@ if ($isAdmin && isset($_GET['section']) && is_string($_GET['section']) && $_GET[
         $pageSlug = 'admin/' . $q;
     }
 }
+// Normalize direct section templates to canonical admin/<section> slugs
+try {
+    $__req_path_norm = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+    if ($isAdmin) {
+        if (strpos($__req_path_norm, 'sections/admin_settings.php') !== false || preg_match('#(^|/)admin_settings\.php$#i', $__req_path_norm)) {
+            $pageSlug = 'admin/settings';
+        }
+    }
+} catch (Throwable $e) { /* noop */ }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <?php
     try {
         $proto = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) ? $_SERVER['HTTP_X_FORWARDED_PROTO'] : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http');
@@ -215,7 +224,8 @@ echo "<script>(function(){try{console.log('[WF-Header] version ', '" . addslashe
 // missing CSS for admin pages other than settings.
 // In dev (localhost) or explicit ?vite=dev, bypass vite() entirely and emit dev scripts directly.
 $__wf_is_localhost = isset($_SERVER['HTTP_HOST']) && (stripos($_SERVER['HTTP_HOST'], 'localhost') !== false);
-if ($__wf_is_localhost || (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'dev')) {
+$__wf_force_prod = (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'prod') || (isset($_GET['wf_force_prod']) && $_GET['wf_force_prod'] === '1');
+if (!$__wf_force_prod && ($__wf_is_localhost || (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'dev'))) {
     // Determine Vite dev origin robustly: env > hot file > default, normalize to localhost
     $devOrigin = getenv('WF_VITE_ORIGIN');
     if (!$devOrigin) {
@@ -261,16 +271,20 @@ if ($__wf_is_localhost || (isset($_GET['vite']) && strtolower((string)$_GET['vit
         echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/@vite/client"></script>' . "\n";
         echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/app.js"></script>' . "\n";
         echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/header-bootstrap.js"></script>' . "\n";
+        // Dynamic icon CSS from configurable admin icon map (keeps icon glyphs updatable without full rebuild)
+        echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
     } else {
         // Fallback to production assets if dev server is not reachable
         echo "<!-- Vite dev server not reachable; falling back to production assets -->\n";
         echo vite('js/app.js');
         echo vite('js/header-bootstrap.js');
+        echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
     }
 } else {
     echo vite('js/app.js');
     // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
     echo vite('js/header-bootstrap.js');
+    echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
 }
 // Final inline override to guarantee help chips are 36x36 with primary brand color
 echo <<<'STYLE'
@@ -525,7 +539,7 @@ echo <<<'SCRIPT'
       var h = document.querySelector('.site-header') || document.querySelector('.universal-page-header');
       if (h && h.getBoundingClientRect){
         var hh = Math.max(40, Math.round(h.getBoundingClientRect().height));
-        document.documentElement.style.setProperty('--wf-header-height', hh + 'px');
+        // defer writing vars until after offset is computed
       }
       var headerBottom = 0;
       if (h && h.getBoundingClientRect) headerBottom = Math.round(h.getBoundingClientRect().bottom);
@@ -533,8 +547,12 @@ echo <<<'SCRIPT'
       var navBottom = 0;
       if (nav && nav.getBoundingClientRect) navBottom = Math.round(nav.getBoundingClientRect().bottom);
       var offset = Math.max(headerBottom, navBottom) + 12;
-      if (offset > 0) document.documentElement.style.setProperty('--wf-overlay-offset', offset + 'px');
-    }catch(_){}
+      if (typeof hh === 'number'){
+        var st = document.getElementById('wf-header-dyn-vars');
+        if (!st) { st = document.createElement('style'); st.id = 'wf-header-dyn-vars'; document.head.appendChild(st); }
+        st.textContent = ':root{--wf-header-height:'+hh+'px; --wf-overlay-offset:'+offset+'px}';
+      }
+    }catch(_){ }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', computeHeaderHeight, {once:true}); else computeHeaderHeight();
   window.addEventListener('load', computeHeaderHeight, {once:true});
@@ -558,16 +576,10 @@ echo <<<'SCRIPT'
       if(!el||el.__wfOffsetApplied) return; // idempotent
       var isOverHeader = !!(el.classList && el.classList.contains('over-header'));
       if (!isOverHeader) {
-        var hh=headerHeight();
-        el.style.paddingTop = (hh+12)+"px";
-        el.style.alignItems = 'flex-start';
-      }
-      // JS fallback z-index; do NOT downgrade explicit over-header overlays
-      if (!isOverHeader && !el.hasAttribute('data-z-lock')) {
-        el.style.zIndex = '10100';
+        el.classList.add('with-offset');
       }
       var dlg = el.querySelector('.admin-modal,.modal,[role="document"],[role="dialog"]');
-      if (dlg) { dlg.style.marginTop='0'; }
+      if (dlg) { /* margin handled by CSS */ }
       el.__wfOffsetApplied = true;
     }catch(_){/* noop */}
   }
@@ -761,7 +773,7 @@ STYLE;
   function hideOverlays(){
     try {
       var sel = ".admin-modal-overlay, #documentationHubModal, [id*=documentation][class*=modal], [id*=help][class*=modal], #searchModal, #loggingStatusModal, #databaseTablesModal";
-      document.querySelectorAll(sel).forEach(function(m){ m.style.display = "none"; m.classList.add("hidden"); });
+      document.querySelectorAll(sel).forEach(function(m){ m.classList.add("hidden"); });
     } catch(_) {}
   }
   function shouldAllow(){ return (Date.now() - userTapTs) <= allowWindow; }
@@ -773,18 +785,18 @@ STYLE;
           if (!m.target) return;
           var el = m.target.nodeType === 1 ? m.target : null;
           if (!el) return;
-          if (el.classList && el.classList.contains("admin-modal-overlay")) {
-            if (!allow) { el.style.display = "none"; el.classList.add("hidden"); }
+            if (el.classList && el.classList.contains("admin-modal-overlay")) {
+            if (!allow) { el.classList.add("hidden"); }
           }
           (m.addedNodes||[]).forEach(function(n){
             if (n.nodeType === 1 && n.classList && n.classList.contains("admin-modal-overlay")) {
-              if (!shouldAllow()) { n.style.display = "none"; n.classList.add("hidden"); }
+              if (!shouldAllow()) { n.classList.add("hidden"); }
             }
             if (n.nodeType === 1 && (n.id === 'searchModal' || n.id === 'loggingStatusModal' || n.id === 'databaseTablesModal')) {
-              if (!shouldAllow()) { n.style.display = 'none'; n.classList.add('hidden'); }
+              if (!shouldAllow()) { n.classList.add('hidden'); }
             }
             if (n.nodeType === 1 && (/(?:^|\s)modal(?:\s|$)/i.test(n.className || '') || /modal/i.test(n.id || ''))) {
-              if (!shouldAllow()) { n.style.display = 'none'; n.classList.add('hidden'); }
+              if (!shouldAllow()) { n.classList.add('hidden'); }
             }
           });
           // Revert unauthorized class/attribute changes on specific modals
@@ -794,7 +806,6 @@ STYLE;
             if ((!allow) && (id === 'searchModal' || id === 'loggingStatusModal' || id === 'databaseTablesModal' || /wf-search-modal/.test(cls) || /modal/i.test(id) || /(\b|_)modal(\b|_)/i.test(cls))) {
               el.classList.add('hidden');
               el.classList.remove('show');
-              el.style.display = 'none';
             }
           } catch(_) {}
         });
@@ -1045,7 +1056,7 @@ if ($bodyBgUrl) {
 <body class="<?php echo implode(' ', $bodyClasses); ?>" <?php echo $bodyBgUrlOut ? 'data-bg-url="' . htmlspecialchars($bodyBgUrlOut) . '"' : ''; ?> data-page="<?php echo htmlspecialchars($pageSlug); ?>" data-path="<?php echo htmlspecialchars($_SERVER['REQUEST_URI'] ?? '/'); ?>" data-is-admin="<?php echo $isAdmin ? 'true' : 'false'; ?>" data-is-logged-in="<?php echo $__wf_is_logged_in ? 'true' : 'false'; ?>"
   <?php echo ($__wf_user_id !== null) ? 'data-user-id="' . htmlspecialchars($__wf_user_id) . '"' : ''; ?>
 >
-<script>(function(){try{var b=document.body;var url=b&&b.getAttribute('data-bg-url');if(url){b.style.backgroundImage='url('+url+')';b.style.backgroundSize='cover';b.style.backgroundPosition='center';b.style.backgroundRepeat='no-repeat';/* Only set minHeight for non-admin pages */if(!b.getAttribute('data-page')||b.getAttribute('data-page').indexOf('admin')!==0){b.style.minHeight='100vh';}}}catch(e){}})();</script>
+<?php /* Body background is applied by Vite entry (body-background-from-data.js) using data attributes; no inline styles necessary. */ ?>
 <?php
 // Render the visual header component
 include_once dirname(__DIR__) . '/components/header_template.php';

@@ -1,0 +1,20 @@
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:#fff; color:#111; }
+.wrap { max-width: 1400px; margin: 0 auto; padding: 16px; }
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+.title { font-size: 20px; font-weight: 700; }
+.grid { display:grid; gap: 12px; grid-template-columns: repeat(1, minmax(0, 1fr)); }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+.row { display:flex; flex-direction:column; gap:6px; }
+label { font-size: 12px; color:#374151; }
+input[type="text"], input[type="email"], input[type="number"], input[type="password"], select, textarea { padding:8px; border:1px solid #d1d5db; border-radius:6px; }
+.hint { font-size: 12px; color:#6b7280; }
+.section { border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:12px; background:#fafafa; }
+.actions { display:flex; gap:8px; justify-content:flex-end; margin-top: 8px; }
+.btn { padding:8px 12px; border-radius:6px; border:1px solid #d1d5db; background:#fff; cursor:pointer; }
+.btn-primary { background:#2563eb; color:#fff; border-color:#1d4ed8; }
+.status { font-size: 12px; margin-left:auto; }
+.success { color:#065f46; }
+.error { color:#b91c1c; }
+.inline { display:flex; align-items:center; gap:8px; }
+.wf-log-console { background:#0b1020; color:#b7c5ff; padding:8px; border-radius:6px; min-height:70px; overflow:auto; }

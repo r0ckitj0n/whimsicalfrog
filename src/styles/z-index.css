@@ -140,6 +140,37 @@
   --z-admin-drawer-overlay: var(--z-index-base); /* 1 */
 }
 
+/* Additional aliases for tokens referenced across legacy and component CSS */
+:root {
+  /* Headers & sticky elements */
+  --z-sticky-header: var(--z-index-page-header, 300);
+  --z-site-header: var(--z-index-page-header, 300);
+
+  /* Dropdowns & content */
+  --z-dropdown: var(--z-index-dropdown, 400);
+  --z-content: var(--z-index-content-front, 15);
+  --z-content-overlay: var(--z-index-overlay-backdrop, 1000);
+
+  /* Modals & overlays */
+  --z-index-modal: var(--z-index-modal-base, 1010);
+  --z-modal-overlay: var(--z-index-overlay-backdrop, 1000);
+  --z-image-zoom-modal: var(--z-detailed-item-modal, 1500);
+  --z-quantity-modal: calc(var(--z-detailed-item-modal, 1500) + 1);
+
+  /* Popups & admin tools */
+  --z-popup: var(--z-global-popup, 1250);
+  --z-index-admin-tools: 10110;
+
+  /* Room & inline UI */
+  --z-room-elements: var(--z-index-content-front, 15);
+
+  /* Miscellaneous */
+  --z-index-raised: var(--z-index-base, 1);
+  --z-index-far-behind: -2;
+  --z-image-viewer: 100400;
+  --z-debug: var(--z-index-god-mode, 1600);
+}
+
 /* Admin-only overlay z-index overrides (scoped by route) */
 body[data-page^='admin'] {
   --wf-admin-overlay-z: var(--z-admin-overlay);

@@ -1061,16 +1061,14 @@ body[data-page^='admin'] .admin-filter-form {
 @media (max-width: 640px) {.modal-content {
     margin: var(--modal-mobile-margin, 1rem);
     max-width: var(--modal-mobile-max-width, calc(100vw - 2rem));
-    max-width: var(--modal-mobile-max-width, calc(100dvw - 2rem));
     max-height: var(--modal-mobile-max-height, calc(100vh - 2rem));
-    max-height: var(--modal-mobile-max-height, calc(100dvh - 2rem));
 }.admin-modal-content {
     margin: var(--admin-modal-mobile-margin, 1rem);
     max-width: var(--admin-modal-mobile-max-width, calc(100vw - 2rem));
-    max-width: var(--admin-modal-mobile-max-width, calc(100dvw - 2rem));
     max-height: var(--admin-modal-mobile-max-height, calc(100vh - 2rem));
-    max-height: var(--admin-modal-mobile-max-height, calc(100dvh - 2rem));
-}.modal-header {
+}@supports (width: 100dvw){.modal-content{max-width: var(--modal-mobile-max-width, calc(100dvw - 2rem)); max-height: var(--modal-mobile-max-height, calc(100dvh - 2rem));}.admin-modal-content{max-width: var(--admin-modal-mobile-max-width, calc(100dvw - 2rem)); max-height: var(--admin-modal-mobile-max-height, calc(100dvh - 2rem));}
+}
+.modal-header {
     padding: 5px 12px;
     margin-bottom: 0;
     border-bottom: 1px solid #e5e7eb;
@@ -2056,7 +2054,7 @@ body[data-page^='admin'] .admin-filter-form {
 }.u-flex-1 {
     flex: 1;
 }.u-font-family-Arial-sans-serif {
-    font-family: Arial, sans-serif;
+    font-family: var(--font-secondary, Arial, sans-serif);
 }.u-font-size-0-875rem {
     font-size: 0.875rem;
 }.u-font-size-0-8rem {
@@ -2335,7 +2333,7 @@ body[data-page^='admin'] .admin-filter-form {
     background-color: #f3f4f6;
     padding: 2px 4px;
     border-radius: 3px;
-    font-family: monospace;
+    font-family: var(--font-code, monospace);
     font-size: 0.875rem;
 }.bg-yellow-50 {
     background-color: #fefce8;
@@ -3227,10 +3225,10 @@ body { /* Allow content overflow */
     transform: translateY(-2px);
 }/* Common Font Family Classes */
 .font-family-courier {
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-code, 'Courier New', monospace);
 }
 .font-family-merienda {
-    font-family: Merienda, cursive;
+    font-family: var(--font-primary, Merienda, cursive);
 }
 h1, h2, h3, h4, h5, h6,
 .page-title, .site-title, .admin-card-title, .admin-modal-title, .modal-title,
@@ -3647,7 +3645,7 @@ h1, h2, h3, h4, h5, h6,
     line-height: 1;
     font-size: 18px;
     color: inherit;
-    font-family: inherit !important;
+    font-family: var(--font-inherit, inherit) !important;
 }
 
 /* Text color utilities used in admin Actions column */
@@ -4233,7 +4231,7 @@ body[data-page='admin/settings'] {
 }.item-card-small .item-sku {
     color: #6b7280;
     font-size: 0.875rem;
-    font-family: Monaco, Menlo, monospace;
+    font-family: var(--font-code, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
 }.item-card-small .item-price {
     font-weight: 600;
     color: #2563eb;
@@ -4408,7 +4406,7 @@ body[data-page='admin/settings'] {
     flex: 1;
 }.config-value {
     width: 100%;
-    font-family: var(--code-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
+    font-family: var(--font-code, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
     background-color: var(--config-value-bg, #f9fafb);
     padding: 4px 8px;
     border-radius: var(--border-radius-small, 4px);
@@ -4628,7 +4626,7 @@ body[data-page='admin/settings'] {
     color: var(--code-badge-text, #374151);
     padding: 2px 6px;
     border-radius: var(--border-radius-small, 4px);
-    font-family: var(--code-font-family, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
+    font-family: var(--font-code, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
     font-size: 0.75rem;
     font-weight: 600;
 }/* Editable Fields */.category-edit-input {
@@ -4892,7 +4890,7 @@ body[data-page='admin/settings'] {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }.log-message {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-family: var(--font-code, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
     font-size: 0.875rem;
     line-height: 1.5;
     white-space: pre-wrap;
@@ -5309,7 +5307,7 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
 }.order-item-sku {
     font-size: 0.75rem;
     color: #6b7280;
-    font-family: monospace;
+    font-family: var(--font-code, monospace);
     margin-bottom: 0.25rem;
 }.order-item-price {
     display: flex;
@@ -5514,7 +5512,7 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     display: flex;
     align-items: center;
     gap: 12px;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: var(--font-secondary, system-ui, -apple-system, sans-serif);
 }.toast-notification.show {
     opacity: 1;
     transform: translateY(0) translateX(0);
@@ -5806,7 +5804,7 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     border: 1px solid #4299e1; ;
     border-radius: 4px; ;
     font-size: inherit; ;
-    font-family: inherit; ;
+    font-family: var(--font-inherit, inherit); ;
     background-color: white;
     box-sizing: border-box;
     margin: 0;
@@ -5817,7 +5815,7 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     border: 1px solid #4299e1; ;
     border-radius: 4px; ;
     font-size: inherit; ;
-    font-family: inherit; ;
+    font-family: var(--font-inherit, inherit); ;
     background-color: white;
     box-sizing: border-box;
     margin: 0;
@@ -5989,8 +5987,6 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     left: 0;
     width: 100vw;
     height: 100vh;
-    width: 100dvw;
-    height: 100dvh;
     background-color: rgb(0 0 0 / 50%);
     align-items: center;
     justify-content: center;
@@ -6001,12 +5997,14 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     background: white;
     border-radius: 8px;
     max-width: 90vw;
-    max-width: 90dvw;
     max-height: 90vh;
-    max-height: 90dvh;
     overflow-y: auto;
     position: relative;
 }/* Custom scrollbar styles */
+@supports (width: 100dvw) {
+  #marketingManagerModal { width: 100dvw; height: 100dvh; }
+  #marketingManagerModal .modal-content { max-width: 90dvw; max-height: 90dvh; }
+}
 .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e0 #f7fafc;
@@ -6480,7 +6478,7 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     border-color: var(--button-bg-primary, #87ac3a);
     color: var(--button-bg-primary, #87ac3a);
 }.css-preview-text {
-    font-family: var(--font-family-primary, 'Merienda', cursive);
+    font-family: var(--font-primary, 'Merienda', cursive);
 }.css-preview-input {
     border-color: var(--input-border-color, #d1d5db);
 }.css-preview-card {
@@ -7562,7 +7560,7 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
     --brand-secondary: #6c757d;
 }/* Base email styles */
 .email-body {
-    font-family: Arial, sans-serif;
+    font-family: var(--font-email, Arial, sans-serif);
     line-height: 1.6;
     color: #333;
     max-width: 600px;
@@ -8344,8 +8342,7 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
 .wf-notification-error {
     border-left: none;
 }/* Override base background for types */
-.wf-notification { /* Let type-specific background take over */ border: 2px solid; border-radius: 16px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 12px 28px rgb(0 0 0 / 35%), 0 4px 8px rgb(0 0 0 / 15%); backdrop-filter: blur(12px) saturate(180%); font-family: var(--brand-font, inherit); font-size: 15px; font-weight: 500; line-height: 1.5; opacity: 0; transform: translateX(100%) scale(0.9); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; position: relative; overflow: hidden; cursor: pointer; background: none; ;
-}
+.wf-notification { /* Let type-specific background take over */ border: 2px solid; border-radius: 16px; padding: 20px 24px; margin-bottom: 16px; box-shadow: 0 12px 28px rgb(0 0 0 / 35%), 0 4px 8px rgb(0 0 0 / 15%); backdrop-filter: blur(12px) saturate(180%); font-family: var(--font-brand, var(--brand-font, inherit)); font-size: 15px; font-weight: 500; line-height: 1.5; opacity: 0; transform: translateX(100%) scale(0.9); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; position: relative; overflow: hidden; cursor: pointer; background: none; ; }
 
 /* Animations */
 @keyframes slideIn {from {
@@ -8870,7 +8867,7 @@ body.modal-open #itemPopup.visible {
     margin: 0;
     padding: 0;
     background: transparent;
-    font-family: Arial, sans-serif;
+    font-family: var(--font-email, Arial, sans-serif);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -9682,7 +9679,7 @@ z-index: var(--z-badge, 10);
     font-size: 12px;
     color: #888;
     margin-bottom: 4px;
-    font-family: 'Courier New', monospace;
+    font-family: var(--font-code, 'Courier New', monospace);
     background: #fff;
     padding: 2px 6px;
     border-radius: 4px;
@@ -10075,7 +10072,7 @@ div #confirmAddToCart {
     display: inline-block;
     padding: 8px 12px 8px 20px; /* Extra left padding for icon */;
     border-radius: 50px;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10088,7 +10085,7 @@ div #confirmAddToCart {
     display: inline-block;
     padding: 8px 12px 8px 20px; /* Extra left padding for icon */;
     border-radius: 50px;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10101,7 +10098,7 @@ div #confirmAddToCart {
     display: inline-block;
     padding: 8px 12px 8px 20px; /* Extra left padding for icon */;
     border-radius: 50px;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10114,7 +10111,7 @@ div #confirmAddToCart {
     display: inline-block;
     padding: 8px 12px 8px 20px; /* Extra left padding for icon */;
     border-radius: 50px;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10127,7 +10124,7 @@ div #confirmAddToCart {
     display: inline-block;
     padding: 8px 12px 8px 20px; /* Extra left padding for icon */;
     border-radius: 50px;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10140,7 +10137,7 @@ div #confirmAddToCart {
     display: inline-block;
     padding: 8px 12px 8px 20px; /* Extra left padding for icon */;
     border-radius: 50px;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10216,7 +10213,7 @@ div #confirmAddToCart {
 }/* Modal Badge Fun Styling */
 #detailedQualityBadge span {
     position: relative;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10228,7 +10225,7 @@ div #confirmAddToCart {
 }
 #detailedTrendingBadge span {
     position: relative;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -10240,7 +10237,7 @@ div #confirmAddToCart {
 }
 #detailedBestsellerBadge span {
     position: relative;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: var(--font-badge, 'Comic Sans MS', cursive, sans-serif);
     font-weight: bold;
     font-size: 10px;
     text-transform: uppercase;
@@ -12984,7 +12981,7 @@ input[type="checkbox"].color-checkbox {
 }.order-id {
     font-size: var(--font-size-sm, 0.875rem);
     margin: 0 0 var(--spacing-xs, 0.5rem) 0;
-    font-family: monospace;
+    font-family: var(--font-code, monospace);
     font-weight: 600;
     color: var(--primary-color, #87ac3a);
 }.customer-name {
@@ -13116,7 +13113,7 @@ input[type="checkbox"].color-checkbox {
     color: var(--text-secondary, #6b7280);
     font-size: 0.875rem;
 }.discount-code {
-    font-family: monospace;
+    font-family: var(--font-code, monospace);
     font-weight: 600;
     color: var(--primary-color, #87ac3a);
     background: var(--card-bg-secondary, #f8fafc);
@@ -13128,7 +13125,7 @@ input[type="checkbox"].color-checkbox {
     font-weight: 600;
     color: var(--text-success, #10b981);
 }.discount-usage {
-    font-family: monospace;
+    font-family: var(--font-code, monospace);
     font-size: 0.875rem;
 }.discount-expires {
     color: var(--text-secondary, #6b7280);
@@ -13604,7 +13601,7 @@ input[type="checkbox"].color-checkbox {
 }.pos-items-grid .item-sku {
     font-size: 0.75rem;
     color: #6b7280;
-    font-family: Monaco, Menlo, monospace;
+    font-family: var(--font-code, 'Monaco', 'Menlo', 'Ubuntu Mono', monospace);
     margin-bottom: 0.5rem;
 }.pos-items-grid .item-price {
     font-size: 1rem;

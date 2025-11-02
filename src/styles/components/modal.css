@@ -9,8 +9,6 @@
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    width: 100dvw !important;
-    height: 100dvh !important;
     overscroll-behavior: contain;
     z-index: var(--z-overlay-topmost, 1600) !important;
     visibility: visible !important;
@@ -246,7 +244,6 @@
 /* Prevent horizontal overflow in modal body */
 .detailed-item-modal .modal-body {
     max-height: 80vh;
-    max-height: 80dvh;
     overflow-y: auto;
     padding-bottom: 2rem;
     overflow-x: hidden !important;
@@ -321,7 +318,6 @@ div[class*="admin-modal"][class*="wf-admin-panel-visible"] {
 .order-history-content {
     flex: 1 !important;
     max-height: 45vh !important;
-    max-height: 45dvh !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     scrollbar-gutter: stable both-edges;
@@ -357,5 +353,23 @@ div[class*="admin-modal"][class*="wf-admin-panel-visible"] {
     margin-bottom: 0.125rem !important;
     font-size: 0.75rem !important;
     line-height: 1.1 !important;
+}
+
+@supports (width: 100dvw) {
+  .wf-modal-force-visible { width: 100dvw !important; height: 100dvh !important; }
+  .detailed-item-modal.show { height: calc(100dvh - var(--wf-header-offset, 0)) !important; }
+  .detailed-item-modal { width: 100dvw !important; max-width: 100dvw !important; }
+  .detailed-item-modal .detailed-item-modal-container {
+    max-width: min(90dvw, 1400px) !important;
+    width: min(90dvw, 1400px) !important;
+  }
+  .detailed-item-modal .modal-body { max-height: 80dvh; }
+  .order-history-content { max-height: 45dvh !important; }
+  .image-viewer-overlay img {
+    max-width: 95dvw !important;
+    max-height: calc(100dvh - var(--wf-header-offset, 0) - 20px) !important;
+  }
+  .detailed-item-modal #detailedMainImage { max-height: calc(95dvh - var(--wf-header-offset, 0) - 50px) !important; }
+  .detailed-item-modal .aspect-square { max-height: calc(95dvh - var(--wf-header-offset, 0) - 50px) !important; }
 }
 

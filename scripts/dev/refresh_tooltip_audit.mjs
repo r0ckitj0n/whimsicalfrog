@@ -15,7 +15,7 @@ async function apiGet(url) {
 }
 
 // Generate unique snarky/helpful tooltip based on element_id and context
-function generateTooltip(elementId, context, currentContent) {
+function generateTooltip(elementId, context, _currentContent) {
   const id = String(elementId || '').toLowerCase();
   const ctx = String(context || '').toLowerCase();
   
@@ -198,7 +198,7 @@ function generateTooltip(elementId, context, currentContent) {
 }
 
 // Generate plain-English description based on element_id
-function generateDescription(elementId, context) {
+function generateDescription(elementId, _context) {
   const id = String(elementId || '').toLowerCase();
   const action = id.startsWith('action:') ? id.slice(7) : id;
   

@@ -64,6 +64,35 @@ try {
 
 function initializeAnalyticsTables($pdo)
 {
+    // Dedicated analytics sessions for attribution (UTM/referrer, device, etc.)
+    $analyticsSessionsTable = "CREATE TABLE IF NOT EXISTS analytics_sessions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        session_id VARCHAR(128) NOT NULL,
+        user_id INT NULL,
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        referrer TEXT,
+        landing_page VARCHAR(500),
+        utm_source VARCHAR(255),
+        utm_medium VARCHAR(255),
+        utm_campaign VARCHAR(255),
+        utm_term VARCHAR(255),
+        utm_content VARCHAR(255),
+        device_type ENUM('desktop','tablet','mobile') DEFAULT 'desktop',
+        browser VARCHAR(100),
+        operating_system VARCHAR(100),
+        started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        total_page_views INT DEFAULT 0,
+        bounce BOOLEAN DEFAULT TRUE,
+        converted BOOLEAN DEFAULT FALSE,
+        conversion_value DECIMAL(10,2) DEFAULT 0,
+        UNIQUE KEY uniq_session_id (session_id),
+        INDEX idx_started_at (started_at),
+        INDEX idx_utm_source (utm_source),
+        INDEX idx_utm_campaign (utm_campaign)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
     // User sessions table
     $sessionsTable = "CREATE TABLE IF NOT EXISTS user_sessions (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -176,12 +205,31 @@ function initializeAnalyticsTables($pdo)
         INDEX idx_status (status)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
+    // Order attribution table (one row per order)
+    $orderAttributionTable = "CREATE TABLE IF NOT EXISTS order_attribution (
+        order_id VARCHAR(64) NOT NULL PRIMARY KEY,
+        session_id VARCHAR(128) NULL,
+        channel VARCHAR(255) NULL,
+        utm_source VARCHAR(255) NULL,
+        utm_medium VARCHAR(255) NULL,
+        utm_campaign VARCHAR(255) NULL,
+        utm_term VARCHAR(255) NULL,
+        utm_content VARCHAR(255) NULL,
+        referrer TEXT NULL,
+        revenue DECIMAL(10,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_channel (channel),
+        INDEX idx_session_id (session_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+
+    Database::execute($analyticsSessionsTable);
     Database::execute($sessionsTable);
     Database::execute($pageViewsTable);
     Database::execute($interactionsTable);
     Database::execute($itemAnalyticsTable);
     Database::execute($conversionFunnelsTable);
     Database::execute($optimizationTable);
+    Database::execute($orderAttributionTable);
 }
 
 function trackVisit($pdo)
@@ -191,8 +239,15 @@ function trackVisit($pdo)
     $sessionId = session_id();
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
     $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
-    $referrer = $_SERVER['HTTP_REFERER'] ?? '';
+    $referrer = $input['referrer'] ?? ($_SERVER['HTTP_REFERER'] ?? '');
     $landingPage = $input['landing_page'] ?? '';
+
+    // UTM params from client payload (prefer explicit over parsing landing_page server-side)
+    $utm_source = $input['utm_source'] ?? '';
+    $utm_medium = $input['utm_medium'] ?? '';
+    $utm_campaign = $input['utm_campaign'] ?? '';
+    $utm_term = $input['utm_term'] ?? '';
+    $utm_content = $input['utm_content'] ?? '';
 
     // Parse user agent for device/browser info
     $deviceInfo = parseUserAgent($userAgent);
@@ -207,6 +262,17 @@ function trackVisit($pdo)
             [$sessionId, $ipAddress, $userAgent, $referrer, $landingPage, $deviceInfo['device_type'], $deviceInfo['browser'], $deviceInfo['os']]
         );
     }
+
+    // Upsert analytics_sessions for attribution
+    Database::execute(
+        "INSERT INTO analytics_sessions (session_id, user_id, ip_address, user_agent, referrer, landing_page, utm_source, utm_medium, utm_campaign, utm_term, utm_content, device_type, browser, operating_system)
+         VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            last_activity = CURRENT_TIMESTAMP,
+            referrer = IFNULL(NULLIF(referrer,''), VALUES(referrer)),
+            landing_page = IFNULL(NULLIF(landing_page,''), VALUES(landing_page))",
+        [$sessionId, $ipAddress, $userAgent, $referrer, $landingPage, $utm_source, $utm_medium, $utm_campaign, $utm_term, $utm_content, $deviceInfo['device_type'], $deviceInfo['browser'], $deviceInfo['os']]
+    );
 
     echo json_encode(['success' => true, 'session_id' => $sessionId]);
 }
@@ -232,6 +298,12 @@ function trackPageView($pdo)
     // Update session stats
     Database::execute(
         "UPDATE user_sessions SET total_page_views = total_page_views + 1, bounce = (total_page_views <= 1), last_activity = CURRENT_TIMESTAMP WHERE session_id = ?",
+        [$sessionId]
+    );
+
+    // Mirror stats into analytics_sessions
+    Database::execute(
+        "UPDATE analytics_sessions SET total_page_views = total_page_views + 1, bounce = (total_page_views <= 1), last_activity = CURRENT_TIMESTAMP WHERE session_id = ?",
         [$sessionId]
     );
 
@@ -272,6 +344,10 @@ function trackInteraction($pdo)
 
         // Mark session as converted
         Database::execute("UPDATE user_sessions SET converted = TRUE WHERE session_id = ?", [$sessionId]);
+        // Update analytics_sessions with conversion and value if provided
+        $convVal = 0;
+        try { if (isset($input['interaction_data']['conversion_value'])) { $convVal = (float)$input['interaction_data']['conversion_value']; } } catch (\Throwable $e) { $convVal = 0; }
+        Database::execute("UPDATE analytics_sessions SET converted = TRUE, conversion_value = GREATEST(conversion_value, ?) WHERE session_id = ?", [$convVal, $sessionId]);
     }
 
     echo json_encode(['success' => true]);

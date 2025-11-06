@@ -764,6 +764,32 @@ import { ApiClient } from '../core/api-client.js';
                         } else if (typeof window.addToCart === 'function') {
                             window.addToCart(sku, qty);
                         } else {
+                            // POS-safe fallback: if no cart API is available, queue into the POS pending buffer
+                            try {
+                                const basePrice = Number(item?.price ?? item?.currentPrice ?? item?.retailPrice ?? item?.originalPrice ?? 0);
+                                const selectedColor = optionState.colors.find(c => String(c.id) === String(qs('#itemColorSelect', modal)?.value || ''));
+                                const selectedSize = optionState.sizes.find(s => String(s.size_code) === String(qs('#itemSizeSelect', modal)?.value || ''));
+                                const selectedGender = String(qs('#itemGenderSelect', modal)?.value || '').trim();
+                                const priceAdj = Number(selectedSize?.price_adjustment || 0);
+                                const price = basePrice + priceAdj;
+                                const name = item?.name ?? item?.title ?? '';
+                                const imageCandidate = Array.isArray(item?.images) ? (item.images[0]?.url ?? item.images[0]) : undefined;
+                                const colorImage = selectedColor?.image_path ? selectedColor.image_path : undefined;
+                                const image = colorImage ?? item?.image ?? imageCandidate ?? '';
+                                const parts = [sku];
+                                if (selectedGender) parts.push(`G${sanitizeCode(selectedGender)}`);
+                                if (selectedSize?.size_code) parts.push(`S${sanitizeCode(selectedSize.size_code)}`);
+                                if (selectedColor?.id) parts.push(`C${String(selectedColor.id)}`);
+                                const cartSku = parts.join('-');
+                                if (typeof window !== 'undefined') {
+                                    window.__POS_pendingAdds = window.__POS_pendingAdds || [];
+                                    window.__POS_pendingAdds.push({ sku: cartSku || sku, quantity: qty, price, name, image });
+                                    try { document.dispatchEvent(new CustomEvent('pos:pendingAdd')); } catch(_) {}
+                                    // Close modal silently to mimic successful add in POS flow
+                                    try { closeGlobalItemModal(); } catch(_) {}
+                                    return;
+                                }
+                            } catch(_) { /* noop */ }
                             // As a last resort, surface a user-visible message so it doesn't look like a no-op
                             try {
                                 const msg = 'Cart system not initialized. Please refresh and try again.';

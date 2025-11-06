@@ -10,7 +10,7 @@ const POSModule = {
     cashCalculatorResolve: null,
     lastSaleData: null,
 
-    init() {
+    async init() {
         const posPage = document.querySelector('.pos-register');
         if (!posPage) {
             try { console.warn('[POS] .pos-register not found; POS module not initialized'); } catch(_) {}
@@ -38,6 +38,61 @@ const POSModule = {
         this.showAllItems();
         this.updateCartDisplay();
         
+        // Provide a lightweight cart bridge for the detailed item modal on POS.
+        // The global detailed modal calls WF_Cart.addItem(payload); here we route it to the POS cart.
+        try {
+            // Ensure global exists
+            window.WF_Cart = window.WF_Cart || {};
+            // Replace/add real handlers bound to this POS module
+            window.WF_Cart.addItem = async ({ sku, quantity = 1, price = 0, name = '', image = '' }) => {
+                try {
+                    const qty = Math.max(1, Number(quantity) || 1);
+                    const existing = this.cart.find(i => String(i.sku) === String(sku));
+                    if (existing) {
+                        existing.quantity += qty;
+                        if (Number.isFinite(Number(price)) && Number(price) > 0) {
+                            existing.price = Number(price);
+                        }
+                    } else {
+                        this.cart.push({ sku, name, price: Number(price) || 0, quantity: qty, image });
+                    }
+                    this.updateCartDisplay();
+                    return { success: true };
+                } catch (err) {
+                    console.warn('[POS] WF_Cart.addItem failed', err);
+                    throw err;
+                }
+            };
+            window.WF_Cart.updateCartDisplay = () => { try { this.updateCartDisplay(); } catch(_) {} };
+            window.WF_Cart.clear = () => { try { this.cart = []; this.updateCartDisplay(); } catch(_) {} };
+
+            // Drain any pending adds queued before POS init and on subsequent events
+            const drainPendingAdds = async () => {
+                if (!Array.isArray(window.__POS_pendingAdds) || !window.__POS_pendingAdds.length) return;
+                try {
+                    const queued = window.__POS_pendingAdds.slice();
+                    window.__POS_pendingAdds.length = 0;
+                    for (const payload of queued) {
+                        await window.WF_Cart.addItem(payload);
+                    }
+                    try { this.updateCartDisplay(); } catch(_) {}
+                } catch (_) { /* noop */ }
+            };
+            await drainPendingAdds();
+            try { document.addEventListener('pos:pendingAdd', () => { drainPendingAdds(); }); } catch(_) {}
+        } catch(_) {}
+
+        // Ensure checkout button triggers even if event delegation misses
+        try {
+            const btn = document.getElementById('checkoutBtn');
+            if (btn && !btn.dataset.posBound) {
+                btn.addEventListener('click', (ev) => {
+                    try { ev.preventDefault(); } catch(_) {}
+                    this.processCheckout();
+                });
+                btn.dataset.posBound = '1';
+            }
+        } catch(_) {}
     },
 
     bindEventListeners() {
@@ -365,7 +420,8 @@ const POSModule = {
 
         try {
             const orderData = {
-                customerId: 'POS001',
+                // Attribute all POS sales to the POS user account
+                customerId: 'pos@whimsicalfrog.us',
                 itemIds: this.cart.map(item => item.sku),
                 quantities: this.cart.map(item => item.quantity),
                 colors: this.cart.map(() => null),
@@ -375,12 +431,15 @@ const POSModule = {
                 shippingMethod: 'Customer Pickup', order_status: 'Delivered'
             };
 
-            const result = await ApiClient.post('/api/orders', orderData);
-            if (result && result.success) {
-                // Open the canonical receipt page so POS uses the same template as checkout/admin
-                this.openReceiptPage(result.orderId);
+            // Use the canonical add-order endpoint
+            const result = await ApiClient.post('add_order.php', orderData);
+            const ok = !!(result && (result.success || (result.data && result.data.success)));
+            const oid = result && (result.orderId || (result.data && result.data.orderId));
+            if (ok && oid) {
+                this.openReceiptPage(oid);
             } else {
-                throw new Error(result.error || 'Checkout failed');
+                const msg = (result && (result.error || result.message)) || (result && result.data && (result.data.error || result.data.message)) || 'Checkout failed';
+                throw new Error(msg);
             }
         } catch (error) {
             console.error('Checkout error:', error);
@@ -388,13 +447,30 @@ const POSModule = {
         }
     },
 
-    openReceiptPage(orderId) {
+    async openReceiptPage(orderId) {
         try {
             this.hidePOSModal();
         } catch(_) {}
         this.lastSaleData = { orderId };
-        const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
-        try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
+        const url = `/receipt.php?orderId=${encodeURIComponent(orderId)}&bare=1`;
+        try {
+            const html = await ApiClient.get(url);
+            const content = `
+                <div class="pos-modal-content pos-modal-large">
+                    <div class="pos-modal-header pos-modal-header-success">
+                        <h3 class="pos-modal-title">Receipt ${orderId}</h3>
+                        <div class="pos-modal-actions">
+                            <button class="btn btn-secondary" data-action="print-receipt">Print</button>
+                            <button class="btn btn-secondary" data-action="email-receipt">Email</button>
+                            <button class="pos-modal-close" data-action="finish-sale">×</button>
+                        </div>
+                    </div>
+                    <div class="pos-modal-body pos-receipt-body">${html}</div>
+                </div>`;
+            this.showPOSModal('', content, 'custom');
+        } catch (_) {
+            try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
+        }
     },
 
     generateReceiptContent(saleData) {
@@ -433,7 +509,7 @@ const POSModule = {
     printReceipt() {
         const id = this.lastSaleData && this.lastSaleData.orderId ? String(this.lastSaleData.orderId) : '';
         if (!id) return;
-        const url = `/receipt?orderId=${encodeURIComponent(id)}&bare=1`;
+        const url = `/receipt.php?orderId=${encodeURIComponent(id)}&bare=1`;
         try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
     },
 
@@ -470,11 +546,13 @@ const POSModule = {
     },
 
     finishSale() {
-        this.hidePOSModal();
+        try { this.hidePOSModal(); } catch(_) {}
+        try { window.location.reload(); return; } catch(_) {}
+        // Fallback if reload fails
         this.cart = [];
         this.updateCartDisplay();
         const searchInput = document.getElementById('skuSearch');
-        if(searchInput) searchInput.value = '';
+        if (searchInput) searchInput.value = '';
         this.showAllItems();
     },
 
@@ -643,3 +721,5 @@ if (document.readyState === 'loading') {
 } else {
     POSModule.init();
 }
+
+try { window.POS_openReceiptInModal = (orderId) => POSModule.openReceiptPage(orderId); } catch(_) {}

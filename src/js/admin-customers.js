@@ -377,10 +377,7 @@ const AdminCustomersModule = {
         const id = (fd.get('customerId') || '').toString();
         console.log('[AdminCustomers] Customer ID:', id);
 
-        ApiClient.request('/functions/process_customer_update.php', {
-            method: 'POST',
-            body: fd,
-        })
+        ApiClient.upload('/functions/process_customer_update.php', fd)
             .then(data => {
                 console.log('[AdminCustomers] Response data:', data);
 

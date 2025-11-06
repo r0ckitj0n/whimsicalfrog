@@ -5,11 +5,19 @@ import '../styles/admin-modals.css';
 import '../styles/admin-nav.css';
 // Import help-bubble last to override nav tab pill styles
 import '../styles/admin-help-bubble.css';
-import './login-modal.js';
-import './header-auth-sync.js';
+// Minimal mode toggle via ?wf_bootstrap_minimal=1 to isolate hangs
+const __wfQS = (() => { try { return new URLSearchParams(window.location.search || ''); } catch(_) { return new URLSearchParams(''); } })();
+const __wfMinimal = (() => { try { return __wfQS.get('wf_bootstrap_minimal') === '1'; } catch(_) { return false; } })();
+const __wfAllow = (name) => { try { return __wfQS.get(`wf_enable_${name}`) === '1'; } catch(_) { return false; } };
+try { if (__wfMinimal) console.log('[HeaderBootstrap] minimal mode'); } catch(_) {}
+
+// Load auth/login helpers unless explicitly minimized (can be re-enabled via wf_enable_login=1, wf_enable_auth=1)
+if (!__wfMinimal || __wfAllow('login')) { try { import('./login-modal.js').catch(() => {}); } catch(_) {} }
+if (!__wfMinimal || __wfAllow('auth'))  { try { import('./header-auth-sync.js').catch(() => {}); } catch(_) {} }
 
 // Ensure tooltip manager is initialized on admin pages even if other entries don't run yet
 (function ensureAdminTooltipsInit(){
+  if (__wfMinimal && !__wfAllow('tooltips')) return;
   const isAdmin = (() => {
     try { return (/^\/?admin(\/|$)/i.test(location.pathname)) || (/^\/?sections\/admin_router\.php$/i.test(location.pathname)); } catch(_) { return false; }
   })();
@@ -24,6 +32,7 @@ import './header-auth-sync.js';
 
 // Admin navbar underline slider (runs independently of tooltip bootstrap)
 (function initAdminNavUnderline(){
+  if (__wfMinimal && !__wfAllow('underline')) return;
   try {
     const isAdminRoute = (() => {
       try { return /^\/admin(\/|$)/i.test(location.pathname) || /admin_router\.php$/i.test(location.pathname); } catch(_) { return false; }
@@ -140,12 +149,15 @@ function __wfSyncHintsToggleButtons() {
     });
   } catch(_) {}
 }
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', __wfSyncHintsToggleButtons, { once: true });
-} else {
-  __wfSyncHintsToggleButtons();
+if (!__wfMinimal || __wfAllow('help')) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', __wfSyncHintsToggleButtons, { once: true });
+  } else {
+    __wfSyncHintsToggleButtons();
+  }
 }
 document.addEventListener('click', async (e) => {
+  if (__wfMinimal && !__wfAllow('help')) return;
   try {
     const btn = e.target && e.target.closest ? e.target.closest('[data-action="help-toggle-global-tooltips"]') : null;
     if (!btn) return;
@@ -191,6 +203,7 @@ document.addEventListener('click', async (e) => {
 
 // Admin Help Docs modal open/close (lives in components/admin_nav_tabs.php)
 document.addEventListener('click', (e) => {
+  if (__wfMinimal && !__wfAllow('helpdocs')) return;
   try {
     const openBtn = e.target && e.target.closest ? e.target.closest('[data-action="open-admin-help-modal"]') : null;
     const closeBtn = e.target && e.target.closest ? e.target.closest('[data-action="close-admin-help-modal"]') : null;

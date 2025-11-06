@@ -1,4 +1,5 @@
 // Admin Settings fallbacks (migrated from inline <script> blocks)
+import { ApiClient } from '../core/api-client.js';
 // - Modal close handlers (X button, delegated close, backdrop click, ESC)
 // - Auto-size admin modals
 // - Auto-resize same-origin iframes inside modals + cross-iframe message sizing
@@ -289,11 +290,9 @@
               ecommerce_cart_minimum_total: minTotal
             }
           };
-          const origin = (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin;
-          const res = await fetch(origin.replace(/\/$/, '') + '/api/business_settings.php?action=upsert_settings', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), credentials: 'include'
-          });
-          if (res.ok) {
+          const body = { action: 'upsert_settings', ...payload };
+          const j = await (window.WhimsicalFrog && WhimsicalFrog.api ? WhimsicalFrog.api.post('/api/business_settings.php', body) : ApiClient.post('/api/business_settings.php', body));
+          if (j) {
             try {
               window.__WF_OPEN_CART_ON_ADD = openAdd;
               window.__WF_CART_MERGE_DUPES = mergeDupes;
@@ -320,7 +319,7 @@
     (function(){
       if (window.__wfBoundCartSimHandlers) return; window.__wfBoundCartSimHandlers = true;
 
-      function getOrigin(){ return (window.__WF_BACKEND_ORIGIN && typeof window.__WF_BACKEND_ORIGIN==='string') ? window.__WF_BACKEND_ORIGIN : window.location.origin; }
+      
       function setStatus(msg, ok){
         const el = document.getElementById('cartSimulationStatus');
         if (!el) return;
@@ -482,8 +481,8 @@
         try {
           const sel = document.getElementById('cartSimPrefCategory');
           if (sel && !sel.__wfFilled) {
-            const origin = getOrigin(); const res = await fetch(origin.replace(/\/$/, '') + '/api/cart_upsell_metadata.php', { credentials: 'include' }); if (!res.ok) throw new Error('meta');
-            const json = await res.json(); const d = (json && json.data) ? json.data : json; const cats = Array.isArray(d && d.categories) ? d.categories : [];
+            const j = await (window.WhimsicalFrog && WhimsicalFrog.api ? WhimsicalFrog.api.get('/api/cart_upsell_metadata.php') : ApiClient.get('/api/cart_upsell_metadata.php'));
+            const d = (j && j.data) ? j.data : j; const cats = Array.isArray(d && d.categories) ? d.categories : [];
             const frag = document.createDocumentFragment(); const first = document.createElement('option'); first.value=''; first.textContent='Auto'; frag.appendChild(first);
             cats.forEach((c)=>{ const opt = document.createElement('option'); opt.value = c; opt.textContent = c; frag.appendChild(opt); });
             sel.innerHTML = ''; sel.appendChild(frag); sel.__wfFilled = true;
@@ -508,12 +507,10 @@
         ev.preventDefault(); ev.stopPropagation();
         try {
           setStatus('Generating shopper and recommendations…', true);
-          const origin = getOrigin();
           const profile = getProfileFromControls();
           const body = { limit: 4 }; if (Object.keys(profile).length) body.profile = profile;
-          const res = await fetch(origin.replace(/\/$/, '') + '/api/cart_upsell_simulation.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
-          if (!res.ok) { setStatus('Failed to generate recommendations', false); return; }
-          const json = await res.json(); const d = (json && json.data) ? json.data : json;
+          const j = await (window.WhimsicalFrog && WhimsicalFrog.api ? WhimsicalFrog.api.post('/api/cart_upsell_simulation.php', body) : ApiClient.post('/api/cart_upsell_simulation.php', body));
+          const d = (j && j.data) ? j.data : j;
           renderProfile(d && d.profile ? d.profile : {});
           renderSeed(d && d.cart_skus ? d.cart_skus : []);
           renderRecs(d && d.recommendations ? d.recommendations : [], d && d.rationales ? d.rationales : {});
@@ -527,11 +524,10 @@
       document.addEventListener('wf:cart-sim-refresh', async function(){
         try {
           setStatus('Generating shopper and recommendations…', true);
-          const origin = getOrigin(); const profile = getProfileFromControls();
+          const profile = getProfileFromControls();
           const body = { limit: 4 }; if (Object.keys(profile).length) body.profile = profile;
-          const res = await fetch(origin.replace(/\/$/, '') + '/api/cart_upsell_simulation.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
-          if (!res.ok) { setStatus('Failed to generate recommendations', false); return; }
-          const json = await res.json(); const d = (json && json.data) ? json.data : json;
+          const j = await (window.WhimsicalFrog && WhimsicalFrog.api ? WhimsicalFrog.api.post('/api/cart_upsell_simulation.php', body) : ApiClient.post('/api/cart_upsell_simulation.php', body));
+          const d = (j && j.data) ? j.data : j;
           renderProfile(d && d.profile ? d.profile : {}); renderSeed(d && d.cart_skus ? d.cart_skus : []);
           renderRecs(d && d.recommendations ? d.recommendations : [], d && d.rationales ? d.rationales : {});
           setStatus('Recommendations updated' + (d && d.id ? ` (Simulation #${d.id})` : ''), true);
@@ -545,9 +541,8 @@
         try {
           const hb = document.getElementById('cartSimulationHistoryBox'); const list = document.getElementById('cartSimulationHistory'); if (!hb || !list) return;
           hb.classList.remove('hidden'); list.innerHTML = '<div class="text-sm text-gray-500">Loading…</div>';
-          const origin = getOrigin(); const res = await fetch(origin.replace(/\/$/, '') + '/api/cart_upsell_history.php?limit=20', { credentials: 'include' });
-          if (!res.ok) { list.innerHTML = '<div class="text-sm text-red-700">Failed to load history</div>'; return; }
-          const json = await res.json(); const d = (json && json.data) ? json.data : json; const items = Array.isArray(d && d.items) ? d.items : [];
+          const j = await (window.WhimsicalFrog && WhimsicalFrog.api ? WhimsicalFrog.api.get('/api/cart_upsell_history.php', { limit: 20 }) : ApiClient.get('/api/cart_upsell_history.php', { limit: 20 }));
+          const d = (j && j.data) ? j.data : j; const items = Array.isArray(d && d.items) ? d.items : [];
           if (!items.length) { list.innerHTML = '<div class="text-sm text-gray-500">No simulations yet.</div>'; return; }
           list.innerHTML = items.map((it)=>{
             const id = it.id; const ts = escapeHtml(it.created_at || ''); const prof = it.profile || {}; const cat = prof.preferredCategory || '—';
@@ -569,9 +564,8 @@
         try {
           const hb = document.getElementById('cartSimulationHistoryBox'); const list = document.getElementById('cartSimulationHistory'); if (!hb || !list) return;
           hb.classList.remove('hidden'); list.innerHTML = '<div class="text-sm text-gray-500">Loading…</div>';
-          const origin = getOrigin(); const res = await fetch(origin.replace(/\/$/, '') + '/api/cart_upsell_history.php?limit=20', { credentials: 'include' });
-          if (!res.ok) { list.innerHTML = '<div class="text-sm text-red-700">Failed to load history</div>'; return; }
-          const json = await res.json(); const d = (json && json.data) ? json.data : json; const items = Array.isArray(d && d.items) ? d.items : [];
+          const j = await (window.WhimsicalFrog && WhimsicalFrog.api ? WhimsicalFrog.api.get('/api/cart_upsell_history.php', { limit: 20 }) : ApiClient.get('/api/cart_upsell_history.php', { limit: 20 }));
+          const d = (j && j.data) ? j.data : j; const items = Array.isArray(d && d.items) ? d.items : [];
           if (!items.length) { list.innerHTML = '<div class="text-sm text-gray-500">No simulations yet.</div>'; return; }
           list.innerHTML = items.map((it)=>{
             const id = it.id; const ts = escapeHtml(it.created_at || ''); const prof = it.profile || {}; const cat = prof.preferredCategory || '—';

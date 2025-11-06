@@ -18,7 +18,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 import url from 'url';
-import os from 'os';
+import _os from 'os';
 
 const repoRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), '..', '..');
 const srcDirs = [

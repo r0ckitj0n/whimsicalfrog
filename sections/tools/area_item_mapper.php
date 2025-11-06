@@ -31,9 +31,9 @@ if ($__wf_modal) {
     <div class="px-4 py-3 border-b">
       <p class="text-sm text-gray-600 mt-1">Map room areas to items or categories, and find unrepresented content.</p>
     </div>
-    <div class="p-4 mx-auto wf-max-w-none wf-w-full">
-      <div class="grid gap-6 md:grid-cols-2">
-        <div>
+    <div id="admin-section-content" class="p-4 mx-auto wf-max-w-none wf-w-full">
+      <div class="grid gap-6 wf-grid-autofit-360">
+        <div class="wf-min-w-0">
           <div id="aimMessage" class="mb-3"></div>
           <div class="grid gap-4">
             <div>
@@ -67,7 +67,7 @@ if ($__wf_modal) {
             </div>
           </div>
         </div>
-        <div>
+        <div class="wf-min-w-0">
           <h2 class="text-lg font-semibold mb-2">Mappings</h2>
           <div id="aimMappingsList" class="border rounded overflow-hidden wf-w-full wf-max-w-none"></div>
         </div>

@@ -6921,7 +6921,7 @@ body[data-page='admin/settings'] div:has(#ai-provider-selection-content) { displ
     background-color: #ffffff;
     color: var(--gray-800, #1f2937);
 }
-.btn:hover { background-color: #f3f4f6; border-color: #cbd5e1; }
+.btn:hover { background: var(--brand-secondary, #BF5700); border-color: var(--brand-secondary, #BF5700); color: #fff; }
 .btn:focus-visible {
     outline: 2px solid var(--brand-primary);
     outline-offset: 2px;

@@ -81,7 +81,7 @@ function movePreserve(relPath, destRoot) {
   fs.renameSync(srcAbs, dstAbs);
 }
 
-function copyPreserve(relPath, destRoot) {
+function _copyPreserve(relPath, destRoot) {
   const srcAbs = path.join(root, relPath);
   const dstAbs = path.join(destRoot, relPath);
   ensureDir(path.dirname(dstAbs));
@@ -143,7 +143,7 @@ const selected = opts.categories ? Object.fromEntries(Object.entries(cats).map((
 
 const timestamp = ts();
 const reportDir = path.join(root, 'reports', 'cleanup', timestamp);
-const backupDir = path.join(root, 'backups', 'cleanup', timestamp);
+const _backupDir = path.join(root, 'backups', 'cleanup', timestamp);
 
 const summary = Object.fromEntries(Object.entries(selected).map(([k,v])=>[k, { count: v.length, bytes: v.reduce((a,b)=>a+(b.size||0),0) }]));
 
@@ -162,8 +162,8 @@ if (!opts.execute) {
 }
 
 // Execute: move files
-let moved = [];
-for (const [k, list] of Object.entries(selected)) {
+const moved = [];
+for (const [_k, list] of Object.entries(selected)) {
   for (const item of list) {
     const rel = item.path;
     const srcAbs = path.join(root, rel);

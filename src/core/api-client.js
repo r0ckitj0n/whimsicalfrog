@@ -162,7 +162,70 @@ export class ApiClient {
     const backendOrigin = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : null;
     const base = (typeof normalized === 'string' && normalized.startsWith('/') && backendOrigin) ? backendOrigin : window.location.origin;
     const absolute = new URL(normalized, base).toString();
-    return this.request(absolute, { method: 'POST', body: formData, headers: {}, ...options });
+
+    const onProgress = options && typeof options.onProgress === 'function' ? options.onProgress : null;
+    const signal = options && options.signal ? options.signal : null;
+
+    // If no progress tracking requested, delegate to request()
+    if (!onProgress && !signal) {
+      return this.request(absolute, { method: 'POST', body: formData, headers: {}, ...options });
+    }
+
+    // Use XMLHttpRequest for progress events
+    return new Promise((resolve, reject) => {
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', absolute);
+        xhr.withCredentials = true;
+        // Apply custom headers (do not set Content-Type so browser sets the multipart boundary)
+        const hdrs = (options && options.headers) ? options.headers : {};
+        Object.keys(hdrs).forEach((k) => {
+          if (k.toLowerCase() === 'content-type') return; // skip, boundary must be set by XHR
+          try { xhr.setRequestHeader(k, hdrs[k]); } catch(_) {}
+        });
+
+        if (onProgress && xhr.upload && typeof xhr.upload.addEventListener === 'function') {
+          xhr.upload.addEventListener('progress', (e) => {
+            try { onProgress(e); } catch(_) {}
+          });
+        }
+
+        if (signal && typeof signal.addEventListener === 'function') {
+          const aborter = () => { try { xhr.abort(); } catch(_) {} };
+          signal.addEventListener('abort', aborter, { once: true });
+        }
+
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState !== 4) return;
+          const ct = String(xhr.getResponseHeader('content-type') || '');
+          const text = xhr.responseText || '';
+          if (xhr.status >= 200 && xhr.status < 300) {
+            if (ct.includes('application/json')) {
+              try {
+                const obj = text ? JSON.parse(text) : {};
+                resolve(obj);
+              } catch (e) {
+                resolve({});
+              }
+            } else {
+              resolve(text);
+            }
+          } else {
+            // Build a similar error message to request()
+            let msg = `HTTP ${xhr.status}`;
+            try {
+              const obj = text ? JSON.parse(text) : null;
+              if (obj && (obj.error || obj.message)) msg = `${msg}: ${obj.error || obj.message}`;
+            } catch(_) {}
+            reject(new Error(msg));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error'));
+        xhr.send(formData);
+      } catch (err) {
+        reject(err);
+      }
+    });
   }
 }
 

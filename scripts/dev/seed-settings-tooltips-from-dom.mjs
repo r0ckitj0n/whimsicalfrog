@@ -7,8 +7,8 @@
  * - Curates snarky, helpful copy using the same patterns as curate_unique_tooltips
  */
 
-import fs from 'fs/promises';
-import path from 'path';
+import _fs from 'fs/promises';
+import _path from 'path';
 
 let puppeteer = null;
 try {
@@ -113,7 +113,7 @@ async function getSuggestionsFromPage(page) {
 
 async function main() {
   // Launch browser
-  let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '';
+  const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '';
   const launchOpts = { headless: 'new', args: ['--no-sandbox','--disable-setuid-sandbox'] };
   if (executablePath) launchOpts.executablePath = executablePath;
   const browser = await puppeteer.launch(launchOpts);

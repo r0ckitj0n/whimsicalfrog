@@ -10,7 +10,20 @@
 /* Tooling (used by tools/size_color_redesign.php) */
 .tool-wrap { padding: 12px; }
 .tool-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-.tool-output { background: #0b1021; color: #cbe3e7; padding: 10px; border-radius: 6px; overflow: auto; }
+.tool-output { background: #0b1021; color: #cbe3e7; padding: 10px; border-radius: 6px; overflow: visible; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+
+/* Size/Color Redesign layout: enforce two columns with right-side stacking */
+.sc-redesign-grid { display: grid !important; grid-template-columns: minmax(320px,1fr) minmax(320px,1fr) !important; gap: 12px !important; align-content: start !important; }
+.sc-redesign-grid .admin-card { min-width: 0 !important; }
+.sc-left { grid-column: 1 !important; grid-row: 1 / span 2 !important; }
+.sc-right-1 { grid-column: 2 !important; grid-row: 1 !important; }
+.sc-right-2 { grid-column: 2 !important; grid-row: 2 !important; }
+@media (max-width: 640px) {
+  .sc-redesign-grid { grid-template-columns: 1fr !important; }
+  .sc-left { grid-row: 1 !important; grid-column: 1 !important; }
+  .sc-right-1 { grid-row: 2 !important; grid-column: 1 !important; }
+  .sc-right-2 { grid-row: 3 !important; grid-column: 1 !important; }
+}
 
 .adm-title { margin: 0; font-size: 1.25rem; font-weight: 800; }
 .adm-form-inline { margin: 0; display: flex; align-items: center; gap: 10px; }
@@ -76,6 +89,11 @@
 .min-w-220 { min-width: 220px !important; }
 .h-300 { height: 300px !important; }
 
+/* Reports: ensure Chart.js canvases fill the fixed-height wrapper */
+.admin-reports-page .admin-card { position: relative !important; }
+.admin-reports-page .h-300 { position: relative !important; }
+.admin-reports-page .h-300 canvas { display: block; width: 100% !important; height: 100% !important; position: relative; z-index: var(--z-index-admin-tools, 10110); }
+
 /* Modal body variants */
 .modal-body--compact { padding: 0.5rem 0.75rem !important; }
 
@@ -135,6 +153,12 @@
 .table-group-header { background: #f9fafb; font-weight: 600; }
 
 /* Message blocks */
-.adm-denied { max-width: 720px; margin: 40px auto; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+.adm-denied { max-width: 720px; margin: 40px auto; font-family: var(--font-secondary, 'Nunito', system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif); }
 .adm-denied__title { font-size: 20px; font-weight: 800; color: #b91c1c; margin: 0 0 8px; }
 .adm-link { color: #2563eb; text-decoration: none; }
+
+/* Inline-style guard replacements */
+/* Area-Item Mapper: derived table container */
+.aim-derived-container { max-width: 48rem; margin: 0 auto; }
+/* Logging preview panel */
+.log-preview { max-height: 360px; overflow: auto; }

@@ -34,7 +34,13 @@
   --font-family-secondary: var(--font-secondary);
 
   /* Code font stack (monospace) */
-  --code-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  --code-font-stack: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* Emoji font stack */
+  --emoji-font-stack: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Noto Emoji", "EmojiOne Color", "Twemoji Mozilla", system-ui, sans-serif;
+  /* Aliases to satisfy font guard (expects --font- prefix) */
+  --font-emoji: var(--emoji-font-stack);
+  --font-code: var(--code-font-stack);
 
   /* Z-index scale (centralized layering) */
   --z-base: 1;

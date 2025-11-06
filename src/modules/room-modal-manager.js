@@ -25,25 +25,12 @@ function ensureRoomBgClass(imageUrl) {
     const cls = `room-bg-${idx}`;
     const styleEl = getRoomModalStyleEl();
     // Apply background ONLY to the inner content wrapper to avoid duplicate layering
-    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
+    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
     roomBgClassMap.set(imageUrl, cls);
     return cls;
 }
 
-const iconPosClassMap = new Map(); // key "t-l-w-h" -> className
-function ensureIconPosClass(t, l, w, h) {
-    const top = Math.max(0, Math.round(Number(t) || 0));
-    const left = Math.max(0, Math.round(Number(l) || 0));
-    const width = Math.max(1, Math.round(Number(w) || 1));
-    const height = Math.max(1, Math.round(Number(h) || 1));
-    const key = `${top}-${left}-${width}-${height}`;
-    if (iconPosClassMap.has(key)) return iconPosClassMap.get(key);
-    const cls = `icon-pos-t${top}-l${left}-w${width}-h${height}`;
-    const styleEl = getRoomModalStyleEl();
-    styleEl.appendChild(document.createTextNode(`.room-product-icon.${cls}{--icon-top:${top}px;--icon-left:${left}px;--icon-width:${width}px;--icon-height:${height}px;top:${top}px;left:${left}px;width:${width}px;height:${height}px;}`));
-    iconPosClassMap.set(key, cls);
-    return cls;
-}
+// Removed CSS class generator for per-icon positions; we now apply inline styles during scaling
 
 class RoomModalManager {
     constructor() {
@@ -66,7 +53,13 @@ class RoomModalManager {
             const p = new URLSearchParams(window.location.search || '');
             this.__diag_no_bg = p.get('wf_diag_no_bg') === '1';
             this.__diag_no_content = p.get('wf_diag_no_content') === '1';
-        } catch (_) { this.__diag_no_bg = false; this.__diag_no_content = false; }
+            this.__diag_no_scripts = p.get('wf_diag_no_modal_scripts') === '1';
+            this.__diag_no_scale = p.get('wf_diag_no_scale') === '1';
+            this.__allow_scripts = p.get('wf_enable_modal_scripts') === '1';
+            // Default: scaling ON unless explicitly disabled via diag flag or wf_enable_scale=0
+            const enableScaleParam = p.get('wf_enable_scale');
+            this.__allow_scale = (enableScaleParam == null) ? true : (enableScaleParam === '1');
+        } catch (_) { this.__diag_no_bg = false; this.__diag_no_content = false; this.__allow_scripts = false; this.__allow_scale = true; }
 
         this.init();
     }
@@ -436,30 +429,31 @@ class RoomModalManager {
         let match;
         while (typeof htmlStr === 'string' && (match = scriptRegex.exec(htmlStr)) !== null) scripts.push(match[1]);
         body.innerHTML = (typeof htmlStr === 'string') ? htmlStr : String(htmlStr || '');
-        // Execute external script tags (e.g. Vite module entries) found in injected HTML
-        try {
-            const externalScripts = Array.from(body.querySelectorAll('script[src]'));
-            externalScripts.forEach((s) => {
-                const src = s.getAttribute('src');
-                if (!src || this._loadedExternalScripts.has(src)) return;
-                const type = s.getAttribute('type') || '';
-                const asyncAttr = s.hasAttribute('async');
-                const deferAttr = s.hasAttribute('defer');
-                const newEl = document.createElement('script');
-                if (type) newEl.type = type;
-                if (asyncAttr) newEl.async = true;
-                if (deferAttr) newEl.defer = true;
-                newEl.src = src;
-                // copy crossorigin if present (Vite uses it)
-                const cx = s.getAttribute('crossorigin');
-                if (cx) newEl.setAttribute('crossorigin', cx);
-                // Append to head to ensure proper module evaluation order
-                document.head.appendChild(newEl);
-                this._loadedExternalScripts.add(src);
-            });
-        } catch (e) { console.warn('[RoomModalManager] Failed to load external scripts from modal content', e); }
-        // Execute inline scripts captured from HTML
-        scripts.forEach((code, i) => { try { new Function(code)(); } catch (e) { console.error(`[Room] Error executing modal script ${i + 1}:`, e); } });
+        // Execute external and inline scripts only when explicitly enabled
+        if (!this.__diag_no_scripts && this.__allow_scripts) {
+            try {
+                const externalScripts = Array.from(body.querySelectorAll('script[src]'));
+                externalScripts.forEach((s) => {
+                    const src = s.getAttribute('src');
+                    if (!src || this._loadedExternalScripts.has(src)) return;
+                    const type = s.getAttribute('type') || '';
+                    const asyncAttr = s.hasAttribute('async');
+                    const deferAttr = s.hasAttribute('defer');
+                    const newEl = document.createElement('script');
+                    if (type) newEl.type = type;
+                    if (asyncAttr) newEl.async = true;
+                    if (deferAttr) newEl.defer = true;
+                    newEl.src = src;
+                    const cx = s.getAttribute('crossorigin');
+                    if (cx) newEl.setAttribute('crossorigin', cx);
+                    document.head.appendChild(newEl);
+                    this._loadedExternalScripts.add(src);
+                });
+            } catch (e) { console.warn('[RoomModalManager] Failed to load external scripts from modal content', e); }
+            scripts.forEach((code, i) => { try { new Function(code)(); } catch (e) { console.error(`[Room] Error executing modal script ${i + 1}:`, e); } });
+        } else {
+            console.warn('[RoomModalManager] Modal script execution is disabled (enable via wf_enable_modal_scripts=1)');
+        }
         this.initializeModalContent();
     }
 
@@ -587,6 +581,7 @@ class RoomModalManager {
         const originalImageWidth = 1280;
         const originalImageHeight = 896;
         const roomWrapper = this.overlay.querySelector('.room-overlay-wrapper') || this.overlay.querySelector('.room-modal-body');
+        const doScale = !(this.__diag_no_scale) && !!this.__allow_scale;
         const loadRoomBackground = async () => {
             if (!roomWrapper || !rn) return;
             try {
@@ -628,10 +623,15 @@ class RoomModalManager {
             }
         };
 
+        let __wfLastWrapperW = 0, __wfLastWrapperH = 0, __wfScaleScheduled = false;
+        const __wfScaleTick = 0;
         const scaleRoomCoordinates = () => {
-            if (!roomWrapper) return;
+            if (!doScale || !roomWrapper) return;
             const wrapperRect = roomWrapper.getBoundingClientRect();
             if (wrapperRect.width === 0 || wrapperRect.height === 0) return;
+            // Skip if size unchanged
+            if (__wfLastWrapperW === wrapperRect.width && __wfLastWrapperH === wrapperRect.height) return;
+            __wfLastWrapperW = wrapperRect.width; __wfLastWrapperH = wrapperRect.height;
             const scaleX = wrapperRect.width / originalImageWidth;
             const scaleY = wrapperRect.height / originalImageHeight;
             const scale = Math.max(scaleX, scaleY);
@@ -639,55 +639,63 @@ class RoomModalManager {
             const scaledImageHeight = originalImageHeight * scale;
             const offsetX = (wrapperRect.width - scaledImageWidth) / 2;
             const offsetY = (wrapperRect.height - scaledImageHeight) / 2;
-            const icons = body.querySelectorAll('.room-product-icon');
-            icons.forEach(icon => {
-                let oTop, oLeft, oWidth, oHeight;
-                if (icon.dataset.originalTop) {
-                    oTop = parseFloat(icon.dataset.originalTop);
-                    oLeft = parseFloat(icon.dataset.originalLeft);
-                    oWidth = parseFloat(icon.dataset.originalWidth);
-                    oHeight = parseFloat(icon.dataset.originalHeight);
-                } else {
-                    const cs = getComputedStyle(icon);
-                    oTop = parseFloat(cs.getPropertyValue('--icon-top')) || parseFloat(cs.top) || 0;
-                    oLeft = parseFloat(cs.getPropertyValue('--icon-left')) || parseFloat(cs.left) || 0;
-                    oWidth = parseFloat(cs.getPropertyValue('--icon-width')) || parseFloat(cs.width) || 80;
-                    oHeight = parseFloat(cs.getPropertyValue('--icon-height')) || parseFloat(cs.height) || 80;
-                    icon.dataset.originalTop = oTop;
-                    icon.dataset.originalLeft = oLeft;
-                    icon.dataset.originalWidth = oWidth;
-                    icon.dataset.originalHeight = oHeight;
+            const icons = Array.from(body.querySelectorAll('.room-product-icon'));
+            const BATCH = 60;
+            let idx = 0;
+            const processBatch = () => {
+                const end = Math.min(idx + BATCH, icons.length);
+                for (; idx < end; idx++) {
+                    const icon = icons[idx];
+                    if (!icon) continue;
+                    let oTop, oLeft, oWidth, oHeight;
+                    if (icon.dataset.originalTop) {
+                        oTop = parseFloat(icon.dataset.originalTop);
+                        oLeft = parseFloat(icon.dataset.originalLeft);
+                        oWidth = parseFloat(icon.dataset.originalWidth);
+                        oHeight = parseFloat(icon.dataset.originalHeight);
+                    } else {
+                        const cs = getComputedStyle(icon);
+                        oTop = parseFloat(cs.getPropertyValue('--icon-top')) || parseFloat(cs.top) || 0;
+                        oLeft = parseFloat(cs.getPropertyValue('--icon-left')) || parseFloat(cs.left) || 0;
+                        oWidth = parseFloat(cs.getPropertyValue('--icon-width')) || parseFloat(cs.width) || 80;
+                        oHeight = parseFloat(cs.getPropertyValue('--icon-height')) || parseFloat(cs.height) || 80;
+                        icon.dataset.originalTop = oTop;
+                        icon.dataset.originalLeft = oLeft;
+                        icon.dataset.originalWidth = oWidth;
+                        icon.dataset.originalHeight = oHeight;
+                    }
+                    const sTop = Math.round((oTop * scale) + offsetY);
+                    const sLeft = Math.round((oLeft * scale) + offsetX);
+                    const sWidth = Math.round(oWidth * scale);
+                    const sHeight = Math.round(oHeight * scale);
+                    const st = icon.style;
+                    st.top = sTop + 'px';
+                    st.left = sLeft + 'px';
+                    st.width = sWidth + 'px';
+                    st.height = sHeight + 'px';
+                    icon.classList.add('positioned');
                 }
-                const sTop = Math.round((oTop * scale) + offsetY);
-                const sLeft = Math.round((oLeft * scale) + offsetX);
-                const sWidth = Math.round(oWidth * scale);
-                const sHeight = Math.round(oHeight * scale);
-                const posCls = ensureIconPosClass(sTop, sLeft, sWidth, sHeight);
-                if (icon.dataset.iconPosClass && icon.dataset.iconPosClass !== posCls) icon.classList.remove(icon.dataset.iconPosClass);
-                icon.classList.add('positioned');
-                icon.classList.add(posCls);
-                icon.dataset.iconPosClass = posCls;
-            });
+                if (idx < icons.length) {
+                    requestAnimationFrame(processBatch);
+                }
+            };
+            requestAnimationFrame(processBatch);
         };
 
         if (this._resizeHandler) { window.removeEventListener('resize', this._resizeHandler); this._resizeHandler = null; }
-        this._resizeHandler = () => { clearTimeout(this._resizeTimeout); this._resizeTimeout = setTimeout(scaleRoomCoordinates, 100); };
-        window.addEventListener('resize', this._resizeHandler);
+        if (doScale) {
+            this._resizeHandler = () => {
+                if (__wfScaleScheduled) return;
+                __wfScaleScheduled = true;
+                requestAnimationFrame(() => { __wfScaleScheduled = false; scaleRoomCoordinates(); });
+            };
+            window.addEventListener('resize', this._resizeHandler);
+        }
         const bgStart = performance.now();
         loadRoomBackground().then(() => {
             const bgDur = performance.now() - bgStart;
             console.log(`[Perf] Room ${rn} background metadata+class in ${bgDur.toFixed(1)}ms (image may still be loading by browser)`);
-            setTimeout(() => {
-                const s1 = performance.now();
-                scaleRoomCoordinates();
-                const s1d = performance.now() - s1;
-                setTimeout(() => {
-                    const s2 = performance.now();
-                    scaleRoomCoordinates();
-                    const s2d = performance.now() - s2;
-                    console.log(`[Perf] Room ${rn} coordinate scale pass1 ${s1d.toFixed(1)}ms, pass2 ${s2d.toFixed(1)}ms`);
-                }, 500);
-            }, 300);
+            if (doScale) { requestAnimationFrame(() => { scaleRoomCoordinates(); }); }
         });
     }
 

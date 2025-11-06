@@ -17,7 +17,7 @@ CHECK_INTERVAL=60  # Check every 60 seconds
 export WF_DB_DEV_ALLOW
 
 # Default local DB credentials (overrideable before invoking this script)
-: "${WF_DB_LOCAL_HOST:=127.0.0.1}"
+: "${WF_DB_LOCAL_HOST:=localhost}"
 : "${WF_DB_LOCAL_NAME:=whimsicalfrog}"
 : "${WF_DB_LOCAL_USER:=root}"
 : "${WF_DB_LOCAL_PASS:=Palz2516!}"
@@ -59,8 +59,16 @@ is_server_responding() {
 # Start PHP server
 start_php_server() {
   cd "$WEBSITE_DIR"
-  log "${BLUE}Starting PHP web server on port $PHP_PORT...${NC}"
-  php -S localhost:$PHP_PORT -t . router.php > logs/php_server.log 2>&1 &
+  # Allow overriding bind host to avoid IPv4/IPv6 fallback delays (e.g., WF_BIND_HOST=0.0.0.0)
+  BIND_HOST="${WF_BIND_HOST:-localhost}"
+  # If IPv6 literal, wrap in [] for php -S binding
+  if [[ "$BIND_HOST" == *:* && "$BIND_HOST" != \[*\] ]]; then
+    ADDRESS="[${BIND_HOST}]:$PHP_PORT"
+  else
+    ADDRESS="${BIND_HOST}:$PHP_PORT"
+  fi
+  log "${BLUE}Starting PHP web server on ${ADDRESS}...${NC}"
+  php -S "$ADDRESS" -t . router.php > logs/php_server.log 2>&1 &
   sleep 2
   if is_port_in_use $PHP_PORT; then
     log "${GREEN}PHP web server started successfully${NC}"
@@ -159,6 +167,8 @@ check_and_restart_vite() {
 stop_php_server() {
   log "${BLUE}Stopping PHP web server...${NC}"
   pkill -f "php -S localhost:$PHP_PORT" || true
+  # Also kill anything listening on the PHP port regardless of host
+  lsof -ti tcp:$PHP_PORT | xargs kill -9 2>/dev/null || true
   sleep 1
   if ! is_port_in_use $PHP_PORT; then
     log "${GREEN}PHP web server stopped successfully${NC}"

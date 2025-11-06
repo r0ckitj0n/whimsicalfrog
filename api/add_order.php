@@ -945,6 +945,39 @@ try {
             }
         }
 
+        try {
+            $sid = isset($_COOKIE[session_name()]) ? (string)$_COOKIE[session_name()] : '';
+            if ($sid) {
+                $sess = Database::queryOne("SELECT session_id, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer FROM analytics_sessions WHERE session_id = ?", [$sid]);
+                if ($sess) {
+                    $utm_source = (string)($sess['utm_source'] ?? '');
+                    $utm_medium = (string)($sess['utm_medium'] ?? '');
+                    $utm_campaign = (string)($sess['utm_campaign'] ?? '');
+                    $utm_term = (string)($sess['utm_term'] ?? '');
+                    $utm_content = (string)($sess['utm_content'] ?? '');
+                    $ref = (string)($sess['referrer'] ?? '');
+                    $channel = $utm_source;
+                    if ($channel === '' && $ref !== '') {
+                        $h = parse_url($ref, PHP_URL_HOST);
+                        if (!$h && strpos($ref, '://') === false) {
+                            $h = trim(explode('/', $ref)[0] ?? '');
+                        }
+                        $h = strtolower((string)$h);
+                        if (strpos($h, 'www.') === 0) { $h = substr($h, 4); }
+                        $channel = $h ?: 'Direct';
+                    }
+                    if ($channel === '') { $channel = 'Direct'; }
+                    Database::execute(
+                        "INSERT INTO order_attribution (order_id, session_id, channel, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, revenue)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         ON DUPLICATE KEY UPDATE revenue = VALUES(revenue), channel = VALUES(channel)",
+                        [$orderId, $sid, $channel, $utm_source, $utm_medium, $utm_campaign, $utm_term, $utm_content, $ref, $computedTotal]
+                    );
+                    Database::execute("UPDATE analytics_sessions SET converted = 1, conversion_value = GREATEST(conversion_value, ?) WHERE session_id = ?", [$computedTotal, $sid]);
+                }
+            }
+        } catch (Exception $e) {}
+
         Database::commit();
 
         try {

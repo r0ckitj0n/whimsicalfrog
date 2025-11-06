@@ -46,6 +46,20 @@
       return;
     }
 
+    // Initial sweep and observer (non-Settings pages only)
+    try { processAll(document); } catch(_){ }
+    try {
+      const obs = new MutationObserver((muts)=>{
+        for (const m of muts){
+          (m.addedNodes||[]).forEach((n)=>{
+            if (n && n.querySelectorAll) processAll(n);
+          });
+        }
+      });
+      const root = document.body || document.documentElement;
+      obs.observe(root, { subtree:true, childList:true });
+    } catch(_){ }
+
   const ICON_MAP = {
     add: 'btn-icon btn-icon--add',
     create: 'btn-icon btn-icon--add',
@@ -205,18 +219,6 @@
     });
   }
 
-  // Initial sweep and observer
-  try { processAll(document); } catch(_){ }
-  try {
-    const obs = new MutationObserver((muts)=>{
-      for (const m of muts){
-        (m.addedNodes||[]).forEach((n)=>{
-          if (n && n.querySelectorAll) processAll(n);
-        });
-      }
-    });
-    obs.observe(document.documentElement, { subtree:true, childList:true });
-  } catch(_){ }
   }
 
   if (document.readyState === 'loading') {

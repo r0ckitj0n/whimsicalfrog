@@ -348,6 +348,22 @@ $messageType = $_GET['type'] ?? '';
 
         async function fetchJSON(url, options) {
           const opts = options || {};
+          // Prefer WhimsicalFrog.api/ApiClient for consistent behavior
+          try {
+            const WF = (typeof window !== 'undefined') ? (window.WhimsicalFrog && window.WhimsicalFrog.api) : null;
+            const A = WF || ((typeof window !== 'undefined') ? (window.ApiClient || null) : null);
+            if (A && typeof A.request === 'function') {
+              const method = (opts.method || 'GET').toUpperCase();
+              if (method === 'GET' && A.get) return await A.get(url);
+              if (method === 'POST' && A.post) return await A.post(url, opts.body || {});
+              if (method === 'PUT' && A.put) return await A.put(url, opts.body || {});
+              if (method === 'DELETE' && A.delete) return await A.delete(url);
+              const res = await A.request(url, { method, body: (opts.body && !(opts.body instanceof FormData)) ? JSON.stringify(opts.body) : opts.body });
+              return res;
+            }
+          } catch (_) { /* fall through to fetch fallback */ }
+
+          // Fallback: robust fetch with JSON/text tolerance
           const headers = { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(opts.headers || {}) };
           const init = { credentials: 'same-origin', headers, ...opts };
           if (opts && opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
@@ -362,16 +378,12 @@ $messageType = $_GET['type'] ?? '';
             throw new Error(errorMsg);
           }
           const trimmed = raw.trim();
-          // Try direct parse first
           try { return JSON.parse(trimmed); } catch(_e) {}
-          // Fallback: handle banners/noise by extracting trailing JSON starting at last { or [
           const iBrace = trimmed.lastIndexOf('{');
           const iBracket = trimmed.lastIndexOf('[');
           const start = Math.max(iBrace, iBracket);
           if (start >= 0) {
-            try { return JSON.parse(trimmed.slice(start)); } catch(e) {
-              console.warn('[Categories] Invalid JSON payload', { snippet: trimmed.slice(0, 160) });
-            }
+            try { return JSON.parse(trimmed.slice(start)); } catch(e) { console.warn('[Categories] Invalid JSON payload', { snippet: trimmed.slice(0, 160) }); }
           }
           throw new Error('Invalid JSON response');
         }

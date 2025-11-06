@@ -23,7 +23,7 @@
 .btn-icon::before {
   font-size: 16px; /* emoji/text icon size */
   line-height: 1;
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Noto Emoji", "EmojiOne Color", "Twemoji Mozilla", system-ui, sans-serif;
+  font-family: var(--font-emoji, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Noto Emoji", "EmojiOne Color", "Twemoji Mozilla", system-ui, sans-serif);
 }
 
 /* Variants (emoji-based to match Inventory actions style) */
@@ -246,6 +246,19 @@ body[data-page^='admin'] .btn:not(.btn-primary):not(.btn-danger):not(.btn-icon) 
 }
 body[data-page^='admin'] .btn:not(.btn-primary):not(.btn-danger):not(.btn-icon):hover {
   filter: brightness(0.95) !important;
+}
+
+/* Embedded admin contexts (iframes within modals): enforce brand-secondary on hover
+   and neutralize brightness filter so color change is visible. This specifically
+   fixes AI modal tool buttons hover color. */
+body[data-embed='1'] .btn:hover,
+body[data-embed='1'] .btn:focus-visible,
+body[data-embed='1'] .btn.btn-secondary:hover,
+body[data-embed='1'] .btn:not(.btn-primary):not(.btn-danger):not(.btn-icon):hover {
+  background: var(--brand-secondary, #BF5700) !important;
+  border-color: var(--brand-secondary, #BF5700) !important;
+  color: #fff !important;
+  filter: none !important;
 }
 
 /* Transparent backgrounds for all icon buttons */

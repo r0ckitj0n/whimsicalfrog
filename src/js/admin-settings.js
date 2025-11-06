@@ -1,5 +1,13 @@
 import { ApiClient } from '../core/api-client.js';
 import { attachSameOriginFallback, markOverlayResponsive } from '../modules/embed-autosize-parent.js';
+
+// ---- Centralized toast helpers (safe if WFToast is missing) ----
+function _wfToast(data, fallbackMsg = 'Updated successfully') {
+  try { if (window?.WFToast?.toastFromData) return window.WFToast.toastFromData(data, fallbackMsg); } catch (_) {}
+}
+function _wfToastErr(message = 'Request failed') {
+  try { if (window?.WFToast?.toastError) return window.WFToast.toastError(message); } catch (_) {}
+}
 function __unusedDelegatedPreamble(e, closest, target) {
         // Deprecated: legacy delegated preamble is no longer used
         // note: deprecated; kept for backward compatibility (no early return to satisfy ESLint no-unreachable)
@@ -11,14 +19,6 @@ function __unusedDelegatedPreamble(e, closest, target) {
                 if (typeof window !== 'undefined' && typeof window.navigateUp === 'function') window.navigateUp();
                 else if (typeof navigateUp === 'function') navigateUp();
             } catch (_) {}
-
-// ---- Centralized toast helpers (safe if WFToast is missing) ----
-function _wfToast(data, fallbackMsg = 'Updated successfully') {
-  try { if (window?.WFToast?.toastFromData) return window.WFToast.toastFromData(data, fallbackMsg); } catch (_) {}
-}
-function _wfToastErr(message = 'Request failed') {
-  try { if (window?.WFToast?.toastError) return window.WFToast.toastError(message); } catch (_) {}
-}
             return;
         }
 
@@ -2584,7 +2584,8 @@ async function testSSLConnection(ev) {
  // Scroll-lock helper to keep modal-open class consistent across all modals
  function updateModalScrollLock() {
      try {
-         const anyOpen = document.querySelectorAll('.admin-modal-overlay:not(.hidden)').length > 0;
+         // Consider only overlays explicitly marked as visible
+         const anyOpen = document.querySelectorAll('.admin-modal-overlay.show').length > 0;
          const html = document.documentElement;
          const body = document.body;
          if (anyOpen) {
@@ -7606,203 +7607,20 @@ if (typeof window !== 'undefined') {
     if (typeof window.__wfModalUserInteracted === 'undefined') window.__wfModalUserInteracted = false;
 
     // Install short-lived guards that suppress programmatic modal opens during initial load
-    function installModalSquelchGuards() {
-        try {
-            if (!__wfIsOnAdminSettingsPage()) return;
-            const params = new URLSearchParams(window.location.search || '');
-            const allowParam = params.get('wf_allow_modals') === '1';
-            // Persist guard until user interaction (or explicit allow). Do not expire purely by time.
-            const shouldGuard = !allowParam && !window.__wfModalUserInteracted;
-            if (!shouldGuard) return;
-
-            const originals = {};
-
-            // Temporary CSS squelch to prevent visual flash of overlays during initial load
-            try {
-                const styleId = 'wf-admin-modal-squelch';
-                if (!document.getElementById(styleId)) {
-                    const style = document.createElement('style');
-                    style.id = styleId;
-                    style.textContent = `
-                      html[data-admin-squelch="1"] .admin-modal-overlay,
-                      html[data-admin-squelch="1"] .modal-overlay,
-                      html[data-admin-squelch="1"] .room-modal-overlay,
-                      html[data-admin-squelch="1"] .wf-revealco-overlay,
-                      html[data-admin-squelch="1"] #global-confirmation-modal,
-                      html[data-admin-squelch="1"] .confirmation-modal-overlay,
-                      html[data-admin-squelch="1"] #searchModal,
-                      html[data-admin-squelch="1"] .wf-login-overlay,
-                      html[data-admin-squelch="1"] #quantityModal,
-                      html[data-admin-squelch="1"] #detailedItemModal,
-                      html[data-admin-squelch="1"] [id$="Modal"] {
-                        display: none !important;
-                        visibility: hidden !important;
-                        opacity: 0 !important;
-                      }
-                    `;
-                    document.head.appendChild(style);
-                }
-                document.documentElement.setAttribute('data-admin-squelch', '1');
-                const lift = () => {
-                    try { document.documentElement.removeAttribute('data-admin-squelch'); } catch (_) {}
-                };
-                // lift on first interaction; do NOT auto-lift by timer unless explicitly allowed via query param
-                window.addEventListener('pointerdown', lift, { once: true, capture: true });
-                window.addEventListener('keydown', lift, { once: true, capture: true });
-                if (allowParam) {
-                    setTimeout(lift, WF_SQUELCH_MS + 150);
-                }
-            } catch (_) {}
-            const wrapNoop = (obj, key) => {
-                try {
-                    if (!obj) return;
-                    const fn = obj[key];
-                    if (typeof fn !== 'function') return;
-                    if (!originals[key]) originals[key] = fn;
-                    obj[key] = function guardedOpen() {
-                        // Only allow after explicit user interaction or allowParam
-                        if (window.__wfModalUserInteracted || allowParam) {
-                            try { return originals[key].apply(this, arguments); } catch (_) { return; }
-                        }
-                        return; // swallow auto-open during squelch
-                    };
-                } catch (_) {}
-            };
-
-            // Wrap common global openers
-            wrapNoop(window, 'openModal');
-            wrapNoop(window, 'openOverlay');
-            wrapNoop(window, 'showModal');
-            wrapNoop(window, 'displayModal');
-            // Wrap specific admin-settings openers that have historically auto-opened on load
-            wrapNoop(window, 'openWebsiteLogsModal');
-            wrapNoop(window, 'openDatabaseTablesModal');
-            wrapNoop(window, 'openLoggingStatusModal');
-            wrapNoop(window, 'createLoggingStatusModal');
-            wrapNoop(window, 'openSearchModal');
-            wrapNoop(window, 'showSearchResults');
-            wrapNoop(window, 'openSearchResultsModal');
-            wrapNoop(window, 'openHelpDocumentationModal');
-            wrapNoop(window, 'openDocumentationHubModal');
-            // Framework-level opener if present
-            if (window.WFModals && typeof window.WFModals.open === 'function') {
-                if (!originals['WFModals.open']) originals['WFModals.open'] = window.WFModals.open;
-                window.WFModals.open = function guardedWFOpen() {
-                    if (window.__wfModalUserInteracted || !isSquelchActive()) {
-                        try { return originals['WFModals.open'].apply(this, arguments); } catch (_) { return; }
-                    }
-                    return;
-                };
-            }
-
-            // DOM observer to hide overlays that appear during squelch
-            let mo = null;
-            try {
-                mo = new MutationObserver((_muts) => {
-                    // Keep hiding overlays until interaction or allowParam
-                    if (allowParam || window.__wfModalUserInteracted) return;
-                    const sel = [
-                        '.admin-modal-overlay',
-                        '.modal-overlay',
-                        '.room-modal-overlay',
-                        '.wf-revealco-overlay',
-                        '#global-confirmation-modal',
-                        '.confirmation-modal-overlay',
-                        '#searchModal',
-                        '.wf-login-overlay',
-                        '#quantityModal',
-                        '#detailedItemModal',
-                        '[id$="Modal"]',
-                        '[role="dialog"]',
-                        '.modal',
-                        '.overlay',
-                        '.drawer',
-                        '.sheet',
-                        '.dialog-backdrop'
-                    ].join(', ');
-                    document.querySelectorAll(sel).forEach((el) => {
-                        try { el.classList.remove('show'); } catch (_) {}
-                        try { el.classList.add('hidden'); } catch (_) {}
-                        try { el.setAttribute('data-wf-squelched', '1'); } catch (_) {}
-                    });
-                });
-                mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class','style'] });
-            } catch (_) {}
-
-            // Restore originals only upon interaction (or when explicitly allowed)
-            const restore = () => {
-                try {
-                    ['openModal','openOverlay','showModal','displayModal','openWebsiteLogsModal','openDatabaseTablesModal','openLoggingStatusModal','createLoggingStatusModal','openSearchModal','showSearchResults','openSearchResultsModal','openHelpDocumentationModal','openDocumentationHubModal'].forEach((k) => {
-                        if (originals[k]) { window[k] = originals[k]; }
-                    });
-                    if (originals['WFModals.open'] && window.WFModals) {
-                        window.WFModals.open = originals['WFModals.open'];
-                    }
-                    if (mo) try { mo.disconnect(); } catch(_) {}
-                } catch (_) {}
-            };
-            window.addEventListener('pointerdown', () => { window.__wfModalUserInteracted = true; restore(); }, { once: true, capture: true });
-            window.addEventListener('keydown', () => { window.__wfModalUserInteracted = true; restore(); }, { once: true, capture: true });
-            if (allowParam) {
-                setTimeout(restore, 0);
-            }
-        } catch (_) {}
-    }
+    const _installModalSquelchGuards = () => {};
     // Force-hide common non-overlay panels (search results, website logs) until user interacts
-    function installPanelSquelchGuards() {
-        try {
-            if (!__wfIsOnAdminSettingsPage()) return;
-            const params = new URLSearchParams(window.location.search || '');
-            const allowParam = params.get('wf_allow_panels') === '1' || params.get('wf_allow_modals') === '1';
-            if (allowParam || window.__wfModalUserInteracted) return;
-
-            const selList = [
-                '#websiteLogsModal', '#websiteLogsContainer', '#websiteLogsPanel',
-                '#databaseTablesModal', '#databaseTablesContainer', '#databaseTablesPanel',
-                '#searchResults', '#searchResultsContainer', '#searchResultsPanel', '#searchResultsModal'
-            ];
-            const hideNode = (el) => {
-                if (!el) return;
-                try { el.classList.add('hidden'); } catch (_) {}
-                try { el.classList.remove('show'); } catch (_) {}
-                try { el.setAttribute('data-wf-panel-squelched', '1'); } catch (_) {}
-            };
-            const sweep = () => {
-                if (allowParam || window.__wfModalUserInteracted) return;
-                selList.forEach((s) => {
-                    document.querySelectorAll(s).forEach(hideNode);
-                });
-            };
-            // Initial sweep
-            sweep();
-            // Observe attribute changes that might re-show these panels before interaction
-            try {
-                const mo = new MutationObserver((_muts) => {
-                    if (allowParam || window.__wfModalUserInteracted) return;
-                    let touched = false;
-                    for (const m of _muts) {
-                        if (m.type === 'attributes' && (m.attributeName === 'class' || m.attributeName === 'style')) {
-                            touched = true; break;
-                        }
-                    }
-                    if (touched) sweep();
-                });
-                mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class','style'] });
-                const release = () => { try { mo.disconnect(); } catch(_) {}; };
-                window.addEventListener('pointerdown', () => { window.__wfModalUserInteracted = true; release(); }, { once: true, capture: true });
-                window.addEventListener('keydown', () => { window.__wfModalUserInteracted = true; release(); }, { once: true, capture: true });
-                if (allowParam) setTimeout(release, 0);
-            } catch (_) {}
-        } catch (_) {}
-    }
+    const _installPanelSquelchGuards = () => {};
     const bootHide = () => {
         if (!__wfIsOnAdminSettingsPage()) return;
-        // Always install squelch guards on admin settings, even in light/minimal renders
-        installModalSquelchGuards();
-        installPanelSquelchGuards();
-        // Only run the heavier legacy force-hide when not in light/minimal/section renders
-        if (__wfIsAdminSettingsLightMode()) return;
-        forceHideAdminModalsOnLoad();
+        // Disable squelch on Admin Settings to allow user-initiated modals to open reliably
+        try {
+            window.__wfModalUserInteracted = true;
+            document.documentElement.removeAttribute('data-admin-squelch');
+        } catch(_) {}
+        // Do NOT install squelch guards on this page
+        // installModalSquelchGuards();
+        // installPanelSquelchGuards();
+        // Skip legacy force-hide on admin settings entirely
     };
     if (document.readyState !== 'loading') bootHide();
     else document.addEventListener('DOMContentLoaded', bootHide, { once: true });
@@ -7811,8 +7629,11 @@ if (typeof window !== 'undefined') {
         try { bootHide(); } catch(_) {}
         // One quick retry; abort if user interacted
         setTimeout(() => { try { bootHide(); } catch(_) {} }, 200);
-        setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 1000);
-        setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 3000);
+        // Do not schedule any legacy force-hide on Admin Settings
+        if (!__wfIsOnAdminSettingsPage()) {
+            setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 1000);
+            setTimeout(() => { try { forceHideAdminModalsOnLoad(); } catch(_) {} }, 3000);
+        }
     }, { once: true });
 
     // Mark user interaction early to disable any further force-hides
@@ -8014,7 +7835,8 @@ if (typeof window !== 'undefined') {
         const openOverlay = (el) => {
             if (!el) return;
             const squelchOn = (typeof window.__wfIsSquelchActive === 'function') ? window.__wfIsSquelchActive() : false;
-            if (squelchOn && !el.__wfUserInitiated) {
+            // Never suppress overlays on Admin Settings page
+            if (squelchOn && !el.__wfUserInitiated && !__wfIsOnAdminSettingsPage()) {
                 // Suppress auto-open during squelch window
                 try { el.classList.remove('show'); } catch(_) {}
                 try { el.classList.add('hidden'); } catch(_) {}
@@ -8022,8 +7844,13 @@ if (typeof window !== 'undefined') {
             }
             // Mark user interaction so late force-hide does not close it
             window.__wfModalUserInteracted = true;
+            // Ensure overlays are appended to body to avoid ancestor overflow/transform issues
+            try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+            // Normalize ARIA and visibility
+            try { el.removeAttribute('hidden'); } catch(_) {}
             try { el.classList.remove('hidden'); } catch (_) {}
             try { el.classList.add('show'); } catch (_) {}
+            try { el.setAttribute('aria-hidden','false'); } catch(_) {}
             // Ensure only the topmost modal scrolls
             try {
                 document.documentElement.classList.add('wf-modal-scroll-lock');
@@ -8043,6 +7870,13 @@ if (typeof window !== 'undefined') {
                 document.body.classList.add('modal-open');
             } catch (_) {}
             applyHeaderOffsetToAllOverlays();
+            // Delegate to shared modal helper if present to align sizing/aria behavior
+            try {
+                if (typeof window.__wfShowModal === 'function') {
+                    const id = el.id || el;
+                    window.__wfShowModal(id);
+                }
+            } catch(_) {}
             // Optional initializer hook: init<ID>() or init<IdWithoutModal>() if defined
             try {
                 const id = el.id || '';
@@ -8066,6 +7900,7 @@ if (typeof window !== 'undefined') {
             if (!el) return;
             try { el.classList.remove('show'); } catch (_) {}
             try { el.classList.add('hidden'); } catch (_) {}
+            try { el.setAttribute('aria-hidden','true'); } catch(_) {}
             try { el.classList.remove('wf-topmost'); } catch (_) {}
             if (window.WFModals && typeof window.WFModals.unlockScrollIfNoneOpen === 'function') {
                 window.WFModals.unlockScrollIfNoneOpen();
@@ -8073,7 +7908,7 @@ if (typeof window !== 'undefined') {
             // If none visible, unlock; else, assign topmost to the last visible overlay
             try {
                 const overlays = Array.from(document.querySelectorAll('.admin-modal-overlay, .modal-overlay, .room-modal-overlay'));
-                const visible = overlays.filter(n => !n.classList.contains('hidden'));
+                const visible = overlays.filter(n => n.classList && n.classList.contains('show'));
                 if (visible.length === 0) {
                     document.documentElement.classList.remove('wf-modal-scroll-lock');
                     document.body.classList.remove('wf-modal-scroll-lock');
@@ -8085,6 +7920,11 @@ if (typeof window !== 'undefined') {
         };
 
         root.addEventListener('click', (ev) => {
+            // Any user click within settings should lift squelch immediately
+            try {
+                window.__wfModalUserInteracted = true;
+                document.documentElement.removeAttribute('data-admin-squelch');
+            } catch(_) {}
             const target = ev.target.closest('[data-action]');
             const clicked = ev.target.closest('button, a, [role="button"]');
             // 1) ID convention: some buttons lack data-action; infer from id: fooBtn -> #fooModal

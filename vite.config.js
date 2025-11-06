@@ -45,6 +45,7 @@ export default defineConfig({
         'js/admin-inventory.js': resolve(__dirname, 'src/entries/admin-inventory.js'),
         'js/admin-settings.js': resolve(__dirname, 'src/entries/admin-settings.js'),
         'js/admin-db-status.js': resolve(__dirname, 'src/entries/admin-db-status.js'),
+        'js/admin-reports.js': resolve(__dirname, 'src/entries/admin-reports.js'),
         'js/header-bootstrap.js': resolve(__dirname, 'src/entries/header-bootstrap.js'),
         'js/admin-email-settings.js': resolve(__dirname, 'src/entries/admin-email-settings.js'),
         'js/admin-customers.js': resolve(__dirname, 'src/entries/admin-customers.js'),

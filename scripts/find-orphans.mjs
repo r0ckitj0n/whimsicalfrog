@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { promises as fs } from 'fs';
 import path from 'path';
-import url from 'url';
+import _url from 'url';
 
 const projectRoot = process.cwd();
 const JS_DIR = path.join(projectRoot, 'js');
@@ -104,7 +104,7 @@ async function walkDir(dir, acc = []) {
   return acc;
 }
 
-function isInExcluded(p) {
+function _isInExcluded(p) {
   const rel = path.relative(projectRoot, p).split(path.sep);
   return rel.length > 0 && EXCLUDE_DIRS.has(rel[0]);
 }

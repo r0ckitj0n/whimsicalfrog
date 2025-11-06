@@ -33,7 +33,7 @@ const ROOT = process.cwd();
 const now = new Date();
 const timestamp = now.toISOString().replace(/[:.]/g, '-');
 const reportDir = path.join(ROOT, 'reports', 'naming-audit', timestamp);
-const DRY_RUN = process.argv.includes('--dry-run') || true; // scanner is always dry-run
+const _DRY_RUN = process.argv.includes('--dry-run') || true; // scanner is always dry-run
 
 // Basic directory ignores to avoid noise
 const DIR_IGNORES = new Set([
@@ -129,7 +129,7 @@ function toSnakeCase(stem) {
     .toLowerCase();
 }
 
-function toPascalCaseFromStem(stem) {
+function _toPascalCaseFromStem(stem) {
   const parts = stem
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/[\-_.]+/g, ' ')
@@ -148,7 +148,7 @@ function detectPhpClassName(content) {
 
 function categorize(relPath, contentSample) {
   const ext = path.extname(relPath).toLowerCase();
-  const dir = relPath.split('/')[0] || '';
+  const _dir = relPath.split('/')[0] || '';
   const base = path.basename(relPath);
   const { stem } = splitNameCore(base);
 
@@ -368,7 +368,7 @@ async function main() {
     const r = rel(abs);
     const base = path.basename(r);
     const ext = path.extname(r).toLowerCase();
-    const dirTop = r.split('/')[0] || '';
+    const _dirTop = r.split('/')[0] || '';
 
     if (isIgnoredDir(r)) continue;
 
@@ -380,7 +380,7 @@ async function main() {
     }
 
     const info = categorize(r, sample);
-    const { stem } = splitNameCore(base);
+    const { stem: _stem } = splitNameCore(base);
     const proposedBase = info.proposed;
     const proposedRel = r.slice(0, -base.length) + proposedBase;
 

@@ -132,31 +132,37 @@
 .toast.fade-out { opacity: 0; }
 
 /* Inline Editing Styles */
-.editable {
+.editable,
+.editable-field {
   cursor: pointer;
   transition: background-color 0.2s ease;
   padding: 4px 8px;
   border-radius: 4px;
 }
 
-.editable:hover {
+.editable:hover,
+.editable-field:hover {
   background-color: var(--editable-hover-bg, #f3f4f6);
 }
 
 .editable input,
-.editable select {
+.editable select,
+.editable-field input,
+.editable-field select {
   width: 100%;
   padding: 4px 8px;
   border: 2px solid var(--editable-border-focus, #3b82f6);
   border-radius: 4px;
   font-size: inherit;
-  font-family: inherit;
+  font-family: var(--font-secondary, inherit);
   background-color: white;
   outline: none;
 }
 
 .editable input:focus,
-.editable select:focus {
+.editable select:focus,
+.editable-field input:focus,
+.editable-field select:focus {
   border-color: var(--editable-border-focus, #3b82f6);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }

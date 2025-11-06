@@ -1,12 +1,36 @@
 // Vite entry: admin-settings.js
-// Use the bridge (includes lightweight handlers and fallbacks)
-import '../js/admin-settings-bridge.js';
+// Load lightweight settings (CSS + minimal handlers)
+import '../modules/admin-settings-lightweight.js';
+import '../modules/modal-managers.js';
+import '../js/admin-settings.js';
+// Load the full bridge (heavier UI, pickers, delegates) lazily on first interaction in Settings
+(function(){
+  try {
+    const params = new URLSearchParams(window.location.search || '');
+    const noBridge = params.get('wf_diag_no_bridge') === '1';
+    if (noBridge) {
+      console.warn('[AdminSettings] Skipping admin-settings-bridge due to wf_diag_no_bridge=1');
+      return;
+    }
+    let loaded = false;
+    const loadBridge = () => { if (loaded) return; loaded = true; try { import('../js/admin-settings-bridge.js').catch(() => {}); } catch(_) {} };
+    const onClick = (e) => { try { const scope = document.querySelector('.settings-page') || document.body; if (scope && scope.contains(e.target)) loadBridge(); } catch(_) {} };
+    const onKey = (e) => { try { if (!e) return; const scope = document.querySelector('.settings-page') || document.body; if (!scope) return; const t = e.target; const key = e.key; if ((key === 'Enter' || key === ' ') && t && scope.contains(t)) loadBridge(); } catch(_) {} };
+    try { document.addEventListener('click', onClick, true); } catch(_) {}
+    try { document.addEventListener('keydown', onKey, true); } catch(_) {}
+    // Safety: remove listeners after bridge loads
+    const cleanup = () => { try { document.removeEventListener('click', onClick, true); document.removeEventListener('keydown', onKey, true); } catch(_) {} };
+    // Hook into bridge load to cleanup
+    const tryCleanup = () => { if (loaded) cleanup(); else setTimeout(tryCleanup, 1500); };
+    setTimeout(tryCleanup, 1500);
+  } catch(_) { /* noop */ }
+})();
 import '../styles/components/tabs.css';
-try {
-  await import('../js/admin-settings.js');
-} catch (e) {
-  console.warn('[Vite] admin-settings.js module not found under src/js. Entry stub loaded.');
-}
+// Defer heavy legacy module; load on idle or first interaction unless disabled
+(function(){
+  // Legacy admin-settings is loaded eagerly above via static import to ensure
+  // modal logic and scroll lock management are available immediately on this page.
+})();
 
 // Lightweight helpers are imported once above. They provide delegated click handlers for:
 // - [data-action="open-area-item-mapper"], [data-action="open-background-manager"], [data-action="open-css-catalog"], [data-action="open-room-map-editor"]

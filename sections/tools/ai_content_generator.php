@@ -14,6 +14,8 @@ if (!$inModal) {
   }
 }
 if ($inModal) {
+  $page = 'admin/marketing';
+  $extraViteEntry = 'src/entries/admin-marketing.js';
   include $root . '/partials/modal_header.php';
 }
 ?>

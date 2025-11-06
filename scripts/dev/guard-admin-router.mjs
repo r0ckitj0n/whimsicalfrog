@@ -9,7 +9,7 @@ const EXCLUDES = new Set([
 
 const LEGACY_RE = /\/admin\/admin\.php(\?|$)/; // match /admin/admin.php and with query
 
-let violations = [];
+const violations = [];
 function walk(dir) {
   const items = readdirSync(dir, { withFileTypes: true });
   for (const ent of items) {

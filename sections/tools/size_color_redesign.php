@@ -6,7 +6,23 @@ require_once dirname(__DIR__, 2) . '/includes/auth_helper.php';
 AuthHelper::requireAdmin();
 ?>
 <div class="tool-wrap">
-  <h2 class="admin-card-title">Size/Color System Redesign</h2>
+  <style>
+    /* Prevent horizontal scrollbars; allow vertical so height can be measured accurately */
+    html, body { overflow-x: hidden !important; overflow-y: visible !important; }
+    #admin-section-content { overflow: visible !important; }
+    .modal-body { overflow: visible !important; max-height: none !important; }
+    /* Scoped fallback to guarantee two-column layout inside the modal */
+    .sc-redesign-grid { display: grid; grid-template-columns: minmax(320px,1fr) minmax(320px,1fr) !important; gap: 12px; align-content: start; }
+    .sc-left { grid-column: 1; grid-row: 1 / span 2; }
+    .sc-right-1 { grid-column: 2; grid-row: 1; }
+    .sc-right-2 { grid-column: 2; grid-row: 2; }
+    @media (max-width: 640px) {
+      .sc-redesign-grid { grid-template-columns: 1fr !important; }
+      .sc-left { grid-row: 1; grid-column: 1; }
+      .sc-right-1 { grid-row: 2; grid-column: 1; }
+      .sc-right-2 { grid-row: 3; grid-column: 1; }
+    }
+  </style>
   <div class="admin-card compact my-2">
     <div class="flex items-center gap-2">
       <label for="itemSku" class="text-sm font-medium">Item SKU</label>
@@ -17,8 +33,8 @@ AuthHelper::requireAdmin();
       <span id="statusChip" class="pill ml-auto"></span>
     </div>
   </div>
-  <div class="grid md:grid-cols-2 gap-3">
-    <div class="admin-card">
+  <div class="grid md:grid-cols-2 gap-3 sc-redesign-grid">
+    <div class="admin-card sc-left">
       <div class="modal-header"><h3 class="admin-card-title">Analysis</h3></div>
       <div class="modal-body">
         <div id="analysisSummary" class="text-sm text-gray-700"></div>
@@ -32,7 +48,7 @@ AuthHelper::requireAdmin();
         </div>
       </div>
     </div>
-    <div class="admin-card">
+    <div class="admin-card sc-right-1">
       <div class="modal-header"><h3 class="admin-card-title">Proposed Structure</h3></div>
       <div class="modal-body">
         <div id="proposedMeta" class="text-sm text-gray-700 mb-2"></div>
@@ -47,15 +63,34 @@ AuthHelper::requireAdmin();
         </div>
       </div>
     </div>
-  </div>
-  <div class="admin-card mt-3">
-    <div class="modal-header"><h3 class="admin-card-title">Output</h3></div>
-    <div class="modal-body">
-      <pre id="output" class="tool-output">Ready.</pre>
+    <div class="admin-card sc-right-2">
+      <div class="modal-header"><h3 class="admin-card-title">Output</h3></div>
+      <div class="modal-body">
+        <pre id="output" class="tool-output">Ready.</pre>
+      </div>
     </div>
   </div>
 </div>
 <script>
+(function(){
+  try {
+    const grid = document.querySelector('.sc-redesign-grid');
+    if (grid) {
+      const apply = () => {
+        try {
+          if (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) {
+            grid.style.removeProperty('grid-template-columns');
+          } else {
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'minmax(320px,1fr) minmax(320px,1fr)';
+          }
+        } catch(_) {}
+      };
+      apply();
+      try { window.addEventListener('resize', apply, { passive: true }); } catch(_) {}
+    }
+  } catch(_) {}
+})();
 (function(){
   const out = document.getElementById('output');
   const skuEl = document.getElementById('itemSku');

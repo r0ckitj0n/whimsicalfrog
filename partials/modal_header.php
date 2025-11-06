@@ -34,6 +34,10 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
         // Load HMR client and entry
         echo '<script crossorigin="anonymous" type="module" src="' . $o . '/@vite/client"></script>' . "\n";
         echo '<script crossorigin="anonymous" type="module" src="' . $o . '/src/entries/app.js"></script>' . "\n";
+        // If an extra entry was requested (e.g., a page-specific iframe bundle), emit it in dev as well
+        if (isset($extraViteEntry) && is_string($extraViteEntry) && $extraViteEntry !== '') {
+            echo '<script crossorigin="anonymous" type="module" src="' . $o . '/' . ltrim($extraViteEntry, '/') . '"></script>' . "\n";
+        }
         // Dynamic icon CSS (admin icon map)
         echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
     } else {

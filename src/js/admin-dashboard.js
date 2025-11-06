@@ -42,10 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('value', newValue);
             formData.append('action', 'updateField');
 
-            const result = await ApiClient.request('/api/fulfill_order.php', {
-                method: 'POST',
-                body: formData,
-            });
+            const result = await ApiClient.upload('/api/fulfill_order.php', formData);
 
             if (result && result.success) {
                 el.classList.remove('wf-field-updating');

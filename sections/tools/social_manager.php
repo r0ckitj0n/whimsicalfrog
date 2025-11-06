@@ -13,6 +13,12 @@ if (!$inModal) {
     register_shutdown_function('__wf_social_manager_footer_shutdown');
   }
 }
+if ($inModal) {
+  // In modal context, load minimal header and ensure the marketing entry is emitted in dev
+  $page = 'admin/marketing';
+  $extraViteEntry = 'src/entries/admin-marketing.js';
+  include $root . '/partials/modal_header.php';
+}
 ?>
 <div class="admin-marketing-page">
   <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">

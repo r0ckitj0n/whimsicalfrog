@@ -6,7 +6,8 @@ cd "$(dirname "$0")/../.."
 # Standardize env
 export VITE_DEV_PORT=5176
 export VITE_HMR_PORT=5176
-export WF_VITE_ORIGIN="http://localhost:5176"
+# Allow override from caller; default to localhost if not provided
+export WF_VITE_ORIGIN="${WF_VITE_ORIGIN:-http://localhost:5176}"
 
 # Ensure logs dir exists
 mkdir -p logs
@@ -25,9 +26,17 @@ if [ ! -d node_modules ]; then
   npm ci --include=optional || npm install --include=optional
 fi
 
-# Write hot file explicitly
-printf 'http://localhost:5176' > hot
+# Write hot file to match origin exactly (scheme://host:port)
+printf '%s' "${WF_VITE_ORIGIN%/}" > hot
+
+# Derive bind host from WF_VITE_ORIGIN (supports IPv6 [::1])
+ORIG_NO_SCHEME="${WF_VITE_ORIGIN#*://}"
+HOST_PART="${ORIG_NO_SCHEME%%:*}"
+# Strip IPv6 brackets if present
+HOST_PART="${HOST_PART#[}"
+HOST_PART="${HOST_PART%]}"
+if [ -z "$HOST_PART" ]; then HOST_PART="localhost"; fi
 
 # Start vite in foreground (pm2 will daemonize this script)
-echo "[run-vite-5176] Starting Vite on http://localhost:5176"
-exec npx vite --host localhost --port 5176 --strictPort --clearScreen false --debug
+echo "[run-vite-5176] Starting Vite on ${WF_VITE_ORIGIN} (host=${HOST_PART})"
+exec npx vite --host "$HOST_PART" --port 5176 --strictPort --clearScreen false --debug

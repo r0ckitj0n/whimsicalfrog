@@ -47,12 +47,19 @@ sleep 2
 # Start PHP server on port $PORT
 ########################################
 VITE_PORT=5176
-echo -e "${GREEN}Starting PHP dev server on http://localhost:$PORT${NC}"
+echo -e "${GREEN}Starting PHP dev server...${NC}"
+# Allow overriding bind host to avoid IPv4/IPv6 fallback delays (e.g., WF_BIND_HOST=0.0.0.0)
+BIND_HOST="${WF_BIND_HOST:-localhost}"
+echo -e "Bind host: ${BIND_HOST}  Port: ${PORT}"
 
 # Start server in background using router.php so we can proxy Vite dev paths
 # Ensure the PHP port is free (belt-and-suspenders)
 lsof -ti tcp:$PORT | xargs kill -9 2>/dev/null || true
-php -S localhost:$PORT -t . router.php > logs/php_server.log 2>&1 &
+ADDRESS="$BIND_HOST:$PORT"
+if [[ "$BIND_HOST" == *:* && "$BIND_HOST" != \[*\] ]]; then
+  ADDRESS="[${BIND_HOST}]:$PORT"
+fi
+php -S "$ADDRESS" -t . router.php > logs/php_server.log 2>&1 &
 PHP_PID=$!
 
 # Wait a moment and check if it started successfully

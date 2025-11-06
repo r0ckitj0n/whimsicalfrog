@@ -16,7 +16,10 @@ import './global-modals.js';
     lastCoordinates: [],
     unrepresentedItems: [],
     unrepresentedCategories: [],
-    debounceTimer: null
+    debounceTimer: null,
+    dirty: new Set(),
+    dirtyNew: false,
+    saving: false
   };
 
   function setMsg(html, type = 'ok'){
@@ -24,6 +27,45 @@ import './global-modals.js';
     const cls = type === 'error' ? 'text-red-700 bg-red-100 border-red-300' : 'text-green-700 bg-green-100 border-green-300';
     el.innerHTML = `<div class="border ${cls} rounded-md px-4 py-3 text-sm">${html}</div>`;
     setTimeout(() => { el.innerHTML = ''; }, 5000);
+  }
+  
+  function postStatus(ok, message) {
+    try { if (window.parent) window.parent.postMessage({ source: 'wf-aim', type: 'status', ok, message }, '*'); } catch(_) {}
+  }
+  
+  async function saveAll() {
+    if (state.saving) return;
+    const room = byId('aimRoomSelect') ? byId('aimRoomSelect').value : '';
+    if (!room) { setMsg('Select a room first.', 'error'); postStatus(false, 'Select a room first'); notify('error','Select a room first'); return; }
+    postStatus(true, 'Saving…');
+    state.saving = true;
+    const ids = Array.from(state.dirty || []);
+    const rows = ids.length
+      ? ids.map(id => document.querySelector(`tr[data-id="${CSS.escape(String(id))}"]`)).filter(Boolean)
+      : [];
+    let okCount = 0;
+    for (const row of rows) {
+      try {
+        const id = row.getAttribute('data-id');
+        await updateMapping(id);
+        try { state.dirty.delete(String(id)); row.classList.remove('aim-row-dirty'); } catch(_) {}
+        okCount++;
+      } catch(_) {}
+    }
+    try {
+      const areaInput = byId('aimNewArea');
+      const targetInput = byId('aimNewTarget');
+      const hasNew = areaInput && targetInput && String(areaInput.value).trim() && String(targetInput.value).trim();
+      if (hasNew || state.dirtyNew) { await addMapping(); state.dirtyNew = false; okCount++; }
+    } catch(_) {}
+    if (okCount === 0) {
+      postStatus(true, 'No changes to save');
+      notify('info','No changes to save');
+    } else {
+      postStatus(true, `Saved ${okCount} change${okCount===1?'':'s'}`);
+      notify('success', `Saved ${okCount} change${okCount===1?'':'s'}`);
+    }
+    state.saving = false;
   }
 
   async function ensureConfirmUi(){
@@ -100,7 +142,7 @@ import './global-modals.js';
       const label = m.sku ? `Item SKU ${m.sku}` : (m.item_id ? `Item #${m.item_id}` : 'Item');
       return `<tr>\n<td class="p-2">${m.area_selector || ''}</td>\n<td class="p-2">${label}</td>\n<td class="p-2">${m.display_order || idx + 1}</td>\n<td class="p-2">${m.sku ? `<button class="btn btn-xs btn-secondary" data-action="aim-convert" data-area="${m.area_selector}" data-sku="${m.sku}">Convert to Explicit</button>` : ''}</td>\n</tr>`;
     }).join('');
-    return `<div class="mt-6 mb-2 font-semibold">Live (Derived) View</div>\n<div class="overflow-x-auto border rounded-lg" style="max-width: 48rem; margin: 0 auto;">\n<table class="w-full text-sm divide-y divide-gray-200">\n<thead class="bg-gray-50"><tr><th class="p-2 text-left">Area</th><th class="p-2 text-left">Resolved Target</th><th class="p-2 text-left">Order</th><th class="p-2 text-left">Actions</th></tr></thead>\n<tbody class="divide-y divide-gray-200">${rows}</tbody>\n</table>\n</div>`;
+    return `<div class="mt-6 mb-2 font-semibold">Live (Derived) View</div>\n<div class="overflow-x-auto border rounded-lg aim-derived-container">\n<table class="w-full text-sm divide-y divide-gray-200">\n<thead class="bg-gray-50"><tr><th class="p-2 text-left">Area</th><th class="p-2 text-left">Resolved Target</th><th class="p-2 text-left">Order</th><th class="p-2 text-left">Actions</th></tr></thead>\n<tbody class="divide-y divide-gray-200">${rows}</tbody>\n</table>\n</div>`;
   }
 
   function renderUnrepresented() {
@@ -313,6 +355,7 @@ import './global-modals.js';
       await loadMappings();
       if (areaInput) areaInput.value = '';
       if (targetInput) targetInput.value = '';
+      state.dirtyNew = false;
     } else {
       setMsg(result ? result.message : 'Failed to add mapping.', 'error');
     }
@@ -334,6 +377,7 @@ import './global-modals.js';
     const result = await fetchJSON('/api/area_mappings.php', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     if (result && result.success) {
       setMsg('Mapping updated.', 'ok');
+      try { state.dirty.delete(String(id)); row.classList.remove('aim-row-dirty'); } catch(_) {}
     } else {
       setMsg(result ? result.message : 'Failed to update mapping.', 'error');
     }
@@ -397,6 +441,32 @@ import './global-modals.js';
         addMapping();
       }
     });
+    // Track dirty fields (explicit mappings table)
+    document.addEventListener('input', (e) => {
+      const t = e.target;
+      if (!t) return;
+      // Explicit rows
+      const row = t.closest && t.closest('tr[data-id]');
+      if (row) {
+        const id = row.getAttribute('data-id');
+        try { state.dirty.add(String(id)); row.classList.add('aim-row-dirty'); } catch(_) {}
+        return;
+      }
+      // New row inputs
+      if (t.id === 'aimNewArea' || t.id === 'aimNewType' || t.id === 'aimNewTarget' || t.id === 'aimNewOrder') {
+        const a = (byId('aimNewArea')?.value || '').trim();
+        const tg = (byId('aimNewTarget')?.value || '').trim();
+        state.dirtyNew = !!(a || tg);
+      }
+    });
+    try {
+      window.addEventListener('message', (ev) => {
+        try {
+          const d = ev && ev.data; if (!d || d.source !== 'wf-aim-parent') return;
+          if (d.type === 'save') saveAll();
+        } catch(_) {}
+      });
+    } catch(_) {}
     const roomSel = byId('aimRoomSelect');
     if (roomSel) {
       roomSel.addEventListener('change', () => {

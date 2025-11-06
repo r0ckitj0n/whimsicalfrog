@@ -15,6 +15,20 @@ class AnalyticsTracker {
         // Initialize tracking
         this.init();
     }
+
+    parseUtmFromUrl(href) {
+        try {
+            const url = new URL(href, window.location.origin);
+            const p = url.searchParams;
+            return {
+                utm_source: p.get('utm_source') || '',
+                utm_medium: p.get('utm_medium') || '',
+                utm_campaign: p.get('utm_campaign') || '',
+                utm_term: p.get('utm_term') || '',
+                utm_content: p.get('utm_content') || ''
+            };
+        } catch(_) { return {}; }
+    }
     
     init() {
         // Track initial visit
@@ -34,10 +48,16 @@ class AnalyticsTracker {
     }
     
     trackVisit() {
+        const utm = this.parseUtmFromUrl(window.location.href);
         const data = {
             landing_page: window.location.href,
             referrer: document.referrer,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            utm_source: utm.utm_source || '',
+            utm_medium: utm.utm_medium || '',
+            utm_campaign: utm.utm_campaign || '',
+            utm_term: utm.utm_term || '',
+            utm_content: utm.utm_content || ''
         };
         
         this.sendData('track_visit', data);

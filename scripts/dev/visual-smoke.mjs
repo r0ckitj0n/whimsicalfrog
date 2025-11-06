@@ -11,7 +11,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import os from 'os';
+import _os from 'os';
 // Flexible import: prefer puppeteer, fallback to puppeteer-core (system Chrome)
 let puppeteer = null;
 try {
@@ -45,7 +45,7 @@ async function ensureOutDir() {
   return outDir;
 }
 
-async function safeClick(page, selector) {
+async function _safeClick(page, selector) {
   try {
     await page.waitForSelector(selector, { timeout: 5000 });
     await page.click(selector);

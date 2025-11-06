@@ -2,8 +2,35 @@ import Chart from 'chart.js/auto';
 import { ApiClient } from '../core/api-client.js';
 
 const AdminMarketingModule = {
+    currentTimeframe: 7,
     salesChartInstance: null,
     paymentChartInstance: null,
+    topCategoriesChartInstance: null,
+    topProductsChartInstance: null,
+    orderStatusChartInstance: null,
+    newReturningChartInstance: null,
+    shippingChartInstance: null,
+    aovTrendChartInstance: null,
+    channelsChartInstance: null,
+    channelRevenueChartInstance: null,
+    // --- Drilldown helpers ---
+    getClickedLabel(chart, evt){
+        try{
+            const points = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+            if (points && points.length){
+                const { index } = points[0];
+                return chart.data.labels?.[index];
+            }
+        }catch(_){ }
+        return null;
+    },
+    goToOrdersWithQuery(q){
+        try{
+            const url = new URL('/admin/orders', window.location.origin);
+            Object.entries(q || {}).forEach(([k,v])=>{ if (v!=null && v!=='') url.searchParams.set(k, v); });
+            window.location.href = url.pathname + '?' + url.searchParams.toString();
+        }catch(_){ }
+    },
     // Simple modal helpers for iframe-local admin modals
     showOverlay(id) {
         try {
@@ -590,24 +617,41 @@ const AdminMarketingModule = {
             }
 
             // Sub-modal openers
+            const isEmbed = (() => { try { return window.parent && window.parent !== window; } catch(_) { return false; } })();
+            const tryOpenParent = (url, title) => {
+                try {
+                    if (!isEmbed) return false;
+                    window.parent.postMessage({ source: 'wf-ai', type: 'open-tool', url, title }, '*');
+                    return true;
+                } catch(_) { return false; }
+            };
+
             if (target.closest('[data-action="open-social-manager"]')) {
                 e.preventDefault();
-                this.openSocialManager();
+                if (!tryOpenParent('/sections/tools/social_manager.php?modal=1', '📱 Social Accounts Manager')) {
+                    this.openSocialManager();
+                }
                 return;
             }
             if (target.closest('[data-action="open-content-generator"]')) {
                 e.preventDefault();
-                this.openContentGenerator();
+                if (!tryOpenParent('/sections/tools/ai_content_generator.php?modal=1', '✍️ Content Generator')) {
+                    this.openContentGenerator();
+                }
                 return;
             }
             if (target.closest('[data-action="open-newsletters-manager"]')) {
                 e.preventDefault();
-                this.openNewslettersManager();
+                if (!tryOpenParent('/sections/tools/newsletters_manager.php?modal=1', '📧 Newsletter Manager')) {
+                    this.openNewslettersManager();
+                }
                 return;
             }
             if (target.closest('[data-action="open-automation-manager"]')) {
                 e.preventDefault();
-                this.openAutomationManager();
+                if (!tryOpenParent('/sections/tools/automation_manager.php?modal=1', '⚙️ Automation Manager')) {
+                    this.openAutomationManager();
+                }
                 return;
             }
             if (target.closest('[data-action="open-marketing-overview"]')) {
@@ -617,17 +661,23 @@ const AdminMarketingModule = {
             }
             if (target.closest('[data-action="open-discounts-manager"]')) {
                 e.preventDefault();
-                this.openDiscountsManager();
+                if (!tryOpenParent('/sections/tools/discounts_manager.php?modal=1', '💸 Discount Codes Manager')) {
+                    this.openDiscountsManager();
+                }
                 return;
             }
             if (target.closest('[data-action="open-coupons-manager"]')) {
                 e.preventDefault();
-                this.openCouponsManager();
+                if (!tryOpenParent('/sections/tools/coupons_manager.php?modal=1', '🎟️ Coupons Manager')) {
+                    this.openCouponsManager();
+                }
                 return;
             }
             if (target.closest('[data-action="open-intent-heuristics-manager"]')) {
                 e.preventDefault();
-                this.openIntentHeuristicsManager();
+                if (!tryOpenParent('/sections/tools/intent_heuristics_manager.php?modal=1', '🧠 Intent Heuristics Config')) {
+                    this.openIntentHeuristicsManager();
+                }
                 return;
             }
             if (target.closest('[data-action="open-ai-provider-parent"]')) {
@@ -637,7 +687,9 @@ const AdminMarketingModule = {
             }
             if (target.closest('[data-action="open-suggestions-manager"]')) {
                 e.preventDefault();
-                this.openSuggestionsManager();
+                if (!tryOpenParent('/sections/tools/ai_suggestions.php?modal=1', '🤖 Suggestions Manager')) {
+                    this.openSuggestionsManager();
+                }
                 return;
             }
 
@@ -656,6 +708,18 @@ const AdminMarketingModule = {
                 } else {
                     this.generateSuggestionsFallback();
                 }
+                return;
+            }
+
+            // Timeframe switcher
+            const tfBtn = target.closest('[data-timeframe]');
+            if (tfBtn) {
+                e.preventDefault();
+                const tf = parseInt(tfBtn.getAttribute('data-timeframe'), 10) || 7;
+                this.setTimeframeActive(tf);
+                this.fetchOverview(tf).then((data) => {
+                    if (data && data.success) this.applyOverviewData(data);
+                }).catch(()=>{});
                 return;
             }
 
@@ -774,16 +838,81 @@ const AdminMarketingModule = {
     },
 
     initializeCharts(container) {
-        const chartDataEl = container.querySelector('#marketingChartData');
+        const chartDataEl = (container && container.querySelector) ? (container.querySelector('#marketingChartData') || document.getElementById('marketingChartData')) : document.getElementById('marketingChartData');
         if (!chartDataEl) return;
 
         try {
             const data = JSON.parse(chartDataEl.textContent);
-            this.renderSalesChart(data.sales);
-            this.renderPaymentChart(data.payments);
+            this.applyOverviewData(data);
         } catch (e) {
             console.error('Failed to parse marketing chart data:', e);
         }
+
+        // Also fetch live data for default timeframe (7d) to ensure freshness
+        this.setTimeframeActive(7);
+        this.fetchOverview(7).then((data)=>{ if (data && data.success) this.applyOverviewData(data); }).catch(()=>{});
+    },
+
+    setTimeframeActive(tf){
+        try{
+            document.querySelectorAll('[data-timeframe]')?.forEach(btn=>{
+                const v = parseInt(btn.getAttribute('data-timeframe'), 10) || 7;
+                btn.classList.toggle('btn-primary', v === tf);
+                btn.classList.toggle('btn-secondary', v !== tf);
+            });
+            this.currentTimeframe = tf;
+            this.updateExportLinks(tf);
+        }catch(_){ }
+    },
+
+    updateExportLinks(tf){
+        try{
+            document.querySelectorAll('a[data-export-type]')?.forEach(a=>{
+                const type = a.getAttribute('data-export-type');
+                if (!type) return;
+                const url = new URL('/api/marketing_overview.php', window.location.origin);
+                url.searchParams.set('format','csv');
+                url.searchParams.set('type', type);
+                url.searchParams.set('timeframe', String(tf||7));
+                a.setAttribute('href', url.pathname + '?' + url.searchParams.toString());
+            });
+        }catch(_){ }
+    },
+
+    async fetchOverview(tf){
+        try{
+            const res = await ApiClient.get('/api/marketing_overview.php', { timeframe: tf });
+            return res;
+        }catch(e){ console.error('Failed to fetch overview', e); return null; }
+    },
+
+    applyOverviewData(data){
+        try{
+            if (data.sales) this.renderSalesChart(data.sales);
+            if (data.payments) this.renderPaymentChart(data.payments);
+            if (data.topCategories) this.renderTopCategoriesChart(data.topCategories);
+            if (data.topProducts) this.renderTopProductsChart(data.topProducts);
+            if (data.status) this.renderOrderStatusChart(data.status);
+            if (data.newReturning) this.renderNewReturningChart(data.newReturning);
+            if (data.shipping) this.renderShippingMethodChart(data.shipping);
+            if (data.aovTrend) this.renderAovTrendChart(data.aovTrend);
+            if (data.channels) this.renderChannelsChart(data.channels);
+            if (data.channelRevenue) this.renderChannelRevenueChart(data.channelRevenue);
+            if (data.kpis) this.updateKpis(data.kpis);
+        }catch(e){ console.error('Failed to apply overview data', e); }
+    },
+
+    updateKpis(kpis){
+        try{
+            const revEl = document.getElementById('kpiRevenue');
+            const ordEl = document.getElementById('kpiOrders');
+            const aovEl = document.getElementById('kpiAov');
+            const custEl = document.getElementById('kpiCustomers');
+            if (revEl && typeof kpis.revenue === 'number') revEl.textContent = Number(kpis.revenue).toFixed(2);
+            if (ordEl && typeof kpis.orders === 'number') ordEl.textContent = String(kpis.orders);
+            if (aovEl && typeof kpis.aov === 'number') aovEl.textContent = Number(kpis.aov).toFixed(2);
+            if (custEl && typeof kpis.customers === 'number') custEl.textContent = String(kpis.customers);
+        }catch(_){ }
     },
 
     renderSalesChart(data) {
@@ -804,7 +933,61 @@ const AdminMarketingModule = {
                     tension: 0.4
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_date: label });
+                }
+            }
+        });
+    },
+
+    renderChannelsChart(data) {
+        const ctx = document.getElementById('channelsChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.channelsChartInstance) this.channelsChartInstance.destroy();
+        this.channelsChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Sessions by Channel',
+                    data: data.values,
+                    backgroundColor: ['#60A5FA','#10B981','#F59E0B','#EF4444','#8B5CF6','#6B7280']
+                }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_channel: label });
+                }
+            }
+        });
+    },
+
+    renderChannelRevenueChart(data) {
+        const ctx = document.getElementById('channelRevenueChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.channelRevenueChartInstance) this.channelRevenueChartInstance.destroy();
+        this.channelRevenueChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Revenue by Channel',
+                    data: data.values,
+                    backgroundColor: '#34D399'
+                }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } },
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_channel: label });
+                }
+            }
         });
     },
 
@@ -825,7 +1008,158 @@ const AdminMarketingModule = {
                     ]
                 }]
             },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_payment_method: label });
+                }
+            }
+        });
+    },
+    
+    renderTopCategoriesChart(data) {
+        const ctx = document.getElementById('topCategoriesChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.topCategoriesChartInstance) this.topCategoriesChartInstance.destroy();
+        this.topCategoriesChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Revenue by Category',
+                    data: data.values,
+                    backgroundColor: '#60A5FA'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } },
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_items: label });
+                }
+            }
+        });
+    },
+
+    renderTopProductsChart(data) {
+        const ctx = document.getElementById('topProductsChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.topProductsChartInstance) this.topProductsChartInstance.destroy();
+        this.topProductsChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Revenue by Product',
+                    data: data.values,
+                    backgroundColor: '#34D399'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } },
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_items: label });
+                }
+            }
+        });
+    },
+
+    renderOrderStatusChart(data) {
+        const ctx = document.getElementById('orderStatusChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.orderStatusChartInstance) this.orderStatusChartInstance.destroy();
+        this.orderStatusChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Orders by Status',
+                    data: data.values,
+                    backgroundColor: ['#F59E0B','#10B981','#3B82F6','#EF4444','#8B5CF6','#6B7280']
+                }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_status: label });
+                }
+            }
+        });
+    },
+
+    renderNewReturningChart(data) {
+        const ctx = document.getElementById('newReturningChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.newReturningChartInstance) this.newReturningChartInstance.destroy();
+        this.newReturningChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Customers',
+                    data: data.values,
+                    backgroundColor: ['#60A5FA','#10B981']
+                }]
+            },
             options: { responsive: true, maintainAspectRatio: false }
+        });
+    },
+
+    renderShippingMethodChart(data) {
+        const ctx = document.getElementById('shippingMethodChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.shippingChartInstance) this.shippingChartInstance.destroy();
+        this.shippingChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Shipping Methods',
+                    data: data.values,
+                    backgroundColor: ['#34D399','#FBBF24','#A78BFA','#F87171','#93C5FD','#FDBA74']
+                }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_shipping_method: label });
+                }
+            }
+        });
+    },
+
+    renderAovTrendChart(data) {
+        const ctx = document.getElementById('aovTrendChart')?.getContext('2d');
+        if (!ctx) return;
+        if (this.aovTrendChartInstance) this.aovTrendChartInstance.destroy();
+        this.aovTrendChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'AOV',
+                    data: data.values,
+                    borderColor: '#8B5CF6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { 
+                responsive: true, maintainAspectRatio: false,
+                onClick: (evt, _els, chart)=>{
+                    const label = this.getClickedLabel(chart, evt);
+                    if (label) this.goToOrdersWithQuery({ filter_date: label });
+                }
+            }
         });
     },
     

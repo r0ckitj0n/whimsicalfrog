@@ -82,7 +82,7 @@
   visibility: visible;
   transition: all 0.3s ease;
   /* Ensure overlay is always above site header and any sticky elements */
-  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 200000));
+  z-index: var(--z-admin-overlay);
 }
 
 /* Orders/items overlays: minimize outer padding further */
@@ -112,7 +112,7 @@
   padding-top: 0 !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 200000)) !important;
+  z-index: var(--z-admin-overlay) !important;
 }
 
 /* Modal panel defaults. Utilities can augment on top. */
@@ -120,20 +120,17 @@
 
 .admin-modal {
   background: #fff;
-  width: var(--admin-modal-width, clamp(720px, 90vw, 1200px)) !important;
+  width: auto !important; /* let overlay classes and content determine width */
   max-width: var(--admin-modal-max-width, 95vw) !important;
   color: #111827; /* gray-900 */
   border-radius: 0.5rem; /* rounded-lg */
   box-shadow: 0 20px 40px rgba(0,0,0,.25);
-  /* Avoid forcing full viewport height to prevent double scrollbars */
-  max-height: var(--admin-modal-max-height, min(90vh, 980px));
+  /* Normalize max height to 95% of viewport unless explicitly overridden */
+  max-height: var(--admin-modal-max-height, 95vh);
   height: var(--admin-modal-height, auto);
   margin: var(--admin-modal-margin, 0);
   overflow: hidden;
   position: relative;
-  z-index: var(--z-admin-overlay-content, 1410);
-  display: flex;
-  flex-direction: column;
 }
 
 /* Global: make modal a flex column so header/footer stay pinned and body scrolls */
@@ -159,6 +156,12 @@
 /* Lock background/page scroll while any admin modal overlay is visible */
 html:has(.admin-modal-overlay.show),
 body:has(.admin-modal-overlay.show) {
+  overflow: hidden !important;
+}
+
+/* Fallback for browsers without :has support: when JS adds this class, lock page scroll */
+html.wf-admin-modal-open,
+body.wf-admin-modal-open {
   overflow: hidden !important;
 }
 
@@ -333,17 +336,59 @@ body:has(.admin-modal-overlay.show) {
   padding: 6px !important;
 }
 
-#actionIconsManagerModal .admin-modal { --admin-modal-max-height: 80vh !important; --admin-modal-height: 80vh !important; height: var(--admin-modal-max-height) !important; }
-#actionIconsManagerModal .modal-body { display: flex !important; flex: 1 1 auto !important; min-height: 0 !important; overflow: auto !important; -webkit-overflow-scrolling: touch !important; }
-#actionIconsManagerModal #actionIconsManagerFrame { width: 100% !important; height: 100% !important; min-height: 0 !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
-#actionIconsManagerModal .modal-body > iframe { flex: 1 1 auto !important; min-height: 0 !important; }
+#actionIconsManagerModal #actionIconsManagerFrame { width: 100% !important; height: auto !important; min-height: 0 !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
 
-/* Enlarge Button Manager width regardless of auto sizing */
-#actionIconsManagerModal .admin-modal {
-  --admin-modal-width: clamp(800px, 80vw, 1200px) !important;
-  --admin-modal-max-width: 95vw !important;
-  width: var(--admin-modal-width, clamp(800px, 80vw, 1200px)) !important;
+/* Hardened scroll behavior for Buttons modal */
+#actionIconsManagerModal { overflow: hidden !important; }
+#actionIconsManagerModal .modal-body {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  max-height: 95vh !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
 }
+
+/* Intent Heuristics Manager: inner iframe handles scrolling; remove outer scroll */
+#intentHeuristicsManagerModal { overflow: hidden !important; }
+#intentHeuristicsManagerModal .modal-body {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 95vh !important;
+  overflow: hidden !important;
+  overflow-x: hidden !important;
+  padding: 0 !important;
+}
+#intentHeuristicsManagerModal .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Alternate opener (from delegated-handlers.js): ensure single-scroll */
+#intentHeuristicsModal { overflow: hidden !important; }
+#intentHeuristicsModal .modal-body {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 95vh !important;
+  overflow: hidden !important;
+  overflow-x: hidden !important;
+  padding: 0 !important;
+}
+#intentHeuristicsModal .modal-body > iframe,
+#intentHeuristicsModal .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* (Removed width enlargement for Buttons modal; width now content-driven) */
 
 
 /* Colors & Fonts: guarantee internal scrollbar and reasonable height cap */
@@ -407,7 +452,7 @@ body:has(.admin-modal-overlay.show) {
   flex-direction: column !important;
   max-height: var(--admin-modal-max-height, 90vh) !important;
   overflow: hidden !important;
-  height: var(--admin-modal-max-height, 90vh) !important;
+  height: auto !important;
 }
 .wf-modal--content-scroll .modal-body {
   flex: 1 1 auto !important;
@@ -427,6 +472,17 @@ body:has(.admin-modal-overlay.show) {
   display: flex !important;
   flex: 1 1 auto !important;
   min-height: 0 !important;
+  /* Ensure only the inner iframe scrolls (remove outer scrollbar) */
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+/* Even if legacy helpers force scrolling, suppress outer scroll when body directly wraps an iframe */
+.admin-modal .modal-body.wf-modal-body--scroll:has(> iframe),
+.admin-modal .modal-body.wf-modal-body--scroll:has(> .wf-admin-embed-frame),
+.admin-modal .modal-body.wf-modal-body--autoheight:has(> iframe),
+.admin-modal .modal-body.wf-modal-body--autoheight:has(> .wf-admin-embed-frame) {
+  overflow: hidden !important;
+  padding: 0 !important;
 }
 .admin-modal .modal-body:has(> iframe) > iframe,
 .admin-modal .modal-body:has(> .wf-admin-embed-frame) > .wf-admin-embed-frame {
@@ -564,6 +620,18 @@ body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-moda
 .admin-modal--actions-in-header .admin-modal-close:hover { background-color: var(--brand-secondary, #BF5700) !important; color: #ffffff !important; border-color: var(--brand-secondary, #BF5700) !important; }
 .admin-modal--actions-in-header .admin-modal-close:focus { outline: none !important; }
 
+/* AI overlays: enforce brand-secondary hover on all buttons inside these modals */
+#aiUnifiedModal .btn:hover,
+#aiUnifiedModal .btn:focus-visible,
+#aiSettingsModal .btn:hover,
+#aiSettingsModal .btn:focus-visible,
+#aiUnifiedChildModal .btn:hover,
+#aiUnifiedChildModal .btn:focus-visible {
+  background: var(--brand-secondary, #BF5700) !important;
+  border-color: var(--brand-secondary, #BF5700) !important;
+  color: #fff !important;
+}
+
 /* Header Save button alignment and sizing (match Shopping Cart modal) */
 .admin-modal--actions-in-header .modal-header-actions .btn {
   height: 28px !important;
@@ -598,8 +666,23 @@ body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
 /* Receipt Messages modal: header/action layout and full-height body */
 #receiptMessagesModal .admin-modal.admin-modal-content { padding: 0 !important; }
 #receiptMessagesModal .modal-header { padding: 6px 8px !important; }
-#receiptMessagesModal .modal-body { padding: 0 !important; overflow: auto !important; }
-#receiptMessagesModal .wf-admin-embed-frame { width: 100% !important; height: auto !important; min-height: 1200px !important; display: block !important; border: 0 !important; box-sizing: border-box !important; }
+/* Single-scroll: let inner iframe handle scrolling */
+#receiptMessagesModal .modal-body {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+#receiptMessagesModal .modal-body > iframe,
+#receiptMessagesModal .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: block !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
 
 /* Shop Encouragements modal: mirror Cart Button Texts sizing and header */
 #shopEncouragementsModal .admin-modal.admin-modal-content { padding: 0 !important; }
@@ -654,12 +737,20 @@ body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
   display: block !important;
   flex: initial !important;
   min-height: auto !important;
-  overflow: visible !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 .admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body > iframe,
 .admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body > .wf-admin-embed-frame {
   height: auto !important;
   max-height: none !important;
+}
+/* Strongest override for responsive panels: if the modal body directly wraps an iframe,
+   the iframe should handle scrolling; suppress body scrollbars. */
+.admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body:has(> iframe),
+.admin-modal-overlay .admin-modal.admin-modal--responsive .modal-body:has(> .wf-admin-embed-frame) {
+  overflow: hidden !important;
+  padding: 0 !important;
 }
 /* Discrete iframe height buckets for responsive modals (avoid inline styles) */
 .wf-embed-h-s  { height: 240px !important; }
@@ -669,20 +760,90 @@ body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
 .wf-embed-h-xxl { height: 820px !important; }
 
 /* Targeted responsive width for key modals */
-#attributesModal .admin-modal,
-#backgroundManagerModal .admin-modal,
-#receiptMessagesModal .admin-modal {
+#backgroundManagerModal .admin-modal {
   width: auto !important;
   max-width: 95vw !important;
 }
 
-/* Attributes modal: prioritize filling up to 95% viewport width before truncation/wrap */
-#attributesModal .admin-modal {
-  --admin-modal-width: clamp(900px, 95vw, 1800px);
+/* Size/Color Redesign: allow wider panel to enable 2-column layout */
+#sizeColorRedesignModal .admin-modal {
+  --admin-modal-width: clamp(900px, 95vw, 1200px);
   --admin-modal-max-width: 95vw;
-  width: var(--admin-modal-width, clamp(900px, 95vw, 1800px)) !important;
+  width: var(--admin-modal-width, clamp(900px, 95vw, 1200px)) !important;
   max-width: var(--admin-modal-max-width, 95vw) !important;
+  overflow: hidden !important; /* prevent panel-level scrollbar; body will scroll */
 }
+/* Reduce overlay padding and reinforce height for near-95vh expansion */
+#sizeColorRedesignModal { padding: 0.25rem !important; }
+#sizeColorRedesignModal .admin-modal { max-height: 95vh !important; }
+#sizeColorRedesignModal .modal-body { overflow-y: auto !important; overflow-x: hidden !important; }
+#sizeColorRedesignModal .modal-body > iframe { display:block !important; width:100% !important; overflow:hidden !important; }
+
+/* Generic helper: force single-scroll inside overlays */
+.admin-modal-overlay.wf-modal-single-scroll { overflow: hidden !important; }
+.admin-modal-overlay.wf-modal-single-scroll .admin-modal { overflow: hidden !important; }
+.admin-modal-overlay.wf-modal-single-scroll .modal-body { overflow-y: auto !important; overflow-x: hidden !important; }
+.admin-modal-overlay.wf-modal-single-scroll .modal-body > iframe,
+.admin-modal-overlay.wf-modal-single-scroll .modal-body > .wf-admin-embed-frame { display:block !important; width:100% !important; overflow:hidden !important; }
+
+/* Autowide helper: let panels grow to 95vw and clamp height to 95vh (content-driven) */
+.admin-modal-overlay.wf-modal-autowide { overflow-x: hidden !important; }
+.admin-modal-overlay.wf-modal-autowide .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  /* Expand to fit content up to viewport cap */
+  width: max-content !important;
+  max-width: 95vw !important;
+  height: auto !important;
+  max-height: 95vh !important;
+  box-sizing: border-box !important;
+}
+/* Neutralize legacy size tokens within autowide overlays */
+.admin-modal-overlay.wf-modal-autowide .admin-modal.admin-modal--xs,
+.admin-modal-overlay.wf-modal-autowide .admin-modal.admin-modal--sm,
+.admin-modal-overlay.wf-modal-autowide .admin-modal.admin-modal--md,
+.admin-modal-overlay.wf-modal-autowide .admin-modal.admin-modal--lg,
+.admin-modal-overlay.wf-modal-autowide .admin-modal.admin-modal--lg-narrow,
+.admin-modal-overlay.wf-modal-autowide .admin-modal.admin-modal--xl,
+.admin-modal-overlay.wf-modal-autowide .admin-modal.admin-modal--full {
+  width: auto !important;
+  max-width: 95vw !important;
+}
+/* Prefer vertical scrolling when clamped */
+.admin-modal-overlay.wf-modal-autowide.wf-modal-single-scroll .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 95vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Column baseline helpers: request minimum columns if viewport allows */
+:root {
+  --wf-modal-col-min: 320px; /* per-column min width */
+  --wf-modal-col-gap: 12px;  /* inter-column gap */
+}
+.admin-modal-overlay.wf-modal-mincols-3 { --wf-modal-col-min: 340px; }
+.admin-modal-overlay.wf-modal-autowide.wf-modal-mincols-2 .admin-modal {
+  /* set a floor so 2 columns fit; allow content to expand up to 95vw */
+  min-width: min(calc((2 * var(--wf-modal-col-min)) + (1 * var(--wf-modal-col-gap))), 95vw) !important;
+}
+.admin-modal-overlay.wf-modal-autowide.wf-modal-mincols-3 .admin-modal {
+  min-width: min(calc((3 * var(--wf-modal-col-min)) + (2 * var(--wf-modal-col-gap))), 95vw) !important;
+}
+.admin-modal-overlay.wf-modal-autowide.wf-modal-mincols-4 .admin-modal {
+  min-width: min(calc((4 * var(--wf-modal-col-min)) + (3 * var(--wf-modal-col-gap))), 95vw) !important;
+}
+
+/* Helper classes to set per-overlay column min size without inline styles */
+.admin-modal-overlay.wf-modal-colmin-320 { --wf-modal-col-min: 320px; }
+.admin-modal-overlay.wf-modal-colmin-340 { --wf-modal-col-min: 340px; }
+.admin-modal-overlay.wf-modal-colmin-360 { --wf-modal-col-min: 360px; }
+.admin-modal-overlay.wf-modal-colmin-380 { --wf-modal-col-min: 380px; }
+
+/* Inline-style replacements (repo guard safe) */
+.wf-grid-autofit-360 { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)) !important; }
+.wf-min-w-0 { min-width: 0 !important; }
 
 /* Attributes: remove inner padding so panel height equals header + iframe exactly */
 #attributesModal .admin-modal.admin-modal-content { padding: 0 !important; }
@@ -691,10 +852,14 @@ body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
 /* Responsive body modes */
 .wf-modal-body--autoheight {
   display: block !important;
-  flex: initial !important;
-  min-height: auto !important;
-  overflow: visible !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
+
+/* Global: enforce 95vh cap inside overlays unless a specific modal overrides */
+.admin-modal-overlay .admin-modal { --admin-modal-max-height: 95vh !important; }
 .wf-modal-body--scroll {
   flex: 1 1 auto !important;
   min-height: 0 !important;
@@ -711,6 +876,40 @@ body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
   flex: 1 1 auto !important;
   min-height: 0 !important;
   overflow: auto !important;
+}
+.admin-modal-overlay.wf-modal-viewport-fill { overflow: hidden !important; }
+.admin-modal-overlay.wf-modal-viewport-fill .admin-modal {
+  --admin-modal-max-height: 95vh !important;
+  height: auto !important;
+}
+.admin-modal-overlay.wf-modal-viewport-fill .modal-body {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-height: 95vh !important; /* static cap as a reliable fallback */
+}
+.admin-modal-overlay.wf-modal-viewport-fill .modal-body > iframe,
+.admin-modal-overlay.wf-modal-viewport-fill .modal-body > .wf-admin-embed-frame {
+  flex: initial !important; /* do not flex-fill; let parent body manage scroll */
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: block !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* AI modal: shrink-to-content and scroll when capped */
+#aiUnifiedModal .modal-body {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  max-height: 95vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 /* When responsive + autoheight is active, prevent child iframe from flex-filling */
@@ -749,6 +948,18 @@ body[data-page^='admin'] :is(.btn-xs, .btn-sm, .btn-lg):not(.btn) {
 /* Semantic aliases (map features to presets/tokens) */
 .admin-modal.admin-modal--attributes {
   --admin-modal-max-height: 90vh;
+}
+
+/* Attributes modal: use shared autosizing mechanism */
+
+/* Default for all autosized iframes: avoid zero-height before measurement */
+.admin-modal .modal-body > iframe[data-autosize="1"] {
+  display: block !important;
+  width: 100% !important;
+  min-height: 220px !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
 }
 .admin-modal.admin-modal--dashboard-config {
   --admin-modal-width: clamp(680px, 80vw, 1200px);
@@ -809,9 +1020,8 @@ body[data-page^='admin'] .admin-modal.admin-modal--room-map {
 
 /* Strongest enforcement: ensure Attributes modal expands up to 95vw before any internal truncation/wrap */
 body[data-page^='admin'] #attributesModal .admin-modal {
-  --admin-modal-width: auto;
-  --admin-modal-max-width: 95vw;
-  width: auto !important;
+  /* Provide a sensible minimum so 3 columns fit when viewport allows; cap at 95vw */
+  width: clamp(840px, 85vw, 95vw) !important;
   max-width: 95vw !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
@@ -821,21 +1031,14 @@ body[data-page^='admin'] #attributesModal .admin-modal {
 
 /* (cleanup) rely on the admin-scoped rule above for width enforcement */
 
-/* Attributes modal: prevent auto-fill behavior so panel width follows content */
-#attributesModal .modal-body {
-  display: block !important;
-  flex: initial !important;
-  min-height: auto !important;
-  overflow: visible !important;
-}
 #attributesModal .modal-body > iframe,
 #attributesModal .modal-body > .wf-admin-embed-frame {
   flex: 0 0 auto !important;
-  width: auto !important;
+  width: 100% !important;
   max-width: 100% !important;
   height: auto !important;
   max-height: none !important;
-  display: inline-block !important;
+  display: block !important;
 }
 
 .admin-modal .modal-body {
@@ -1302,6 +1505,47 @@ body[data-embed="1"] .bg-gray-100 { background: #fff !important; min-height: aut
 body[data-embed="1"] .container { max-width: none !important; margin: 0 !important; padding: 0 !important; }
 body[data-embed="1"] .shadow, body[data-embed="1"] .shadow-md, body[data-embed="1"] .shadow-lg, body[data-embed="1"] .shadow-xl { box-shadow: none !important; }
 body[data-embed="1"] h1 { font-size: 20px !important; margin-bottom: 16px !important; }
+
+/* Embed flattening: if a page renders an admin-modal inside an iframe, drop panel chrome
+   and prevent nested scrollbars. Let the iframe handle scrolling. */
+body[data-embed="1"] .admin-modal.admin-modal-content {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+/* Intent Heuristics page specifically: force complete flatten and no inner scroll */
+body[data-embed="1"] #intentHeuristicsRoot .admin-modal.admin-modal-content {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+body[data-embed="1"] #intentHeuristicsRoot .admin-modal.admin-modal-content > .modal-body {
+  display: block !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+body[data-embed="1"] .admin-modal.admin-modal-content > .modal-header {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin: 0 0 8px 0 !important;
+  position: static !important;
+}
+body[data-embed="1"] .admin-modal.admin-modal-content > .modal-body {
+  padding: 0 !important;
+  overflow: visible !important;
+}
 
 /* Admin pages (replace inline styles) */
 body[data-page='admin/marketing'] #admin-section-content { margin-top: 0 !important; border-top: none !important; }

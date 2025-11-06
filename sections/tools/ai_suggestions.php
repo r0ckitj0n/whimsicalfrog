@@ -13,6 +13,12 @@ if (!$inModal) {
     register_shutdown_function('__wf_ai_suggestions_footer_shutdown');
   }
 }
+if ($inModal) {
+  // In modal context, load minimal header and ensure the marketing entry is emitted in dev
+  $page = 'admin/marketing';
+  $extraViteEntry = 'src/entries/admin-marketing.js';
+  include $root . '/partials/modal_header.php';
+}
 ?>
 <style>
 .hidden{display:none !important}

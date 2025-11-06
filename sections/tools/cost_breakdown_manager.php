@@ -263,8 +263,7 @@ if ($is_modal_context) {
         // Load cost breakdown data
         function loadCostBreakdown(itemId) {
             showLoading();
-            fetch('/functions/process_cost_breakdown.php?inventoryId=' + itemId + '&costType=all')
-                .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
+            __wfApiJson('GET', '/functions/process_cost_breakdown.php?inventoryId=' + itemId + '&costType=all')
                 .then(data => {
                     if (data.success) {
                         costBreakdown = data.data;
@@ -403,8 +402,7 @@ if ($is_modal_context) {
             const url = isEdit ? `/functions/process_cost_breakdown.php?inventoryId=${inventoryId}&costType=materials&id=${id}` : `/functions/process_cost_breakdown.php?inventoryId=${inventoryId}`;
             const data = { costType: 'materials', name, cost: parseFloat(cost) };
             showFormLoading('material');
-            fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-            .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
+            __wfApiJson(method, url, data)
             .then(result => { if (result.success) { closeModal('materialModal'); showSuccess(result.message); loadCostBreakdown(inventoryId); } else { showError('Error: ' + result.error); } hideFormLoading('material'); })
             .catch(() => { showError('Failed to save material. Please try again.'); hideFormLoading('material'); });
         }
@@ -418,8 +416,7 @@ if ($is_modal_context) {
             const url = isEdit ? `/functions/process_cost_breakdown.php?inventoryId=${inventoryId}&costType=labor&id=${id}` : `/functions/process_cost_breakdown.php?inventoryId=${inventoryId}`;
             const data = { costType: 'labor', description, cost: parseFloat(cost) };
             showFormLoading('labor');
-            fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-            .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
+            __wfApiJson(method, url, data)
             .then(result => { if (result.success) { closeModal('laborModal'); showSuccess(result.message); loadCostBreakdown(inventoryId); } else { showError('Error: ' + result.error); } hideFormLoading('labor'); })
             .catch(() => { showError('Failed to save labor. Please try again.'); hideFormLoading('labor'); });
         }
@@ -433,24 +430,21 @@ if ($is_modal_context) {
             const url = isEdit ? `/functions/process_cost_breakdown.php?inventoryId=${inventoryId}&costType=energy&id=${id}` : `/functions/process_cost_breakdown.php?inventoryId=${inventoryId}`;
             const data = { costType: 'energy', description, cost: parseFloat(cost) };
             showFormLoading('energy');
-            fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-            .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
+            __wfApiJson(method, url, data)
             .then(result => { if (result.success) { closeModal('energyModal'); showSuccess(result.message); loadCostBreakdown(inventoryId); } else { showError('Error: ' + result.error); } hideFormLoading('energy'); })
             .catch(() => { showError('Failed to save energy. Please try again.'); hideFormLoading('energy'); });
         }
         function deleteItem(id, type) {
             const url = `/functions/process_cost_breakdown.php?inventoryId=${currentItemId}&costType=${type}&id=${id}`;
             showFormLoading('delete');
-            fetch(url, { method: 'DELETE' })
-            .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
+            __wfApiJson('DELETE', url)
             .then(result => { if (result.success) { closeModal('deleteModal'); showSuccess(result.message); loadCostBreakdown(currentItemId); } else { showError('Error: ' + result.error); } hideFormLoading('delete'); })
             .catch(() => { showError('Failed to delete item. Please try again.'); hideFormLoading('delete'); });
         }
         function updateCostPrice() {
             const suggestedCost = costBreakdown.totals.suggestedCost;
             showFormLoading('updateCost');
-            fetch('/functions/process_inventory_update.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: currentItemId, costPrice: suggestedCost }) })
-            .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
+            __wfApiJson('POST', '/functions/process_inventory_update.php', { id: currentItemId, costPrice: suggestedCost })
             .then(result => {
                 if (result.success) {
                     closeModal('updateCostModal');
@@ -463,6 +457,22 @@ if ($is_modal_context) {
                 hideFormLoading('updateCost');
             })
             .catch(() => { showError('Failed to update cost price. Please try again.'); hideFormLoading('updateCost'); });
+        }
+
+        // Unified API helper for JSON endpoints (prefers WhimsicalFrog.api/ApiClient)
+        async function __wfApiJson(method, url, body){
+            try {
+                const A = (window.WhimsicalFrog && window.WhimsicalFrog.api) ? window.WhimsicalFrog.api : (window.ApiClient || null);
+                if (A && typeof A.request === 'function') {
+                    if (method === 'GET' && A.get) return A.get(url);
+                    if (method === 'POST' && A.post) return A.post(url, body||{});
+                    if (method === 'PUT' && A.put) return A.put(url, body||{});
+                    if (method === 'DELETE' && A.delete) return A.delete(url);
+                    return A.request(url, { method, body: body ? JSON.stringify(body) : undefined, headers: { 'Content-Type': 'application/json' } });
+                }
+            } catch(_){ }
+            const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1' }, body: body ? JSON.stringify(body) : undefined, credentials: 'include' });
+            return res.json();
         }
 
         // Helpers

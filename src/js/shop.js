@@ -6,6 +6,9 @@ import './site-core.js';
 import apiClient from './api-client.js';
 const WF = window.WF;
 import { debounce } from './utils.js';
+// Diagnostic light mode: reduce heavy operations when enabled
+const __wfQS = (() => { try { return new URLSearchParams(window.location.search || ''); } catch(_) { return new URLSearchParams(''); } })();
+const __wfShopLight = (() => { try { return (__wfQS.get('wf_diag_shop_light') === '1') || (__wfQS.get('wf_app_minimal') === '1'); } catch(_) { return false; } })();
 
 // Runtime helpers for height equalization without inline styles
 const WFSHOP_EQH = { styleEl: null, rules: new Set() };
@@ -126,10 +129,12 @@ const ShopPage = {
             });
         }
 
-        window.addEventListener('resize', debounce(() => {
-            this.measureNavHeight();
-            this.equalizeCardHeights();
-        }, 200));
+        if (!__wfShopLight) {
+            window.addEventListener('resize', debounce(() => {
+                this.measureNavHeight();
+                this.equalizeCardHeights();
+            }, 200));
+        }
 
         // React to URL q= changes (e.g., back/forward)
         window.addEventListener('popstate', () => {
@@ -301,6 +306,7 @@ const ShopPage = {
     },
 
     equalizeCardHeights() {
+        if (__wfShopLight) return;
         // If any card is expanded, prefer natural heights
         if (this.productsGrid.querySelector('.product-card.is-expanded')) {
             this.removeEqualization();
@@ -322,10 +328,13 @@ const ShopPage = {
 
         // Allow the browser to reflow and calculate natural heights
         requestAnimationFrame(() => {
-            const maxHeight = Math.max(...visibleCards.map(card => card.offsetHeight));
+            const sample = visibleCards.slice(0, 200);
+            const maxHeight = Math.max(...sample.map(card => card.offsetHeight));
     
             if (maxHeight > 0) {
-                const h = Math.round(maxHeight);
+                let h = Math.round(maxHeight);
+                // Clamp to 4px steps to reduce CSS rule cardinality
+                h = Math.max(0, Math.round(h / 4) * 4);
                 const className = buildEqHClassName(h);
                 ensureEqHRule(className, h);
                 visibleCards.forEach(card => {
@@ -386,7 +395,9 @@ const ShopPage = {
         });
 
         if (visibleCount === 0 && hasTerm) {
-            // No exact matches, compute fuzzy recommendations
+            if (__wfShopLight) {
+                return; // Skip fuzzy work in light mode
+            }
             const recs = this.computeFuzzyRecommendations(term, 6);
             this.showRecommendations(term, recs);
         }

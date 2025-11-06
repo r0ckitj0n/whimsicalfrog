@@ -100,7 +100,7 @@ function resolveImport(fromFile, spec) {
   // Only handle relative imports for reachability; ignore bare package imports
   if (!spec.startsWith('.') && !spec.startsWith('/')) return null;
   const baseDir = path.dirname(fromFile);
-  let candidate = path.normalize(path.join(baseDir, spec));
+  const candidate = path.normalize(path.join(baseDir, spec));
   // Try standard JS resolution: exact, add .js, index.js
   const tryPaths = [
     candidate,

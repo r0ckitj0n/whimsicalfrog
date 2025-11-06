@@ -926,7 +926,12 @@ class AdminInventoryModule {
         // Option B (client-side modal): Handle edit/view within the same page context
         document.addEventListener('click', async (e) => {
             console.log('[AdminInventory] Click detected on document!', e.target);
-
+            // Ignore clicks within inline-editable cells entirely
+            try {
+                if (e.target && e.target.closest && e.target.closest('.editable-field')) {
+                    return;
+                }
+            } catch(_) {}
             const a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
             console.log('[AdminInventory] Closest anchor element:', a);
 
@@ -934,6 +939,15 @@ class AdminInventoryModule {
                 console.log('[AdminInventory] No anchor element found in click path');
                 return;
             }
+
+            // Only handle explicit View/Edit buttons inside the actions cell
+            try {
+                const inActions = !!(a.closest && a.closest('.admin-actions'));
+                const isViewOrEditBtn = a.classList && (a.classList.contains('btn-icon--view') || a.classList.contains('btn-icon--edit'));
+                if (!inActions || !isViewOrEditBtn) {
+                    return;
+                }
+            } catch(_) {}
 
             const href = a.getAttribute('href');
             console.log('[AdminInventory] Anchor href:', href);
@@ -2074,7 +2088,7 @@ class AdminInventoryModule {
         // Load thumbnails for inventory table
         this.loadInventoryThumbnails();
         
-        // Set up inline editing
+        // Enable inline editing on inventory cells using the unified class
         this.setupInlineEditing();
 
         const modal = document.getElementById('inventoryModalOuter');
@@ -3592,61 +3606,22 @@ class AdminInventoryModule {
         }
 
         try {
-            const result = await new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('POST', '/functions/process_multi_image_upload.php');
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-                xhr.upload.onprogress = (e) => {
-                    if (!progressBar || !e.lengthComputable) return;
+            const result = await ApiClient.upload('/functions/process_multi_image_upload.php', formData, {
+                onProgress: (e) => {
+                    if (!progressBar || !e || !e.lengthComputable) return;
                     const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
-                    // apply dynamic width class
-                    const ensureWidthClass = (el, p) => {
-                        const val = Math.max(0, Math.min(100, Math.round(p)));
+                    const ensureWidthClass = (el, percentVal) => {
+                        const p = Math.max(0, Math.min(100, Math.round(percentVal)));
                         const set = (window.__wfInvWidthClasses ||= new Set());
                         let styleEl = document.getElementById('inventory-dynamic-widths');
                         if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'inventory-dynamic-widths'; document.head.appendChild(styleEl); }
-                        const cls = `w-p-${val}`;
-                        if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{width:${val}%}`; set.add(cls); }
+                        const cls = `w-p-${p}`;
+                        if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{width:${p}%}`; set.add(cls); }
                         (el.className || '').split(' ').forEach(c => { if (/^w-p-\d{1,3}$/.test(c)) el.classList.remove(c); });
                         el.classList.add(cls);
                     };
                     ensureWidthClass(progressBar, percent);
-                };
-
-                xhr.onload = () => {
-                    console.log('[AdminInventory] XHR request completed. Status:', xhr.status, 'Response:', xhr.responseText);
-                    if (progressBar) {
-                        const ensureWidthClass = (el, p) => {
-                            const val = Math.max(0, Math.min(100, Math.round(p)));
-                            const set = (window.__wfInvWidthClasses ||= new Set());
-                            let styleEl = document.getElementById('inventory-dynamic-widths');
-                            if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'inventory-dynamic-widths'; document.head.appendChild(styleEl); }
-                            const cls = `w-p-${val}`;
-                            if (!set.has(cls)) { styleEl.textContent += `\n.${cls}{width:${val}%}`; set.add(cls); }
-                            (el.className || '').split(' ').forEach(c => { if (/^w-p-\d{1,3}$/.test(c)) el.classList.remove(c); });
-                            el.classList.add(cls);
-                        };
-                        ensureWidthClass(progressBar, 100);
-                    }
-                    try {
-                        const json = JSON.parse(xhr.responseText || '{}');
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            resolve(json);
-                        } else {
-                            reject(new Error(json.error || `HTTP ${xhr.status}`));
-                        }
-                    } catch (e) {
-                        console.error('Invalid JSON from upload:', e, xhr.responseText);
-                        reject(new Error('Server returned invalid response'));
-                    }
-                };
-
-                xhr.onerror = () => {
-                    reject(new Error('Network error during upload'));
-                };
-
-                xhr.send(formData);
+                }
             });
 
             if (result.success) {
@@ -5623,11 +5598,16 @@ class AdminInventoryModule {
     setupInlineEditing() {
         // Add click handlers for editable cells
         document.addEventListener('click', (e) => {
-            const editableCell = e.target.closest('.editable');
-            if (editableCell && !editableCell.querySelector('input, select')) {
-                this.startInlineEdit(editableCell);
-            }
-        });
+            const cell = e.target.closest && e.target.closest('.editable-field');
+            if (!cell) return;
+            // Avoid activating if clicking within an interactive control
+            if (e.target.closest('input,select,textarea,button,a')) return;
+            // Prevent double editors
+            if (cell.__editing) return;
+            // Prevent other handlers (like view/edit link interceptors) from acting on this click
+            try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
+            this.startInlineEdit(cell);
+        }, true);
     }
 
     startInlineEdit(cell) {
@@ -5635,6 +5615,8 @@ class AdminInventoryModule {
         const row = cell.closest('tr');
         const sku = row.dataset.sku;
         const currentValue = this.extractCellValue(cell, field);
+        // Prevent duplicate editors on the same cell
+        cell.__editing = true;
         
         // Store original content for cancel
         cell.dataset.originalContent = cell.innerHTML;
@@ -5793,6 +5775,7 @@ class AdminInventoryModule {
         
         // Remove editing state
         delete cell.dataset.originalContent;
+        try { cell.__editing = false; } catch(_) {}
         
         // Add a brief highlight to show the change
         cell.classList.add('bg-green-100');
@@ -5805,6 +5788,7 @@ class AdminInventoryModule {
         // Restore original content
         cell.innerHTML = cell.dataset.originalContent;
         delete cell.dataset.originalContent;
+        try { cell.__editing = false; } catch(_) {}
     }
 }
 

@@ -21,14 +21,38 @@ try {
     }
 
     if ($method === 'GET') {
-        // Read from business_settings (key: shop_encouragement_phrases)
-        $raw = BusinessSettings::get('shop_encouragement_phrases', '[]');
-        if (is_string($raw)) {
-            $decoded = json_decode($raw, true);
-            $phrases = is_array($decoded) ? $decoded : [];
+        // Read from business_settings category 'messages', key 'shop_encouragement_phrases'
+        $category = 'messages';
+        $key = 'shop_encouragement_phrases';
+
+        $settings = BusinessSettings::getByCategory($category);
+        $raw = '';
+        if (is_array($settings) && array_key_exists($key, $settings)) {
+            $raw = $settings[$key];
         } else {
-            $phrases = is_array($raw) ? $raw : [];
+            // Fallback to generic getter (in case category was omitted historically)
+            $raw = BusinessSettings::get($key, '');
         }
+
+        $phrases = [];
+        if (is_array($raw)) {
+            $phrases = $raw;
+        } else {
+            $s = (string)$raw;
+            if ($s !== '') {
+                // Accept JSON array or newline/comma separated text
+                $decoded = json_decode($s, true);
+                if (is_array($decoded)) {
+                    $phrases = $decoded;
+                } else {
+                    $parts = preg_split('/[\r\n,]+/', $s);
+                    if (is_array($parts)) {
+                        $phrases = $parts;
+                    }
+                }
+            }
+        }
+
         echo json_encode([
             'success' => true,
             'phrases' => array_values(array_filter(array_map('trim', $phrases), fn($s) => $s !== '')),

@@ -76,7 +76,7 @@ function moveToStale(abs) {
 }
 
 // Load DB whitelist (basenames) if requested
-let dbWhitelist = new Set();
+const dbWhitelist = new Set();
 let userPatterns = [];
 if (DB_WHITELIST) {
   try {

@@ -150,73 +150,88 @@ try {
     } catch (\Throwable $e) { }
     ?>
     <title>WhimsicalFrog</title>
-    <script>
-      // Normalize dev host to localhost to avoid IPv4-only 127.0.0.1 issues
-      try {
-        (function(){
-          var hn = window.location.hostname;
-          if (hn === '127.0.0.1' || hn === '0.0.0.0') {
-            try {
-              var u = new URL(window.location.href);
-              u.hostname = 'localhost';
-              window.location.replace(u.toString());
-              return;
-            } catch(_) {
-              try { window.location.href = window.location.href.replace('127.0.0.1','localhost').replace('0.0.0.0','localhost'); return; } catch(__) {}
-            }
-          }
-          window.__WF_BACKEND_ORIGIN = window.location.origin;
-        })();
-      } catch(_) {}
-    </script>
-    <script>
-      (function(){
+    <?php
+      // Early define safe-mode flags so conditionals below can reference them
+      $__wf_safe_param = isset($_GET['safe']) ? (string)$_GET['safe'] : '';
+      $__wf_safe_mode = ($__wf_safe_param === '1' || $__wf_safe_param === 'true');
+      $__wf_safe_only_app = ($__wf_safe_param === 'app');
+      $__wf_safe_only_boot = ($__wf_safe_param === 'bootstrap');
+    ?>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&family=Nunito:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&family=Nunito:wght@400;600;700&display=swap"></noscript>
+    <?php if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot)) { ?>
+      <script>
+        // Normalize dev host to localhost to avoid IPv4-only 127.0.0.1 issues
         try {
-          if (!window.ApiClient || typeof window.ApiClient !== 'object') {
-            var _appendParams = function(url, params){
-              if (!params || typeof params !== 'object') return url;
+          (function(){
+            var hn = window.location.hostname;
+            if (hn === '127.0.0.1' || hn === '0.0.0.0') {
               try {
-                var u = new URL(url, window.location.origin);
-                Object.keys(params).forEach(function(k){ if (params[k] !== undefined && params[k] !== null) u.searchParams.set(k, String(params[k])); });
-                return u.toString();
-              } catch(_) { return url; }
-            };
-            var _isFormData = function(b){ return (typeof FormData !== 'undefined') && (b instanceof FormData); };
-            var _isPlainObject = function(v){ return Object.prototype.toString.call(v) === '[object Object]'; };
-            var _json = function(r){ return r && typeof r.json === 'function' ? r.json() : Promise.resolve({}); };
-            var base = {
-              request: function(url, opts){
-                opts = opts || {};
-                var method = (opts.method || 'GET').toUpperCase();
-                var headers = Object.assign({ 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest' }, opts.headers || {});
-                var body = opts.body;
-                if (body != null && !_isFormData(body) && _isPlainObject(body)) {
-                  headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-                  body = JSON.stringify(body);
-                }
-                var cfg = Object.assign({}, opts, { method: method, headers: headers, credentials: 'include', body: body });
-                return fetch(url, cfg).then(_json).catch(function(){ return {}; });
-              },
-              get: function(url, params){ return base.request(_appendParams(url, params||{}), { method: 'GET' }); },
-              post: function(url, data, options){ return base.request(url, Object.assign({ method: 'POST', body: data }, options||{})); },
-              put: function(url, data, options){ return base.request(url, Object.assign({ method: 'PUT', body: data }, options||{})); },
-              delete: function(url, options){ return base.request(url, Object.assign({ method: 'DELETE' }, options||{})); }
-            };
-            window.ApiClient = base;
-          }
-          if (typeof window.apiGet !== 'function') {
-            window.apiGet = function(url, params){ return window.ApiClient.get(url, params); };
-          }
-          if (typeof window.apiPost !== 'function') {
-            window.apiPost = function(url, data, options){ return window.ApiClient.post(url, data, options||{}); };
-          }
+                var u = new URL(window.location.href);
+                u.hostname = 'localhost';
+                window.location.replace(u.toString());
+                return;
+              } catch(_) {
+                try { window.location.href = window.location.href.replace('127.0.0.1','localhost').replace('0.0.0.0','localhost'); return; } catch(__) {}
+              }
+            }
+            window.__WF_BACKEND_ORIGIN = window.location.origin;
+          })();
         } catch(_) {}
-      })();
-    </script>
+      </script>
+      <script>
+        (function(){
+          try {
+            if (!window.ApiClient || typeof window.ApiClient !== 'object') {
+              var _appendParams = function(url, params){
+                if (!params || typeof params !== 'object') return url;
+                try {
+                  var u = new URL(url, window.location.origin);
+                  Object.keys(params).forEach(function(k){ if (params[k] !== undefined && params[k] !== null) u.searchParams.set(k, String(params[k])); });
+                  return u.toString();
+                } catch(_) { return url; }
+              };
+              var _isFormData = function(b){ return (typeof FormData !== 'undefined') && (b instanceof FormData); };
+              var _isPlainObject = function(v){ return Object.prototype.toString.call(v) === '[object Object]'; };
+              var _json = function(r){ return r && typeof r.json === 'function' ? r.json() : Promise.resolve({}); };
+              var base = {
+                request: function(url, opts){
+                  opts = opts || {};
+                  var method = (opts.method || 'GET').toUpperCase();
+                  var headers = Object.assign({ 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest' }, opts.headers || {});
+                  var body = opts.body;
+                  if (body != null && !_isFormData(body) && _isPlainObject(body)) {
+                    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+                    body = JSON.stringify(body);
+                  }
+                  var cfg = Object.assign({}, opts, { method: method, headers: headers, credentials: 'include', body: body });
+                  return fetch(url, cfg).then(_json).catch(function(){ return {}; });
+                },
+                get: function(url, params){ return base.request(_appendParams(url, params||{}), { method: 'GET' }); },
+                post: function(url, data, options){ return base.request(url, Object.assign({ method: 'POST', body: data }, options||{})); },
+                put: function(url, data, options){ return base.request(url, Object.assign({ method: 'PUT', body: data }, options||{})); },
+                delete: function(url, options){ return base.request(url, Object.assign({ method: 'DELETE' }, options||{})); }
+              };
+              window.ApiClient = base;
+            }
+            if (typeof window.apiGet !== 'function') {
+              window.apiGet = function(url, params){ return window.ApiClient.get(url, params); };
+            }
+            if (typeof window.apiPost !== 'function') {
+              window.apiPost = function(url, data, options){ return window.ApiClient.post(url, data, options||{}); };
+            }
+          } catch(_) {}
+        })();
+      </script>
+    <?php } ?>
     <?php
     // Debug breadcrumb: emit a one-time header version marker and currently attached <script> srcs
-    $header_ts = date('c');
-echo "<script>(function(){try{console.log('[WF-Header] version ', '" . addslashes($header_ts) . "'); var ss=[].map.call(document.getElementsByTagName('script'), function(s){return s && s.src || ''}).filter(Boolean); if (ss && ss.length) console.log('[WF-Header] existing scripts:', ss);}catch(_){}})();</script>\n";
+    if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot)) {
+      $header_ts = date('c');
+      echo "<script>(function(){try{console.log('[WF-Header] version ', '" . addslashes($header_ts) . "'); var ss=[].map.call(document.getElementsByTagName('script'), function(s){return s && s.src || ''}).filter(Boolean); if (ss && ss.length) console.log('[WF-Header] existing scripts:', ss);}catch(_){}})();</script>\n";
+    }
 ?>
     <?php
 // Always load the main application bundle so global CSS/JS are available on ALL pages,
@@ -267,24 +282,54 @@ if (!$__wf_force_prod && ($__wf_is_localhost || (isset($_GET['vite']) && strtolo
         }
     }
     if ($probe($origin)) {
-        echo "<script>try{console.log('[Header] DEV mode active', { origin: '" . addslashes($origin) . "' });}catch(_){}</script>\n";
-        echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/@vite/client"></script>' . "\n";
-        echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/app.js"></script>' . "\n";
-        echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/header-bootstrap.js"></script>' . "\n";
-        // Dynamic icon CSS from configurable admin icon map (keeps icon glyphs updatable without full rebuild)
-        echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
+        if ($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot) {
+            echo '<link rel="stylesheet" href="/src/styles/main.css">' . "\n";
+            echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
+            if ($__wf_safe_only_app) {
+                echo '<script crossorigin="anonymous" type="module" src="/src/entries/app.js"></script>' . "\n";
+            } elseif ($__wf_safe_only_boot) {
+                echo '<script crossorigin="anonymous" type="module" src="/src/entries/header-bootstrap.js"></script>' . "\n";
+            }
+        } else {
+            echo "<script>try{console.log('[Header] DEV mode active', { origin: '" . addslashes($origin) . "' });}catch(_){}</script>\n";
+            echo '<script crossorigin="anonymous" type="module" src="/@vite/client"></script>' . "\n";
+            echo '<script crossorigin="anonymous" type="module" src="/src/entries/app.js"></script>' . "\n";
+            echo '<script crossorigin="anonymous" type="module" src="/src/entries/header-bootstrap.js"></script>' . "\n";
+            echo '<link rel="stylesheet" href="/src/styles/main.css">' . "\n";
+            echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
+        }
     } else {
         // Fallback to production assets if dev server is not reachable
         echo "<!-- Vite dev server not reachable; falling back to production assets -->\n";
+        if ($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot) {
+            echo '<link rel="stylesheet" href="/src/styles/main.css">' . "\n";
+            echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
+            if ($__wf_safe_only_app) {
+                echo vite('js/app.js');
+            } elseif ($__wf_safe_only_boot) {
+                echo vite('js/header-bootstrap.js');
+            }
+        } else {
+            echo vite('js/app.js');
+            echo vite('js/header-bootstrap.js');
+            echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
+        }
+    }
+} else {
+    if ($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot) {
+        echo '<link rel="stylesheet" href="/src/styles/main.css">' . "\n";
+        echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
+        if ($__wf_safe_only_app) {
+            echo vite('js/app.js');
+        } elseif ($__wf_safe_only_boot) {
+            echo vite('js/header-bootstrap.js');
+        }
+    } else {
         echo vite('js/app.js');
+        // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
         echo vite('js/header-bootstrap.js');
         echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
     }
-} else {
-    echo vite('js/app.js');
-    // Always load header bootstrap to enable login modal and auth sync on all pages (incl. admin)
-    echo vite('js/header-bootstrap.js');
-    echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
 }
 // Final inline override to guarantee help chips are 36x36 with primary brand color
 echo <<<'STYLE'
@@ -324,6 +369,7 @@ try {
 } catch (\Throwable $e) { /* noop */
 }
 // Client bootstrap: sync header auth via whoami on every page load as a safety net
+if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot)) {
 echo <<<'SCRIPT'
 <script>
 (function(){
@@ -358,8 +404,10 @@ echo <<<'SCRIPT'
 })();
 </script>
 SCRIPT;
+}
 // One-time safety: if any module dispatches wf:login-success, force a sealing redirect
 // This ensures cookies persist even if an older login-modal bundle is cached
+if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot)) {
 echo <<<'SCRIPT'
 <script>
 (function(){
@@ -380,6 +428,7 @@ echo <<<'SCRIPT'
 })();
 </script>
 SCRIPT;
+} // Added closing bracket here
 // Always ensure admin navbar has a horizontal layout on admin ROUTES (fallback before external CSS)
 // Global header offset to keep content and modals clear of the fixed header, site-wide
 // IMPORTANT: Only apply to overlays that are actually visible to avoid blocking clicks
@@ -532,6 +581,7 @@ try {
 } catch (\Throwable $___e) { /* noop */
 }
 // Compute header height on all routes and update CSS variable live
+if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot)) {
 echo <<<'SCRIPT'
 <script>(function(){
   function computeHeaderHeight(){
@@ -560,8 +610,10 @@ echo <<<'SCRIPT'
   if (window.ResizeObserver){ try{ var ro=new ResizeObserver(computeHeaderHeight); var h=document.querySelector('.site-header')||document.querySelector('.universal-page-header'); if(h) ro.observe(h);}catch(_){}}
 })();</script>
 SCRIPT;
+} // Added closing bracket here
 
 // Global runtime guard: ensure any modal/overlay added is offset below header
+if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot)) {
 echo <<<'SCRIPT'
 <script>
 (function(){
@@ -627,6 +679,7 @@ echo <<<'SCRIPT'
 })();
 </script>
 SCRIPT;
+} // Added closing bracket here
 
 if ($__is_admin_route) {
     echo <<<'STYLE'

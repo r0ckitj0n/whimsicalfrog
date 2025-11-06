@@ -557,7 +557,7 @@ if ($inModal) {
     } else if (action === 'spm-publish') {
       ev.preventDefault();
       const id = btn.getAttribute('data-id');
-      const j = await api(`/api/social_posts_templates.php?action=get&id=${encodeURIComponent(id)}`);
+      const j = await apiGet(`/api/social_posts_templates.php?action=get&id=${encodeURIComponent(id)}`);
       if (j && j.success && j.template) {
         const t = j.template;
         const payload = { content: t.content||'', image_url: t.image_url||'', platforms: Array.isArray(t.platforms)?t.platforms:[], publish_all: true };
@@ -581,8 +581,7 @@ if ($inModal) {
     };
     const isUpdate = !!fId.value;
     const url = isUpdate ? '/api/social_posts_templates.php?action=update' : '/api/social_posts_templates.php?action=create';
-    const r = await fetch(url, { method:'POST', credentials:'include', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload) });
-    const j = await r.json().catch(()=>null);
+    const j = await apiPost(url, payload);
     if (j && j.success) { closeEditor(); loadTemplates(); } else { notify('Save failed', 'error'); }
   });
 

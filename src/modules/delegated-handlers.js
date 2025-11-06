@@ -56,6 +56,91 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
+  // Buttons (Action Icons Manager) Modal (iframe) — fallback wiring
+  if (closest('[data-action="open-action-icons-manager"], #actionIconsManagerBtn')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      let el = document.getElementById('actionIconsManagerModal');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'actionIconsManagerModal';
+        el.className = 'admin-modal-overlay over-header wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden';
+        el.setAttribute('aria-hidden', 'true');
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-modal', 'true');
+        el.setAttribute('tabindex', '-1');
+        el.setAttribute('aria-labelledby', 'actionIconsManagerTitle');
+        el.innerHTML = `
+          <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
+            <div class="modal-header">
+              <h2 id="actionIconsManagerTitle" class="admin-card-title">🧰 Button Manager</h2>
+              <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body wf-modal-body--autoheight">
+              <iframe id="actionIconsManagerFrame" title="Button Manager" class="wf-admin-embed-frame" data-autosize="1" data-measure-selector="#iconsManagerRoot,.icons-manager-inner,.admin-card,.admin-table" data-src="/sections/tools/action_icons_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+            </div>
+          </div>`;
+        document.body.appendChild(el);
+      }
+      // Ensure autosize wiring and prime iframe src
+      try { wfWireOverlay(el); } catch(_) {}
+      const frame = el.querySelector('#actionIconsManagerFrame');
+      if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
+        const ds = frame.getAttribute('data-src') || '/sections/tools/action_icons_manager.php?modal=1';
+        frame.setAttribute('src', ds);
+      }
+      wfShowModalCentral('actionIconsManagerModal');
+    } catch (error) {
+      console.error('Error opening Action Icons Manager modal:', error);
+    }
+    return;
+  }
+
+  // Area Mappings Modal (iframe) — fallback wiring
+  if (closest('[data-action="open-area-item-mapper"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      let el = document.getElementById('areaItemMapperModal');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'areaItemMapperModal';
+        el.className = 'admin-modal-overlay over-header wf-modal-autowide wf-modal-mincols-3 wf-modal-single-scroll wf-modal-closable hidden';
+        el.setAttribute('aria-hidden', 'true');
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-modal', 'true');
+        el.setAttribute('tabindex', '-1');
+        el.setAttribute('aria-labelledby', 'areaItemMapperTitle');
+        el.innerHTML = `
+          <div class="admin-modal admin-modal-content admin-modal--actions-in-header admin-modal--responsive">
+            <div class="modal-header">
+              <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area Mappings</h2>
+              <div class="modal-header-actions">
+                <span id="areaItemMapperStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+                <button type="button" id="areaItemMapperSave" class="btn btn-primary btn-sm">Save</button>
+              </div>
+              <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body wf-modal-body--fill">
+              <iframe id="areaItemMapperFrame" title="Area Mappings" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-measure-selector="#admin-section-content,.wf-grid-autofit-360,.aim-tab-panel,.admin-card" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
+            </div>
+          </div>`;
+        document.body.appendChild(el);
+      }
+      try { wfWireOverlay(el); } catch(_) {}
+      const iframe = el.querySelector('#areaItemMapperFrame');
+      if (iframe && (!iframe.getAttribute('src') || iframe.getAttribute('src') === 'about:blank')) {
+        const ds = iframe.getAttribute('data-src') || '/sections/tools/area_item_mapper.php?modal=1';
+        iframe.setAttribute('src', ds);
+      }
+      wfShowModalCentral('areaItemMapperModal');
+    } catch (error) {
+      console.error('Error opening Area Mappings modal:', error);
+    }
+    return;
+  }
+
   // Social Media Manager Modal (iframe)
   if (closest('[data-action="open-social-media-manager"]')) {
     e.preventDefault();
@@ -1095,7 +1180,7 @@ const DelegatedHandlers = {
               <a class="btn-icon btn-icon--download" href="/api/website_logs.php?action=download_log&type=${encodeURIComponent(type)}" target="_blank" rel="noopener" aria-label="Download CSV" title="Download CSV"></a>
             </div>
           </div>
-          <div id="logPreview_${type}" class="hidden border-l-4 border-gray-200 pl-3 ml-2 mt-1" style="max-height: 360px; overflow:auto;"></div>
+          <div id="logPreview_${type}" class="hidden border-l-4 border-gray-200 pl-3 ml-2 mt-1 log-preview"></div>
         `;
       }).join('');
     } catch (error) {

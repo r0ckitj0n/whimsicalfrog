@@ -1,5 +1,6 @@
 // Lazy modal factory: Background Manager (embeds dashboard #background)
 // Lazy modal factory: Room Map Manager
+import { ApiClient } from '../core/api-client.js';
 const __wfEnsureRoomMapEditorModal = () => {
   let el = document.getElementById('roomMapManagerModal');
   // ALWAYS force recreation to pick up template changes
@@ -45,11 +46,12 @@ const __wfAI_fetchAndPopulateModels = async (provider, force, source) => {
     const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
     let data = null;
     try {
-      if (window.ApiClient && typeof window.ApiClient.request === 'function') {
+      if (window.WhimsicalFrog && window.WhimsicalFrog.api && typeof window.WhimsicalFrog.api.get === 'function') {
+        data = await window.WhimsicalFrog.api.get(url);
+      } else if (window.ApiClient && typeof window.ApiClient.request === 'function') {
         data = await window.ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
       } else {
-        const res = await fetch(url, { credentials: 'include', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
-        data = await res.json().catch(() => ({}));
+        data = await ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
       }
     } catch (e) {
       data = null;
@@ -95,30 +97,33 @@ const __wfEnsureActionIconsManagerModal = () => {
   let el = document.getElementById('actionIconsManagerModal');
   if (el) {
     try {
-      if (!el.classList.contains('wf-modal--content-scroll')) el.classList.add('wf-modal--content-scroll');
+      // Use single-scroll parent with body fill and iframe fill (parent-scroll like Area Mappings)
+      el.classList.add('over-header','wf-modal-autowide','wf-modal-single-scroll','wf-modal-closable');
+      el.classList.remove('wf-modal--content-scroll');
       const panel = el.querySelector('.admin-modal');
       if (panel) {
-        panel.classList.add('admin-modal--actions-in-header');
-        panel.classList.remove('admin-modal--sm');
-        panel.classList.add('admin-modal--lg');
+        panel.classList.add('admin-modal--actions-in-header','admin-modal--responsive');
+        panel.classList.remove('admin-modal--sm','admin-modal--md','admin-modal--lg','admin-modal--lg-narrow','admin-modal--xl','admin-modal--full','admin-modal--square-200','admin-modal--square-260','admin-modal--square-300');
       }
       const body = el.querySelector('.modal-body');
-      if (body && !body.classList.contains('wf-modal-body--fill')) body.classList.add('wf-modal-body--fill');
+      if (body) { body.classList.add('wf-modal-body--fill'); body.classList.remove('wf-modal-body--autoheight'); }
       const frame = el.querySelector('#actionIconsManagerFrame');
-      if (frame && !frame.classList.contains('wf-embed--fill')) frame.classList.add('wf-embed--fill');
+      if (frame) frame.classList.add('wf-embed--fill');
+      try { if (typeof markOverlayResponsive === 'function') markOverlayResponsive(el); } catch(_) {}
+      try { if (typeof attachSameOriginFallback === 'function' && frame) attachSameOriginFallback(frame, el); } catch(_) {}
     } catch(_) {}
     return el;
   }
   el = document.createElement('div');
   el.id = 'actionIconsManagerModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay over-header wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.setAttribute('tabindex', '-1');
   el.setAttribute('aria-labelledby', 'actionIconsManagerTitle');
   el.innerHTML = `
-    <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
+    <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="actionIconsManagerTitle" class="admin-card-title">🧰 Button Manager</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
@@ -130,10 +135,13 @@ const __wfEnsureActionIconsManagerModal = () => {
   `;
   document.body.appendChild(el);
   try {
+    wireOverlay(el);
     const body = el.querySelector('.modal-body');
-    if (body) body.classList.add('wf-modal-body--fill');
+    if (body) { body.classList.add('wf-modal-body--fill'); body.classList.remove('wf-modal-body--autoheight'); }
     const frame = el.querySelector('#actionIconsManagerFrame');
     if (frame) { frame.classList.add('wf-embed--fill'); }
+    try { if (typeof markOverlayResponsive === 'function') markOverlayResponsive(el); } catch(_) {}
+    try { if (typeof attachSameOriginFallback === 'function' && frame) attachSameOriginFallback(frame, el); } catch(_) {}
   } catch(_) {}
   return el;
 };
@@ -199,7 +207,7 @@ const __wfEnsureAreaItemMapperModal = () => {
   if (el) { try { el.remove(); } catch(_) {}; el = null; }
   el = document.createElement('div');
   el.id = 'areaItemMapperModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay over-header wf-modal-autowide wf-modal-mincols-3 wf-modal-single-scroll wf-modal-closable hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -209,14 +217,68 @@ const __wfEnsureAreaItemMapperModal = () => {
     <div class="admin-modal admin-modal-content admin-modal--actions-in-header admin-modal--responsive">
       <div class="modal-header">
         <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area Mappings</h2>
+        <div class="modal-header-actions">
+          <span id="areaItemMapperStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+          <button type="button" id="areaItemMapperSave" class="btn btn-primary btn-sm">Save</button>
+        </div>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body wf-modal-body--autoheight">
-        <iframe id="areaItemMapperFrame" title="Area Mappings" class="wf-admin-embed-frame" data-autosize="1" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body wf-modal-body--fill">
+        <iframe id="areaItemMapperFrame" title="Area Mappings" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-measure-selector="#admin-section-content,.wf-grid-autofit-360,.aim-tab-panel,.admin-card" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
   document.body.appendChild(el);
+  try {
+    wireOverlay(el);
+    const body = el.querySelector('.modal-body');
+    if (body) { body.classList.add('wf-modal-body--fill'); body.classList.remove('wf-modal-body--autoheight'); }
+    const frame = el.querySelector('#areaItemMapperFrame');
+    if (frame) frame.classList.add('wf-embed--fill');
+    const saveBtn = el.querySelector('#areaItemMapperSave');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const f = el.querySelector('#areaItemMapperFrame');
+        // Disable while saving begins
+        try { saveBtn.disabled = true; saveBtn.dataset.prevLabel = saveBtn.textContent || ''; saveBtn.textContent = 'Saving…'; } catch(_) {}
+        try { if (f && f.contentWindow) f.contentWindow.postMessage({ source:'wf-aim-parent', type:'save' }, '*'); } catch(_) {}
+      });
+    }
+    if (!window.__wfAIMStatusListener) {
+      window.addEventListener('message', (ev) => {
+        try {
+          const d = ev && ev.data; if (!d || d.source !== 'wf-aim') return;
+          const s = document.getElementById('areaItemMapperStatus');
+          const btn = document.getElementById('areaItemMapperSave');
+          if (d.type === 'busy') {
+            const busy = !!d.busy;
+            if (btn) {
+              try {
+                btn.disabled = busy;
+                if (busy) { btn.dataset.prevLabel = btn.textContent || ''; btn.textContent = 'Saving…'; }
+                else { if (btn.dataset.prevLabel) { btn.textContent = btn.dataset.prevLabel; delete btn.dataset.prevLabel; } else { btn.textContent = 'Save'; } }
+              } catch(_) {}
+            }
+            if (s && busy) { try { s.textContent = 'Saving…'; s.classList.remove('text-red-700'); s.classList.add('text-green-700'); } catch(_) {} }
+            return;
+          }
+          if (d.type === 'status') {
+            if (s) {
+              s.textContent = d.message || '';
+              s.classList.remove('text-green-700','text-red-700');
+              s.classList.add(d.ok ? 'text-green-700' : 'text-red-700');
+            }
+            if (btn) {
+              try { btn.disabled = false; if (btn.dataset.prevLabel) { btn.textContent = btn.dataset.prevLabel; delete btn.dataset.prevLabel; } else { btn.textContent = 'Save'; } } catch(_) {}
+            }
+            return;
+          }
+        } catch (_) {}
+      });
+      window.__wfAIMStatusListener = true;
+    }
+  } catch(_) {}
   return el;
 };
 
@@ -265,17 +327,24 @@ const __wfEnsureReceiptMessagesModal = () => {
   let el = document.getElementById('receiptMessagesModal');
   if (el) {
     try {
+      // Ensure overlay uses final autosize helpers
+      el.classList.remove('wf-modal--content-scroll');
+      el.classList.add('wf-modal-viewport-fill','wf-modal-single-scroll');
       const panel = el.querySelector('.admin-modal');
       if (panel) {
         panel.classList.remove('admin-modal--lg','admin-modal--lg-narrow');
         panel.classList.add('admin-modal--xl','admin-modal--actions-in-header');
       }
+      // Remove legacy scroll helper from body if present
+      const body = el.querySelector('.modal-body');
+      if (body) body.classList.remove('wf-modal-body--scroll');
     } catch(_) {}
     return el;
   }
   el = document.createElement('div');
   el.id = 'receiptMessagesModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  // Autosize overlay to viewport and prefer a single inner scroll
+  el.className = 'admin-modal-overlay wf-modal-viewport-fill wf-modal-single-scroll hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -298,9 +367,7 @@ const __wfEnsureReceiptMessagesModal = () => {
   `;
   document.body.appendChild(el);
   try {
-    const body = el.querySelector('.modal-body');
-    if (body) body.classList.add('wf-modal-body--scroll');
-    // Keep built-in height class; no embed-fill needed
+    // No extra scroll helper; CSS handles iframe fill and overlay sizing
     const saveBtn = el.querySelector('#receiptMessagesSave');
     if (saveBtn) {
       saveBtn.addEventListener('click', (e) => {
@@ -334,6 +401,9 @@ const __wfEnsureCartButtonTextsModal = () => {
   let el = document.getElementById('cartButtonTextsModal');
   if (el) {
     try {
+      // Normalize overlay classes to shared autosizing pattern
+      el.classList.add('over-header','wf-modal-autowide','wf-modal-single-scroll','wf-modal-closable');
+      el.classList.remove('wf-modal--content-scroll');
       const panel = el.querySelector('.admin-modal');
       if (panel) {
         panel.classList.remove('admin-modal--lg','admin-modal--lg-narrow','admin-modal--md','admin-modal--xl','admin-modal--full','admin-modal--sm','admin-modal--xs','admin-modal--square-200','admin-modal--square-260');
@@ -344,7 +414,7 @@ const __wfEnsureCartButtonTextsModal = () => {
   }
   el = document.createElement('div');
   el.id = 'cartButtonTextsModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay over-header wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -634,14 +704,45 @@ import '../styles/admin-settings-extras.css';
 // Import utilities
 import '../modules/utilities.js';
 
-// Import the coordinator module
-import '../modules/admin-settings-coordinator.js';
+// Import the coordinator module lazily; allow disabling via wf_diag_no_settings_init=1
+(function(){
+  try {
+    const p = new URLSearchParams(window.location.search || '');
+    const noInit = p.get('wf_diag_no_settings_init') === '1';
+    if (noInit) {
+      console.warn('[AdminSettings] Coordinator disabled via wf_diag_no_settings_init=1');
+      return;
+    }
+    let loaded = false;
+    const load = () => { if (loaded) return; loaded = true; try { import('../modules/admin-settings-coordinator.js').catch(()=>{}); } catch(_) {} };
+    const scopeContains = (el) => { try { const scope = document.querySelector('.settings-page') || document.body; return scope && scope.contains(el); } catch(_) { return true; } };
+    const onClick = (e) => { try { if (e && scopeContains(e.target)) load(); } catch(_) {} };
+    const onKey = (e) => { try { if (e && (e.key === 'Enter' || e.key === ' ')) load(); } catch(_) {} };
+    try { document.addEventListener('click', onClick, true); } catch(_) {}
+    try { document.addEventListener('keydown', onKey, true); } catch(_) {}
+    try {
+      const idle = (fn) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 1500));
+      idle(load);
+    } catch(_) {}
+  } catch(_) { /* noop */ }
+})();
+
 // Standardized embed autosize controller (parent side)
 import { initEmbedAutosizeParent, attachSameOriginFallback, markOverlayResponsive, initOverlayAutoWire, wireOverlay } from '../modules/embed-autosize-parent.js';
 
-// Initialize global message listener and auto-wire overlays once
-try { initEmbedAutosizeParent(); } catch(_) {}
-try { initOverlayAutoWire(); } catch(_) {}
+// Initialize global message listener and auto-wire overlays once (unless diagnostics disable it)
+(function(){
+  try {
+    const p = new URLSearchParams(window.location.search || '');
+    const noAuto = p.get('wf_diag_no_autosize') === '1';
+    if (noAuto) {
+      console.warn('[AdminSettings] Autosize parent disabled via wf_diag_no_autosize=1');
+      return;
+    }
+  } catch(_) {}
+  try { initEmbedAutosizeParent(); } catch(_) {}
+  try { initOverlayAutoWire(); } catch(_) {}
+})();
 
 // Immediately install lightweight modal helpers
 const __wfShowModal = (id) => {
@@ -744,7 +845,6 @@ const __wfShowModal = (id) => {
               any = true;
               try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
               try { if (f) f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
-              try { if (f) attachSameOriginFallback(f, el); } catch(_) {}
               try { if (f && f.classList) f.classList.remove('wf-embed--fill'); } catch(_) {}
               try { if (f && f.dataset) f.dataset.wfWired = '1'; } catch(_) {}
             });
@@ -768,7 +868,6 @@ const __wfShowModal = (id) => {
                           try { if (f && f.dataset && f.dataset.wfWired === '1') return; } catch(_) {}
                           try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
                           try { if (f) f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
-                          try { if (f) attachSameOriginFallback(f, el); } catch(_) {}
                           try { if (f && f.classList) f.classList.remove('wf-embed--fill'); } catch(_) {}
                           try { if (f && f.dataset) f.dataset.wfWired = '1'; } catch(_) {}
                         });
@@ -1013,16 +1112,36 @@ try {
     window.__wfAIProviderOpenListener = true;
     window.addEventListener('message', (ev) => {
       try {
-        const d = ev && ev.data; if (!d || d.source !== 'wf-ai' || d.type !== 'open-provider') return;
-        const unified = document.getElementById('aiUnifiedModal');
-        if (unified) { try { __wfHideModal('aiUnifiedModal'); } catch(_) {} }
-        const modal = document.getElementById('aiSettingsModal');
-        if (modal) {
-          try { if (modal.parentElement && modal.parentElement !== document.body) document.body.appendChild(modal); } catch(_) {}
-          modal.classList.add('over-header');
-          __wfShowModal('aiSettingsModal');
-          try { if (typeof window !== 'undefined' && typeof window.loadAISettings === 'function') window.loadAISettings(); else if (typeof __wfAI_loadSettingsAndRender === 'function') __wfAI_loadSettingsAndRender(); } catch(_) {}
-          try { if (typeof window !== 'undefined' && typeof window.loadAIProviders === 'function') window.loadAIProviders(); } catch(_) {}
+        const d = ev && ev.data; if (!d || d.source !== 'wf-ai') return;
+        if (d.type === 'open-provider') {
+          const modal = document.getElementById('aiSettingsModal');
+          if (modal) {
+            try { if (modal.parentElement && modal.parentElement !== document.body) document.body.appendChild(modal); } catch(_) {}
+            try { modal.classList.add('over-header'); } catch(_) {}
+            try { modal.classList.add('topmost'); } catch(_) {}
+            __wfShowModal('aiSettingsModal');
+            try { if (typeof window !== 'undefined' && typeof window.loadAISettings === 'function') window.loadAISettings(); else if (typeof __wfAI_loadSettingsAndRender === 'function') __wfAI_loadSettingsAndRender(); } catch(_) {}
+            try { if (typeof window !== 'undefined' && typeof window.loadAIProviders === 'function') window.loadAIProviders(); } catch(_) {}
+          }
+          return;
+        }
+        if (d.type === 'open-tool') {
+          const overlay = document.getElementById('aiUnifiedChildModal');
+          if (!overlay) return;
+          try { if (overlay.parentElement && overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(_) {}
+          try { overlay.classList.add('over-header'); } catch(_) {}
+          try { const titleEl = overlay.querySelector('#aiUnifiedChildTitle'); if (titleEl && d.title) titleEl.textContent = String(d.title); } catch(_) {}
+          try {
+            const frame = overlay.querySelector('#aiUnifiedChildFrame');
+            if (frame) {
+              if (!frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1');
+              frame.removeAttribute('data-wf-use-msg-sizing');
+              frame.setAttribute('src', String(d.url || 'about:blank'));
+              try { if (typeof attachSameOriginFallback === 'function') attachSameOriginFallback(frame, overlay); } catch(_) {}
+            }
+          } catch(_) {}
+          try { __wfShowModal('aiUnifiedChildModal'); } catch(_) {}
+          return;
         }
       } catch(_) {}
     });
@@ -1448,7 +1567,7 @@ const __wfAI_loadSettingsAndRender = async () => {
     try {
       const url = '/api/ai_settings.php?action=get_settings&_=' + Date.now();
       const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
-      const j = await window.ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
+      const j = await ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
       if (j && j.success) {
         settings = j.settings || {};
         try { console.log('[AI Settings] get_settings response:', settings); } catch(_) {}
@@ -1541,15 +1660,23 @@ const __wfAI_loadSettingsAndRender = async () => {
 
       // Open Action Icons Manager
       if (closest('[data-action="open-action-icons-manager"], #actionIconsManagerBtn')) {
-        e.preventDefault();
-        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        const m = __wfEnsureActionIconsManagerModal();
+        const canEnsure = (typeof __wfEnsureActionIconsManagerModal === 'function');
+        if (!canEnsure) {
+          // Do not block other handlers; allow global fallbacks to process this click
+          return;
+        }
+        let m = null;
+        try { m = __wfEnsureActionIconsManagerModal(); } catch(_) { m = null; }
         if (m) {
+          e.preventDefault();
+          if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
           try { __wfSetModalHeaderFromTrigger(closest('[data-action="open-action-icons-manager"], #actionIconsManagerBtn'), m); } catch(_) {}
           const f = m.querySelector('#actionIconsManagerFrame');
           try { if (f && !f.getAttribute('src')) f.setAttribute('src', f.getAttribute('data-src') || '/sections/tools/action_icons_manager.php?modal=1'); } catch(_) {}
           __wfShowModal('actionIconsManagerModal');
+          return;
         }
+        // If ensure failed, let other handlers (fallbacks) run
         return;
       }
 
@@ -1855,12 +1982,32 @@ const __wfAI_loadSettingsAndRender = async () => {
         if (el) {
           try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
           __wfSetModalHeaderFromTrigger(closest('[data-action="open-categories"], #categoriesBtn'), el);
-          const f = el.querySelector('iframe');
-          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
-            const ds = f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
-            f.setAttribute('src', ds);
+          // Ensure overlay policy classes
+          try { el.classList.add('wf-modal-autowide'); } catch(_) {}
+          try { el.classList.add('wf-modal-single-scroll'); } catch(_) {}
+          const f = document.getElementById('categoriesFrame') || el.querySelector('iframe');
+          if (f) {
+            try { f.setAttribute('data-autosize','1'); } catch(_) {}
+            try { f.setAttribute('scrolling','no'); } catch(_) {}
+            if (!f.hasAttribute('data-measure-selector')) {
+              try { f.setAttribute('data-measure-selector', '#categoryManagementRoot,.admin-card,.admin-table'); } catch(_) {}
+            }
+            const base = f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
+            const sep = base.indexOf('?') === -1 ? '?' : '&';
+            const ds = `${base}${sep}_=${Date.now()}`;
+            try { f.removeAttribute('src'); } catch(_) {}
+            setTimeout(() => { try { f.setAttribute('src', ds); } catch(_) {} }, 0);
+            try { f.addEventListener('load', () => { try { if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') window.__wfEmbedAutosize.resize(f); } catch(_) {} }, { once: true }); } catch(_) {}
+            try { markOverlayResponsive(el); } catch(_) {}
+            try { attachSameOriginFallback(f, el); } catch(_) {}
           }
           __wfShowModal('categoriesModal');
+          // Recompute after paint to capture header height and paddings
+          try {
+            const rerun = () => { try { markOverlayResponsive(el); } catch(_) {} };
+            try { requestAnimationFrame(rerun); } catch(_) { setTimeout(rerun, 0); }
+            setTimeout(rerun, 200);
+          } catch(_) {}
         }
         return;
       }
@@ -1873,16 +2020,31 @@ const __wfAI_loadSettingsAndRender = async () => {
           try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
           __wfSetModalHeaderFromTrigger(closest('[data-action="open-attributes"], #attributesBtn'), el);
           const f = document.getElementById('attributesFrame') || el.querySelector('iframe');
-          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
-            const ds = f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
-            f.setAttribute('src', ds);
+          if (f) {
+            try { f.setAttribute('data-autosize','1'); } catch(_) {}
+            try { f.setAttribute('scrolling','no'); } catch(_) {}
+            const base = f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
+            const sep = base.indexOf('?') === -1 ? '?' : '&';
+            const ds = `${base}${sep}_=${Date.now()}`;
+            try { f.removeAttribute('src'); } catch(_) {}
+            setTimeout(() => { try { f.setAttribute('src', ds); } catch(_) {} }, 0);
+            // Ensure a resize pass on load so width/height are applied immediately
+            try {
+              f.addEventListener('load', () => {
+                try {
+                  if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') {
+                    window.__wfEmbedAutosize.resize(f);
+                  }
+                } catch(_) {}
+              }, { once: true });
+            } catch(_) {}
+            // Hide iframe's own scrollbars where supported
+            try { f.setAttribute('scrolling', 'no'); } catch(_) {}
           }
           __wfShowModal('attributesModal');
           // Enable standardized autosize
           try { if (f && f.classList) f.classList.remove('wf-admin-embed-frame--tall','wf-embed--fill'); } catch(_) {}
           try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
-          try { markOverlayResponsive(el); } catch(_) {}
-          try { if (f) attachSameOriginFallback(f, el); } catch(_) {}
           // Recompute after paint to capture header height and paddings
           try {
             const ov = el;
@@ -1918,15 +2080,31 @@ const __wfAI_loadSettingsAndRender = async () => {
           try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
           __wfSetModalHeaderFromTrigger(closest('[data-action="open-size-color-redesign"], #sizeColorRedesignBtn'), el);
           const f = document.getElementById('sizeColorRedesignFrame');
-          if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
-            const ds = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
-            f.setAttribute('src', ds);
+          if (f) {
+            const base = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
+            const sep = base.indexOf('?') === -1 ? '?' : '&';
+            const ds = `${base}${sep}_=${Date.now()}`;
+            try { f.removeAttribute('src'); } catch(_) {}
+            // Small timeout to ensure reload even if URL is same except cache-buster
+            setTimeout(() => { try { f.setAttribute('src', ds); } catch(_) {} }, 0);
+            // Ensure autosize is enabled and fallback attached when switching to Tools
+            try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
+            // Clear message-based sizing flag so fallback can take effect if needed
+            try { if (f) f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
+            try {
+              const overlay = document.getElementById('sizeColorRedesignModal');
+              if (overlay) {
+                markOverlayResponsive(overlay);
+                attachSameOriginFallback(f, overlay);
+              }
+            } catch(_) {}
           }
           __wfShowModal('sizeColorRedesignModal');
           // Enable standardized autosize
           try { const fx = document.getElementById('sizeColorRedesignFrame') || el.querySelector('iframe'); if (fx && !fx.hasAttribute('data-autosize')) fx.setAttribute('data-autosize','1'); } catch(_) {}
           try { markOverlayResponsive(el); } catch(_) {}
           try { const fx = document.getElementById('sizeColorRedesignFrame') || el.querySelector('iframe'); if (fx) attachSameOriginFallback(fx, el); } catch(_) {}
+          // Single-scroll is enforced by CSS helper wf-modal-single-scroll on the overlay
         }
         return;
       }
@@ -2034,7 +2212,7 @@ const __wfAI_loadSettingsAndRender = async () => {
           try {
             const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
             const options = isLocal ? { headers: { 'X-WF-Dev-Admin': '1' } } : {};
-            const r = await window.ApiClient.post('/api/ai_settings.php?action=update_settings', settings, options);
+            const r = await ApiClient.post('/api/ai_settings.php?action=update_settings', settings, options);
             if (r && r.success) {
               notify('AI Settings Saved', 'AI settings saved successfully!', 'success');
               // Immediately reflect the newly selected provider in UI
@@ -2070,21 +2248,11 @@ const __wfAI_loadSettingsAndRender = async () => {
         const doGet = async () => {
           try {
             const isLocal = (() => { try { const h = window.location.hostname; return h === 'localhost' || h === '127.0.0.1'; } catch(_) { return false; } })();
-            if (typeof window.ApiClient !== 'undefined' && window.ApiClient && typeof window.ApiClient.request === 'function') {
-              const r = await window.ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
-              if (r && r.success) {
-                __wfUpdateStatusModal('✅ ' + provider + ' provider test successful!');
-              } else {
-                __wfUpdateStatusModal('❌ ' + provider + ' provider test failed' + (r && r.message ? ': ' + r.message : ''));
-              }
+            const r = await ApiClient.request(url, { method: 'GET', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
+            if (r && r.success) {
+              __wfUpdateStatusModal('✅ ' + provider + ' provider test successful!');
             } else {
-              const res = await fetch(url, { credentials: 'include', headers: isLocal ? { 'X-WF-Dev-Admin': '1' } : {} });
-              const j = await res.json().catch(() => ({}));
-              if (j && j.success) {
-                __wfUpdateStatusModal('✅ ' + provider + ' provider test successful!');
-              } else {
-                __wfUpdateStatusModal('❌ ' + provider + ' provider test failed' + (j && j.message ? ': ' + j.message : ''));
-              }
+              __wfUpdateStatusModal('❌ ' + provider + ' provider test failed' + (r && r.message ? ': ' + r.message : ''));
             }
           } catch (err) {
             __wfUpdateStatusModal('❌ Test failed: ' + ((err && err.message) || 'Request error'));
@@ -2151,27 +2319,43 @@ const __wfAI_loadSettingsAndRender = async () => {
 
       // Open Area-Item Mapper modal (ensure + prime)
       if (closest('[data-action="open-area-item-mapper"]')) {
-        e.preventDefault();
-        if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        __wfEnsureAreaItemMapperModal();
-        __wfSetModalHeaderFromTrigger(closest('[data-action=\"open-area-item-mapper\"]'), document.getElementById('areaItemMapperModal'));
-        const iframe = document.getElementById('areaItemMapperFrame');
-        if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
-          iframe.dataset.loading = '1';
-          iframe.dataset.loaded = '0';
-          iframe.addEventListener('load', () => { try { iframe.dataset.loaded = '1'; iframe.dataset.loading = '0'; } catch(_) {} }, { once: true });
-          iframe.src = iframe.dataset.src;
+        const canEnsure = (typeof __wfEnsureAreaItemMapperModal === 'function');
+        if (!canEnsure) {
+          // Do not block other handlers; allow global fallbacks to process this click
+          return;
         }
-        __wfShowModal('areaItemMapperModal');
-        // Ensure standardized autosize
-        try { const ov = document.getElementById('areaItemMapperModal'); if (ov) markOverlayResponsive(ov); } catch(_) {}
-        try { const ov = document.getElementById('areaItemMapperModal'); if (iframe && ov) attachSameOriginFallback(iframe, ov); } catch(_) {}
-        try {
-          const ov = document.getElementById('areaItemMapperModal');
-          const rerun = () => { try { markOverlayResponsive(ov); } catch(_) {} };
-          try { requestAnimationFrame(rerun); } catch(_) { setTimeout(rerun, 0); }
-          setTimeout(rerun, 200);
-        } catch(_) {}
+        let ensured = false;
+        try { __wfEnsureAreaItemMapperModal(); ensured = true; } catch(_) { ensured = false; }
+        if (ensured) {
+          e.preventDefault();
+          if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
+          __wfSetModalHeaderFromTrigger(closest('[data-action=\"open-area-item-mapper\"]'), document.getElementById('areaItemMapperModal'));
+          const iframe = document.getElementById('areaItemMapperFrame');
+          if (iframe && iframe.dataset && iframe.dataset.src && (!iframe.src || iframe.src === 'about:blank')) {
+            iframe.dataset.loading = '1';
+            iframe.dataset.loaded = '0';
+            iframe.addEventListener('load', () => { try { iframe.dataset.loaded = '1'; iframe.dataset.loading = '0'; } catch(_) {} }, { once: true });
+            iframe.src = iframe.dataset.src;
+          }
+          __wfShowModal('areaItemMapperModal');
+          // Ensure standardized autosize
+          try { const ov = document.getElementById('areaItemMapperModal'); if (ov) markOverlayResponsive(ov); } catch(_) {}
+          try { const ov = document.getElementById('areaItemMapperModal'); if (iframe && ov) attachSameOriginFallback(iframe, ov); } catch(_) {}
+          try {
+            if (iframe && window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') {
+              window.__wfEmbedAutosize.resize(iframe);
+              setTimeout(() => { try { window.__wfEmbedAutosize.resize(iframe); } catch(_) {} }, 250);
+            }
+          } catch(_) {}
+          try {
+            const ov = document.getElementById('areaItemMapperModal');
+            const rerun = () => { try { markOverlayResponsive(ov); } catch(_) {} };
+            try { requestAnimationFrame(rerun); } catch(_) { setTimeout(rerun, 0); }
+            setTimeout(rerun, 200);
+          } catch(_) {}
+          return;
+        }
+        // If ensure failed, let other handlers (fallbacks) run
         return;
       }
     } catch (_) {}
@@ -2202,7 +2386,7 @@ function __wfSelectAITab(tab) {
     if (isTools) {
       const f = document.getElementById('aiUnifiedToolsFrame');
       if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
-        const ds = f.getAttribute('data-src') || '/sections/admin_marketing.php?modal=1';
+        const ds = f.getAttribute('data-src') || '/sections/ai_tools.php?modal=1';
         f.setAttribute('src', ds);
       }
       // Ensure autosize is enabled and fallback attached when switching to Tools
@@ -2230,12 +2414,12 @@ function __wfOpenUnifiedAIModal(initialTab, triggerEl) {
     if (!el) return;
     try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
     try { if (typeof __wfSetModalHeaderFromTrigger === 'function') __wfSetModalHeaderFromTrigger(triggerEl || null, el); } catch(_) {}
-    __wfShowModal('aiUnifiedModal');
-    // Standardized autosize wiring for AI Tools iframe and responsive overlay
+    // Prepare iframe and sizing BEFORE showing to avoid width/height flash
     try { const f = document.getElementById('aiUnifiedToolsFrame'); if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
     try { markOverlayResponsive(el); } catch(_) {}
-    try { const f = document.getElementById('aiUnifiedToolsFrame'); if (f) { try { f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}; attachSameOriginFallback(f, el); } } catch(_) {}
     __wfSelectAITab(String(initialTab || 'tools'));
+    try { const f = document.getElementById('aiUnifiedToolsFrame'); if (f) { try { f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}; attachSameOriginFallback(f, el); } } catch(_) {}
+    __wfShowModal('aiUnifiedModal');
   } catch(_) {}
 }
 

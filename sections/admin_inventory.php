@@ -285,13 +285,13 @@ function invSortIndicator($column, $currentSort, $currentDir) {
                                 <?= intval($item['image_count']) ?>
                             </span>
                         </td>
-                        <td class="editable" data-field="name"><?= htmlspecialchars($item['name'] ?? '') ?></td>
-                        <td class="editable" data-field="category"><?= htmlspecialchars($item['category'] ?? '') ?></td>
+                        <td class="editable-field" data-field="name" data-type="text"><?= htmlspecialchars($item['name'] ?? '') ?></td>
+                        <td class="editable-field" data-field="category" data-type="select"><?= htmlspecialchars($item['category'] ?? '') ?></td>
                         <td><?= htmlspecialchars($item['sku'] ?? '') ?></td>
-                        <td class="editable" data-field="stockLevel"><?= htmlspecialchars($item['stockLevel'] ?? '0') ?></td>
-                        <td class="editable" data-field="reorderPoint"><?= htmlspecialchars($item['reorderPoint'] ?? '0') ?></td>
-                        <td class="editable" data-field="costPrice">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
-                        <td class="editable" data-field="retailPrice">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
+                        <td class="editable-field" data-field="stockLevel" data-type="number"><?= htmlspecialchars($item['stockLevel'] ?? '0') ?></td>
+                        <td class="editable-field" data-field="reorderPoint" data-type="number"><?= htmlspecialchars($item['reorderPoint'] ?? '0') ?></td>
+                        <td class="editable-field" data-field="costPrice" data-type="number" data-raw-value="<?= number_format(floatval($item['costPrice'] ?? 0), 2, '.', '') ?>">$<?= number_format(floatval($item['costPrice'] ?? 0), 2) ?></td>
+                        <td class="editable-field" data-field="retailPrice" data-type="number" data-raw-value="<?= number_format(floatval($item['retailPrice'] ?? 0), 2, '.', '') ?>">$<?= number_format(floatval($item['retailPrice'] ?? 0), 2) ?></td>
                         <td>
                             <div class="admin-actions">
                                 <?php $viewHref = '/admin/inventory?' . http_build_query(array_merge($linkBase, ['view' => ($item['sku'] ?? '')])); ?>

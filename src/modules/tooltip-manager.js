@@ -571,11 +571,13 @@ async function loadTooltips() {
       }
     } catch(_) {}
 
-    // Concise summary
+    // Concise summary (reduced verbosity by default)
     const uniqCount = uniqueTargets.size;
+    const isDebug = !!(typeof window !== 'undefined' && window.__WF_TOOLTIP_DEBUG);
     if (attached !== tooltips.length) {
-      const sample = missing.slice(0, 8);
-      console.warn('[TooltipManager] Attached', uniqCount, 'unique targets from', tooltips.length, 'DB rows. Missing sample:', sample);
+      const sample = isDebug ? missing.slice(0, 8) : missing.slice(0, 3);
+      const msg = '[TooltipManager] Attached '+uniqCount+' unique targets from '+tooltips.length+' DB rows'+(sample.length?'. Missing sample: '+JSON.stringify(sample):'');
+      if (isDebug) { console.warn(msg); } else { console.info(msg); }
     } else {
       console.info('[TooltipManager] Attached tooltips to unique targets:', uniqCount);
     }
@@ -601,7 +603,7 @@ async function loadTooltips() {
     }
 
     if (!tooltips.length) {
-      console.warn('[TooltipManager] No tooltips attached for this page. Ensure help_tooltips rows exist for contexts:', contexts);
+      console.info('[TooltipManager] No tooltips attached for this page. Ensure help_tooltips rows exist for contexts:', contexts);
       // Minimal fallback: attach a demo tooltip to the global help toggle if present
       try {
         const demoTarget = document.querySelector('#adminHelpToggleBtn, [data-action="help-toggle-global-tooltips"]');

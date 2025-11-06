@@ -9,8 +9,8 @@
  *   node scripts/dev/seed-admin-tooltips.mjs --dry-run # default, preview only
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
+import _fs from 'node:fs';
+import _path from 'node:path';
 
 const API_BASE = process.env.WF_BASE_URL || 'http://localhost:8080';
 const IS_LOCAL = /localhost|127\.0\.0\.1/.test(API_BASE);

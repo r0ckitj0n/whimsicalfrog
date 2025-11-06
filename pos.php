@@ -82,6 +82,8 @@ $businessName = 'WhimsicalFrog';
     <title><?= htmlspecialchars($businessName) ?> - Point of Sale</title>
 
     <?php
+    // Early inline cart stub to ensure the detailed modal always has a cart API on POS
+    echo '<script>(function(){try{if(!window.WF_Cart){window.__POS_pendingAdds=window.__POS_pendingAdds||[];window.WF_Cart={addItem:async function(p){try{window.__POS_pendingAdds.push(p||{});document.dispatchEvent(new CustomEvent("pos:pendingAdd"));}catch(_){ }return {success:true};},updateCartDisplay:function(){},clear:function(){try{window.__POS_pendingAdds.length=0;}catch(_){}}};try{window.cart=window.cart||{};window.cart.add=function(payload,qty){try{var p=payload||{};window.__POS_pendingAdds.push({sku:p.sku,quantity:qty||p.quantity||1,price:p.price||0,name:p.name||"",image:p.image||""});document.dispatchEvent(new CustomEvent("pos:pendingAdd"));}catch(_){}};window.cart.addItem=function(o){try{var x=o||{};window.__POS_pendingAdds.push({sku:x.sku,quantity:x.quantity||1,price:x.price||0,name:x.name||"",image:x.image||""});document.dispatchEvent(new CustomEvent("pos:pendingAdd"));}catch(_){}};window.addToCart=function(sku,qty){try{window.__POS_pendingAdds.push({sku:sku,quantity:qty||1,price:0,name:"",image:""});document.dispatchEvent(new CustomEvent("pos:pendingAdd"));}catch(_){}};}catch(_){}}}catch(_){}})();</script>';
     // Since this is a standalone page, include the dedicated POS Vite entry.
     // This entry imports POS-specific CSS and the shared detailed item modal stack.
     if (function_exists('vite_entry')) {
@@ -228,6 +230,86 @@ $businessName = 'WhimsicalFrog';
     <!-- Data bridge for the POS module -->
     <script id="pos-data" type="application/json">
         <?= json_encode($allItems, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>
+    </script>
+
+    <script>
+    (function(){
+      function runInlineCheckout(ev){
+        try{ ev && ev.preventDefault && ev.preventDefault(); }catch(_){ }
+        try {
+          var items = Array.prototype.slice.call(document.querySelectorAll('#cartItems .cart-item'));
+          if (!items.length) return;
+          var skus = []; var qtys = [];
+          items.forEach(function(el){
+            var sku = el.getAttribute('data-sku') || '';
+            var qEl = el.querySelector('.quantity');
+            var q = qEl ? parseInt(qEl.textContent || '1', 10) : 1;
+            if (sku) { skus.push(sku); qtys.push(isFinite(q) && q>0 ? q : 1); }
+          });
+          if (!skus.length) return;
+          var totalText = '';
+          try { totalText = (document.getElementById('cartTotal') || document.getElementById('posCartTotal')).textContent || ''; } catch(_){ totalText=''; }
+          var total = 0;
+          try { total = parseFloat(String(totalText).replace(/[^0-9.]/g,'')) || 0; } catch(_){ total = 0; }
+          var btn = document.getElementById('checkoutBtn');
+          try{ if (btn) btn.disabled = true; }catch(_){ }
+          var payload = {
+            customerId: 'pos@whimsicalfrog.us',
+            itemIds: skus,
+            quantities: qtys,
+            colors: skus.map(function(){return null;}),
+            sizes: skus.map(function(){return null;}),
+            paymentMethod: 'Cash',
+            paymentStatus: 'Received',
+            shippingMethod: 'Customer Pickup',
+            total: total
+          };
+          fetch('/api/add_order.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-WF-ApiClient': '1' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+          }).then(function(r){ return r.json().catch(function(){ return {}; }); })
+          .then(function(data){
+            var oid = (data && (data.orderId || (data.data && data.data.orderId))) || null;
+            if (data && data.success && oid) {
+              // Prefer opening receipt in POS modal if available
+              try {
+                if (window.POS_openReceiptInModal) { window.POS_openReceiptInModal(oid); return; }
+              } catch(_){ }
+              var url = '/receipt.php?orderId=' + encodeURIComponent(oid) + '&bare=1';
+              try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
+            } else {
+              var msg = (data && (data.error || data.message)) || (data && data.data && (data.data.error || data.data.message)) || 'Unknown error';
+              alert('Checkout failed: ' + msg);
+            }
+          }).catch(function(err){
+            alert('Checkout error: ' + (err && err.message ? err.message : String(err)));
+          }).finally(function(){ try{ if (btn) btn.disabled = false; }catch(_){ } });
+        } catch (e) {
+          try{ console.error('[POS inline checkout] error', e); }catch(_){ }
+        }
+      }
+      try {
+        try { window.POS_runInlineCheckout = runInlineCheckout; } catch(_){ }
+        var btn = document.getElementById('checkoutBtn');
+        if (btn && !btn.__wfInlineBound) {
+          btn.__wfInlineBound = true;
+          btn.addEventListener('click', runInlineCheckout);
+        }
+        // Also bind to any [data-action="checkout"] element as a safety net (capture phase)
+        document.addEventListener('click', function(e){
+          try {
+            var t = e.target && (e.target.closest ? e.target.closest('[data-action="checkout"]') : null);
+            if (!t) return;
+            var btnEl = document.getElementById('checkoutBtn');
+            // If the dedicated button exists and is handling the click, do not double-submit
+            if (btnEl && btnEl.contains(e.target) && btnEl.__wfInlineBound) return;
+            runInlineCheckout(e);
+          } catch(_){ }
+        }, true);
+      } catch(_) {}
+    })();
     </script>
 
     </body>

@@ -72,7 +72,7 @@ function collectCandidates(html) {
   }
   // Generic [data-action]
   for (const m of findAll(/<([a-z0-9:-]+)\b([^>]*)>/gi, html)) {
-    const tag = (m[1] || '').toLowerCase(); const attrs = m[2] || '';
+    const _tag = (m[1] || '').toLowerCase(); const attrs = m[2] || '';
     const da = (attrs.match(/\bdata-action\s*=\s*"([^"]+)"/i) || [])[1] || (attrs.match(/\bdata-action\s*=\s*'([^']+)'/i) || [])[1] || '';
     if (!da) continue;
     // Exclude if already captured by button/a with same id/action

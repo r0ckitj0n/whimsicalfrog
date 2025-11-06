@@ -39,22 +39,29 @@ if ($path === '__vite_ping') {
 
 // Build list of candidate origins to try (helps avoid odd resolver/proxy issues)
 $candidates = [];
-$candidates[] = $primaryOrigin;
-// Always add loopback variants for resilience
+// Always add loopback variants for resilience. Prefer IPv6 first for localhost.
 $parsed = parse_url($primaryOrigin);
 if ($parsed && isset($parsed['scheme'])) {
     $scheme = $parsed['scheme'];
     $port = isset($parsed['port']) ? (int)$parsed['port'] : ($scheme === 'https' ? 443 : 80);
-    $variants = [
-        sprintf('%s://localhost:%d', $scheme, $port),
-        sprintf('%s://127.0.0.1:%d', $scheme, $port),
-        sprintf('%s://[::1]:%d', $scheme, $port),
-    ];
-    foreach ($variants as $v) {
-        if (!in_array($v, $candidates, true)) {
-            $candidates[] = $v;
+    $host = isset($parsed['host']) ? $parsed['host'] : '';
+    if ($host === 'localhost' || $host === '127.0.0.1') {
+        // Prefer IPv6 literal first to avoid IPv4 fallback delays
+        $candidates[] = sprintf('%s://[::1]:%d', $scheme, $port);
+        // Then try the declared primary origin (localhost) if distinct
+        if (!in_array($primaryOrigin, $candidates, true)) {
+            $candidates[] = $primaryOrigin;
         }
+        // Then localhost and IPv4 literal last
+        $candidates[] = sprintf('%s://localhost:%d', $scheme, $port);
+        $candidates[] = sprintf('%s://127.0.0.1:%d', $scheme, $port);
+    } else {
+        // Non-localhost: try the primary origin first
+        $candidates[] = $primaryOrigin;
     }
+}
+if (empty($candidates)) {
+    $candidates[] = $primaryOrigin;
 }
 
 $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
@@ -62,14 +69,20 @@ if ($method !== 'HEAD') {
     $method = 'GET';
 }
 
+// Forward the client's Accept header. This allows Vite to decide whether to
+// serve CSS as a JS module (for imports) or as plain CSS (for <link> tags).
+$acceptHeader = isset($_SERVER['HTTP_ACCEPT']) && $_SERVER['HTTP_ACCEPT'] !== ''
+    ? $_SERVER['HTTP_ACCEPT']
+    : '*/*';
+
 $opts = [
     'http' => [
         'method' => $method,
-        'header' => "Accept: text/javascript, */*;q=0.1\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Proxy/1.0\r\n",
+        'header' => "Accept: {$acceptHeader}\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Proxy/1.0\r\n",
         // Ensure HTTP/1.1 to avoid 426 Upgrade Required from some dev servers
         'protocol_version' => 1.1,
         'ignore_errors' => true,
-        'timeout' => 8,
+        'timeout' => 2,
         'follow_location' => 1,
     ],
     'ssl' => [
@@ -85,46 +98,27 @@ foreach ($candidates as $origin) {
     $u = parse_url($upstream);
     $hostHeader = '';
     if ($u && !empty($u['host'])) {
-        $hostHeader = $u['host'] . (isset($u['port']) ? ':' . $u['port'] : '');
+        $hh = $u['host'];
+        // If IPv6 literal (contains ':'), ensure Host header uses brackets
+        if (strpos($hh, ':') !== false && $hh[0] !== '[') {
+            $hh = '[' . $hh . ']';
+        }
+        $hostHeader = $hh . (isset($u['port']) ? ':' . $u['port'] : '');
     }
-    $hdr = "Accept: text/javascript, */*;q=0.1\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Proxy/1.0\r\n";
-    if ($hostHeader !== '') {
-        $hdr .= 'Host: ' . $hostHeader . "\r\n";
-    }
-    $perOriginOpts = $opts;
-    $perOriginOpts['http']['header'] = $hdr;
-    $ctx = stream_context_create($perOriginOpts);
-    $tryBody = @file_get_contents($upstream, false, $ctx);
 
     $tryStatus = 502;
     $tryType = null;
-    if (isset($http_response_header) && is_array($http_response_header)) {
-        foreach ($http_response_header as $h) {
-            if (preg_match('#^HTTP/\S+\s+(\d{3})#i', $h, $m)) {
-                $tryStatus = (int)$m[1];
-            } elseif (stripos($h, 'Content-Type:') === 0) {
-                $tryType = trim(substr($h, strlen('Content-Type:')));
-            }
-        }
-    }
+    $tryBody = false;
 
-    if ($tryBody !== false && $tryStatus >= 200 && $tryStatus < 300) {
-        $statusCode = $tryStatus;
-        $contentType = $tryType;
-        $body = $tryBody;
-        break;
-    }
-
-    // If stream method failed or returned non-2xx (e.g., 426), try cURL if available forced to HTTP/1.1
+    // Prefer cURL first for better IPv6 handling and faster timeouts
     if (function_exists('curl_init')) {
         $ch = curl_init();
         $headers = [
-            'Accept: text/javascript, */*;q=0.1',
+            'Accept: ' . $acceptHeader,
             'Accept-Encoding: identity',
             'Connection: keep-alive',
             'User-Agent: PHP-Vite-Proxy/1.0',
         ];
-        // Preserve Host header for localhost/127.0.0.1 consistency
         if ($hostHeader !== '') {
             $headers[] = 'Host: ' . $hostHeader;
         }
@@ -132,7 +126,7 @@ foreach ($candidates as $origin) {
             CURLOPT_URL => $upstream,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 8,
+            CURLOPT_TIMEOUT => 2,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_SSL_VERIFYPEER => false,
@@ -142,16 +136,41 @@ foreach ($candidates as $origin) {
             $curlOpts[CURLOPT_NOBODY] = true;
         }
         curl_setopt_array($ch, $curlOpts);
-        $respBody = curl_exec($ch);
-        $curlStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $respType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        $tryBody = curl_exec($ch);
+        $tryStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $tryType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         curl_close($ch);
-        if ($respBody !== false && $curlStatus >= 200 && $curlStatus < 300) {
-            $statusCode = $curlStatus;
-            $contentType = $respType ?: $tryType;
-            $body = $respBody;
-            break;
+    }
+
+    // Fallback to PHP streams if cURL is unavailable or failed
+    if (($tryBody === false || $tryStatus < 200 || $tryStatus >= 300)) {
+        $hdr = "Accept: {$acceptHeader}\r\nAccept-Encoding: identity\r\nConnection: keep-alive\r\nUser-Agent: PHP-Vite-Proxy/1.0\r\n";
+        if ($hostHeader !== '') {
+            $hdr .= 'Host: ' . $hostHeader . "\r\n";
         }
+        $perOriginOpts = $opts;
+        $perOriginOpts['http']['header'] = $hdr;
+        $ctx = stream_context_create($perOriginOpts);
+        $tryBody = @file_get_contents($upstream, false, $ctx);
+
+        $tryStatus = 502;
+        $tryType = $tryType ?: null;
+        if (isset($http_response_header) && is_array($http_response_header)) {
+            foreach ($http_response_header as $h) {
+                if (preg_match('#^HTTP/\S+\s+(\d{3})#i', $h, $m)) {
+                    $tryStatus = (int)$m[1];
+                } elseif (stripos($h, 'Content-Type:') === 0) {
+                    $tryType = trim(substr($h, strlen('Content-Type:')));
+                }
+            }
+        }
+    }
+
+    if ($tryBody !== false && $tryStatus >= 200 && $tryStatus < 300) {
+        $statusCode = $tryStatus;
+        $contentType = $tryType;
+        $body = $tryBody;
+        break;
     }
 }
 

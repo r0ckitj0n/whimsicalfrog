@@ -123,15 +123,15 @@ if (!$isModal) {
       <div class="wf-grid wf-grid-md-2 wf-grid-xl-3">
         <div class="wf-row">
           <label for="smtpHost">SMTP Host</label>
-          <input id="smtpHost" type="text" placeholder="smtp.gmail.com" />
+          <input id="smtpHost" type="text" placeholder="smtp.gmail.com" autocomplete="off" />
         </div>
         <div class="wf-row">
           <label for="smtpPort">SMTP Port</label>
-          <input id="smtpPort" type="number" placeholder="587" />
+          <input id="smtpPort" type="number" placeholder="587" autocomplete="off" />
         </div>
         <div class="wf-row">
           <label for="smtpUsername">SMTP Username</label>
-          <input id="smtpUsername" type="text" placeholder="user@example.com" />
+          <input id="smtpUsername" type="text" placeholder="user@example.com" autocomplete="username" />
           <div class="wf-hint">Stored in DB for reference; secret store is the authority for sending.</div>
         </div>
         <div class="wf-row">
@@ -153,7 +153,7 @@ if (!$isModal) {
         </div>
         <div class="wf-row">
           <label for="smtpTimeout">SMTP Timeout (seconds)</label>
-          <input id="smtpTimeout" type="number" placeholder="30" />
+          <input id="smtpTimeout" type="number" placeholder="30" autocomplete="off" />
         </div>
         <div class="wf-row wf-inline">
           <input id="smtpDebug" type="checkbox" />
@@ -282,16 +282,21 @@ if (!$isModal) {
       }
 
       async function apiRequest(method, url, data=null, options={}){
-        const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
+        const WF = (typeof window !== 'undefined') ? (window.WhimsicalFrog && window.WhimsicalFrog.api) : null;
+        const A = WF || ((typeof window !== 'undefined') ? (window.ApiClient || null) : null);
         const m = String(method||'GET').toUpperCase();
+        const isForm = (typeof FormData !== 'undefined') && (data instanceof FormData);
         if (A && typeof A.request === 'function') {
-          if (m === 'GET') return A.get(url, (options && options.params) || {});
-          if (m === 'POST') return A.post(url, data||{}, options||{});
-          if (m === 'PUT') return A.put(url, data||{}, options||{});
-          if (m === 'DELETE') return A.delete(url, options||{});
+          if (isForm) {
+            // Let client handle multipart boundary; do NOT set Content-Type
+            return A.request(url, { method: m, body: data, headers: {}, ...(options||{}) });
+          }
+          if (m === 'GET' && A.get) return A.get(url, (options && options.params) || {});
+          if (m === 'POST' && A.post) return A.post(url, data||{}, options||{});
+          if (m === 'PUT' && A.put) return A.put(url, data||{}, options||{});
+          if (m === 'DELETE' && A.delete) return A.delete(url, options||{});
           return A.request(url, { method: m, ...(options||{}) });
         }
-        const isForm = (typeof FormData !== 'undefined') && (data instanceof FormData);
         const headers = isForm ? { 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) }
                                : { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
         const cfg = { credentials:'include', method:m, headers, ...(options||{}) };

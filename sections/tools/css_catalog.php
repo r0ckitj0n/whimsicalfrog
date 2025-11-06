@@ -277,7 +277,8 @@ if (!$isModal) {
 
   // API helpers
   async function apiRequest(method, url, data=null, options={}){
-    const A = (typeof window !== 'undefined') ? (window.ApiClient || null) : null;
+    const WF = (typeof window !== 'undefined') ? (window.WhimsicalFrog && window.WhimsicalFrog.api) : null;
+    const A = WF || ((typeof window !== 'undefined') ? (window.ApiClient || null) : null);
     const m = String(method||'GET').toUpperCase();
     if (A && typeof A.request === 'function') {
       if (m === 'GET') return A.get(url, (options && options.params) || {});

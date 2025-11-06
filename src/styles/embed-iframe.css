@@ -8,7 +8,8 @@ html:has(body[data-embed='1']) {
 body[data-embed='1'] {
   height: auto !important;
   min-height: auto !important;
-  overflow: visible !important;
+  overflow-y: auto !important; /* default: iframe can scroll */
+  overflow-x: hidden !important;
 }
 
 /* Common admin page containers should not force full height */
@@ -19,4 +20,59 @@ body[data-embed='1'] .admin-page,
 body[data-embed='1'] #admin-section-content {
   height: auto !important;
   min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: visible !important;
 }
+
+/* Also ensure common inner containers don't clip content in embed */
+body[data-embed='1'] .tool-wrap,
+body[data-embed='1'] .aim-tab-panel,
+body[data-embed='1'] .admin-card {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Ensure embedded marketing buttons honor sitewide hover color */
+body[data-embed='1'] .admin-marketing-page .btn:hover,
+body[data-embed='1'] .admin-marketing-page .btn:focus-visible {
+  background: var(--brand-secondary, #BF5700) !important;
+  border-color: var(--brand-secondary, #BF5700) !important;
+  color: #fff !important;
+}
+
+/* Safety net: apply to any .btn in embedded admin contexts */
+body[data-embed='1'] .btn:hover,
+body[data-embed='1'] .btn:focus-visible {
+  background: var(--brand-secondary, #BF5700) !important;
+  border-color: var(--brand-secondary, #BF5700) !important;
+  color: #fff !important;
+}
+
+/* Neutralize fixed vw-based presets inside embeds so width is content-driven */
+body[data-embed='1'] .admin-modal.admin-modal--lg,
+body[data-embed='1'] .admin-modal.admin-modal--lg-narrow,
+body[data-embed='1'] .admin-modal.admin-modal--xl {
+  width: auto !important;
+  max-width: none !important;
+}
+/* Prefer responsive panel behavior under embed */
+body[data-embed='1'] .admin-modal.admin-modal-content {
+  height: auto !important;
+}
+
+/* In embedded admin pages, remove child overlay height caps so parent can control expansion */
+body[data-embed='1'] .admin-modal-overlay .admin-modal {
+  max-height: none !important;
+  height: auto !important;
+}
+body[data-embed='1'] .wf-modal--content-scroll .admin-modal {
+  max-height: none !important;
+  height: auto !important;
+}
+body[data-embed='1'] .wf-modal--content-scroll .modal-body {
+  max-height: none !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+}
+
+/* Buttons manager: let page defaults handle table wrapper scroll (no overrides) */

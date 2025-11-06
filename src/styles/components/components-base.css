@@ -169,6 +169,15 @@
 .site-header.universal-page-header .welcome-message {
     color: var(--brand-primary);
 }
+.site-header.universal-page-header .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-self: end;
+    padding-right: 20px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
 .site-header.universal-page-header .header-right .nav-link {
     color: var(--brand-primary);
     text-decoration: none;
@@ -177,6 +186,7 @@
     padding: 8px 16px;
     border-radius: 6px;
     transition: all 0.3s ease;
+    white-space: nowrap;
 }
 .site-header.universal-page-header .header-right .nav-link:hover {
     background: rgba(255, 255, 255, 0.15);
@@ -191,6 +201,8 @@
     border-radius: 6px;
     transition: all 0.3s ease;
     font-weight: 500;
+    flex-shrink: 0;
+    white-space: nowrap;
 }
 .site-header.universal-page-header .cart-link:hover {
     background: rgba(255, 255, 255, 0.15);
@@ -339,4 +351,12 @@
 /* Semantic utility: apply secondary brand color (burnt orange) to text */
 .text-brand-secondary {
   color: var(--brand-secondary);
+}
+
+/* Sitewide button hover: use secondary brand color */
+.btn:hover:not(:disabled),
+.btn:focus-visible:not(:disabled) {
+  background: var(--brand-secondary, #BF5700) !important;
+  border-color: var(--brand-secondary, #BF5700) !important;
+  color: #fff !important;
 }

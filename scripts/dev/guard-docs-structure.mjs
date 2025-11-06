@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdirSync, statSync, readFileSync } from 'fs';
+import { readdirSync, statSync, readFileSync as _readFileSync } from 'fs';
 import { join, relative } from 'path';
 
 const ROOT = process.cwd();
@@ -21,7 +21,7 @@ const OPTIONAL_ROOT_FILES = [
 const allowedRootFiles = new Set([README, ADMIN_GUIDE, ...OPTIONAL_ROOT_FILES]);
 const allowedRootDirs = new Set([FRONTEND, INCLUDES, TECH]);
 
-let violations = [];
+const violations = [];
 
 function walk(dir) {
   for (const ent of readdirSync(dir, { withFileTypes: true })) {

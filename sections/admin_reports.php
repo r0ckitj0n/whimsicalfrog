@@ -188,4 +188,4 @@ if (empty($paymentLabels)) {
 ]) ?>
 </script>
 
-<?php echo vite_entry('src/entries/admin-reports.js'); ?>
+<?php echo vite_entry('js/admin-reports.js'); ?>

@@ -864,7 +864,8 @@ body[data-page^='admin'] #attributesModal .modal-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow: hidden; /* ensure inner lists get the scroll, not the body */
+  overflow-y: auto !important; /* parent body scrolls */
+  overflow-x: hidden !important;
 }
 body[data-page^='admin'] #attributesModal .modal-body {
   margin-bottom: 0 !important;
@@ -885,7 +886,8 @@ body[data-page^='admin'] #attributesModal .modal-header {
 body[data-page^='admin'] #attributesModal .modal-body {
   flex: 1 1 auto !important;
   min-height: 0 !important;
-  overflow: hidden !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   margin: 0 !important;
   padding: 0 !important;
 }

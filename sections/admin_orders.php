@@ -41,7 +41,8 @@ $filters = [
     'status' => $_GET['filter_status'] ?? '',
     'payment_method' => $_GET['filter_payment_method'] ?? '',
     'shipping_method' => $_GET['filter_shipping_method'] ?? '',
-    'payment_status' => $_GET['filter_payment_status'] ?? ''
+    'payment_status' => $_GET['filter_payment_status'] ?? '',
+    'channel' => $_GET['filter_channel'] ?? ''
 ];
 
 // Sorting (whitelisted)
@@ -57,6 +58,7 @@ $sortMap = [
     'shipping' => 'o.shippingMethod',
     'paystatus' => 'o.paymentStatus',
     'total' => 'o.total',
+    'channel' => 'oa.channel',
     'items' => 'COALESCE(oc.items_count,0)',
 ];
 $orderColumn = $sortMap[$sortBy] ?? 'o.date';
@@ -83,11 +85,11 @@ array_walk($filters, function ($value, $key) use (&$conditions, &$params) {
             $params[] = "%{$value}%";
             break;
         case 'status':
-            $conditions[] = "o.status = ?";
+            $conditions[] = "o.order_status = ?";
             $params[] = $value;
             break;
         case 'payment_method':
-            $conditions[] = "o.paymentMethod = ?";
+            $conditions[] = "LOWER(o.paymentMethod) = LOWER(?)";
             $params[] = $value;
             break;
         case 'shipping_method':
@@ -98,15 +100,39 @@ array_walk($filters, function ($value, $key) use (&$conditions, &$params) {
             $conditions[] = "o.paymentStatus = ?";
             $params[] = $value;
             break;
+        case 'channel':
+            $conditions[] = "LOWER(COALESCE(oa.channel,'')) = LOWER(?)";
+            $params[] = $value;
+            break;
     }
 });
 
 $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-// Main orders query with optimized JOIN
+// Main orders query with optimized JOIN (fallback if attribution table missing)
 if (!empty($params)) {
-    $stmt = $db->prepare("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
-                          COALESCE(oc.items_count, 0) AS items_count
+    try {
+        $sqlWithAttr = "SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
+                          COALESCE(oc.items_count, 0) AS items_count,
+                          oa.channel AS channel
+                          FROM orders o 
+                          JOIN users u ON o.userId = u.id 
+                          LEFT JOIN (
+                            SELECT orderId, SUM(quantity) AS items_count
+                            FROM order_items
+                            GROUP BY orderId
+                          ) oc ON oc.orderId = o.id
+                          LEFT JOIN order_attribution oa ON BINARY oa.order_id = BINARY o.id
+                          {$whereClause} 
+                          ORDER BY {$orderClause}";
+        $stmt = $db->prepare($sqlWithAttr);
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll(); // Database class sets default fetch mode
+    } catch (\Throwable $e) {
+        // Fallback without order_attribution table
+        $sqlNoAttr = "SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
+                          COALESCE(oc.items_count, 0) AS items_count,
+                          '' AS channel
                           FROM orders o 
                           JOIN users u ON o.userId = u.id 
                           LEFT JOIN (
@@ -115,12 +141,16 @@ if (!empty($params)) {
                             GROUP BY orderId
                           ) oc ON oc.orderId = o.id
                           {$whereClause} 
-                          ORDER BY {$orderClause}");
-    $stmt->execute($params);
-    $orders = $stmt->fetchAll(); // Database class sets default fetch mode
+                          ORDER BY {$orderClause}";
+        $stmt = $db->prepare($sqlNoAttr);
+        $stmt->execute($params);
+        $orders = $stmt->fetchAll();
+    }
 } else {
-    $orders = $db->query("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
-                          COALESCE(oc.items_count, 0) AS items_count
+    try {
+        $orders = $db->query("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
+                          COALESCE(oc.items_count, 0) AS items_count,
+                          oa.channel AS channel
                           FROM orders o 
                           JOIN users u ON o.userId = u.id 
                           LEFT JOIN (
@@ -128,7 +158,22 @@ if (!empty($params)) {
                             FROM order_items
                             GROUP BY orderId
                           ) oc ON oc.orderId = o.id
+                          LEFT JOIN order_attribution oa ON BINARY oa.order_id = BINARY o.id
                           ORDER BY {$orderClause}")->fetchAll(); // Database class sets default fetch mode
+    } catch (\Throwable $e) {
+        // Fallback without order_attribution table
+        $orders = $db->query("SELECT o.*, u.username, u.addressLine1, u.addressLine2, u.city, u.state, u.zipCode,
+                          COALESCE(oc.items_count, 0) AS items_count,
+                          '' AS channel
+                          FROM orders o 
+                          JOIN users u ON o.userId = u.id 
+                          LEFT JOIN (
+                            SELECT orderId, SUM(quantity) AS items_count
+                            FROM order_items
+                            GROUP BY orderId
+                          ) oc ON oc.orderId = o.id
+                          ORDER BY {$orderClause}")->fetchAll();
+    }
 }
 
 // Get filter dropdown options with single queries
@@ -136,7 +181,11 @@ $dropdownOptions = [
     'status' => $db->query("SELECT DISTINCT order_status FROM orders WHERE order_status IN ('Pending','Processing','Shipped','Delivered','Cancelled') ORDER BY order_status")->fetchAll(\PDO::FETCH_COLUMN),
     'payment_method' => $db->query("SELECT DISTINCT paymentMethod FROM orders WHERE paymentMethod IS NOT NULL AND paymentMethod != '' ORDER BY paymentMethod")->fetchAll(\PDO::FETCH_COLUMN),
     'shipping_method' => $db->query("SELECT DISTINCT shippingMethod FROM orders WHERE shippingMethod IS NOT NULL AND shippingMethod != '' ORDER BY shippingMethod")->fetchAll(\PDO::FETCH_COLUMN),
-    'payment_status' => $db->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(\PDO::FETCH_COLUMN)
+    'payment_status' => $db->query("SELECT DISTINCT paymentStatus FROM orders WHERE paymentStatus IS NOT NULL AND paymentStatus != '' ORDER BY paymentStatus")->fetchAll(\PDO::FETCH_COLUMN),
+    'channel' => (function() use ($db){
+        try { return $db->query("SELECT DISTINCT channel FROM order_attribution WHERE channel IS NOT NULL AND channel != '' ORDER BY channel")->fetchAll(\PDO::FETCH_COLUMN); }
+        catch (\Throwable $e) { return []; }
+    })()
 ];
 
 // Modal state management
@@ -406,6 +455,16 @@ function ordSortIndicator($column, $currentSort, $currentDir)
                 </option>
                 <?php endforeach; ?>
             </select>
+
+            <select name="filter_channel" class="admin-form-select">
+                <option value="">All Channels</option>
+                <?php foreach ($dropdownOptions['channel'] as $channel): ?>
+                <option value="<?= htmlspecialchars($channel) ?>" 
+                        <?= $filters['channel'] === $channel ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($channel) ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
             
             <span class="admin-actions">
                 <button type="submit" class="btn btn-primary admin-filter-button">Filter</button>
@@ -445,6 +504,9 @@ function ordSortIndicator($column, $currentSort, $currentDir)
                     </th>
                     <th>
                         <a href="<?= ordSortUrl('paystatus', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='paystatus' ? ' is-active' : '' ?>">Pay Status <?= ordSortIndicator('paystatus', $sortBy, $sortDir) ?></a>
+                    </th>
+                    <th>
+                        <a href="<?= ordSortUrl('channel', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='channel' ? ' is-active' : '' ?>">Channel <?= ordSortIndicator('channel', $sortBy, $sortDir) ?></a>
                     </th>
                     <th>
                         <a href="<?= ordSortUrl('total', $sortBy, $sortDir) ?>" class="table-sort-link<?= $sortBy==='total' ? ' is-active' : '' ?>">Total <?= ordSortIndicator('total', $sortBy, $sortDir) ?></a>
@@ -500,6 +562,7 @@ function ordSortIndicator($column, $currentSort, $currentDir)
                             <?= htmlspecialchars($order['paymentStatus'] ?? 'Pending') ?>
                         </span>
                     </td>
+                    <td><?= htmlspecialchars((($order['channel'] ?? '') !== '' ? $order['channel'] : 'Direct')) ?></td>
                     <td class="font-bold">$<?= number_format($order['total'] ?? 0, 2) ?></td>
                     <td>
                         <div class="admin-actions">
@@ -840,4 +903,4 @@ function ordSortIndicator($column, $currentSort, $currentDir)
 ?>
 </script>
 
-<?php // Admin orders script is loaded via app.js per-page imports ?>
+<?php echo vite_entry('src/entries/admin-orders.js'); ?>

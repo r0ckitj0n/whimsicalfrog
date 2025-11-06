@@ -1,18 +1,40 @@
 import Chart from 'chart.js/auto';
 
-document.addEventListener('DOMContentLoaded', () => {
+function initReports() {
     const dataElement = document.getElementById('reports-data');
     if (!dataElement) {
         console.warn('Reports data element not found - reports may not be active');
         return;
     }
 
-    const chartData = JSON.parse(dataElement.textContent);
+function stabilizeChartSizing(chart, container) {
+    if (!chart) return;
+    const doResize = () => { try { chart.resize(); } catch(_) {} };
+    try { requestAnimationFrame(() => { doResize(); setTimeout(doResize, 50); setTimeout(doResize, 250); setTimeout(doResize, 800); }); } catch(_) { setTimeout(doResize, 100); }
+    try {
+        if (window.ResizeObserver && container) {
+            const ro = new ResizeObserver(() => { doResize(); });
+            ro.observe(container);
+            // Store to chart instance for potential cleanup later (optional)
+            chart.__ro = ro;
+        }
+        window.addEventListener('resize', doResize, { passive: true });
+        chart.__onDestroy = () => { try { window.removeEventListener('resize', doResize); } catch(_) {} try { chart.__ro && chart.__ro.disconnect && chart.__ro.disconnect(); } catch(_) {} };
+    } catch(_) {}
+}
+
+    let chartData;
+    try {
+        chartData = JSON.parse(dataElement.textContent || '{}');
+    } catch (e) {
+        console.error('Failed to parse reports data JSON', e);
+        return;
+    }
 
     // 1. Sales Performance Chart
     const salesCanvas = document.getElementById('salesChart');
-    if (salesCanvas && chartData.labels.length > 0) {
-        new Chart(salesCanvas, {
+    if (salesCanvas && Array.isArray(chartData.labels) && chartData.labels.length > 0) {
+        const salesChart = new Chart(salesCanvas, {
             type: 'line',
             data: {
                 labels: chartData.labels,
@@ -64,12 +86,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             },
         });
+        try {
+            stabilizeChartSizing(salesChart, salesCanvas.closest('.h-300') || salesCanvas.parentElement || document.body);
+            requestAnimationFrame(() => { try { salesChart.update(); } catch(_) {} });
+            setTimeout(() => { try { salesChart.update(); } catch(_) {} }, 350);
+        } catch(_) {}
     }
 
     // 2. Payment Method Chart
     const paymentCanvas = document.getElementById('paymentMethodChart');
-    if (paymentCanvas && chartData.paymentLabels.length > 0) {
-        new Chart(paymentCanvas, {
+    if (paymentCanvas && Array.isArray(chartData.paymentLabels) && chartData.paymentLabels.length > 0) {
+        const paymentChart = new Chart(paymentCanvas, {
             type: 'doughnut',
             data: {
                 labels: chartData.paymentLabels,
@@ -91,6 +118,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 maintainAspectRatio: false,
             },
         });
+        try {
+            stabilizeChartSizing(paymentChart, paymentCanvas.closest('.h-300') || paymentCanvas.parentElement || document.body);
+            requestAnimationFrame(() => { try { paymentChart.update(); } catch(_) {} });
+            setTimeout(() => { try { paymentChart.update(); } catch(_) {} }, 350);
+        } catch(_) {}
     }
 
     // 3. Print Button Handler
@@ -100,4 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
             window.print();
         });
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initReports);
+} else {
+    initReports();
+}

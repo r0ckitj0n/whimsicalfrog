@@ -8,12 +8,9 @@ require_once dirname(__DIR__, 2) . '/includes/functions.php';
 require_once dirname(__DIR__, 2) . '/includes/auth.php';
 require_once dirname(__DIR__, 2) . '/includes/auth_helper.php';
 
-// Auth: allow session-admin; in dev, also allow explicit admin_token for iframe usage
+// Auth: require admin session
 try {
-    $token = $_GET['admin_token'] ?? $_POST['admin_token'] ?? null;
-    if (!$token || $token !== (AuthHelper::ADMIN_TOKEN ?? 'whimsical_admin_2024')) {
-        AuthHelper::requireAdmin();
-    }
+    AuthHelper::requireAdmin();
 } catch (Throwable $____) {
     AuthHelper::requireAdmin();
 }
@@ -71,9 +68,29 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   /* html/body intrinsic sizing is governed by embed-iframe.css via app.js */
   html, body { height:auto !important; min-height:auto !important; margin:0; background:transparent; overflow:visible !important; }
   #admin-section-content { display:block; width:100%; max-width:none; height:auto !important; max-height:none !important; overflow:visible !important; overflow-y: visible !important; overflow-x: hidden !important; }
-  .attributes-grid { display: grid; grid-template-columns: repeat(3, max-content); grid-auto-rows: min-content; align-items: start; justify-content: start; gap: 16px; padding-bottom: 0; margin-top: 10px; position: relative; z-index: 0; }
+  /* Responsive grid: Genders compact but can grow to fit content; Sizes/Colors flexible */
+  .attributes-grid {
+    display: grid !important;
+    width: 100%;
+    grid-template-columns: minmax(200px, max-content) minmax(280px, 1fr) minmax(280px, 1fr) !important;
+    grid-auto-rows: min-content;
+    align-items: start;
+    justify-content: start;
+    gap: 12px;
+    padding-bottom: 0;
+    margin-top: 10px;
+    position: relative;
+    z-index: 0;
+  }
+  #admin-section-content .attributes-grid { display: grid !important; grid-template-columns: minmax(200px, max-content) minmax(280px, 1fr) minmax(280px, 1fr) !important; justify-content: start !important; }
+  @media (max-width: 980px) {
+    .attributes-grid, #admin-section-content .attributes-grid { grid-template-columns: minmax(220px,max-content) minmax(260px,1fr) !important; }
+  }
+  @media (max-width: 720px) {
+    .attributes-grid, #admin-section-content .attributes-grid { grid-template-columns: 1fr !important; }
+  }
   .attributes-grid { min-height:auto; height:auto; align-content: start; }
-  .attributes-grid > .card { height: auto; width: auto; min-width: 280px; }
+  .attributes-grid > .card { height: auto; width: 100%; min-width: 0; overflow: visible; }
   /* Remove trailing bottom whitespace from collapsed margins in modal context */
   #admin-section-content > *:last-child { margin-bottom: 0 !important; }
   .attributes-grid { margin-bottom: 0 !important; }
@@ -83,7 +100,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   .card-body { padding: 10px 12px; max-height: unset; overflow: visible; flex: 0 0 auto; min-height: 0; }
   .attributes-grid .card-body ul.simple li {
     display:grid;
-    grid-template-columns: minmax(240px, 1fr) max-content; /* wider min ensures labels remain visible */
+    grid-template-columns: minmax(0, 1fr) max-content;
     align-items:center;
     gap:8px;
   }
@@ -91,36 +108,83 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     display: inline-block;
     min-width: 0; /* allow ellipsis */
     max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
   }
   .attributes-grid .card-body ul.simple li .row-actions {
     white-space: nowrap;
+    width: max-content !important;
   }
   .muted { color: #6b7280; font-size: 12px; }
   ul.simple { list-style: none; padding-left: 0; margin: 0; }
-  ul.simple li { padding: 6px 4px; border-bottom: 1px dashed #f1f5f9; display:flex; justify-content: space-between; gap:10px; }
-  /* Re-assert grid layout for attribute rows to preserve label visibility */
-  .attributes-grid .card-body ul.simple li { display:grid !important; grid-template-columns: minmax(240px, 1fr) max-content !important; align-items:center !important; gap:8px !important; }
-  .attributes-grid .card-body ul.simple li > span:first-child { min-width: 0 !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
-  .attributes-grid .card-body ul.simple li .row-actions { white-space: nowrap !important; justify-self: end !important; }
+  ul.simple li { padding: 6px 4px; border-bottom: 1px dashed #f1f5f9; display:flex; justify-content: space-between; gap:10px; overflow: visible; }
   .pill { font-size: 11px; background: #f3f4f6; color: #374151; padding: 2px 6px; border-radius: 12px; }
   .toolbar { position:absolute; right:12px; top:50%; transform:translateY(-50%); display:flex; gap:6px; }
   .row-actions { display:flex; gap:6px; }
-  @media (max-width: 740px) {
-    .attributes-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  /* Ungated icon rules so icons render even if admin-actions-icons is not active */
+  .attributes-grid .row-actions .btn::before {
+    display: inline-block; font-size: 14px; line-height: 1; width: 1.3em; text-align: center;
+    -webkit-mask-image: none !important; mask-image: none !important; background: none !important;
   }
-  @media (max-width: 520px) {
-    .attributes-grid { grid-template-columns: 1fr; }
+  .attributes-grid .row-actions .btn { display:inline-flex; align-items:center; justify-content:center; width:24px; min-width:24px; height:24px; padding:0; overflow: visible; }
+  .attributes-grid .row-actions { overflow: visible; padding-right: 1px; }
+  .attributes-grid .row-actions .btn.btn-icon--edit::before,
+  .attributes-grid .row-actions .btn[data-action="gender-rename"]::before,
+  .attributes-grid .row-actions .btn[data-action="size-edit"]::before,
+  .attributes-grid .row-actions .btn[data-action="color-edit"]::before,
+  .attributes-grid .row-actions .btn[title^="Edit"]::before { content: '✏️' !important; }
+  .attributes-grid .row-actions .btn.btn-icon--duplicate::before,
+  .attributes-grid .row-actions .btn[data-action="size-dup"]::before,
+  .attributes-grid .row-actions .btn[data-action="color-dup"]::before,
+  .attributes-grid .row-actions .btn[title^="Duplicate"]::before { content: '📄' !important; }
+  .attributes-grid .row-actions .btn.btn-icon--delete::before,
+  .attributes-grid .row-actions .btn[data-action="gender-delete"]::before,
+  .attributes-grid .row-actions .btn[data-action="size-delete"]::before,
+  .attributes-grid .row-actions .btn[data-action="color-delete"]::before,
+  .attributes-grid .row-actions .btn[title^="Delete"]::before { content: '🗑️' !important; }
+  /* Scoped standardized icons for row-actions (emoji content to avoid Vite path transforms in inline CSS) */
+  .admin-actions-icons .attributes-grid .row-actions .btn::before {
+    display: inline-block; font-size: 14px; line-height: 1; width: 1.2em; text-align: center;
+    /* Kill any mask-image/background from global rules so emoji renders */
+    -webkit-mask-image: none !important; mask-image: none !important; background: none !important;
   }
+  /* Explicit mapping for delete buttons to ensure visibility */
+  .admin-actions-icons .attributes-grid .row-actions .btn.btn-icon--delete::before { content: '🗑️'; }
+  /* Give buttons a consistent box so pseudo-element is always visible */
+  .admin-actions-icons .attributes-grid .row-actions .btn { display:inline-flex; align-items:center; justify-content:center; width:24px; min-width:24px; height:24px; padding:0; }
+  /* Prefer reliable data-action hooks over title */
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="gender-rename"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="size-edit"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="color-edit"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[title^="Edit"]::before { content: '✏️'; }
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="size-dup"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="color-dup"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[title^="Duplicate"]::before { content: '📄'; }
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="gender-delete"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="size-delete"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="color-delete"]::before,
+  .admin-actions-icons .attributes-grid .row-actions .btn[title^="Delete"]::before { content: '🗑️'; }
+  /* Header Add buttons */
+  .admin-actions-icons .attributes-grid .card-header .btn[data-action="gender-add"]::before,
+  .admin-actions-icons .attributes-grid .card-header .btn[data-action="size-new"]::before,
+  .admin-actions-icons .attributes-grid .card-header .btn[data-action="color-new"]::before,
+  .admin-actions-icons .attributes-grid .card-header .btn[title^="Add"]::before,
+  .admin-actions-icons .attributes-grid .card-header .btn[title^="New"]::before {
+    content: '➕'; display: inline-block; font-size: 14px; line-height: 1;
+    -webkit-mask-image: none !important; mask-image: none !important; background: none !important;
+  }
+  /* No explicit breakpoints needed; auto-fit handles 3→2→1 responsively. */
   /* Inline modal helpers */
   .attr-modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,.6); display:none; z-index: 2147483000; }
   .attr-modal-overlay.show { display:block; }
-  .attr-modal { position: absolute; top: 6vh; bottom: 6vh; left: 6vw; right: 6vw; max-width: 1100px; margin: 0 auto; background:#fff; border-radius:10px; box-shadow: 0 20px 50px rgba(0,0,0,.35); display:flex; flex-direction:column; border: none; overflow:hidden; }
+  .attr-modal { position: fixed; top: 12px; bottom: 12px; left: 6vw; right: 6vw; max-width: 1100px; margin: 0 auto; background:#fff; border-radius:10px; box-shadow: 0 20px 50px rgba(0,0,0,.35); display:flex; flex-direction:column; border: none; overflow:hidden; }
+  .attr-modal.attr-modal--autoheight { bottom: auto; height: auto; max-height: calc(100dvh - 12vh); }
+  .attr-modal.attr-modal--scroll { bottom: auto; height: auto; max-height: calc(100dvh - 12vh); }
   .attr-modal-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#fff; }
   .attr-modal-title { font-weight:600; font-size:14px; }
-  .attr-modal-body { overflow-y:auto; overflow-x:hidden; padding:12px 14px; height:100%; background:#fff; }
+  .attr-modal-body { flex: 1 1 auto; min-height: 0; overflow-y:auto; overflow-x:hidden; padding:12px 14px; background:#fff; }
+  .attr-modal.attr-modal--autoheight .attr-modal-body { overflow: visible; }
   #admin-section-content.dimmed { filter: blur(1px) brightness(.85); }
   .editor.loading { pointer-events:none; opacity:.7; }
   .spinner { display:inline-block; width:14px; height:14px; border:2px solid #cbd5e1; border-top-color:#2563eb; border-radius:50%; animation:spin 1s linear infinite; }
@@ -195,16 +259,19 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   .attr-modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,.6); display:none; z-index: 2147483000; }
   .attr-modal-overlay.show { display:block; }
   .attr-modal {
-    position: absolute;
-    top: 6vh; bottom: 6vh; left: 6vw; right: 6vw;
+    position: fixed;
+    top: 12px; bottom: 12px; left: 6vw; right: 6vw;
     max-width: 1100px; margin: 0 auto; background:#fff;
     border-radius:10px; box-shadow: 0 20px 50px rgba(0,0,0,.35);
     display:flex; flex-direction:column; border: none; overflow:hidden;
   }
+  .attr-modal.attr-modal--autoheight { bottom: auto; height: auto; max-height: calc(100dvh - 12vh); }
+  .attr-modal.attr-modal--scroll { bottom: auto; height: auto; max-height: calc(100dvh - 12vh); }
   .attr-modal-header { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #e5e7eb; background:#fff; }
   .attr-modal-title { font-weight:600; font-size:14px; }
   .attr-modal-close { border:none; background:transparent; font-size:18px; line-height:1; cursor:pointer; padding:4px 8px; }
-  .attr-modal-body { overflow-y:auto; overflow-x:hidden; padding:12px 14px; height:100%; background:#fff; }
+  .attr-modal-body { flex: 1 1 auto; min-height: 0; overflow-y:auto; overflow-x:hidden; padding:12px 14px; background:#fff; }
+  .attr-modal.attr-modal--autoheight .attr-modal-body { overflow: visible; }
   /* Neutralize any odd borders around the mounted editor */
   .attr-modal-body > .editor { border: 0; border-radius:8px; box-shadow:none; outline: none; }
   /* Dim background content explicitly when modal is open */
@@ -218,18 +285,59 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     <div class="flex items-center justify-between">
       <div>
         <h3 class="admin-card-title">Inventory Structure Tools</h3>
-        <div class="text-sm text-gray-600">Analyze and migrate an item's Size/Color structure.</div>
+        <div class="text-sm text-gray-600">Analyze and migrate an item's Size/Color structure. </div>
+<?php if ($inModal): ?>
+<script>
+(function(){
+  try {
+    if (document && document.body && !document.body.hasAttribute('data-embed')) {
+      document.body.setAttribute('data-embed','1');
+    }
+    function h() {
+      try {
+        var n = document.getElementById('admin-section-content') || document.body;
+        var r = n.getBoundingClientRect();
+        var H = Math.max(80, Math.round(r.height || n.scrollHeight || 0));
+        var W = Math.max(200, Math.round(r.width || n.scrollWidth || 0));
+        window.parent && window.parent.postMessage({ source: 'wf-embed-size', height: H, width: W }, '*');
+      } catch(_) {}
+    }
+    // Burst a few times to ensure parent receives a non-zero measurement
+    var times = [0, 60, 120, 240, 400, 600, 900];
+    times.forEach(function(t){ setTimeout(h, t); });
+    window.addEventListener('load', function(){ setTimeout(h, 0); setTimeout(h, 150); setTimeout(h, 350); }, { once: true });
+  } catch(_) {}
+})();
+</script>
+<?php endif; ?>
       </div>
       <div>
         <button id="sizeColorRedesignBtn" class="btn btn-primary" data-action="open-size-color-redesign">Open Size/Color Redesign</button>
       </div>
     </div>
   </div>
+<div id="attrPromptModal" class="attr-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1">
+  <div class="attr-modal attr-modal--autoheight">
+    <div class="attr-modal-header">
+      <div class="attr-modal-title" id="attrPromptTitle">Input</div>
+      <button type="button" class="attr-modal-close admin-modal-close wf-admin-nav-button" data-action="attr-prompt-close" aria-label="Close">×</button>
+    </div>
+    <div class="attr-modal-body">
+      <div class="grid gap-2">
+        <input id="attrPromptInput" type="text" class="form-input w-full" placeholder="" />
+        <div class="inline-actions">
+          <button type="button" class="btn btn-primary" id="attrPromptOk">OK</button>
+          <button type="button" class="btn btn-secondary" id="attrPromptCancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
   <div class="attributes-grid">
     <div class="card">
       <div class="card-header">Genders <span class="muted">(distinct across catalog)</span>
         <div class="toolbar">
-          <button class="btn-icon btn-icon--add" data-action="gender-add" title="Add" aria-label="Add"></button>
+          <button class="btn btn-icon btn-icon--add" data-action="gender-add" title="Add" aria-label="Add"></button>
         </div>
       </div>
       <div class="card-body">
@@ -240,8 +348,8 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                 <li>
                   <span><?= htmlspecialchars((string)$g) ?></span>
                   <span class="row-actions">
-                    <button class="btn-icon btn-icon--edit" data-action="gender-rename" title="Rename" aria-label="Rename" data-gender="<?= htmlspecialchars((string)$g) ?>"></button>
-                    <button class="btn-icon btn-icon--delete" data-action="gender-delete" title="Delete" aria-label="Delete" data-gender="<?= htmlspecialchars((string)$g) ?>"></button>
+                    <button class="btn btn-icon btn-icon--edit" data-action="gender-rename" title="Rename" aria-label="Rename" data-gender="<?= htmlspecialchars((string)$g) ?>"></button>
+                    <button class="btn btn-icon btn-icon--delete" data-action="gender-delete" title="Delete" aria-label="Delete" data-gender="<?= htmlspecialchars((string)$g) ?>"></button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -256,7 +364,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     <div class="card">
       <div class="card-header">Sizes <span class="muted">(templates)</span>
         <div class="toolbar">
-          <button class="btn-icon btn-icon--add" data-action="size-new" title="New Template" aria-label="New Template"></button>
+          <button class="btn btn-icon btn-icon--add" data-action="size-new" title="New Template" aria-label="New Template"></button>
         </div>
       </div>
       <div class="card-body">
@@ -268,9 +376,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                   <span><?= htmlspecialchars((string)($t['template_name'] ?? '')) ?><?= $t['category'] ? ' · '.htmlspecialchars((string)$t['category']) : '' ?></span>
                   <span class="row-actions">
                     <span class="pill"><?=(int)($t['size_count'] ?? 0)?> sizes</span>
-                    <button class="btn-icon btn-icon--edit" data-action="size-edit" title="Edit" aria-label="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
-                    <button class="btn-icon btn-icon--duplicate" data-action="size-dup" title="Duplicate" aria-label="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
-                    <button class="btn-icon btn-icon--delete" data-action="size-delete" title="Delete" aria-label="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn btn-icon btn-icon--edit" data-action="size-edit" title="Edit" aria-label="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn btn-icon btn-icon--duplicate" data-action="size-dup" title="Duplicate" aria-label="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn btn-icon btn-icon--delete" data-action="size-delete" title="Delete" aria-label="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -286,7 +394,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     <div class="card">
       <div class="card-header">Colors <span class="muted">(templates)</span>
         <div class="toolbar">
-          <button class="btn-icon btn-icon--add" data-action="color-new" title="New Template" aria-label="New Template"></button>
+          <button class="btn btn-icon btn-icon--add" data-action="color-new" title="New Template" aria-label="New Template"></button>
         </div>
       </div>
       <div class="card-body">
@@ -298,9 +406,9 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
                   <span><?= htmlspecialchars((string)($t['template_name'] ?? '')) ?><?= $t['category'] ? ' · '.htmlspecialchars((string)$t['category']) : '' ?></span>
                   <span class="row-actions">
                     <span class="pill"><?=(int)($t['color_count'] ?? 0)?> colors</span>
-                    <button class="btn-icon btn-icon--edit" data-action="color-edit" title="Edit" aria-label="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
-                    <button class="btn-icon btn-icon--duplicate" data-action="color-dup" title="Duplicate" aria-label="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
-                    <button class="btn-icon btn-icon--delete" data-action="color-delete" title="Delete" aria-label="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn btn-icon btn-icon--edit" data-action="color-edit" title="Edit" aria-label="Edit" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn btn-icon btn-icon--duplicate" data-action="color-dup" title="Duplicate" aria-label="Duplicate" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
+                    <button class="btn btn-icon btn-icon--delete" data-action="color-delete" title="Delete" aria-label="Delete" data-id="<?= (int)($t['id'] ?? 0) ?>"></button>
                   </span>
                 </li>
               <?php endforeach; ?>
@@ -328,6 +436,48 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   </div>
 <script>
 (function(){
+  let __attrPromptResolve = null;
+  async function openAttrPrompt(opts){
+    try {
+      const ov = document.getElementById('attrPromptModal');
+      const t = document.getElementById('attrPromptTitle');
+      const inp = document.getElementById('attrPromptInput');
+      const ok = document.getElementById('attrPromptOk');
+      const cancel = document.getElementById('attrPromptCancel');
+      if (!ov || !t || !inp || !ok || !cancel) return null;
+      t.textContent = (opts && opts.title) || 'Input';
+      inp.value = (opts && opts.defaultValue) || '';
+      inp.setAttribute('placeholder', (opts && opts.placeholder) || '');
+      ok.textContent = (opts && opts.confirmText) || 'OK';
+      return await new Promise((resolve)=>{
+        __attrPromptResolve = resolve;
+        ov.classList.add('show');
+        ov.setAttribute('aria-hidden','false');
+        try { inp.focus(); inp.select && inp.select(); } catch(_){ }
+      });
+    } catch(_) { return null; }
+  }
+  function closeAttrPrompt(val){
+    try {
+      const ov = document.getElementById('attrPromptModal');
+      if (ov) { ov.classList.remove('show'); ov.setAttribute('aria-hidden','true'); }
+      const r = __attrPromptResolve; __attrPromptResolve = null; if (r) try { r(val); } catch(_){ }
+    } catch(_) {}
+  }
+  (function initAttrPrompt(){
+    try {
+      const ov = document.getElementById('attrPromptModal'); if (!ov) return;
+      const inp = document.getElementById('attrPromptInput');
+      const ok = document.getElementById('attrPromptOk');
+      const cancel = document.getElementById('attrPromptCancel');
+      if (ok && !ok.__wf){ ok.__wf = true; ok.addEventListener('click', function(){ closeAttrPrompt((inp && inp.value) || ''); }, true); }
+      if (cancel && !cancel.__wf){ cancel.__wf = true; cancel.addEventListener('click', function(){ closeAttrPrompt(null); }, true); }
+      ov.addEventListener('click', function(e){ if (e.target === ov) closeAttrPrompt(null); }, true);
+      document.addEventListener('keydown', function(e){ if (ov.classList.contains('show')) { if (e.key === 'Escape') closeAttrPrompt(null); if (e.key === 'Enter') closeAttrPrompt((inp && inp.value) || ''); } }, true);
+      const cls = ov.querySelector('[data-action="attr-prompt-close"]'); if (cls && !cls.__wf){ cls.__wf=true; cls.addEventListener('click', function(){ closeAttrPrompt(null); }, true); }
+    } catch(_) {}
+  })();
+  try { document.documentElement.classList.add('admin-actions-icons'); } catch(_) {}
   const ADMIN_TOKEN = 'whimsical_admin_2024';
   function api(u, opts = {}) {
     try {
@@ -366,11 +516,12 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         <li>
           <span>${escapeHtml(g)}</span>
           <span class="row-actions">
-            <button class="btn-icon btn-icon--edit" data-action="gender-rename" title="Rename" aria-label="Rename" data-gender="${escapeAttr(g)}"></button>
-            <button class="btn-icon btn-icon--delete" data-action="gender-delete" title="Delete" aria-label="Delete" data-gender="${escapeAttr(g)}"></button>
+            <button class="btn btn-icon btn-icon--edit" data-action="gender-rename" title="Rename" aria-label="Rename" data-gender="${escapeAttr(g)}"></button>
+            <button class="btn btn-icon btn-icon--delete" data-action="gender-delete" title="Delete" aria-label="Delete" data-gender="${escapeAttr(g)}"></button>
           </span>
         </li>`).join('');
       wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No genders found.</div>';
+      try { relayoutAttributes(); } catch(_) {}
     } catch(_){}
   }
 
@@ -384,12 +535,13 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         <span>${escapeHtml(t.template_name||'')}${t.category ? ' · '+escapeHtml(t.category) : ''}</span>
         <span class="row-actions">
           <span class="pill">${Number(t.size_count||0)} sizes</span>
-          <button class="btn-icon btn-icon--edit" data-action="size-edit" title="Edit" aria-label="Edit" data-id="${t.id}"></button>
-          <button class="btn-icon btn-icon--duplicate" data-action="size-dup" title="Duplicate" aria-label="Duplicate" data-id="${t.id}"></button>
-          <button class="btn-icon btn-icon--delete" data-action="size-delete" title="Delete" aria-label="Delete" data-id="${t.id}"></button>
+          <button class="btn btn-icon btn-icon--edit" data-action="size-edit" title="Edit" aria-label="Edit" data-id="${t.id}"></button>
+          <button class="btn btn-icon btn-icon--duplicate" data-action="size-dup" title="Duplicate" aria-label="Duplicate" data-id="${t.id}"></button>
+          <button class="btn btn-icon btn-icon--delete" data-action="size-delete" title="Delete" aria-label="Delete" data-id="${t.id}"></button>
         </span>
       </li>`).join('');
     wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No size templates found.</div>';
+    try { relayoutAttributes(); } catch(_) {}
   }
 
   async function reloadColors(){
@@ -402,16 +554,67 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         <span>${escapeHtml(t.template_name||'')}${t.category ? ' · '+escapeHtml(t.category) : ''}</span>
         <span class="row-actions">
           <span class="pill">${Number(t.color_count||0)} colors</span>
-          <button class="btn-icon btn-icon--edit" data-action="color-edit" title="Edit" aria-label="Edit" data-id="${t.id}"></button>
-          <button class="btn-icon btn-icon--duplicate" data-action="color-dup" title="Duplicate" aria-label="Duplicate" data-id="${t.id}"></button>
-          <button class="btn-icon btn-icon--delete" data-action="color-delete" title="Delete" aria-label="Delete" data-id="${t.id}"></button>
+          <button class="btn btn-icon btn-icon--edit" data-action="color-edit" title="Edit" aria-label="Edit" data-id="${t.id}"></button>
+          <button class="btn btn-icon btn-icon--duplicate" data-action="color-dup" title="Duplicate" aria-label="Duplicate" data-id="${t.id}"></button>
+          <button class="btn btn-icon btn-icon--delete" data-action="color-delete" title="Delete" aria-label="Delete" data-id="${t.id}"></button>
         </span>
       </li>`).join('');
     wrap.innerHTML = rows ? `<ul class="simple">${rows}</ul>` : '<div class="empty">No color templates found.</div>';
+    try { relayoutAttributes(); } catch(_) {}
   }
 
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
   function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+  // Layout: staged label sizing
+  function computeMaxLabelWidth(card){
+    try {
+      const spans = card.querySelectorAll('.card-body ul.simple li > span:first-child');
+      let max = 240;
+      spans.forEach(sp => { const w = sp.scrollWidth || 0; if (w > max) max = w; });
+      return max;
+    } catch(_) { return 240; }
+  }
+  function relayoutAttributes(){
+    try {
+      const grid = document.querySelector('.attributes-grid');
+      if (!grid) return;
+      // Ensure columns using label visibility: prefer 3; if any labels shrink <70%, drop to 2; if still <70%, drop to 1
+      const enforceGridCols = () => {
+        try {
+          // Do not hard-enforce column count; remove any legacy inline style so CSS can flow to 3 columns when space allows
+          if (grid && grid.style) {
+            try { grid.style.removeProperty('grid-template-columns'); } catch(_) {}
+          }
+        } catch(_) {}
+      };
+
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      if (!cards.length) return;
+      // Baseline: 70% of each card's max label width (min 240px)
+      const data = cards.map(card => {
+        const L = computeMaxLabelWidth(card);
+        const base = Math.max(220, Math.floor(L * 0.7));
+        card.style.setProperty('--label-col', base + 'px');
+        return { card, L, base };
+      });
+      // Force layout and measure grid width at baseline
+      void grid.offsetWidth;
+      const vw95 = Math.max(0, Math.floor((window.innerWidth || 0) * 0.95));
+      const baseGridWidth = Math.ceil(grid.scrollWidth || 0);
+      let extraAvail = Math.max(0, vw95 - baseGridWidth);
+      const remaining = data.reduce((sum, d) => sum + Math.max(0, d.L - d.base), 0);
+      if (extraAvail > 0 && remaining > 0) {
+        data.forEach(d => {
+          const room = Math.max(0, d.L - d.base);
+          const share = Math.floor(extraAvail * (room / remaining));
+          const next = Math.min(d.L, d.base + share);
+          d.card.style.setProperty('--label-col', next + 'px');
+        });
+      }
+      enforceGridCols();
+    } catch(_) {}
+  }
 
   async function brandedConfirm(message, options){
     try {
@@ -553,9 +756,12 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
               } catch(_) {}
               try {
                 const f = pd.getElementById('sizeColorRedesignFrame');
-                if (f && (!f.getAttribute('src') || f.getAttribute('src') === 'about:blank')) {
-                  const ds = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
-                  f.setAttribute('src', ds);
+                if (f) {
+                  const base = f.getAttribute('data-src') || '/sections/tools/size_color_redesign.php?modal=1';
+                  const sep = base.indexOf('?') === -1 ? '?' : '&';
+                  const ds = `${base}${sep}_=${Date.now()}`;
+                  try { f.removeAttribute('src'); } catch(_) {}
+                  setTimeout(() => { try { f.setAttribute('src', ds); } catch(_) {} }, 0);
                 }
               } catch(_) {}
               m.classList.remove('hidden');
@@ -576,7 +782,11 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         return;
       }
       if (action === 'gender-add') {
-        const name = prompt('New gender name:');
+        let name = '';
+        try { name = await openAttrPrompt({ title: 'New Gender', placeholder: 'e.g., Women', confirmText: 'Create' }); } catch(_){ }
+        if (!name && window.parent && typeof window.parent.showPromptModal === 'function') {
+          try { name = await window.parent.showPromptModal({ title: 'New Gender', message: 'Enter a name for the gender:', placeholder: 'e.g., Women', inputType: 'text', confirmText: 'Create', cancelText: 'Cancel' }); } catch(_){ }
+        }
         if (!name) return;
         await api('/api/genders_admin.php?action=create', {
           method:'POST', headers:{'Content-Type':'application/json'},
@@ -585,7 +795,12 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         await reloadGenders();
       } else if (action === 'gender-rename') {
         const old = btn.getAttribute('data-gender') || '';
-        const name = prompt('Rename gender to:', old);
+        let name = '';
+        try { name = await openAttrPrompt({ title: 'Rename Gender', defaultValue: old, placeholder: old, confirmText: 'Rename' }); } catch(_){ }
+        if (!name && window.parent && typeof window.parent.showPromptModal === 'function') {
+          try { name = await window.parent.showPromptModal({ title: 'Rename Gender', message: 'Enter a new name for this gender:', placeholder: old, inputType: 'text', confirmText: 'Rename', cancelText: 'Cancel' }); } catch(_){ }
+        }
+        name = (name || '').trim();
         if (!name || name === old) return;
         await api('/api/genders_admin.php?action=rename', {
           method:'POST', headers:{'Content-Type':'application/json'},
@@ -606,9 +821,18 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         await reloadGenders();
       } else if (action === 'size-new') {
         ev.preventDefault(); ev.stopPropagation();
-        const template_name = prompt('Size template name:');
+        let template_name = '';
+        try { template_name = await openAttrPrompt({ title: 'New Size Template', placeholder: 'Template name', confirmText: 'Next' }); } catch(_){ }
+        if (!template_name && window.parent && typeof window.parent.showPromptModal === 'function') {
+          try { template_name = await window.parent.showPromptModal({ title: 'New Size Template', message: 'Enter template name', placeholder: 'Template name', inputType: 'text', confirmText: 'Next', cancelText: 'Cancel' }); } catch(_){ }
+        }
         if (!template_name) return;
-        const category = prompt('Category (optional):') || 'General';
+        let category = '';
+        try { category = await openAttrPrompt({ title: 'Category (optional)', placeholder: 'e.g., General', confirmText: 'Create' }); } catch(_){ }
+        if (!category && window.parent && typeof window.parent.showPromptModal === 'function') {
+          try { category = await window.parent.showPromptModal({ title: 'Category (optional)', message: 'Enter a category for this template (optional)', placeholder: 'e.g., General', inputType: 'text', confirmText: 'Create', cancelText: 'Skip' }); } catch(_){ }
+        }
+        category = category || 'General';
         const sizes = [];
         const r = await api('/api/size_templates.php?action=create_template', {
           method:'POST', headers:{'Content-Type':'application/json'},
@@ -639,9 +863,18 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         notify('Size template deleted', 'success');
       } else if (action === 'color-new') {
         ev.preventDefault(); ev.stopPropagation();
-        const template_name = prompt('Color template name:');
+        let template_name = '';
+        try { template_name = await openAttrPrompt({ title: 'New Color Template', placeholder: 'Template name', confirmText: 'Next' }); } catch(_){ }
+        if (!template_name && window.parent && typeof window.parent.showPromptModal === 'function') {
+          try { template_name = await window.parent.showPromptModal({ title: 'New Color Template', message: 'Enter template name', placeholder: 'Template name', inputType: 'text', confirmText: 'Next', cancelText: 'Cancel' }); } catch(_){ }
+        }
         if (!template_name) return;
-        const category = prompt('Category (optional):') || 'General';
+        let category = '';
+        try { category = await openAttrPrompt({ title: 'Category (optional)', placeholder: 'e.g., General', confirmText: 'Create' }); } catch(_){ }
+        if (!category && window.parent && typeof window.parent.showPromptModal === 'function') {
+          try { category = await window.parent.showPromptModal({ title: 'Category (optional)', message: 'Enter a category for this template (optional)', placeholder: 'e.g., General', inputType: 'text', confirmText: 'Create', cancelText: 'Skip' }); } catch(_){ }
+        }
+        category = category || 'General';
         const colors = [];
         const cr = await api('/api/color_templates.php?action=create_template', {
           method:'POST', headers:{'Content-Type':'application/json'},
@@ -749,15 +982,34 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   }, true);
 
   // Close modal on overlay click and Escape key
-  document.getElementById('attrEditorModal')?.addEventListener('click', (e) => {
-    if (e.target && e.target === e.currentTarget) closeAttrModal();
-  });
+  (function(){
+    const ov = document.getElementById('attrEditorModal');
+    if (!ov) return;
+    ov.addEventListener('click', (e) => {
+      try {
+        const closeBtn = e.target && e.target.closest ? e.target.closest('[data-action="attr-modal-close"]') : null;
+        if (closeBtn) { e.preventDefault(); e.stopPropagation(); closeAttrModal(); return; }
+        if (e.target && e.target === ov) { closeAttrModal(); }
+      } catch(_) {}
+    });
+  })();
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const overlay = document.getElementById('attrEditorModal');
       if (overlay && overlay.classList.contains('show')) closeAttrModal();
     }
   });
+
+  // Initial layout and responsive adjustments
+  try { requestAnimationFrame(() => { try { relayoutAttributes(); } catch(_) {} }); } catch(_) { try { setTimeout(relayoutAttributes, 0); } catch(__) {} }
+  try { let __wfResizeT; window.addEventListener('resize', function(){ clearTimeout(__wfResizeT); __wfResizeT = setTimeout(relayoutAttributes, 120); }, { passive: true }); } catch(_) {}
+  try {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function(){ try { relayoutAttributes(); setTimeout(relayoutAttributes, 50); } catch(_){} }, { once: true });
+    } else {
+      setTimeout(function(){ try { relayoutAttributes(); setTimeout(relayoutAttributes, 50); } catch(_){} }, 0);
+    }
+  } catch(_) {}
 
   // Save/Cancel handlers for editors and modal close
   ROOT.addEventListener('click', async (ev) => {
@@ -905,7 +1157,6 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     const sizes = Array.isArray(t.sizes) ? t.sizes.slice().sort((a,b)=> (a.display_order||0)-(b.display_order||0)) : [];
     wrap.innerHTML = `
       <div class="editor" data-kind="size" data-id="${t.id}">
-        <h4>Edit Size Template</h4>
         <div class=\"grid grid-2-2-2\">
           <div><input id="sizeTplName" placeholder="Template name" value="${escapeAttr(t.template_name||'')}" /></div>
           <div><input id="sizeTplCategory" placeholder="Category" value="${escapeAttr(t.category||'')}" /></div>
@@ -964,7 +1215,6 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     const colors = Array.isArray(t.colors) ? t.colors.slice().sort((a,b)=> (a.display_order||0)-(b.display_order||0)) : [];
     wrap.innerHTML = `
       <div class="editor" data-kind="color" data-id="${t.id}">
-        <h4>Edit Color Template</h4>
         <div class="grid grid-2-2-2">
           <div><input id="colorTplName" placeholder="Template name" value="${escapeAttr(t.template_name||'')}" /></div>
           <div><input id="colorTplCategory" placeholder="Category" value="${escapeAttr(t.category||'')}" /></div>

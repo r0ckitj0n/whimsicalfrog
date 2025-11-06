@@ -27,7 +27,7 @@ try {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, '..');
+const _repoRoot = path.resolve(__dirname, '..');
 const projectRoot = path.resolve(__dirname, '..');
 const SRC_STYLES = path.resolve(projectRoot, 'src/styles');
 const LOGS_DIR = path.resolve(projectRoot, 'logs');
@@ -65,7 +65,7 @@ function serializeDecls(rule) {
   return decls.join(';');
 }
 
-function rankTargetByHeuristics(selector) {
+function _rankTargetByHeuristics(selector) {
   // Basic routing heuristics to suggest cohesive buckets
   // Pages
   if (/body\s*\[data-page=['"]about['"]\]/.test(selector)) return 'pages/about.css';

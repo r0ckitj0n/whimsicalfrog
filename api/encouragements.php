@@ -26,19 +26,24 @@ try {
     $settings = BusinessSettings::getByCategory($category);
     $raw = '';
     if (is_array($settings) && array_key_exists($key, $settings)) {
-        $raw = (string)$settings[$key];
+        $raw = $settings[$key];
     }
 
     $phrases = [];
-    if ($raw !== '') {
-        // Accept JSON array or newline/comma separated text
-        $decoded = json_decode($raw, true);
-        if (is_array($decoded)) {
-            $phrases = array_values(array_filter(array_map('trim', $decoded), fn($s) => $s !== ''));
-        } else {
-            $parts = preg_split('/[\r\n,]+/', $raw);
-            if (is_array($parts)) {
-                $phrases = array_values(array_filter(array_map('trim', $parts), fn($s) => $s !== ''));
+    if (is_array($raw)) {
+        $phrases = array_values(array_filter(array_map('trim', $raw), fn($s) => $s !== ''));
+    } else {
+        $s = (string)$raw;
+        if ($s !== '') {
+            // Accept JSON array or newline/comma separated text
+            $decoded = json_decode($s, true);
+            if (is_array($decoded)) {
+                $phrases = array_values(array_filter(array_map('trim', $decoded), fn($s) => $s !== ''));
+            } else {
+                $parts = preg_split('/[\r\n,]+/', $s);
+                if (is_array($parts)) {
+                    $phrases = array_values(array_filter(array_map('trim', $parts), fn($s) => $s !== ''));
+                }
             }
         }
     }

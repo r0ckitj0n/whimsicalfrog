@@ -305,7 +305,7 @@ class AdminOrdersModule {
                 if (!form) break;
                 const fd = new FormData(form);
                 const id = (fd.get('orderId') || fd.get('id') || '').toString();
-                ApiClient.request('/functions/process_order_update.php', { method: 'POST', body: fd })
+                ApiClient.upload('/functions/process_order_update.php', fd)
                     .then(data => {
                         if (data && data.success) {
                             try { window.showNotification && window.showNotification('Order saved', 'success', { title: 'Saved' }); } catch(_) {}
@@ -392,14 +392,13 @@ class AdminOrdersModule {
                     }
                 }
 
-                // Abortable fetch with timeout to avoid hangs
+                // Abortable request with timeout to avoid hangs
                 const ctrl = new AbortController();
                 this.__modalAbortCtrl && this.__modalAbortCtrl.abort();
                 this.__modalAbortCtrl = ctrl;
                 const timeout = setTimeout(() => { try { ctrl.abort(); } catch(_) {} }, 5000);
 
-                fetch(url.toString(), { credentials: 'include', signal: ctrl.signal })
-                  .then(r => r.text())
+                ApiClient.request(url.toString(), { method: 'GET', signal: ctrl.signal })
                   .then(html => {
                     // Cache trimmed response
                     try { this.setModalCache(key, html); } catch(_) {}

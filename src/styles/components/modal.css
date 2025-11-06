@@ -373,3 +373,31 @@ div[class*="admin-modal"][class*="wf-admin-panel-visible"] {
   .detailed-item-modal .aspect-square { max-height: calc(95dvh - var(--wf-header-offset, 0) - 50px) !important; }
 }
 
+/* POS modal overlay and content (receipt, confirmations) */
+.pos-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  z-index: calc(var(--z-overlay-topmost, 1600) + 10000);
+}
+.pos-modal-content {
+  background: #fff;
+  border-radius: 8px;
+  margin-top: calc(var(--wf-header-height, var(--header-height, 80px)) + 8px);
+  width: min(90vw, 1400px);
+  max-width: min(90vw, 1400px);
+  max-height: 90vh;
+  overflow: auto;
+}
+.pos-modal-body {
+  max-height: 80vh;
+  overflow: auto;
+}

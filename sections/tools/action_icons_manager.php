@@ -72,10 +72,16 @@ if ($inModal) {
 
 <?php if ($inModal): ?>
 <?php /* modal adjustments are handled via reusable utilities on wrappers */ ?>
+<style>
+  /* Narrow layout specifically when embedded in a modal */
+  #iconsManagerRoot .icons-manager-inner { max-width: 560px; }
+  @media (min-width: 768px) { #iconsManagerRoot .icons-manager-inner { max-width: 600px; } }
+  @media (min-width: 1024px) { #iconsManagerRoot .icons-manager-inner { max-width: 640px; } }
+</style>
 <?php endif; ?>
 
 <div id="iconsManagerRoot" class="p-3 admin-actions-icons<?php echo $inModal ? ' wf-panel-fill' : ''; ?>">
-  <div class="icons-manager-inner<?php echo $inModal ? ' wf-w-full wf-max-w-none wf-flex-1' : ''; ?>">
+  <div class="icons-manager-inner<?php echo $inModal ? ' wf-flex-1' : ''; ?>">
   <?php if (!$inModal): ?>
   <div class="admin-card icons-card-main">
     <div class="flex items-center justify-between mb-2">
@@ -138,6 +144,28 @@ if ($inModal) {
   const fKey = document.getElementById('newKey');
   const fEmoji = document.getElementById('newEmoji');
 
+  // API helpers prefer shared ApiClient/WhimsicalFrog.api; fallback adds identifying header
+  async function apiRequest(method, url, data=null, options={}){
+    try {
+      const A = (typeof window !== 'undefined') ? (window.WhimsicalFrog && window.WhimsicalFrog.api ? window.WhimsicalFrog.api : (window.ApiClient || null)) : null;
+      const m = String(method||'GET').toUpperCase();
+      if (A && typeof A.request === 'function') {
+        if (m === 'GET' && A.get) return A.get(url, (options && options.params) || {});
+        if (m === 'POST' && A.post) return A.post(url, data||{}, options||{});
+        if (m === 'PUT' && A.put) return A.put(url, data||{}, options||{});
+        if (m === 'DELETE' && A.delete) return A.delete(url, options||{});
+        return A.request(url, { method: m, ...(options||{}), body: data ? JSON.stringify(data) : undefined });
+      }
+    } catch(_) {}
+    const headers = { 'Content-Type': 'application/json', 'X-WF-ApiClient': '1', 'X-Requested-With': 'XMLHttpRequest', ...(options.headers||{}) };
+    const cfg = { credentials:'include', method: String(method||'GET').toUpperCase(), headers, ...(options||{}) };
+    if (data !== null && typeof cfg.body === 'undefined') cfg.body = JSON.stringify(data);
+    const res = await fetch(url, cfg);
+    return res.json().catch(()=>({}));
+  }
+  const apiGet = (url, params) => apiRequest('GET', url, null, { params });
+  const apiPost = (url, body, options) => apiRequest('POST', url, body, options);
+
   const DEFAULTS = {
     add:'➕', edit:'✏️', duplicate:'📄', delete:'🗑️', view:'👁️', preview:'👁️', 'preview-inline':'🪟',
     refresh:'🔄', send:'📤', save:'💾', archive:'🗄️', settings:'⚙️', download:'⬇️', upload:'⬆️',
@@ -165,8 +193,7 @@ if ($inModal) {
   async function load(){
     iconsBody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Loading…</td></tr>';
     try {
-      const res = await fetch('/api/admin_icon_map.php?action=get_map', { credentials:'include' });
-      const j = await res.json();
+      const j = await apiGet('/api/admin_icon_map.php?action=get_map');
       const saved = (j && j.map) ? j.map : {};
       // Merge default keys with saved map so all standard actions (incl. close) are shown
       const map = Object.assign({}, DEFAULTS, saved);
@@ -198,10 +225,7 @@ if ($inModal) {
 
   async function save(){
     const map = collect();
-    const res = await fetch('/api/admin_icon_map.php?action=set_map', {
-      method:'POST', credentials:'include', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ map })
-    });
-    const j = await res.json().catch(()=>({success:false}));
+    const j = await apiPost('/api/admin_icon_map.php?action=set_map', { map });
     if (j && j.success) {
       // Bust icon CSS cache locally and in parent admin doc so all icons update immediately
       try {

@@ -57,8 +57,8 @@ $backgroundMain = get_active_background('room_main') ?: '/images/backgrounds/bac
 
 
 
-<!-- Preload the main room background to start fetch earlier -->
-<link rel="preload" as="image" href="<?php echo htmlspecialchars($backgroundMain, ENT_QUOTES, 'UTF-8'); ?>">
+<!-- Prefetch the main room background to warm the cache without strict "used soon" timing -->
+<link rel="prefetch" href="<?php echo htmlspecialchars($backgroundMain, ENT_QUOTES, 'UTF-8'); ?>">
 
 <!-- Room main styles now managed by global CSS system (css/room-main.css) -->
 
@@ -116,3 +116,4 @@ try {
 <!-- Room modal system loaded globally in index.php -->
 
 
+ 

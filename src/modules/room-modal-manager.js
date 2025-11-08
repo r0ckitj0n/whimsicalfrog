@@ -4,6 +4,10 @@
  * Recovered and consolidated from legacy files
  */
 import { ApiClient } from '../core/api-client.js';
+// Module-scoped guard so we only log the disabled warning once per page load
+let __WF_WARNED_NO_MODAL_SCRIPTS = false;
+// Module-scoped singleton instance to avoid re-instantiation across opens
+let __ROOM_MODAL_SINGLETON = null;
 
 // Runtime-injected style classes (no inline styles or element-level CSS var writes)
 const ROOM_MODAL_STYLE_ID = 'room-modal-runtime-classes';
@@ -25,15 +29,18 @@ function ensureRoomBgClass(imageUrl) {
     const cls = `room-bg-${idx}`;
     const styleEl = getRoomModalStyleEl();
     // Apply background ONLY to the inner content wrapper to avoid duplicate layering
-    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
+    styleEl.appendChild(document.createTextNode(`.room-overlay-wrapper.${cls}, .room-modal-body.${cls}, #modalRoomPage.${cls}{--room-bg-image:url('${imageUrl}');background-image:url('${imageUrl}') !important;background-size:cover;background-position:center;background-repeat:no-repeat;}`));
     roomBgClassMap.set(imageUrl, cls);
     return cls;
 }
 
 // Removed CSS class generator for per-icon positions; we now apply inline styles during scaling
 
+// (Removed) runtime utility CSS injection for instant-open/hide; using default transitions
+
 class RoomModalManager {
     constructor() {
+        if (__ROOM_MODAL_SINGLETON) return __ROOM_MODAL_SINGLETON;
         this.overlay = null;
         this.content = null;
         this.isLoading = false;
@@ -47,6 +54,8 @@ class RoomModalManager {
         this._prewarmStopped = false; // stop flag after first open
         this._inflightByUrl = new Map(); // url -> Promise to coalesce identical requests
         this._loadedExternalScripts = new Set(); // track loaded <script src> to avoid duplicates
+        // Inline scripts will execute on every render; external scripts are de-duped by URL
+        this._openedRooms = new Set(); // rooms opened at least once (for instant-open UX)
         
         // Diagnostics from URL params
         try {
@@ -55,20 +64,33 @@ class RoomModalManager {
             this.__diag_no_content = p.get('wf_diag_no_content') === '1';
             this.__diag_no_scripts = p.get('wf_diag_no_modal_scripts') === '1';
             this.__diag_no_scale = p.get('wf_diag_no_scale') === '1';
-            this.__allow_scripts = p.get('wf_enable_modal_scripts') === '1';
+            // Default: allow executing inline scripts inside modal content for proper rendering
+            const enableScriptsParam = p.get('wf_enable_modal_scripts');
+            this.__allow_scripts = (enableScriptsParam == null) ? true : (enableScriptsParam === '1');
+            // Allow persistent opt-in/out via localStorage (overrides default and URL unless explicitly set to 0 in URL)
+            try {
+                const ls = localStorage.getItem('wf_enable_modal_scripts');
+                if (enableScriptsParam == null) {
+                    if (ls === '1') this.__allow_scripts = true;
+                    if (ls === '0') this.__allow_scripts = false;
+                }
+            } catch(_) {}
             // Default: scaling ON unless explicitly disabled via diag flag or wf_enable_scale=0
             const enableScaleParam = p.get('wf_enable_scale');
             this.__allow_scale = (enableScaleParam == null) ? true : (enableScaleParam === '1');
         } catch (_) { this.__diag_no_bg = false; this.__diag_no_content = false; this.__allow_scripts = false; this.__allow_scale = true; }
 
+        this._inited = false;
         this.init();
+        __ROOM_MODAL_SINGLETON = this;
+        try { window.__roomModalManager = this; } catch(_) {}
     }
 
     init() {
-        console.log('[RoomModalManager] init() called');
+        if (this._inited) return;
+        this._inited = true;
         this.createModalStructure();
         this.setupEventListeners();
-        console.log('[RoomModalManager] Modal structure created, overlay:', this.overlay);
         // Do NOT preload content or show modal during initialization
     }
 
@@ -151,9 +173,6 @@ class RoomModalManager {
         this.overlay.addEventListener('click', (e) => {
             if (e.target === this.overlay) {
                 this.close();
-            } else if (this.__diag_no_content && !roomContent) {
-                console.warn('[RoomModalManager][DIAG] wf_diag_no_content=1 active: skipping content API');
-                roomContent = `<div class="room-modal-body-inner"><p>DIAG MODE: content fetch skipped.</p></div>`;
             }
         });
 
@@ -258,12 +277,6 @@ class RoomModalManager {
                 if (inOpenModal && (!doorLink || doorLink.id === 'modalRoomPage')) return;
                 if (!doorLink) return;
 
-                // Diagnostics
-                try {
-                    const tgt = e.target && (e.target.id || e.target.className || e.target.nodeName);
-                    console.log('[RoomModalManager] Door click detected (delegated)', { target: tgt, prevented: e.defaultPrevented });
-                } catch(_) {}
-
                 e.preventDefault();
                 // Stop propagation to avoid duplicate opens if other handlers exist
                 if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation(); else e.stopPropagation();
@@ -272,7 +285,6 @@ class RoomModalManager {
                                    (doorLink.href && doorLink.href.match(/room=(\d+)/)?.[1]) ||
                                    doorLink.getAttribute('data-room-number');
 
-                console.log('[RoomModalManager] Resolved room number:', roomNumber, 'from element:', doorLink);
                 if (roomNumber) {
                     this.openRoom(roomNumber);
                 }
@@ -295,6 +307,9 @@ class RoomModalManager {
         if (this.isLoading) return;
         const key = String(roomNumber);
         this.currentRoomNumber = key;
+        const bodyEl = this.overlay.querySelector('.room-modal-body');
+        const _cached = this.roomCache.has(key);
+        const _sameRoomMounted = bodyEl && bodyEl.dataset && bodyEl.dataset.room === key && bodyEl.childElementCount > 0;
         this.isLoading = true;
 
         this.show();
@@ -307,10 +322,22 @@ class RoomModalManager {
                 try { await this._inflightContent.get(key); } catch(_) {}
             }
             let roomContent = this.roomCache.get(key);
+            // Dev/HMR-safe cache: fall back to sessionStorage if memory cache is empty
+            if (!roomContent) {
+                try {
+                    const ss = sessionStorage.getItem(`wf_room_content_${key}`);
+                    if (ss && typeof ss === 'string' && ss.length > 0) {
+                        roomContent = ss;
+                        this.roomCache.set(key, roomContent);
+                    }
+                } catch(_) {}
+            }
+            // Validate cached content; drop and refetch if invalid/minimal
+            if (!this.isValidRoomContent(roomContent)) {
+                roomContent = null;
+            }
             if (!roomContent && !this.__diag_no_content) {
                 try { performance.mark('wf:roomModal:fetch:start'); } catch(_) {}
-                const tNavStart = performance.timeOrigin || (performance.timing && performance.timing.navigationStart) || 0;
-                const tFetchStart = performance.now();
                 const resp = await ApiClient.get('/api/load_room_content.php', { room: key, modal: 1, perf: 1 });
                 // Accept JSON or text. If text looks like JSON, parse it.
                 if (typeof resp === 'string') {
@@ -334,39 +361,31 @@ class RoomModalManager {
                     if (resp.metadata) this.updateHeader(resp.metadata);
                     if (resp.background) this._bgMetaCache.set(key, resp.background);
                 }
-                this.roomCache.set(key, roomContent);
+                // Cache only meaningful content (avoid caching empty/placeholder)
+                const cacheable = typeof roomContent === 'string' && roomContent.trim().length > 50;
+                if (cacheable) {
+                    this.roomCache.set(key, roomContent);
+                    try { sessionStorage.setItem(`wf_room_content_${key}`, roomContent); } catch(_) {}
+                }
                 try {
                     performance.mark('wf:roomModal:fetch:end');
                     performance.measure('wf:roomModal:fetch', 'wf:roomModal:fetch:start', 'wf:roomModal:fetch:end');
-                    const m = performance.getEntriesByName('wf:roomModal:fetch').pop();
-                    if (m) console.log(`[Perf] Room ${key} content fetched in ${m.duration.toFixed(1)}ms`);
-                    // ResourceTiming breakdown if available
-                    const entries = performance.getEntriesByType('resource');
-                    const rt = entries && entries.find(e => (e.name && e.name.indexOf('/api/load_room_content.php') !== -1));
-                    if (rt) {
-                        console.log('[Perf:RT] content', {
-                            name: rt.name,
-                            dns: (rt.domainLookupEnd - rt.domainLookupStart).toFixed(1),
-                            tcp: (rt.connectEnd - rt.connectStart).toFixed(1),
-                            ssl: (rt.secureConnectionStart > 0 ? (rt.connectEnd - rt.secureConnectionStart).toFixed(1) : 0),
-                            ttfb: (rt.responseStart - rt.requestStart).toFixed(1),
-                            download: (rt.responseEnd - rt.responseStart).toFixed(1),
-                            total: (rt.responseEnd - rt.startTime).toFixed(1)
-                        });
-                    } else {
-                        const tFetchEnd = performance.now();
-                        console.log('[Perf:Approx] content', { totalMs: (tFetchEnd - tFetchStart).toFixed(1), sinceNavMs: (tFetchEnd + tNavStart - tNavStart).toFixed(1) });
-                    }
+                    // Perf marks kept for DevTools, logging removed
                 } catch(_) {}
             }
 
             try { performance.mark('wf:roomModal:dom:set:start'); } catch(_) {}
-            this.setContent(roomContent);
+            const stillSameMounted = bodyEl && bodyEl.dataset && bodyEl.dataset.room === key && bodyEl.dataset.roomContent === '1' && bodyEl.childElementCount > 0;
+            if (!stillSameMounted) {
+                this.setContent(roomContent);
+            } else {
+                // Reuse DOM; just (re)initialize listeners and scale
+                try { this.initializeModalContent(); } catch(_) {}
+            }
             try {
                 performance.mark('wf:roomModal:dom:set:end');
                 performance.measure('wf:roomModal:dom:set', 'wf:roomModal:dom:set:start', 'wf:roomModal:dom:set:end');
-                const m = performance.getEntriesByName('wf:roomModal:dom:set').pop();
-                if (m) console.log(`[Perf] Room ${roomNumber} DOM set in ${m.duration.toFixed(1)}ms`);
+                // Perf marks kept for DevTools, logging removed
             } catch(_) {}
             this.updateHeaderFromDOM();
             if (window.WhimsicalFrog) window.WhimsicalFrog.emit('room:opened', { roomNumber, content: roomContent });
@@ -384,8 +403,7 @@ class RoomModalManager {
             try {
                 performance.mark('wf:roomModal:open:end');
                 performance.measure('wf:roomModal:open', 'wf:roomModal:open:start', 'wf:roomModal:open:end');
-                const m = performance.getEntriesByName('wf:roomModal:open').pop();
-                if (m) console.log(`[Perf] Room ${roomNumber} open total ${m.duration.toFixed(1)}ms`);
+                // Perf marks kept for DevTools, logging removed
             } catch(_) {}
         }
     }
@@ -429,6 +447,12 @@ class RoomModalManager {
         let match;
         while (typeof htmlStr === 'string' && (match = scriptRegex.exec(htmlStr)) !== null) scripts.push(match[1]);
         body.innerHTML = (typeof htmlStr === 'string') ? htmlStr : String(htmlStr || '');
+        // Tag which room is currently mounted to avoid re-rendering on second open
+        try { body.dataset.room = String(this.currentRoomNumber || ''); } catch(_) {}
+        try {
+            const hasRealContent = !!(body.querySelector('.room-product-icon') || body.querySelector('img') || body.querySelector('#modalRoomPage'));
+            body.dataset.roomContent = hasRealContent ? '1' : '0';
+        } catch(_) {}
         // Execute external and inline scripts only when explicitly enabled
         if (!this.__diag_no_scripts && this.__allow_scripts) {
             try {
@@ -450,11 +474,28 @@ class RoomModalManager {
                     this._loadedExternalScripts.add(src);
                 });
             } catch (e) { console.warn('[RoomModalManager] Failed to load external scripts from modal content', e); }
+            // Run inline scripts on every render (idempotent content should guard itself)
             scripts.forEach((code, i) => { try { new Function(code)(); } catch (e) { console.error(`[Room] Error executing modal script ${i + 1}:`, e); } });
         } else {
-            console.warn('[RoomModalManager] Modal script execution is disabled (enable via wf_enable_modal_scripts=1)');
+            if (!__WF_WARNED_NO_MODAL_SCRIPTS) {
+                console.info('[RoomModalManager] Modal script execution is disabled. Enable with ?wf_enable_modal_scripts=1 or localStorage.setItem(\'wf_enable_modal_scripts\',\'1\')');
+                __WF_WARNED_NO_MODAL_SCRIPTS = true;
+            }
         }
         this.initializeModalContent();
+    }
+
+    isValidRoomContent(html) {
+        try {
+            if (!html || typeof html !== 'string') return false;
+            const t = html.trim();
+            if (t.length < 50) return false;
+            // Must include a recognizable modal wrapper or at least one product/icon/img marker
+            if (t.includes('id="modalRoomPage"')) return true;
+            if (t.includes('class="room-product-icon"')) return true;
+            if (t.includes('<img')) return true;
+            return false;
+        } catch(_) { return false; }
     }
 
     initializeModalContent() {
@@ -468,6 +509,87 @@ class RoomModalManager {
                 window.setupImageErrorHandling(img, sku);
             }
         });
+        // Ensure images render even if content scripts are delayed: hydrate src from data attributes
+        try {
+            let backend = (typeof window !== 'undefined' && window.__WF_BACKEND_ORIGIN) ? String(window.__WF_BACKEND_ORIGIN) : '';
+            if (!backend) {
+                try {
+                    const entries = performance.getEntriesByType('resource') || [];
+                    const hit = entries.find(e => (e.name && e.name.includes('/api/')));
+                    if (hit && hit.name) {
+                        const u = new URL(hit.name, window.location.origin);
+                        backend = `${u.protocol}//${u.host}`;
+                    }
+                } catch(_) {}
+            }
+            const absolutize = (url) => {
+                try {
+                    if (!url) return url;
+                    if (/^(https?:)?\/\//i.test(url) || url.startsWith('data:')) return url;
+                    // Normalize leading slash
+                    const u = url.startsWith('/') ? url : `/${url}`;
+                    if (backend && (u.startsWith('/images/') || u.startsWith('/uploads/') || u.startsWith('/media/'))) {
+                        return backend + u;
+                    }
+                    return url;
+                } catch(_) { return url; }
+            };
+            body.querySelectorAll('img').forEach((img) => {
+                const hasSrc = !!img.getAttribute('src');
+                const ds = img.dataset || {};
+                const candidate = ds.src || ds.image || ds.lazySrc || ds.lazy;
+                if (!hasSrc && candidate) {
+                    try { img.setAttribute('src', absolutize(candidate)); } catch(_) {}
+                } else if (hasSrc) {
+                    try { img.setAttribute('src', absolutize(img.getAttribute('src'))); } catch(_) {}
+                }
+            });
+            // Hydrate <source> inside <picture>
+            body.querySelectorAll('picture source').forEach((source) => {
+                const hasSet = !!source.getAttribute('srcset');
+                const ds = source.dataset || {};
+                const candidate = ds.srcset || ds.src || ds.image || ds.lazySrcset || ds.lazy;
+                if (!hasSet && candidate) {
+                    try { source.setAttribute('srcset', absolutize(candidate)); } catch(_) {}
+                } else if (hasSet) {
+                    try {
+                        const val = source.getAttribute('srcset');
+                        if (val && typeof val === 'string') {
+                            const parts = val.split(',').map(s => s.trim()).map(part => {
+                                const [u, d] = part.split(/\s+/);
+                                const abs = absolutize(u);
+                                return d ? `${abs} ${d}` : abs;
+                            });
+                            source.setAttribute('srcset', parts.join(', '));
+                        }
+                    } catch(_) {}
+                }
+            });
+            // If icons only have data-image on the container, create an <img>
+            body.querySelectorAll('.room-product-icon, .item-icon').forEach((icon) => {
+                try {
+                    const hasImgChild = !!icon.querySelector('img');
+                    const ds = icon.dataset || {};
+                    const url = ds.image || ds.src || ds.lazy;
+                    if (!hasImgChild && url) {
+                        const img = document.createElement('img');
+                        img.className = 'room-product-icon-img';
+                        img.setAttribute('draggable', 'false');
+                        if (ds.sku) img.setAttribute('data-sku', ds.sku);
+                        if (ds.image) img.setAttribute('data-image', ds.image);
+                        if (ds.name) img.setAttribute('alt', ds.name);
+                        try { img.src = absolutize(url); } catch(_) {}
+                        icon.appendChild(img);
+                    } else if (!hasImgChild && !url && ds && ds.imageUrl) {
+                        // Fallback alt key
+                        const img = document.createElement('img');
+                        img.className = 'room-product-icon-img';
+                        try { img.src = absolutize(ds.imageUrl); } catch(_) {}
+                        icon.appendChild(img);
+                    }
+                } catch(_) {}
+            });
+        } catch(_) {}
 
         // Add-to-cart buttons
         body.querySelectorAll('.add-to-cart, [data-action="add-to-cart"]').forEach(button => {
@@ -537,17 +659,17 @@ class RoomModalManager {
                 return;
             }
         };
-        // Avoid double-binding hover popup handlers if the delegated system is active
+        // Avoid double-binding hover/click handlers on the same modal body across opens
         const hasDelegated = !!(document.body && document.body.hasAttribute('data-wf-room-delegated-listeners'));
-        if (!hasDelegated) {
+        if (!hasDelegated && !body.__wfBound) {
             body.addEventListener('mouseover', onOver);
             body.addEventListener('mouseout', onOut);
             body.addEventListener('focusin', onOver);
             body.addEventListener('focusout', onOut);
-        } else {
-            console.log('[RoomModalManager] Skipping hover popup listeners; delegated event-manager is active');
+            body.__wfBound = true;
         }
-        body.addEventListener('click', (e) => {
+        if (!body.__wfClickBound) {
+            body.addEventListener('click', (e) => {
             const target = e.target;
             if (!target || typeof target.closest !== 'function') return;
             const trigger = target.closest('.room-product-icon, [data-sku], [data-product], img[data-sku], img[data-product]');
@@ -565,22 +687,17 @@ class RoomModalManager {
             else if (window.parent && typeof window.parent.showGlobalItemModal === 'function') window.parent.showGlobalItemModal(sku, data || { sku });
             else if (window.WhimsicalFrog) window.WhimsicalFrog.emit('product:modal-requested', { element: icon, sku });
         }, true);
+            body.__wfClickBound = true;
+        }
 
         // Background + coordinate scaling
-        const modalPage = this.overlay.querySelector('#modalRoomPage');
-        let rn = null;
-        if (modalPage) {
-            rn = modalPage.getAttribute('data-room');
-            if (rn) { window.roomNumber = rn; }
-        }
-        // Fallback to currentRoomNumber if DOM id was malformed
-        if (!rn) {
-            rn = this.currentRoomNumber;
-        }
+        // Canonical wrapper: always use the modal body for background + scaling
+        const rn = String(this.currentRoomNumber || '');
 
         const originalImageWidth = 1280;
         const originalImageHeight = 896;
-        const roomWrapper = this.overlay.querySelector('.room-overlay-wrapper') || this.overlay.querySelector('.room-modal-body');
+        // Use .room-modal-body as the authoritative wrapper for both background and scaling
+        const roomWrapper = this.overlay.querySelector('.room-modal-body');
         const doScale = !(this.__diag_no_scale) && !!this.__allow_scale;
         const loadRoomBackground = async () => {
             if (!roomWrapper || !rn) return;
@@ -599,8 +716,19 @@ class RoomModalManager {
                     if (!filename.startsWith('backgrounds/')) filename = `backgrounds/${filename}`;
                     const imageUrl = `/images/${filename}`;
                     const bgCls = ensureRoomBgClass(imageUrl);
-                    if (roomWrapper.dataset.roomBgClass && roomWrapper.dataset.roomBgClass !== bgCls) roomWrapper.classList.remove(roomWrapper.dataset.roomBgClass);
-                    if (bgCls) { roomWrapper.classList.add(bgCls); roomWrapper.dataset.roomBgClass = bgCls; }
+                    const targetEl = roomWrapper;
+                    if (targetEl) {
+                        try {
+                            const prev = targetEl.dataset?.roomBgClass;
+                            if (prev && prev !== bgCls) targetEl.classList.remove(prev);
+                        } catch(_) {}
+                        if (bgCls) {
+                            try { targetEl.classList.add(bgCls); } catch(_) {}
+                            try { targetEl.dataset.roomBgClass = bgCls; targetEl.dataset.roomBgRoom = String(rn); } catch(_) {}
+                        } else {
+                            try { delete targetEl.dataset.roomBgClass; delete targetEl.dataset.roomBgRoom; } catch(_) {}
+                        }
+                    }
                     // ResourceTiming breakdown if available
                     try {
                         const entries = performance.getEntriesByType('resource');
@@ -654,25 +782,40 @@ class RoomModalManager {
                         oWidth = parseFloat(icon.dataset.originalWidth);
                         oHeight = parseFloat(icon.dataset.originalHeight);
                     } else {
-                        const cs = getComputedStyle(icon);
-                        oTop = parseFloat(cs.getPropertyValue('--icon-top')) || parseFloat(cs.top) || 0;
-                        oLeft = parseFloat(cs.getPropertyValue('--icon-left')) || parseFloat(cs.left) || 0;
-                        oWidth = parseFloat(cs.getPropertyValue('--icon-width')) || parseFloat(cs.width) || 80;
-                        oHeight = parseFloat(cs.getPropertyValue('--icon-height')) || parseFloat(cs.height) || 80;
-                        icon.dataset.originalTop = oTop;
-                        icon.dataset.originalLeft = oLeft;
-                        icon.dataset.originalWidth = oWidth;
-                        icon.dataset.originalHeight = oHeight;
+                        // Prefer explicit data-* attributes if provided by content
+                        const attrTop = icon.getAttribute('data-top');
+                        const attrLeft = icon.getAttribute('data-left');
+                        const attrWidth = icon.getAttribute('data-width');
+                        const attrHeight = icon.getAttribute('data-height');
+                        if (attrTop != null && attrLeft != null && attrWidth != null && attrHeight != null) {
+                            oTop = parseFloat(attrTop) || 0;
+                            oLeft = parseFloat(attrLeft) || 0;
+                            oWidth = parseFloat(attrWidth) || 80;
+                            oHeight = parseFloat(attrHeight) || 80;
+                        } else {
+                            // Fallback: CSS custom properties, then raw computed styles
+                            const cs = getComputedStyle(icon);
+                            oTop = parseFloat(cs.getPropertyValue('--icon-top')) || parseFloat(cs.top) || 0;
+                            oLeft = parseFloat(cs.getPropertyValue('--icon-left')) || parseFloat(cs.left) || 0;
+                            oWidth = parseFloat(cs.getPropertyValue('--icon-width')) || parseFloat(cs.width) || 80;
+                            oHeight = parseFloat(cs.getPropertyValue('--icon-height')) || parseFloat(cs.height) || 80;
+                        }
+                        icon.dataset.originalTop = String(oTop);
+                        icon.dataset.originalLeft = String(oLeft);
+                        icon.dataset.originalWidth = String(oWidth);
+                        icon.dataset.originalHeight = String(oHeight);
                     }
-                    const sTop = Math.round((oTop * scale) + offsetY);
-                    const sLeft = Math.round((oLeft * scale) + offsetX);
-                    const sWidth = Math.round(oWidth * scale);
-                    const sHeight = Math.round(oHeight * scale);
+                    const sTop = (oTop * scale) + offsetY;
+                    const sLeft = (oLeft * scale) + offsetX;
+                    const sWidth = oWidth * scale;
+                    const sHeight = oHeight * scale;
                     const st = icon.style;
-                    st.top = sTop + 'px';
-                    st.left = sLeft + 'px';
-                    st.width = sWidth + 'px';
-                    st.height = sHeight + 'px';
+                    // Apply robust inline styles with !important to prevent overrides after reopen
+                    st.setProperty('position', 'absolute', 'important');
+                    st.setProperty('top', sTop.toFixed(2) + 'px', 'important');
+                    st.setProperty('left', sLeft.toFixed(2) + 'px', 'important');
+                    st.setProperty('width', sWidth.toFixed(2) + 'px', 'important');
+                    st.setProperty('height', sHeight.toFixed(2) + 'px', 'important');
                     icon.classList.add('positioned');
                 }
                 if (idx < icons.length) {
@@ -683,6 +826,7 @@ class RoomModalManager {
         };
 
         if (this._resizeHandler) { window.removeEventListener('resize', this._resizeHandler); this._resizeHandler = null; }
+        if (this._resizeObserver) { try { this._resizeObserver.disconnect(); } catch(_) {} this._resizeObserver = null; }
         if (doScale) {
             this._resizeHandler = () => {
                 if (__wfScaleScheduled) return;
@@ -690,13 +834,34 @@ class RoomModalManager {
                 requestAnimationFrame(() => { __wfScaleScheduled = false; scaleRoomCoordinates(); });
             };
             window.addEventListener('resize', this._resizeHandler);
+            // Observe wrapper size changes precisely (e.g., fonts, content shifts)
+            try {
+                if ('ResizeObserver' in window && roomWrapper) {
+                    let roScheduled = false;
+                    const ro = new ResizeObserver(() => {
+                        if (roScheduled) return;
+                        roScheduled = true;
+                        requestAnimationFrame(() => { roScheduled = false; scaleRoomCoordinates(); });
+                    });
+                    ro.observe(roomWrapper);
+                    this._resizeObserver = ro;
+                }
+            } catch(_) {}
         }
-        const bgStart = performance.now();
+        // Always resolve background for current room to avoid stale backgrounds
         loadRoomBackground().then(() => {
-            const bgDur = performance.now() - bgStart;
-            console.log(`[Perf] Room ${rn} background metadata+class in ${bgDur.toFixed(1)}ms (image may still be loading by browser)`);
-            if (doScale) { requestAnimationFrame(() => { scaleRoomCoordinates(); }); }
-        });
+            // Perf marks retained; logging removed
+            if (doScale) {
+                // Initial scale on open
+                requestAnimationFrame(() => { try { scaleRoomCoordinates(); } catch(_) {} });
+                // Also schedule once after overlay transition completes (BFCache/tab focus quirks)
+                try {
+                    const onTe = (_e) => { try { requestAnimationFrame(scaleRoomCoordinates); } catch(_) {} };
+                    this.overlay.addEventListener('transitionend', onTe, { once: true });
+                } catch(_) {}
+            }
+            try { this._openedRooms.add(String(this.currentRoomNumber || rn)); } catch(_) {}
+        }).catch(() => { /* no-op */ });
     }
 
     show() {
@@ -727,6 +892,10 @@ class RoomModalManager {
             window.removeEventListener('resize', this._resizeHandler);
             this._resizeHandler = null;
         }
+        if (this._resizeObserver) {
+            try { this._resizeObserver.disconnect(); } catch(_) {}
+            this._resizeObserver = null;
+        }
         if (typeof window.hideModal === 'function') {
             try { window.hideModal('roomModalOverlay'); } catch(_) {}
             try { document.body.classList.remove('room-modal-open'); } catch(_) {}
@@ -743,7 +912,6 @@ class RoomModalManager {
                 } else {
                     document.documentElement.classList.remove('modal-open');
                     document.body.classList.remove('modal-open');
-                    console.log('[RoomModalManager] Using fallback scroll unlock');
                 }
                 if (this.previouslyFocusedElement) {
                     try { this.previouslyFocusedElement.focus(); } catch(_) {}

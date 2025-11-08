@@ -8,7 +8,7 @@ if (!function_exists('renderAccountSettingsModal')) {
     function renderAccountSettingsModal(): string {
         ob_start();
         ?>
-<div id="accountSettingsModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
+<div id="accountSettingsModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="accountSettingsTitle">
   <div class="admin-modal admin-modal-content admin-modal--md admin-modal--actions-in-header overflow-hidden">
     <div class="modal-header">
       <h2 id="accountSettingsTitle" class="admin-card-title">Account Settings</h2>

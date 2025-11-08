@@ -36,12 +36,91 @@ const AdminMarketingModule = {
         try {
             const el = document.getElementById(id);
             if (!el) return false;
+            // If running inside the AI tools iframe, always request parent to open tool overlay (full-viewport tint)
+            try {
+                const isEmbed = (window.parent && window.parent !== window);
+                if (isEmbed) {
+                    const map = {
+                        socialManagerModal: { url: '/sections/tools/social_manager.php?modal=1', title: '📱 Social Accounts Manager' },
+                        suggestionsManagerModal: { url: '/sections/tools/ai_suggestions.php?modal=1', title: '🤖 Suggestions Manager' },
+                        automationManagerModal: { url: '/sections/tools/automation_manager.php?modal=1', title: '⚙️ Automation Manager' },
+                        intentHeuristicsManagerModal: { url: '/sections/tools/intent_heuristics_manager.php?modal=1', title: '🧠 Intent Heuristics Config' },
+                        contentGeneratorModal: { url: '/sections/tools/ai_content_generator.php?modal=1', title: '✍️ Content Generator' },
+                        newsletterManagerModal: { url: '/sections/tools/newsletters_manager.php?modal=1', title: '📧 Newsletter Manager' },
+                        discountManagerModal: { url: '/sections/tools/discounts_manager.php?modal=1', title: '💸 Discount Codes Manager' },
+                        couponManagerModal: { url: '/sections/tools/coupons_manager.php?modal=1', title: '🎟️ Coupons Manager' }
+                    };
+                    const entry = map[id];
+                    if (entry) {
+                        try { window.parent.postMessage({ source: 'wf-ai', type: 'open-tool', url: entry.url, title: entry.title }, '*'); } catch(_) {}
+                        return true; // parent will handle; do not render a local overlay
+                    }
+                }
+            } catch(_) {}
             if (el.parentElement && el.parentElement !== document.body) {
                 document.body.appendChild(el);
             }
+            // Ensure unified modal policy
+            try { el.classList.add('wf-modal-auto'); } catch(_) {}
+            try { el.classList.add('wf-modal-autowide'); } catch(_) {}
+            try { el.classList.add('wf-modal-single-scroll'); } catch(_) {}
+            // If inside AI modal (same-origin parent), prefer viewport-fill behavior for full-coverage scrim and remove inner scrim
+            try {
+                const inIframe = (window.top && window.top !== window);
+                if (inIframe) {
+                    let parentHasAI = false;
+                    try { parentHasAI = !!window.top.document.querySelector('#aiUnifiedModal.show, #aiUnifiedChildModal.show'); } catch(_) {}
+                    if (parentHasAI) { el.classList.add('wf-modal-viewport-fill'); el.classList.add('wf-modal-noscrim'); }
+                }
+            } catch(_) {}
             el.classList.remove('hidden');
             el.classList.add('show');
             el.setAttribute('aria-hidden', 'false');
+            // Recompute responsive sizing for non-iframe overlays (primary path)
+            try { if (typeof window.markOverlayResponsive === 'function') window.markOverlayResponsive(el); } catch(_) {}
+            // Fallback local autosize only if markOverlayResponsive is not available in this iframe
+            try {
+                if (!(typeof window.markOverlayResponsive === 'function')) {
+                    // Reset any inherited/preset sizing so measurement starts from a neutral state
+                    const panel = el.querySelector('.admin-modal');
+                    const body = panel ? panel.querySelector('.modal-body') : null;
+                    const header = panel ? panel.querySelector('.modal-header') : null;
+                    if (panel) {
+                        try { panel.classList.add('admin-modal--responsive'); } catch(_) {}
+                        try { panel.classList.remove('admin-modal--xs','admin-modal--sm','admin-modal--md','admin-modal--lg','admin-modal--lg-narrow','admin-modal--xl','admin-modal--full','admin-modal--square-200','admin-modal--square-260','admin-modal--square-300'); } catch(_) {}
+                    }
+                    if (body) {
+                        try { body.classList.remove('wf-modal-body--scroll','wf-modal-body--autoheight'); } catch(_) {}
+                        try { body.classList.add('wf-modal-body--autoheight'); } catch(_) {}
+                    }
+                    try {
+                        const frames = el.querySelectorAll('iframe, .wf-admin-embed-frame');
+                        frames.forEach((f) => {
+                            try { f.classList.remove('wf-embed--fill','wf-embed-h-s','wf-embed-h-m','wf-embed-h-l','wf-embed-h-xl','wf-embed-h-xxl','wf-admin-embed-frame--tall'); } catch(_) {}
+                        });
+                    } catch(_) {}
+                    if (panel && body) {
+                        const getF = (n, f) => { try { const cs = getComputedStyle(n); return (parseFloat(cs[f])||0); } catch(_) { return 0; } };
+                        const applyScroll = () => {
+                            try {
+                                const maxVh = 0.95;
+                                const maxPanel = Math.floor(window.innerHeight * maxVh);
+                                const available = Math.max(160, maxPanel - (header?header.offsetHeight:0) - (getF(panel,'paddingTop')+getF(panel,'paddingBottom')) - (getF(body,'paddingTop')+getF(body,'paddingBottom')));
+                                // If the body directly wraps an iframe, suppress outer scroll (let iframe scroll)
+                                const directIframe = !!body.querySelector(':scope > iframe, :scope > .wf-admin-embed-frame');
+                                const need = directIframe ? false : ((body.scrollHeight - available) > 8);
+                                body.classList.toggle('wf-modal-body--scroll', need);
+                                body.classList.toggle('wf-modal-body--autoheight', !need);
+                            } catch(_) {}
+                        };
+                        applyScroll();
+                        try { if (!el.__wfLocalRO) { const ro = new ResizeObserver(()=>applyScroll()); ro.observe(body); el.__wfLocalRO = ro; } } catch(_) {}
+                        try { if (!el.__wfLocalMO) { const mo = new MutationObserver(()=>applyScroll()); mo.observe(body, { childList:true, subtree:true, characterData:true }); el.__wfLocalMO = mo; } } catch(_) {}
+                        // Recalculate on window resize to collapse back from tall overlays
+                        try { if (!el.__wfLocalResize) { const onR=()=>applyScroll(); window.addEventListener('resize', onR, { passive:true }); el.__wfLocalResize = onR; } } catch(_) {}
+                    }
+                }
+            } catch(_) {}
             return true;
         } catch (_) { return false; }
     },
@@ -417,6 +496,13 @@ const AdminMarketingModule = {
     // --------- Automation Manager ---------
     async openAutomationManager() {
         const modalId = 'automationManagerModal';
+        // Prefer parent overlay if embedded
+        try {
+            const isEmbed = (window.parent && window.parent !== window);
+            if (isEmbed) {
+                try { window.parent.postMessage({ source: 'wf-ai', type: 'open-tool', url: '/sections/tools/automation_manager.php?modal=1', title: '⚙️ Automation Manager' }, '*'); return; } catch(_) {}
+            }
+        } catch(_) {}
         const content = document.getElementById('automationManagerContent');
         if (!content) { this.showOverlay(modalId); return; }
         content.innerHTML = 'Loading…';
@@ -459,9 +545,245 @@ const AdminMarketingModule = {
         this.showOverlay(modalId);
     },
 
-    // --------- Intent Heuristics Manager (iframe page) ---------
-    openIntentHeuristicsManager() {
+    // --------- Intent Heuristics Manager (inline-first; fallback iframe) ---------
+    async openIntentHeuristicsManager() {
         const modalId = 'intentHeuristicsManagerModal';
+        const inline = document.getElementById('intentHeuristicsContent');
+        if (inline) {
+            inline.innerHTML = `
+              <div class="space-y-3 text-sm text-gray-700">
+                <div class="flex gap-2">
+                  <button id="ih-load-defaults" class="btn btn-secondary">Load Defaults</button>
+                  <button id="ih-reload" class="btn btn-secondary">Reload Current</button>
+                  <button id="ih-save" class="btn btn-primary">Save</button>
+                </div>
+                <div class="card">
+                  <div class="section-title">Weights</div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div><label class="text-xs text-gray-600">Popularity cap</label><input class="admin-form-input" type="number" step="0.1" id="w_popularity_cap"></div>
+                    <div><label class="text-xs text-gray-600">Keyword positive</label><input class="admin-form-input" type="number" step="0.1" id="w_kw_positive"></div>
+                    <div><label class="text-xs text-gray-600">Category positive</label><input class="admin-form-input" type="number" step="0.1" id="w_cat_positive"></div>
+                    <div><label class="text-xs text-gray-600">Seasonal boost</label><input class="admin-form-input" type="number" step="0.1" id="w_seasonal"></div>
+                    <div><label class="text-xs text-gray-600">Same category</label><input class="admin-form-input" type="number" step="0.1" id="w_same_category"></div>
+                    <div><label class="text-xs text-gray-600">Upgrade ratio threshold</label><input class="admin-form-input" type="number" step="0.01" id="w_upgrade_ratio"></div>
+                    <div><label class="text-xs text-gray-600">Upgrade price boost</label><input class="admin-form-input" type="number" step="0.1" id="w_upgrade_price"></div>
+                    <div><label class="text-xs text-gray-600">Upgrade label boost</label><input class="admin-form-input" type="number" step="0.1" id="w_upgrade_label"></div>
+                    <div><label class="text-xs text-gray-600">Replacement label boost</label><input class="admin-form-input" type="number" step="0.1" id="w_replacement_label"></div>
+                    <div><label class="text-xs text-gray-600">Gift set boost</label><input class="admin-form-input" type="number" step="0.1" id="w_gift_set"></div>
+                    <div><label class="text-xs text-gray-600">Gift price boost</label><input class="admin-form-input" type="number" step="0.1" id="w_gift_price"></div>
+                    <div><label class="text-xs text-gray-600">Teacher price ceiling</label><input class="admin-form-input" type="number" step="0.1" id="w_teacher_ceiling"></div>
+                    <div><label class="text-xs text-gray-600">Teacher price boost</label><input class="admin-form-input" type="number" step="0.1" id="w_teacher_boost"></div>
+                    <div><label class="text-xs text-gray-600">Budget proximity multiplier</label><input class="admin-form-input" type="number" step="0.1" id="w_budget_mult"></div>
+                    <div><label class="text-xs text-gray-600">Negative keyword penalty</label><input class="admin-form-input" type="number" step="0.1" id="w_neg_penalty"></div>
+                    <div><label class="text-xs text-gray-600">Intent badge threshold</label><input class="admin-form-input" type="number" step="0.1" id="w_badge_threshold"></div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="section-title">Budget Ranges</div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div><label class="text-xs text-gray-600">Low (min)</label><input class="admin-form-input" type="number" step="0.1" id="b_low_min"></div>
+                    <div><label class="text-xs text-gray-600">Low (max)</label><input class="admin-form-input" type="number" step="0.1" id="b_low_max"></div>
+                    <div><label class="text-xs text-gray-600">Mid (min)</label><input class="admin-form-input" type="number" step="0.1" id="b_mid_min"></div>
+                    <div><label class="text-xs text-gray-600">Mid (max)</label><input class="admin-form-input" type="number" step="0.1" id="b_mid_max"></div>
+                    <div><label class="text-xs text-gray-600">High (min)</label><input class="admin-form-input" type="number" step="0.1" id="b_high_min"></div>
+                    <div><label class="text-xs text-gray-600">High (max)</label><input class="admin-form-input" type="number" step="0.1" id="b_high_max"></div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="section-title">Advanced: Seasonal Months Hints (JSON)</div>
+                  <textarea id="t_seasonal" class="admin-form-textarea" rows="4" placeholder='{"12": ["christmas"], "2": ["valentine"]}'></textarea>
+                </div>
+                <div class="card">
+                  <div class="section-title">Advanced: Keyword Positives by Intent (JSON)</div>
+                  <textarea id="t_kw_pos" class="admin-form-textarea" rows="6" placeholder='{"upgrade": ["pro","premium"]}'></textarea>
+                </div>
+                <div class="card">
+                  <div class="section-title">Advanced: Keyword Negatives by Intent (JSON)</div>
+                  <textarea id="t_kw_neg" class="admin-form-textarea" rows="4" placeholder='{"replacement": ["gift","decor"]}'></textarea>
+                </div>
+                <div class="card">
+                  <div class="section-title">Advanced: Category Affinities by Intent (JSON)</div>
+                  <textarea id="t_cat_pos" class="admin-form-textarea" rows="6" placeholder='{"home-decor": ["home decor","signs"]}'></textarea>
+                </div>
+                <div id="ih-status" class="text-xs text-gray-600" role="status" aria-live="polite"></div>
+              </div>`;
+
+            const statusEl = inline.querySelector('#ih-status');
+            try { if (statusEl) { statusEl.setAttribute('role','status'); statusEl.setAttribute('aria-live','polite'); } } catch(_) {}
+            const setStatus = (msg, ok = true) => { if (!statusEl) return; statusEl.textContent = msg || ''; statusEl.classList.toggle('text-red-600', !ok); };
+
+            const Defaults = {
+              weights: {
+                popularity_cap: 3.0,
+                kw_positive: 2.5,
+                cat_positive: 3.5,
+                seasonal: 2.0,
+                same_category: 2.0,
+                upgrade_price_ratio_threshold: 1.25,
+                upgrade_price_boost: 3.0,
+                upgrade_label_boost: 2.5,
+                replacement_label_boost: 3.0,
+                gift_set_boost: 1.0,
+                gift_price_boost: 1.5,
+                teacher_price_ceiling: 30.0,
+                teacher_price_boost: 1.5,
+                budget_proximity_mult: 2.0,
+                neg_keyword_penalty: 2.0,
+                intent_badge_threshold: 2.0
+              },
+              budget_ranges: { low: [8.0,20.0], mid: [15.0,40.0], high: [35.0,120.0] },
+              keywords: {
+                positive: {
+                  gift: ["gift","set","bundle","present","pack","box"],
+                  personal: [],
+                  replacement: ["refill","replacement","spare","recharge","insert"],
+                  upgrade: ["upgrade","pro","deluxe","premium","xl","plus","pro+","ultimate"],
+                  "diy-project": ["diy","kit","project","starter","make your own","how to"],
+                  "home-decor": ["decor","wall","frame","sign","plaque","art","canvas"],
+                  holiday: ["holiday","christmas","xmas","easter","halloween","valentine","mother","father"],
+                  birthday: ["birthday","party","celebration","cake","bday"],
+                  anniversary: ["anniversary","love","heart","romance","romantic"],
+                  wedding: ["wedding","bride","groom","bridal","mr & mrs","mr and mrs"],
+                  "teacher-gift": ["teacher","school","classroom","teach"],
+                  "office-decor": ["office","desk","workspace","cubicle"],
+                  "event-supplies": ["event","party","supplies","decoration","bulk"],
+                  "workshop-class": ["class","workshop","lesson","course","tutorial"]
+                },
+                negative: { gift: ["refill","replacement"], replacement: ["gift","decor"], upgrade: ["refill"] },
+                categories: {
+                  gift: ["gifts","gift sets","bundles"],
+                  replacement: ["supplies","refills","consumables"],
+                  "diy-project": ["diy","kits","craft kits","projects"],
+                  "home-decor": ["home decor","decor","wall art","signs"],
+                  holiday: ["holiday","seasonal"],
+                  "office-decor": ["office decor"],
+                  "event-supplies": ["event supplies","party"],
+                  "workshop-class": ["classes","workshops"]
+                }
+              },
+              seasonal_months: { 1:["valentine"], 2:["valentine"], 3:["easter"], 4:["easter"], 5:["mother"], 6:["father"], 9:["halloween"], 10:["halloween"], 11:["christmas"], 12:["christmas"] }
+            };
+
+            const setForm = (cfg) => {
+              const W = cfg && cfg.weights ? cfg.weights : {};
+              const BR = cfg && cfg.budget_ranges ? cfg.budget_ranges : {};
+              const low = BR.low || [null,null];
+              const mid = BR.mid || [null,null];
+              const high = BR.high || [null,null];
+              const v = (id, val) => { const n=document.getElementById(id); if (n) n.value = (val ?? '') ; };
+              v('w_popularity_cap', W.popularity_cap);
+              v('w_kw_positive', W.kw_positive);
+              v('w_cat_positive', W.cat_positive);
+              v('w_seasonal', W.seasonal);
+              v('w_same_category', W.same_category);
+              v('w_upgrade_ratio', W.upgrade_price_ratio_threshold);
+              v('w_upgrade_price', W.upgrade_price_boost);
+              v('w_upgrade_label', W.upgrade_label_boost);
+              v('w_replacement_label', W.replacement_label_boost);
+              v('w_gift_set', W.gift_set_boost);
+              v('w_gift_price', W.gift_price_boost);
+              v('w_teacher_ceiling', W.teacher_price_ceiling);
+              v('w_teacher_boost', W.teacher_price_boost);
+              v('w_budget_mult', W.budget_proximity_mult);
+              v('w_neg_penalty', W.neg_keyword_penalty);
+              v('w_badge_threshold', W.intent_badge_threshold);
+              v('b_low_min', low[0]); v('b_low_max', low[1]);
+              v('b_mid_min', mid[0]); v('b_mid_max', mid[1]);
+              v('b_high_min', high[0]); v('b_high_max', high[1]);
+              const t = (id, obj) => { const n=document.getElementById(id); if (n) n.value = JSON.stringify(obj || {}, null, 2); };
+              const K = cfg && cfg.keywords ? cfg.keywords : {};
+              t('t_seasonal', cfg && cfg.seasonal_months ? cfg.seasonal_months : {});
+              t('t_kw_pos', K.positive || {});
+              t('t_kw_neg', K.negative || {});
+              t('t_cat_pos', K.categories || {});
+            };
+
+            const getForm = () => {
+              const num = (id) => { const n=document.getElementById(id); return parseFloat((n && n.value) ? n.value : '0'); };
+              const js = (id) => { const n=document.getElementById(id); try { return JSON.parse((n && n.value) ? n.value : '{}'); } catch(e) { return {}; } };
+              const cfg = { weights:{}, budget_ranges:{}, keywords:{ positive:{}, negative:{}, categories:{} }, seasonal_months:{} };
+              cfg.weights.popularity_cap = num('w_popularity_cap');
+              cfg.weights.kw_positive = num('w_kw_positive');
+              cfg.weights.cat_positive = num('w_cat_positive');
+              cfg.weights.seasonal = num('w_seasonal');
+              cfg.weights.same_category = num('w_same_category');
+              cfg.weights.upgrade_price_ratio_threshold = num('w_upgrade_ratio');
+              cfg.weights.upgrade_price_boost = num('w_upgrade_price');
+              cfg.weights.upgrade_label_boost = num('w_upgrade_label');
+              cfg.weights.replacement_label_boost = num('w_replacement_label');
+              cfg.weights.gift_set_boost = num('w_gift_set');
+              cfg.weights.gift_price_boost = num('w_gift_price');
+              cfg.weights.teacher_price_ceiling = num('w_teacher_ceiling');
+              cfg.weights.teacher_price_boost = num('w_teacher_boost');
+              cfg.weights.budget_proximity_mult = num('w_budget_mult');
+              cfg.weights.neg_keyword_penalty = num('w_neg_penalty');
+              cfg.weights.intent_badge_threshold = num('w_badge_threshold');
+              cfg.budget_ranges.low = [ num('b_low_min'), num('b_low_max') ];
+              cfg.budget_ranges.mid = [ num('b_mid_min'), num('b_mid_max') ];
+              cfg.budget_ranges.high = [ num('b_high_min'), num('b_high_max') ];
+              cfg.seasonal_months = js('t_seasonal');
+              cfg.keywords.positive = js('t_kw_pos');
+              cfg.keywords.negative = js('t_kw_neg');
+              cfg.keywords.categories = js('t_cat_pos');
+              return cfg;
+            };
+
+            const setDefaults = () => { setForm(Defaults); setStatus('Loaded defaults'); };
+            const reload = async () => {
+              try {
+                setStatus('Loading current…');
+                const data = await ApiClient.get('business_settings.php', { action: 'get_setting', key: 'cart_intent_heuristics' });
+                const row = data && data.setting ? data.setting : null;
+                if (!row || !row.setting_value) { setForm(Defaults); setStatus('Loaded defaults (no stored config)'); return; }
+                let cfg = null; try { cfg = JSON.parse(row.setting_value); } catch(_) { cfg = null; }
+                if (!cfg || typeof cfg !== 'object') { setForm(Defaults); setStatus('Invalid stored config, showing defaults'); return; }
+                setForm(cfg); setStatus('Loaded current');
+              } catch(_) { setForm(Defaults); setStatus('Failed to load, showing defaults', false); }
+            };
+            const save = async () => {
+              try {
+                const cfg = getForm();
+                await ApiClient.post('business_settings.php?action=upsert_settings', { category: 'ecommerce', settings: { cart_intent_heuristics: cfg } });
+                setStatus('Saved');
+              } catch(_) { setStatus('Save failed', false); }
+            };
+            // JSON validation & Save guarding
+            const saveBtn = inline.querySelector('#ih-save');
+            const jsonIds = ['t_seasonal','t_kw_pos','t_kw_neg','t_cat_pos'];
+            const validateJsonFields = () => {
+              const invalid = [];
+              jsonIds.forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const val = el.value || '';
+                let ok = true;
+                try { if (val.trim() !== '') JSON.parse(val); } catch(e){ ok = false; }
+                el.classList.toggle('border-red-500', !ok);
+                el.classList.toggle('focus:ring-red-500', !ok);
+                if (!ok) invalid.push(id);
+              });
+              if (saveBtn) saveBtn.disabled = invalid.length > 0;
+              if (invalid.length > 0) setStatus('Invalid JSON in: ' + invalid.join(', '), false);
+              else setStatus('');
+              return invalid.length === 0;
+            };
+            jsonIds.forEach((id)=>{ const el=document.getElementById(id); if (el) el.addEventListener('input', validateJsonFields); });
+            inline.querySelector('#ih-load-defaults')?.addEventListener('click', setDefaults);
+            inline.querySelector('#ih-reload')?.addEventListener('click', reload);
+            inline.querySelector('#ih-save')?.addEventListener('click', save);
+            setDefaults();
+            await reload();
+            validateJsonFields();
+            this.showOverlay(modalId);
+            return;
+        }
+        // Fallback behavior (legacy iframe path)
+        try {
+            const isEmbed = (window.parent && window.parent !== window);
+            if (isEmbed) {
+                try { window.parent.postMessage({ source: 'wf-ai', type: 'open-tool', url: '/sections/tools/intent_heuristics_manager.php?modal=1', title: '🧠 Intent Heuristics Config' }, '*'); return; } catch(_) {}
+            }
+        } catch(_) {}
         try {
             const frame = document.getElementById('intentHeuristicsManagerFrame');
             if (frame) {
@@ -553,9 +875,11 @@ const AdminMarketingModule = {
         try {
             const el = document.getElementById(id);
             if (!el) return false;
-            el.classList.add('hidden');
             el.classList.remove('show');
+            el.classList.add('hidden');
             el.setAttribute('aria-hidden', 'true');
+            // Notify parent iframe autosizer that inner overlay closed
+            try { if (window.parent && window.parent !== window) window.parent.postMessage({ source: 'wf-embed-size', overlay: false }, '*'); } catch(_) {}
             return true;
         } catch (_) { return false; }
     },
@@ -569,7 +893,22 @@ const AdminMarketingModule = {
         this.bindEventListeners();
         this.initializeCharts(marketingPage);
 
-        // Deep-link support removed; marketing overview does not auto-open sub-modals.
+        // Optional deep-link support to open tools via query param (e.g., ?wf_open=intent)
+        try {
+            const qp = new URLSearchParams(window.location.search || '');
+            const key = (qp.get('wf_open') || qp.get('open') || '').toLowerCase();
+            const map = {
+              'suggestions': () => this.openSuggestionsManager(),
+              'social': () => this.openSocialManager(),
+              'automation': () => this.openAutomationManager(),
+              'content': () => this.openContentGenerator(),
+              'newsletters': () => this.openNewslettersManager(),
+              'discounts': () => this.openDiscountsManager(),
+              'coupons': () => this.openCouponsManager(),
+              'intent': () => this.openIntentHeuristicsManager()
+            };
+            if (map[key]) map[key]();
+        } catch(_) {}
     },
 
     bindEventListeners() {

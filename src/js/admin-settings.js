@@ -676,7 +676,7 @@ function showContentToneModal() {
   const existing = document.getElementById('contentToneModal');
   if (existing) existing.remove();
   const modalHtml = `
-    <div id="contentToneModal" class="admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="overlay-close">
+    <div id="contentToneModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost" data-action="overlay-close">
       <div class="admin-modal admin-modal--md bg-white rounded-lg flex flex-col" role="dialog" aria-modal="true" aria-labelledby="contentToneTitle">
         <div class="flex justify-between items-center border-b p-4">
           <h3 id="contentToneTitle" class="text-lg font-semibold text-gray-800">Manage Content Tone Options</h3>
@@ -899,7 +899,7 @@ function showBrandVoiceModal() {
   const existing = document.getElementById('brandVoiceModal');
   if (existing) existing.remove();
   const modalHtml = `
-    <div id="brandVoiceModal" class="admin-modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="overlay-close">
+    <div id="brandVoiceModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost" data-action="overlay-close">
       <div class="admin-modal admin-modal--md bg-white rounded-lg flex flex-col" role="dialog" aria-modal="true" aria-labelledby="brandVoiceTitle">
         <div class="flex justify-between items-center border-b p-4">
           <h3 id="brandVoiceTitle" class="text-lg font-semibold text-gray-800">Manage Brand Voice Options</h3>
@@ -2683,10 +2683,10 @@ function switchTemplateTab(tabName) {
     const subjectSpan = document.getElementById('previewSubject');
     if (!modal || !iframe || !subjectSpan) return;
 
-    // Normalize modal overlay to match admin modal behavior (below header, items-start)
+    // Normalize modal overlay to match unified admin behavior (full viewport, centered)
     try {
-        modal.classList.add('admin-modal-overlay', 'fixed', 'left-0', 'right-0', 'bg-black', 'bg-opacity-50', 'flex', 'items-start', 'justify-center', 'z-50', 'admin-modal-offset-under-header');
-        modal.classList.remove('items-center');
+        modal.classList.add('admin-modal-overlay', 'wf-overlay-viewport', 'over-header', 'topmost');
+        modal.classList.remove('items-start', 'admin-modal-offset-under-header');
     } catch (_) {}
 
     subjectSpan.textContent = (preview && preview.subject) ? preview.subject : '';
@@ -2728,7 +2728,7 @@ function switchTemplateTab(tabName) {
       }
   } catch (_) {}
 
-  // Removed inline-style positioning helpers; using CSS class 'admin-modal-offset-under-header'
+  // Removed legacy header-offset positioning helpers (admin-modal-offset-under-header)
 
   // Delegated handlers for Email Template Preview modal
   document.addEventListener('click', function(ev) {
@@ -2761,7 +2761,7 @@ function showTestEmailModal(templateId) {
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'testEmailSendModal';
-        overlay.className = 'admin-modal-overlay fixed left-0 right-0 bg-black bg-opacity-50 flex items-start justify-center z-50 hidden';
+        overlay.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
         overlay.innerHTML = `
           <div class="admin-modal bg-white rounded-lg w-full max-w-lg shadow-xl" role="dialog" aria-modal="true" aria-labelledby="testEmailTitle">
             <div class="flex items-center justify-between p-4 border-b">
@@ -2784,10 +2784,15 @@ function showTestEmailModal(templateId) {
     try { lastFocusedBeforeTestModal = document.activeElement; } catch (_) {}
     overlay.classList.remove('hidden');
     try { updateModalScrollLock(); } catch (_) {}
-    // Position under header and keep in sync while visible
-    setOverlayPosition(overlay);
-    overlay._disposePositioner?.();
-    overlay._disposePositioner = attachOverlayAutoPosition(overlay);
+    // Do not apply header-offset positioning on admin routes
+    try {
+        const isAdmin = !!document.body && document.body.matches('[data-page^="admin"]');
+        if (!isAdmin) {
+            setOverlayPosition(overlay);
+            overlay._disposePositioner?.();
+            overlay._disposePositioner = attachOverlayAutoPosition(overlay);
+        }
+    } catch(_) {}
     const input = overlay.querySelector('#testEmailInput');
     if (input) { try { input.focus(); } catch (_) {} }
 }
@@ -2928,7 +2933,7 @@ function showTestEmailModal(templateId) {
       if (overlay) return overlay;
       overlay = document.createElement('div');
       overlay.id = 'emailTemplateEditModal';
-      overlay.className = 'admin-modal-overlay fixed left-0 right-0 bg-black bg-opacity-50 flex items-start justify-center z-50 hidden';
+      overlay.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
       overlay.innerHTML = `
         <div class="admin-modal admin-modal-content admin-modal--lg bg-white rounded-lg flex flex-col shadow-xl" role="dialog" aria-modal="true" aria-labelledby="emailTemplateEditTitle">
           <div class="flex items-center justify-between p-4 border-b">
@@ -3185,7 +3190,7 @@ function showTestEmailModal(templateId) {
       if (overlay) return overlay;
       overlay = document.createElement('div');
       overlay.id = 'templateAssignmentModal';
-      overlay.className = 'admin-modal-overlay fixed left-0 right-0 bg-black bg-opacity-50 flex items-start justify-center z-50 hidden admin-modal-offset-under-header';
+      overlay.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
       overlay.innerHTML = `
         <div class="admin-modal bg-white rounded-lg w-full max-w-md shadow-xl" role="dialog" aria-modal="true" aria-labelledby="templateAssignmentTitle">
           <div class="flex items-center justify-between p-4 border-b">
@@ -3765,18 +3770,18 @@ if (typeof window !== 'undefined') {
     window.updateColorPicker = updateColorPicker;
     window.saveColorTemplate = saveColorTemplate;
     // Size Template shims
-    window.loadSizeTemplates = loadSizeTemplates;
-    window.renderSizeTemplates = renderSizeTemplates;
-    window.filterSizeTemplates = filterSizeTemplates;
-    window.createNewSizeTemplate = createNewSizeTemplate;
-    window.editSizeTemplate = editSizeTemplate;
-    window.deleteSizeTemplate = deleteSizeTemplate;
-    window.createSizeTemplateEditModal = createSizeTemplateEditModal;
-    window.showSizeTemplateEditModal = showSizeTemplateEditModal;
-    window.closeSizeTemplateEditModal = closeSizeTemplateEditModal;
-    window.addSizeToTemplate = addSizeToTemplate;
-    window.removeSizeFromTemplate = removeSizeFromTemplate;
-    window.saveSizeTemplate = saveSizeTemplate;
+    window.loadSizeTemplates = (typeof loadSizeTemplates === 'function') ? loadSizeTemplates : (typeof window.loadSizeTemplates === 'function' ? window.loadSizeTemplates : function(){});
+    window.renderSizeTemplates = (typeof renderSizeTemplates === 'function') ? renderSizeTemplates : (typeof window.renderSizeTemplates === 'function' ? window.renderSizeTemplates : function(){});
+    window.filterSizeTemplates = (typeof filterSizeTemplates === 'function') ? filterSizeTemplates : (typeof window.filterSizeTemplates === 'function' ? window.filterSizeTemplates : function(){});
+    window.createNewSizeTemplate = (typeof createNewSizeTemplate === 'function') ? createNewSizeTemplate : (typeof window.createNewSizeTemplate === 'function' ? window.createNewSizeTemplate : function(){});
+    window.editSizeTemplate = (typeof editSizeTemplate === 'function') ? editSizeTemplate : (typeof window.editSizeTemplate === 'function' ? window.editSizeTemplate : function(){});
+    window.deleteSizeTemplate = (typeof deleteSizeTemplate === 'function') ? deleteSizeTemplate : (typeof window.deleteSizeTemplate === 'function' ? window.deleteSizeTemplate : function(){});
+    window.createSizeTemplateEditModal = (typeof createSizeTemplateEditModal === 'function') ? createSizeTemplateEditModal : (typeof window.createSizeTemplateEditModal === 'function' ? window.createSizeTemplateEditModal : function(){});
+    window.showSizeTemplateEditModal = (typeof showSizeTemplateEditModal === 'function') ? showSizeTemplateEditModal : (typeof window.showSizeTemplateEditModal === 'function' ? window.showSizeTemplateEditModal : function(){});
+    window.closeSizeTemplateEditModal = (typeof closeSizeTemplateEditModal === 'function') ? closeSizeTemplateEditModal : (typeof window.closeSizeTemplateEditModal === 'function' ? window.closeSizeTemplateEditModal : function(){});
+    window.addSizeToTemplate = (typeof addSizeToTemplate === 'function') ? addSizeToTemplate : (typeof window.addSizeToTemplate === 'function' ? window.addSizeToTemplate : function(){});
+    window.removeSizeFromTemplate = (typeof removeSizeFromTemplate === 'function') ? removeSizeFromTemplate : (typeof window.removeSizeFromTemplate === 'function' ? window.removeSizeFromTemplate : function(){});
+    window.saveSizeTemplate = (typeof saveSizeTemplate === 'function') ? saveSizeTemplate : (typeof window.saveSizeTemplate === 'function' ? window.saveSizeTemplate : function(){});
     // AI settings shims
     window.openAISettingsModal = openAISettingsModal;
     window.closeAISettingsModal = closeAISettingsModal;
@@ -4025,7 +4030,11 @@ function initAdminSettingsDelegatedListeners() {
         try {
             const obsRoot = document.querySelector('.settings-page');
             if (obsRoot) {
+                let __wfMigLast = 0;
                 const observer = new MutationObserver((mutations) => {
+                    const now = Date.now();
+                    if ((now - __wfMigLast) < 150) return;
+                    __wfMigLast = now;
                     for (const m of mutations) {
                         if (m.type === 'childList') {
                             for (const node of m.addedNodes) {
@@ -7690,7 +7699,10 @@ function offsetOverlayBelowHeader(el) {
 }
 
 function applyHeaderOffsetToAllOverlays() {
+    // Legacy helper disabled for admin routes to allow full-viewport centering
     try {
+        const isAdmin = !!document.body && document.body.matches('[data-page^="admin"]');
+        if (isAdmin) return; // no-op on admin
         const selectors = [
             '.admin-modal-overlay',
             '.modal-overlay',
@@ -7710,6 +7722,9 @@ function applyHeaderOffsetToAllOverlays() {
 
 function watchModalOpensForHeaderOffset() {
     try {
+        let __wfHdrOffTimer = null;
+        let __wfHdrOffBusy = false;
+        let __wfHdrOffLast = 0;
         const observer = new MutationObserver((mutations) => {
             let needApply = false;
             for (const m of mutations) {
@@ -7723,10 +7738,19 @@ function watchModalOpensForHeaderOffset() {
                     }
                 }
             }
-            if (needApply) {
-                // Also sweep all to be safe
-                applyHeaderOffsetToAllOverlays();
+            if (!needApply) return;
+            const now = Date.now();
+            const run = () => {
+                if (__wfHdrOffBusy) return;
+                __wfHdrOffBusy = true;
+                try { applyHeaderOffsetToAllOverlays(); } finally { __wfHdrOffBusy = false; __wfHdrOffLast = Date.now(); }
+            };
+            if ((now - __wfHdrOffLast) < 200) {
+                try { if (__wfHdrOffTimer) clearTimeout(__wfHdrOffTimer); } catch(_) {}
+                __wfHdrOffTimer = setTimeout(run, 200);
+                return;
             }
+            run();
         });
         observer.observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
         // Keep a reference in case we need to disconnect later
@@ -7736,13 +7760,15 @@ function watchModalOpensForHeaderOffset() {
 
 if (typeof window !== 'undefined') {
     const onReady = () => {
-        // Inject a strong style sheet that enforces top/height below header for overlays
-        try {
-            const existing = document.getElementById('wf-modal-offset-style');
-            const style = existing || document.createElement('style');
-            style.id = 'wf-modal-offset-style';
-            const headerZ = getHeaderZIndex();
-            const css = `
+        const __wfEnableHdrOffset = false; // finalized: disabled on Settings
+        if (__wfEnableHdrOffset) {
+            // Inject a strong style sheet that enforces top/height below header for overlays
+            try {
+                const existing = document.getElementById('wf-modal-offset-style');
+                const style = existing || document.createElement('style');
+                style.id = 'wf-modal-offset-style';
+                const headerZ = getHeaderZIndex();
+                const css = `
                 :root { --wf-header-h: ${getHeaderHeight()}px; --wf-header-h-plus: calc(var(--wf-header-h) + 16px); --wf-header-z: ${Number.isFinite(headerZ) ? headerZ : 100}; --wf-modal-below-header-z: calc(var(--wf-header-z) - 1); }
                 .admin-modal-overlay,
                 .modal-overlay,
@@ -7783,27 +7809,30 @@ if (typeof window !== 'undefined') {
                     z-index: 1;
                 }
             `;
-            style.textContent = css;
-            if (!existing) document.head.appendChild(style);
-        } catch (_) {}
-
-        applyHeaderOffsetToAllOverlays();
-        watchModalOpensForHeaderOffset();
-        // Re-apply on resize since header height can change with breakpoints
-        window.addEventListener('resize', () => {
-            // Refresh style block value without touching inline CSS variables
-            try {
-                const h = getHeaderHeight();
-                const style = document.getElementById('wf-modal-offset-style');
-                if (style) style.textContent = style.textContent.replace(/--wf-header-h: \d+px;/, `--wf-header-h: ${h}px;`);
+                style.textContent = css;
+                if (!existing) document.head.appendChild(style);
             } catch (_) {}
-            applyHeaderOffsetToAllOverlays();
-        });
+            // No header offset on admin: overlays are full-viewport centered
+            const onSettingsPage = !!document.querySelector('.settings-page');
+            if (!onSettingsPage) {
+                watchModalOpensForHeaderOffset();
+            }
+            // Re-apply on resize since header height can change with breakpoints
+            window.addEventListener('resize', () => {
+                // Refresh style block value without touching inline CSS variables
+                try {
+                    const h = getHeaderHeight();
+                    const style = document.getElementById('wf-modal-offset-style');
+                    if (style) style.textContent = style.textContent.replace(/--wf-header-h: \d+px;/, `--wf-header-h: ${h}px;`);
+                } catch (_) {}
+                applyHeaderOffsetToAllOverlays();
+            });
 
-        // Re-apply shortly after initial paint to catch late header sizing
-        setTimeout(() => applyHeaderOffsetToAllOverlays(), 250);
-        // Also re-apply on full window load (fonts/images can change header height)
-        window.addEventListener('load', () => applyHeaderOffsetToAllOverlays(), { once: true });
+            // Re-apply shortly after initial paint to catch late header sizing
+            setTimeout(() => applyHeaderOffsetToAllOverlays(), 250);
+            // Also re-apply on full window load (fonts/images can change header height)
+            window.addEventListener('load', () => applyHeaderOffsetToAllOverlays(), { once: true });
+        }
 
         // Delegated admin modal handlers
         const root = document;
@@ -7846,6 +7875,8 @@ if (typeof window !== 'undefined') {
             window.__wfModalUserInteracted = true;
             // Ensure overlays are appended to body to avoid ancestor overflow/transform issues
             try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+            // Force viewport anchoring utility classes
+            try { el.classList.add('wf-overlay-viewport','over-header','topmost'); el.classList.remove('under-header'); } catch(_) {}
             // Normalize ARIA and visibility
             try { el.removeAttribute('hidden'); } catch(_) {}
             try { el.classList.remove('hidden'); } catch (_) {}

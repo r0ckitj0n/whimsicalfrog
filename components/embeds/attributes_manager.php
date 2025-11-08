@@ -72,7 +72,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   .attributes-grid {
     display: grid !important;
     width: 100%;
-    grid-template-columns: minmax(200px, max-content) minmax(280px, 1fr) minmax(280px, 1fr) !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     grid-auto-rows: min-content;
     align-items: start;
     justify-content: start;
@@ -82,10 +82,8 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     position: relative;
     z-index: 0;
   }
-  #admin-section-content .attributes-grid { display: grid !important; grid-template-columns: minmax(200px, max-content) minmax(280px, 1fr) minmax(280px, 1fr) !important; justify-content: start !important; }
-  @media (max-width: 980px) {
-    .attributes-grid, #admin-section-content .attributes-grid { grid-template-columns: minmax(220px,max-content) minmax(260px,1fr) !important; }
-  }
+  #admin-section-content .attributes-grid { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; justify-content: start !important; }
+  @media (max-width: 980px) { .attributes-grid, #admin-section-content .attributes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
   @media (max-width: 720px) {
     .attributes-grid, #admin-section-content .attributes-grid { grid-template-columns: 1fr !important; }
   }
@@ -118,62 +116,12 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
   }
   .muted { color: #6b7280; font-size: 12px; }
   ul.simple { list-style: none; padding-left: 0; margin: 0; }
-  ul.simple li { padding: 6px 4px; border-bottom: 1px dashed #f1f5f9; display:flex; justify-content: space-between; gap:10px; overflow: visible; }
+  ul.simple li { padding: 6px 4px; border-bottom: 1px dashed #f1f5f9; display:grid; grid-template-columns: minmax(0, 1fr) max-content; align-items:center; gap:8px; overflow: visible; }
   .pill { font-size: 11px; background: #f3f4f6; color: #374151; padding: 2px 6px; border-radius: 12px; }
   .toolbar { position:absolute; right:12px; top:50%; transform:translateY(-50%); display:flex; gap:6px; }
   .row-actions { display:flex; gap:6px; }
-  /* Ungated icon rules so icons render even if admin-actions-icons is not active */
-  .attributes-grid .row-actions .btn::before {
-    display: inline-block; font-size: 14px; line-height: 1; width: 1.3em; text-align: center;
-    -webkit-mask-image: none !important; mask-image: none !important; background: none !important;
-  }
-  .attributes-grid .row-actions .btn { display:inline-flex; align-items:center; justify-content:center; width:24px; min-width:24px; height:24px; padding:0; overflow: visible; }
+  /* Use standardized admin icon classes; remove legacy per-embed icon overrides */
   .attributes-grid .row-actions { overflow: visible; padding-right: 1px; }
-  .attributes-grid .row-actions .btn.btn-icon--edit::before,
-  .attributes-grid .row-actions .btn[data-action="gender-rename"]::before,
-  .attributes-grid .row-actions .btn[data-action="size-edit"]::before,
-  .attributes-grid .row-actions .btn[data-action="color-edit"]::before,
-  .attributes-grid .row-actions .btn[title^="Edit"]::before { content: '✏️' !important; }
-  .attributes-grid .row-actions .btn.btn-icon--duplicate::before,
-  .attributes-grid .row-actions .btn[data-action="size-dup"]::before,
-  .attributes-grid .row-actions .btn[data-action="color-dup"]::before,
-  .attributes-grid .row-actions .btn[title^="Duplicate"]::before { content: '📄' !important; }
-  .attributes-grid .row-actions .btn.btn-icon--delete::before,
-  .attributes-grid .row-actions .btn[data-action="gender-delete"]::before,
-  .attributes-grid .row-actions .btn[data-action="size-delete"]::before,
-  .attributes-grid .row-actions .btn[data-action="color-delete"]::before,
-  .attributes-grid .row-actions .btn[title^="Delete"]::before { content: '🗑️' !important; }
-  /* Scoped standardized icons for row-actions (emoji content to avoid Vite path transforms in inline CSS) */
-  .admin-actions-icons .attributes-grid .row-actions .btn::before {
-    display: inline-block; font-size: 14px; line-height: 1; width: 1.2em; text-align: center;
-    /* Kill any mask-image/background from global rules so emoji renders */
-    -webkit-mask-image: none !important; mask-image: none !important; background: none !important;
-  }
-  /* Explicit mapping for delete buttons to ensure visibility */
-  .admin-actions-icons .attributes-grid .row-actions .btn.btn-icon--delete::before { content: '🗑️'; }
-  /* Give buttons a consistent box so pseudo-element is always visible */
-  .admin-actions-icons .attributes-grid .row-actions .btn { display:inline-flex; align-items:center; justify-content:center; width:24px; min-width:24px; height:24px; padding:0; }
-  /* Prefer reliable data-action hooks over title */
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="gender-rename"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="size-edit"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="color-edit"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[title^="Edit"]::before { content: '✏️'; }
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="size-dup"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="color-dup"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[title^="Duplicate"]::before { content: '📄'; }
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="gender-delete"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="size-delete"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[data-action="color-delete"]::before,
-  .admin-actions-icons .attributes-grid .row-actions .btn[title^="Delete"]::before { content: '🗑️'; }
-  /* Header Add buttons */
-  .admin-actions-icons .attributes-grid .card-header .btn[data-action="gender-add"]::before,
-  .admin-actions-icons .attributes-grid .card-header .btn[data-action="size-new"]::before,
-  .admin-actions-icons .attributes-grid .card-header .btn[data-action="color-new"]::before,
-  .admin-actions-icons .attributes-grid .card-header .btn[title^="Add"]::before,
-  .admin-actions-icons .attributes-grid .card-header .btn[title^="New"]::before {
-    content: '➕'; display: inline-block; font-size: 14px; line-height: 1;
-    -webkit-mask-image: none !important; mask-image: none !important; background: none !important;
-  }
   /* No explicit breakpoints needed; auto-fit handles 3→2→1 responsively. */
   /* Inline modal helpers */
   .attr-modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,.6); display:none; z-index: 2147483000; }
@@ -281,6 +229,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
 <body>
 <?php endif; ?>
 <div id="admin-section-content" class="p-3 admin-actions-icons">
+  <div id="attributesMeasure">
   <div class="admin-card compact my-2">
     <div class="flex items-center justify-between">
       <div>
@@ -295,10 +244,14 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     }
     function h() {
       try {
-        var n = document.getElementById('admin-section-content') || document.body;
+        var n = document.getElementById('attributesMeasure') || document.getElementById('admin-section-content') || document.body;
         var r = n.getBoundingClientRect();
-        var H = Math.max(80, Math.round(r.height || n.scrollHeight || 0));
-        var W = Math.max(200, Math.round(r.width || n.scrollWidth || 0));
+        var hRect = Math.round(r && r.height ? r.height : 0);
+        var hScroll = Math.round(n && n.scrollHeight ? n.scrollHeight : 0);
+        var H = Math.max(80, hRect, hScroll);
+        var wRect = Math.round(r && r.width ? r.width : 0);
+        var wScroll = Math.round(n && n.scrollWidth ? n.scrollWidth : 0);
+        var W = Math.max(200, wRect, wScroll);
         window.parent && window.parent.postMessage({ source: 'wf-embed-size', height: H, width: W }, '*');
       } catch(_) {}
     }
@@ -306,6 +259,10 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     var times = [0, 60, 120, 240, 400, 600, 900];
     times.forEach(function(t){ setTimeout(h, t); });
     window.addEventListener('load', function(){ setTimeout(h, 0); setTimeout(h, 150); setTimeout(h, 350); }, { once: true });
+    try {
+      var mo = new MutationObserver(function(){ setTimeout(h, 0); setTimeout(h, 120); });
+      mo.observe(document.getElementById('attributesMeasure') || document.body, { childList: true, subtree: true });
+    } catch(_) {}
   } catch(_) {}
 })();
 </script>
@@ -315,7 +272,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
         <button id="sizeColorRedesignBtn" class="btn btn-primary" data-action="open-size-color-redesign">Open Size/Color Redesign</button>
       </div>
     </div>
-  </div>
+  <!-- wrapper stays open; close after grid so height includes full content -->
 <div id="attrPromptModal" class="attr-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1">
   <div class="attr-modal attr-modal--autoheight">
     <div class="attr-modal-header">
@@ -333,7 +290,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
     </div>
   </div>
 </div>
-  <div class="attributes-grid">
+<div class="attributes-grid">
     <div class="card">
       <div class="card-header">Genders <span class="muted">(distinct across catalog)</span>
         <div class="toolbar">
@@ -421,6 +378,7 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
       </div>
     </div>
   </div>
+  </div> <!-- /#attributesMeasure -->
 </div>
 <!-- Editor Modal injected into this embed -->
 <div id="attrEditorModal" class="attr-modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1">
@@ -1169,14 +1127,14 @@ if ($inModal) { include dirname(__DIR__, 2) . '/partials/modal_header.php'; }
           <div id="sizeRows">
             ${sizes.map((s,idx)=>`
               <div class="row" data-index="${idx}">
-                <input data-field="size_name" value="${escapeAttr(s.size_name||'')}" />
-                <input data-field="size_code" value="${escapeAttr(s.size_code||'')}" />
-                <input data-field="price_adjustment" type="number" step="0.01" value="${escapeAttr(s.price_adjustment||0)}" />
-                <input data-field="display_order" type="number" value="${escapeAttr(s.display_order||idx)}" />
+                <input data-field="size_name" value="${escapeAttr(s.size_name||'')}">
+                <input data-field="size_code" value="${escapeAttr(s.size_code||'')}">
+                <input data-field="price_adjustment" type="number" step="0.01" value="${escapeAttr(s.price_adjustment||0)}">
+                <input data-field="display_order" type="number" value="${escapeAttr(s.display_order||idx)}">
                 <div class="move">
-                  <button class="btn btn-icon btn-icon--up" data-action="row-up" aria-label="Move up" title="Move up"></button>
-                  <button class="btn btn-icon btn-icon--down" data-action="row-down" aria-label="Move down" title="Move down"></button>
-                  <button class="btn btn-icon btn-icon--delete" data-action="row-del" aria-label="Remove" title="Remove"></button>
+                  <button class="btn-icon btn-icon--up" data-action="row-up" aria-label="Move up" title="Move up"></button>
+                  <button class="btn-icon btn-icon--down" data-action="row-down" aria-label="Move down" title="Move down"></button>
+                  <button class="btn-icon btn-icon--delete" data-action="row-del" aria-label="Remove" title="Remove"></button>
                 </div>
               </div>`).join('')}
           </div>

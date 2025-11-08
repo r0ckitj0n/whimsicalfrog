@@ -12,7 +12,8 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Section</title>
     <?php
-    // Always try the Vite dev server first (WF_VITE_ORIGIN > hot file > default localhost:5176)
+    // Always try the Vite dev server first (WF_VITE_ORIGIN > hot file > default localhost:5176),
+    // but avoid dev on HTTPS pages if Vite origin is HTTP (mixed content will block HMR in iframes)
     $origin = getenv('WF_VITE_ORIGIN');
     if (!$origin && file_exists(dirname(__DIR__) . '/hot')) {
         $origin = trim((string)@file_get_contents(dirname(__DIR__) . '/hot'));
@@ -29,7 +30,11 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
         $ctx = stream_context_create(['http'=>['timeout'=>0.6,'ignore_errors'=>true],'https'=>['timeout'=>0.6,'ignore_errors'=>true]]);
         return @file_get_contents($u, false, $ctx) !== false;
     };
-    if ($probe($origin)) {
+    $pageIsHttps = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']))
+        ? (strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+        : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443));
+    $originIsHttp = (stripos($origin, 'http://') === 0);
+    if ($probe($origin) && !($pageIsHttps && $originIsHttp)) {
         $o = rtrim($origin,'/');
         // Load HMR client and entry
         echo '<script crossorigin="anonymous" type="module" src="' . $o . '/@vite/client"></script>' . "\n";
@@ -41,7 +46,10 @@ require_once dirname(__DIR__) . '/includes/vite_helper.php';
         // Dynamic icon CSS (admin icon map)
         echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
     } else {
-        // Fall back to production manifest bundles
+        // Fall back to production manifest bundles (or when mixed content would block HMR)
+        if ($pageIsHttps && $originIsHttp) {
+            echo "<!-- modal_header: HTTPS page with HTTP Vite origin; using production assets to avoid mixed content -->\n";
+        }
         echo vite('js/app.js');
     }
     ?>

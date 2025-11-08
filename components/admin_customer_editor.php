@@ -13,8 +13,8 @@ if (!function_exists('renderAdminCustomerEditor')) {
         $username = htmlspecialchars((string)($customer['username'] ?? ''), ENT_QUOTES, 'UTF-8');
         $role = htmlspecialchars((string)($customer['role'] ?? 'customer'), ENT_QUOTES, 'UTF-8');
         ?>
-<div id="customerModalOuter" class="admin-modal-overlay wf-modal--content-scroll fixed inset-0 bg-black/50 flex items-start justify-center overflow-y-auto" data-action="close-customer-editor-on-overlay" role="dialog" aria-modal="true" aria-hidden="false">
-  <div class="admin-modal admin-modal--actions-in-header relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-4xl">
+<div id="customerModalOuter" class="admin-modal-overlay wf-overlay-viewport over-header topmost" data-action="close-customer-editor-on-overlay" role="dialog" aria-modal="true" aria-hidden="false">
+  <div class="admin-modal admin-modal--actions-in-header bg-white rounded-lg shadow-xl w-full max-w-4xl">
     <div class="modal-header flex items-center justify-between border-b border-gray-100 gap-2 px-4 py-3">
       <h2 class="text-lg font-bold text-green-700"><?= $isEdit ? 'Edit Customer' : 'Add New Customer' ?><?= ($isEdit && $id) ? ' (#' . $id . ')' : '' ?></h2>
       <?php if ($isEdit): ?>

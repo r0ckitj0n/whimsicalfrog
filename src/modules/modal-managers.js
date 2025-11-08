@@ -12,6 +12,8 @@ export const ModalManager = {
         document.body.appendChild(el);
       }
     } catch(_) {}
+    // Force viewport anchoring and consistent stacking/tint via utility classes
+    try { el.classList.add('wf-overlay-viewport','over-header','topmost'); el.classList.remove('under-header'); } catch(_) {}
     try { el.removeAttribute('hidden'); } catch(_) {}
     el.classList.remove('hidden');
     el.classList.add('show');

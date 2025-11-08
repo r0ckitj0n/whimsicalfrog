@@ -10,7 +10,7 @@
     width: 100vw !important;
     height: 100vh !important;
     overscroll-behavior: contain;
-    z-index: var(--z-overlay-topmost, 1600) !important;
+    z-index: var(--z-overlay-topmost) !important;
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;
@@ -18,7 +18,7 @@
 
 /* Ensure standard overlays sit above header/admin nav */
 .modal-overlay {
-    z-index: var(--z-overlay,  10050);
+    z-index: var(--z-overlay);
     overscroll-behavior: contain;
 }
 
@@ -386,7 +386,7 @@ div[class*="admin-modal"][class*="wf-admin-panel-visible"] {
   align-items: flex-start;
   justify-content: center;
   background: rgba(0,0,0,0.5);
-  z-index: calc(var(--z-overlay-topmost, 1600) + 10000);
+  z-index: var(--z-overlay-topmost);
 }
 .pos-modal-content {
   background: #fff;

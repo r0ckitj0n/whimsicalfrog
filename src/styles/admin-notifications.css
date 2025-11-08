@@ -7,7 +7,7 @@
     position: fixed !important;
     top: 20px !important;
     right: 20px !important;
-    z-index: var(--z-global-popup, 100200) !important;
+    z-index: var(--z-global-popup) !important;
     pointer-events: none !important;
     max-width: 400px !important;
 }
@@ -23,7 +23,7 @@
     transform: translateX(120%) !important;
     opacity: 0 !important;
     transition: all 0.4s ease !important;
-    z-index: var(--z-global-popup, 100200) !important;
+    z-index: var(--z-global-popup) !important;
     min-width: 300px !important;
     max-width: 400px !important;
 }
@@ -101,7 +101,7 @@
     position: fixed !important;
     top: 10px !important;
     left: 10px !important;
-    z-index: var(--z-global-popup, 100200) !important;
+    z-index: var(--z-global-popup) !important;
     background: #87ac3a !important;
     color: white !important;
     border: none !important;
@@ -114,7 +114,7 @@
 .admin-test-save-button {
     left: 150px !important;
     background: #dc2626 !important;
-    z-index: var(--z-global-popup, 100200) !important;
+    z-index: var(--z-global-popup) !important;
 }
 
 .admin-error-notification {

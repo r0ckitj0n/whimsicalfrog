@@ -5,7 +5,11 @@ import '../styles/components/modal.css';
 import '../styles/admin-settings.css';
 import '../styles/embed-iframe.css';
 import '../modules/embed-autosize-child.js';
+import '../modules/overlay-manager.js';
 import '../js/admin-marketing.js';
+
+// Prefer inline overlays by default; rollback flags still respected
+try { if (typeof window !== 'undefined') window.__WF_INLINE_STRICT = true; } catch(_) {}
 
 (function(){
   const variants = ['btn-primary','btn-secondary','btn-danger','btn-info','btn-warning','btn-success','btn-link','btn-xs','btn-sm','btn-lg'];

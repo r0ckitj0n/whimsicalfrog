@@ -14,6 +14,8 @@ export class RoomCoordinateManager {
     this.styleElement = null;
   }
 
+ 
+
   /**
    * Initialize coordinate manager
    */
@@ -41,31 +43,72 @@ export class RoomCoordinateManager {
    */
   async loadCoordinates(roomType = 'room_main') {
     try {
-      // Don't try to load coordinates for room_main since it doesn't need them
-      if (roomType === 'room_main') {
-        console.log('[CoordinateManager] Skipping coordinate load for room_main - not needed');
-        return true;
-      }
+      // Map canonical room ids. Support main navigation background as room 0.
+      // Accept numbers, 'roomN', 'N', and 'room_main' => '0'
+      let apiRoom = roomType;
+      if (roomType === 'room_main' || roomType === 'main') apiRoom = '0';
+      if (typeof apiRoom === 'number') apiRoom = String(apiRoom);
+      if (typeof apiRoom === 'string' && /^room\d+$/i.test(apiRoom)) apiRoom = apiRoom.replace(/^room/i, '');
+      if (apiRoom == null || apiRoom === '') apiRoom = '0';
+      // Session cache (TTL: 10 minutes)
+      const cacheKey = `wf_coords_room_${apiRoom}`;
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const ttlMs = 10 * 60 * 1000;
+          if (parsed && Array.isArray(parsed.coordinates) && parsed.t && (Date.now() - parsed.t) < ttlMs) {
+            this.config.doorCoordinates = parsed.coordinates.map((coord) => {
+              const sel = String(coord.selector || '').trim();
+              const normalized = (/^[.#\[]/.test(sel)) ? sel : (sel ? `.${sel}` : '');
+              return { ...coord, selector: normalized };
+            });
+            return true;
+          }
+        }
+      } catch(_) {}
       try { performance.mark('wf:coords:load:start'); } catch(_) {}
-      const data = await ApiClient.get('/api/get_room_coordinates.php', { room: roomType });
-      if (data.success && Array.isArray(data.coordinates) && data.coordinates.length) {
-        this.config.doorCoordinates = data.coordinates.map((coord) => ({
-          ...coord,
-          selector: coord.selector.startsWith('.') ? coord.selector : `.${coord.selector}`,
-        }));
+      const data = await ApiClient.get('/api/get_room_coordinates.php', { room: apiRoom });
+      const payload = (data && (data.data || data)) || {};
+      const coords = Array.isArray(payload.coordinates) ? payload.coordinates : [];
+      if (data && data.success && coords.length) {
+        this.config.doorCoordinates = coords.map((coord) => {
+          const sel = String(coord.selector || '').trim();
+          const normalized = (/^[.#\[]/.test(sel)) ? sel : (sel ? `.${sel}` : '');
+          return {
+            ...coord,
+            selector: normalized,
+          };
+        });
+        // Save to session cache
+        try { sessionStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), coordinates: coords })); } catch(_) {}
         try {
           performance.mark('wf:coords:load:end');
           performance.measure('wf:coords:load', 'wf:coords:load:start', 'wf:coords:load:end');
-          const m = performance.getEntriesByName('wf:coords:load').pop();
-          if (m) console.log(`[Perf] Coordinates loaded for ${roomType} in ${m.duration.toFixed(1)}ms`);
+          // Perf marks retained for DevTools; no console logging
         } catch(_) {}
         return true;
       }
 
-      console.warn(`No active room map found in database for ${roomType}`);
       return false;
     } catch (error) {
-      console.error('Error loading room coordinates from database:', error);
+      // Fallback to cache on error
+      try {
+        const apiRoom = (roomType === 'room_main' || roomType === 'main') ? '0' : String(roomType);
+        const raw = sessionStorage.getItem(`wf_coords_room_${apiRoom}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.coordinates)) {
+            this.config.doorCoordinates = parsed.coordinates.map((coord) => {
+              const sel = String(coord.selector || '').trim();
+              const normalized = (/^[.#\[]/.test(sel)) ? sel : (sel ? `.${sel}` : '');
+              return { ...coord, selector: normalized };
+            });
+            return true;
+          }
+        }
+      } catch(_) {}
+      // Silent failure; caller should handle gracefully
       return false;
     }
   }
@@ -76,33 +119,46 @@ export class RoomCoordinateManager {
    */
   applyDoorCoordinates(containerSelector = '#mainRoomPage') {
     const container = document.querySelector(containerSelector);
-    if (!container) {
-      console.warn('Container not found:', containerSelector);
-      return;
-    }
+    if (!container) return;
 
-    if (!this.config.doorCoordinates || this.config.doorCoordinates.length === 0) {
-      console.log('No door coordinates available - skipping application');
-      return;
-    }
+    if (!this.config.doorCoordinates || this.config.doorCoordinates.length === 0) return;
     try { performance.mark('wf:coords:apply:start'); } catch(_) {}
     const rect = container.getBoundingClientRect();
+    // If container hasn't been laid out yet, retry on next animation frame
+    if (!rect || rect.width < 4 || rect.height < 4) {
+      requestAnimationFrame(() => this.applyDoorCoordinates(containerSelector));
+      return;
+    }
+    // Use the same math as backgrounds with background-size: cover; centered
     const scaleX = rect.width / this.config.originalImageWidth;
     const scaleY = rect.height / this.config.originalImageHeight;
+    const scale = Math.max(scaleX, scaleY);
+    const scaledImageWidth = this.config.originalImageWidth * scale;
+    const scaledImageHeight = this.config.originalImageHeight * scale;
+    const offsetX = (rect.width - scaledImageWidth) / 2;
+    const offsetY = (rect.height - scaledImageHeight) / 2;
 
     let css = '';
     this.config.doorCoordinates.forEach((coord) => {
       const door = container.querySelector(coord.selector);
-      if (!door) {
-        console.warn('Door element not found:', coord.selector);
-        return;
-      }
+      if (!door) return;
 
-      const scaledTop = coord.top * scaleY;
-      const scaledLeft = coord.left * scaleX;
-      const scaledWidth = coord.width * scaleX;
-      const scaledHeight = coord.height * scaleY;
+      // Coordinates are stored in pixels relative to the original image
+      const scaledTop = (coord.top * scale) + offsetY;
+      const scaledLeft = (coord.left * scale) + offsetX;
+      const scaledWidth = coord.width * scale;
+      const scaledHeight = coord.height * scale;
 
+      // Apply inline styles to ensure immediate effect
+      const st = door.style;
+      st.setProperty('position', 'absolute', 'important');
+      st.setProperty('top', `${scaledTop.toFixed(2)}px`, 'important');
+      st.setProperty('left', `${scaledLeft.toFixed(2)}px`, 'important');
+      st.setProperty('width', `${scaledWidth.toFixed(2)}px`, 'important');
+      st.setProperty('height', `${scaledHeight.toFixed(2)}px`, 'important');
+      if (!st.zIndex) st.setProperty('z-index', 'var(--z-room-door)');
+
+      // Also emit CSS as a fallback
       door.classList.add('use-door-vars');
       const selector = `${containerSelector} ${coord.selector}.use-door-vars`;
       css += `${selector}{top:${scaledTop.toFixed(2)}px;left:${scaledLeft.toFixed(2)}px;width:${scaledWidth.toFixed(2)}px;height:${scaledHeight.toFixed(2)}px;}`;
@@ -112,8 +168,7 @@ export class RoomCoordinateManager {
     try {
       performance.mark('wf:coords:apply:end');
       performance.measure('wf:coords:apply', 'wf:coords:apply:start', 'wf:coords:apply:end');
-      const m = performance.getEntriesByName('wf:coords:apply').pop();
-      if (m) console.log(`[Perf] Coordinates applied in ${m.duration.toFixed(1)}ms for ${this.config.doorCoordinates.length} doors`);
+      // Perf marks retained for DevTools; no console logging
     } catch(_) {}
   }
 
@@ -130,6 +185,9 @@ export class RoomCoordinateManager {
     window.addEventListener('load', () => {
       setTimeout(updateCoordinates, 100);
     });
+
+    // Try an immediate pass in case layout is already ready
+    requestAnimationFrame(updateCoordinates);
 
     // Update on resize with debounce
     let resizeTimeout;

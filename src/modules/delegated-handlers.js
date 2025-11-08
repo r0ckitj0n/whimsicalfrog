@@ -78,7 +78,7 @@ document.addEventListener('click', async (e) => {
               <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
             </div>
             <div class="modal-body wf-modal-body--autoheight">
-              <iframe id="actionIconsManagerFrame" title="Button Manager" class="wf-admin-embed-frame" data-autosize="1" data-measure-selector="#iconsManagerRoot,.icons-manager-inner,.admin-card,.admin-table" data-src="/sections/tools/action_icons_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+              <iframe id="actionIconsManagerFrame" title="Button Manager" class="wf-admin-embed-frame" data-autosize="1" data-allow-settings-autosize="1" data-measure-selector="#iconsManagerRoot,.icons-manager-inner,.admin-card,.icons-table-wrap,.admin-table,#admin-section-content" data-src="/sections/tools/action_icons_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
             </div>
           </div>`;
         document.body.appendChild(el);
@@ -239,6 +239,9 @@ document.addEventListener('click', async (e) => {
           const frame = modal.querySelector('iframe');
           if (frame) {
             try { if (!frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1'); } catch(_) {}
+            try { if (!frame.hasAttribute('data-allow-settings-autosize')) frame.setAttribute('data-allow-settings-autosize','1'); } catch(_) {}
+            try { if (!frame.hasAttribute('data-measure-selector')) frame.setAttribute('data-measure-selector', '#categoryManagementRoot,.admin-card,.admin-table'); } catch(_) {}
+            try { if (!frame.hasAttribute('data-trust-refined')) frame.setAttribute('data-trust-refined','1'); } catch(_) {}
             // Ensure initial resize on load
             try {
               frame.addEventListener('load', () => {
@@ -249,11 +252,14 @@ document.addEventListener('click', async (e) => {
                 } catch(_) {}
               }, { once: false });
             } catch(_) {}
-            // Prime src (no cache-busting; rely on natural load)
+            // Prime src; reload with cache-busting when requested
+            const wantsReload = frame.hasAttribute('data-reload-on-open');
+            const base = (frame.getAttribute('data-src') || frame.getAttribute('src') || '/sections/admin_categories.php?modal=1&tab=categories');
+            const bust = wantsReload ? ((base.includes('?') ? '&' : '?') + '_=' + Date.now()) : '';
+            const target = wantsReload ? (base + bust) : base;
             const current = frame.getAttribute('src');
-            if (!current || current === 'about:blank') {
-              const ds = frame.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
-              frame.setAttribute('src', ds);
+            if (!current || current === 'about:blank' || wantsReload) {
+              frame.setAttribute('src', target);
             }
           }
           // Ensure overlay is attached to body and above header
@@ -276,17 +282,30 @@ document.addEventListener('click', async (e) => {
     return;
   }
 
-  // Attributes Management Modal (iframe embed)
+  // Attributes Management Modal — prefer inline container when present, else iframe fallback
   if (closest('[data-action="open-attributes"]')) {
     e.preventDefault();
     e.stopPropagation();
     try {
       const modal = document.getElementById('attributesModal');
+      const inlineMount = document.getElementById('attributesInlineContainer');
+      if (modal && inlineMount) {
+        // Inline path: show overlay and invoke inline loader
+        wfShowModalCentral('attributesModal');
+        try {
+          if (typeof window.loadAttributesInline === 'function') window.loadAttributesInline();
+          else if (typeof window.initAttributesModal === 'function') window.initAttributesModal();
+        } catch(_) {}
+        return;
+      }
       if (modal) {
-        // Ensure the iframe src is set once and autosize is enabled
+        // Fallback iframe path (legacy)
         const frame = modal.querySelector('#attributesFrame');
         if (frame) {
           try { if (!frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1'); } catch(_) {}
+          try { if (!frame.hasAttribute('data-allow-settings-autosize')) frame.setAttribute('data-allow-settings-autosize','1'); } catch(_) {}
+          try { if (!frame.hasAttribute('data-measure-selector')) frame.setAttribute('data-measure-selector', '#attributesMeasure,.attributes-grid'); } catch(_) {}
+          try { if (!frame.hasAttribute('data-trust-refined')) frame.setAttribute('data-trust-refined','1'); } catch(_) {}
           try {
             frame.addEventListener('load', () => {
               try {
@@ -296,25 +315,48 @@ document.addEventListener('click', async (e) => {
               } catch(_) {}
             }, { once: false });
           } catch(_) {}
+          const wantsReload = frame.hasAttribute('data-reload-on-open');
+          const base = (frame.getAttribute('data-src') || frame.getAttribute('src') || '/components/embeds/attributes_manager.php?modal=1');
+          const bust = wantsReload ? ((base.includes('?') ? '&' : '?') + '_=' + Date.now()) : '';
+          const target = wantsReload ? (base + bust) : base;
           const current = frame.getAttribute('src');
-          if (!current || current === 'about:blank') {
-            const ds = frame.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
-            frame.setAttribute('src', ds);
+          if (!current || current === 'about:blank' || wantsReload) {
+            frame.setAttribute('src', target);
           }
         }
-        // Bring modal to front and wire responsive autosize
-        try {
-          if (modal.parentElement && modal.parentElement !== document.body) {
-            document.body.appendChild(modal);
-          }
-          modal.classList.add('over-header');
-        } catch (_) {}
+        try { if (modal.parentElement && modal.parentElement !== document.body) document.body.appendChild(modal); } catch(_) {}
+        try { modal.classList.add('over-header'); } catch(_) {}
         try { wfWireOverlay(modal); } catch(_) {}
-        // Centralized show
         wfShowModalCentral('attributesModal');
       }
     } catch (error) {
       console.error('Error opening attributes modal:', error);
+    }
+    return;
+  }
+
+  // Reports & Documentation — prefer inline loader when available, else ensure iframe modal
+  if (closest('[data-action="open-reports-browser"]')) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      if (typeof window.openReportsBrowser === 'function') {
+        window.openReportsBrowser({ base: 'documentation', dir: '' });
+        return;
+      }
+      // Fallback: ensure iframe-based modal exists (legacy)
+      const el = document.getElementById('reportsBrowserModal') || __wfEnsureReportsBrowserModal();
+      if (el) {
+        try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+        wfShowModalCentral('reportsBrowserModal');
+        const frame = el.querySelector('#reportsBrowserFrame');
+        if (frame && (!frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank')) {
+          const ds = frame.getAttribute('data-src') || '/sections/tools/reports_browser.php?modal=1';
+          frame.setAttribute('src', ds);
+        }
+      }
+    } catch (error) {
+      console.error('Error opening Reports & Documentation modal:', error);
     }
     return;
   }
@@ -329,7 +371,7 @@ document.addEventListener('click', async (e) => {
       if (el) { try { el.remove(); } catch(_) {} el = null; }
       el = document.createElement('div');
       el.id = 'emailSettingsModal';
-      el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+      el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
       el.setAttribute('data-modal', 'emailSettingsModal');
       el.setAttribute('aria-hidden', 'true');
       el.setAttribute('role', 'dialog');

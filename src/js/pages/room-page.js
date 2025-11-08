@@ -128,7 +128,9 @@ import { ApiClient } from '../../core/api-client.js';
         document.body.appendChild(container.firstElementChild);
 
         const modal = document.getElementById('detailedItemModal');
+        // Ensure visibility (handled by CSS; no inline styles or flags)
         modal.classList.remove('hidden');
+        modal.classList.add('show');
         if (window.WFModals && typeof window.WFModals.lockScroll === 'function') {
           try { window.WFModals.lockScroll(); } catch {}
         }

@@ -18,7 +18,7 @@ try {
         throw $e;
     }
 
-    // New contract: use 'room' (number 1..5). Legacy 'room_type' is deprecated.
+    // New contract: use 'room' (alphanumeric or '0'). Legacy 'room_type' is deprecated.
     $roomParam = $_GET['room'] ?? '';
     $roomParam = is_string($roomParam) ? trim($roomParam) : $roomParam;
 
@@ -26,18 +26,19 @@ try {
         Response::error('Room is required', null, 400);
     }
 
-    // Normalize to integer 1..5 if possible, otherwise accept strings like 'room1'
-    if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
-        $roomNumber = (int)$m[1];
+    // Normalize: roomX -> X (letters or numbers), leave others as-is
+    if (preg_match('/^room([A-Za-z0-9]+)$/i', (string)$roomParam, $m)) {
+        $roomKey = (string)$m[1];
     } else {
-        $roomNumber = (int)$roomParam;
+        $roomKey = (string)$roomParam;
     }
-    if ($roomNumber < 1 || $roomNumber > 5) {
-        Response::error('Invalid room. Expected 1-5.', null, 400);
+    // Validate: allow 0 or alphanumeric token
+    if (!preg_match('/^(0|[A-Za-z0-9]+)$/', $roomKey)) {
+        Response::error('Invalid room. Expected 0 or alphanumeric (letters/numbers).', null, 400);
     }
 
-    // room_number-only lookup
-    $roomNumberStr = (string)$roomNumber;
+    // room_number-only lookup (supports '0' for main room)
+    $roomNumberStr = (string)$roomKey;
     $map = Database::queryOne("SELECT * FROM room_maps WHERE room_number = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$roomNumberStr]);
 
     if ($map) {

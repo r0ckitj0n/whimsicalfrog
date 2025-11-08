@@ -1,5 +1,5 @@
 // Import CSS with error handling (will fail gracefully in dev mode)
-import('../styles/room-main.css').catch(cssError => {
+import('../styles/components/room-main.css').catch(cssError => {
     console.warn('[RoomMain] CSS import failed, continuing without styles:', cssError);
 }).then(() => {
     console.log('[RoomMain] CSS loaded or skipped gracefully');
@@ -66,6 +66,25 @@ class RoomMainManager {
         this.setupCleanup();
 
         console.log('🐸 Room Main: Initialization complete');
+
+        try {
+            import('../modules/room-coordinates/coordinate-manager.js')
+                .then(mod => {
+                    try {
+                        const Mgr = mod.RoomCoordinateManager;
+                        if (!Mgr) return;
+                        const mgr = new Mgr();
+                        mgr.init();
+                        mgr.loadCoordinates('room_main').then((ok) => {
+                            if (ok) {
+                                mgr.setupResponsiveCoordinates('#mainRoomPage');
+                                mgr.applyDoorCoordinates('#mainRoomPage');
+                            }
+                        }).catch(() => {});
+                    } catch (_) {}
+                })
+                .catch(() => {});
+        } catch (_) {}
     }
 
     setupBackground() {
@@ -73,9 +92,7 @@ class RoomMainManager {
         const mainRoomSection = document.getElementById('mainRoomPage');
         console.log('🐸 Room Main: mainRoomSection element:', mainRoomSection);
         if (mainRoomSection) {
-            // Override the data-bg-url with the correct value
-            const correctBgUrl = '/images/backgrounds/background-room-main.webp';
-            mainRoomSection.setAttribute('data-bg-url', correctBgUrl);
+            // Use the URL provided by PHP via data-bg-url
             const bgUrl = mainRoomSection.getAttribute('data-bg-url');
             console.log('🐸 Room Main: bgUrl from element (corrected):', bgUrl);
             if (bgUrl) {
@@ -101,17 +118,7 @@ class RoomMainManager {
         const doorElements = document.querySelectorAll('.door-area');
         console.log(`🚪 Found ${doorElements.length} door elements`);
 
-        // Helper: wait for RoomModalManager to exist
-        const waitForModalManager = async (timeoutMs = 4000) => {
-            const start = Date.now();
-            while (!window.roomModalManager) {
-                await new Promise(r => setTimeout(r, 50));
-                if (Date.now() - start > timeoutMs) break;
-            }
-            return window.roomModalManager || null;
-        };
-
-        // Ensure doors are clickable and properly positioned
+        // Ensure doors are interactive and properly positioned
         doorElements.forEach((door, _index) => {
             ensureUtilityCss();
             door.classList.add('door-interactive');
@@ -124,28 +131,15 @@ class RoomMainManager {
             // Add keyboard support
             door.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    door.click();
+                    // Translate to a bubbling click so the global delegated door handler can catch it
+                    try { e.preventDefault(); } catch(_) {}
+                    try {
+                        door.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+                    } catch(_) {
+                        try { door.click(); } catch(_) {}
+                    }
                 }
             });
-
-            // Add explicit click handler to open the modal (bypasses delegated listener if needed)
-            door.addEventListener('click', async (e) => {
-                try {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const rn = door.getAttribute('data-room') || door.getAttribute('data-room-number');
-                    if (!rn) return;
-                    const mgr = await waitForModalManager();
-                    if (mgr && typeof mgr.openRoom === 'function') {
-                        mgr.openRoom(rn);
-                    } else if (window.WF_RoomModal && typeof window.WF_RoomModal.openRoom === 'function') {
-                        window.WF_RoomModal.openRoom(rn);
-                    } else if (window.RoomModalManager && typeof window.RoomModalManager === 'function') {
-                        try { (window.__roomModalSingleton = window.__roomModalSingleton || new window.RoomModalManager()).openRoom(rn); } catch(_) {}
-                    }
-                } catch (_) { /* no-op */ }
-            }, { capture: true });
         });
 
         console.log('🚪 Door positioning and accessibility configured');

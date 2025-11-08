@@ -111,7 +111,7 @@ if (!$isModal && !function_exists('__wf_admin_root_footer_shutdown')) {
               </div>
               <?php if (!$e['isDir']): ?>
                 <div class="ml-2">
-                  <a class="btn-chip pill-ring" href="<?php echo htmlspecialchars($href); ?>" download title="Download">Download</a>
+                  <a class="btn-chip pill-ring" href="<?php echo htmlspecialchars($href); ?>" download title="Download" aria-label="Download file">⬇️</a>
                 </div>
               <?php endif; ?>
             </div>

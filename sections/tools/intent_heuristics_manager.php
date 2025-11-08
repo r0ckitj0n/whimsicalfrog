@@ -21,11 +21,10 @@ if ($inModal) {
   <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--actions-in-header">
     <div class="modal-header">
       <h2 class="admin-card-title">🧠 Intent Heuristics Config</h2>
-      <div class="btn-row">
-        <button type="button" class="btn" id="btnLoadDefaults">Load Defaults</button>
-        <button type="button" class="btn" id="btnReload">Reload Current</button>
+      <div class="modal-header-actions">
+        <button type="button" class="btn btn-secondary" id="btnLoadDefaults">Load Defaults</button>
+        <button type="button" class="btn btn-secondary" id="btnReload">Reload Current</button>
         <button type="button" class="btn btn-primary" id="btnSave">Save</button>
-        <button type="button" class="btn" data-action="close-admin-modal" aria-label="Close">Close</button>
       </div>
     </div>
     <div class="modal-body">

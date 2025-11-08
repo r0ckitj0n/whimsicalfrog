@@ -23,6 +23,12 @@ function walk(dir, out=[]) {
   return out;
 }
 
+function isAdminFile(file){
+  const norm = file.replace(/\\/g, '/');
+  // Treat anything under /sections/ as admin-managed UI
+  return /(^|\/)sections\//i.test(norm);
+}
+
 function checkFile(file){
   const text = fs.readFileSync(file, 'utf8');
   // Rule 1: emoji-only buttons (likely icon buttons) are disallowed
@@ -35,6 +41,11 @@ function checkFile(file){
   if (HAS_DATA_ICON_RE.test(text) && !HAS_ARIA_LABEL_RE.test(text)) {
     errors++;
     console.error(`[icons-guard] data-icon used without aria-label in: ${file}`);
+  }
+  // Rule 3: Disallow data-icon entirely in admin sections
+  if (isAdminFile(file) && HAS_DATA_ICON_RE.test(text)) {
+    errors++;
+    console.error(`[icons-guard] data-icon is disallowed in admin sections: ${file}`);
   }
 }
 

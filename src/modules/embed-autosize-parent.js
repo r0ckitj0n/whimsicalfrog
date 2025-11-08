@@ -12,6 +12,8 @@ const __wfEmbedRules = new Map();
 const __wfPanelRules = new Map();
 const __wfLastApply = new Map(); // key: panelId or iframeId -> { w, h, ts }
 
+let __wfLastCssText = '';
+
 function ensureStyleTag() {
   const id = 'wf-embed-dynamic-heights';
   let tag = document.getElementById(id);
@@ -70,15 +72,15 @@ function updateStyleTag() {
       // Scroll strategy: parent-scroll for Area Mapper and AI (including child AI overlay).
       // For viewport-fill overlays, keep parent-scroll (iframe overflow hidden), and only enable modal-body scroll when content exceeds the cap.
       const parentScrollIds = ['areaItemMapperModal','aiUnifiedModal','aiUnifiedChildModal'];
-      let isParentScroll = (v && v.ov && parentScrollIds.indexOf(v.ov) !== -1);
-      if (v && v.vf) { isParentScroll = true; }
+      let _isParentScroll = (v && v.ov && parentScrollIds.indexOf(v.ov) !== -1);
+      if (v && v.vf) { _isParentScroll = true; }
       // Body rule: clamp to available; for viewport-fill, keep overflow hidden until scrolling is actually needed
       let c = '';
       if (v.p) {
         const innerMh = (v && v.vf) ? Math.max(0, (v.pbmax||0) - Math.max(0, v.bpy||0) - 8) : Math.max(0, v.pbmax||0);
         const mh = `${innerMh}px`;
-        let oy = 'auto';
-        if (v && v.vf) { oy = v.scroll ? 'auto' : 'hidden'; }
+        // Rule: hide scrollbars unless the modal needs to scroll at the 95vh cap
+        const oy = v.scroll ? 'auto' : 'hidden';
         const sg = (oy === 'auto') ? 'stable both-edges' : 'auto';
         c = `#${esc(v.p)} .modal-body{height:auto !important;max-height:${mh} !important;overflow-y:${oy} !important;overflow-x:hidden !important;overscroll-behavior:contain !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:${sg} !important;}`;
       }
@@ -88,7 +90,8 @@ function updateStyleTag() {
       const capBase = Math.max(0, v.pbmax||0);
       const capH = (v && v.vf) ? Math.max(0, capBase - Math.max(0, v.bpy||0) - 8) : capBase;
       const ifrH = capH ? Math.min(contentH || capH, capH) : contentH;
-      const ifrOverflow = isParentScroll ? 'hidden' : 'auto';
+      // Disable iframe scrollbars universally; only the modal body will scroll when needed (at 95vh cap)
+      const ifrOverflow = 'hidden';
       const d = (v.p) ? `#${esc(v.p)} .modal-body #${esc(k)}{height:${ifrH}px !important;max-height:none !important;width:100% !important;display:block !important;overflow:${ifrOverflow} !important;}` : '';
       // Buttons-specific: hide outer scrollbar (iframe-scroll)
       const bodyOverflowButtons = (v.p && v.ov === 'actionIconsManagerModal') ? `#${esc(v.p)} .modal-body{overflow-y:hidden !important;}` : '';
@@ -96,10 +99,15 @@ function updateStyleTag() {
     }).join('');
     const cssFromPanels = Array.from(__wfPanelRules.entries()).map(([pid,vals]) => {
       const p = `#${esc(pid)}{max-height:${Math.max(0, vals.pmh||0)}px !important;${vals.pmw?`max-width:${Math.max(0, vals.pmw)}px !important;`:''}overflow:hidden !important;}`;
-      const b = `#${esc(pid)} .modal-body{max-height:${Math.max(0, vals.pbmax||0)}px !important;height:auto !important;flex:initial !important;overflow-y:auto !important;overscroll-behavior:contain !important;-webkit-overflow-scrolling:touch !important;}`;
+      const oy = (vals && vals.scroll) ? 'auto' : 'hidden';
+      const sg = (vals && vals.scroll) ? 'stable both-edges' : 'auto';
+      const b = `#${esc(pid)} .modal-body{max-height:${Math.max(0, vals.pbmax||0)}px !important;height:auto !important;flex:initial !important;overflow-y:${oy} !important;overflow-x:hidden !important;overscroll-behavior:contain !important;-webkit-overflow-scrolling:touch !important;scrollbar-gutter:${sg} !important;}`;
       return p + b;
     }).join('');
     const cssAll = cssFromPanels + cssFromEmbed;
+    // Avoid redundant DOM writes if CSS did not change
+    if (__wfLastCssText === cssAll) return;
+    __wfLastCssText = cssAll;
     try { styleTag.textContent = cssAll; } catch(_) { try { styleTag.innerText = cssAll; } catch(_) {} }
   } catch(_) {}
 }
@@ -180,10 +188,15 @@ function applyHeightToIframe(iframe, contentHeight, contentWidth) {
       }
     } catch(_) {}
 
-    // Prefer accurate doc height for deciding scroll state
-    const accurateH = Math.max(refinedH || 0, docH || 0);
+    // Prefer refined measurement only when the iframe explicitly opts in
+    const trustRefined = !!(iframe && iframe.hasAttribute('data-trust-refined'));
+    // Safety: if refined is suspiciously small (<120px), fall back to document height
+    const accurateH = trustRefined
+      ? ((refinedH && refinedH >= 120) ? refinedH : Math.max(refinedH || 0, docH || 0))
+      : Math.max(refinedH || 0, docH || 0);
     // Clamp iframe height to available modal body space so only the modal body scrolls
-    let desired = Math.max(80, Math.min(accurateH, available));
+    // Add a tiny fudge for trusted refined measurements to avoid 1px internal scrollbars from rounding
+    let desired = Math.max(80, Math.min(accurateH + (trustRefined ? 2 : 0), available));
     // If nothing measurable yet, pre-fill to available to avoid tiny panel
     const reportedH = Math.round(Number(contentHeight) || 0);
     let forceScrollInit = false;
@@ -426,15 +439,38 @@ function initEmbedAutosizeParent() {
 
       const iframe = findIframeBySourceWindow(ev.source);
       if (!iframe) return;
+      // Only handle autosize for explicitly opted-in frames
+      try { if (!iframe.hasAttribute('data-autosize')) return; } catch(_) {}
+      // Settings page exception: allow autosize when explicitly opted-in or for specific overlays
+      try {
+        if (document.querySelector('.settings-page')) {
+          const allow = iframe.hasAttribute('data-allow-settings-autosize')
+            || !!(iframe.closest && iframe.closest('#actionIconsManagerModal'));
+          if (!allow) return;
+        }
+      } catch(_) {}
       // Throttle per-iframe message handling to avoid churn
       try {
         let id = iframe.getAttribute('id');
         if (!id) { id = 'wf-embed-auto-' + (++__wfEmbedAutoId); try { iframe.setAttribute('id', id); } catch(_) {} }
+        const ovTmp = iframe.closest && iframe.closest('.admin-modal-overlay');
+        const ovTmpId = ovTmp && ovTmp.id ? ovTmp.id : '';
+        const skipRateLimit = (ovTmpId === 'attributesModal') || (ovTmpId === 'categoriesModal') || (iframe && iframe.hasAttribute('data-skip-throttle'));
         window.__wfMsgThrottle = window.__wfMsgThrottle || new Map();
         const now = Date.now();
         const last = window.__wfMsgThrottle.get(id) || 0;
-        if ((now - last) < 100) return;
+        // Per-iframe hard throttle
+        if (!skipRateLimit && (now - last) < 250) return;
         window.__wfMsgThrottle.set(id, now);
+        if (!skipRateLimit) {
+          // Per-iframe rate limiter (burst protection)
+          window.__wfMsgRate = window.__wfMsgRate || new Map();
+          const rec = window.__wfMsgRate.get(id) || { count: 0, win: now };
+          if ((now - rec.win) > 2000) { rec.count = 0; rec.win = now; }
+          rec.count++;
+          window.__wfMsgRate.set(id, rec);
+          if (rec.count > 8) return;
+        }
       } catch(_) {}
       try {
         const ov = iframe.closest('.admin-modal-overlay');
@@ -528,6 +564,7 @@ function computeDocWidth(doc) {
 
 function attachSameOriginFallback(iframe, overlayEl) {
   try {
+    if (__wfNoAutosize) return;
     if (!iframe) return;
     const markResponsive = () => {
       try { markOverlayResponsive(overlayEl || iframe.closest('.admin-modal-overlay')); } catch (_) {}
@@ -555,7 +592,7 @@ function attachSameOriginFallback(iframe, overlayEl) {
         };
         set();
         try {
-          const times = [0, 50, 100, 200, 350, 500, 800, 1200];
+          const times = [0, 100, 300, 600];
           const run = () => { if (iframe.dataset && iframe.dataset.wfUseMsgSizing === '1') return; set(); };
           times.forEach((t)=>{ setTimeout(run, t); });
         } catch(_) {}
@@ -631,11 +668,47 @@ function markOverlayResponsive(overlayEl) {
           // For iframe-driven modals, let per-iframe rules manage body/panel sizing
           try { __wfPanelRules.delete(pid); } catch(_) {}
         } else {
-          __wfPanelRules.set(pid, { pmh: panelMaxPx, pbmax: available, pmw: maxPanelW });
+          // Non-iframe modal: compute and apply scroll only when needed
+          const applyPanelRules = (needScroll) => {
+            try {
+              const rec = __wfPanelRules.get(pid) || {};
+              rec.pmh = panelMaxPx; rec.pbmax = available; rec.pmw = maxPanelW; rec.scroll = !!needScroll;
+              __wfPanelRules.set(pid, rec);
+              updateStyleTag();
+            } catch(_) {}
+          };
+          const measureScrollNeed = () => {
+            try {
+              // Recompute available each time to stay accurate on resizes
+              const maxPanel2 = Math.floor(window.innerHeight * maxVh);
+              /* const panelMaxPx2 = Math.max(200, maxPanel2 - (getF(panel,'marginTop') + getF(panel,'marginBottom'))); */
+              const available2 = Math.max(160, maxPanel2 - (header ? header.offsetHeight : 0) - (getF(panel,'paddingTop') + getF(panel,'paddingBottom')) - (getF(body,'paddingTop') + getF(body,'paddingBottom')));
+              const contentH = body.scrollHeight;
+              const need = (contentH - available2) > 8; // hysteresis epsilon
+              applyPanelRules(need);
+            } catch(_) {}
+          };
+          applyPanelRules(false);
+          // Observe content and size changes
+          try {
+            if (!overlayEl.__wfPanelRO) {
+              const ro = new ResizeObserver(()=>measureScrollNeed());
+              ro.observe(body);
+              overlayEl.__wfPanelRO = ro;
+            }
+          } catch(_) {}
+          try {
+            if (!overlayEl.__wfPanelMO) {
+              const mo = new MutationObserver(()=>measureScrollNeed());
+              mo.observe(body, { childList: true, subtree: true, characterData: true });
+              overlayEl.__wfPanelMO = mo;
+            }
+          } catch(_) {}
+          // Initial measurement next tick for accurate scrollHeight
+          if ('requestAnimationFrame' in window) requestAnimationFrame(()=>measureScrollNeed()); else setTimeout(measureScrollNeed, 0);
         }
-        updateStyleTag();
-        // Width clamping handled via dynamic CSS rules in updateStyleTag()
       } catch(_) {}
+      // Width clamping handled via dynamic CSS rules in updateStyleTag()
     }
     document.body.classList.add('wf-embed-responsive-mode');
   } catch (_) {}
@@ -645,8 +718,10 @@ function markOverlayResponsive(overlayEl) {
 function wireOverlay(overlayEl) {
   try {
     const el = (typeof overlayEl === 'string') ? document.getElementById(overlayEl) : overlayEl;
-    if (!el || el.__wfWired) return;
-    // Ensure rollout via CSS classes: autowide max-width clamp + single-scroll policy
+    if (!el) return;
+    try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+    if (el.__wfWired) return;
+    // Ensure rollout via CSS classes: unified auto policy (overlay should NOT get wf-modal-auto)
     try { el.classList.add('wf-modal-autowide'); } catch(_) {}
     const isViewportFill = !!(el && el.classList && el.classList.contains('wf-modal-viewport-fill'));
     if (!isViewportFill) {
@@ -656,14 +731,16 @@ function wireOverlay(overlayEl) {
     }
     markOverlayResponsive(el);
     const frames = el.querySelectorAll('iframe, .wf-admin-embed-frame');
+    const _onSettingsPage = !!document.querySelector('.settings-page');
     frames.forEach((f) => {
+      try { f.classList.remove('wf-embed--fill','wf-embed-h-s','wf-embed-h-m','wf-embed-h-l','wf-embed-h-xl','wf-embed-h-xxl','wf-admin-embed-frame--tall'); } catch(_) {}
+      // Always wire same-origin fallback and initial resize, even on Settings page
       try { if (!f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
       try { if (!f.hasAttribute('data-measure-selector')) f.setAttribute('data-measure-selector', '#admin-section-content,.tool-wrap,.sc-redesign-grid,.attributes-grid,.admin-page,.admin-card'); } catch(_) {}
       try { f.removeAttribute('data-wf-use-msg-sizing'); } catch(_) {}
-      try { f.classList.remove('wf-embed--fill','wf-embed-h-s','wf-embed-h-m','wf-embed-h-l','wf-embed-h-xl','wf-embed-h-xxl','wf-admin-embed-frame--tall'); } catch(_) {}
       try { attachSameOriginFallback(f, el); } catch(_) {}
       try { f.addEventListener('load', () => { try { if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') window.__wfEmbedAutosize.resize(f); } catch(_) {} }, { once: false }); } catch(_) {}
-  });
+    });
     el.__wfWired = true;
   } catch(_) {}
 }
@@ -685,6 +762,71 @@ function initOverlayAutoWire() {
       } catch(_) {}
     };
     updatePageScrollLock();
+    // Ensure overlays are always portaled to <body> and carry viewport class to avoid transform clipping
+    const ensureViewportOverlay = (el) => {
+      try {
+        if (!el || el.nodeType !== 1) return;
+        const ensureOnce = () => {
+          let changed = false;
+          try {
+            if (el.parentElement && el.parentElement !== document.body) { document.body.appendChild(el); changed = true; }
+          } catch(_) {}
+          try {
+            if (el.classList) {
+              if (!el.classList.contains('wf-overlay-viewport')) { el.classList.add('wf-overlay-viewport'); changed = true; }
+              if (!el.classList.contains('over-header')) { el.classList.add('over-header'); changed = true; }
+              if (!el.classList.contains('topmost')) { el.classList.add('topmost'); changed = true; }
+              if (el.classList.contains('under-header')) { el.classList.remove('under-header'); changed = true; }
+            }
+          } catch(_) {}
+          return changed;
+        };
+        ensureOnce();
+        // Attach a lightweight, element-scoped attribute watcher once (guarded to avoid self-trigger loops)
+        if (!el.__wfAttrWatch) {
+          try {
+            const mo = new MutationObserver(() => {
+              try {
+                if (el.__wfEnsuring) return;
+                // Only act if state drifted (missing required classes or wrong parent)
+                const need = (el.parentElement !== document.body) ||
+                  !(el.classList && el.classList.contains('wf-overlay-viewport') && el.classList.contains('over-header') && el.classList.contains('topmost')) ||
+                  (el.classList && el.classList.contains('under-header'));
+                if (!need) return;
+                el.__wfEnsuring = true;
+                ensureOnce();
+              } catch(_) { /* noop */ }
+              finally { try { el.__wfEnsuring = false; } catch(_) {} }
+            });
+            mo.observe(el, { attributes: true, attributeFilter: ['class','aria-hidden'] });
+            el.__wfAttrWatch = mo;
+          } catch(_) {}
+        }
+      } catch(_) {}
+    };
+    try { document.querySelectorAll('.admin-modal-overlay,.modal-overlay,.room-modal-overlay').forEach(ensureViewportOverlay); } catch(_) {}
+    try {
+      const moPortal = new MutationObserver((muts) => {
+        try {
+          for (const m of muts) {
+            if (!m.addedNodes || m.addedNodes.length === 0) continue;
+            for (const n of m.addedNodes) {
+              try {
+                if (!n || n.nodeType !== 1) continue;
+                const el = n;
+                // Only process the added element itself; avoid deep subtree scans on large mounts
+                if (el.classList && (el.classList.contains('admin-modal-overlay') || el.classList.contains('modal-overlay') || el.classList.contains('room-modal-overlay') || /Modal$/.test(el.id || ''))) {
+                  ensureViewportOverlay(el);
+                }
+              } catch(_) {}
+            }
+          }
+        } catch(_) {}
+      });
+      moPortal.observe(document.documentElement, { childList: true, subtree: true });
+    } catch(_) {}
+    // (Scoped attribute watchers are attached per overlay in ensureViewportOverlay)
+
     // Wrap showModal helpers to wire overlays just-in-time
     try {
       const wrap = (obj, key) => {
@@ -717,7 +859,10 @@ function initOverlayAutoWire() {
                 // Track show/hide to maintain scroll lock
                 try {
                   if (!n.__wfAttrMO) {
-                    const amo = new MutationObserver(() => updatePageScrollLock());
+                    const amo = new MutationObserver(() => {
+                      try { if (n.parentElement && n.parentElement !== document.body) document.body.appendChild(n); } catch(_) {}
+                      updatePageScrollLock();
+                    });
                     amo.observe(n, { attributes: true, attributeFilter: ['class','aria-hidden'] });
                     n.__wfAttrMO = amo;
                   }

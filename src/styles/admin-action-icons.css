@@ -248,6 +248,19 @@ body[data-page^='admin'] .btn:not(.btn-primary):not(.btn-danger):not(.btn-icon):
   filter: brightness(0.95) !important;
 }
 
+/* Embedded admin contexts (iframes inside admin modals): default to brand-filled buttons
+   so embedded tools match admin pages without needing data-page="admin". */
+body[data-embed='1'] .btn.btn-secondary {
+  background-color: var(--brand-primary, #2563eb) !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--brand-primary, #2563eb), #000 10%) !important;
+}
+body[data-embed='1'] .btn:not(.btn-primary):not(.btn-danger):not(.btn-icon) {
+  background-color: var(--brand-primary, #2563eb) !important;
+  color: #fff !important;
+  border-color: color-mix(in srgb, var(--brand-primary, #2563eb), #000 10%) !important;
+}
+
 /* Embedded admin contexts (iframes within modals): enforce brand-secondary on hover
    and neutralize brightness filter so color change is visible. This specifically
    fixes AI modal tool buttons hover color. */

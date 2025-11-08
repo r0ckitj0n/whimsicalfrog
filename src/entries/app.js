@@ -4,7 +4,6 @@ import "../styles/main.css";
 import "../styles/site-base.css";
 import "../styles/admin-modals.css";
 import { ApiClient } from "../core/api-client.js";
-import "../ui/icons.js";
 import { normalizeAssetUrl, attachStrictImageGuards, removeBrokenImage } from "../core/asset-utils.js";
 // Global item popup (must load before delegated listeners attach)
 // Install global popup and delegated handlers conditionally (diagnostics can disable)
@@ -117,6 +116,7 @@ if (__wfIsAdmin && ((!__wfAppMinimal || __wfAllow('embed')) && !__wfDiagNoAutosi
 // Ensure Settings bridge features (fallback showModal, wiring helpers) are present on Admin Settings
 if (__wfIsAdminSettings) {
   try { await import('../js/admin-settings-bridge.js'); } catch(_) {}
+  try { await import('../modules/attributes-inline-loader.js'); } catch(_) {}
 }
 
 // If this page is rendered inside an admin modal iframe, enable intrinsic sizing and child autosize emitter
@@ -137,6 +137,8 @@ try {
   `;
   document.head.appendChild(__wfFallbackStyle);
 } catch (_) {}
+
+ 
 
 // Safety: briefly ensure positioned popup is visible if hidden due to races
 // Run only when explicitly enabled via wf_enable_popup_fallback=1 and not on Admin Settings
@@ -815,6 +817,13 @@ if (__wfAllow('popup_fallback') && !__wfIsAdminSettings) {
       } catch (_) {}
     }
 
+    // Main room page: full-screen background and door coordinate mapping
+    if (page === "room_main" || document.getElementById("mainRoomPage")) {
+      try {
+        await import("../js/room-main.js");
+      } catch (_) {}
+    }
+
     // (Removed element-conditional import; modal manager is now always loaded.)
 
     // Note: We intentionally avoid initializing RoomCoordinator here to prevent
@@ -1113,8 +1122,15 @@ try {
         if (!sku) return;
         try {
           const mod = window.WF_Cart || window.cart || null;
-          if (mod && typeof mod.remove === "function") {
-            mod.remove(sku);
+          if (mod) {
+            if (typeof mod.removeItem === "function") {
+              mod.removeItem(sku);
+            } else if (typeof mod.remove === "function") {
+              mod.remove(sku);
+            } else if (typeof mod.updateItem === "function") {
+              // Fallback: set quantity to 0 to simulate removal
+              mod.updateItem(sku, 0);
+            }
           }
         } catch (_) {}
       },

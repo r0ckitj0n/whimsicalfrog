@@ -107,9 +107,18 @@ function vite(string $entry): string
     }
     $bootScriptEarly = "<script>window.__WF_BACKEND_ORIGIN = '" . addslashes(rtrim($backendOriginEarly, '/')) . "';</script>\n";
 
+    // Determine if the current page is HTTPS (to avoid mixed-content dev HMR)
+    $pageIsHttps = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']))
+        ? (strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+        : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443));
+
     // STRICT MODE: explicit dev only, no silent fallbacks to prod.
     // If explicitly requested dev, attempt to use the dev server; if unreachable, DO NOT fall back.
     // Also attempt to reset OPcache to avoid stale helper code paths.
+    // Mixed content guard: if page is HTTPS but Vite origin is HTTP, disable explicit dev to avoid HMR being blocked by browser
+    if ($explicitDev && $pageIsHttps && stripos($viteOrigin, 'http://') === 0) {
+        $explicitDev = false;
+    }
     if ($explicitDev) {
         try { if (function_exists('opcache_reset')) { @opcache_reset(); } } catch (Throwable $e) { /* ignore */ }
         $origin = rtrim(empty(getenv('WF_VITE_ORIGIN')) ? $viteOrigin : getenv('WF_VITE_ORIGIN'), '/');
@@ -400,7 +409,11 @@ function vite_css(string $entry): string
     };
 
     // STRICT DEV: if dev is requested and Vite is reachable, emit dev CSS. Otherwise do NOT fall back.
-    if ($isDevRequested) {
+    // Mixed content guard: disable dev CSS if page is HTTPS but Vite origin is HTTP
+    $pageIsHttps = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']))
+        ? (strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+        : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443));
+    if ($isDevRequested && !($pageIsHttps && stripos($viteOrigin, 'http://') === 0)) {
         $origin = rtrim($viteOrigin, '/');
         if ($probe($origin)) {
             $cssMap = [
@@ -432,8 +445,8 @@ function vite_css(string $entry): string
             // Unknown mapping in strict dev; return comment
             return '<!-- vite_css: no mapping for entry in strict dev: ' . htmlspecialchars($entry) . ' -->';
         }
-        // Strict: Vite not reachable; do not fall back
-        return '<!-- vite_css: dev requested but Vite unreachable (strict) -->';
+        // Strict: Vite not reachable or mixed content; do not fall back
+        return '<!-- vite_css: dev requested but Vite unreachable or mixed content (strict) -->';
     }
 
     // PROD: read manifest and recursively collect CSS

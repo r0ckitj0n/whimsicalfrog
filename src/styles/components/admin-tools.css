@@ -92,7 +92,7 @@
 /* Reports: ensure Chart.js canvases fill the fixed-height wrapper */
 .admin-reports-page .admin-card { position: relative !important; }
 .admin-reports-page .h-300 { position: relative !important; }
-.admin-reports-page .h-300 canvas { display: block; width: 100% !important; height: 100% !important; position: relative; z-index: var(--z-index-admin-tools, 10110); }
+.admin-reports-page .h-300 canvas { display: block; width: 100% !important; height: 100% !important; position: relative; z-index: var(--z-index-admin-tools); }
 
 /* Modal body variants */
 .modal-body--compact { padding: 0.5rem 0.75rem !important; }
@@ -105,7 +105,7 @@
 #dashboardSectionsTable col:nth-child(5) { width: 90px; }
 
 /* Z-index helpers for modals */
-.z-10110 { z-index: var(--z-index-admin-tools, 10110); }
+.z-10110 { z-index: var(--z-index-admin-tools); }
 .cursor-pointer { cursor: pointer !important; }
 
 /* Flex helpers */
@@ -124,7 +124,7 @@
   color: #fff;
   padding: 16px;
   position: relative;
-  z-index: var(--z-index-admin-tools, 10100);
+  z-index: var(--z-index-admin-tools);
   background: var(--brand-primary, #87ac3a);
 }
 .wf-success-notification {

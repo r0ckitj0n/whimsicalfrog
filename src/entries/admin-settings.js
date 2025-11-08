@@ -51,6 +51,13 @@ import '../styles/components/tabs.css';
         const nodes = Array.from(section.querySelectorAll('button.admin-settings-button, a.admin-settings-button'));
         if (nodes.length < 2) return;
         const sorted = nodes.slice().sort((a, b) => normalizeLabel(a).localeCompare(normalizeLabel(b)));
+        let changed = false;
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i] !== sorted[i]) { changed = true; break; }
+        }
+        if (!changed) return;
+        try { window.__wfSortingSettings = true; } catch(_) {}
+        // Minimal reorder: appending in sorted order moves only when needed
         sorted.forEach(el => section.appendChild(el));
       });
     } catch (_) {}
@@ -58,9 +65,11 @@ import '../styles/components/tabs.css';
 
   // Debounced helper for frequent DOM changes
   let sortTimer = null;
+  let sorting = false;
   function scheduleSort(delay = 50){
+    if (sorting) return;
     if (sortTimer) clearTimeout(sortTimer);
-    sortTimer = setTimeout(sortSettingsCardButtons, delay);
+    sortTimer = setTimeout(() => { sorting = true; try { sortSettingsCardButtons(); } finally { sorting = false; try { window.__wfSortingSettings = false; } catch(_) {} } }, delay);
   }
 
   // Run after DOM is ready
@@ -82,7 +91,7 @@ import '../styles/components/tabs.css';
   // Observe dynamic mutations inside the settings root to keep order stable
   try {
     const root = document.getElementById('adminSettingsRoot') || document;
-    const obs = new MutationObserver(() => scheduleSort(50));
+    const obs = new MutationObserver(() => { if (window.__wfSortingSettings) return; scheduleSort(50); });
     obs.observe(root, { subtree: true, childList: true });
     // Expose for manual re-run if future code adds more items dynamically
     window.__wfSortSettingsButtons = sortSettingsCardButtons;

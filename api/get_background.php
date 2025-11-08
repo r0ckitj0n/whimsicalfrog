@@ -75,18 +75,20 @@ try {
     Response::serverError('Database unavailable: ' . $e->getMessage());
 }
 
-// New contract: use 'room' (0..5) or 'room_number' - include 0 for landing page
+// New contract: accept alphanumeric room identifiers (letters or numbers), plus '0' for main
 $roomParam = $_GET['room'] ?? $_GET['room_number'] ?? '';
 if ($roomParam === '') {
-    Response::error('Room is required (use room=0..5, where 0=landing)', null, 400);
+    Response::error('Room is required (letters or numbers; use 0 for main)', null, 400);
 }
-if (preg_match('/^room(\d+)$/i', (string)$roomParam, $m)) {
-    $roomNumber = (string)((int)$m[1]);
+// Normalize: roomX -> X, room12 -> 12
+if (preg_match('/^room([A-Za-z0-9]+)$/i', (string)$roomParam, $m)) {
+    $roomNumber = (string)$m[1];
 } else {
-    $roomNumber = (string)((int)$roomParam);
+    $roomNumber = (string)$roomParam;
 }
-if (!preg_match('/^[0-5]$/', $roomNumber)) {
-    Response::error('Invalid room. Expected 0-5 (where 0=landing).', null, 400);
+// Validate: allow 0 or any alphanumeric token
+if (!preg_match('/^(0|[A-Za-z0-9]+)$/', $roomNumber)) {
+    Response::error('Invalid room. Expected 0 or alphanumeric (letters/numbers).', null, 400);
 }
 
 try {

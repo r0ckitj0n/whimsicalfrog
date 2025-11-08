@@ -7,7 +7,7 @@
   color: #fff;
   padding: 12px 20px;
   border-radius: 4px;
-  z-index: var(--z-index-toast, 10000);
+  z-index: var(--z-index-toast);
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   transform: translateX(100%);

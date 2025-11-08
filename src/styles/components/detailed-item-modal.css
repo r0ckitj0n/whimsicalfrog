@@ -306,7 +306,7 @@
     /* Provide a subtle backdrop so users can see the clickable overlay */
     background: rgba(0, 0, 0, 0.35);
     /* Must be above hover popup and room overlay */
-    z-index: var(--z-detailed-item-modal, 100300) !important;
+    z-index: var(--z-detailed-item-modal) !important;
     overscroll-behavior: contain;
 }
 
@@ -461,7 +461,7 @@
     position: fixed !important;
     inset: 0 !important;
     background: rgba(0, 0, 0, 0.85) !important;
-    z-index: var(--z-image-viewer, 100400) !important;
+    z-index: var(--z-image-viewer) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;

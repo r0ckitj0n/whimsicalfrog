@@ -13,8 +13,8 @@ if (!function_exists('renderAdminOrderEditor')) {
         $totalAmount = htmlspecialchars(number_format((float)($order['total_amount'] ?? 0), 2, '.', ''), ENT_QUOTES, 'UTF-8');
         $createdAt = htmlspecialchars((string)($order['created_at'] ?? ''), ENT_QUOTES, 'UTF-8');
         ?>
-<div id="orderModalOuter" class="admin-modal-overlay wf-modal--content-scroll fixed inset-0 bg-black/50 flex items-start justify-center overflow-y-auto" data-action="close-order-editor-on-overlay" role="dialog" aria-modal="true" aria-hidden="false">
-  <div class="admin-modal relative mt-8 bg-white rounded-lg shadow-xl w-full max-w-4xl">
+<div id="orderModalOuter" class="admin-modal-overlay wf-overlay-viewport over-header topmost" data-action="close-order-editor-on-overlay" role="dialog" aria-modal="true" aria-hidden="false">
+  <div class="admin-modal bg-white rounded-lg shadow-xl w-full max-w-4xl">
     <div class="modal-header flex items-center border-b border-gray-100 gap-2 px-4 py-3">
       <h2 class="text-lg font-bold text-green-700"><?= $isEdit ? 'Edit Order' : 'Add New Order' ?><?= ($isEdit && $id) ? ' (#' . $id . ')' : '' ?></h2>
     </div>

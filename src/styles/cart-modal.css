@@ -1,7 +1,7 @@
 /* Cart Modal specific tweaks */
 #cartModalOverlay {
   /* Use a dedicated cart overlay z-index above room modals and most overlays */
-  z-index: var(--z-index-cart-overlay, 10070) !important;
+  z-index: var(--z-index-cart-overlay) !important;
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -165,7 +165,7 @@
   #cartModalOverlay .cart-header {
     top: 0;
     background: #fff;
-    z-index: var(--z-index-modal-content, 420);
+    z-index: var(--z-index-modal-content);
   }
   /* retain behavior on mobile (already set globally) */
   }

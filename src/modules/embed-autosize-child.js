@@ -52,7 +52,7 @@
         const h = Math.round(Number(height) || 0);
         const w = Math.round(Number(width) || 0);
         const ov = overlay ? String(overlay) : '';
-        const EPS = 2, BIG = 12, MIN_MS = 220;
+        const EPS = 2, BIG = 12, MIN_MS = 320;
         const now = Date.now();
         const smallDelta = Math.abs(h - lastSentH) <= EPS && Math.abs(w - lastSentW) <= EPS;
         const timeOk = (now - lastSentTs) >= MIN_MS;
@@ -232,7 +232,7 @@
       if (document.body) ro.observe(document.body);
     } catch (_) {
       // Fallback: poll a few times on slow pages
-      let c = 0; const t = setInterval(() => { send(); if (++c > 20) clearInterval(t); }, 200);
+      let c = 0; const t = setInterval(() => { send(); if (++c > 12) clearInterval(t); }, 250);
     }
 
     // Also observe overlay show/hide to trigger updates promptly
@@ -251,7 +251,7 @@
     }
     window.addEventListener('load', () => {
       setTimeout(send, 0);
-      let i = 0; const t = setInterval(() => { send(); if (++i > 10) clearInterval(t); }, 100);
+      let i = 0; const t = setInterval(() => { send(); if (++i > 6) clearInterval(t); }, 150);
     }, { once: true });
   }
 

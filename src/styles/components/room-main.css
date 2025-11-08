@@ -21,7 +21,7 @@
     background-position: center center;
     background-repeat: no-repeat;
     /* Ensure the section stays beneath the site header; doors use a much higher z-index */
-    z-index: var(--z-room-base, 200);
+    z-index: var(--z-room-base);
     overflow: hidden;
     pointer-events: auto;
 }
@@ -41,7 +41,7 @@
     cursor: pointer;
     transition: all 0.3s ease;
     /* Ensure doors are above potential overlays/headers so clicks register */
-    z-index: var(--z-room-door, 10060);
+    z-index: var(--z-room-door);
     pointer-events: auto;
 }
 
@@ -109,41 +109,7 @@
     height: var(--door-height, auto);
 }
 
-/* Initial door positioning to prevent flash/swap effect */
-.door-area.area-1 {
-    top: 19.2%;
-    left: 2.3%;
-    width: 18.3%;
-    height: 26.0%;
-}
-
-.door-area.area-2 {
-    top: 45.0%;
-    left: 30.5%;
-    width: 15.8%;
-    height: 26.9%;
-}
-
-.door-area.area-3 {
-    top: 30.2%;
-    left: 58.8%;
-    width: 13.3%;
-    height: 26.2%;
-}
-
-.door-area.area-4 {
-    top: 17.5%;
-    left: 38.0%;
-    width: 14.8%;
-    height: 25.7%;
-}
-
-.door-area.area-5 {
-    top: 32.5%;
-    left: 78.2%;
-    width: 15.4%;
-    height: 28.5%;
-}
+/* Initial door positioning removed – pixel-based positions are applied by JS */
 
 /* ==============================================
    DOOR INTERACTION STATES
@@ -212,21 +178,21 @@
 /* Header gradient is now defined canonically in `.site-header.universal-page-header` via --gradient-header. */
 
 /* Remove text shadow from page header text and increase z-index */
-.room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: var(--z-index-page-header, 300) !important;  position: relative !important; }
+.room-page-header * { /* Higher than header background */ color: var(--brand-primary); text-shadow: none !important; z-index: var(--z-index-page-header) !important;  position: relative !important; }
 
 /* Ensure header text and links are above the gradient */
-.site-header * { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
-.header-container * { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
-.header-content { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
-.header-content * { z-index: var(--z-index-header-ink, 200) !important; position: relative !important; }
+.site-header * { z-index: var(--z-index-header-ink) !important; position: relative !important; }
+.header-container * { z-index: var(--z-index-header-ink) !important; position: relative !important; }
+.header-content { z-index: var(--z-index-header-ink) !important; position: relative !important; }
+.header-content * { z-index: var(--z-index-header-ink) !important; position: relative !important; }
 
 /* Additional specificity for navigation links */
-.nav-links { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
-.nav-links * { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
-.nav-link { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
-.logo-link { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
-.logo-text { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
-.cart-link { z-index: var(--z-index-nav, 300) !important; position: relative !important; text-shadow: none !important; }
+.nav-links { z-index: var(--z-index-nav) !important; position: relative !important; text-shadow: none !important; }
+.nav-links * { z-index: var(--z-index-nav) !important; position: relative !important; text-shadow: none !important; }
+.nav-link { z-index: var(--z-index-nav) !important; position: relative !important; text-shadow: none !important; }
+.logo-link { z-index: var(--z-index-nav) !important; position: relative !important; text-shadow: none !important; }
+.logo-text { z-index: var(--z-index-nav) !important; position: relative !important; text-shadow: none !important; }
+.cart-link { z-index: var(--z-index-nav) !important; position: relative !important; text-shadow: none !important; }
 
 /* ==============================================
    ROOM TITLE OVERLAY STYLING

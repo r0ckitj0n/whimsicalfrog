@@ -239,8 +239,9 @@ try {
 // missing CSS for admin pages other than settings.
 // In dev (localhost) or explicit ?vite=dev, bypass vite() entirely and emit dev scripts directly.
 $__wf_is_localhost = isset($_SERVER['HTTP_HOST']) && (stripos($_SERVER['HTTP_HOST'], 'localhost') !== false);
-$__wf_force_prod = (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'prod') || (isset($_GET['wf_force_prod']) && $_GET['wf_force_prod'] === '1');
-if (!$__wf_force_prod && ($__wf_is_localhost || (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'dev'))) {
+$__wf_cookie_mode = isset($_COOKIE['wf_vite_mode']) ? strtolower((string)$_COOKIE['wf_vite_mode']) : '';
+$__wf_force_prod = (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'prod') || (isset($_GET['wf_force_prod']) && $_GET['wf_force_prod'] === '1') || ($__wf_cookie_mode === 'prod') || (getenv('WF_VITE_DISABLE_DEV') === '1') || file_exists(dirname(__DIR__) . '/.disable-vite-dev');
+if (!$__wf_force_prod && ($__wf_is_localhost || (isset($_GET['vite']) && strtolower((string)$_GET['vite']) === 'dev') || ($__wf_cookie_mode === 'dev'))) {
     // Determine Vite dev origin robustly: env > hot file > default, normalize to localhost
     $devOrigin = getenv('WF_VITE_ORIGIN');
     if (!$devOrigin) {
@@ -281,7 +282,10 @@ if (!$__wf_force_prod && ($__wf_is_localhost || (isset($_GET['vite']) && strtolo
             if ($probe($cand)) { $origin = $cand; break; }
         }
     }
-    if ($probe($origin)) {
+    // If page is HTTPS and Vite origin is HTTP, avoid dev (mixed content blocks HMR)
+    $pageIsHttps = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) ? ($_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443)));
+    $originIsHttp = (stripos($origin, 'http://') === 0);
+    if ($probe($origin) && !($pageIsHttps && $originIsHttp)) {
         if ($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot) {
             echo '<link rel="stylesheet" href="/src/styles/main.css">' . "\n";
             echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
@@ -292,13 +296,18 @@ if (!$__wf_force_prod && ($__wf_is_localhost || (isset($_GET['vite']) && strtolo
             }
         } else {
             echo "<script>try{console.log('[Header] DEV mode active', { origin: '" . addslashes($origin) . "' });}catch(_){}</script>\n";
-            echo '<script crossorigin="anonymous" type="module" src="/@vite/client"></script>' . "\n";
-            echo '<script crossorigin="anonymous" type="module" src="/src/entries/app.js"></script>' . "\n";
-            echo '<script crossorigin="anonymous" type="module" src="/src/entries/header-bootstrap.js"></script>' . "\n";
-            echo '<link rel="stylesheet" href="/src/styles/main.css">' . "\n";
+            // IMPORTANT: In dev, load from the Vite origin (not relative) so the HMR client connects correctly
+            echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/@vite/client"></script>' . "\n";
+            echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/app.js"></script>' . "\n";
+            echo '<script crossorigin="anonymous" type="module" src="' . $origin . '/src/entries/header-bootstrap.js"></script>' . "\n";
+            // Dev CSS via Vite server to avoid 404s on backend origin
+            echo '<link rel="stylesheet" href="' . $origin . '/src/styles/main.css">' . "\n";
             echo '<link rel="stylesheet" href="/api/admin_icon_map.php?action=get_css">' . "\n";
         }
     } else {
+        if ($pageIsHttps && $originIsHttp) {
+            echo "<!-- Vite dev origin is HTTP on HTTPS page; falling back to production to avoid mixed content -->\n";
+        }
         // Fallback to production assets if dev server is not reachable
         echo "<!-- Vite dev server not reachable; falling back to production assets -->\n";
         if ($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot) {
@@ -436,21 +445,22 @@ echo <<<'STYLE'
 <style id="wf-global-header-offset">
   :root{--wf-header-height:64px; --wf-overlay-offset: calc(var(--wf-header-height) + 12px)}
   body{padding-top:var(--wf-header-height)}
-  /* Ensure common overlays/modals are not obscured by the header (only when visible) */
-  .admin-modal-overlay.show:not(.over-header),
-  .modal-overlay.show:not(.over-header),
-  [role="dialog"].overlay.show,
-  .wf-search-modal.show,
-  #searchModal.show,
-  #loggingStatusModal.show,
-  #databaseTablesModal.show,
-  .admin-modal-overlay[aria-hidden="false"]:not(.over-header),
-  .modal-overlay[aria-hidden="false"]:not(.over-header),
-  [role="dialog"].overlay[aria-hidden="false"],
-  .wf-search-modal[aria-hidden="false"],
-  #searchModal[aria-hidden="false"],
-  #loggingStatusModal[aria-hidden="false"],
-  #databaseTablesModal[aria-hidden="false"] {
+  /* Ensure common overlays/modals are not obscured by the header (only when visible).
+     IMPORTANT: Disabled on admin routes to allow full-viewport centered overlays. */
+  body:not([data-page^='admin']) .admin-modal-overlay.show:not(.over-header),
+  body:not([data-page^='admin']) .modal-overlay.show:not(.over-header),
+  body:not([data-page^='admin']) [role="dialog"].overlay.show,
+  body:not([data-page^='admin']) .wf-search-modal.show,
+  body:not([data-page^='admin']) #searchModal.show,
+  body:not([data-page^='admin']) #loggingStatusModal.show,
+  body:not([data-page^='admin']) #databaseTablesModal.show,
+  body:not([data-page^='admin']) .admin-modal-overlay[aria-hidden="false"]:not(.over-header),
+  body:not([data-page^='admin']) .modal-overlay[aria-hidden="false"]:not(.over-header),
+  body:not([data-page^='admin']) [role="dialog"].overlay[aria-hidden="false"],
+  body:not([data-page^='admin']) .wf-search-modal[aria-hidden="false"],
+  body:not([data-page^='admin']) #searchModal[aria-hidden="false"],
+  body:not([data-page^='admin']) #loggingStatusModal[aria-hidden="false"],
+  body:not([data-page^='admin']) #databaseTablesModal[aria-hidden="false"] {
     padding-top: var(--wf-overlay-offset) !important;
     align-items: flex-start !important;
     z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 200000)) !important; /* above header and nav using unified token */
@@ -612,8 +622,8 @@ echo <<<'SCRIPT'
 SCRIPT;
 } // Added closing bracket here
 
-// Global runtime guard: ensure any modal/overlay added is offset below header
-if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot)) {
+// Global runtime guard: ensure any modal/overlay added is offset below header (non-admin routes only)
+if (!($__wf_safe_mode || $__wf_safe_only_app || $__wf_safe_only_boot) && !$__is_admin_route) {
 echo <<<'SCRIPT'
 <script>
 (function(){

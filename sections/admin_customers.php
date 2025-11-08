@@ -466,7 +466,7 @@ $messageType = $_GET['type'] ?? '';
     $modeParam = $modalMode === 'edit' ? 'edit' : 'view';
 ?>
 <!-- Customer View/Edit Modal -->
-<div class="customer-modal admin-modal-overlay topmost show" id="customerModalOuter" data-action="close-customer-editor-on-overlay">
+<div class="customer-modal admin-modal-overlay wf-overlay-viewport over-header topmost show" id="customerModalOuter" data-action="close-customer-editor-on-overlay">
     <!-- Navigation Arrows -->
     <?php
         $linkBase = $_GET;

@@ -86,6 +86,7 @@ if (!$isModal) {
         </div>
       </div>
     </div>
+    </form>
 
     <div class="wf-section">
       <div class="wf-grid wf-grid-md-2 wf-grid-xl-3">
@@ -115,6 +116,7 @@ if (!$isModal) {
       </div>
     </div>
 
+    <form id="smtpConfigForm" data-action="prevent-submit" autocomplete="off" onsubmit="return false">
     <div class="wf-section">
       <div class="wf-row wf-inline mb-2">
         <input id="smtpEnabled" type="checkbox" />

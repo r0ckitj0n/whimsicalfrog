@@ -63,19 +63,15 @@ try {
         <div class="hidden"></div>
 
     <!-- Sub-modals inside iframe -->
-    <div id="socialManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialManagerTitle">
+    <div id="socialManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
-            <div class="modal-header">
-                <h2 id="socialManagerTitle" class="admin-card-title">📱 Social Accounts Manager</h2>
-                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
-            </div>
             <div class="modal-body">
                 <div id="socialManagerContent" class="space-y-2 text-sm text-gray-700">Loading accounts…</div>
             </div>
         </div>
     </div>
 
-    <div id="newsletterManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="newsletterManagerTitle">
+    <div id="newsletterManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="newsletterManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="newsletterManagerTitle" class="admin-card-title">📧 Newsletter Manager</h2>
@@ -87,19 +83,15 @@ try {
         </div>
     </div>
 
-    <div id="automationManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="automationManagerTitle">
+    <div id="automationManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="automationManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
-            <div class="modal-header">
-                <h2 id="automationManagerTitle" class="admin-card-title">⚙️ Automation Manager</h2>
-                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
-            </div>
             <div class="modal-body">
                 <div id="automationManagerContent" class="space-y-3 text-sm text-gray-700">Loading automations…</div>
             </div>
         </div>
     </div>
 
-    <div id="discountManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="discountManagerTitle">
+    <div id="discountManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="discountManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="discountManagerTitle" class="admin-card-title">💸 Discount Codes Manager</h2>
@@ -111,7 +103,7 @@ try {
         </div>
     </div>
 
-    <div id="couponManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="couponManagerTitle">
+    <div id="couponManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="couponManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="couponManagerTitle" class="admin-card-title">🎟️ Coupons Manager</h2>
@@ -123,19 +115,15 @@ try {
         </div>
     </div>
 
-    <div id="suggestionsManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="suggestionsManagerTitle">
+    <div id="suggestionsManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="suggestionsManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
-            <div class="modal-header">
-                <h2 id="suggestionsManagerTitle" class="admin-card-title">🤖 Suggestions Manager</h2>
-                <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
-            </div>
             <div class="modal-body">
                 <div id="suggestionsManagerContent" class="text-sm text-gray-700">View and curate AI suggestions. (Coming soon)</div>
             </div>
         </div>
     </div>
 
-    <div id="contentGeneratorModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="contentGeneratorTitle">
+    <div id="contentGeneratorModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="contentGeneratorTitle">
         <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="contentGeneratorTitle" class="admin-card-title">✍️ Content Generator</h2>
@@ -147,7 +135,7 @@ try {
         </div>
     </div>
 
-    <div id="intentHeuristicsManagerModal" class="admin-modal-overlay wf-modal--content-scroll hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="intentHeuristicsManagerTitle">
+    <div id="intentHeuristicsManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="intentHeuristicsManagerTitle">
         <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--actions-in-header">
             <div class="modal-header">
                 <h2 id="intentHeuristicsManagerTitle" class="admin-card-title">🧠 Intent Heuristics Config</h2>

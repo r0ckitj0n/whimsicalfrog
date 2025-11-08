@@ -33,7 +33,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity .15s ease, transform .15s ease;
-  z-index: var(--z-index-tooltip, 12000); /* above cards */
+  z-index: var(--z-index-tooltip); /* above cards */
 }
 
 .wf-tooltip::before {
@@ -49,7 +49,7 @@
   pointer-events: none;
   opacity: 0;
   transition: opacity .15s ease, transform .15s ease;
-  z-index: var(--z-index-tooltip, 12000);
+  z-index: var(--z-index-tooltip);
 }
 
 /* Light theme variant (optional): apply .wf-tooltip--light in addition to wf-tooltip */

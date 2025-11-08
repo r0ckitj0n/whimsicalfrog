@@ -13,7 +13,7 @@ require_once __DIR__ . '/config.php';
  */
 function getActiveProductRooms()
 {
-    // Product rooms are numeric >= 1 (exclude 0 main room and any letter-coded pages)
+    // Product rooms are numeric >= 1 (exclude 0 main room and letter-coded pages)
     try {
         $rows = Database::queryAll("
             SELECT room_number
@@ -36,14 +36,13 @@ function getActiveProductRooms()
  */
 function getAllValidRooms()
 {
-    // Valid navigable room numbers are numeric (including 0 main room). Letter-coded pages are excluded here.
+    // Valid navigable rooms: any alphanumeric identifier including '0'
     try {
         $rows = Database::queryAll("
             SELECT room_number
             FROM room_settings
             WHERE is_active = 1
-              AND room_number REGEXP '^[0-9]+$'
-            ORDER BY CAST(room_number AS UNSIGNED)
+            ORDER BY display_order, room_number
         ");
         return array_map(function ($r) { return array_values($r)[0]; }, $rows);
     } catch (Exception $e) {
@@ -83,9 +82,8 @@ function getRoomDoorsData()
             SELECT room_number, room_name, door_label, description, display_order
             FROM room_settings
             WHERE is_active = 1
-              AND room_number REGEXP '^[0-9]+$'
-              AND CAST(room_number AS UNSIGNED) >= 1
-            ORDER BY CAST(room_number AS UNSIGNED)
+              AND room_number <> '0'
+            ORDER BY display_order, room_number
         ");
     } catch (Exception $e) {
         error_log("Error getting room doors data: " . $e->getMessage());
@@ -99,20 +97,18 @@ function getRoomDoorsData()
  */
 function getRoomTypeMapping()
 {
-    // Map numeric rooms: 0 -> room_main, n>=1 -> room{n}
+    // Map rooms: '0' -> room_main, others -> room{token}
     try {
         $rows = Database::queryAll("
             SELECT room_number
             FROM room_settings
             WHERE is_active = 1
-              AND room_number REGEXP '^[0-9]+$'
-            ORDER BY CAST(room_number AS UNSIGNED)
+            ORDER BY display_order, room_number
         ");
         $mapping = [];
         foreach ($rows as $row) {
             $num = $row['room_number'];
-            $n = (int)$num;
-            $mapping[$num] = ($n === 0) ? 'room_main' : ('room' . $n);
+            $mapping[$num] = ($num === '0') ? 'room_main' : ('room' . $num);
         }
         return $mapping;
     } catch (Exception $e) {
@@ -143,7 +139,8 @@ function isValidRoom($roomNumber)
  */
 function isProductRoom($roomNumber)
 {
-    return !in_array($roomNumber, ['A', 'B']) && isValidRoom($roomNumber);
+    // Treat numeric rooms >=1 as product rooms; exclude letter-coded and '0'
+    return preg_match('/^[0-9]+$/', (string)$roomNumber) && (int)$roomNumber >= 1 && isValidRoom($roomNumber);
 }
 
 /**

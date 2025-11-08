@@ -38,6 +38,14 @@ export default [
       ],
       "no-unreachable": "error",
       "prefer-const": "warn",
+      // Enforce ApiClient-only: forbid direct use of global fetch in app code
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "fetch",
+          message: "Use ApiClient (src/core/api-client.js) instead of direct fetch."
+        }
+      ],
       // Disallow inline style writes (class-based styling only)
       // 1) Block assignments to element.style.<prop>
       "no-restricted-syntax": [
@@ -51,6 +59,17 @@ export default [
           message: "Do not set CSS variables on elements via style.setProperty. Use classes and CSS variables at a higher scope.",
         }
       ],
+    },
+  },
+  {
+    files: [
+      "src/core/api-client.js",
+      "src/js/site-core.js",
+      "src/modules/api-client.js",
+    ],
+    rules: {
+      // Allow internal implementations to use fetch
+      "no-restricted-globals": "off",
     },
   },
   {

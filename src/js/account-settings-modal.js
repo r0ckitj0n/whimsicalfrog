@@ -138,14 +138,15 @@ import { ApiClient } from '../core/api-client.js';
     try {
       const isAdmin = (document.body?.getAttribute('data-page') || '').startsWith('admin');
       if (isAdmin) {
-        o.classList.add('over-header');
+        o.classList.add('wf-overlay-viewport','over-header','topmost');
+        o.classList.remove('under-header');
       }
     } catch (_) {}
     o.classList.remove('hidden');
     o.classList.add('show');
     o.setAttribute('aria-hidden','false');
-    // Ensure header offset via class instead of inline style
-    o.classList.add('with-offset');
+    // Remove legacy header-offset helper
+    try { o.classList.remove('with-offset'); } catch(_) {}
     // If this is the admin Settings variant (iframe-based), prime its src
     try {
       const frame = o.querySelector('#accountSettingsFrame');

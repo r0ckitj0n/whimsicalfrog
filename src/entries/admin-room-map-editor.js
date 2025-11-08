@@ -3,5 +3,4 @@
 import '../styles/site-base.css';
 import '../styles/components/global-modals.css';
 import '../js/global-modals.js';
-import '../ui/icons.js';
 import '../js/admin-room-map-editor.js';

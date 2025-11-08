@@ -73,7 +73,7 @@ $tooltipIds = [
 </div>
 
 <!-- Help Documentation Modal -->
-<div id="adminHelpDocsModal" class="admin-modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminHelpDocsTitle">
+<div id="adminHelpDocsModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" role="dialog" aria-modal="true" aria-labelledby="adminHelpDocsTitle">
     <div class="admin-modal w-full max-w-5xl flex flex-col" role="document">
         <div class="modal-body">
             <iframe id="adminHelpDocsFrame" title="Admin Help Documentation" src="about:blank" data-src="/help.php" class="wf-admin-embed-frame"></iframe>

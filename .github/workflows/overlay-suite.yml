@@ -1,0 +1,41 @@
+name: Overlay Full Suite
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Base URL to run the overlay full suite against (e.g., https://admin.example.com)
+        required: true
+        type: string
+
+jobs:
+  suite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Chromium
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser || sudo apt-get install -y chromium || true
+          which chromium-browser || which chromium || true
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve Chromium path
+        id: browser
+        shell: bash
+        run: |
+          echo "path=$(which chromium-browser || which chromium || echo '')" >> $GITHUB_OUTPUT
+
+      - name: Run overlay full suite
+        run: npm run test:overlays
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          PUPPETEER_EXECUTABLE_PATH: ${{ steps.browser.outputs.path }}

@@ -60,7 +60,46 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     if (function_exists('vite')) {
       $skipVite = isset($_GET['wf_diag_no_vite']) && $_GET['wf_diag_no_vite'] === '1';
       if (!$skipVite) {
-        echo vite('js/admin-settings.js');
+        // Guard older inline handlers: ensure size-template functions exist to prevent ReferenceError
+        echo '<script>'
+          . 'window.loadSizeTemplates=window.loadSizeTemplates||function(){};'
+          . 'window.renderSizeTemplates=window.renderSizeTemplates||function(){};'
+          . 'window.filterSizeTemplates=window.filterSizeTemplates||function(){};'
+          . 'window.createNewSizeTemplate=window.createNewSizeTemplate||function(){};'
+          . 'window.editSizeTemplate=window.editSizeTemplate||function(){};'
+          . 'window.deleteSizeTemplate=window.deleteSizeTemplate||function(){};'
+          . 'window.createSizeTemplateEditModal=window.createSizeTemplateEditModal||function(){};'
+          . 'window.showSizeTemplateEditModal=window.showSizeTemplateEditModal||function(){};'
+          . 'window.closeSizeTemplateEditModal=window.closeSizeTemplateEditModal||function(){};'
+          . 'window.addSizeToTemplate=window.addSizeToTemplate||function(){};'
+          . 'window.removeSizeFromTemplate=window.removeSizeFromTemplate||function(){};'
+          . 'window.saveSizeTemplate=window.saveSizeTemplate||function(){};'
+          . '</script>';
+        // Align dev/prod mode with header: prefer dev module when reachable and not mixed-content
+        $devOrigin = getenv('WF_VITE_ORIGIN');
+        if (!$devOrigin) {
+          $hot = dirname(__DIR__) . '/hot';
+          if (is_file($hot)) { $raw = @file_get_contents($hot); if (is_string($raw) && trim($raw) !== '') $devOrigin = trim($raw); }
+        }
+        if (!$devOrigin) { $devOrigin = 'http://localhost:5176'; }
+        try {
+          $p = @parse_url($devOrigin);
+          if (is_array($p) && isset($p['host']) && ($p['host'] === '127.0.0.1' || $p['host'] === '0.0.0.0')) {
+            $sch = $p['scheme'] ?? 'http'; $hst = 'localhost'; $prt = isset($p['port']) ? (':' . $p['port']) : ''; $pth = $p['path'] ?? '';
+            $devOrigin = $sch . '://' . $hst . $prt . $pth;
+          }
+        } catch (Throwable $e) { /* noop */ }
+        $probeOk = false; $pageIsHttps = (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) ? (strtolower((string)$_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') : ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443));
+        $originIsHttp = (stripos((string)$devOrigin, 'http://') === 0);
+        $ctx = stream_context_create(['http'=>['timeout'=>0.6,'ignore_errors'=>true],'https'=>['timeout'=>0.6,'ignore_errors'=>true]]);
+        $probeOk = @file_get_contents(rtrim($devOrigin,'/') . '/@vite/client', false, $ctx) !== false;
+        if ($probeOk && !($pageIsHttps && $originIsHttp)) {
+          // Only emit the module entry; header already loads @vite/client in dev
+          echo '<script crossorigin="anonymous" type="module" src="' . rtrim($devOrigin,'/') . '/src/entries/admin-settings.js"></script>' . "\n";
+        } else {
+          // Fall back to production manifest bundle
+          echo vite('js/admin-settings.js');
+        }
       } else {
         echo "<!-- [Diagnostics] Skipping js/admin-settings.js due to wf_diag_no_vite=1 -->\n";
       }
@@ -117,7 +156,65 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           shipping_rate_per_lb_ups: qs('perLbUpsInput')?.value || '',
           shipping_category_weight_defaults: gatherCatMap()
         }
+        
       };
+
+      // Debug helpers
+      try {
+        window.__wfDebugAttrPing = () => {
+          try {
+            var client=(window.WhimsicalFrog&&WhimsicalFrog.api)||window.ApiClient;
+            if(!client||typeof client.get!=='function') return Promise.resolve('');
+            var url='/components/embeds/attributes_manager.php?modal=1&_='+Date.now();
+            return client.get(url).then(function(txt){ try{ console.log('[WF] Debug ping length', (txt||'').length); }catch(_){} return (txt||'').slice(0,200); });
+          } catch(_) { return Promise.resolve(''); }
+        };
+      } catch(_) {}
+
+      // Fallback renderer when embed fetch fails (no attributes_manager.php request or empty HTML)
+      async function mountAttributesFallback(mount){
+        try { console.warn('[WF] Attributes: entering fallback renderer'); } catch(_) {}
+        if (!mount) return;
+        mount.innerHTML = `
+          <div class="attributes-grid">
+            <div class="card">
+              <div class="card-header">Genders</div>
+              <div class="card-body"><div id="genderList">Loading…</div></div>
+            </div>
+            <div class="card">
+              <div class="card-header">Sizes</div>
+              <div class="card-body"><div id="sizeList">Loading…</div></div>
+            </div>
+            <div class="card">
+              <div class="card-header">Colors</div>
+              <div class="card-body"><div id="colorList">Loading…</div></div>
+            </div>
+          </div>`;
+        const j = (u)=> { try { var client=(window.WhimsicalFrog&&WhimsicalFrog.api)||window.ApiClient; if(!client||typeof client.get!=='function') return Promise.resolve(null); return client.get(u).catch(()=>null); } catch(_) { return Promise.resolve(null); } };
+        try {
+          const g = await j('/api/genders_admin.php?action=list_distinct');
+          const gl = document.getElementById('genderList');
+          if (gl) gl.innerHTML = (g && g.success && Array.isArray(g.genders) && g.genders.length)
+            ? `<ul class="simple">${g.genders.map(x=>`<li><span>${String(x)}</span></li>`).join('')}</ul>`
+            : '<div class="empty">No genders</div>';
+        } catch(_){ try { document.getElementById('genderList').textContent = 'Failed to load'; } catch(__){} }
+        try {
+          const s = await j('/api/size_templates.php?action=get_all');
+          const sl = document.getElementById('sizeList');
+          if (sl) sl.innerHTML = (s && s.success && Array.isArray(s.templates) && s.templates.length)
+            ? `<ul class="simple">${s.templates.map(t=>`<li><span>${String(t.template_name||'')} ${t.category?('· '+t.category):''}</span></li>`).join('')}</ul>`
+            : '<div class="empty">No size templates</div>';
+        } catch(_){ try { document.getElementById('sizeList').textContent = 'Failed to load'; } catch(__){} }
+        try {
+          const c = await j('/api/color_templates.php?action=get_all');
+          const cl = document.getElementById('colorList');
+          if (cl) cl.innerHTML = (c && c.success && Array.isArray(c.templates) && c.templates.length)
+            ? `<ul class="simple">${c.templates.map(t=>`<li><span>${String(t.template_name||'')} ${t.category?('· '+t.category):''}</span></li>`).join('')}</ul>`
+            : '<div class="empty">No color templates</div>';
+        } catch(_){ try { document.getElementById('colorList').textContent = 'Failed to load'; } catch(__){} }
+        try { console.warn('[WF] Attributes: fallback render complete'); } catch(_) {}
+      }
+      try { window.loadSizeColorInline = loadSizeColorInline; } catch(_) {}
       try {
         var client=(window.WhimsicalFrog&&WhimsicalFrog.api)||window.ApiClient;
         if(!client||typeof client.post!=='function') throw new Error('no api');
@@ -228,8 +325,9 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <fieldset class="border rounded p-3">
             <legend class="text-sm font-semibold">USPS</legend>
             <label class="block text-sm font-medium mb-1" for="uspsUserId">USPS Web Tools USERID</label>
-            <input id="uspsUserId" type="text" class="form-input w-full" placeholder="(required for USPS live rates)" autocomplete="off" />
+            <input id="uspsUserId" type="text" class="form-input w-full" placeholder="(required for USPS live rates)" autocomplete="username" />
           </fieldset>
+          <form id="upsSecretsForm" data-action="prevent-submit" autocomplete="off">
           <fieldset class="border rounded p-3">
             <legend class="text-sm font-semibold">UPS</legend>
             <div class="grid gap-3 md:grid-cols-2">
@@ -243,6 +341,8 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               </div>
             </div>
           </fieldset>
+          </form>
+          <form id="fedexSecretsForm" data-action="prevent-submit" autocomplete="off">
           <fieldset class="border rounded p-3">
             <legend class="text-sm font-semibold">FedEx</legend>
             <div class="grid gap-3 md:grid-cols-2">
@@ -256,6 +356,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               </div>
             </div>
           </fieldset>
+          </form>
           <form id="shippingRatesForm" data-action="prevent-submit" class="space-y-2" autocomplete="off">
           <fieldset class="border rounded p-3">
             <legend class="text-sm font-semibold">Shipping Rates</legend>
@@ -352,7 +453,44 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           </fieldset>
           <fieldset class="border rounded p-3">
             <legend class="text-sm font-semibold">Address Diagnostics</legend>
-            <iframe id="addressDiagnosticsFrameEmbed" title="Address Diagnostics" class="wf-admin-embed-frame wf-admin-embed-frame--tall" src="/sections/tools/address_diagnostics.php?modal=1" referrerpolicy="no-referrer"></iframe>
+            <div id="addressDiagnosticsInline" class="space-y-3">
+              <div>
+                <div class="text-sm font-semibold mb-1">Canonical Business Address</div>
+                <div id="addrDiagBizBlock" class="font-mono text-sm"></div>
+                <div class="text-sm text-gray-600">Sourced from business_info: business_address, business_address2, business_city, business_state, business_postal.</div>
+              </div>
+              <div>
+                <div class="text-sm font-semibold mb-2">Compute Miles To Target</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-semibold text-gray-700 mb-1" for="addrDiagToAddress">Address Line 1</label>
+                    <input id="addrDiagToAddress" class="form-input" placeholder="91 Singletree Ln" />
+                  </div>
+                  <div>
+                    <label class="block font-semibold text-gray-700 mb-1" for="addrDiagToCity">City</label>
+                    <input id="addrDiagToCity" class="form-input" placeholder="Dawsonville" />
+                  </div>
+                  <div>
+                    <label class="block font-semibold text-gray-700 mb-1" for="addrDiagToState">State</label>
+                    <input id="addrDiagToState" class="form-input" placeholder="GA" />
+                  </div>
+                  <div>
+                    <label class="block font-semibold text-gray-700 mb-1" for="addrDiagToZip">ZIP</label>
+                    <input id="addrDiagToZip" class="form-input" placeholder="30534" />
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 mt-3">
+                  <button type="button" id="addrDiagCompute" class="btn btn-primary">Compute Miles</button>
+                  <button type="button" id="addrDiagUseSample" class="btn btn-secondary">Use Sample Address</button>
+                  <span id="addrDiagStatus" class="text-sm text-gray-600" aria-live="polite"></span>
+                </div>
+                <div id="addrDiagResult" class="mt-3"></div>
+                <details class="mt-2">
+                  <summary>Debug</summary>
+                  <pre id="addrDiagDebug" class="bg-gray-50 p-2 rounded max-h-64 overflow-auto"></pre>
+                </details>
+              </div>
+            </div>
           </fieldset>
           <div class="text-sm text-gray-600">Changes apply immediately. Cache TTL is 24h; rates/distance are auto-cached.</div>
           <div class="wf-modal-actions"></div>
@@ -369,6 +507,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         </div>
         <div class="modal-body">
           <iframe id="aiUnifiedChildFrame" title="AI Tool" src="about:blank" class="wf-admin-embed-frame" referrerpolicy="no-referrer" data-autosize="1"></iframe>
+          <div id="aiUnifiedChildInline" class="wf-ai-inline-tool hidden"></div>
         </div>
       </div>
     </div>
@@ -537,6 +676,95 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       try { document.removeEventListener('click', onHistoryClick, true); } catch(_){ }
       document.addEventListener('click', onRefreshClick, true);
       document.addEventListener('click', onHistoryClick, true);
+
+    // Address Diagnostics (inline) wiring
+    try {
+      var addrBox = document.getElementById('addressDiagnosticsInline');
+      if (addrBox && !addrBox.__wfInit) {
+        addrBox.__wfInit = true;
+        (function(){
+          var biz = null;
+          var $ = function(id){ return document.getElementById(id); };
+          var statusEl = $('addrDiagStatus');
+          var resultEl = $('addrDiagResult');
+          var debugEl = $('addrDiagDebug');
+          function esc(s){ try { return String(s||'').replace(/[&<>"']/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]); }); } catch(_){ return String(s||''); } }
+          function wfApi(){ return (window.WhimsicalFrog && WhimsicalFrog.api) || window.ApiClient || null; }
+          function setStatus(t){ try { if (statusEl) statusEl.textContent = t || ''; } catch(_){} }
+          function renderBiz(info){
+            try {
+              var lines = [];
+              if (info.business_address) lines.push(info.business_address);
+              if (info.business_address2) lines.push(info.business_address2);
+              var cityLine = '';
+              if (info.business_city) cityLine += info.business_city;
+              if (info.business_state) cityLine += (cityLine?', ':'') + info.business_state;
+              if (info.business_postal) cityLine += (cityLine?' ':'') + info.business_postal;
+              if (cityLine) lines.push(cityLine);
+              var box = $('addrDiagBizBlock'); if (box) box.innerHTML = lines.map(esc).join('<br />');
+            } catch(_){}
+          }
+          // Load business info
+          try {
+            setStatus('Loading business info…');
+            var A = wfApi();
+            if (A && typeof A.get === 'function') {
+              A.get('/api/business_settings.php?action=get_business_info')
+                .then(function(j){ biz = (j && j.data) || j || {}; renderBiz(biz); setStatus(''); })
+                .catch(function(){ setStatus('Failed to load business info'); });
+            }
+          } catch(_) { setStatus('Failed to load business info'); }
+          // Sample button
+          try {
+            var sampleBtn = $('addrDiagUseSample');
+            if (sampleBtn && !sampleBtn.__wfInit) {
+              sampleBtn.__wfInit = true;
+              sampleBtn.addEventListener('click', function(e){ e.preventDefault();
+                try { $('addrDiagToAddress').value = '91 Singletree Ln'; } catch(_){}
+                try { $('addrDiagToCity').value = 'Dawsonville'; } catch(_){}
+                try { $('addrDiagToState').value = 'GA'; } catch(_){}
+                try { $('addrDiagToZip').value = '30534'; } catch(_){}
+              });
+            }
+          } catch(_){}
+          // Compute button
+          try {
+            var computeBtn = $('addrDiagCompute');
+            if (computeBtn && !computeBtn.__wfInit) {
+              computeBtn.__wfInit = true;
+              computeBtn.addEventListener('click', function(e){ e.preventDefault();
+                if (!biz) { setStatus('Business info not loaded'); return; }
+                try { resultEl.textContent=''; debugEl.textContent=''; } catch(_){}
+                setStatus('Computing…');
+                var from = { address: biz.business_address||'', city: biz.business_city||'', state: biz.business_state||'', zip: biz.business_postal||'' };
+                var to = { address: ($('addrDiagToAddress')?.value||'').trim(), city: ($('addrDiagToCity')?.value||'').trim(), state: ($('addrDiagToState')?.value||'').trim(), zip: ($('addrDiagToZip')?.value||'').trim() };
+                var A2 = wfApi();
+                if (A2 && typeof A2.post === 'function') {
+                  A2.post('/api/distance.php', { from: from, to: to, debug: true })
+                    .then(function(jr){
+                      try {
+                        var d = (jr && jr.data) || jr || {};
+                        var miles = (typeof d.miles !== 'undefined') ? d.miles : null;
+                        setStatus('');
+                        if (miles === null) {
+                          resultEl.innerHTML = '<strong>Result:</strong> miles = null (ineligible)';
+                        } else {
+                          var cached = !!d.cached; var estimated = !!d.estimated;
+                          resultEl.innerHTML = '<strong>Result:</strong> '+ Number(miles).toFixed(2) +' miles' + (cached?' (cached)':'') + (estimated?' [estimated]':'');
+                        }
+                        debugEl.textContent = JSON.stringify(d, null, 2);
+                      } catch(err){ setStatus('Error computing miles'); try { debugEl.textContent = String(err && err.message || err); } catch(_){} }
+                    })
+                    .catch(function(){ setStatus('Error computing miles'); });
+                } else {
+                  setStatus('ApiClient unavailable');
+                }
+              });
+            }
+          } catch(_){}
+        })();
+      }
+    } catch(_){}
 
     // Enforce skinny profile panel without inline styles
     try {
@@ -862,15 +1090,15 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     </div>
   </div>
-  <!-- STATIC: Size/Color Redesign Tool Modal -->
-  <div id="sizeColorRedesignModal" class="admin-modal-overlay wf-modal--content-scroll wf-modal-autowide wf-modal-mincols-2 wf-modal-single-scroll wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="sizeColorRedesignTitle">
+  <!-- Size/Color Redesign Tool Modal (inline) -->
+  <div id="sizeColorRedesignModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-mincols-2 wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="sizeColorRedesignTitle">
     <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header admin-modal--responsive">
       <div class="modal-header">
         <h2 id="sizeColorRedesignTitle" class="admin-card-title">🧩 Size/Color System Redesign</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body wf-modal-body--autoheight">
-        <iframe id="sizeColorRedesignFrame" title="Size/Color Redesign" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-autosize="1" data-measure-selector=".tool-wrap,.sc-redesign-grid,#admin-section-content" data-src="/sections/tools/size_color_redesign.php?modal=1" src="about:blank" referrerpolicy="no-referrer"></iframe>
+        <div id="sizeColorRedesignContainer" class="p-0"></div>
       </div>
     </div>
   </div>
@@ -883,14 +1111,14 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     
 
     <!-- Auto-resize same-origin iframes inside modals (e.g., Categories) -->
-  <div id="categoriesModal" class="admin-modal-overlay wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="categoriesTitle">
+  <div id="categoriesModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="categoriesTitle">
     <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--actions-in-header admin-modal--responsive">
       <div class="modal-header">
         <h2 id="categoriesTitle" class="admin-card-title">Categories</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body wf-modal-body--autoheight">
-        <iframe id="categoriesFrame" title="Categories Manager" class="wf-admin-embed-frame" data-autosize="1" data-measure-selector="#categoryManagementRoot,.admin-card,.admin-table" data-src="/sections/admin_categories.php?modal=1" src="about:blank" referrerpolicy="no-referrer" scrolling="no"></iframe>
+        <iframe id="categoriesFrame" title="Categories Manager" class="wf-admin-embed-frame" data-autosize="1" data-allow-settings-autosize="1" data-trust-refined="1" data-reload-on-open="1" data-measure-selector="#categoryManagementRoot,.admin-card,.admin-table" data-src="/sections/admin_categories.php?modal=1" src="/sections/admin_categories.php?modal=1" referrerpolicy="no-referrer" scrolling="no"></iframe>
       </div>
     </div>
   </div>
@@ -899,7 +1127,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     
 
   <!-- Customer Messages Modal: Shop Encouragement Phrases -->
-  <div id="customerMessagesModal" class="admin-modal-overlay wf-modal--content-scroll wf-modal-closable hidden z-10110" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="customerMessagesTitle">
+  <div id="customerMessagesModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="customerMessagesTitle">
     <div class="admin-modal admin-modal-content admin-modal--xl admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="customerMessagesTitle" class="admin-card-title">💬 Marketing &amp; Engagement Hub</h2>
@@ -976,181 +1204,48 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     
 
 
-    <!-- Dev Status Dashboard Modal (iframe embed) -->
-    <div id="devStatusModal" class="admin-modal-overlay wf-modal--content-scroll over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
+    <!-- Dev Status Dashboard Modal (inline) -->
+  <div id="devStatusModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="devStatusTitle">
       <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="devStatusTitle" class="admin-card-title">🧪 Dev Status Dashboard</h2>
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body admin-modal-body--lg">
-          <iframe id="devStatusFrame" title="Dev Status" class="wf-admin-embed-frame wf-admin-embed-frame--tall" data-src="/dev/status.php" referrerpolicy="no-referrer"></iframe>
+          <div id="devStatusContainer" class="rounded border p-2 bg-white text-sm overflow-auto"></div>
         </div>
       </div>
     </div>
 
     
 
-    <!-- Attributes Management Modal (iframe embed) -->
-    <div id="attributesModal" class="admin-modal-overlay over-header wf-modal-autowide wf-modal-mincols-3 wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="attributesTitle">
+    <!-- Attributes Management Modal (inline) -->
+    <div id="attributesModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-mincols-3 wf-modal-single-scroll wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="attributesTitle">
       <div class="admin-modal admin-modal-content admin-modal--attributes admin-modal--actions-in-header admin-modal--responsive">
         <div class="modal-header">
-          <h2 id="attributesTitle" class="admin-card-title">🧩 Genders, Sizes, &amp; Colors</h2>
+          <h2 id="attributesTitle" class="admin-card-title">Genders, Sizes, &amp; Colors</h2>
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body wf-modal-body--autoheight">
-          <iframe id="attributesFrame" title="Attributes Management" class="wf-admin-embed-frame" data-autosize="1" data-measure-selector="#admin-section-content,.attributes-grid" data-src="/components/embeds/attributes_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+          <div id="attributesInlineContainer" class="p-0"></div>
         </div>
       </div>
     </div>
 
-  <!-- Reports & Documentation Browser Modal (iframe embed) -->
-  <div id="reportsBrowserModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="reportsBrowserTitle">
+  <!-- Reports & Documentation Browser Modal (inline) -->
+  <div id="reportsBrowserModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="reportsBrowserTitle">
     <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
       <div class="modal-header">
         <h2 id="reportsBrowserTitle" class="admin-card-title">Reports &amp; Documentation</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
       <div class="modal-body admin-modal-body--lg">
-        <iframe id="reportsBrowserFrame" title="Reports &amp; Documentation" src="about:blank" data-src="/sections/tools/reports_browser.php?modal=1" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>
+        <div id="reportsBrowserContainer" class="rounded border p-2 bg-white text-sm overflow-auto"></div>
       </div>
     </div>
   </div>
-
-  <script>
-  (function(){
-    try {
-      const $ = (id) => document.getElementById(id);
-      const ensureContainer = () => (document.body || document.documentElement);
-      const openOverlay = (el) => {
-        try {
-          if (!el) return;
-          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_){ }
-          el.classList.remove('hidden');
-          el.classList.add('show');
-          el.setAttribute('aria-hidden','false');
-          try { document.documentElement.classList.add('modal-open'); } catch(_){ }
-          try { document.body.classList.add('modal-open','wf-no-scroll'); } catch(_){ }
-        } catch(_){}
-      };
-      const closeOverlay = (el) => {
-        try {
-          if (!el) return;
-          el.classList.add('hidden');
-          el.classList.remove('show','wf-modal--body-scroll');
-          el.setAttribute('aria-hidden','true');
-          try {
-            const anyOpen = document.querySelector('.admin-modal-overlay.show');
-            if (!anyOpen) {
-              document.documentElement.classList.remove('modal-open');
-              document.body.classList.remove('modal-open','wf-no-scroll');
-            }
-          } catch(_){ }
-        } catch(_){}
-      };
-
-      const ensureReportsBrowserModal = () => {
-        let modal = $('reportsBrowserModal');
-        if (!modal) {
-          const html = '\n      <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">\n        <div class="modal-header">\n          <h2 id="reportsBrowserTitle" class="admin-card-title">Reports &amp; Documentation</h2>\n          <button type="button" class="admin-modal-close wf-admin-nav-button" aria-label="Close">×</button>\n        </div>\n        <div class="modal-body admin-modal-body--lg">\n          <iframe id="reportsBrowserFrame" title="Reports &amp; Documentation" src="about:blank" data-src="/sections/tools/reports_browser.php?modal=1" class="wf-admin-embed-frame wf-admin-embed-frame--tall" referrerpolicy="no-referrer"></iframe>\n        </div>\n      </div>';
-          modal = document.createElement('div');
-          modal.id = 'reportsBrowserModal';
-          modal.className = 'admin-modal-overlay over-header wf-modal-closable hidden';
-          modal.setAttribute('role','dialog');
-          modal.setAttribute('aria-modal','true');
-          modal.setAttribute('tabindex','-1');
-          modal.setAttribute('aria-labelledby','reportsBrowserTitle');
-          modal.innerHTML = html;
-          ensureContainer().appendChild(modal);
-          try { modal.querySelector('.admin-modal-close').addEventListener('click', function(){ closeOverlay(modal); }); } catch(_){}
-        }
-        const frame = $('reportsBrowserFrame');
-        if (frame && !frame.getAttribute('src')) { frame.setAttribute('src', frame.getAttribute('data-src') || '/sections/tools/reports_browser.php?modal=1'); }
-        openOverlay(modal);
-      };
-
-      const bind = () => {
-        const repBtn = $('reportsBrowserBtn');
-        if (repBtn && !repBtn.__wfClickBound) {
-          repBtn.__wfClickBound = true;
-          repBtn.addEventListener('click', function(ev){ ev.preventDefault(); try { ensureReportsBrowserModal(); } catch(_){} });
-        }
-        const catBtn = $('categoriesBtn');
-        if (catBtn && !catBtn.__wfClickBound) {
-          catBtn.__wfClickBound = true;
-          catBtn.addEventListener('click', function(ev){ ev.preventDefault(); try { var el=document.getElementById('categoriesModal'); if (el){ openOverlay(el); } var f=document.getElementById('categoriesFrame'); if (f && !f.getAttribute('src')) { f.setAttribute('src', f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1'); } } catch(_){} });
-        }
-        const attrBtn = $('attributesBtn');
-        if (attrBtn && !attrBtn.__wfClickBound) {
-          attrBtn.__wfClickBound = true;
-          attrBtn.addEventListener('click', function(ev){ ev.preventDefault(); try { var el=document.getElementById('attributesModal'); if (el){ openOverlay(el); } var f=document.getElementById('attributesFrame'); if (f && !f.getAttribute('src')) { f.setAttribute('src', f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1'); } } catch(_){} });
-        }
-        const shipBtn = $('shippingSettingsBtn');
-        if (shipBtn && !shipBtn.__wfClickBound) {
-          shipBtn.__wfClickBound = true;
-          shipBtn.addEventListener('click', function(ev){ ev.preventDefault(); try { var el=document.getElementById('shippingSettingsModal'); if (el) { openOverlay(el); } } catch(_){} });
-        }
-        const diagBtn = $('addressDiagBtn');
-        if (diagBtn && !diagBtn.__wfClickBound) {
-          diagBtn.__wfClickBound = true;
-          diagBtn.addEventListener('click', function(ev){ ev.preventDefault(); try { var el=document.getElementById('shippingSettingsModal'); if (el) { openOverlay(el); } } catch(_){} });
-        }
-      };
-
-      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', bind, { once:true }); } else { bind(); }
-    } catch(_){ }
-  })();
-  </script>
-
-  <script>
-  (function(){
-    try {
-      function show(id){
-        var el=document.getElementById(id); if(!el) return;
-        try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_){ }
-        try { el.removeAttribute('hidden'); } catch(_){ }
-        try { el.classList.remove('hidden'); } catch(_){ }
-        try { el.classList.add('show'); } catch(_){ }
-        try { el.setAttribute('aria-hidden','false'); } catch(_){ }
-        try { document.documentElement.classList.add('modal-open'); } catch(_){ }
-        try { document.body.classList.add('modal-open','wf-no-scroll'); } catch(_){ }
-      }
-      function prime(frameId, src){
-        try { var f=document.getElementById(frameId); if (f && !f.getAttribute('src')) { f.setAttribute('src', src); } } catch(_){ }
-      }
-      var map = {
-        'open-categories': ['categoriesModal','categoriesFrame','/sections/admin_categories.php?modal=1'],
-        'open-attributes': ['attributesModal','attributesFrame','/components/embeds/attributes_manager.php?modal=1'],
-        'open-shipping-settings': ['shippingSettingsModal']
-      };
-      document.addEventListener('click', function(ev){
-        try {
-          var t=ev.target; if(!t || !t.closest) return;
-          var btn=t.closest('[data-action]'); if(!btn) return;
-          var a=btn.getAttribute('data-action')||''; var m=map[a]; if(!m) return;
-          ev.preventDefault(); ev.stopImmediatePropagation();
-          show(m[0]); if(m[1]&&m[2]) prime(m[1], m[2]);
-        } catch(_){ }
-      }, true);
-      function reconcile(){
-        try {
-          var any=document.querySelector('.admin-modal-overlay.show');
-          if(!any){
-            document.documentElement.classList.remove('modal-open','wf-admin-modal-open');
-            document.body.classList.remove('modal-open','wf-no-scroll','wf-admin-modal-open');
-            try { document.body.style.overflow=''; } catch(_){ }
-          } else {
-            try { any.removeAttribute('hidden'); any.setAttribute('aria-hidden','false'); } catch(_){ }
-          }
-        } catch(_){ }
-      }
-      setInterval(reconcile, 300);
-    } catch(_){ }
-  })();
-  </script>
-
-  <!-- Root containers the JS module can enhance -->
-  <div id="adminSettingsRoot" class="admin-settings-root">
+ 
+                  <div id="adminSettingsRoot" class="admin-settings-root">
     <!-- Settings cards grid using legacy classes -->
     <div class="settings-grid">
       <?php // Content Management ?>
@@ -1197,7 +1292,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Health & Diagnostics Modal (hidden by default) -->
-    <div id="healthModal" class="admin-modal-overlay wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="healthTitle">
+    <div id="healthModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="healthTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="healthTitle" class="admin-card-title">🩺 Health &amp; Diagnostics</h2>
@@ -1245,8 +1340,8 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
       </div>
     </div>
 
-    <!-- Area-Item Mapper Modal (hidden by default) -->
-    <div id="areaItemMapperModal" class="admin-modal-overlay over-header wf-modal-autowide wf-modal-viewport-fill wf-modal-mincols-3 wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="areaItemMapperTitle">
+    <!-- Area-Item Mapper Modal (inline) -->
+    <div id="areaItemMapperModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-viewport-fill wf-modal-mincols-3 wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="areaItemMapperTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="areaItemMapperTitle" class="admin-card-title">🧭 Area Mappings</h2>
@@ -1257,7 +1352,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
           <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
         </div>
         <div class="modal-body">
-          <iframe id="areaItemMapperFrame" title="Area Mappings" class="wf-admin-embed-frame" data-autosize="1" data-measure-selector="#admin-section-content,.wf-grid-autofit-360,.aim-tab-panel,.admin-card" data-src="/sections/tools/area_item_mapper.php?modal=1" referrerpolicy="no-referrer"></iframe>
+          <div id="areaItemMapperContainer" class="wf-w-full wf-max-w-none"></div>
         </div>
       </div>
     </div>
@@ -1267,15 +1362,59 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
         var overlay = document.getElementById('areaItemMapperModal');
         var saveBtn = document.getElementById('areaItemMapperSave');
         var statusEl = document.getElementById('areaItemMapperStatus');
+        function loadAreaItemMapperInline(){
+          try {
+            var mount = document.getElementById('areaItemMapperContainer');
+            if (!mount) return;
+            if (mount.__wfLoaded) return;
+            mount.__wfLoaded = true;
+            mount.innerHTML = '<div class="text-sm text-gray-600 p-2">Loading…</div>';
+            var url = '/sections/tools/area_item_mapper.php?modal=1';
+            ApiClient.get(url).then(function(html){
+              try {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(String(html||''), 'text/html');
+                var styles = Array.from(doc.querySelectorAll('style')).map(function(s){ return s.textContent || ''; }).join('\n');
+                var section = doc.querySelector('#admin-section-content');
+                var bodyHtml = section ? section.innerHTML : (doc.body ? doc.body.innerHTML : '');
+                // Scope styles to container
+                var scoped = styles;
+                try {
+                  scoped = styles.split('}').map(function(rule){
+                    var parts = rule.split('{');
+                    if (parts.length < 2) return '';
+                    var sel = parts[0].trim();
+                    var decl = parts.slice(1).join('{');
+                    if (!sel) return '';
+                    if (sel.startsWith('@')) return rule + '}';
+                    var prefixed = sel.split(',').map(function(s){ return '#areaItemMapperContainer ' + s.trim(); }).join(', ');
+                    return prefixed + ' {' + decl + '}';
+                  }).filter(Boolean).join('}\n');
+                } catch(_) {}
+                mount.innerHTML = '';
+                var styleEl = document.createElement('style'); styleEl.textContent = scoped; mount.appendChild(styleEl);
+                var content = document.createElement('div'); content.className = 'aim-inline-root'; content.innerHTML = bodyHtml; mount.appendChild(content);
+                // Execute scripts (module and inline)
+                var scripts = Array.from(doc.querySelectorAll('script'));
+                scripts.forEach(function(srcEl){
+                  var s = document.createElement('script');
+                  if (srcEl.type) s.type = srcEl.type;
+                  if (srcEl.src) { s.src = srcEl.src; } else { s.textContent = srcEl.textContent || ''; }
+                  document.body.appendChild(s);
+                });
+              } catch(err) { mount.innerHTML = '<div class="text-sm text-red-700 p-2">Failed to load Area-Item Mapper</div>'; }
+            }).catch(function(){ mount.innerHTML = '<div class="text-sm text-red-700 p-2">Failed to load Area-Item Mapper</div>'; });
+          } catch(_){}
+        }
+        // Expose for click mapping
+        try { window.__wfLoadAIMInline = loadAreaItemMapperInline; } catch(_){}
+
         if (saveBtn && !saveBtn.__wfBound) {
           saveBtn.__wfBound = true;
           saveBtn.addEventListener('click', function(e){
             e.preventDefault();
             try { saveBtn.disabled = true; saveBtn.dataset.prevLabel = saveBtn.textContent || ''; saveBtn.textContent = 'Saving…'; } catch(_){ }
-            try {
-              var f = document.getElementById('areaItemMapperFrame');
-              if (f && f.contentWindow) f.contentWindow.postMessage({ source:'wf-aim-parent', type:'save' }, '*');
-            } catch(_){ }
+            try { window.postMessage({ source:'wf-aim-parent', type:'save' }, '*'); } catch(_){ }
           }, true);
         }
         if (!window.__wfAIMStaticListener) {
@@ -1373,7 +1512,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Template Manager Modal (iframe embed) -->
-    <div id="templateManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="templateManagerTitle">
+    <div id="templateManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="templateManagerTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="templateManagerTitle" class="admin-card-title">📁 Template Manager</h2>
@@ -1387,7 +1526,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Social Media Posts Templates Modal (iframe embed) -->
-    <div id="socialPostsManagerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialPostsManagerTitle">
+    <div id="socialPostsManagerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="socialPostsManagerTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="socialPostsManagerTitle" class="admin-card-title">📝 Social Media Posts</h2>
@@ -1401,7 +1540,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Cost Breakdown Manager Modal (iframe embed) -->
-    <div id="costBreakdownModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="costBreakdownTitle">
+    <div id="costBreakdownModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="costBreakdownTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="costBreakdownTitle" class="admin-card-title">💲 Cost Breakdown Manager</h2>
@@ -1415,7 +1554,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Font Picker Modal -->
-    <div id="fontPickerModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="fontPickerTitle">
+    <div id="fontPickerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="fontPickerTitle">
       <div class="admin-modal admin-modal-content max-w-4xl admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="fontPickerTitle" class="admin-card-title">Font Library</h2>
@@ -1454,7 +1593,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Business Info Modal (native form, branding removed) -->
-    <div id="businessInfoModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="businessInfoTitle">
+    <div id="businessInfoModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="businessInfoTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header admin-modal--xl">
         <div class="modal-header">
           <h2 id="businessInfoTitle" class="admin-card-title">🏢 Business Information</h2>
@@ -1658,7 +1797,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Email Settings Modal (lightweight shell; bridge populates) -->
-    <div id="emailSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="emailSettingsTitle">
+    <div id="emailSettingsModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="emailSettingsTitle">
       <div class="admin-modal admin-modal--auto admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="emailSettingsTitle" class="admin-card-title">✉️ Email Settings</h2>
@@ -1715,7 +1854,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
               </div>
               <div>
                 <label for="smtpUsername" class="block text-sm font-medium mb-1">SMTP Username</label>
-                <input id="smtpUsername" type="text" class="form-input w-full" />
+                <input id="smtpUsername" type="text" class="form-input w-full" autocomplete="username" />
               </div>
               <div>
                 <label for="smtpPassword" class="block text-sm font-medium mb-1">SMTP Password</label>
@@ -1746,7 +1885,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Email History Modal (dedicated UI) -->
-    <div id="emailHistoryModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="emailHistoryTitle">
+    <div id="emailHistoryModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="emailHistoryTitle">
       <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="emailHistoryTitle" class="admin-card-title">📬 Email History</h2>
@@ -1826,7 +1965,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Square Settings Modal (hidden by default) -->
-    <div id="squareSettingsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="squareSettingsTitle">
+    <div id="squareSettingsModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="squareSettingsTitle">
       <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="squareSettingsTitle" class="admin-card-title">🟩 Square Settings</h2>
@@ -1926,7 +2065,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     
 
     <!-- Dashboard Configuration Modal (hidden by default) -->
-    <div id="dashboardConfigModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="dashboardConfigTitle">
+    <div id="dashboardConfigModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="dashboardConfigTitle">
       <div class="admin-modal admin-modal-content admin-modal--dashboard-config admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="dashboardConfigTitle" class="admin-card-title">⚙️ Dashboard Configuration</h2>
@@ -1968,7 +2107,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Logging Status Modal (hidden by default) -->
-    <div id="loggingStatusModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="loggingStatusModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true">
       <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 class="admin-card-title">📜 Log Viewer</h2>
@@ -1995,7 +2134,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Log File Viewer Modal (hidden by default) -->
-    <div id="logFileViewerModal" class="admin-modal-overlay over-header wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="logFileViewerTitle">
+    <div id="logFileViewerModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-closable hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="logFileViewerTitle">
       <div class="admin-modal admin-modal-content admin-modal--lg admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 id="logFileViewerTitle" class="admin-card-title">🪟 Log Viewer</h2>
@@ -2008,7 +2147,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
     </div>
 
     <!-- Secrets Manager Modal (hidden by default) -->
-    <div id="secretsModal" class="admin-modal-overlay hidden" aria-hidden="true" role="dialog" aria-modal="true">
+    <div id="secretsModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true">
       <div class="admin-modal admin-modal--actions-in-header">
         <div class="modal-header">
           <h2 class="admin-card-title">🔒 Secrets Manager</h2>
@@ -2108,294 +2247,7 @@ require_once dirname(__DIR__) . '/components/settings_card.php';
 <?php
 ?>
 <!-- WF: SETTINGS WRAPPER END -->
-<script>
-(() => {
-  const MODAL = 'dashboardConfigModal';
-  const TBODY = 'dashboardSectionsBody';
-  const STATUS = 'dashboardConfigResult';
-  let __wfDashLastRefresh = 0;
 
-  // Fallback: if API returns no available_sections, use this local map
-  const FALLBACK_SECTIONS = {
-    metrics: { title: '📊 Quick Metrics' },
-    recent_orders: { title: '📋 Recent Orders' },
-    low_stock: { title: '⚠️ Low Stock Alerts' },
-    inventory_summary: { title: '📦 Inventory Summary' },
-    customer_summary: { title: '👥 Customer Overview' },
-    marketing_tools: { title: '📈 Marketing Tools' },
-    order_fulfillment: { title: '🚚 Order Fulfillment' },
-    reports_summary: { title: '📊 Reports Summary' }
-  };
-
-  const updateOrderNumbers=()=>{document.querySelectorAll('#'+TBODY+' tr').forEach((row,i)=>{const span=row.querySelector('span');if(span)span.textContent=i+1;});};
-  const setStatus=(m,ok)=>{const s=document.getElementById(STATUS);if(!s)return;s.textContent=m||'';s.classList.toggle('text-green-600',!!ok);s.classList.toggle('text-red-600',ok===false);};
-  const show=()=>{const el=document.getElementById(MODAL);if(el){el.classList.remove('hidden');el.classList.add('show');el.removeAttribute('aria-hidden');}};
-  const api=function(u,p){
-    try {
-      const client = (window.WhimsicalFrog && WhimsicalFrog.api) || {};
-      const fn = p ? client.post : client.get;
-      return fn(u, p || {}).then(function(res){ return (res && (res.data || res)) || {}; });
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  };
-  const get=()=>api('/api/dashboard_sections.php?action=get_sections');
-  const refresh=function(){
-    const now=Date.now();
-    if(now-__wfDashLastRefresh<500){return;}
-    __wfDashLastRefresh=now;
-    setStatus('Loading…', true);
-    return get().then(function(data){
-      draw(data);
-      setStatus('Loaded', true);
-    }).catch(function(error){
-      try{draw({ sections: [], available_sections: FALLBACK_SECTIONS });setStatus('Loaded (defaults)', true);}catch(e2){setStatus('Load failed', false);}
-    });
-  };
-
-  const draw = function(d) {
-    console.log('🎯 Dashboard Config draw() called with data:', d);
-    var tb = document.getElementById(TBODY);
-    if (!tb) {
-      console.error('❌ Dashboard Config: tbody not found:', TBODY);
-      return;
-    }
-
-    var avail = (d && d.available_sections) ? d.available_sections : {};
-    if (!avail || Object.keys(avail).length === 0) {
-      console.warn('⚠️ Dashboard Config: available_sections missing from API response; using FALLBACK_SECTIONS');
-      avail = FALLBACK_SECTIONS;
-    }
-    var act = (d && Array.isArray(d.sections)) ? d.sections : [];
-    var ks = new Set(Object.keys(avail));
-
-    act.forEach(function(s) {
-      if (s && s.section_key) ks.add(s.section_key);
-    });
-
-    var active = new Set(act.map(function(s) { return s.section_key; }));
-    var sectionData = Array.from(ks).sort().map(function(k, i) {
-      var found = null;
-      for (var ii = 0; ii < act.length; ii++) {
-        if (act[ii] && act[ii].section_key === k) {
-          found = act[ii];
-          break;
-        }
-      }
-
-      var section = found || {
-        section_key: k,
-        display_order: i + 1,
-        is_active: 0,
-        show_title: 1,
-        show_description: 1,
-        custom_title: null,
-        custom_description: null,
-        width_class: 'half-width'
-      };
-
-      var info = avail[k];
-      return {
-        key: k,
-        title: (info && info.title) || k,
-        active: active.has(k),
-        order: section.display_order || (i + 1),
-        width: section.width_class || 'half-width',
-        section_key: section.section_key,
-        display_order: section.display_order,
-        is_active: section.is_active,
-        show_title: section.show_title,
-        show_description: section.show_description,
-        custom_title: section.custom_title,
-        custom_description: section.custom_description,
-        width_class: section.width_class
-      };
-    });
-
-    console.log('📊 Dashboard Config sectionData:', sectionData);
-    tb.innerHTML = '';
-
-    sectionData.forEach(function(item, i) {
-      var tr = document.createElement('tr');
-      tr.className = 'border-b';
-
-      var html = '<td class="p-2">' +
-        '<div class="flex items-center gap-1">' +
-        '<button class="btn btn-icon btn-icon--up" data-action="move-up" aria-label="Move up" title="Move up" data-key="' + item.key + '" ' + (i === 0 ? 'disabled' : '') + '></button>' +
-        '<button class="btn btn-icon btn-icon--down" data-action="move-down" aria-label="Move down" title="Move down" data-key="' + item.key + '" ' + (i === sectionData.length - 1 ? 'disabled' : '') + '></button>' +
-        '<span class="ml-1 text-gray-500">' + item.order + '</span>' +
-        '</div>' +
-        '</td>' +
-        '<td class="p-2">' + item.title + '</td>' +
-        '<td class="p-2"><code>' + item.key + '</code></td>' +
-        '<td class="p-2">' +
-        '<select class="dash-width text-xs" data-key="' + item.key + '">' +
-        '<option value="half-width" ' + (item.width === 'half-width' ? 'selected' : '') + '>Half</option>' +
-        '<option value="full-width" ' + (item.width === 'full-width' ? 'selected' : '') + '>Full</option>' +
-        '</select>' +
-        '</td>' +
-        '<td class="p-2">' +
-        '<input type="checkbox" class="dash-active" data-key="' + item.key + '" ' + (item.active ? 'checked' : '') + '>' +
-        '</td>';
-
-      tr.innerHTML = html;
-      tb.appendChild(tr);
-    });
-
-    console.log('✅ Dashboard Config: Successfully rendered', sectionData.length, 'sections');
-  };
-  const payload = function() {
-    var rows = Array.prototype.slice.call(document.querySelectorAll('#' + TBODY + ' tr'));
-    return {
-      action: 'update_sections',
-      sections: rows.map(function(row, i) {
-        var elA = row.querySelector('.dash-active');
-        var key = (elA && elA.dataset) ? elA.dataset.key : undefined;
-        var elW = row.querySelector('.dash-width');
-        var width = (elW ? elW.value : 'half-width');
-        var active = (elA && elA.checked ? 1 : 0);
-        return {
-          key: key,
-          section_key: key,
-          display_order: i + 1,
-          is_active: active,
-          show_title: 1,
-          show_description: 1,
-          custom_title: null,
-          custom_description: null,
-          width_class: width
-        };
-      }).filter(function(s) { return s.key; })
-    };
-  };
-
-  // Add direct click handler to the button to bypass Vite module interference
-  const attachDashboardConfigButtonHandler = function() {
-    const dashboardBtn = document.getElementById('dashboardConfigBtn');
-    if (dashboardBtn && !dashboardBtn.__wfDashboardClickAttached) {
-      dashboardBtn.__wfDashboardClickAttached = true;
-      dashboardBtn.addEventListener('click', function(e) {
-        console.log('🎯 Dashboard Config button clicked directly');
-        e.preventDefault();
-        e.stopPropagation();
-        show();
-        refresh();
-      });
-      console.log('✅ Dashboard Config: Direct click handler attached');
-    } else if (!dashboardBtn) {
-      console.error('❌ Dashboard Config: Button not found with ID dashboardConfigBtn');
-    }
-  };
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', attachDashboardConfigButtonHandler);
-  } else {
-    attachDashboardConfigButtonHandler();
-  }
-
-  const installOpenObserver=function(){
-    const el=document.getElementById(MODAL);
-    if(!el||el.__wfDashObs){return;}
-    el.__wfDashOpened=false;
-    const obs=new MutationObserver(function(muts){
-      for(var i=0;i<muts.length;i++){
-        var m=muts[i];
-        if(m.type==='attributes'&&(m.attributeName==='class'||m.attributeName==='aria-hidden')){
-          var showing=(el.classList.contains('show')&&!el.classList.contains('hidden'))&&(el.getAttribute('aria-hidden')!=='true');
-          if(showing&&!el.__wfDashOpened){el.__wfDashOpened=true;refresh();}
-          else if(!showing&&el.__wfDashOpened){el.__wfDashOpened=false;}
-        }
-      }
-    });
-    obs.observe(el,{attributes:true,attributeFilter:['class','aria-hidden']});
-    el.__wfDashObs=obs;
-  };
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installOpenObserver);
-  } else {
-    installOpenObserver();
-  }
-
-  document.addEventListener('click', function(e) {
-    const a = e.target.closest('[data-action]');
-    if (!a) return;
-    const action = a.dataset.action;
-
-    // Skip open-dashboard-config since we handle it directly above
-    if (action === 'open-dashboard-config') {
-      return; // Let the direct handler take care of it
-    }
-    if (action === 'dashboard-config-refresh') {
-      e.preventDefault();
-      setStatus('Refreshing…', true);
-      get().then(function(data) {
-        draw(data);
-        setStatus('Refreshed', true);
-      }).catch(function(err) {
-        console.error('❌ Dashboard Config refresh error:', err);
-        console.warn('⚠️ Falling back to default sections');
-        try {
-          draw({ sections: [], available_sections: FALLBACK_SECTIONS });
-          setStatus('Refreshed (defaults)', true);
-        } catch (e2) {
-          setStatus('Refresh failed', false);
-        }
-      });
-    }
-    if (action === 'dashboard-config-reset') {
-      e.preventDefault();
-      setStatus('Resetting…', true);
-      api('/api/dashboard_sections.php?action=reset_defaults').then(function() {
-        return get();
-      }).then(function(data) {
-        draw(data);
-        setStatus('Defaults restored', true);
-      }).catch(function() {
-        setStatus('Reset failed', false);
-      });
-    }
-    if (action === 'dashboard-config-save') {
-      e.preventDefault();
-      const p = payload();
-      if (!p.sections.length) {
-        setStatus('Select at least one', false);
-        return;
-      }
-      setStatus('Saving…', true);
-      api('/api/dashboard_sections.php?action=update_sections', p).then(function() {
-        setStatus('Saved', true);
-      }).catch(function() {
-        setStatus('Save failed', false);
-      });
-    }
-    if (action === 'move-up') {
-      e.preventDefault();
-      const key = e.target.dataset.key;
-      const rows = Array.prototype.slice.call(document.querySelectorAll('#' + TBODY + ' tr'));
-      const idx = rows.findIndex(function(r) {
-        var __el = r.querySelector('.dash-active');
-        return (__el && __el.dataset ? __el.dataset.key : undefined) === key;
-      });
-      if (idx > 0) {
-        rows[idx].parentNode.insertBefore(rows[idx], rows[idx - 1]);
-        updateOrderNumbers();
-      }
-    }
-    if (action === 'move-down') {
-      e.preventDefault();
-      const key = e.target.dataset.key;
-      const rows = Array.prototype.slice.call(document.querySelectorAll('#' + TBODY + ' tr'));
-      const idx = rows.findIndex(function(r) {
-        var __el = r.querySelector('.dash-active');
-        return (__el && __el.dataset ? __el.dataset.key : undefined) === key;
-      });
-      if (idx < rows.length - 1) {
-        rows[idx].parentNode.insertBefore(rows[idx + 1], rows[idx]);
-        updateOrderNumbers();
-      }
-    }
-  });
-})();
-</script>
 
 <?php if (!defined('WF_ADMIN_SECTION_WRAPPED')): ?>
     </div>

@@ -1,5 +1,15 @@
 // src/room/eventManager.js
 // ES-module for room icon hover/click events and popup wiring.
+const DEBUG_EVENTS = (() => {
+  try {
+    const p = new URLSearchParams(window.location.search || '');
+    const fromParam = p.get('wf_diag_events');
+    const fromLS = localStorage.getItem('wf_diag_events');
+    if (fromParam != null) return fromParam === '1';
+    if (fromLS != null) return fromLS === '1';
+  } catch(_) {}
+  return false;
+})();
 
 /** Extract product data from various legacy sources on an icon element. */
 function extractProductData(icon) {
@@ -60,11 +70,11 @@ function getPopupApi() {
 /** Delegated hover / click handlers attached to document once. */
 export function attachDelegatedItemEvents() {
   if (document.body.hasAttribute('data-wf-room-delegated-listeners')) {
-    console.warn('[eventManager] Delegated listeners already attached; skipping duplicate attachment');
+    if (DEBUG_EVENTS) console.warn('[eventManager] Delegated listeners already attached; skipping duplicate attachment');
     return;
   }
   document.body.setAttribute('data-wf-room-delegated-listeners', 'true');
-  console.log('[eventManager] Delegated listeners attached');
+  if (DEBUG_EVENTS) console.log('[eventManager] Delegated listeners attached');
 
   // Use mouseover/mouseout (bubbling) with guards – works reliably in iframes
   document.addEventListener('mouseover', e => {
@@ -73,7 +83,6 @@ export function attachDelegatedItemEvents() {
     if (!targetEl || typeof targetEl.closest !== 'function') {
       return;
     }
-    console.log('[eventManager] mouseover event detected on:', targetEl);
     const overPopup = targetEl.closest('.item-popup');
     const icon = targetEl.closest('.item-icon, .room-product-icon');
     // Only cancel hide if pointer is over an icon or the popup itself
@@ -81,51 +90,44 @@ export function attachDelegatedItemEvents() {
       const { cancelHide } = getPopupApi();
       if (typeof cancelHide === 'function') cancelHide();
     }
+    // If not over an icon, do nothing here; mouseout handler controls hide timing.
     if (!icon) {
-      // Pointer not over an icon. If also not over the popup, schedule a hide.
-      if (!overPopup) {
-        const { scheduleHide } = getPopupApi();
-        if (typeof scheduleHide === 'function') scheduleHide(500);
-      }
-      console.log('[eventManager] no matching icon found for hover');
+      if (DEBUG_EVENTS) console.log('[eventManager] mouseover on non-icon');
       return;
     }
-    console.log('[eventManager] found icon element:', icon, 'classes:', icon.className);
+    if (DEBUG_EVENTS) console.log('[eventManager] found icon element:', icon, 'classes:', icon.className);
     const data = extractProductData(icon);
-    console.log('[eventManager] extracted product data:', data);
+    if (DEBUG_EVENTS) console.log('[eventManager] extracted product data:', data);
     const { show } = getPopupApi();
-    console.log('[eventManager] popup function available:', typeof show);
+    if (DEBUG_EVENTS) console.log('[eventManager] popup function available:', typeof show);
     if (typeof show === 'function' && data) {
-      console.log('[eventManager] calling popup function with:', icon, data);
+      if (DEBUG_EVENTS) console.log('[eventManager] calling popup function with:', icon, data);
       show(icon, data);
       attachPopupPersistence(icon);
-      // Fallback: force-reveal in case popup module's reveal step is delayed/raced
-      const forceReveal = (attempt) => {
-        try {
-          const p = document.getElementById('itemPopup');
-          if (!p) return;
-          // Do not resurrect if suppressed by hideImmediate or if no computed position class exists
-          const suppressed = p.classList.contains('suppress-auto-show') || p.dataset.wfGpSuppress === '1';
-          const posClass = p.dataset.wfGpPosClass;
-          // If a detailed item modal is visible, do not force the popup
-          const detailed = document.getElementById('detailedItemModal');
-          const detailedVisible = !!(detailed && detailed.getAttribute('aria-hidden') !== 'true' && !(detailed.classList && detailed.classList.contains('hidden')));
-          if (suppressed || !posClass || detailedVisible) return;
-          if (!p.classList.contains('visible')) {
-            try { p.classList.remove('hidden', 'measuring'); } catch(_) {}
-            try { p.classList.add('visible'); } catch(_) {}
-            try { p.setAttribute('aria-hidden', 'false'); } catch(_) {}
-            try { p.classList.add('force-visible'); } catch(_) {}
-            try { console.log('[eventManager] fallback reveal applied (attempt', attempt, ') classes:', p.className); } catch(_) {}
-          }
-        } catch (_) {}
-      };
-      // Apply immediate and a couple of retries to survive rAF/hide races
-      setTimeout(() => forceReveal(1), 0);
-      setTimeout(() => forceReveal(2), 60);
-      setTimeout(() => forceReveal(3), 180);
+      // Optional debug-only fallback reveal attempts
+      if (DEBUG_EVENTS) {
+        const forceReveal = (attempt) => {
+          try {
+            const p = document.getElementById('itemPopup');
+            if (!p) return;
+            const suppressed = p.classList.contains('suppress-auto-show') || p.dataset.wfGpSuppress === '1';
+            const posClass = p.dataset.wfGpPosClass;
+            const detailed = document.getElementById('detailedItemModal');
+            const detailedVisible = !!(detailed && detailed.getAttribute('aria-hidden') !== 'true' && !(detailed.classList && detailed.classList.contains('hidden')));
+            if (suppressed || !posClass || detailedVisible) return;
+            if (!p.classList.contains('visible')) {
+              try { p.classList.remove('hidden', 'measuring'); } catch(_) {}
+              try { p.classList.add('visible'); } catch(_) {}
+              try { p.setAttribute('aria-hidden', 'false'); } catch(_) {}
+              try { p.classList.add('force-visible'); } catch(_) {}
+              try { console.log('[eventManager] fallback reveal applied (attempt', attempt, ') classes:', p.className); } catch(_) {}
+            }
+          } catch (_) {}
+        };
+        setTimeout(() => forceReveal(1), 0);
+      }
     } else {
-      console.warn('[eventManager] cannot show popup - function:', typeof show, 'data:', !!data);
+      if (DEBUG_EVENTS) console.warn('[eventManager] cannot show popup - function:', typeof show, 'data:', !!data);
     }
   });
 
@@ -178,14 +180,14 @@ export function attachDelegatedItemEvents() {
 
 /** For legacy per-icon listeners (called after coordinate positioning). */
 export function setupPopupEventsAfterPositioning() {
-  console.log('[eventManager] setupPopupEventsAfterPositioning() called');
+  if (DEBUG_EVENTS) console.log('[eventManager] setupPopupEventsAfterPositioning() called');
   // If delegated listeners are active, skip per-icon bindings to avoid duplication
   if (document.body && document.body.hasAttribute('data-wf-room-delegated-listeners')) {
-    console.log('[eventManager] Delegated listeners active; skipping per-icon fallback');
+    if (DEBUG_EVENTS) console.log('[eventManager] Delegated listeners active; skipping per-icon fallback');
     return;
   }
   const icons = document.querySelectorAll('.item-icon, .room-product-icon');
-  console.warn('[eventManager] Delegation inactive; attaching legacy per-icon listeners to', icons.length, 'icons');
+  if (DEBUG_EVENTS) console.warn('[eventManager] Delegation inactive; attaching legacy per-icon listeners to', icons.length, 'icons');
   icons.forEach(icon => {
     // ensure icon is interactive
     icon.classList.add('clickable-icon');

@@ -74,10 +74,12 @@ export async function loadRoomBackground(roomNumberStr) {
             return;
         }
 
-        // Normal room background loading via new room param
-        const rn = /^room\d+$/i.test(String(roomNumberStr)) ? String(roomNumberStr).replace(/^room/i, '') : String(roomNumberStr);
-        if (!/^\d+$/.test(rn)) {
-            console.log('[DBG] Not a numeric room; skipping background API fetch');
+        // Normal room background loading via new room param (accept letters or numbers)
+        const rn = /^room([A-Za-z0-9]+)$/i.test(String(roomNumberStr))
+            ? String(roomNumberStr).replace(/^room/i, '')
+            : String(roomNumberStr);
+        if (!/^(0|[A-Za-z0-9]+)$/.test(rn)) {
+            console.log('[DBG] Invalid room key; skipping background API fetch');
             return;
         }
         const data = await ApiClient.get('/api/get_background.php', { room: encodeURIComponent(rn) });

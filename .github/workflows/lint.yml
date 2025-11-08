@@ -36,3 +36,6 @@ jobs:
 
       - name: Guard - No Inline Fallbacks
         run: node scripts/guards/no-inline-fallbacks.mjs
+
+      - name: Guard - Icons Consistency (standardized emoji icons)
+        run: WF_ICONS_STRICT=1 node scripts/guards/guard-icons-consistency.mjs

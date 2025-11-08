@@ -62,7 +62,7 @@ body[data-is-admin='false'] {
 body[data-page='payment'] #paymentPage,
 body[data-page='payment'] #checkoutRoot {
   position: relative; /* establish stacking context */
-  z-index: var(--z-index-checkout-overlay, 2600); /* above room modal overlay (~2400), below topmost UI */
+  z-index: var(--z-index-checkout-overlay); /* above room modal overlay (~2400), below topmost UI */
 }
 
 /* Shop grid: Out-of-Stock badge over product image */
@@ -84,7 +84,7 @@ body[data-page='payment'] #checkoutRoot {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: var(--z-index-god-mode, 100001);
+  z-index: var(--z-index-god-mode);
   background: rgba(17, 24, 39, 0.72); /* more transparent */
   color: #fff;
   font-weight: 900;
@@ -127,7 +127,7 @@ body[data-page='payment'] #checkoutRoot {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: var(--z-index-god-mode, 100001);
+  z-index: var(--z-index-god-mode);
   background: rgba(17, 24, 39, 0.5); /* more transparent for room icons */
   color: #fff;
   font-weight: 900;
@@ -213,7 +213,7 @@ body.mode-fullscreen #landingPage {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  z-index: var(--z-index-landing-page, 110);
+  z-index: var(--z-index-landing-page);
   overflow: hidden;
 }
 body.mode-fullscreen .clickable-area {
@@ -377,7 +377,7 @@ body[data-page='about'] .page-content .prose {
 body[data-page='about'] .page-content { max-width: none !important; padding-left: 0; padding-right: 0; display: flex; justify-content: center; overflow: visible; }
 body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: auto !important; margin-right: auto !important; }
 .wf-cloud-card { position: relative; display: block; width: auto; max-width: min(2000px, 90vw); margin: clamp(8px, 1.5vh, 16px) auto 0 auto; padding: clamp(44px, 7.5vw, 168px) clamp(48px, 8.5vw, 188px); min-height: clamp(620px, 62vh, 1100px); background: none; box-shadow: none;  overflow: visible; overflow-wrap: anywhere; }
-.wf-cloud-card .content { overflow-wrap: anywhere; position: relative; z-index: var(--z-index-base, 1); max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
+.wf-cloud-card .content { overflow-wrap: anywhere; position: relative; z-index: var(--z-index-base); max-width: 82ch; margin-inline: auto; color: #111; text-align: center; }
 .wf-cloud-card .content p { margin: 0.35em 0; line-height: 1.4; }
 .wf-cloud-card .content > p:first-of-type {
   /* Increase space between the title and the first paragraph (story) by ~50px more */
@@ -395,7 +395,7 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
   background: rgba(255,255,255,0.45);
   filter: blur(14px);
   border-radius: 999px; /* soft oval shadow under cloud */
-  z-index: var(--z-index-far-behind, -2); /* shadow behind cloud */
+  z-index: var(--z-index-far-behind); /* shadow behind cloud */
 }
 /* Cloud graphic layer (scaled bigger than content so it fully surrounds text) */
 .wf-cloud-card::after {
@@ -408,7 +408,7 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
   height: calc(100% + 24%);
   transform: translate(-50%, -50%);
   background: url('../assets/cloud-bg.svg') center/100% 100% no-repeat;
-  z-index: var(--z-index-behind, -1);
+  z-index: var(--z-index-behind);
   pointer-events: none;
 }
 @media (max-width: 520px) {
@@ -487,7 +487,7 @@ body[data-page='about'] .page-content .prose > .wf-cloud-card { margin-left: aut
 body[data-page='contact'] .content { color: #fff !important; }
 
 /* --- Reveal Company Info Modal (modal styles) --- */
-.wf-revealco-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index: var(--z-global-popup, 2147482000)}
+.wf-revealco-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease;z-index: var(--z-global-popup)}
 .wf-revealco-overlay.show{opacity:1;pointer-events:auto}
 .wf-revealco-modal{width:100%;max-width:520px;margin:12px;padding:0}
 .wf-revealco-card{background:#fff;border-radius:12px;box-shadow:0 15px 40px rgba(0,0,0,.18);padding:18px 16px 16px;position:relative}
@@ -658,7 +658,7 @@ body[data-page='contact'] .content { color: #fff !important; }
   margin: 0;
   width: auto;
   /* Ensure filters render above product cards and other content using dedicated token */
-  z-index: var(--z-shop-filters, 2600) !important;
+  z-index: var(--z-shop-filters) !important;
   /* Request: make this element transparent */
   background: transparent !important;
   background-image: none !important;
@@ -1060,12 +1060,12 @@ body.pos-body { font-family: var(--font-secondary, -apple-system, BlinkMacSystem
 .remove-btn:hover { background: #dc2626; }
 .option-btn { padding: 0.5rem 1rem; border: 2px solid #e5e7eb; background: #fff; border-radius: 0.25rem; cursor: pointer; margin: 0.25rem; transition: all 0.2s; }
 .option-btn:hover { border-color: var(--brand-primary, #87ac3a); }
-.wf-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: var(--z-overlay-topmost, 10000); display: none; align-items: center; justify-content: center; }
+.wf-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: var(--z-overlay-topmost); display: none; align-items: center; justify-content: center; }
 .wf-modal { background: #fff; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-width: 400px; width: 90%; border: 2px solid var(--brand-secondary, #BF5700); }
 .wf-modal-header { background: linear-gradient(135deg, var(--brand-primary, #87ac3a) 0%, var(--brand-secondary, #BF5700) 100%); color: #fff; padding: 1rem 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
 .wf-modal-body { padding: 1.5rem; }
 .wf-modal-footer { padding: 1rem 1.5rem; background: #f9fafb; display: flex; gap: 0.75rem; justify-content: flex-end; }
-.pos-options-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: var(--z-overlay, 1000); align-items: center; justify-content: center; }
+.pos-options-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: var(--z-overlay); align-items: center; justify-content: center; }
 .pos-options-modal { background: #fff; border-radius: 0.5rem; padding: 1.5rem; max-width: 400px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 .pos-options-title { margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; }
 .pos-options-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }

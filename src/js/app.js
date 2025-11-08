@@ -7,7 +7,6 @@
 import '../styles/main.css';
 import '../styles/site-base.css';
 import '../styles/admin-hints.css';
-import '../ui/icons.js';
 import '../core/action-registry.js';
 import './body-background-from-data.js';
 // Install global delegated hover/click listeners for item icons across pages
@@ -336,7 +335,6 @@ async function initializeCoreSystemsApp() {
         if (window.WhimsicalFrog && WhimsicalFrog.registerModule) {
             WhimsicalFrog.registerModule('room-modal-manager', roomModalManager);
         }
-        console.log('[App] RoomModalManager created and exposed globally:', roomModalManager);
     } else {
         console.warn('[App] RoomModalManager module unavailable; skipping modal manager initialization');
     }
@@ -428,6 +426,8 @@ if (__WF_IS_ADMIN) {
 // The core WF object is exported and initialized automatically.
 // Modules that need to run on specific pages will be imported here.
 // Their own init logic will determine if they should run.
+
+// (Removed) Temporary mainRoomPage fallback coordinator
 
 // Public per-page dynamic imports (non-admin)
 (function setupPublicPageImports() {
@@ -753,23 +753,26 @@ if (__WF_IS_ADMIN) {
                     const quickShow = (id) => {
                         const el = document.getElementById(id);
                         if (!el) return false;
+                        try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+                        try { el.classList.add('over-header','topmost','wf-overlay-viewport'); el.classList.remove('under-header'); } catch(_) {}
                         if (typeof window.showModal === 'function') {
-                            return window.showModal(id);
+                            try { window.showModal(id); } catch(_) {}
                         }
-                        el.classList.remove('hidden');
-                        el.classList.add('show');
-                        el.setAttribute('aria-hidden','false');
+                        try { el.classList.remove('hidden'); el.classList.add('show'); el.setAttribute('aria-hidden','false'); } catch(_) {}
+                        try { document.documentElement.classList.add('wf-admin-modal-open'); document.body.classList.add('wf-admin-modal-open'); } catch(_) {}
                         return true;
                     };
                     const quickHide = (id) => {
                         const el = document.getElementById(id);
                         if (!el) return false;
                         if (typeof window.hideModal === 'function') {
-                            return window.hideModal(id);
+                            try { window.hideModal(id); } catch(_) {}
                         }
-                        el.classList.add('hidden');
-                        el.classList.remove('show');
-                        el.setAttribute('aria-hidden','true');
+                        try { el.classList.add('hidden'); el.classList.remove('show'); el.setAttribute('aria-hidden','true'); } catch(_) {}
+                        try {
+                            const anyVisible = document.querySelector('.admin-modal-overlay.show:not(.hidden)');
+                            if (!anyVisible) { document.documentElement.classList.remove('wf-admin-modal-open'); document.body.classList.remove('wf-admin-modal-open'); }
+                        } catch(_) {}
                         return true;
                     };
                     const ensureCssCatalogModal = () => {
@@ -1061,10 +1064,38 @@ if (__WF_IS_ADMIN) {
                                 e.preventDefault(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); else e.stopPropagation();
                                 quickShow('devStatusModal');
                                 try {
-                                    const frame = document.getElementById('devStatusFrame');
-                                    if (frame && frame.dataset && frame.dataset.src && (!frame.src || frame.src === 'about:blank')) {
-                                        frame.src = frame.dataset.src;
-                                    }
+                                    const box = document.getElementById('devStatusContainer');
+                                    if (!box) return;
+                                    box.innerHTML = '<div class="text-sm text-gray-600">Loading…</div>';
+                                    ApiClient.get('/dev/status.php').then((html) => {
+                                        try {
+                                            const parser = new DOMParser();
+                                            const doc = parser.parseFromString(String(html||''), 'text/html');
+                                            const headStyles = Array.from(doc.querySelectorAll('head style')).map(s => s.textContent || '').join('\n');
+                                            const bodyHtml = (doc.querySelector('body') || doc).innerHTML || '';
+                                            // Scope styles to #devStatusContainer to avoid bleeding
+                                            let scoped = '';
+                                            try {
+                                                scoped = headStyles.split('}').map(rule => {
+                                                    const parts = rule.split('{');
+                                                    if (parts.length < 2) return '';
+                                                    const sel = parts[0].trim();
+                                                    const decl = parts.slice(1).join('{');
+                                                    if (!sel) return '';
+                                                    if (sel.startsWith('@')) return rule + '}';
+                                                    const prefixed = sel.split(',').map(s => `#devStatusContainer ${s.trim()}`).join(', ');
+                                                    return `${prefixed} {${decl}}`;
+                                                }).filter(Boolean).join('}\n');
+                                            } catch(_) { scoped = headStyles; }
+                                            box.innerHTML = '';
+                                            const styleEl = document.createElement('style'); styleEl.textContent = scoped;
+                                            box.appendChild(styleEl);
+                                            const content = document.createElement('div'); content.className = 'devstatus-content'; content.innerHTML = bodyHtml;
+                                            box.appendChild(content);
+                                        } catch (err) {
+                                            box.innerHTML = '<div class="text-sm text-red-700">Failed to load Dev Status</div>';
+                                        }
+                                    }).catch(() => { box.innerHTML = '<div class="text-sm text-red-700">Failed to load Dev Status</div>'; });
                                 } catch(_) {}
                                 return;
                             }

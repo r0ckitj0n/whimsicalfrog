@@ -274,21 +274,6 @@ if (window.WhimsicalFrog && window.WhimsicalFrog.Core) {
         eventBus.emit('core:ready', window.WhimsicalFrog);
     }
 
-    // Global fetch wrapper: only add credentials for same-origin requests
-    const originalFetch = window.fetch;
-    window.fetch = function(resource, init = {}) {
-        try {
-            const urlStr = (typeof resource === 'string') ? resource : (resource && resource.url ? resource.url : '');
-            const urlObj = new URL(urlStr, window.location.origin);
-            if (urlObj.origin === window.location.origin) {
-                if (!init.credentials) init.credentials = 'same-origin';
-            }
-        } catch (_) {
-            // If parsing fails, leave init as-is
-        }
-        return originalFetch(resource, init);
-    };
-
     // Auto-initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);

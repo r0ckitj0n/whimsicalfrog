@@ -103,6 +103,40 @@ $messageType = $_GET['type'] ?? '';
 
 ?>
 <div id="categoryManagementRoot" class="p-4">
+    <?php if ($isModal): ?>
+    <style>
+      html, body { height:auto !important; min-height:auto !important; margin:0; background:transparent; overflow:visible !important; }
+      #categoryManagementRoot { display:block; width:100%; height:auto !important; max-height:none !important; overflow:visible !important; }
+    </style>
+    <script>
+    (function(){
+      try {
+        if (document && document.body && !document.body.hasAttribute('data-embed')) { document.body.setAttribute('data-embed','1'); }
+        function h(){
+          try {
+            var n = document.getElementById('categoryManagementRoot') || document.body;
+            var r = n.getBoundingClientRect();
+            var hRect = Math.round(r && r.height ? r.height : 0);
+            var hScroll = Math.round(n && n.scrollHeight ? n.scrollHeight : 0);
+            var H = Math.max(80, hRect, hScroll);
+            var wRect = Math.round(r && r.width ? r.width : 0);
+            var wScroll = Math.round(n && n.scrollWidth ? n.scrollWidth : 0);
+            var W = Math.max(200, wRect, wScroll);
+            window.parent && window.parent.postMessage({ source: 'wf-embed-size', height: H, width: W }, '*');
+          } catch(_) {}
+        }
+        try { window.__wfMeasure = h; } catch(_) {}
+        var bursts = [0,60,120,240,400,600,900];
+        bursts.forEach(function(t){ setTimeout(h, t); });
+        window.addEventListener('load', function(){ setTimeout(h,0); setTimeout(h,150); setTimeout(h,350); }, { once:true });
+        try {
+          var mo = new MutationObserver(function(){ setTimeout(h,0); setTimeout(h,120); });
+          mo.observe(document.getElementById('categoryManagementRoot') || document.body, { childList:true, subtree:true, attributes:true, characterData:true });
+        } catch(_) {}
+      } catch(_) {}
+    })();
+    </script>
+    <?php endif; ?>
     <?php if (!$isModal): ?>
     <h1 class="admin-title">Category Management</h1>
     <?php endif; ?>
@@ -344,7 +378,15 @@ $messageType = $_GET['type'] ?? '';
             });
           }
         })();
-        showPanel('tabPanelOverview'); // default
+        <?php
+          // Choose default tab: prefer explicit ?tab= param; default to Overview.
+          $tabParam = strtolower($_GET['tab'] ?? '');
+          $panelKey = 'tabPanelOverview';
+          if ($tabParam === 'categories') { $panelKey = 'tabPanelCategories'; }
+          elseif ($tabParam === 'assignments') { $panelKey = 'tabPanelAssignments'; }
+          elseif ($tabParam === 'sku' || $tabParam === 'skurules' || $tabParam === 'sku_rules') { $panelKey = 'tabPanelSkuRules'; }
+        ?>
+        showPanel('<?= $panelKey ?>');
 
         async function fetchJSON(url, options) {
           const opts = options || {};
@@ -471,7 +513,6 @@ $messageType = $_GET['type'] ?? '';
             el.innerHTML = '';
             el.appendChild(toolbar);
             el.appendChild(table);
-            try { if (window.WF_Icons && typeof window.WF_Icons.applyIcons === 'function') { window.WF_Icons.applyIcons(el); } } catch(_) {}
 
             // Drag & Drop within same room
             const tbody = table.querySelector('#assignmentsTbody');
@@ -777,7 +818,6 @@ $messageType = $_GET['type'] ?? '';
                 </tbody>
               </table>
             `;
-            try { if (window.WF_Icons && typeof window.WF_Icons.applyIcons === 'function') { window.WF_Icons.applyIcons(container); } } catch(_) {}
           } catch (e) {
             container.innerHTML = `<div class="text-danger">Error loading SKU rules: ${escapeHtml(e.message)}</div>`;
           }

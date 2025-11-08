@@ -110,7 +110,7 @@ body[data-page='admin/inventory'] .admin-table-section thead th,
 body[data-page='admin/inventory'] .admin-table-section thead td {
   position: sticky !important;
   top: 0 !important; /* stick to top of the scroller (below filters) */
-  z-index: var(--z-sticky-header, 50) !important;
+  z-index: var(--z-admin-sticky-header) !important;
   background: #fff !important; /* solid to cover rows under */
 }
 
@@ -126,7 +126,7 @@ body[data-page='admin/orders'] .admin-table-section thead,
 body[data-page='admin/inventory'] .admin-table-section thead {
   position: sticky !important;
   top: 0 !important;
-  z-index: var(--z-sticky-header, 55) !important;
+  z-index: var(--z-admin-sticky-header) !important;
   background: #fff !important;
   display: table-header-group !important; /* WebKit-friendly */
 }
@@ -137,7 +137,7 @@ body[data-page='admin/orders'] .admin-table-section thead tr,
 body[data-page='admin/inventory'] .admin-table-section thead tr {
   position: sticky !important;
   top: 0 !important;
-  z-index: var(--z-sticky-header, 56) !important;
+  z-index: var(--z-admin-sticky-header) !important;
   background: #fff !important;
   border-bottom: 1px solid #e5e7eb !important;
 }

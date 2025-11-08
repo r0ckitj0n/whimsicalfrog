@@ -235,7 +235,7 @@ import { ApiClient } from '../core/api-client.js';
     applyCanvasBgFromData();
   }
 
-  // Apply shared SVG icons and ensure aria-label/title when provided
+  // Ensure aria-label/title when provided (no SVG icon application)
   function enforceIconOnly(scope){
     const root = scope || document;
     const btns = root.querySelectorAll('button[data-icon]');
@@ -246,7 +246,6 @@ import { ApiClient } from '../core/api-client.js';
         if (!btn.getAttribute('title')) btn.setAttribute('title', label);
       }
     });
-    try { if (window.WF_Icons && typeof window.WF_Icons.applyIcons === 'function') { window.WF_Icons.applyIcons(root); } } catch(_) {}
   }
 
   // Ensure the canvas frame uses the same viewport aspect ratio as the live page

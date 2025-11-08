@@ -937,6 +937,8 @@ import { ApiClient } from '../core/api-client.js';
         if (modal) {
             modal.classList.remove('show');
             modal.classList.add('hidden');
+            try { document.body.classList.remove('html-open'); } catch(_) {}
+            try { document.documentElement.classList.remove('html-open'); } catch(_) {}
             modal.classList.remove('force-visible'); // Remove force-visible to allow hiding
             modal.setAttribute('aria-hidden', 'true');
             console.log('[GlobalModal] Modal classes after close:', modal.className);
@@ -1000,7 +1002,7 @@ import { ApiClient } from '../core/api-client.js';
                 #detailedItemModal {
                     position: fixed !important;
                     inset: 0 !important;
-                    z-index: var(--z-detailed-item-modal, 100300) !important;
+                    z-index: var(--z-detailed-item-modal) !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
@@ -1034,6 +1036,7 @@ import { ApiClient } from '../core/api-client.js';
             modalContainer.innerHTML = html;
             const modal = document.getElementById('detailedItemModal');
             if (!modal) return;
+            try { modal.classList.add('show'); } catch(_) {}
 
             // Init item options with base SKU (strip only variant suffix tokens -G*, -S*, -C*)
             const rawSku = String(sku || payloadItem?.sku || '');

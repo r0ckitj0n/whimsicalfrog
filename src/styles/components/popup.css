@@ -266,7 +266,7 @@
 .item-popup-legacy.oos .popup-image-container::after {
   content: 'OUT OF STOCK';
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  z-index: var(--z-index-global-popup, 100500) !important;
+  z-index: var(--z-index-global-popup) !important;
   background: rgba(17, 24, 39, 0.6);
   color: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.35);
   padding: 8px 14px; text-transform: uppercase; font-weight: 900;
@@ -289,7 +289,7 @@
   transform: translate(-50%, -50%) !important;
   inset: auto !important;
   pointer-events: none !important;
-  z-index: var(--z-index-god-mode, 100001) !important;
+  z-index: var(--z-index-god-mode) !important;
   background: rgba(17, 24, 39, 0.6) !important; /* more transparent */
   border-radius: 12px !important;
   box-shadow: 0 8px 28px rgba(0,0,0,.35) !important;
@@ -344,7 +344,7 @@
   max-height: calc(100dvh - 16px) !important;
   /* Ensure popup participates in stacking context and layers above base UIs */
   position: absolute;
-  z-index: var(--z-global-popup, var(--z-index-global-popup, 100200)) !important;
+  z-index: var(--z-global-popup) !important;
 }
 
 /* Default hidden unless explicitly shown by JS */
@@ -368,7 +368,7 @@
 }
 /* When the anchor is inside the room modal, elevate popup above the overlay and header */
 #itemPopup.in-room-modal {
-  z-index: var(--z-global-popup, var(--z-index-global-popup, 100200)) !important;
+  z-index: var(--z-global-popup) !important;
 }
 /* During measurement, keep it hidden to avoid flicker */
 .item-popup.measuring {

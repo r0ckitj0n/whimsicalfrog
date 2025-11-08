@@ -8,9 +8,10 @@ const __wfEnsureRoomMapEditorModal = () => {
     el.remove();
     el = null;
   }
+  try { if (window && window.CustomEvent) window.dispatchEvent(new CustomEvent('wf:overlay:close', { detail: { id, element: el, time: Date.now() } })); } catch(_) {}
   el = document.createElement('div');
   el.id = 'roomMapManagerModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -106,9 +107,9 @@ const __wfEnsureActionIconsManagerModal = () => {
         panel.classList.remove('admin-modal--sm','admin-modal--md','admin-modal--lg','admin-modal--lg-narrow','admin-modal--xl','admin-modal--full','admin-modal--square-200','admin-modal--square-260','admin-modal--square-300');
       }
       const body = el.querySelector('.modal-body');
-      if (body) { body.classList.add('wf-modal-body--fill'); body.classList.remove('wf-modal-body--autoheight'); }
+      if (body) { body.classList.remove('wf-modal-body--fill'); body.classList.add('wf-modal-body--autoheight'); }
       const frame = el.querySelector('#actionIconsManagerFrame');
-      if (frame) frame.classList.add('wf-embed--fill');
+      if (frame) frame.classList.remove('wf-embed--fill');
       try { if (typeof markOverlayResponsive === 'function') markOverlayResponsive(el); } catch(_) {}
       try { if (typeof attachSameOriginFallback === 'function' && frame) attachSameOriginFallback(frame, el); } catch(_) {}
     } catch(_) {}
@@ -128,8 +129,8 @@ const __wfEnsureActionIconsManagerModal = () => {
         <h2 id="actionIconsManagerTitle" class="admin-card-title">🧰 Button Manager</h2>
         <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-admin-modal" aria-label="Close">×</button>
       </div>
-      <div class="modal-body wf-modal-body--fill">
-        <iframe id="actionIconsManagerFrame" title="Button Manager" class="wf-admin-embed-frame wf-embed--fill" data-autosize="1" data-src="/sections/tools/action_icons_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
+      <div class="modal-body">
+        <iframe id="actionIconsManagerFrame" title="Button Manager" class="wf-admin-embed-frame" data-autosize="1" data-allow-settings-autosize="1" data-measure-selector="#iconsManagerRoot,.icons-manager-inner,.admin-card,.icons-table-wrap,.admin-table,#admin-section-content" data-src="/sections/tools/action_icons_manager.php?modal=1" referrerpolicy="no-referrer"></iframe>
       </div>
     </div>
   `;
@@ -137,9 +138,9 @@ const __wfEnsureActionIconsManagerModal = () => {
   try {
     wireOverlay(el);
     const body = el.querySelector('.modal-body');
-    if (body) { body.classList.add('wf-modal-body--fill'); body.classList.remove('wf-modal-body--autoheight'); }
+    if (body) { body.classList.remove('wf-modal-body--fill'); body.classList.add('wf-modal-body--autoheight'); }
     const frame = el.querySelector('#actionIconsManagerFrame');
-    if (frame) { frame.classList.add('wf-embed--fill'); }
+    if (frame) { frame.classList.remove('wf-embed--fill'); }
     try { if (typeof markOverlayResponsive === 'function') markOverlayResponsive(el); } catch(_) {}
     try { if (typeof attachSameOriginFallback === 'function' && frame) attachSameOriginFallback(frame, el); } catch(_) {}
   } catch(_) {}
@@ -152,7 +153,7 @@ const __wfEnsureReportsBrowserModal = () => {
   if (el) return el;
   el = document.createElement('div');
   el.id = 'reportsBrowserModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden over-header';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -179,7 +180,7 @@ const __wfEnsureModalMarkupGuideModal = () => {
   if (el) return el;
   el = document.createElement('div');
   el.id = 'modalMarkupGuideModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden over-header';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -207,7 +208,7 @@ const __wfEnsureAreaItemMapperModal = () => {
   if (el) { try { el.remove(); } catch(_) {}; el = null; }
   el = document.createElement('div');
   el.id = 'areaItemMapperModal';
-  el.className = 'admin-modal-overlay over-header wf-modal-autowide wf-modal-mincols-3 wf-modal-single-scroll wf-modal-closable hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-mincols-3 wf-modal-single-scroll wf-modal-closable hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -289,7 +290,7 @@ const __wfEnsureEmailSettingsModal = () => {
   if (el) { try { el.remove(); } catch(_) {} el = null; }
   el = document.createElement('div');
   el.id = 'emailSettingsModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('data-modal', 'emailSettingsModal');
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
@@ -414,7 +415,7 @@ const __wfEnsureCartButtonTextsModal = () => {
   }
   el = document.createElement('div');
   el.id = 'cartButtonTextsModal';
-  el.className = 'admin-modal-overlay over-header wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost wf-modal-autowide wf-modal-single-scroll wf-modal-closable hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -485,7 +486,7 @@ const __wfEnsureShopEncouragementsModal = () => {
   }
   el = document.createElement('div');
   el.id = 'shopEncouragementsModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -551,7 +552,7 @@ const __wfEnsureTemplateManagerModal = () => {
   }
   el = document.createElement('div');
   el.id = 'templateManagerModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -619,7 +620,7 @@ const __wfEnsureAutomationModal = () => {
   }
   el = document.createElement('div');
   el.id = 'automationModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -665,7 +666,7 @@ const __wfEnsureEmailHistoryModal = () => {
   }
   el = document.createElement('div');
   el.id = 'emailHistoryModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -749,6 +750,10 @@ const __wfShowModal = (id) => {
   const el = document.getElementById(id);
   if (!el) return false;
   try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
+  // Force viewport anchoring and stacking at show-time to avoid partial viewport placement
+  try {
+    try { el.classList.add('over-header','topmost','wf-overlay-viewport'); el.classList.remove('under-header'); } catch(_) {}
+  } catch(_) {}
   try {
     const panel = el.querySelector('.admin-modal');
     const body = panel ? panel.querySelector('.modal-body') : null;
@@ -770,6 +775,46 @@ const __wfShowModal = (id) => {
   try { el.classList.remove('hidden'); } catch(_) {}
   try { el.classList.add('show'); } catch(_) {}
   try { el.setAttribute('aria-hidden', 'false'); } catch(_) {}
+  try { if (window && window.CustomEvent) window.dispatchEvent(new CustomEvent('wf:overlay:open', { detail: { id, element: el, time: Date.now() } })); } catch(_) {}
+  // A11y ties
+  try {
+    if (!el.getAttribute('role')) el.setAttribute('role','dialog');
+    el.setAttribute('aria-modal','true');
+    const header = el.querySelector('.modal-header [id], .modal-header h1[id], .modal-header h2[id], .modal-header h3[id]');
+    if (header && header.id) el.setAttribute('aria-labelledby', header.id);
+  } catch(_) {}
+  // Fallback page scroll lock for browsers without :has support
+  try { document.documentElement.classList.add('wf-admin-modal-open'); document.body.classList.add('wf-admin-modal-open'); } catch(_) {}
+  // Attempt to focus the first actionable control inside the modal
+  try {
+    const focusable = el.querySelector('.modal-body [autofocus], .modal-body button, .modal-body [href], .modal-body input, .modal-body select, .modal-body textarea');
+    if (focusable && typeof focusable.focus === 'function') focusable.focus();
+  } catch(_) {}
+  // Focus trap within the overlay while visible
+  try {
+    if (!el.__wfTrapHandler) {
+      const handler = (e) => {
+        try {
+          if (!e || e.key !== 'Tab') return;
+          const panel = el.querySelector('.admin-modal');
+          if (!panel) return;
+          const nodes = panel.querySelectorAll('a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])');
+          const list = Array.from(nodes).filter(n => n && n.offsetParent !== null);
+          if (!list.length) return;
+          const first = list[0];
+          const last = list[list.length - 1];
+          const active = document.activeElement;
+          if (e.shiftKey) {
+            if (active === first || !panel.contains(active)) { e.preventDefault(); try { last.focus(); } catch(_) {} }
+          } else {
+            if (active === last || !panel.contains(active)) { e.preventDefault(); try { first.focus(); } catch(_) {} }
+          }
+        } catch(_) {}
+      };
+      el.__wfTrapHandler = handler;
+      try { el.addEventListener('keydown', handler, true); } catch(_) {}
+    }
+  } catch(_) {}
   // Post-show layout helpers kept for wide/auto-grid behavior
   try {
     const apply = () => {
@@ -904,8 +949,58 @@ const __wfHideModal = (id) => {
     el.classList.remove('show');
     el.setAttribute('aria-hidden', 'true');
   }
+  // Remove focus trap if present
+  try { if (el.__wfTrapHandler) { el.removeEventListener('keydown', el.__wfTrapHandler, true); el.__wfTrapHandler = null; } } catch(_) {}
+  // If no admin overlays are visible, remove the fallback scroll-lock class
+  try {
+    const anyVisible = document.querySelector('.admin-modal-overlay.show:not(.hidden)');
+    if (!anyVisible) { document.documentElement.classList.remove('wf-admin-modal-open'); document.body.classList.remove('wf-admin-modal-open'); }
+  } catch(_) {}
+  // If child AI overlay closed, restore focus to the opener if we captured it
+  try {
+    if (id === 'aiUnifiedChildModal') {
+      const overlay = document.getElementById('aiUnifiedChildModal');
+      const toFocus = overlay && overlay.__wfReturnFocusEl ? overlay.__wfReturnFocusEl : null;
+      if (toFocus && document.contains(toFocus)) {
+        try { toFocus.focus({ preventScroll: true }); } catch(_) { try { toFocus.focus(); } catch(_) {} }
+      }
+      if (overlay) { try { overlay.__wfReturnFocusEl = null; } catch(_) {} }
+      // Optionally re-show the parent overlay if it was previously visible
+      try {
+        const shouldRestoreParent = !!(overlay && overlay.__wfRestoreParent);
+        if (shouldRestoreParent) {
+          const parent = document.getElementById('aiUnifiedModal');
+          if (parent) { try { __wfShowModal('aiUnifiedModal'); } catch(_) { parent.classList.remove('hidden'); parent.classList.add('show'); parent.setAttribute('aria-hidden','false'); } }
+        }
+        if (overlay) { try { overlay.__wfRestoreParent = false; } catch(_) {} }
+      } catch(_) {}
+    }
+  } catch(_) {}
   return true;
 };
+
+// Global ESC handler: close the visible AI overlay (child preferred, then parent)
+(function(){
+  try {
+    if (!window.__wfModalEscHandler) {
+      window.__wfModalEscHandler = true;
+      document.addEventListener('keydown', (e) => {
+        try {
+          if (e && (e.key === 'Escape' || e.key === 'Esc')) {
+            const child = document.getElementById('aiUnifiedChildModal');
+            const parent = document.getElementById('aiUnifiedModal');
+            const visible = (el) => !!(el && el.classList && el.classList.contains('show') && !el.classList.contains('hidden'));
+            const target = visible(child) ? child : (visible(parent) ? parent : null);
+            if (target) {
+              e.preventDefault();
+              try { __wfHideModal(target.id); } catch(_) {}
+            }
+          }
+        } catch(_) {}
+      }, true);
+    }
+  } catch(_) {}
+})();
 
 // Lightweight generic status modal (for transient operations like provider tests)
 const __wfEnsureStatusModal = () => {
@@ -913,7 +1008,7 @@ const __wfEnsureStatusModal = () => {
   if (el) return el;
   el = document.createElement('div');
   el.id = 'wfStatusModal';
-  el.className = 'admin-modal-overlay wf-modal--content-scroll hidden over-header';
+  el.className = 'admin-modal-overlay wf-overlay-viewport over-header topmost hidden';
   el.setAttribute('aria-hidden', 'true');
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
@@ -1130,21 +1225,200 @@ try {
           if (!overlay) return;
           try { if (overlay.parentElement && overlay.parentElement !== document.body) document.body.appendChild(overlay); } catch(_) {}
           try { overlay.classList.add('over-header'); } catch(_) {}
+          try { overlay.classList.add('topmost'); } catch(_) {}
           try { const titleEl = overlay.querySelector('#aiUnifiedChildTitle'); if (titleEl && d.title) titleEl.textContent = String(d.title); } catch(_) {}
+
+          // Decide whether to render inline (no iframe) for known marketing tools
+          const url = String(d.url || '');
+          // Allow forcing iframe path via message flag, URL params, or global/window flag
+          const forceFrame = (() => {
+            try {
+              if (d && d.forceFrame) return true;
+              const u = new URL(url, window.location.origin);
+              if (u.searchParams.get('frame') === '1' || u.searchParams.get('wf_force_frame') === '1') return true;
+              const qp = new URLSearchParams(window.location.search || '');
+              if (qp.get('wf_marketing_force_frame') === '1') return true;
+              if (window.__WF_FORCE_FRAME) return true;
+            } catch(_) { /* noop */ }
+            return false;
+          })();
+          // Allow forcing inline path via message flag, URL/page params, or global flag
+          const forceInline = (() => {
+            try {
+              if (d && d.forceInline) return true;
+              const u = new URL(url, window.location.origin);
+              if (u.searchParams.get('wf_inline') === '1' || u.searchParams.get('wf_inline_strict') === '1') return true;
+              const qp = new URLSearchParams(window.location.search || '');
+              if (qp.get('wf_inline_strict') === '1') return true;
+              if (window.__WF_INLINE_STRICT) return true;
+            } catch(_) {}
+            return false;
+          })();
+          const canInlineTool = /\/sections\/tools\/(social_manager\.php|automation_manager\.php|ai_suggestions\.php|ai_content_generator\.php|newsletters_manager\.php|discounts_manager\.php|coupons_manager\.php|intent_heuristics_manager\.php)(\?|$)/.test(url);
+          // Iframe retirement for known marketing tools: ALWAYS inline for these URLs
+          const isInline = canInlineTool || forceInline;
+          try { if (canInlineTool && forceFrame) console.warn('[AI Overlays] Iframe fallback is retired for', url, '- forcing inline.'); } catch(_) {}
+          let frame = overlay.querySelector('#aiUnifiedChildFrame');
+          const inlineBox = overlay.querySelector('#aiUnifiedChildInline');
+
+          if (isInline && inlineBox) {
+            // Ensure AdminMarketingModule is available; if not, inject its entry script and retry once
+            const runInline = () => {
+              try {
+                const M = (typeof window !== 'undefined' && window.AdminMarketingModule) ? window.AdminMarketingModule : null;
+                if (!M) return false;
+                // Detach iframe from the modal body so CSS :has(> iframe) doesn't apply single-scroll rules erroneously
+                try {
+                  const bodyEl = overlay.querySelector('.modal-body');
+                  if (frame && bodyEl && frame.parentElement === bodyEl) {
+                    overlay.__wfSavedChildFrame = frame;
+                    bodyEl.removeChild(frame);
+                  }
+                } catch(_) {}
+                // Show inline container
+                try { inlineBox.classList.remove('hidden'); } catch(_) {}
+                // Prepare minimal containers expected by AdminMarketingModule functions
+                let html = '';
+                if (/social_manager\.php/.test(url)) { html = '<div id="socialManagerContent" class="space-y-2 text-sm text-gray-700">Loading accounts…</div>'; }
+                else if (/automation_manager\.php/.test(url)) { html = '<div id="automationManagerContent" class="space-y-3 text-sm text-gray-700">Loading automations…</div>'; }
+                else if (/ai_suggestions\.php/.test(url)) { html = '<div id="suggestionsManagerContent" class="text-sm text-gray-700"></div>'; }
+                else if (/ai_content_generator\.php/.test(url)) { html = '<div id="contentGeneratorContent" class="space-y-3 text-sm text-gray-700"></div>'; }
+                else if (/newsletters_manager\.php/.test(url)) { html = '<div id="newsletterManagerContent" class="space-y-3 text-sm text-gray-700"></div>'; }
+                else if (/discounts_manager\.php/.test(url)) { html = '<div id="discountManagerContent" class="space-y-3 text-sm text-gray-700"></div>'; }
+                else if (/coupons_manager\.php/.test(url)) { html = '<div id="couponManagerContent" class="space-y-3 text-sm text-gray-700"></div>'; }
+                else if (/intent_heuristics_manager\.php/.test(url)) { html = '<div id="intentHeuristicsContent" class="space-y-3 text-sm text-gray-700"></div>'; }
+                try { inlineBox.innerHTML = '<div class="wf-inline-tool-wrap">'+html+'</div>'; } catch(_) {}
+                // Patch showOverlay to a no-op so module doesn't create iframe-local overlays
+                try { M.showOverlay = function(){ return true; }; } catch(_) {}
+                if (/social_manager\.php/.test(url) && typeof M.openSocialManager === 'function') { M.openSocialManager(); }
+                else if (/automation_manager\.php/.test(url) && typeof M.openAutomationManager === 'function') { M.openAutomationManager(); }
+                else if (/ai_suggestions\.php/.test(url) && typeof M.openSuggestionsManager === 'function') { M.openSuggestionsManager(); }
+                else if (/ai_content_generator\.php/.test(url) && typeof M.openContentGenerator === 'function') { M.openContentGenerator(); }
+                else if (/newsletters_manager\.php/.test(url) && typeof M.openNewslettersManager === 'function') { M.openNewslettersManager(); }
+                else if (/discounts_manager\.php/.test(url) && typeof M.openDiscountsManager === 'function') { M.openDiscountsManager(); }
+                else if (/coupons_manager\.php/.test(url) && typeof M.openCouponsManager === 'function') { M.openCouponsManager(); }
+                else if (/intent_heuristics_manager\.php/.test(url) && typeof M.openIntentHeuristicsManager === 'function') { M.openIntentHeuristicsManager(); }
+                // Hide the parent AI modal to avoid competing scroll/centering contexts
+                try { if (typeof __wfHideModal === 'function') __wfHideModal('aiUnifiedModal'); else { const p=document.getElementById('aiUnifiedModal'); if (p) { p.classList.remove('show'); p.classList.add('hidden'); p.setAttribute('aria-hidden','true'); } } } catch(_) {}
+                try { __wfShowModal('aiUnifiedChildModal'); } catch(_) {}
+                return true;
+              } catch(_) { return false; }
+            };
+            let ok = false;
+            try { ok = runInline(); } catch(_) { ok = false; }
+            if (!ok) {
+              try {
+                if (!document.getElementById('wf-admin-marketing-entry')) {
+                  const s = document.createElement('script');
+                  s.id = 'wf-admin-marketing-entry';
+                  s.type = 'module';
+                  s.src = '/src/entries/admin-marketing.js';
+                  s.onload = function(){ try { runInline(); } catch(_) {} };
+                  document.head.appendChild(s);
+                } else {
+                  // Already injected but module not ready yet; retry shortly
+                  setTimeout(function(){ try { runInline(); } catch(_) {} }, 120);
+                }
+              } catch(_) {}
+            }
+            // If module is injected, we’ve opened inline or will shortly; ensure parent is hidden and child is visible
+            try {
+              // Remember previously focused element to return focus after child closes (if still visible)
+              try { overlay.__wfReturnFocusEl = document.activeElement || null; } catch(_) {}
+              // Capture whether parent was visible so we can restore it on child close
+              try {
+                const parent = document.getElementById('aiUnifiedModal');
+                const parentVisible = !!(parent && parent.classList && parent.classList.contains('show') && !parent.classList.contains('hidden'));
+                overlay.__wfRestoreParent = parentVisible;
+              } catch(_) {}
+              if (typeof __wfHideModal === 'function') __wfHideModal('aiUnifiedModal');
+            } catch(_) {}
+            try { __wfShowModal('aiUnifiedChildModal'); } catch(_) {}
+            return;
+          }
+
+          // Default: use iframe (unless strict inline is requested)
           try {
-            const frame = overlay.querySelector('#aiUnifiedChildFrame');
+            // Safety net: if URL is a known marketing tool, do NOT use iframe; attempt inline instead
+            if (canInlineTool) {
+              try {
+                if (!document.getElementById('wf-admin-marketing-entry')) {
+                  const s = document.createElement('script'); s.id='wf-admin-marketing-entry'; s.type='module'; s.src='/src/entries/admin-marketing.js'; document.head.appendChild(s);
+                }
+              } catch(_) {}
+              try { __wfShowModal('aiUnifiedChildModal'); } catch(_) {}
+              return;
+            }
+            if (forceInline) {
+              // Strict inline requested: attempt inline path by injecting entry script and showing child overlay, skipping iframe entirely
+              try {
+                if (!document.getElementById('wf-admin-marketing-entry')) {
+                  const s = document.createElement('script'); s.id='wf-admin-marketing-entry'; s.type='module'; s.src='/src/entries/admin-marketing.js'; document.head.appendChild(s);
+                }
+              } catch(_) {}
+              try { __wfShowModal('aiUnifiedChildModal'); } catch(_) {}
+              return;
+            }
             if (frame) {
+              // If the iframe was detached during inline mode, reattach it to the modal body before use
+              try {
+                const bodyEl = overlay.querySelector('.modal-body');
+                if (overlay.__wfSavedChildFrame && bodyEl && overlay.__wfSavedChildFrame !== frame) {
+                  // Prefer the saved frame reference if different
+                  try { if (frame && frame.parentElement) frame.parentElement.removeChild(frame); } catch(_) {}
+                  frame = overlay.__wfSavedChildFrame;
+                }
+                if (bodyEl && (!frame.parentElement || frame.parentElement !== bodyEl)) {
+                  bodyEl.insertBefore(frame, bodyEl.firstChild || null);
+                }
+                // Clear saved pointer
+                try { overlay.__wfSavedChildFrame = null; } catch(_) {}
+              } catch(_) {}
               if (!frame.hasAttribute('data-autosize')) frame.setAttribute('data-autosize','1');
               frame.removeAttribute('data-wf-use-msg-sizing');
-              frame.setAttribute('src', String(d.url || 'about:blank'));
+              frame.setAttribute('src', url || 'about:blank');
               try { if (typeof attachSameOriginFallback === 'function') attachSameOriginFallback(frame, overlay); } catch(_) {}
+              try { frame.classList.remove('hidden'); } catch(_) {}
             }
+            if (inlineBox) { try { inlineBox.classList.add('hidden'); inlineBox.innerHTML = ''; } catch(_) {} }
+          } catch(_) {}
+          // Hide parent AI modal then show child modal (iframe path)
+          try {
+            try { overlay.__wfReturnFocusEl = document.activeElement || null; } catch(_) {}
+            // Capture whether parent was visible so we can restore it on child close
+            try {
+              const parent = document.getElementById('aiUnifiedModal');
+              const parentVisible = !!(parent && parent.classList && parent.classList.contains('show') && !parent.classList.contains('hidden'));
+              overlay.__wfRestoreParent = parentVisible;
+            } catch(_) {}
+            if (typeof __wfHideModal === 'function') __wfHideModal('aiUnifiedModal'); else { const p=document.getElementById('aiUnifiedModal'); if (p) { p.classList.remove('show'); p.classList.add('hidden'); p.setAttribute('aria-hidden','true'); } }
           } catch(_) {}
           try { __wfShowModal('aiUnifiedChildModal'); } catch(_) {}
           return;
         }
       } catch(_) {}
     });
+  }
+} catch(_) {}
+
+// Harden overlay placement: always attach overlays to document.body (prevents clipping and partial tints)
+try {
+  if (!window.__wfOverlayPortalInit) {
+    window.__wfOverlayPortalInit = true;
+    const moveToBody = (el) => { try { if (el && el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {} };
+    try { document.querySelectorAll('.admin-modal-overlay').forEach(moveToBody); } catch(_) {}
+    try {
+      const mo = new MutationObserver((muts) => {
+        try {
+          muts.forEach((m) => {
+            (m.addedNodes || []).forEach((n) => {
+              try { if (n && n.nodeType === 1 && n.classList && n.classList.contains('admin-modal-overlay')) moveToBody(n); } catch(_) {}
+            });
+          });
+        } catch(_) {}
+      });
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    } catch(_) {}
   }
 } catch(_) {}
 
@@ -1992,7 +2266,7 @@ const __wfAI_loadSettingsAndRender = async () => {
             if (!f.hasAttribute('data-measure-selector')) {
               try { f.setAttribute('data-measure-selector', '#categoryManagementRoot,.admin-card,.admin-table'); } catch(_) {}
             }
-            const base = f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1';
+            const base = f.getAttribute('data-src') || '/sections/admin_categories.php?modal=1&tab=categories';
             const sep = base.indexOf('?') === -1 ? '?' : '&';
             const ds = `${base}${sep}_=${Date.now()}`;
             try { f.removeAttribute('src'); } catch(_) {}
@@ -2005,50 +2279,6 @@ const __wfAI_loadSettingsAndRender = async () => {
           // Recompute after paint to capture header height and paddings
           try {
             const rerun = () => { try { markOverlayResponsive(el); } catch(_) {} };
-            try { requestAnimationFrame(rerun); } catch(_) { setTimeout(rerun, 0); }
-            setTimeout(rerun, 200);
-          } catch(_) {}
-        }
-        return;
-      }
-
-      // Open Attributes Management modal (iframe)
-      if (closest('[data-action="open-attributes"], #attributesBtn')) {
-        e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
-        const el = document.getElementById('attributesModal');
-        if (el) {
-          try { if (el.parentElement && el.parentElement !== document.body) document.body.appendChild(el); } catch(_) {}
-          __wfSetModalHeaderFromTrigger(closest('[data-action="open-attributes"], #attributesBtn'), el);
-          const f = document.getElementById('attributesFrame') || el.querySelector('iframe');
-          if (f) {
-            try { f.setAttribute('data-autosize','1'); } catch(_) {}
-            try { f.setAttribute('scrolling','no'); } catch(_) {}
-            const base = f.getAttribute('data-src') || '/components/embeds/attributes_manager.php?modal=1';
-            const sep = base.indexOf('?') === -1 ? '?' : '&';
-            const ds = `${base}${sep}_=${Date.now()}`;
-            try { f.removeAttribute('src'); } catch(_) {}
-            setTimeout(() => { try { f.setAttribute('src', ds); } catch(_) {} }, 0);
-            // Ensure a resize pass on load so width/height are applied immediately
-            try {
-              f.addEventListener('load', () => {
-                try {
-                  if (window.__wfEmbedAutosize && typeof window.__wfEmbedAutosize.resize === 'function') {
-                    window.__wfEmbedAutosize.resize(f);
-                  }
-                } catch(_) {}
-              }, { once: true });
-            } catch(_) {}
-            // Hide iframe's own scrollbars where supported
-            try { f.setAttribute('scrolling', 'no'); } catch(_) {}
-          }
-          __wfShowModal('attributesModal');
-          // Enable standardized autosize
-          try { if (f && f.classList) f.classList.remove('wf-admin-embed-frame--tall','wf-embed--fill'); } catch(_) {}
-          try { if (f && !f.hasAttribute('data-autosize')) f.setAttribute('data-autosize','1'); } catch(_) {}
-          // Recompute after paint to capture header height and paddings
-          try {
-            const ov = el;
-            const rerun = () => { try { markOverlayResponsive(ov); } catch(_) {} };
             try { requestAnimationFrame(rerun); } catch(_) { setTimeout(rerun, 0); }
             setTimeout(rerun, 200);
           } catch(_) {}

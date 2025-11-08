@@ -117,7 +117,7 @@ body[data-page^='admin'] .admin-filter-form {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     /* Use dedicated token so filters stack above content/room modal */
-    z-index: var(--z-shop-filters, 2600) !important;
+    z-index: var(--z-shop-filters) !important;
     padding: 1rem 0; /* remove horizontal padding so content can hug viewport edges */
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -1393,9 +1393,9 @@ body[data-page^='admin'] .admin-filter-form {
 }/* ==============================================
    COMMON Z-INDEX CLASSES
    ============================================== */.z-index-1000 {
-    z-index: var(--z-inline-popup, 1000);
+    z-index: var(--z-inline-popup);
 }.z-index-modal {
-    z-index: var(--z-index-modal, 2000);
+    z-index: var(--z-index-modal);
 }/* ==============================================
    COMMON OPACITY CLASSES
    ============================================== */
@@ -2714,12 +2714,12 @@ body[data-page^='admin'] .admin-filter-form {
 /* Ensure modals take precedence over admin navbar
    When any admin modal overlay is present, keep the admin tabs below overlays. */
 body:has(.admin-modal-overlay:not(.hidden)) .admin-tab-navigation {
-    z-index: var(--z-admin-nav, 500);
+    z-index: var(--z-admin-nav);
 }
 /* Fallback for browsers without :has() support */
 body.modal-open[data-page^='admin'] .admin-tab-navigation,
 html.modal-open:has(body[data-page^='admin']) .admin-tab-navigation {
-    z-index: var(--z-admin-nav, 500);
+    z-index: var(--z-admin-nav);
 }
 /* Enhanced Tab Color Overrides - RESTORED LAST NIGHT'S STYLING *//* Force all admin tab colors to be white text *//* Content Area Protection *//* Prevent any floating elements from interfering *//* ==============================================
    CRITICAL UTILITY CLASSES RESTORED
@@ -3142,7 +3142,7 @@ body { /* Allow content overflow */
 .z-index-9999 {
     z-index: var(--z-index-toast);
 }.z-index-1100 {
-    z-index: var(--z-inline-popup-high, 1100);
+    z-index: var(--z-inline-popup-high);
 }/* Common Opacity Classes */
 .opacity-09 {
     opacity: 0.9;
@@ -5109,8 +5109,9 @@ body[data-page^='admin'] .settings-section-content { min-height: auto; gap: 0.5r
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     border-color: #3b82f6;
-}.draggable-section-item.dragging {
-    z-index: var(--z-inline-popup, 1000);
+}
+.draggable-section-item.dragging {
+    z-index: var(--z-inline-popup);
     opacity: 0.5;
     transform: rotate(2deg);
     cursor: grabbing;
@@ -8231,7 +8232,7 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
 
 /* Notification Container */
 .wf-notification-container {
-    z-index: var(--z-global-popup, 2147483647);
+    z-index: var(--z-global-popup);
     position: fixed;
     top: 24px;
     right: 24px;
@@ -8950,8 +8951,9 @@ input[type="submit"]:hover,
 }
 
 /* Room Product Icons in Modal - Use centralized z-index */
-.room-product-icon { /* Use centralized z-index */ background-color: white; backdrop-filter: blur(2px); --icon-width: 80px; --icon-height: 80px; border-radius: 8px; overflow: hidden; top: var(--icon-top, 0); left: var(--icon-left, 0); width: var(--icon-width, 80px); height: var(--icon-height, 80px); position: absolute; cursor: pointer; transition: all 0.3s ease; z-index: var(--z-room-elements, 15);  background: #ffffff; border: none !important; padding: 0 !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; pointer-events: auto;
-}.room-product-icon:hover { /* Slightly higher on hover */ transform: scale(1.05); background: rgb(255 255 255 / 95%); box-shadow: 0 4px 12px rgb(0 0 0 / 30%); z-index: calc(var(--z-room-elements, 15) + 5); ;
+.room-product-icon { /* Use centralized z-index */ background-color: white; backdrop-filter: blur(2px); --icon-width: 80px; --icon-height: 80px; border-radius: 8px; overflow: hidden; top: var(--icon-top, 0); left: var(--icon-left, 0); width: var(--icon-width, 80px); height: var(--icon-height, 80px); position: absolute; cursor: pointer; transition: all 0.3s ease; z-index: var(--z-room-elements);  background: #ffffff; border: none !important; padding: 0 !important; box-shadow: none !important; display: flex; align-items: center; justify-content: center; pointer-events: auto;
+}
+.room-product-icon:hover { /* Slightly higher on hover */ transform: scale(1.05); background: rgb(255 255 255 / 95%); box-shadow: 0 4px 12px rgb(0 0 0 / 30%); z-index: calc(var(--z-room-elements) + 5); ;
 }.room-product-icon img {
     width: 100%;
     height: auto;
@@ -9123,18 +9125,18 @@ input[type="submit"]:hover,
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }/* Badge styling */.popup-sale-badge {
-z-index: var(--z-badge, 10);
+z-index: var(--z-badge);
 position: absolute;
 top: 8px;
 pointer-events: none;
 left: 8px;
 }.popup-stock-badge {
-z-index: var(--z-badge, 10);
+z-index: var(--z-badge);
 position: absolute;
 top: 8px;
 pointer-events: none;
 right: 8px;
-}.popup-marketing-badge { /* Position below stock badge */ font-size: 9px; padding: 3px 8px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2d3748; z-index: var(--z-badge, 10); position: absolute; pointer-events: none; right: 8px; top: 35px; ;
+}.popup-marketing-badge { /* Position below stock badge */ font-size: 9px; padding: 3px 8px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2d3748; z-index: var(--z-badge); position: absolute; pointer-events: none; right: 8px; top: 35px; ;
 }
 /* Override positioning for image overlay badges */
 .popup-image-container .popup-marketing-badge {
@@ -9142,7 +9144,7 @@ top: 6px;
 right: 6px;
 }.stock-badge {
 background: #f97316;
-z-index: var(--z-badge, 10);
+z-index: var(--z-badge);
     color: white;
     padding: 4px 8px;
     border-radius: 12px;
@@ -9279,7 +9281,7 @@ z-index: var(--z-badge, 10);
     margin: 2px;
     color: white;
     background: #666;
-    z-index: var(--z-badge, 10);
+    z-index: var(--z-badge);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -9456,7 +9458,7 @@ z-index: var(--z-badge, 10);
     height: 100%;
     background: currentcolor;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    z-index: var(--z-index-base, 1);
+    z-index: var(--z-index-base);
     bottom: 100%;
     border-bottom: 12px solid #22c55e;
 }.modal-badge.shape-hexagon::after {
@@ -9792,7 +9794,7 @@ div #confirmAddToCart {
     opacity: 0.9;
     filter: grayscale(10%);
 }.out-of-stock-badge {
-    z-index: var(--z-badge, 10);
+    z-index: var(--z-badge);
     position: absolute;
     top: 5px;
     right: 5px;
@@ -11187,7 +11189,7 @@ div #confirmAddToCart {
     font-size: var(--table-header-font-size, 0.875rem);
     position: sticky;
     top: 0;
-    z-index: var(--z-index-base, 1);
+    z-index: var(--z-index-base);
     border-bottom: 2px solid var(--table-header-border, var(--brand-secondary, #BF5700));
 }.orders-table th:first-child {
     border-top-left-radius: var(--table-border-radius, 0.5rem);
@@ -11979,7 +11981,7 @@ body.image-viewer-open #imageViewerModal {
     transform: scale(1);
 }.delete-modal {
     background: rgb(0 0 0 / 60%);
-    z-index: var(--z-modal-overlay, 100);
+    z-index: var(--z-modal-overlay);
     visibility: hidden;
     position: fixed;
     inset: 0;
@@ -12109,7 +12111,7 @@ body.image-viewer-open #imageViewerModal {
     left: 0;
     width: 100%;
     height: 100vh;
-    z-index: var(--wf-confirm-overlay-z, var(--z-overlay-topmost, var(--z-index-overlay-backdrop)));
+    z-index: var(--wf-confirm-overlay-z);
 }
 .confirmation-modal-overlay.under-header {
     z-index: calc(var(--z-index-page-header) - 1);
@@ -12118,7 +12120,7 @@ body.image-viewer-open #imageViewerModal {
 }
 /* Checkout/payment overlay: ensure it stacks above room modal using variable */
 .confirmation-modal-overlay.checkout-overlay {
-    z-index: var(--z-index-checkout-overlay, 2500);
+    z-index: var(--z-index-checkout-overlay);
 }
 
 /* ===================== Receipt Modal (Screen) ===================== */
@@ -12138,7 +12140,7 @@ body.image-viewer-open #imageViewerModal {
     background: #fff;
     position: sticky;
     top: 0;
-    z-index: var(--z-index-base, 1);
+    z-index: var(--z-index-base);
 }
 .receipt-modal-header .title {
     margin: 0;
@@ -12559,7 +12561,7 @@ input[type="checkbox"].color-checkbox {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: var(--z-modal, 50);
+    z-index: var(--z-modal);
     padding: var(--spacing-md, 1rem);
 }.modal-header {
     margin-bottom: 0;
@@ -13525,7 +13527,7 @@ input[type="checkbox"].color-checkbox {
     border: 1px solid #9ca3af;
 }/* Order Modal System - Sunday Layout Restored */
 .order-modal {
-    z-index: var(--z-overlay,  10050);
+    z-index: var(--z-overlay);
     position: fixed;
     inset: 0;
     background-color: rgb(0 0 0 / 60%);
@@ -13545,7 +13547,7 @@ input[type="checkbox"].color-checkbox {
     display: flex;
     flex-direction: column;
     position: relative;
-    z-index: var(--z-index-modal-content,  10051);
+    z-index: var(--z-index-modal-content);
 }/* ==============================================
    POS (POINT OF SALE) SYSTEM STYLES
    ============================================== */

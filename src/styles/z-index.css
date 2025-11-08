@@ -36,7 +36,9 @@
 :root {
   /* -- Base & Content Layers -- */
   --z-index-behind: -1;
+  --z-index-far-behind: -2;
   --z-index-base: 1;
+  --z-index-raised: 1;
   --z-index-content-back: 5;
   --z-index-content-mid: 10;
   --z-index-content-front: 15;
@@ -61,11 +63,11 @@
   /* Standard overlays (confirmation modals, generic modals) */
   --z-overlay: 1200;
   --z-overlay-content: 1210;
-  --z-overlay-topmost: 1600;
+  --z-overlay-topmost: 2147483647; /* topmost should dominate all stacks */
 
-  /* Admin-specific overlays (admin modals/panels) may have distinct stacking needs */
-  --z-admin-overlay: 1400;              /* above global overlays */
-  --z-admin-overlay-content: 1410;
+  /* Admin-specific overlays (admin modals/panels) */
+  --z-admin-overlay: 10110;              /* above global overlays and cart */
+  --z-admin-overlay-content: 10120;
 
   /* -- Room & Special Modals -- */
   --z-index-room-modal: 1100;
@@ -90,9 +92,11 @@
   --z-inline-popup: 550;                /* product hover popups, small tips */
   --z-inline-popup-high: 560;           /* slightly above default inline popups */
   --z-index-toast: 1500;                /* global toasts/notifications */
+  --z-image-viewer: 1700;               /* image viewer overlay inside detailed modal */
   /* Room main layers */
   --z-room-base: 80;                    /* base layer for main room section (below header) */
   --z-room-door: 10060;                 /* door interactive layer */
+  --z-room-buttons: 55;                 /* back button and small controls in room modal header */
   /* Help documentation dropdown */
   --z-help-dropdown: 50;                /* search results dropdown in help docs */
   --z-badge: 10;                        /* decorative badges over images */
@@ -143,32 +147,33 @@
 /* Additional aliases for tokens referenced across legacy and component CSS */
 :root {
   /* Headers & sticky elements */
-  --z-sticky-header: var(--z-index-page-header, 300);
-  --z-site-header: var(--z-index-page-header, 300);
+  --z-sticky-header: var(--z-index-page-header);
+  --z-site-header: var(--z-index-page-header);
+  --z-admin-sticky-header: var(--z-sticky-header);
 
   /* Dropdowns & content */
-  --z-dropdown: var(--z-index-dropdown, 400);
-  --z-content: var(--z-index-content-front, 15);
-  --z-content-overlay: var(--z-index-overlay-backdrop, 1000);
+  --z-dropdown: var(--z-index-dropdown);
+  --z-content: var(--z-index-content-front);
+  --z-content-overlay: var(--z-index-overlay-backdrop);
 
   /* Modals & overlays */
-  --z-index-modal: var(--z-index-modal-base, 1010);
-  --z-modal-overlay: var(--z-index-overlay-backdrop, 1000);
-  --z-image-zoom-modal: var(--z-detailed-item-modal, 1500);
-  --z-quantity-modal: calc(var(--z-detailed-item-modal, 1500) + 1);
+  --z-index-modal: var(--z-index-modal-base);
+  --z-modal-overlay: var(--z-index-overlay-backdrop);
+  --z-image-zoom-modal: var(--z-detailed-item-modal);
+  --z-quantity-modal: calc(var(--z-detailed-item-modal) + 1);
 
   /* Popups & admin tools */
-  --z-popup: var(--z-global-popup, 1250);
+  --z-popup: var(--z-global-popup);
   --z-index-admin-tools: 10110;
 
   /* Room & inline UI */
   --z-room-elements: var(--z-index-content-front, 15);
 
   /* Miscellaneous */
-  --z-index-raised: var(--z-index-base, 1);
+  --z-index-raised: var(--z-index-base);
   --z-index-far-behind: -2;
   --z-image-viewer: 100400;
-  --z-debug: var(--z-index-god-mode, 1600);
+  --z-debug: var(--z-index-god-mode);
 }
 
 /* Admin-only overlay z-index overrides (scoped by route) */
@@ -183,22 +188,22 @@ body[data-page^='admin'] {
  * Bump checkout overlay slightly above the cart overlay to ensure visibility.
  */
 .confirmation-modal-overlay.checkout-overlay {
-  z-index: var(--z-index-checkout-overlay, 10060); /* above cart overlay default */
+  z-index: var(--z-index-checkout-overlay); /* above cart overlay default */
   /* Prevent fullscreen stretch: position modal as a centered flex child */
   display: flex;
   align-items: flex-start; /* honor margin-top offset under header */
   justify-content: center;
 }
 .confirmation-modal-overlay.checkout-overlay .confirmation-modal {
-  z-index: var(--z-index-checkout-content, 10061); /* ensure content sits above its own backdrop */
+  z-index: var(--z-index-checkout-content); /* ensure content sits above its own backdrop */
 }
 
 /* When combined with under-header, force above header and cart overlay */
 .confirmation-modal-overlay.checkout-overlay.under-header {
-  z-index: var(--z-index-checkout-overlay, 10060) !important;
+  z-index: var(--z-index-checkout-overlay) !important;
 }
 .confirmation-modal-overlay.checkout-overlay.under-header .confirmation-modal {
-  z-index: var(--z-index-checkout-content, 10061) !important;
+  z-index: var(--z-index-checkout-content) !important;
 }
 
 /* Fallback visibility: if aria-hidden is false, force overlay visible even if `.show` hasn't applied yet */
@@ -218,7 +223,7 @@ html body .confirmation-modal-overlay.checkout-overlay[aria-hidden="false"] .con
 
 /* Receipt overlay: ensure it appears below the fixed header with correct padding and is always on top */
 .confirmation-modal-overlay.receipt-overlay {
-  z-index: var(--z-index-receipt-overlay, 10080) !important;
+  z-index: var(--z-index-receipt-overlay) !important;
   /* Position content at the top of the viewport; content handles its own offset */
   align-items: flex-start !important;
 }
@@ -237,7 +242,7 @@ html body .confirmation-modal-overlay.checkout-overlay[aria-hidden="false"] .con
 /* Toast/notification container should sit above most UI */
 #wf-notification-container {
   position: fixed;
-  z-index: var(--z-index-toast, 11000);
+  z-index: var(--z-index-toast);
 }
 
 /* When the checkout modal is open, fully hide any /payment page content behind it */

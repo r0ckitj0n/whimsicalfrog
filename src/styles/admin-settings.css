@@ -304,9 +304,10 @@ body[data-page='admin/settings'] {
 
 /* Ensure admin Settings overlays start below the header (site-wide var) */
 body[data-page^='admin'] .admin-modal-overlay {
-  align-items: flex-start !important;
-  padding-top: var(--wf-overlay-offset, calc(var(--wf-header-height, 64px) + 12px)) !important;
-  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important;
+  /* Center by default; offsetting causes partial-viewport placement */
+  align-items: center !important;
+  padding-top: 0 !important;
+  z-index: var(--wf-admin-overlay-z) !important;
 }
 body[data-page^='admin'] .admin-modal-overlay .admin-modal {
   margin-top: 0 !important;
@@ -322,6 +323,13 @@ body[data-page='admin/settings'] .settings-section {
   position: static; /* avoid stacking context */
   z-index: auto;    /* let overlays stack against the viewport/header */
   overflow: visible !important;
+  transform: none !important;   /* prevent fixed overlays from being contained */
+  contain: initial !important;   /* avoid creating a containing context */
+}
+/* Also ensure the primary scroll container does not create a fixed containing block */
+body[data-page='admin/settings'] #admin-section-content {
+  transform: none !important;
+  contain: initial !important;
 }
 
 /*
@@ -341,12 +349,12 @@ body[data-page='admin/settings'] .footer-container {
 /* Elevate settings cards above footer just in case */
 body[data-page='admin/settings'] .settings-section {
   position: relative;
-  z-index: var(--z-content-3, 3);
+  z-index: var(--z-content-3);
 }
 
 /* Suppress bottom gradient overlay on admin routes (causes a 50-60px band) */
 body[data-page^='admin'] .overlay-gradient-bottom { display: none !important; }
-body[data-page^='admin'] .bg-container.mode-fullscreen { z-index: var(--z-index-flat, 0) !important; }
+body[data-page^='admin'] .bg-container.mode-fullscreen { z-index: var(--z-index-flat) !important; }
 
 /* Ensure admin navbar (tabs) starts below the fixed page header */
 body[data-page^='admin'] .admin-tab-navigation {
@@ -437,7 +445,7 @@ body[data-page^='admin'] .confirmation-modal-overlay {
   pointer-events: none !important;
   position: fixed !important;
   inset: 0 !important;
-  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important;
+  z-index: var(--wf-admin-overlay-z) !important;
 }
 /* Only show when explicitly marked (framework adds .show or [aria-hidden="false"]) */
 body[data-page^='admin'] .confirmation-modal-overlay.show,
@@ -464,17 +472,37 @@ body[data-page^='admin'] .room-modal-overlay.show {
   pointer-events: auto !important;
 }
 
+/* Final guard: any element ending with Modal ID should behave as a full-viewport overlay when visible */
+body[data-page^='admin'] [id$="Modal"]:not(.hidden) {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  width: 100dvw !important;
+  height: 100dvh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  z-index: var(--wf-admin-overlay-z) !important;
+}
+body[data-page^='admin'] [id$="Modal"]:not(.hidden) .admin-modal {
+  margin: 0 !important;
+}
+
 /* Over-header variant: let certain modals (e.g., Deploy Manager) fully cover header/navbar */
 body[data-page^='admin'] .admin-modal-overlay.over-header {
   padding-top: 0 !important;            /* remove header offset */
   align-items: center !important;       /* recenter vertically */
-  z-index: var(--z-detailed-item-modal, 100300) !important; /* ensure topmost */
+  z-index: var(--z-detailed-item-modal) !important; /* ensure topmost */
 }
 /* Explicit IDs for critical tools that must always sit above header/navbar */
 body[data-page^='admin'] #deployManagerModal {
   padding-top: 0 !important;
   align-items: center !important;
-  z-index: var(--z-detailed-item-modal, 100300) !important;
+  z-index: var(--z-detailed-item-modal) !important;
 }
 body[data-page^='admin'] #businessInfoModal {
   position: fixed !important;
@@ -483,33 +511,48 @@ body[data-page^='admin'] #businessInfoModal {
   height: 100dvh !important;
   padding-top: 0 !important;
   align-items: center !important;
-  z-index: var(--z-detailed-item-modal, 100300) !important;
+  z-index: var(--z-detailed-item-modal) !important;
   justify-content: center !important;
   overflow: visible !important;
 }
 body[data-page^='admin'] #businessInfoModal .admin-modal {
   margin-top: 0 !important;
 }
+
+/* Ensure Categories modal anchors to the viewport fully */
+body[data-page^='admin'] #categoriesModal {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  padding-top: 0 !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+body[data-page^='admin'] #categoriesModal .admin-modal {
+  margin-top: 0 !important;
+}
 body:has(#businessInfoModal:not(.hidden)) .site-header,
 body:has(#businessInfoModal.show) .site-header,
 body:has(#businessInfoModal:not(.hidden)) .universal-page-header,
 body:has(#businessInfoModal.show) .universal-page-header {
-  z-index: var(--z-index-base, 1) !important;
+  z-index: var(--z-index-base) !important;
 }
 body.modal-open[data-page^='admin'] .site-header,
 html.modal-open:has(body[data-page^='admin']) .site-header,
 body.modal-open[data-page^='admin'] .universal-page-header,
 html.modal-open:has(body[data-page^='admin']) .universal-page-header {
-  z-index: var(--z-index-base, 1) !important;
+  z-index: var(--z-index-base) !important;
 }
 body[data-page^='admin'] #devStatusModal {
   padding-top: 0 !important;
   align-items: center !important;
-  z-index: var(--z-detailed-item-modal, 100300) !important;
+  z-index: var(--z-detailed-item-modal) !important;
 }
 
 body[data-page='admin/settings'] #fontPickerModal {
-  z-index: calc(var(--z-detailed-item-modal, 100300) + 20) !important;
+  z-index: calc(var(--z-detailed-item-modal) + 20) !important;
 }
 
 body[data-page='admin/settings'] #fontPickerModal .modal-body {
@@ -540,7 +583,7 @@ body[data-page^='admin'] .detailed-item-modal.show {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
-  z-index: var(--z-detailed-item-modal, 100300) !important;
+  z-index: var(--z-detailed-item-modal) !important;
 }
 
 body[data-page^='admin'] #orderModal:not(.hidden),
@@ -551,7 +594,7 @@ body[data-page^='admin'] #orderModal.show {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
-  z-index: var(--z-admin-overlay,  10100) !important;
+  z-index: var(--z-admin-overlay) !important;
 }
 /* Ensure Square modal keeps flex centering when shown */
 body[data-page^='admin'] #squareSettingsModal.show { display: flex !important; }
@@ -566,7 +609,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   padding: 0 !important;
   position: fixed !important;
   inset: 0 !important;
-  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important; /* ensure above header/nav */
+  z-index: var(--wf-admin-overlay-z) !important; /* ensure above header/nav */
   pointer-events: auto !important;
 }
 
@@ -619,7 +662,7 @@ body[data-page^='admin'] .room-modal-overlay:not(.hidden) {
   height: 100vh !important;
   overflow: auto !important;
   box-sizing: border-box !important;
-  z-index: var(--wf-admin-overlay-z, var(--z-admin-overlay, 10100)) !important; /* above admin content/header stacks */
+  z-index: var(--wf-admin-overlay-z) !important; /* above admin content/header stacks */
   display: flex !important; /* ensure centering */
   align-items: center !important;
   justify-content: center !important;
@@ -679,7 +722,7 @@ body[data-page^='admin'] :is(.admin-modal-overlay, .modal-overlay, .room-modal-o
   opacity: 1 !important; /* ensure panel is fully visible */
   background: #fff !important; /* enforce solid panel background */
   position: relative !important;
-  z-index: var(--z-index-base, 1) !important; /* ensure panel content sits above overlay tint */
+  z-index: var(--z-index-base) !important; /* ensure panel content sits above overlay tint */
   transform: none !important; /* neutralize legacy scale/translate animations */
 }
 
@@ -1077,8 +1120,9 @@ body[data-page^='admin'] h1:first-child {
 
 /* Admin modals - ensure they appear below header */
 body[data-page^='admin'] .admin-modal-overlay {
-  /* Already handled above but reinforcing */
-  padding-top: var(--wf-overlay-offset, calc(var(--wf-header-height, 64px) + 12px)) !important;
+  /* Final: overlays are centered and full-viewport with no header offset */
+  padding-top: 0 !important;
+  align-items: center !important;
 }
 
 /* Admin navbar positioning - CONSISTENT SPACING */
@@ -1091,7 +1135,7 @@ body[data-page^='admin'] .admin-tab-navigation {
 /* Settings page: add more space between header and navbar */
 body[data-page='admin/settings'] .admin-tab-navigation {
   top: 76px !important; /* 64px header + 12px gap */
-  z-index: var(--z-admin-nav, 500) !important;
+  z-index: var(--z-admin-nav) !important;
   margin: 0 !important;
   display: flex !important;
   visibility: visible !important;

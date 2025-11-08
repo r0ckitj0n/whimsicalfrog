@@ -38,13 +38,10 @@ RSYNC_EXCLUDES=(
     "--exclude=setup-dev-database.php"
     "--exclude=database-config-dev.php"
     "--exclude=deploy.sh"
-    "--exclude=start-replit.sh"
-    "--exclude=replit.md"
     "--exclude=node_modules/"
     "--exclude=backups/"
     "--exclude=tests/"
     "--exclude=.git/"
-    "--exclude=.replit"
 )
 
 if [[ "${WF_DEPLOY_EXCLUDE_TMP:-1}" != "0" ]]; then

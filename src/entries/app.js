@@ -176,6 +176,10 @@ if (__wfAllow('popup_fallback') && !__wfIsAdminSettings) {
     try {
       await import("../core/ui-helpers.js");
     } catch (_) {}
+    try {
+      const isRoomMain = !!(document.getElementById("mainRoomPage") || /(^|\/)room_main(\.php)?$/i.test(path));
+      if (isRoomMain) { await import("../js/room-main.js"); }
+    } catch (_) {}
     // Global item popup already imported at top-level
 
     // Fallback: enforce popup persistence when modern popup is not available

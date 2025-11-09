@@ -13,7 +13,7 @@
   C: Root .htaccess snapshots (.htaccess.* except .htaccess)
   D: scripts/migrations/ older than 30 days
   E: Deprecated endpoints (css/dynamic-styles.php, api/css_generator.php)
-  F: Dev/test caches (.phpunit.result.cache, .replit, .tmp*)
+  F: Dev/test caches (.phpunit.result.cache, .tmp*)
 */
 
 import fs from 'fs';
@@ -136,7 +136,7 @@ for (const rel of allFiles) {
   // E: deprecated endpoints
   if (rel === path.join('css','dynamic-styles.php') || rel === path.join('api','css_generator.php')) pushIf(rel,'E');
   // F: dev/test caches
-  if (base === '.phpunit.result.cache' || base === '.replit' || base.startsWith('.tmp')) pushIf(rel,'F');
+  if (base === '.phpunit.result.cache' || base.startsWith('.tmp')) pushIf(rel,'F');
 }
 
 const selected = opts.categories ? Object.fromEntries(Object.entries(cats).map(([k,v])=>[k, opts.categories.includes(k)?v:[]])) : cats;

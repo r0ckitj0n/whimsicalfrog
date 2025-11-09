@@ -149,16 +149,10 @@ class Database
             return true;
         }
         
-        // If REPLIT_DEPLOYMENT_ID is set AND no PostgreSQL, this is a Replit deployment (production)
-        if (!empty($_SERVER['REPLIT_DEPLOYMENT_ID']) || getenv('REPLIT_DEPLOYMENT_ID') !== false) {
-            return false;
-        }
-        
         // Generic dev indicators
         return (
             PHP_SAPI === 'cli' ||
-            (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false)) ||
-            (!empty($_SERVER['REPL_ID']) && empty($_SERVER['REPLIT_DEPLOYMENT_ID']))
+            (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false))
         );
     }
 

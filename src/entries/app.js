@@ -182,6 +182,26 @@ if (__wfAllow('popup_fallback') && !__wfIsAdminSettings) {
     } catch (_) {}
     // Global item popup already imported at top-level
 
+    // Late, DOM-parsed detection to ensure room-main module loads even if head executes before body is parsed
+    try {
+      function __wfLateLoadRoomMain(){
+        try {
+          if (window.__wfRoomMainLoaded) return;
+          const el = document.getElementById('mainRoomPage');
+          if (el) {
+            window.__wfRoomMainLoaded = true;
+            import('../js/room-main.js').catch(()=>{});
+          }
+        } catch(_) {}
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', __wfLateLoadRoomMain, { once: true });
+      } else {
+        __wfLateLoadRoomMain();
+      }
+      window.addEventListener('load', __wfLateLoadRoomMain, { once: true });
+    } catch(_) {}
+
     // Fallback: enforce popup persistence when modern popup is not available
     (function installPopupFallbackPersistence() {
       const ENABLE_POPUP_FALLBACK = false; // keep code for reference, disabled by default

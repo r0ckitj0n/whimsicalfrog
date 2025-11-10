@@ -47,5 +47,7 @@ try {
 
 // Load the detailed item modal stack (uses WF_Cart.addItem when adding)
 import('../js/detailed-item-modal.js');
+// Load the receipt modal so POS can show receipts without opening a new tab
+import('../js/receipt-modal.js');
 // Load the main POS module (defines the real cart integration and drains queue)
 import('../js/pos.js');

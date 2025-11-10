@@ -1482,7 +1482,7 @@ const DelegatedHandlers = {
   // Dashboard configuration methods
   async loadDashboardConfig() {
     try {
-      const data = await ApiClient.get('/api/dashboard_sections.php?action=get_sections');
+      const data = await ApiClient.get('/api/dashboard_sections.php?action=get_sections', { _: Date.now() });
 
       if (data.success) {
         this.populateDashboardConfig(data.data);
@@ -1545,6 +1545,22 @@ const DelegatedHandlers = {
       });
     });
 
+    // Wire move up/down buttons
+    tbody.querySelectorAll('[data-action="move-up"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
+        const key = e.currentTarget?.dataset?.key;
+        if (key) this.moveDashboardItem(key, -1);
+      }, { capture: true });
+    });
+    tbody.querySelectorAll('[data-action="move-down"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
+        const key = e.currentTarget?.dataset?.key;
+        if (key) this.moveDashboardItem(key, 1);
+      }, { capture: true });
+    });
+
     // Initialize drag and drop
     this.initDashboardConfigDragAndDrop();
   },
@@ -1578,10 +1594,23 @@ const DelegatedHandlers = {
     const tbody = document.getElementById('dashboardSectionsBody');
     if (!tbody) return;
 
-    tbody.querySelectorAll('tr').forEach((row, index) => {
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.forEach((row, index) => {
       const orderSpan = row.querySelector('span');
       if (orderSpan) {
         orderSpan.textContent = index + 1;
+      }
+    });
+
+    // Update arrow disabled states: first row cannot move up, last cannot move down
+    rows.forEach((row, index) => {
+      const up = row.querySelector('[data-action="move-up"]');
+      const down = row.querySelector('[data-action="move-down"]');
+      if (up) {
+        if (index === 0) up.setAttribute('disabled', ''); else up.removeAttribute('disabled');
+      }
+      if (down) {
+        if (index === rows.length - 1) down.setAttribute('disabled', ''); else down.removeAttribute('disabled');
       }
     });
   },
@@ -1626,7 +1655,7 @@ const DelegatedHandlers = {
         if (e.clientY < midpoint) {
           target.parentNode.insertBefore(draggedElement, target);
         } else {
-          target.parentNode.insertAfter(draggedElement, target);
+          target.parentNode.insertBefore(draggedElement, target.nextSibling);
         }
       }
     });

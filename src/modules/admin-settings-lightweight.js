@@ -2350,6 +2350,74 @@ const __wfAI_loadSettingsAndRender = async () => {
         e.preventDefault(); if (typeof e.stopImmediatePropagation==='function') e.stopImmediatePropagation(); else e.stopPropagation();
         __wfSetModalHeaderFromTrigger(closest('[data-action="open-dashboard-config"], #dashboardConfigBtn'), document.getElementById('dashboardConfigModal'));
         __wfShowModal('dashboardConfigModal');
+        try {
+          // Load data into the table on open
+          if (typeof window.loadDashboardConfig === 'function') {
+            window.loadDashboardConfig();
+          }
+          // Wire Refresh/Reset buttons once
+          const modal = document.getElementById('dashboardConfigModal');
+          if (modal && !modal.__wfDashCfgBound) {
+            modal.__wfDashCfgBound = true;
+            const onRefresh = (ev) => { try { ev.preventDefault(); } catch(_) {} try { window.loadDashboardConfig && window.loadDashboardConfig(); } catch(_) {} };
+            const onReset = async (ev) => {
+              try { ev.preventDefault(); } catch(_) {}
+              try {
+                await ApiClient.get('/api/dashboard_sections.php?action=reset_defaults&_=' + Date.now());
+                if (typeof window.loadDashboardConfig === 'function') {
+                  window.loadDashboardConfig();
+                }
+              } catch(_) {}
+            };
+            const onSave = async (ev) => {
+              try { ev.preventDefault(); } catch(_) {}
+              try {
+                const tbody = document.getElementById('dashboardSectionsBody');
+                if (!tbody) return;
+                const rows = Array.from(tbody.querySelectorAll('tr'));
+                const sections = rows.map((row, idx) => {
+                  const key = row?.dataset?.sectionKey || '';
+                  const widthSel = row.querySelector('.dash-width');
+                  const activeCb = row.querySelector('.dash-active');
+                  return {
+                    section_key: key,
+                    display_order: idx + 1,
+                    is_active: activeCb && activeCb.checked ? 1 : 0,
+                    show_title: 1,
+                    show_description: 1,
+                    custom_title: null,
+                    custom_description: null,
+                    width_class: widthSel ? widthSel.value : 'half-width'
+                  };
+                });
+                const payload = { sections };
+                const res = await ApiClient.post('/api/dashboard_sections.php?action=update_sections', payload);
+                const status = document.getElementById('dashboardConfigResult');
+                if (res && res.success) {
+                  if (status) { status.textContent = 'Saved'; setTimeout(() => { try { status.textContent = ''; } catch(_) {} }, 2000); }
+                  if (typeof window.loadDashboardConfig === 'function') window.loadDashboardConfig();
+                } else {
+                  if (status) { status.textContent = 'Save failed'; setTimeout(() => { try { status.textContent = ''; } catch(_) {} }, 3000); }
+                }
+              } catch(err) {
+                const status = document.getElementById('dashboardConfigResult');
+                if (status) { status.textContent = 'Error: ' + (err && err.message ? String(err.message) : 'saving'); setTimeout(() => { try { status.textContent = ''; } catch(_) {} }, 4000); }
+              }
+            };
+            try {
+              const refreshBtn = modal.querySelector('[data-action="dashboard-config-refresh"]');
+              if (refreshBtn && !refreshBtn.__wfBound) { refreshBtn.__wfBound = true; refreshBtn.addEventListener('click', onRefresh, true); }
+            } catch(_) {}
+            try {
+              const resetBtn = modal.querySelector('[data-action="dashboard-config-reset"]');
+              if (resetBtn && !resetBtn.__wfBound) { resetBtn.__wfBound = true; resetBtn.addEventListener('click', onReset, true); }
+            } catch(_) {}
+            try {
+              const saveBtn = modal.querySelector('[data-action="dashboard-config-save"]');
+              if (saveBtn && !saveBtn.__wfBound) { saveBtn.__wfBound = true; saveBtn.addEventListener('click', onSave, true); }
+            } catch(_) {}
+          }
+        } catch(_) {}
         return;
       }
 

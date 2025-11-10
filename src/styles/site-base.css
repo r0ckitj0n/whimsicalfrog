@@ -8414,31 +8414,60 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
 .pos-modal-content {
     max-width: 500px;
     padding: 2rem;
-}.pos-modal-body {
+    position: relative; /* allow absolute positioning of the close button */
+}
+.pos-modal-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    color: #111827;
+    cursor: pointer;
+}
+.pos-modal-close:hover { opacity: 0.8; }
+.pos-modal-body {
     padding: 2rem;
 }.pos-modal-body .total-display {
     text-align: center;
     margin-bottom: 2rem;
-}.pos-modal-body .total-amount {
+}
+.pos-modal-body .total-amount {
     font-size: 1.5rem;
     font-weight: bold;
     color: #333;
-}/* Payment Methods Grid */.payment-method-btn {
-    background: #4CAF50;
-    color: white;
-    border: none;
-    padding: 1rem;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    cursor: pointer;
+}
+/* Centered, larger total for POS payment method selection */
+.pos-total-center {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    transition: all 0.2s ease;
-}.payment-method-btn:hover {
-    background: #45a049;
+    justify-content: center;
+    text-align: center;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+}
+.pos-total-center .pos-total-label {
+    font-size: 1.125rem;
+    color: #374151;
+    font-weight: 600;
+}
+.pos-total-center .pos-total-amount {
+    font-size: 3rem; /* doubled from previous 1.5rem */
+    font-weight: 700;
+    color: #111827;
+}
+/* Payment Methods Grid */.payment-method-btn {
+    width: 100%;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.payment-method-btn:hover {
     transform: translateY(-2px);
-}.payment-method-btn.credit-card {
+}
+.payment-method-btn.credit-card {
     background-color: #2196F3;
     color: white;
     background: #2196F3;
@@ -8456,8 +8485,9 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
     background: #9C27B0;
 }.payment-method-btn.check:hover {
     background: #7b1fa2;
-}.payment-method-btn .icon {
-    font-size: 1.5rem;
+}.payment-method-btn .icon,
+.payment-method-btn .btn-icon {
+    font-size: 1.1rem;
 }.payment-method-btn .details {
     text-align: left;
 }.payment-method-btn .details .title {
@@ -8519,6 +8549,9 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
     background: white;
     border-radius: 4px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     transition: all 0.2s ease;
 }.cash-calculator .quick-amount-btn:hover {
     background: #f0f0f0;
@@ -8554,7 +8587,7 @@ body[data-page^='admin'] .settings-section .admin-settings-button.btn-secondary:
 }.cash-calculator .quick-amounts {
     grid-template-columns: repeat(2, 1fr);
 }.payment-methods {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }.pos-modal-content {
     max-width: 95vw;
     padding: 1rem;
@@ -13768,11 +13801,22 @@ input[type="checkbox"].color-checkbox {
     white-space: nowrap;
 }/* POS (Point of Sale) System */
 .payment-methods {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     display: grid;
     gap: 1rem;
     margin-bottom: 2rem;
-}#posCartTotal {
+}
+
+/* Stronger targeting to ensure layout applies within the POS modal */
+.pos-modal-body .payment-methods {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+.pos-modal-body .payment-methods .payment-method-btn {
+    width: 100%;
+}
+#posCartTotal {
     color: #dc3545;
     font-size: 2.5rem;
     font-weight: 700;

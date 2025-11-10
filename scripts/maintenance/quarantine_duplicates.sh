@@ -38,17 +38,8 @@ actual_count=0
 
 is_excluded() { local p="$1"; for e in "${EXCLUDES[@]}"; do [[ "$p" == "$e"* ]] && return 0; done; return 1; }
 
-# Build find command dynamically
-mapfile -t found < <(
-  (
-    IFS=$'\n'
-    for pat in "${PATTERNS[@]}"; do
-      find "$REPO_ROOT" -type f -name "$pat" 2>/dev/null
-    done
-  ) | sort -u
-)
-
-for abs in "${found[@]}"; do
+# Iterate candidates (portable: avoids 'mapfile' not present on macOS Bash 3)
+while IFS= read -r abs; do
   [[ -z "$abs" ]] && continue
   is_excluded "$abs" && continue
   # Skip files already under backups/duplicates
@@ -79,7 +70,14 @@ for abs in "${found[@]}"; do
   moved_any=1
   moved_list+=("$rel -> ${dest#$REPO_ROOT/}")
 
-done
+done < <(
+  (
+    IFS=$'\n'
+    for pat in "${PATTERNS[@]}"; do
+      find "$REPO_ROOT" -type f -name "$pat" 2>/dev/null
+    done
+  ) | sort -u
+)
 
 # Stage changes if any
 if [[ "$moved_any" -eq 1 ]]; then

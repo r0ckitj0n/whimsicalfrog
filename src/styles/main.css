@@ -84,25 +84,41 @@ body[data-page='payment'] #checkoutRoot {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: var(--z-index-god-mode);
-  background: rgba(17, 24, 39, 0.72); /* more transparent */
+  z-index: var(--z-index-god-mode, 10000);
+  background: rgba(17, 24, 39, 0.72);
   color: #fff;
   font-weight: 900;
   font-family: var(--font-secondary, Nunito, system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif);
-  font-size: clamp(0.9rem, 2vw, 1.3rem); /* smaller so full text fits */
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
   line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: clamp(6px, 1vw, 12px) clamp(12px, 2vw, 20px);
   border-radius: 12px;
   box-shadow: 0 8px 28px rgba(0,0,0,.35);
-  pointer-events: none; /* purely visual overlay */
+  pointer-events: none;
   text-align: center;
-  white-space: normal; /* allow wrapping if needed */
+  white-space: normal;
   max-width: 92%;
   box-sizing: border-box;
   overflow-wrap: anywhere;
   word-break: normal;
+}
+
+
+/* Dim image and add full overlay when out of stock */
+.product-card.is-out-of-stock .product-image-container .product-image {
+  filter: grayscale(0.8) brightness(0.6);
+  transition: filter .2s ease;
+}
+.product-card.is-out-of-stock .product-image-container > .product-image-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  border-radius: 10px;
+  z-index: 2;
+  pointer-events: none;
 }
 
 
@@ -640,26 +656,14 @@ body[data-page='contact'] .content { color: #fff !important; }
 /* --- Shop page styles --- */
 /* Navigation area just under the page header */
 #shopPage .shop-navigation-area {
-  /* Expose an explicit nav height token used by the scrollable content area */
   --shop-nav-height: 36px;
-  /* Outer gap that appears both above and below the nav (symmetry) */
   --shop-nav-gap: 12px;
-  /* Ensure fixed nav spans the full viewport width */
-  position: fixed;
-  /* Stable position: just under header with a small gap */
-  top: calc(var(--wf-header-height, var(--header-height, 80px)) + var(--shop-nav-gap, 12px));
-  left: 0;
-  right: 0;
-  padding: 0; /* no extra vertical padding so content aligns tightly */
-  /* Let container fit actual bar height; still reserve minimum expected size */
-  min-height: calc(var(--shop-nav-height, 36px) + var(--shop-nav-gap, 12px));
-  display: flex;
-  align-items: center; /* vertically center buttons within the fixed height */
+  position: static;
+  padding: 0;
+  min-height: auto;
+  display: block;
   margin: 0;
-  width: auto;
-  /* Ensure filters render above product cards and other content using dedicated token */
-  z-index: var(--z-shop-filters) !important;
-  /* Request: make this element transparent */
+  width: 100%;
   background: transparent !important;
   background-image: none !important;
   box-shadow: none !important;
@@ -672,7 +676,7 @@ body[data-page='contact'] .content { color: #fff !important; }
 }
 
 /* Prevent outer page scroll on shop; only internal content area should scroll */
-body[data-page='shop'] { overflow: hidden; }
+body[data-page='shop'] { overflow: visible; }
 
 /* Shop page: additional top offset tuned so total ≈ 80px */
 body[data-page='shop'] { --shop-extra-offset: -48px; }
@@ -685,16 +689,8 @@ body[data-page='shop'] .page-content#shopPage {
   margin-right: 0 !important;
   max-width: none !important;
   width: 100% !important;
-  /* Place content below measured chrome (header/admin) + nav height + nav gap */
   margin-top: 0 !important;
-  padding-top: calc(
-    var(--shop-chrome-height, (
-      var(--wf-header-height, var(--header-height, 80px))
-      + var(--wf-admin-tabs-height, 0px)
-    ))
-    + var(--shop-nav-height, 36px)
-    + var(--shop-nav-gap, 12px)
-  ) !important;
+  padding-top: calc(var(--wf-header-height, 64px) + var(--wf-admin-tabs-height, 40px) + 8px) !important;
 }
 
 /* Also target the ID directly to defeat media query rules like #shopPage { padding: 0 15px } */
@@ -1004,7 +1000,6 @@ body[data-page='contact'] #message { min-height: unset; height: auto; resize: ve
 #shopPage .product-info { margin-top: 8px; }
 #shopPage .product-button { margin-top: 10px; }
 
-/* Additional Information: hidden by default; shown when card is expanded */
 #shopPage .product-extra { display: none; margin-top: 8px; color: #374151; }
 #shopPage .product-card.is-expanded .product-extra { display: block; }
 #shopPage .product-more-toggle { margin-top: 6px; padding: 0; background: transparent; border: none; color: var(--brand-primary, #87ac3a); cursor: pointer; font-weight: 600; }

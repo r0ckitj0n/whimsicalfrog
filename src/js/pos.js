@@ -432,7 +432,7 @@ const POSModule = {
             };
 
             // Use the canonical add-order endpoint
-            const result = await ApiClient.post('add_order.php', orderData);
+            const result = await ApiClient.post('/api/add_order.php', orderData);
             const ok = !!(result && (result.success || (result.data && result.data.success)));
             const oid = result && (result.orderId || (result.data && result.data.orderId));
             if (ok && oid) {
@@ -448,29 +448,17 @@ const POSModule = {
     },
 
     async openReceiptPage(orderId) {
-        try {
-            this.hidePOSModal();
-        } catch(_) {}
+        try { this.hidePOSModal(); } catch(_) {}
         this.lastSaleData = { orderId };
-        const url = `/receipt.php?orderId=${encodeURIComponent(orderId)}&bare=1`;
+        // Prefer in-app receipt modal to avoid double scrollbars and keep context
         try {
-            const html = await ApiClient.get(url);
-            const content = `
-                <div class="pos-modal-content pos-modal-large">
-                    <div class="pos-modal-header pos-modal-header-success">
-                        <h3 class="pos-modal-title">Receipt ${orderId}</h3>
-                        <div class="pos-modal-actions">
-                            <button class="btn btn-secondary" data-action="print-receipt">Print</button>
-                            <button class="btn btn-secondary" data-action="email-receipt">Email</button>
-                            <button class="pos-modal-close" data-action="finish-sale">×</button>
-                        </div>
-                    </div>
-                    <div class="pos-modal-body pos-receipt-body">${html}</div>
-                </div>`;
-            this.showPOSModal('', content, 'custom');
-        } catch (_) {
-            try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
-        }
+            if (window.WF_ReceiptModal && typeof window.WF_ReceiptModal.open === 'function') {
+                window.WF_ReceiptModal.open(orderId);
+                return;
+            }
+        } catch(_) { /* ignore and fall back to URL */ }
+        const url = `/receipt?orderId=${encodeURIComponent(orderId)}&bare=1`;
+        try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
     },
 
     generateReceiptContent(saleData) {
@@ -509,7 +497,7 @@ const POSModule = {
     printReceipt() {
         const id = this.lastSaleData && this.lastSaleData.orderId ? String(this.lastSaleData.orderId) : '';
         if (!id) return;
-        const url = `/receipt.php?orderId=${encodeURIComponent(id)}&bare=1`;
+        const url = `/receipt?orderId=${encodeURIComponent(id)}&bare=1`;
         try { window.open(url, '_blank', 'noopener'); } catch(_) { window.location.href = url; }
     },
 
@@ -621,11 +609,23 @@ const POSModule = {
 
     showPaymentMethodSelector(total) {
         const message = `
-            <h3>Total Due: $${total.toFixed(2)}</h3>
+            <div class="pos-total-center" aria-live="polite">
+                <span class="pos-total-label">Total Due</span>
+                <span class="pos-total-amount">$${total.toFixed(2)}</span>
+            </div>
             <div class="payment-methods">
-                <button class="payment-btn payment-method-btn cash" data-method="Cash" title="Cash" aria-label="Cash"><span class="btn-icon btn-icon--cash" aria-hidden="true"></span> <span>Cash</span></button>
-                <button class="payment-btn payment-method-btn card" data-method="Card" title="Card" aria-label="Card"><span class="btn-icon btn-icon--card" aria-hidden="true"></span> <span>Card</span></button>
-                <button class="payment-btn payment-method-btn other" data-method="Other" title="Other" aria-label="Other"><span class="btn-icon btn-icon--mobile" aria-hidden="true"></span> <span>Other</span></button>
+                <button class="btn btn-success btn-md payment-btn payment-method-btn" data-method="Cash" title="Cash" aria-label="Cash">
+                    <span class="btn-icon btn-icon--cash" aria-hidden="true"></span>
+                    <span>Cash</span>
+                </button>
+                <button class="btn btn-primary btn-md payment-btn payment-method-btn" data-method="Card" title="Card" aria-label="Card">
+                    <span class="btn-icon btn-icon--card" aria-hidden="true"></span>
+                    <span>Card</span>
+                </button>
+                <button class="btn btn-warning btn-md payment-btn payment-method-btn" data-method="Other" title="Other" aria-label="Other">
+                    <span class="btn-icon btn-icon--mobile" aria-hidden="true"></span>
+                    <span>Other</span>
+                </button>
             </div>`;
         return new Promise(resolve => {
             this.showPOSModal('Select Payment Method', message, 'info');

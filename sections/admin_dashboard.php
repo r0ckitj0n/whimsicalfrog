@@ -669,3 +669,95 @@ if (empty($dashboardConfig)) {
         <?php endforeach; ?>
     </div>
 </div>
+
+<div id="orderDetailsModal" class="admin-modal-overlay wf-overlay-viewport over-header topmost hidden" aria-hidden="true" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="orderDetailsTitle">
+  <div class="admin-modal admin-modal-content admin-modal--actions-in-header">
+    <div class="modal-header">
+      <h2 id="orderDetailsTitle" class="admin-card-title">Order Details</h2>
+      <button type="button" class="admin-modal-close wf-admin-nav-button" data-action="close-order-details" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="text-sm"><span class="text-gray-600">Order</span> <span id="modal-order-id" class="font-mono font-semibold"></span></div>
+          <div class="text-sm"><span class="text-gray-600">Customer</span> <span id="modal-customer" class="font-medium"></span></div>
+          <div class="text-sm"><span class="text-gray-600">Total</span> <span id="modal-total" class="font-semibold"></span></div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Order Status</label>
+            <select id="modal-order-status" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="order_status">
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Payment Method</label>
+            <select id="modal-payment-method" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="paymentMethod">
+              <option value="">Select…</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Cash">Cash</option>
+              <option value="Check">Check</option>
+              <option value="PayPal">PayPal</option>
+              <option value="Venmo">Venmo</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Shipping Method</label>
+            <select id="modal-shipping-method" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="shippingMethod">
+              <option value="">Select…</option>
+              <option value="Customer Pickup">Customer Pickup</option>
+              <option value="Local Delivery">Local Delivery</option>
+              <option value="USPS">USPS</option>
+              <option value="FedEx">FedEx</option>
+              <option value="UPS">UPS</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Payment Status</label>
+            <select id="modal-payment-status" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="paymentStatus">
+              <option value="Pending">Pending</option>
+              <option value="Received">Received</option>
+              <option value="Refunded">Refunded</option>
+              <option value="Failed">Failed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Order Date</label>
+            <input type="date" id="modal-date" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="date" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700">Payment Date</label>
+            <input type="date" id="modal-payment-date" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="paymentDate" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <div class="text-xs font-medium text-gray-700">Shipping Address</div>
+            <pre id="modal-address" class="text-xs bg-gray-50 border border-gray-200 rounded p-2 whitespace-pre-wrap"></pre>
+          </div>
+          <div>
+            <div class="text-xs font-medium text-gray-700">Payment Notes</div>
+            <div id="modal-payment-notes" class="text-xs bg-gray-50 border border-gray-200 rounded p-2"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="text-xs font-medium text-gray-700">Items</div>
+          <div id="modal-order-items" class="space-y-2"></div>
+        </div>
+
+        <div>
+          <div class="text-xs font-medium text-gray-700">Notes</div>
+          <div id="modal-notes" class="text-xs bg-gray-50 border border-gray-200 rounded p-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>

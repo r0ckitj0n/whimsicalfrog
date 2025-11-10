@@ -96,7 +96,7 @@ async function openOrderDetailsModal(orderId) {
     }
 
     try {
-        const result = await ApiClient.get(`/api/orders/${orderId}`);
+        const result = await ApiClient.get('/api/get_order.php', { id: orderId, _: Date.now() });
 
         if (result.success && result.order) {
             updateOrderModalContent(result.order, result.items || []);
@@ -122,12 +122,33 @@ function closeOrderDetailsModal() {
 function updateOrderModalContent(order, items) {
     document.getElementById('modal-order-id').textContent = order.id;
     document.getElementById('modal-customer').textContent = order.username || 'N/A';
-    document.getElementById('modal-date').textContent = new Date(order.date).toLocaleDateString();
+    const dateInput = document.getElementById('modal-date');
+    if (dateInput) {
+        try { dateInput.value = (order.date ? new Date(order.date) : new Date()).toISOString().slice(0,10); } catch(_) {}
+        dateInput.dataset.orderId = order.id;
+    }
     document.getElementById('modal-total').textContent = `$${parseFloat(order.total || 0).toFixed(2)}`;
-    document.getElementById('modal-status').textContent = order.order_status || 'Pending';
-    document.getElementById('modal-payment-method').textContent = order.paymentMethod || 'N/A';
-    document.getElementById('modal-payment-status').textContent = order.paymentStatus || 'Pending';
-    document.getElementById('modal-shipping-method').textContent = order.shippingMethod || 'N/A';
+
+    const setSelect = (id, value) => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.dataset.orderId = order.id;
+        if (value && !Array.from(sel.options).some(o => o.value === value)) {
+            const opt = document.createElement('option');
+            opt.value = value; opt.textContent = value; sel.appendChild(opt);
+        }
+        sel.value = value || '';
+    };
+    setSelect('modal-order-status', order.order_status || 'Pending');
+    setSelect('modal-payment-method', order.paymentMethod || '');
+    setSelect('modal-payment-status', order.paymentStatus || 'Pending');
+    setSelect('modal-shipping-method', order.shippingMethod || '');
+
+    const payDate = document.getElementById('modal-payment-date');
+    if (payDate) {
+        try { payDate.value = (order.paymentDate ? new Date(order.paymentDate) : null) ? new Date(order.paymentDate).toISOString().slice(0,10) : ''; } catch(_) {}
+        payDate.dataset.orderId = order.id;
+    }
 
     const itemsContainer = document.getElementById('modal-order-items');
     itemsContainer.innerHTML = '';
@@ -162,4 +183,7 @@ function updateOrderModalContent(order, items) {
 
     document.getElementById('modal-notes').textContent = order.note || 'No notes';
     document.getElementById('modal-payment-notes').textContent = order.paynote || 'No payment notes';
+
+    const updatables = document.querySelectorAll('#orderDetailsModal .order-field-update');
+    updatables.forEach(el => { try { el.dataset.orderId = order.id; } catch(_) {} });
 }

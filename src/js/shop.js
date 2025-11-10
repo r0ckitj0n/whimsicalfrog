@@ -6,29 +6,8 @@ import './site-core.js';
 import apiClient from './api-client.js';
 const WF = window.WF;
 import { debounce } from './utils.js';
-// Diagnostic light mode: reduce heavy operations when enabled
 const __wfQS = (() => { try { return new URLSearchParams(window.location.search || ''); } catch(_) { return new URLSearchParams(''); } })();
 const __wfShopLight = (() => { try { return (__wfQS.get('wf_diag_shop_light') === '1') || (__wfQS.get('wf_app_minimal') === '1'); } catch(_) { return false; } })();
-
-// Runtime helpers for height equalization without inline styles
-const WFSHOP_EQH = { styleEl: null, rules: new Set() };
-function ensureEqHStyleEl() {
-    if (!WFSHOP_EQH.styleEl) {
-        WFSHOP_EQH.styleEl = document.createElement('style');
-        WFSHOP_EQH.styleEl.id = 'wf-shop-eqh-styles';
-        document.head.appendChild(WFSHOP_EQH.styleEl);
-    }
-    return WFSHOP_EQH.styleEl;
-}
-function buildEqHClassName(h) {
-    return `wf-eqh-h${h}`;
-}
-function ensureEqHRule(className, h) {
-    if (WFSHOP_EQH.rules.has(className)) return;
-    const css = `#productsGrid .${className} { height: ${h}px; }`;
-    ensureEqHStyleEl().appendChild(document.createTextNode(css));
-    WFSHOP_EQH.rules.add(className);
-}
 
 const ShopPage = {
     init() {
@@ -62,7 +41,6 @@ const ShopPage = {
         // Use a timeout to ensure images are loaded before calculating heights
         setTimeout(() => {
             this.applyFilters();
-            this.equalizeCardHeights();
         }, 300);
         WF.log('Shop Page module initialized.');
     },
@@ -132,7 +110,6 @@ const ShopPage = {
         if (!__wfShopLight) {
             window.addEventListener('resize', debounce(() => {
                 this.measureNavHeight();
-                this.equalizeCardHeights();
             }, 200));
         }
 
@@ -140,7 +117,6 @@ const ShopPage = {
         window.addEventListener('popstate', () => {
             this.keyword = this.getQueryParam('q');
             this.applyFilters();
-            this.equalizeCardHeights();
         });
     },
 
@@ -174,16 +150,12 @@ const ShopPage = {
                 // Toggle expanded state on the card
                 card.classList.toggle('is-expanded', isNowExpanded);
 
-                // Swap short/full description visibility without inline styles
-                const shortEl = card.querySelector('.description-text-short');
-                const fullEl = card.querySelector('.description-text-full');
-                if (shortEl) shortEl.classList.toggle('hidden', isNowExpanded);
-                if (fullEl) fullEl.classList.toggle('hidden', !isNowExpanded);
+                // Description remains always visible; only the extra block toggles
 
                 // Toggle the additional info block (CSS handles via .is-expanded)
                 // Update button a11y and label
                 button.setAttribute('aria-expanded', String(isNowExpanded));
-                button.textContent = isNowExpanded ? 'Hide Additional Information' : 'Additional Information';
+                button.textContent = isNowExpanded ? 'Hide More Info' : 'More Info';
 
                 // When any card is expanded, drop equalization so other rows aren't forced tall
                 if (isNowExpanded) {
@@ -301,52 +273,10 @@ const ShopPage = {
         button.classList.add('active');
         this.activeCategory = category || 'all';
         this.applyFilters();
-        // Recalculate heights after the DOM has updated from filtering
-        setTimeout(() => this.equalizeCardHeights(), 50);
+        
     },
 
-    equalizeCardHeights() {
-        if (__wfShopLight) return;
-        // If any card is expanded, prefer natural heights
-        if (this.productsGrid.querySelector('.product-card.is-expanded')) {
-            this.removeEqualization();
-            return;
-        }
-
-        const visibleCards = Array.from(this.productCards).filter(card => !card.classList.contains('hidden'));
-
-        if (visibleCards.length === 0) return;
-
-        // Reset previous height classes to allow natural reflow
-        visibleCards.forEach(card => {
-            const prev = card.dataset.wfEqhClass;
-            if (prev) {
-                card.classList.remove(prev);
-                delete card.dataset.wfEqhClass;
-            }
-        });
-
-        // Allow the browser to reflow and calculate natural heights
-        requestAnimationFrame(() => {
-            const sample = visibleCards.slice(0, 200);
-            const maxHeight = Math.max(...sample.map(card => card.offsetHeight));
-    
-            if (maxHeight > 0) {
-                let h = Math.round(maxHeight);
-                // Clamp to 4px steps to reduce CSS rule cardinality
-                h = Math.max(0, Math.round(h / 4) * 4);
-                const className = buildEqHClassName(h);
-                ensureEqHRule(className, h);
-                visibleCards.forEach(card => {
-                    // Remove any stale class first (in case card becomes visible from previous group)
-                    const prev = card.dataset.wfEqhClass;
-                    if (prev && prev !== className) card.classList.remove(prev);
-                    if (!card.classList.contains(className)) card.classList.add(className);
-                    card.dataset.wfEqhClass = className;
-                });
-            }
-        });
-    },
+    equalizeCardHeights() { return; },
 
     removeEqualization() {
         const cards = Array.from(this.productCards);

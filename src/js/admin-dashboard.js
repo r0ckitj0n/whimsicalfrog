@@ -4,8 +4,7 @@ import '../styles/admin-dashboard.css';
 
 // --- Dashboard Event Handlers ---
 
-document.addEventListener('DOMContentLoaded', () => {
-
+function initAdminDashboardHandlers() {
     // Attach event listeners for order modals
     document.body.addEventListener('click', function(event) {
         const target = event.target.closest('[data-action]');
@@ -27,9 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const el = event.target.closest('.order-field-update');
         if (!el) return;
 
-        const orderId = el.dataset.orderId;
+        let orderId = el.dataset.orderId;
         const fieldName = el.dataset.field;
         const newValue = el.value;
+
+        if (!orderId) {
+            try {
+                const idEl = document.getElementById('modal-order-id');
+                if (idEl) orderId = (idEl.textContent || '').replace('#','').trim();
+            } catch (_) {}
+        }
+        if (!orderId || !fieldName) {
+            try { console.warn('[Order Inline Update] Missing orderId or fieldName; aborting', { orderId, fieldName }); } catch(_) {}
+            return;
+        }
 
         // indicate updating via class (no inline styles)
         el.classList.add('wf-field-updating');
@@ -67,7 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
             el.disabled = false;
         }
     });
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAdminDashboardHandlers, { once: true });
+} else {
+    initAdminDashboardHandlers();
+}
 
 
 // --- Dashboard Actions ---

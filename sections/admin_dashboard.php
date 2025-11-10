@@ -635,19 +635,52 @@ if (empty($dashboardConfig)) {
                                                         </button>
                                                     </td>
                                                     <td class="font-semibold">$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
-                                                    <td class="">
-                                                        <div class="text-xs rounded-full bg-blue-100 text-blue-800">
-                                                            <?= htmlspecialchars($order['paymentStatus'] ?? 'Pending') ?>
-                                                        </div>
+                                                    <td>
+                                                        <select class="order-field-update text-xs border border-gray-300 rounded px-1 py-0.5" data-field="paymentStatus" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <?php $ps = $order['paymentStatus'] ?? 'Pending'; ?>
+                                                            <option value="Pending" <?= ($ps === 'Pending') ? 'selected' : '' ?>>Pending</option>
+                                                            <option value="Received" <?= ($ps === 'Received') ? 'selected' : '' ?>>Received</option>
+                                                            <option value="Refunded" <?= ($ps === 'Refunded') ? 'selected' : '' ?>>Refunded</option>
+                                                            <option value="Failed" <?= ($ps === 'Failed') ? 'selected' : '' ?>>Failed</option>
+                                                        </select>
                                                     </td>
-                                                    <td class="text-xs text-gray-700"><?= htmlspecialchars(isset($order['paymentDate']) ? date('M j, Y', strtotime($order['paymentDate'])) : '—') ?></td>
-                                                    <td class="">
-                                                        <div class="text-xs rounded-full bg-blue-100 text-blue-800">
-                                                            <?= htmlspecialchars($order['order_status'] ?? 'Pending') ?>
-                                                        </div>
+                                                    <td>
+                                                        <?php $pdVal = isset($order['paymentDate']) && $order['paymentDate'] ? date('Y-m-d', strtotime($order['paymentDate'])) : ''; ?>
+                                                        <input type="date" class="order-field-update text-xs border border-gray-300 rounded px-1 py-0.5" data-field="paymentDate" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" value="<?= htmlspecialchars($pdVal) ?>" />
                                                     </td>
-                                                    <td class="text-xs"><?= htmlspecialchars($order['paymentMethod'] ?? 'N/A') ?></td>
-                                                    <td class="text-xs"><?= htmlspecialchars($order['shippingMethod'] ?? 'N/A') ?></td>
+                                                    <td>
+                                                        <select class="order-field-update text-xs border border-gray-300 rounded px-1 py-0.5" data-field="order_status" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <?php $os = $order['order_status'] ?? 'Pending'; ?>
+                                                            <option value="Pending" <?= ($os === 'Pending') ? 'selected' : '' ?>>Pending</option>
+                                                            <option value="Processing" <?= ($os === 'Processing') ? 'selected' : '' ?>>Processing</option>
+                                                            <option value="Shipped" <?= ($os === 'Shipped') ? 'selected' : '' ?>>Shipped</option>
+                                                            <option value="Delivered" <?= ($os === 'Delivered') ? 'selected' : '' ?>>Delivered</option>
+                                                            <option value="Cancelled" <?= ($os === 'Cancelled') ? 'selected' : '' ?>>Cancelled</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select class="order-field-update text-xs border border-gray-300 rounded px-1 py-0.5" data-field="paymentMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <?php $pm = $order['paymentMethod'] ?? ''; ?>
+                                                            <option value="">Select…</option>
+                                                            <option value="Credit Card" <?= ($pm === 'Credit Card') ? 'selected' : '' ?>>Credit Card</option>
+                                                            <option value="Cash" <?= ($pm === 'Cash') ? 'selected' : '' ?>>Cash</option>
+                                                            <option value="Check" <?= ($pm === 'Check') ? 'selected' : '' ?>>Check</option>
+                                                            <option value="PayPal" <?= ($pm === 'PayPal') ? 'selected' : '' ?>>PayPal</option>
+                                                            <option value="Venmo" <?= ($pm === 'Venmo') ? 'selected' : '' ?>>Venmo</option>
+                                                            <option value="Other" <?= ($pm === 'Other') ? 'selected' : '' ?>>Other</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select class="order-field-update text-xs border border-gray-300 rounded px-1 py-0.5" data-field="shippingMethod" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>">
+                                                            <?php $sm = $order['shippingMethod'] ?? ''; ?>
+                                                            <option value="">Select…</option>
+                                                            <option value="Customer Pickup" <?= ($sm === 'Customer Pickup') ? 'selected' : '' ?>>Customer Pickup</option>
+                                                            <option value="Local Delivery" <?= ($sm === 'Local Delivery') ? 'selected' : '' ?>>Local Delivery</option>
+                                                            <option value="USPS" <?= ($sm === 'USPS') ? 'selected' : '' ?>>USPS</option>
+                                                            <option value="FedEx" <?= ($sm === 'FedEx') ? 'selected' : '' ?>>FedEx</option>
+                                                            <option value="UPS" <?= ($sm === 'UPS') ? 'selected' : '' ?>>UPS</option>
+                                                        </select>
+                                                    </td>
                                                     <td>
                                                         <div class="admin-actions">
                                                             <a href="/admin/orders?view=<?= htmlspecialchars($order['id']) ?>" class="text-blue-600 hover:text-blue-800" title="View Order">👁️</a>

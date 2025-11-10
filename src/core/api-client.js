@@ -42,8 +42,16 @@ export class ApiClient {
       credentials = credentials || 'same-origin';
     }
 
+    // Merge headers and drop JSON Content-Type for FormData bodies
+    let mergedHeaders = { ...defaultHeaders, ...(options.headers || {}) };
+    try {
+      if (options && options.body && typeof FormData !== 'undefined' && (options.body instanceof FormData)) {
+        delete mergedHeaders['Content-Type'];
+      }
+    } catch (_) { /* noop */ }
+
     const config = {
-      headers: { ...defaultHeaders, ...(options.headers || {}) },
+      headers: mergedHeaders,
       credentials,
       ...options,
     };

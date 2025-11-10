@@ -200,6 +200,24 @@ if (__wfAllow('popup_fallback') && !__wfIsAdminSettings) {
         __wfLateLoadRoomMain();
       }
       window.addEventListener('load', __wfLateLoadRoomMain, { once: true });
+      // Final safety net: brief polling to catch very late DOM insertions
+      try {
+        let __wfRoomMainPollTries = 0;
+        const __wfRoomMainPollMax = 40; // ~4s total
+        const __wfRoomMainPoll = setInterval(() => {
+          try {
+            if (window.__wfRoomMainLoaded) { clearInterval(__wfRoomMainPoll); return; }
+            const el = document.getElementById('mainRoomPage');
+            if (el) {
+              window.__wfRoomMainLoaded = true;
+              import('../js/room-main.js').catch(()=>{});
+              clearInterval(__wfRoomMainPoll);
+              return;
+            }
+          } catch(_) {}
+          if (++__wfRoomMainPollTries >= __wfRoomMainPollMax) clearInterval(__wfRoomMainPoll);
+        }, 100);
+      } catch(_) {}
     } catch(_) {}
 
     // Fallback: enforce popup persistence when modern popup is not available

@@ -24,60 +24,68 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-echo "Preparing deployment package..."
+echo "Preparing incremental SFTP deployment (changed or missing files only)..."
 
-# Create temporary deployment directory
-DEPLOY_DIR=$(mktemp -d)
-echo "Temporary directory: $DEPLOY_DIR"
-
-# Copy core files (excluding development-only files)
-RSYNC_EXCLUDES=(
-    "--exclude=logs/"
-    "--exclude=database/"
-    "--exclude=.env"
-    "--exclude=setup-dev-database.php"
-    "--exclude=database-config-dev.php"
-    "--exclude=deploy.sh"
-    "--exclude=node_modules/"
-    "--exclude=backups/"
-    "--exclude=tests/"
-    "--exclude=.git/"
-)
-
-if [[ "${WF_DEPLOY_EXCLUDE_TMP:-1}" != "0" ]]; then
-    RSYNC_EXCLUDES+=("--exclude=tmp/" "--exclude=/tmp/")
+# Ensure lftp is available
+if ! command -v lftp >/dev/null 2>&1; then
+    echo "Error: lftp is not installed or not on PATH."
+    echo "Please install lftp (e.g., brew install lftp) and retry."
+    exit 1
 fi
 
-rsync -av "${RSYNC_EXCLUDES[@]}" ./ "$DEPLOY_DIR/"
+# Remote configuration
+PORT="${SFTP_PORT:-22}"
+REMOTE_PATH="${SFTP_REMOTE_PATH:-/}"
 
-echo "Files prepared for deployment:"
-find "$DEPLOY_DIR" -type f | head -10
-echo "... and more"
+echo "Using remote path: $REMOTE_PATH"
 
-echo
-echo "Deployment package ready in: $DEPLOY_DIR"
-echo
-echo "SECURITY NOTE: For production deployment, use secure methods:"
-echo "1. Use SSH key-based authentication instead of passwords"
-echo "2. Use rsync with SSH: rsync -avz --delete $DEPLOY_DIR/ user@host:/web/path/"
-echo "3. Or use secure SFTP clients with proper authentication"
-echo
-echo "Manual deployment with your SFTP credentials:"
-echo "  Host: $SFTP_HOST"
-echo "  Port: ${SFTP_PORT:-22}"
-echo "  User: $SFTP_USER"
-echo "  (Use your secure SFTP client with the provided password)"
-echo
-echo "Post-deployment checklist:"
-echo "- Set WHF_ENV=production on production server"
-echo "- Configure MySQL database credentials"
-echo "- Configure your web server (Apache/Nginx) if needed"
-echo "- Test all functionality thoroughly"
-
-# Cleanup option
-read -p "Remove temporary directory? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    rm -rf "$DEPLOY_DIR"
-    echo "Temporary directory removed"
+# Determine deletion behavior (ON by default)
+DELETE_FLAG="--delete"
+if [[ "${WF_DEPLOY_DELETE:-1}" = "0" ]]; then
+  DELETE_FLAG=""
+  echo "Remote delete disabled (WF_DEPLOY_DELETE=0). Remote-orphaned files will be kept."
+else
+  echo "Remote delete enabled (default). Set WF_DEPLOY_DELETE=0 to skip removing remote-orphaned files."
 fi
+
+# Build lftp mirror command file
+cat > deploy_commands.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$SFTP_USER:$SFTP_PASSWORD@$SFTP_HOST:$PORT
+# Only upload changed or missing files:
+#   --reverse   : local -> remote
+#   --only-newer: skip if remote is same/newer mtime
+#   --no-perms  : don't sync permissions
+#   --delete    : optional; remove remote files that no longer exist locally (WF_DEPLOY_DELETE=1)
+mirror --reverse $DELETE_FLAG --verbose --only-newer --no-perms \
+  --exclude-glob .git/ \
+  --exclude-glob node_modules/ \
+  --exclude-glob vendor/ \
+  --exclude-glob .vscode/ \
+  --exclude-glob scripts/ \
+  --exclude-glob tests/ \
+  --exclude-glob backups/duplicates/** \
+  --exclude-glob backups/tests/** \
+  --exclude-glob documentation/ \
+  --include-glob documentation/.htaccess \
+  --exclude-glob *.log \
+  --exclude-glob deploy_commands.txt \
+  . $REMOTE_PATH
+bye
+EOL
+
+echo "Deploying files to $SFTP_HOST ..."
+if lftp -f deploy_commands.txt; then
+  echo "✅ Deployment completed (incremental)."
+  EXIT_CODE=0
+else
+  echo "❌ Deployment failed."
+  EXIT_CODE=1
+fi
+
+# Clean up
+rm -f deploy_commands.txt
+
+exit $EXIT_CODE

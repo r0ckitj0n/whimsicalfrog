@@ -1,6 +1,7 @@
 import { buildAdminUrl } from '../core/admin-url-builder.js';
 import { ApiClient } from '../core/api-client.js';
 import '../styles/admin-dashboard.css';
+import '../styles/admin-inventory.css';
 
 // --- Dashboard Event Handlers ---
 
@@ -44,6 +45,9 @@ function initAdminDashboardHandlers() {
         // indicate updating via class (no inline styles)
         el.classList.add('wf-field-updating');
         el.disabled = true;
+        // Also mark wrapper as busy for consistent styling with inventory/orders
+        let wrap = null;
+        try { wrap = el.closest('.editable, .editable-field'); if (wrap) wrap.classList.add('is-busy'); } catch(_) {}
 
         try {
             const formData = new FormData();
@@ -75,6 +79,7 @@ function initAdminDashboardHandlers() {
             }, 2000);
         } finally {
             el.disabled = false;
+            try { if (wrap) wrap.classList.remove('is-busy'); } catch(_) {}
         }
     });
 }

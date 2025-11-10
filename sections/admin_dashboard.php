@@ -635,19 +635,19 @@ if (empty($dashboardConfig)) {
                                                         </button>
                                                     </td>
                                                     <td class="font-semibold">$<?= number_format(floatval($order['total'] ?? 0), 2) ?></td>
-                                                    <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentStatus" data-type="select">
+                                                    <td class="editable-field" role="button" tabindex="0" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentStatus" data-type="select" aria-label="Edit payment status">
                                                         <?= htmlspecialchars($order['paymentStatus'] ?? 'Pending') ?>
                                                     </td>
-                                                    <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentDate" data-type="date" data-raw-value="<?= htmlspecialchars(isset($order['paymentDate']) && $order['paymentDate'] ? date('Y-m-d', strtotime($order['paymentDate'])) : '') ?>">
+                                                    <td class="editable-field" role="button" tabindex="0" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentDate" data-type="date" data-raw-value="<?= htmlspecialchars(isset($order['paymentDate']) && $order['paymentDate'] ? date('Y-m-d', strtotime($order['paymentDate'])) : '') ?>" aria-label="Edit payment date">
                                                         <?= htmlspecialchars(isset($order['paymentDate']) && $order['paymentDate'] ? date('M j, Y', strtotime($order['paymentDate'])) : '—') ?>
                                                     </td>
-                                                    <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="order_status" data-type="select">
+                                                    <td class="editable-field" role="button" tabindex="0" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="order_status" data-type="select" aria-label="Edit order status">
                                                         <?= htmlspecialchars($order['order_status'] ?? 'Pending') ?>
                                                     </td>
-                                                    <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentMethod" data-type="select">
+                                                    <td class="editable-field" role="button" tabindex="0" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="paymentMethod" data-type="select" aria-label="Edit payment method">
                                                         <?= htmlspecialchars(($order['paymentMethod'] ?? '') !== '' ? $order['paymentMethod'] : '—') ?>
                                                     </td>
-                                                    <td class="editable-field" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="shippingMethod" data-type="select">
+                                                    <td class="editable-field" role="button" tabindex="0" data-order-id="<?= htmlspecialchars($order['id'] ?? '') ?>" data-field="shippingMethod" data-type="select" aria-label="Edit shipping method">
                                                         <?= htmlspecialchars(($order['shippingMethod'] ?? '') !== '' ? $order['shippingMethod'] : '—') ?>
                                                     </td>
                                                     <td>
@@ -689,53 +689,27 @@ if (empty($dashboardConfig)) {
         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-medium text-gray-700">Order Status</label>
-            <select id="modal-order-status" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="order_status">
-              <option value="Pending">Pending</option>
-              <option value="Processing">Processing</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+            <div id="modal-order-status" class="editable-field" role="button" tabindex="0" data-field="order_status" data-type="select" aria-label="Edit order status">—</div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700">Payment Method</label>
-            <select id="modal-payment-method" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="paymentMethod">
-              <option value="">Select…</option>
-              <option value="Credit Card">Credit Card</option>
-              <option value="Cash">Cash</option>
-              <option value="Check">Check</option>
-              <option value="PayPal">PayPal</option>
-              <option value="Venmo">Venmo</option>
-              <option value="Other">Other</option>
-            </select>
+            <div id="modal-payment-method" class="editable-field" role="button" tabindex="0" data-field="paymentMethod" data-type="select" aria-label="Edit payment method">—</div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700">Shipping Method</label>
-            <select id="modal-shipping-method" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="shippingMethod">
-              <option value="">Select…</option>
-              <option value="Customer Pickup">Customer Pickup</option>
-              <option value="Local Delivery">Local Delivery</option>
-              <option value="USPS">USPS</option>
-              <option value="FedEx">FedEx</option>
-              <option value="UPS">UPS</option>
-            </select>
+            <div id="modal-shipping-method" class="editable-field" role="button" tabindex="0" data-field="shippingMethod" data-type="select" aria-label="Edit shipping method">—</div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700">Payment Status</label>
-            <select id="modal-payment-status" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="paymentStatus">
-              <option value="Pending">Pending</option>
-              <option value="Received">Received</option>
-              <option value="Refunded">Refunded</option>
-              <option value="Failed">Failed</option>
-            </select>
+            <div id="modal-payment-status" class="editable-field" role="button" tabindex="0" data-field="paymentStatus" data-type="select" aria-label="Edit payment status">—</div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700">Order Date</label>
-            <input type="date" id="modal-date" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="date" />
+            <div id="modal-date" class="editable-field" role="button" tabindex="0" data-field="date" data-type="date" aria-label="Edit order date">—</div>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-700">Payment Date</label>
-            <input type="date" id="modal-payment-date" class="order-field-update w-full text-xs border border-gray-300 rounded" data-field="paymentDate" />
+            <div id="modal-payment-date" class="editable-field" role="button" tabindex="0" data-field="paymentDate" data-type="date" aria-label="Edit payment date">—</div>
           </div>
         </div>
 

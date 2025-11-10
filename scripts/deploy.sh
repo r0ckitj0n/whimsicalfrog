@@ -212,11 +212,10 @@ set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
 open sftp://$USER:$PASS@$HOST
-# Note: SFTP lacks checksums; use size-only + only-newer to avoid re-uploading identical files
-# - only-newer: don't overwrite if remote is same/newer
-# - ignore-time: ignore mtime differences; compare by size only to skip identical files
+# Note: SFTP lacks checksums; use mtime with --only-newer to avoid re-uploading unchanged files
+# - only-newer: don't overwrite if remote is same/newer (mtime-based)
 # - no-perms: don't try to sync permissions (reduces needless diffs)
-mirror --reverse --delete --verbose --only-newer --ignore-time --no-perms \
+mirror --reverse --delete --verbose --only-newer --no-perms \
   --exclude-glob .git/ \
   --exclude-glob node_modules/ \
   --exclude-glob vendor/ \
@@ -295,12 +294,11 @@ EOL
   else
     echo -e "${YELLOW}⏭️  Skipping maintenance upload (set WF_UPLOAD_MAINTENANCE=1 to enable)${NC}"
   fi
-  # Perform a second, targeted mirror for images/backgrounds WITHOUT --ignore-time
-  # Rationale: when replacing background files with the same size but different content,
-  # the size-only comparison (from --ignore-time) may skip the upload. This pass uses
-  # mtime to ensure changed files are uploaded.
-  echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based)...${NC}"
-  cat > deploy_backgrounds.txt << EOL
+  # Optional second-pass mirrors for sensitive assets (disabled by default).
+  # Enable with WF_MTIME_SECOND_PASS=1 if you need a dedicated mtime-based pass.
+  if [ "${WF_MTIME_SECOND_PASS:-0}" = "1" ]; then
+    echo -e "${GREEN}🖼️  Ensuring background images are updated (mtime-based)...${NC}"
+    cat > deploy_backgrounds.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
@@ -309,18 +307,17 @@ mirror --reverse --delete --verbose --only-newer --no-perms \
   images/backgrounds images/backgrounds
 bye
 EOL
-  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-    echo -e "${YELLOW}DRY-RUN: Skipping backgrounds sync (mtime-based)${NC}"
-  elif lftp -f deploy_backgrounds.txt; then
-    echo -e "${GREEN}✅ Background images synced (mtime-based)${NC}"
-  else
-    echo -e "${YELLOW}⚠️  Background image sync failed; continuing${NC}"
-  fi
-  rm -f deploy_backgrounds.txt
-  # Perform a second, targeted mirror for dist WITHOUT --ignore-time
-  # Rationale: manifest.json and hashed bundles can change without size changes; ensure they upload
-  echo -e "${GREEN}📦 Ensuring dist assets & manifest are updated (mtime-based)...${NC}"
-  cat > deploy_dist.txt << EOL
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping backgrounds sync (mtime-based)${NC}"
+    elif lftp -f deploy_backgrounds.txt; then
+      echo -e "${GREEN}✅ Background images synced (mtime-based)${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Background image sync failed; continuing${NC}"
+    fi
+    rm -f deploy_backgrounds.txt
+
+    echo -e "${GREEN}📦 Ensuring dist assets & manifest are updated (mtime-based)...${NC}"
+    cat > deploy_dist.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 set cmd:fail-exit yes
@@ -329,14 +326,17 @@ mirror --reverse --delete --verbose --only-newer --no-perms \
   dist dist
 bye
 EOL
-  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-    echo -e "${YELLOW}DRY-RUN: Skipping dist sync (mtime-based)${NC}"
-  elif lftp -f deploy_dist.txt; then
-    echo -e "${GREEN}✅ Dist assets & manifest synced (mtime-based)${NC}"
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping dist sync (mtime-based)${NC}"
+    elif lftp -f deploy_dist.txt; then
+      echo -e "${GREEN}✅ Dist assets & manifest synced (mtime-based)${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Dist sync failed; continuing${NC}"
+    fi
+    rm -f deploy_dist.txt
   else
-    echo -e "${YELLOW}⚠️  Dist sync failed; continuing${NC}"
+    echo -e "${YELLOW}⏭️  Skipping extra asset mtime assurance pass (set WF_MTIME_SECOND_PASS=1 to enable)${NC}"
   fi
-  rm -f deploy_dist.txt
 else
   echo -e "${RED}❌ File deployment failed${NC}"
   rm deploy_commands.txt

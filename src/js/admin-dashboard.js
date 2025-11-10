@@ -22,6 +22,94 @@ function initAdminDashboardHandlers() {
         }
     });
 
+    // Click-to-edit for inline dashboard Order Fulfillment cells
+    const activateEditableCell = (cell) => {
+        if (!cell || cell.dataset.editing === '1') return false;
+        const orderId = cell.dataset.orderId;
+        const field = cell.dataset.field;
+        const type = (cell.dataset.type || 'select').toLowerCase();
+        if (!orderId || !field) return false;
+
+        const rawValue = (cell.dataset.rawValue != null) ? String(cell.dataset.rawValue) : (cell.textContent || '').trim();
+        const optionsByField = {
+            order_status: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
+            paymentStatus: ['Pending', 'Received', 'Refunded', 'Failed'],
+            paymentMethod: ['Credit Card', 'Cash', 'Check', 'PayPal', 'Venmo', 'Other'],
+            shippingMethod: ['Customer Pickup', 'Local Delivery', 'USPS', 'FedEx', 'UPS'],
+        };
+
+        let editor;
+        if (type === 'date') {
+            editor = document.createElement('input');
+            editor.type = 'date';
+            editor.value = rawValue || '';
+        } else {
+            const sel = document.createElement('select');
+            const list = optionsByField[field] || [];
+            if (field === 'paymentMethod' || field === 'shippingMethod') {
+                const opt = document.createElement('option'); opt.value = ''; opt.textContent = 'Select…'; sel.appendChild(opt);
+            }
+            list.forEach(v => { const opt = document.createElement('option'); opt.value = v; opt.textContent = v; sel.appendChild(opt); });
+            sel.value = rawValue || sel.value;
+            editor = sel;
+        }
+        editor.className = 'order-field-update text-xs border border-gray-300 rounded px-1 py-0.5';
+        editor.dataset.field = field;
+        editor.dataset.orderId = orderId;
+
+        const prevText = (cell.textContent || '').trim();
+        cell.dataset.prevText = prevText;
+        cell.dataset.editing = '1';
+        cell.innerHTML = '';
+        cell.appendChild(editor);
+        try { editor.focus(); } catch(_) {}
+        editor.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                cell.textContent = prevText;
+                delete cell.dataset.editing;
+            }
+        });
+        editor.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (cell && cell.dataset && cell.dataset.editing === '1') {
+                    cell.textContent = prevText;
+                    delete cell.dataset.editing;
+                }
+            }, 180);
+        }, { once: true });
+        return true;
+    };
+
+    const findEditableCell = (event) => {
+        let t = event.target;
+        try { if (t && t.nodeType === 3) t = t.parentElement; } catch(_) {}
+        let cell = null;
+        try { if (t && t.closest) cell = t.closest('.editable-field'); } catch(_) {}
+        if (!cell && event.composedPath) {
+            try { cell = event.composedPath().find(el => el && el.classList && el.classList.contains('editable-field')) || null; } catch(_) {}
+        }
+        return cell;
+    };
+
+    document.body.addEventListener('click', (event) => {
+        const cell = findEditableCell(event);
+        if (!cell) return;
+        if (activateEditableCell(cell)) { event.preventDefault(); }
+    });
+    document.body.addEventListener('dblclick', (event) => {
+        const cell = findEditableCell(event);
+        if (!cell) return;
+        if (activateEditableCell(cell)) { event.preventDefault(); }
+    });
+    document.body.addEventListener('keydown', (event) => {
+        const cell = findEditableCell(event);
+        if (!cell) return;
+        if ((event.key === 'Enter' || event.key === ' ') && !cell.dataset.editing) {
+            if (activateEditableCell(cell)) { event.preventDefault(); }
+        }
+    });
+
     // Delegated handler for inline order field updates in the Order Fulfillment widget
     document.body.addEventListener('change', async (event) => {
         const el = event.target.closest('.order-field-update');
@@ -64,12 +152,44 @@ function initAdminDashboardHandlers() {
                 setTimeout(() => {
                     el.classList.remove('wf-field-success');
                 }, 2000);
+                // If editing inside a cell, render new display text and exit edit mode
+                const cell = el.closest('.editable-field');
+                if (cell) {
+                    const f = (el.dataset.field || '').toString();
+                    const val = el.value || '';
+                    let disp = val;
+                    if (f === 'paymentDate' || f === 'date') {
+                        // Convert YYYY-MM-DD to 'Mon D, YYYY'
+                        try {
+                            if (val) {
+                                const d = new Date(val + 'T00:00:00');
+                                const fmt = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                                disp = fmt;
+                                cell.dataset.rawValue = val;
+                            } else {
+                                disp = '—';
+                                cell.dataset.rawValue = '';
+                            }
+                        } catch(_) {}
+                    } else if (!val) {
+                        disp = '—';
+                    }
+                    cell.textContent = disp;
+                    delete cell.dataset.editing;
+                }
             } else {
                 el.classList.remove('wf-field-updating');
                 el.classList.add('wf-field-error');
                 setTimeout(() => {
                     el.classList.remove('wf-field-error');
                 }, 2000);
+                // Revert cell display on error
+                const cell = el.closest('.editable-field');
+                if (cell) {
+                    const prev = cell.dataset.prevText || '';
+                    cell.textContent = prev;
+                    delete cell.dataset.editing;
+                }
             }
         } catch (err) {
             el.classList.remove('wf-field-updating');
@@ -77,6 +197,12 @@ function initAdminDashboardHandlers() {
             setTimeout(() => {
                 el.classList.remove('wf-field-error');
             }, 2000);
+            const cell = el.closest('.editable-field');
+            if (cell) {
+                const prev = cell.dataset.prevText || '';
+                cell.textContent = prev;
+                delete cell.dataset.editing;
+            }
         } finally {
             el.disabled = false;
             try { if (wrap) wrap.classList.remove('is-busy'); } catch(_) {}

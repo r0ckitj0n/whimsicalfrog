@@ -1,0 +1,52 @@
+/* Email Base & Layout Styles (Vite-managed) */
+
+@layer components.email {
+  .email-template {
+    --brand-primary: var(--brand-primary, #007bff);
+    --brand-secondary: var(--brand-secondary, #6c757d);
+  }
+
+  .email-body {
+    font-family: var(--font-email, Arial, sans-serif);
+    line-height: 1.6;
+    color: #333;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .email-header {
+    background-color: var(--brand-primary);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .email-wrapper {
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 0 0 8px 8px;
+    border: 1px solid #ddd;
+  }
+
+  .email-section {
+    background-color: white;
+    padding: 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    border: 1px solid #e0e0e0;
+  }
+
+  .email-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .email-footer p { margin: 0; }
+  .email-footer p + p { margin: 5px 0 0; font-size: 12px; }
+}

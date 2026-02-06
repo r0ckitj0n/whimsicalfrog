@@ -1,0 +1,290 @@
+/* Foundation tokens: map server-emitted --token-* vars to semantic CSS vars. */
+:root {
+  /* Brand colors */
+  --token-brand-primary: #87ac3a;
+  --token-brand-primary-rgb: 135, 172, 58;
+  --token-brand-secondary: #BF5700;
+  --token-brand-secondary-rgb: 191, 87, 0;
+  --token-brand-accent: #a8f406;
+  --token-brand-accent-rgb: 168, 244, 6;
+  --token-error: #ef4444;
+  --token-error-rgb: 239, 68, 68;
+  --token-warning: #f59e0b;
+  --token-warning-rgb: 245, 158, 11;
+  --token-surface-background: #ffffff;
+  --token-surface-text: #111827;
+  --token-toast-text: #ffffff;
+  --token-public-header-bg: #ffffff;
+  --token-public-header-text: #000000;
+  --token-public-modal-bg: #ffffff;
+  --token-public-modal-text: #000000;
+  --token-public-page-bg: #ffffff;
+  --token-public-page-text: #000000;
+  /* Button palette tokens (mirrored from PHP branding tokens) */
+  --token-button-primary-bg: #87ac3a;
+  --token-button-primary-border: #87ac3a;
+  --token-button-primary-hover-bg: #bf5700;
+  --token-button-primary-hover-border: #bf5700;
+  --token-button-secondary-bg: #bf5700;
+  --token-button-secondary-border: #bf5700;
+  /* Secondary hover intentionally "inverts" to primary */
+  --token-button-secondary-hover-bg: #87ac3a;
+  --token-button-secondary-hover-border: #87ac3a;
+  /* Optional text color tokens so Brand Styling can control label colors */
+  --token-button-primary-text: #ffffff;
+  --token-button-secondary-text: #ffffff;
+  --token-button-height: 50px;
+  --token-font-primary: 'Merienda', cursive;
+  --token-font-secondary: 'Nunito', sans-serif;
+}
+
+:root {
+  /* Brand colors */
+  --brand-primary: var(--token-brand-primary);
+  /* Whimsical Frog green */
+  --brand-primary-rgb: var(--token-brand-primary-rgb);
+  --brand-secondary: var(--token-brand-secondary);
+  /* burnt orange */
+  --brand-secondary-rgb: var(--token-brand-secondary-rgb);
+  --brand-accent: var(--token-brand-accent);
+  --brand-accent-rgb: var(--token-brand-accent-rgb);
+  --brand-error: var(--token-error);
+  --brand-error-rgb: var(--token-error-rgb);
+  --brand-warning: var(--token-warning);
+  --brand-error-bg: rgba(var(--brand-error-rgb), 0.05);
+  --brand-error-border: rgba(var(--brand-error-rgb), 0.2);
+  --brand-warning-bg: rgba(var(--brand-warning-rgb), 0.05);
+  --brand-warning-border: rgba(var(--brand-warning-rgb), 0.2);
+  --brand-secondary-bg: rgba(var(--brand-secondary-rgb), 0.05);
+  --brand-secondary-border: rgba(var(--brand-secondary-rgb), 0.2);
+  --brand-accent-bg: rgba(var(--brand-accent-rgb), 0.05);
+  --brand-accent-border: rgba(var(--brand-accent-rgb), 0.2);
+  --brand-primary-bg: rgba(var(--brand-primary-rgb), 0.05);
+  --brand-primary-border: rgba(var(--brand-primary-rgb), 0.2);
+
+  /* Legacy alias used in some styles */
+  --primary_color: var(--brand-primary);
+
+  /* Header gradient (dark -> light) */
+  --gradient-header: linear-gradient(180deg,
+      rgba(0, 0, 0, 1.0) 0%,
+      rgba(0, 0, 0, 0.85) 58%,
+      rgba(0, 0, 0, 0.00) 100%);
+
+  /* Global default header height */
+  --header-height: 80px;
+
+  /* Common utility tokens referenced occasionally */
+  --white: #ffffff;
+
+  /* Brand fonts */
+  /* Primary brand display font (used for titles, badges, CTAs) */
+  --font-primary: 'Merienda', cursive;
+  /* Legacy alias used in some rules */
+  --font-family-primary: var(--font-primary);
+
+  /* Secondary brand font (clean UI stack for body and UI elements) */
+  --font-secondary: 'Nunito', system-ui, -apple-system, 'Segoe UI', roboto, helvetica, arial, sans-serif;
+  /* Optional alias for symmetry */
+  --font-family-secondary: var(--font-secondary);
+
+  /* Code font stack (monospace) */
+  --code-font-stack: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* Emoji font stack */
+  --emoji-font-stack: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Noto Emoji", "EmojiOne Color", "Twemoji Mozilla", system-ui, sans-serif;
+  /* Aliases to satisfy font guard (expects --font- prefix) */
+  --font-emoji: var(--emoji-font-stack);
+  --font-code: var(--code-font-stack);
+  --font-title-primary: var(--token-font-title-primary, var(--font-primary));
+  --font-title-secondary: var(--token-font-title-secondary, var(--font-primary));
+
+  /* Z-index scale (centralized layering) */
+  --z-base: var(--wf-z-base);
+  --z-base-elevated: var(--wf-z-elevated);
+  --z-header: var(--wf-z-sticky);
+  --z-navbar: calc(var(--wf-z-sticky) + 10);
+  --z-dropdown: calc(var(--wf-z-sticky) + 20);
+  --z-modal: var(--wf-z-modal);
+  --z-overlay: var(--wf-z-backdrop);
+  --z-tooltip: calc(var(--wf-z-backdrop) + 10);
+  /* Global popup layer (used by notifications, should top modals/overlays) */
+  --z-global-popup: var(--wf-z-toast);
+
+  /* Canonical layout offsets */
+  --header-height: var(--header-height, 80px);
+  /* reaffirm default for clarity */
+  --header-offset: 0px;
+  --overlay-offset: calc(var(--header-height, 64px) + 12px);
+
+  /* Legacy alias variables (backward compatibility) */
+  --wf-brand-primary: var(--brand-primary);
+  --wf-brand-secondary: var(--brand-secondary);
+  --wf-overlay-z: var(--z-overlay);
+  --wf-overlay-content-z: var(--z-index-modal-content);
+  --wf-admin-overlay-z: var(--z-admin-overlay);
+  --wf-admin-overlay-content-z: var(--z-admin-overlay-content);
+  --wf-header-height: var(--header-height);
+  --wf-overlay-offset: var(--overlay-offset);
+  --wf-header-offset: var(--header-offset);
+
+  /* Site-wide button palette (admin + public share the same defaults) */
+  --button-primary-bg: var(--token-button-primary-bg, var(--brand-primary));
+  --button-primary-border: var(--token-button-primary-border, var(--brand-primary));
+  --button-primary-text: var(--token-button-primary-text, #ffffff);
+  --button-primary-hover-bg: var(--token-button-primary-hover-bg, var(--brand-secondary));
+  --button-primary-hover-border: var(--token-button-primary-hover-border, var(--brand-secondary));
+  /* Hover text follows the primary text token */
+  --button-primary-hover-text: var(--token-button-primary-text, #ffffff);
+
+  /* Secondary button palette (used by ghost/secondary buttons and tiles) */
+  --button-secondary-bg: var(--token-button-secondary-bg, var(--brand-secondary));
+  --button-secondary-border: var(--token-button-secondary-border, var(--brand-secondary));
+  --button-secondary-text: var(--token-button-secondary-text, #ffffff);
+  --button-secondary-hover-bg: var(--token-button-secondary-hover-bg, var(--brand-primary));
+  --button-secondary-hover-border: var(--token-button-secondary-hover-border, var(--brand-primary));
+  /* Hover text also follows the secondary text token */
+  --button-secondary-hover-text: var(--token-button-secondary-text, #ffffff);
+
+  /* Legacy aliases kept for existing selectors */
+  --button-bg-primary: var(--button-primary-bg);
+  --button-bg-primary-hover: var(--button-primary-hover-bg);
+  --button-text-primary: var(--button-primary-text);
+
+  /* Form inputs (global defaults) */
+  --form-input-bg: #f9fafb;
+  --form-input-color: #111827;
+  /* gray-900 */
+  --form-input-border: 1px solid #e5e7eb;
+  /* gray-200 */
+  --form-input-border-focus: 2px solid var(--brand-primary);
+  --form-input-ring-focus: rgba(var(--brand-primary-rgb), 0.15);
+  --form-input-padding: 0.75rem 1rem;
+  --form-input-border-radius: 12px;
+  --form-input-placeholder: #9ca3af;
+  /* gray-400 */
+  --form-label-color: #374151;
+  /* gray-700 */
+  --form-label-size: 0.875rem;
+  --form-label-weight: 600;
+  --form-select-bg: #f9fafb;
+  --form-select-arrow: none;
+
+  /* Transition tokens (server-configurable with fallbacks) */
+  --transition-fast: var(--token-transition-fast, all 0.2s ease);
+  --transition-normal: var(--token-transition-normal, all 0.3s ease);
+  --transition-smooth: var(--token-transition-smooth, all 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+
+  /* Shadow tokens (server-configurable with fallbacks) */
+  --shadow-sm: var(--token-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  --shadow-md: var(--token-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06));
+  --shadow-lg: var(--token-shadow-lg, 0 12px 20px -8px rgba(0, 0, 0, 0.1));
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Scrollbar tokens (server-configurable with fallbacks) */
+  --scrollbar-thumb: var(--token-scrollbar-thumb, #c1c1c1);
+  --scrollbar-track: var(--token-scrollbar-track, #f1f1f1);
+  --scrollbar-width: var(--token-scrollbar-width, 12px);
+
+  /* Hover lift tokens (server-configurable with fallbacks) */
+  --hover-lift: var(--token-hover-lift, -2px);
+  --hover-lift-lg: var(--token-hover-lift-lg, -4px);
+
+  /* Card Themes (Aligned with Production) */
+  --card-theme-blue-bg: linear-gradient(135deg, #3b82f6, #1e40af);
+  --card-theme-indigo-bg: linear-gradient(135deg, #6366f1, #4338ca);
+  --card-theme-purple-bg: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  --card-theme-teal-bg: linear-gradient(135deg, #06b6d4, #0891b2);
+  --card-theme-emerald-bg: linear-gradient(135deg, #10b981, #059669);
+  --card-theme-orange-bg: linear-gradient(135deg, #f59e0b, #d97706);
+  --card-theme-rose-bg: linear-gradient(135deg, #f43f5e, #e11d48);
+  --card-theme-red-bg: linear-gradient(135deg, #ef4444, #dc2626);
+  --card-theme-pink-bg: linear-gradient(135deg, #ec4899, #db2777);
+  --card-theme-slate-bg: linear-gradient(135deg, #475569, #334155);
+  --card-theme-amber-bg: linear-gradient(135deg, #f59e0b, #b45309);
+  --card-theme-cyan-bg: linear-gradient(135deg, #22d3ee, #06b6d4);
+}
+
+/* Tailwind CSS 4.0 @theme block - defines design tokens for Tailwind utilities */
+/* noinspection CssInvalidAtRule */
+@theme {
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-error: var(--brand-error);
+  --color-brand-warning: var(--brand-warning);
+
+  --font-size-fluid-h1: clamp(2rem, 5vw, 3rem);
+  --font-size-fluid-h2: clamp(1.5rem, 4vw, 2.25rem);
+  --font-size-fluid-h3: clamp(1.25rem, 3vw, 1.75rem);
+  --font-size-fluid-h4: clamp(1.125rem, 2vw, 1.5rem);
+
+  --z-index-negative: var(--wf-z-negative);
+  --z-index-base: var(--wf-z-base);
+  --z-index-elevated: var(--wf-z-elevated);
+  --z-index-sticky: var(--wf-z-sticky);
+  --z-index-admin-overlay: var(--wf-z-admin-overlay);
+  --z-index-admin-content: var(--wf-z-admin-content);
+  --z-index-backdrop: var(--wf-z-backdrop);
+  --z-index-modal: var(--wf-z-modal);
+  --z-index-modal-elevated: var(--wf-z-modal-elevated);
+  --z-index-toast: var(--wf-z-toast);
+  --z-index-topmost: var(--wf-z-topmost);
+  --z-index-cursor: var(--wf-z-cursor);
+
+  --font-merienda: var(--font-primary), cursive;
+  --font-nunito: var(--font-secondary), sans-serif;
+  --font-title-p: var(--font-title-primary), cursive;
+  --font-title-s: var(--font-title-secondary), cursive;
+
+  --background-image-gradient-header: var(--gradient-header);
+}
+
+/* Card Theme Classes (setting the local variable used by cards) */
+.card-theme-blue {
+  --card-accent-bg: var(--card-theme-blue-bg);
+}
+
+.card-theme-indigo {
+  --card-accent-bg: var(--card-theme-indigo-bg);
+}
+
+.card-theme-purple {
+  --card-accent-bg: var(--card-theme-purple-bg);
+}
+
+.card-theme-teal {
+  --card-accent-bg: var(--card-theme-teal-bg);
+}
+
+.card-theme-emerald {
+  --card-accent-bg: var(--card-theme-emerald-bg);
+}
+
+.card-theme-orange {
+  --card-accent-bg: var(--card-theme-orange-bg);
+}
+
+.card-theme-rose {
+  --card-accent-bg: var(--card-theme-rose-bg);
+}
+
+.card-theme-red {
+  --card-accent-bg: var(--card-theme-red-bg);
+}
+
+.card-theme-pink {
+  --card-accent-bg: var(--card-theme-pink-bg);
+}
+
+.card-theme-slate {
+  --card-accent-bg: var(--card-theme-slate-bg);
+}
+
+.card-theme-amber {
+  --card-accent-bg: var(--card-theme-amber-bg);
+}
+
+.card-theme-cyan {
+  --card-accent-bg: var(--card-theme-cyan-bg);
+}

@@ -1,0 +1,46 @@
+/* Square Settings Modal: Ensure scrollbar appears when content overflows */
+#squareSettingsModal .admin-modal {
+  width: min(1150px, 95vw) !important;
+  min-width: 640px !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: width 0.3s ease, max-width 0.3s ease;
+}
+
+#squareSettingsModal .admin-modal.square-modal-expanded {
+  /* When diagnostics are open, allow the modal to grow nearly full-width */
+  width: 95vw !important;
+  max-width: 95vw !important;
+}
+
+/* Force strict sizing on the diagnostics panel to prevent it from crushing the form */
+#squareTestOutputPanel {
+  flex: 0 0 600px !important;
+  width: 600px !important;
+  max-width: 600px !important;
+  min-width: 600px !important;
+  /* Give diagnostics more vertical space while still respecting modal caps */
+  max-height: 70vh !important;
+  height: auto !important;
+  /* Allow the diagnostics block itself to scroll if content exceeds its cap */
+  overflow-y: auto !important;
+}
+
+#squareTestOutputPanel #connectionResult {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  /* Fixed viewport so diagnostics always get their own scrollbar */
+  display: block !important;
+  height: 260px !important;
+  max-height: 60vh !important;
+  overflow-y: scroll !important;
+  /* force "little" vertical scrollbar */
+  overflow-x: auto !important;
+}
+
+#squareSettingsModal .modal-body {
+  overflow-y: auto !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}

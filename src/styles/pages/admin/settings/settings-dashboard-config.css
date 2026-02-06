@@ -1,0 +1,57 @@
+/* Dashboard Configuration modal: styling for order and width controls */
+body[data-page^='admin'] #dashboardConfigModal .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body[data-page^='admin'] #dashboardConfigModal .modal-header {
+  flex: 0 0 auto !important;
+}
+
+body[data-page^='admin'] #dashboardConfigModal .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important; /* critical for nested flex scroll */
+  overflow-y: auto !important;
+  padding-bottom: 12px !important; /* keep last controls visible */
+}
+
+body[data-page^='admin'] #dashboardConfigModal .dash-width {
+  min-width: 60px;
+  padding: 2px 4px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+}
+
+body[data-page^='admin'] #dashboardConfigModal button[data-action="move-up"],
+body[data-page^='admin'] #dashboardConfigModal button[data-action="move-down"] {
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  background: #f9fafb;
+  color: #6b7280;
+  transition: all 0.15s ease;
+}
+
+body[data-page^='admin'] #dashboardConfigModal button[data-action="move-up"]:hover,
+body[data-page^='admin'] #dashboardConfigModal button[data-action="move-down"]:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+body[data-page^='admin'] #dashboardConfigModal button[data-action="move-up"]:disabled,
+body[data-page^='admin'] #dashboardConfigModal button[data-action="move-down"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable {
+  border-collapse: collapse;
+}
+
+body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable th,
+body[data-page^='admin'] #dashboardConfigModal #dashboardSectionsTable td {
+  border: 1px solid #e5e7eb;
+  vertical-align: middle;
+}

@@ -1,0 +1,61 @@
+@layer components-settings-shop-encouragements {
+
+  /* Shop Encouragements modal: mirror Cart Button Texts sizing and header */
+  #shopEncouragementsModal .modal-header {
+    padding: 6px 8px !important;
+  }
+
+  #shopEncouragementsModal .admin-modal.admin-modal-content {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #shopEncouragementsModal .admin-modal.admin-modal--responsive .modal-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    padding: 0 !important;
+  }
+
+  #shopEncouragementsModal #shopEncouragementsContainer {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #shopEncouragementsModal #shopEncouragementsContainer .wf-panel-fill {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+
+  #shopEncouragementsModal .admin-modal.admin-modal--square-300 {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  #shopEncouragementsModal .admin-modal.admin-modal--square-300 .modal-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    display: flex !important;
+    padding: 0 !important;
+  }
+
+  #shopEncouragementsModal .admin-modal.admin-modal--square-300 .modal-body>* {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+  }
+
+  #shopEncouragementsModal .wf-admin-embed-frame {
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    border: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #shopEncouragementsModal {
+    min-height: 600px !important;
+  }
+}

@@ -1,0 +1,43 @@
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-emerald .btn--card-accent {
+    background: #10b981 !important;
+    background-color: #10b981 !important;
+    color: white !important;
+}
+
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-emerald .btn--card-accent:hover {
+    background: #059669 !important;
+    background-color: #059669 !important;
+}
+
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-orange .btn--card-accent {
+    background: #f97316 !important;
+    background-color: #f97316 !important;
+    color: white !important;
+}
+
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-orange .btn--card-accent:hover {
+    background: #ea580c !important;
+    background-color: #ea580c !important;
+}
+
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-blue .btn--card-accent {
+    background: #3b82f6 !important;
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-blue .btn--card-accent:hover {
+    background: #2563eb !important;
+    background-color: #2563eb !important;
+}
+
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-red .btn--card-accent {
+    background: #ef4444 !important;
+    background-color: #ef4444 !important;
+    color: white !important;
+}
+
+body[data-page='admin/settings'] #adminSettingsRoot .settings-section.card-theme-red .btn--card-accent:hover {
+    background: #dc2626 !important;
+    background-color: #dc2626 !important;
+}

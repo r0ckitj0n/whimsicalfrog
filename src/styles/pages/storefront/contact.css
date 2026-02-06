@@ -1,0 +1,45 @@
+/* Contact Page (Modularized) */
+
+@import url("./contact/layout.css");
+@import url("./contact/form.css");
+@import url("./contact/reveal-modal.css");
+
+@layer pages-storefront-contact {
+
+  /* Legacy/Compatibility overrides */
+  body[data-page='contact'] .wf-reveal-company-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    color: var(--brand-primary);
+    border: 2px solid var(--brand-primary);
+    border-radius: 9999px;
+    /* pill */
+    padding: 6px 12px;
+    /* slimmer */
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .16);
+    width: fit-content;
+    /* shrink to text width */
+    white-space: nowrap;
+  }
+
+  body[data-page='contact'] .wf-reveal-company-btn::before {
+    content: '🔒';
+  }
+
+  body[data-page='contact'] .wf-reveal-company-btn:hover {
+    background: var(--brand-primary);
+    color: #ffffff;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, .24);
+    filter: none;
+  }
+
+  body[data-page='contact'] .wf-reveal-company-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.35), 0 12px 28px rgba(0, 0, 0, .16);
+  }
+}

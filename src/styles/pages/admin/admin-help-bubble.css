@@ -1,0 +1,108 @@
+/* Help container: holds separate buttons with proper spacing */
+.admin-tab-navigation .admin-help-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Individual help buttons - Base Reset */
+.admin-tab-navigation .admin-help-docs,
+.admin-tab-navigation .admin-help-toggle {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: 9999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  border-style: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+/* Question mark styling */
+.admin-tab-navigation .admin-help-docs .help-q {
+  font-size: 18px !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  display: inline-block !important;
+  transform: translateY(-1px) !important;
+  color: #fff !important;
+}
+
+/* Toggle switch styling */
+.admin-tab-navigation .admin-help-toggle .wf-toggle {
+  width: 22px;
+  height: 0.75rem;
+  position: relative;
+  display: inline-block;
+  background-color: var(--brand-secondary, #f97316);
+  border-radius: 9999px;
+  transition-property: background-color;
+  transition-duration: 120ms;
+  transition-timing-function: ease-in-out;
+}
+
+.admin-tab-navigation .admin-help-toggle .wf-knob {
+  width: 0.625rem;
+  height: 0.625rem;
+  position: absolute;
+  top: 50%;
+  left: 1px;
+  transform: translateY(-50%);
+  background-color: #fff;
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  transition-property: left, background-color;
+  transition-duration: 120ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* ==========================================================================
+   STATE & COLOR LOGIC
+   High-specificity overrides to ensure brand colors persist over global button styles.
+   ========================================================================== */
+
+/* 1. DEFAULT STATE: Primary Brand Color (Green) */
+html body .admin-tab-navigation #adminHelpDocsBtn,
+html body .admin-tab-navigation #adminHelpToggleBtn,
+html body .admin-tab-navigation #adminHelpToggleBtn[aria-pressed="true"],
+html body .admin-tab-navigation #adminHelpToggleBtn[aria-pressed="false"] {
+  background-color: var(--brand-primary, #22c55e) !important;
+  background-image: none !important;
+  color: #fff !important;
+}
+
+/* 2. HOVER STATE: Secondary Brand Color (Orange) - Must come after Default */
+html body .admin-tab-navigation #adminHelpDocsBtn:hover,
+html body .admin-tab-navigation #adminHelpToggleBtn:hover,
+html body .admin-tab-navigation #adminHelpToggleBtn:hover[aria-pressed="true"],
+html body .admin-tab-navigation #adminHelpToggleBtn:hover[aria-pressed="false"] {
+  background-color: var(--brand-secondary, #f97316) !important;
+  background-image: none !important;
+}
+
+/* 3. TOGGLE TRACK (SLOT) LOGIC */
+/* Default: Secondary Brand Color Track (Inverse of Primary Button) */
+html body .admin-tab-navigation #adminHelpToggleBtn .wf-toggle {
+  background-color: var(--brand-secondary, #f97316) !important;
+}
+
+/* Hover: Primary Brand Color Track (Inverse of Secondary Button) */
+html body .admin-tab-navigation #adminHelpToggleBtn:hover .wf-toggle {
+  background-color: var(--brand-primary, #22c55e) !important;
+}
+
+/* 4. TOGGLE KNOB LOGIC */
+/* OFF State (aria-pressed="false"): Black Knob */
+html body .admin-tab-navigation #adminHelpToggleBtn[aria-pressed="false"] .wf-knob {
+  background-color: #000 !important;
+  left: 1px;
+}
+
+/* ON State (aria-pressed="true"): White Knob */
+html body .admin-tab-navigation #adminHelpToggleBtn[aria-pressed="true"] .wf-knob {
+  background-color: #fff !important;
+  left: 11px;
+}

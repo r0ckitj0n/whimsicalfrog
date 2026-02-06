@@ -1,0 +1,45 @@
+/* POS Modal Specific Styles & Variants (Vite-managed) */
+
+.pos-modal-content {
+  max-width: min(90vw, 1400px);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.pos-modal-body {
+  max-height: 80vh;
+  overflow: auto;
+}
+
+/* Scoped overrides: compact POS modal variants */
+.pos-modal-content.pos-modal-small {
+  width: min(560px, 95vw) !important;
+  max-width: min(560px, 95vw) !important;
+  padding: 1rem !important;
+}
+.pos-modal-content.pos-modal-medium {
+  width: min(680px, 95vw) !important;
+  max-width: min(680px, 95vw) !important;
+}
+
+.pos-options-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: var(--wf-z-backdrop, 200);
+  align-items: center;
+  justify-content: center;
+}
+
+.pos-options-modal {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.pos-options-title { margin: 0 0 1rem 0; font-size: 1.1rem; font-weight: 600; }
+.pos-options-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }

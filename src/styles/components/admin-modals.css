@@ -1,0 +1,34 @@
+@import url("./admin-modals/shared.css");
+@import url("./admin-modals/overlays.css");
+@import url("./admin-modals/inventory.css");
+@import url("./admin-modals/orders.css");
+@import url("./admin-modals/ai-unified.css");
+@import url("./admin-modals/hybrid-layout.css");
+@import url("./admin-modals/themed-sections.css");
+
+@import url("./customer-modals/customer-editor.css");
+
+@layer components.admin-modals {
+
+  /* Customer Editor specific fixes */
+  .customer-editor-modal .modal-body {
+    padding: 1.5rem !important;
+  }
+
+  /* Business Info Modal specific fixes */
+  #businessInfoModal .admin-modal {
+    width: min(800px, 95vw) !important;
+  }
+
+  /* Receipt Message specific fixes */
+  #receiptMessagesModal .modal-body {
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Final nuke for stray legacy modal borders */
+  body[data-page^='admin'] .admin-modal {
+    border: none !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  }
+}

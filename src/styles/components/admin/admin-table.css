@@ -1,0 +1,111 @@
+/* Admin Table Compacting & Specific Styles (Vite-managed) */
+
+/* Global guard for tables inside admin modals to ensure text is always dark */
+.admin-modal .admin-table td,
+.admin-modal .admin-table th,
+.admin-modal table td,
+.admin-modal table th,
+.admin-modal .assignment-form__select {
+    color: #111827 !important;
+    /* gray-900 */
+}
+
+.admin-modal .code-badge {
+    color: #111827 !important;
+    background-color: #f3f4f6 !important;
+    /* ensure contrast */
+}
+
+.admin-table-container {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    text-align: left;
+}
+
+.admin-table th {
+    background: #f9fafb;
+    padding: 12px 16px;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 12px 16px;
+    color: #4b5563;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+.admin-table tr:hover td {
+    background: #f9fafb;
+}
+
+/* Compact version for dense data displays */
+.admin-table-compact td,
+.admin-table-compact th {
+    padding: 8px 12px;
+}
+
+.admin-table-compact {
+    font-size: 0.8rem;
+}
+
+/* Status Badges in Tables */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge-active {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-badge-inactive {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.status-badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge-error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Table Action Buttons */
+.table-action-btn {
+    padding: 4px;
+    border-radius: 4px;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+/* Hover: also defined in buttons-hover.css for consistency */
+
+.table-action-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.table-action-btn-danger:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}

@@ -1,0 +1,149 @@
+@layer components-settings-receipt-messages {
+
+  /* Receipt Messages modal: header/action layout and full-height body */
+  #receiptMessagesModal .modal-header {
+    padding: 6px 8px !important;
+  }
+
+  /* Single-scroll: let inner iframe handle scrolling */
+  #receiptMessagesModal .modal-body {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  #receiptMessagesModal .modal-body>iframe,
+  #receiptMessagesModal .wf-admin-embed-frame {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: block !important;
+    border: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Receipt Modal Sizing */
+  .admin-modal.admin-modal--receipt {
+    --admin-modal-width: 90vw;
+    --admin-modal-max-width: 90vw;
+    --admin-modal-height: 90vh;
+    --admin-modal-max-height: 90vh;
+  }
+
+  body[data-page^='admin'] .admin-modal.admin-modal--receipt-messages {
+    width: min(1000px, 95vw) !important;
+    height: auto !important;
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+    min-width: 0 !important;
+  }
+
+  .admin-modal--receipt-messages .grid {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Receipt Modal (Standard) */
+  #receiptModal.hidden {
+    display: none;
+  }
+
+  #receiptModal .modal-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* header/footer fixed; body scrolls */
+  }
+
+  #receiptModal .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    /* allow flex child to shrink and enable scrolling */
+    overflow-y: auto;
+  }
+
+  #receiptContent {
+    /* Let the container manage vertical constraints to avoid double scrollbars */
+    max-height: none;
+    padding: 1rem;
+    /* Add padding to content area */
+    margin-right: 0;
+    background: white;
+  }
+
+  #receiptContent .receipt-container {
+    margin: 0;
+    box-shadow: none;
+    padding: 0;
+    /* Remove padding since it's on the parent now */
+  }
+
+  /* Style the receipt content when displayed in modal */
+  #receiptContent table {
+    margin-bottom: 1rem;
+  }
+
+  #receiptContent .text-brand-error,
+  #receiptContent span[class*="red"] {
+    color: var(--brand-error) !important;
+    /* Ensure red color shows */
+  }
+
+  #receiptContent .text-xl {
+    font-size: 1.25rem !important;
+    /* Ensure larger text */
+  }
+
+  #receiptContent .flex.justify-end {
+    text-align: right !important;
+    justify-content: flex-end !important;
+  }
+
+  /* Force total styling - catch all total elements */
+  .receipt-total-forced {
+    color: var(--brand-error) !important;
+    font-size: 1.25rem !important;
+    font-weight: bold !important;
+  }
+
+  .receipt-total-container-forced {
+    text-align: right !important;
+    justify-content: flex-end !important;
+    display: flex !important;
+  }
+
+  /* Force total styling - catch all total elements from backup */
+  #receiptContent .flex.justify-end span,
+  #receiptContent span:contains("Total") {
+    color: var(--brand-error) !important;
+    /* Red color */
+    font-size: 1.25rem !important;
+    /* Larger text */
+    font-weight: bold !important;
+  }
+
+  /* Standard Windows scrollbar for receipt modal */
+  #receiptContent::-webkit-scrollbar {
+    width: 17px;
+    /* Standard Windows scrollbar width */
+  }
+
+  #receiptContent::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    /* Light gray track */
+  }
+
+  #receiptContent::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    /* Standard gray thumb */
+    border: 1px solid #a6a6a6;
+  }
+
+  #receiptContent::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+    /* Darker on hover */
+  }
+}

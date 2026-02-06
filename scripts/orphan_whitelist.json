@@ -1,0 +1,66 @@
+[
+    {
+        "file": "src/types/api.ts",
+        "reason": "Architectural core type definitions."
+    },
+    {
+        "file": "src/types/global.d.ts",
+        "reason": "Global TypeScript ambient declarations."
+    },
+    {
+        "file": "src/core/types/socialMedia.ts",
+        "reason": "Reserved for future type safety standardization."
+    },
+    {
+        "file": "check_room_backgrounds.php",
+        "reason": "Manual maintenance/debug utility used outside static import graph."
+    },
+    {
+        "file": "check_room_names.php",
+        "reason": "Manual maintenance/debug utility used outside static import graph."
+    },
+    {
+        "file": "check_room_schema.php",
+        "reason": "Manual maintenance/debug utility used outside static import graph."
+    },
+    {
+        "file": "check_rooms.php",
+        "reason": "Manual maintenance/debug utility used outside static import graph."
+    },
+    {
+        "file": "check_rooms_data.php",
+        "reason": "Manual maintenance/debug utility used outside static import graph."
+    },
+    {
+        "file": "check_sign_mappings.php",
+        "reason": "Manual maintenance/debug utility used outside static import graph."
+    },
+    {
+        "file": "check_sign_mappings_detailed.php",
+        "reason": "Manual maintenance/debug utility used outside static import graph."
+    },
+    {
+        "file": "migrate_notes.php",
+        "reason": "One-off migration script retained for audit/recovery."
+    },
+    {
+        "file": "scripts/add_quality_tier_column.php",
+        "reason": "Schema migration utility intentionally invoked manually."
+    },
+    {
+        "file": "scripts/db/fix_item_size_fk.php",
+        "reason": "Schema repair utility intentionally invoked manually."
+    },
+    {
+        "file": "src/components/admin/categories/CategoriesInline.tsx",
+        "reason": "Dormant admin UI variant retained intentionally for rapid fallback."
+    },
+    {
+        "file": "src/components/admin/settings/ai-suggestions/SuggestionsDisplay.tsx",
+        "reason": "Dormant UI helper retained for alternative AI suggestions presentation."
+    },
+    {
+        "file": "src/components/admin/settings/area-mapper/CoordinatesView.tsx",
+        "reason": "Dormant room-map visual component retained for admin tooling fallback."
+    }
+]

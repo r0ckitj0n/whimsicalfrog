@@ -1,0 +1,100 @@
+/* Inventory Management Modal Styles */
+
+#inventoryManagerModal .admin-modal.admin-modal--inventory-manager,
+#inventoryAuditModal .admin-modal.admin-modal--inventory-audit {
+  max-height: var(--admin-modal-max-height, 95vh) !important;
+  height: var(--admin-modal-max-height, 95vh) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: min(1200px, 96vw) !important;
+  overflow: hidden !important;
+}
+
+#inventoryManagerModal .admin-modal.admin-modal--inventory-manager .modal-body,
+#inventoryAuditModal .admin-modal.admin-modal--inventory-audit .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+}
+
+.wf-invman-scroll {
+  max-height: calc(var(--admin-modal-max-height, 95vh) - 9.5rem) !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+}
+
+.wf-invman-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  object-fit: cover;
+  background: #f1f5f9;
+  display: block;
+}
+
+.wf-invman-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.wf-invman-node {
+  border-left: 2px solid #e2e8f0;
+  padding-left: 0.5rem;
+}
+
+.wf-invman-summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+}
+
+.wf-invman-node > summary::-webkit-details-marker { display: none; }
+
+.wf-invman-summary-label {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.75rem;
+}
+
+.wf-invman-summary-total {
+  font-variant-numeric: tabular-nums;
+  color: #334155;
+  font-size: 0.75rem;
+}
+
+.wf-invman-children {
+  margin-top: 0.25rem;
+  padding-left: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wf-invman-leaf-group {
+  padding-left: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.wf-invman-leaf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0.4rem;
+}
+
+.wf-invman-leaf-label {
+  font-size: 0.75rem;
+  color: #334155;
+}

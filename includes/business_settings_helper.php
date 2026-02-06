@@ -1,0 +1,443 @@
+<?php
+
+/**
+ * Business Settings Helper - Unified Conductor
+ * Provides easy access to business settings throughout the application.
+ * Last Updated: 2026-01-08 00:15:00 (Cache-Bust Recovery Final)
+ */
+
+require_once __DIR__ . '/../api/config.php';
+require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/traits/BusinessInfoTrait.php';
+
+class BusinessSettings
+{
+    use BusinessInfoTrait;
+
+    private static $cache = [];
+    private static function dbUp(): bool
+    {
+        try {
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $isLocal = (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false);
+            if ($isLocal) {
+                $disable = getenv('WF_DB_DEV_DISABLE');
+                if ($disable === '1' || strtolower((string) $disable) === 'true') {
+                    return false;
+                }
+                return \Database::isAvailableQuick(0.6);
+            }
+            // Non-local: assume available
+            return true;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+
+    /**
+     * Get a business setting value
+     */
+    public static function get($key, $default = null)
+    {
+        if (!self::dbUp()) {
+            return $default;
+        }
+        // Check cache first
+        if (isset(self::$cache[$key])) {
+            return self::$cache[$key];
+        }
+
+        try {
+            $result = Database::queryOne(
+                "SELECT setting_value, setting_type, category, updated_at
+                 FROM business_settings
+                 WHERE setting_key = ?
+                 ORDER BY
+                   (category = 'business_info') DESC,
+                   (category = 'business') DESC,
+                   (category = 'branding') DESC,
+                   (category = 'ecommerce') DESC,
+                   updated_at DESC",
+                [$key]
+            );
+
+            if (!$result) {
+                self::$cache[$key] = $default;
+                return $default;
+            }
+
+            $value = self::convertValue($result['setting_value'], $result['setting_type']);
+            self::$cache[$key] = $value;
+            return $value;
+
+        } catch (Exception $e) {
+            return $default;
+        }
+    }
+
+    /**
+     * Get multiple settings by category
+     */
+    public static function getByCategory($category)
+    {
+        if (!self::dbUp()) {
+            return [];
+        }
+        try {
+            // Order by key then updated_at ASC so the most recent row appears last per key
+            // ensuring the final assigned value is the latest
+            $results = Database::queryAll(
+                "SELECT setting_key, setting_value, setting_type FROM business_settings WHERE category = ? ORDER BY setting_key ASC, updated_at ASC",
+                [$category]
+            );
+
+            $settings = [];
+            foreach ($results as $result) {
+                $settings[$result['setting_key']] = self::convertValue($result['setting_value'], $result['setting_type']);
+            }
+
+            return $settings;
+
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Get all settings grouped by category
+     */
+    public static function getAll()
+    {
+        if (!self::dbUp()) {
+            return [];
+        }
+        try {
+            $results = Database::queryAll("SELECT * FROM business_settings ORDER BY category, display_order");
+
+            $grouped = [];
+            foreach ($results as $result) {
+                $value = self::convertValue($result['setting_value'], $result['setting_type']);
+                $grouped[$result['category']][$result['setting_key']] = $value;
+            }
+
+            return $grouped;
+
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Convert setting value based on type
+     */
+    private static function convertValue($value, $type)
+    {
+        switch ($type) {
+            case 'boolean':
+                return in_array(strtolower($value), ['true', '1']);
+            case 'number':
+                return is_numeric($value) ? (float) $value : 0;
+            case 'json':
+                $decoded = json_decode($value, true);
+                return $decoded !== null ? $decoded : [];
+            default:
+                return $value;
+        }
+    }
+
+    /**
+     * Clear cache (useful after updates)
+     */
+    public static function clearCache()
+    {
+        self::$cache = [];
+    }
+
+    public static function getPrimaryColor()
+    {
+        $explicit = self::get('business_brand_primary', null);
+        if (is_string($explicit) && trim($explicit) !== '') {
+            return trim($explicit);
+        }
+        $legacy = self::get('primary_color', null);
+        if (is_string($legacy) && trim($legacy) !== '') {
+            return trim($legacy);
+        }
+        return '';
+    }
+
+    public static function getSecondaryColor()
+    {
+        $explicit = self::get('business_brand_secondary', null);
+        if (is_string($explicit) && trim($explicit) !== '') {
+            return trim($explicit);
+        }
+        $legacy = self::get('secondary_color', null);
+        if (is_string($legacy) && trim($legacy) !== '') {
+            return trim($legacy);
+        }
+        return '';
+    }
+
+    public static function getPaymentMethods()
+    {
+        $val = self::get('payment_methods', []);
+        return is_array($val) ? $val : [];
+    }
+
+    public static function getShippingMethods()
+    {
+        $val = self::get('shipping_methods', []);
+        return is_array($val) ? $val : [];
+    }
+
+    public static function getPaymentStatuses()
+    {
+        $val = self::get('payment_statuses', []);
+        return is_array($val) ? $val : [];
+    }
+
+    public static function getOrderStatuses()
+    {
+        $val = self::get('order_statuses', []);
+        return is_array($val) ? $val : [];
+    }
+
+    public static function getTaxRate()
+    {
+        return self::get('tax_rate', null);
+    }
+
+    public static function isTaxEnabled()
+    {
+        $raw = self::get('tax_enabled', null);
+        return ($raw === null || $raw === '') ? null : self::getBooleanSetting('tax_enabled', false);
+    }
+
+    public static function isMaintenanceMode()
+    {
+        return self::get('maintenance_mode', false);
+    }
+
+    /**
+     * Robust boolean getter that accepts common truthy strings
+     */
+    public static function getBooleanSetting($key, $default = false)
+    {
+        $val = self::get($key, null);
+        if ($val === null) {
+            return (bool) $default;
+        }
+        if (is_bool($val)) {
+            return $val;
+        }
+        $str = strtolower(trim((string) $val));
+        return in_array($str, ['1', 'true', 'yes', 'on', 'y'], true);
+    }
+
+    /**
+     * Retrieve shipping configuration.
+     * When $strict is true, throws InvalidArgumentException on missing/invalid keys.
+     * When false, applies sane defaults and reports which keys defaulted in 'usedDefaults'.
+     */
+    public static function getShippingConfig($strict = false)
+    {
+        $keys = [
+            'free_shipping_threshold' => 50.00,
+            'local_delivery_fee' => 5.00,
+            'shipping_rate_usps' => 8.99,
+            'shipping_rate_fedex' => 12.99,
+            'shipping_rate_ups' => 12.99,
+        ];
+
+        $out = [
+            'free_shipping_threshold' => null,
+            'local_delivery_fee' => null,
+            'shipping_rate_usps' => null,
+            'shipping_rate_fedex' => null,
+            'shipping_rate_ups' => null,
+            'usedDefaults' => [],
+        ];
+
+        foreach ($keys as $k => $def) {
+            $val = self::get($k, null);
+            if ($val === null || $val === '') {
+                if ($strict) {
+                    throw new InvalidArgumentException("Missing required setting: {$k}");
+                }
+                $out[$k] = (float) $def;
+                $out['usedDefaults'][] = $k;
+                continue;
+            }
+            if (!is_numeric($val)) {
+                if ($strict) {
+                    throw new InvalidArgumentException("Invalid numeric setting: {$k}");
+                }
+                $out[$k] = (float) $def;
+                $out['usedDefaults'][] = $k;
+                continue;
+            }
+            $out[$k] = (float) $val;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Retrieve tax configuration.
+     * - enabled: bool via isTaxEnabled()
+     * - rate: float via getTaxRate()
+     * - taxShipping: robust boolean for 'tax_shipping'
+     * Strict mode enforces: if enabled and (rate <= 0) or tax_shipping missing -> throw.
+     */
+    public static function getTaxConfig($strict = false)
+    {
+        $enabled = (bool) self::isTaxEnabled();
+        $rate = (float) self::getTaxRate();
+
+        // Detect presence of tax_shipping key distinctly from its value
+        $taxShippingRaw = self::get('tax_shipping', null);
+        $hasTaxShippingKey = ($taxShippingRaw !== null && $taxShippingRaw !== '');
+        $taxShipping = self::getBooleanSetting('tax_shipping', false);
+
+        if ($strict) {
+            if ($enabled && ($rate <= 0)) {
+                throw new InvalidArgumentException('Missing or invalid setting: tax_rate');
+            }
+            // Require explicit tax_shipping only when tax is enabled; otherwise default to false
+            if ($enabled && !$hasTaxShippingKey) {
+                throw new InvalidArgumentException('Missing required setting: tax_shipping');
+            }
+        }
+
+        return [
+            'enabled' => $enabled,
+            'rate' => $rate,
+            'taxShipping' => $taxShipping,
+            'hasTaxShippingKey' => $hasTaxShippingKey,
+        ];
+    }
+
+    /**
+     * Generate CSS variables for brand colors
+     */
+    public static function getCSSVariables()
+    {
+        $colors = self::getByCategory('branding');
+        $css = ":root {\n";
+
+        foreach ($colors as $key => $value) {
+            if (strpos($key, '_color') !== false) {
+                $cssVar = '-' . str_replace('_', '-', $key);
+                $css .= "    {$cssVar}: {$value};\n";
+            }
+        }
+
+        $css .= "}\n";
+        return $css;
+    }
+
+    /**
+     * Get site URL with protocol
+     */
+    public static function getSiteUrl($path = '')
+    {
+        $domain = self::getBusinessDomain();
+        if ($domain === '') {
+            throw new RuntimeException('Business domain is not configured.');
+        }
+        $protocol = (strpos($domain, 'localhost') !== false || strpos($domain, '127.0.0.1') !== false) ? 'http://' : 'https://';
+        $url = $protocol . $domain;
+        if ($path && $path[0] !== '/') {
+            $url .= '/';
+        }
+        $url .= $path;
+
+        return $url;
+    }
+}
+
+// Global helper functions for backward compatibility
+function getBusinessSetting($key, $default = null)
+{
+    return BusinessSettings::get($key, $default);
+}
+
+function getBusinessName()
+{
+    return BusinessSettings::getBusinessName();
+}
+
+function getBusinessEmail()
+{
+    return BusinessSettings::getBusinessEmail();
+}
+
+function getPrimaryColor()
+{
+    return BusinessSettings::getPrimaryColor();
+}
+
+function getPaymentMethods()
+{
+    return BusinessSettings::getPaymentMethods();
+}
+
+function getShippingMethods()
+{
+    return BusinessSettings::getShippingMethods();
+}
+
+/**
+ * Get a random cart button text from the configured variations
+ * Supports both legacy plain string arrays and new structured format with { id, text, is_active }
+ * @return string Random cart button text
+ */
+function getRandomCartButtonText()
+{
+    try {
+        $cartTexts = getBusinessSetting('cart_button_texts', '["Add to Cart"]');
+
+        // Parse JSON if it's a string
+        if (is_string($cartTexts)) {
+            $cartTexts = json_decode($cartTexts, true);
+        }
+
+        // Ensure we have an array with at least one option
+        if (!is_array($cartTexts) || empty($cartTexts)) {
+            return 'Add to Cart';
+        }
+
+        // Filter to only active texts and extract text values
+        $activeTexts = [];
+        foreach ($cartTexts as $item) {
+            if (is_string($item)) {
+                // Legacy plain string format
+                $trimmed = trim($item);
+                if ($trimmed !== '') {
+                    $activeTexts[] = $trimmed;
+                }
+            } elseif (is_array($item) && isset($item['text'])) {
+                // New structured format { id, text, is_active }
+                $isActive = isset($item['is_active']) ? (bool) $item['is_active'] : true;
+                if ($isActive) {
+                    $trimmed = trim((string) $item['text']);
+                    if ($trimmed !== '') {
+                        $activeTexts[] = $trimmed;
+                    }
+                }
+            }
+        }
+
+        // Return a random cart button text
+        if (empty($activeTexts)) {
+            return 'Add to Cart';
+        }
+        return $activeTexts[array_rand($activeTexts)];
+
+    } catch (Exception $e) {
+        // Fallback to default if there's any error
+        return 'Add to Cart';
+    }
+}

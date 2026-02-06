@@ -1,0 +1,15 @@
+/* Components Base (Modularized)
+   Imports sub-components to stay under file line limits. */
+
+@import url("./ui/image-placeholders.css");
+@import url("./admin/cost-management.css");
+@import url("./admin/room-mapper.css");
+@import url("./admin/receipt-settings.css");
+@import url("./modals/delete-confirmation-modal.css");
+@import url("./ui/base-rules.css");
+
+
+.wf-admin-loading {
+    padding: 40px;
+    text-align: center;
+}

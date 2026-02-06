@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WhimsicalFrog</title>
+
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Merienda:wght@400;700&family=Nunito:wght@400;600;700&display=swap">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐸</text></svg>">
+    <link rel="stylesheet" href="/src/styles/entries/public-core.css">
+
+    <style>
+        body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            color: #fff;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        #wf-root:empty::after {
+            content: "Loading...";
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="wf-root"></div>
+    <script>
+        // Synchronously apply admin-view class before React loads
+        // This fixes timing issues with CSS icon selectors that depend on body.admin-view
+        (function () {
+            var path = window.location.pathname.toLowerCase();
+            var isAdminPath = path === '/admin' || path.startsWith('/admin/') || path.includes('admin_router.php');
+            if (isAdminPath) {
+                document.body.classList.add('admin-view');
+            }
+        })();
+    </script>
+    <script type="module" src="/src/entries/main.tsx"></script>
+</body>
+
+</html>

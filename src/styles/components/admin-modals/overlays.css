@@ -1,0 +1,42 @@
+@layer components.admin-modals {
+
+    /* Admin-wide final guards: any visible overlay fills the viewport and centers its panel */
+    body[data-page^='admin'] .admin-modal-overlay.show,
+    body[data-page^='admin'] .admin-modal-overlay[aria-hidden="false"],
+    body[data-page^='admin'] .modal-overlay.show,
+    body[data-page^='admin'] .modal-overlay[aria-hidden="false"] {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        z-index: var(--z-modal, 11010) !important;
+        pointer-events: auto !important;
+    }
+
+}
+
+/* Moved out of @layer for maximum specificity and precedence */
+/* Ensure the containers don't trap the modals in a low stacking context relative to the header */
+body.wf-modal-open #admin-section-content,
+body.wf-modal-open #wf-root,
+body.wf-modal-open main,
+body.wf-modal-open[data-page^='admin'] .site-header.universal-page-header {
+    position: relative !important;
+    z-index: var(--wf-z-backdrop) !important;
+    pointer-events: none !important;
+}
+
+/* Dim the header when a modal is open to match the backdrop effect */
+body.wf-modal-open[data-page^='admin'] .site-header.universal-page-header {
+    position: fixed !important;
+    /* Keep it fixed but boosted */
+    filter: brightness(0.6) blur(2px) !important;
+    pointer-events: none !important;
+    transition: filter 0.3s ease !important;
+}

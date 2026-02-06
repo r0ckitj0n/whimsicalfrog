@@ -1,0 +1,226 @@
+import { useState, useCallback } from 'react';
+import { AiManager } from '../../../core/ai/AiManager.js';
+import logger from '../../../core/logger.js';
+
+export interface PriceComponent {
+    type: string;
+    amount: number;
+    label: string;
+    explanation: string;
+}
+
+export interface PriceSuggestion {
+    success: boolean;
+    suggested_price: number;
+    confidence: string | number | null;
+    factors: {
+        requested_pricing_tier?: string;
+        tier_multiplier?: number;
+        final_before_tier?: number;
+        [key: string]: unknown;
+    };
+    components: PriceComponent[];
+    analysis: {
+        requested_pricing_tier?: string;
+        requested_tier_multiplier?: number;
+        [key: string]: unknown;
+    };
+    reasoning: string;
+    created_at: string | number | null;
+    _cachedAt?: number;
+}
+
+export const getPriceTierMultiplier = (tier: string) => {
+    const t = (tier || '').toLowerCase();
+    switch (t) {
+        case 'premium':
+            return 1.15;
+        case 'conservative':
+        case 'budget':
+        case 'economy':
+            return 0.85;
+        case 'standard':
+        default:
+            return 1.0;
+    }
+};
+
+export const usePriceSuggestions = () => {
+    const [is_busy, setIsBusy] = useState(false);
+    const [cached_price_suggestion, setCachedPriceSuggestion] = useState<PriceSuggestion | null>(null);
+
+    const normalizePriceSuggestionData = useCallback((raw: Record<string, unknown>): PriceSuggestion | null => {
+        if (!raw || typeof raw !== 'object') return null;
+        const data = { ...raw };
+        const suggestedPriceVal = data.suggested_price ?? data.suggested_price ?? data.price;
+        const num = parseFloat(String(suggestedPriceVal));
+        const suggested_price = Number.isFinite(num) ? num : 0;
+
+        const safe_parse = (v: unknown, fallback: unknown) => {
+            if (v == null) return fallback;
+            if (Array.isArray(v) || typeof v === 'object') return v;
+            if (typeof v === 'string') {
+                try {
+                    const parsed = JSON.parse(v);
+                    return parsed ?? fallback;
+                } catch (_) {
+                    return fallback;
+                }
+            }
+            return fallback;
+        };
+
+        const rawConfidence = data.confidence;
+        let confidence: string | number = 'N/A';
+        if (typeof rawConfidence === 'number' || typeof rawConfidence === 'string') {
+            confidence = rawConfidence;
+        } else if (rawConfidence && typeof rawConfidence === 'object') {
+            // Normalize object-based confidence (e.g. from PricingStrategyHelper)
+            const vals = Object.values(rawConfidence as Record<string, number>).filter(v => typeof v === 'number');
+            if (vals.length > 0) {
+                const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+                confidence = Number(avg.toFixed(2));
+            }
+        }
+
+        const compsRaw = safe_parse(data.components, []);
+        let components: PriceComponent[] = [];
+        if (Array.isArray(compsRaw)) {
+            components = compsRaw as PriceComponent[];
+        } else if (compsRaw && typeof compsRaw === 'object') {
+            components = Object.entries(compsRaw as Record<string, unknown>).map(([type, val]: [string, unknown]) => {
+                if (val && typeof val === 'object' && !Array.isArray(val)) {
+                    const v = val as Record<string, unknown>;
+                    return {
+                        type,
+                        amount: Number(v.amount ?? 0),
+                        label: String(v.label ?? type),
+                        explanation: String(v.explanation ?? '')
+                    };
+                }
+                return {
+                    type,
+                    amount: Number(val ?? 0),
+                    label: type,
+                    explanation: ''
+                };
+            });
+        }
+
+        return {
+            success: Boolean(data.success),
+            suggested_price,
+            confidence,
+            factors: (safe_parse(data.factors, {}) as PriceSuggestion['factors']),
+            components,
+            analysis: (safe_parse(data.analysis, {}) as PriceSuggestion['analysis']),
+            reasoning: String(data.reasoning || ''),
+            created_at: (data.created_at || data.created_at || null) as string | number | null
+        };
+    }, []);
+
+    const retier_price_suggestion = useCallback((source: PriceSuggestion, targetTier: string): PriceSuggestion | null => {
+        if (!source || typeof source !== 'object') return null;
+
+        const data = { ...source };
+        const factors = { ...(data.factors || {}) };
+        const analysis = { ...(data.analysis || {}) };
+        const components = Array.isArray(data.components) ? [...data.components] : [];
+
+        const currentTierMult = (data.factors.tier_multiplier as number | undefined) || 1;
+        const suggestedNum = Number(data.suggested_price);
+
+        let basePrice = (data.factors.final_before_tier as number | undefined);
+        if (basePrice === undefined || !Number.isFinite(basePrice) || basePrice <= 0) {
+            if (Number.isFinite(suggestedNum) && currentTierMult > 0) {
+                basePrice = suggestedNum / currentTierMult;
+            } else {
+                basePrice = suggestedNum;
+            }
+        }
+        if (basePrice === undefined || !Number.isFinite(basePrice) || basePrice <= 0) return null;
+
+        const targetMult = getPriceTierMultiplier(targetTier);
+        const newPrice = basePrice * targetMult;
+
+        data.suggested_price = Number.isFinite(newPrice) ? Number(newPrice.toFixed(2)) : suggestedNum;
+
+        factors.requested_pricing_tier = (targetTier || 'standard').toLowerCase();
+        factors.tier_multiplier = targetMult;
+        factors.final_before_tier = basePrice;
+        analysis.requested_pricing_tier = factors.requested_pricing_tier;
+        analysis.requested_tier_multiplier = targetMult;
+
+        // Effective multiplier for components
+        const effectiveMultiplier = basePrice > 0 ? (data.suggested_price / basePrice) : targetMult;
+
+        // Distribute multiplier to components and remove any existing quality_tier adjustment
+        const updatedComponents = components
+            .filter(c => c && c.type !== 'quality_tier')
+            .map((c) => ({
+                ...c,
+                amount: Number((c.amount * effectiveMultiplier).toFixed(2))
+            }));
+
+        data.factors = factors;
+        data.analysis = analysis;
+        data.components = updatedComponents;
+        return data;
+    }, []);
+
+    const fetch_price_suggestion = useCallback(async (params: {
+        sku: string;
+        name: string;
+        description: string;
+        category: string;
+        cost_price: string | number;
+        tier?: string;
+        useImages?: boolean;
+    }) => {
+        setIsBusy(true);
+        try {
+            const data = await AiManager.getPricingSuggestion({
+                sku: params.sku,
+                name: params.name,
+                description: params.description,
+                category: params.category,
+                cost_price: params.cost_price,
+                useImages: params.useImages ?? true,
+                quality_tier: params.tier || 'standard'
+            });
+
+            if (data && data.success) {
+                let suggested = (data.suggested_price != null) ? Number(data.suggested_price) : Number(data.price ?? 0);
+                if (!Number.isFinite(suggested)) suggested = 0;
+                data.suggested_price = suggested;
+
+                const normalized = normalizePriceSuggestionData(data);
+                if (normalized) {
+                    normalized.factors.final_before_tier = normalized.suggested_price;
+                    normalized.factors.tier_multiplier = getPriceTierMultiplier(params.tier || 'standard');
+                    normalized.factors.requested_pricing_tier = (params.tier || 'standard').toLowerCase();
+                    normalized._cachedAt = Date.now();
+
+                    const tiered = retier_price_suggestion(normalized, params.tier || 'standard') || normalized;
+                    tiered._cachedAt = normalized._cachedAt;
+                    setCachedPriceSuggestion(tiered);
+                    return tiered;
+                }
+            }
+            return null;
+        } catch (err) {
+            logger.error('fetch_price_suggestion failed', err);
+            return null;
+        } finally {
+            setIsBusy(false);
+        }
+    }, [normalizePriceSuggestionData, retier_price_suggestion]);
+
+    return {
+        is_busy,
+        cached_price_suggestion,
+        setCachedPriceSuggestion,
+        fetch_price_suggestion,
+        retier_price_suggestion
+    };
+};

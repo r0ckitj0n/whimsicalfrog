@@ -1,0 +1,34 @@
+@layer components.admin-modals {
+    /* Hybrid Layout & Flattening Rules 
+     Used when React modals are embedded in PHP shells or vice-versa. */
+
+    body[data-page^='admin'] .admin-modal.admin-modal-content.wf-embed-flatten-target,
+    body[data-embed="1"] .wf-modal-flatten-target,
+    .wf-embed-flatten-target {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    .wf-embed-flatten-target>.modal-header,
+    body[data-embed="1"] .wf-modal-flatten-target>.modal-header {
+        display: none !important;
+    }
+
+    /* Automation Specifics */
+    #automationContainer,
+    #automationManagerContainer {
+        padding-bottom: 100px !important;
+    }
+
+    #automationManagerModal .modal-body .admin-modal,
+    #automationModal .modal-body .admin-modal {
+        box-shadow: none !important;
+        border: 0 !important;
+    }
+}

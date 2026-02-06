@@ -1,0 +1,80 @@
+/* Settings Modal Styles */
+
+/* Hard, ID-scoped overrides to guarantee fit for Cart Button Texts modal */
+#cartButtonTextsModal .modal-body {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal-content {
+  display: flex !important;
+  flex-direction: column !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal--responsive .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+}
+#cartButtonTextsModal #cartButtonTextsContainer {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+#cartButtonTextsModal #cartButtonTextsContainer .wf-panel-fill {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+}
+#cartButtonTextsModal .wf-admin-embed-frame {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  border: 0 !important;
+  box-sizing: border-box !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal-content {
+  padding: 0 !important; /* remove inner panel padding so iframe can touch edges */
+}
+#cartButtonTextsModal .modal-header {
+  padding: 6px 8px !important; /* compact header to maximize body area */
+  position: static !important; /* allow close button to sit inline */
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important; /* allow stacking in tight width */
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
+#cartButtonTextsModal .modal-header > h2 { flex: 1 0 100% !important; margin: 0 !important; }
+#cartButtonTextsModal .modal-header-actions {
+  margin-left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important; /* allow stacking if cramped */
+}
+#cartButtonTextsModal .admin-modal-close {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  margin-left: auto !important; /* push X to far right on second row */
+  padding: 6px !important;
+}
+
+/* Force full-height layout for the square modal body and children from backup */
+#cartButtonTextsModal .admin-modal.admin-modal--square-300 {
+  display: flex !important;
+  flex-direction: column !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal--square-300 .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  padding: 0 !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal--square-300 .modal-body > * {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+#cartButtonTextsModal .admin-modal.admin-modal-content {
+  min-height: 600px !important;
+}

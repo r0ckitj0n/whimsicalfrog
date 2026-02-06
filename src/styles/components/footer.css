@@ -1,0 +1,272 @@
+/* ==============================================
+   FOOTER CSS
+   ============================================== */
+
+/* Hide site footer on admin pages - React footer should not overlay PHP admin views */
+body.admin-view .site-footer,
+body[data-page^='admin'] .site-footer {
+    display: none !important;
+}
+
+.footer-container {
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+}
+
+/* Footer Layout Systems */
+.footer-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-single {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Footer Sections */
+.footer-section {
+    margin-bottom: 1.25rem;
+}
+
+.footer-section:last-child {
+    margin-bottom: 0;
+}
+
+.footer-heading {
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--footer-heading-color);
+    font-size: var(--footer-heading-size);
+}
+
+.footer-text {
+    line-height: 1.625;
+    margin-bottom: 0.625rem;
+    color: var(--footer-text-color);
+    font-size: var(--footer-font-size);
+}
+
+.footer-text:last-child {
+    margin-bottom: 0;
+}
+
+/* Footer Links */
+.footer-link {
+    border: 1px solid currentColor;
+    text-decoration: none;
+    transition: color 300ms ease;
+    color: var(--footer-link-color);
+    font-size: var(--footer-font-size);
+}
+
+.footer-link:hover {
+    color: var(--brand-secondary);
+    text-decoration: underline;
+}
+
+.footer-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-nav li {
+    margin-bottom: 8px;
+}
+
+.footer-nav li:last-child {
+    margin-bottom: 0;
+}
+
+.footer-nav a {
+    color: var(--footer-link-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    font-size: var(--footer-font-size);
+    display: block;
+    padding: 2px 0;
+}
+
+.footer-nav a:hover {
+    color: var(--footer-link-hover-color);
+    padding-left: 5px;
+}
+
+.footer-nav-horizontal {
+    flex-direction: column;
+    text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-nav-horizontal li {
+    margin: 0;
+}
+
+.footer-nav-horizontal a {
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.footer-nav-horizontal a:hover {
+    background-color: rgb(135 172 58 / 10%);
+    padding-left: 10px;
+}
+
+/* Social Media Icons */
+.footer-social {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.footer-social-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background-color: transparent;
+    border: 2px solid #94a3b8;
+    border-radius: 9999px;
+    text-decoration: none;
+    transition: all 300ms ease;
+    font-size: 1.125rem;
+    border-color: var(--footer-social-icon-color);
+    color: var(--footer-social-icon-color);
+}
+
+.footer-social-icon:hover {
+    transform: translateY(-0.125rem);
+    background-color: var(--footer-social-icon-hover);
+    border-color: var(--footer-social-icon-hover);
+    color: var(--footer-bg-color);
+}
+
+.footer-social-square {
+    border-radius: 0.5rem;
+}
+
+.footer-social-large .footer-social-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+}
+
+/* Copyright Section */
+.site-footer {
+    color: #4b5563;
+    /* Default text-gray-600 */
+}
+
+/* Override for dark room backgrounds */
+body.room-bg-main .site-footer,
+body.mode-fullscreen .site-footer {
+    display: none !important;
+    color: #ffffff !important;
+}
+
+body.room-bg-main .site-footer a,
+body.mode-fullscreen .site-footer a,
+body.room-bg-main .site-footer span,
+body.mode-fullscreen .site-footer span {
+    color: #ffffff !important;
+}
+
+.footer-copyright {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 1.25rem;
+    margin-top: 30px;
+    text-align: center;
+}
+
+.footer-copyright-text {
+    line-height: 1.5;
+    margin: 0;
+    color: var(--footer-copyright-color);
+    font-size: var(--footer-copyright-size);
+}
+
+.footer-copyright-links {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-top: 0.625rem;
+    flex-wrap: wrap;
+}
+
+.footer-copyright-links a {
+    text-decoration: none;
+    transition: color 300ms ease;
+    color: var(--footer-copyright-color);
+    font-size: var(--footer-copyright-size);
+}
+
+.footer-copyright-links a:hover {
+    color: var(--brand-secondary);
+}
+
+/* Slim Footer Overrides */
+.site-footer.is-slim {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    background: transparent !important;
+}
+
+.site-footer.is-slim .footer-container {
+    max-width: 60rem;
+}
+
+.site-footer.is-slim .footer-grid-3 {
+    gap: 40px;
+}
+
+.site-footer.is-slim .footer-logo img {
+    height: 40px;
+}
+
+.site-footer.is-slim .footer-heading {
+    font-size: 0.85rem;
+}
+
+.site-footer.is-slim .footer-nav li {
+    margin-bottom: 4px;
+}
+
+.site-footer.is-slim .footer-copyright {
+    margin-top: 20px;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

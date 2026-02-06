@@ -1,0 +1,121 @@
+/* Shop Page Layout & Navigation (Vite-managed) */
+
+@layer pages-storefront-shop {
+
+  /* Navigation Bar */
+  #shopPage .navigation-bar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    border-bottom: none !important;
+    gap: 6px;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    padding: 10px 0;
+    /* Reduced padding */
+    box-sizing: border-box;
+    min-height: 48px;
+    /* Slightly more compact */
+  }
+
+  #shopPage .shop-navigation-area {
+    position: relative;
+    /* Changed from static */
+    z-index: var(--wf-z-elevated);
+    padding: 0;
+    min-height: auto;
+    display: block;
+    margin: 0;
+    width: 100%;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    border-bottom: none !important;
+  }
+
+  #shopPage .shop-navigation-area::before,
+  #shopPage .shop-navigation-area::after {
+    content: none !important;
+  }
+
+  /* Root & Page Containers */
+  body[data-page='shop'],
+  html[data-page='shop'],
+  body[data-page='shop'] #wf-root {
+    overflow: hidden !important;
+    height: 100vh !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body[data-page='shop'] .site-header.universal-page-header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--wf-z-sticky) !important;
+  }
+
+  body[data-page='shop'] .admin-nav-tabs {
+    position: fixed !important;
+    top: var(--wf-header-height, 80px);
+    left: 0;
+    right: 0;
+    z-index: calc(var(--wf-z-sticky) - 1) !important;
+  }
+
+  body[data-page='shop'] footer {
+    display: none !important;
+  }
+
+  body[data-page='shop'] .page-content#shopPage {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    /* This margin-top is critical to clear the fixed/sticky header */
+    margin-top: calc(var(--header-height, 120px) + 5px) !important;
+    overflow: hidden !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+
+  /* Shared chip-style brand button for shop filters and back link */
+  .btn-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    height: var(--token-button-height, 40px);
+    border-radius: 9999px;
+    font-family: var(--font-primary, inherit);
+    font-weight: 600;
+  }
+
+  #shopPage .room-main-nav-container {
+    justify-self: start;
+  }
+
+  #shopPage .room-main-nav-image {
+    height: 60px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+  }
+
+  #shopPage .category-navigation {
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+}

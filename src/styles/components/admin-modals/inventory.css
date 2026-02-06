@@ -1,0 +1,42 @@
+@layer components.admin-modals {
+
+    /* Inventory Modal Styles */
+    #inventoryModalOuter {
+        padding: 0.25rem !important;
+        z-index: var(--z-overlay-topmost) !important;
+    }
+
+    #inventoryManagerModal .admin-modal.admin-modal--inventory-manager,
+    #inventoryAuditModal .admin-modal.admin-modal--inventory-audit {
+        max-height: var(--admin-modal-max-height, 95vh) !important;
+        height: var(--admin-modal-max-height, 95vh) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: min(1200px, 96vw) !important;
+        overflow: hidden !important;
+    }
+
+    #inventoryManagerModal .admin-modal.admin-modal--inventory-manager .modal-body,
+    #inventoryAuditModal .admin-modal.admin-modal--inventory-audit .modal-body {
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+    }
+
+    .wf-invman-scroll {
+        max-height: calc(var(--admin-modal-max-height, 95vh) - 9.5rem) !important;
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+    }
+
+    .wf-invman-thumb {
+        width: 40px;
+        height: 40px;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        object-fit: cover;
+        background: #f1f5f9;
+        display: block;
+    }
+}

@@ -1,0 +1,235 @@
+/* Inventory modal specific layering and overlay overrides from backup */
+#inventoryModalOuter.admin-modal-overlay {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.25rem !important;
+}
+
+#inventoryModalOuter.admin-modal-overlay.show {
+  overflow: hidden;
+}
+
+#inventoryModalOuter .admin-modal {
+  margin: 0 !important;
+  width: clamp(760px, 92vw, 1200px) !important;
+  height: 95vh;
+  max-height: 95vh !important;
+  min-height: 95vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: var(--z-overlay-topmost) !important;
+}
+
+#inventoryModalOuter .modal-header {
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  gap: 0.5rem !important;
+}
+
+#inventoryModalOuter .modal-header .wf-admin-nav-button {
+  color: var(--admin-modal-text-color, #0f172a) !important;
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+  border-radius: 999px;
+  font-size: 20px;
+  line-height: 1;
+  background: transparent !important;
+  border: none !important;
+}
+
+#inventoryModalOuter .modal-header .wf-admin-nav-button:hover,
+#inventoryModalOuter .modal-header .wf-admin-nav-button:focus-visible {
+  color: #ffffff !important;
+}
+
+#inventoryModalOuter .admin-modal.admin-modal--actions-in-header .modal-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+#inventoryModalOuter .modal-header button[data-action="generate-all-ai"] {
+  display: inline-flex;
+  align-self: center;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#inventoryModalOuter .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: 0 !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  max-height: none !important;
+  scrollbar-width: auto;
+}
+
+#inventoryModalOuter .admin-modal.admin-modal-content {
+  padding-bottom: 0 !important;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar {
+  width: 17px;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border: 1px solid #a6a6a6;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+#inventoryModalOuter .wf-modal-actions {
+  background: #ffffff;
+  padding-bottom: 0.25rem;
+  padding-top: 0.25rem;
+}
+
+#inventoryModalOuter .wf-modal-actions:not(:has(.wf-modal-button, .btn, button)) {
+  display: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+}
+
+#inventoryModalOuter .modal-section {
+  background: var(--admin-modal-section-bg, transparent);
+  border: 1px solid var(--admin-modal-section-border, transparent);
+  border-radius: var(--admin-modal-section-radius, 0.25rem);
+  padding: var(--admin-modal-section-padding, 0.25rem) !important;
+  margin-bottom: var(--admin-modal-section-gap, 0.375rem);
+}
+
+#inventoryModalOuter .modal-section:last-of-type {
+  margin-bottom: 0 !important;
+}
+
+/* Inventory modal Cost/Price analysis: ensure Clear buttons are solid danger buttons */
+#inventoryModalOuter .modal-section .suggestions-container .btn.btn-danger.btn-sm {
+  background: var(--button-danger-bg, #ef4444) !important;
+  border-color: var(--button-danger-border, #ef4444) !important;
+  color: var(--button-danger-text, #ffffff) !important;
+}
+
+#inventoryModalOuter .modal-section .suggestions-container .btn.btn-danger.btn-sm:hover,
+#inventoryModalOuter .modal-section .suggestions-container .btn.btn-danger.btn-sm:focus-visible {
+  background: var(--button-danger-hover-bg, #dc2626) !important;
+  border-color: var(--button-danger-hover-border, #dc2626) !important;
+  color: var(--button-danger-hover-text, #ffffff) !important;
+}
+
+/* Inventory modal: force Item Information rows to use exactly two columns on wider screens */
+#inventoryModalOuter .item-info-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  #inventoryModalOuter .item-info-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+#inventoryModalOuter .wf-modal-form {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Inventory item modal: force visible close glyph even if dynamic icon map/pseudo styles fail */
+.inventory-modal-close-btn::before,
+.inventory-modal-close-btn::after {
+  content: none !important;
+  display: none !important;
+}
+
+.inventory-modal-close-btn {
+  z-index: var(--wf-z-elevated) !important;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  transform-origin: center !important;
+}
+
+.inventory-modal-close-btn .inventory-modal-close-glyph {
+  display: inline-block !important;
+  font-size: 1.5rem !important;
+  line-height: 1 !important;
+  font-weight: 700 !important;
+  color: #475569 !important;
+}
+
+.inventory-modal-close-btn:hover .inventory-modal-close-glyph,
+.inventory-modal-close-btn:focus-visible .inventory-modal-close-glyph {
+  color: #ffffff !important;
+}
+
+.inventory-modal-close-btn:hover,
+.inventory-modal-close-btn:focus-visible {
+  transform: scale(1.35) !important;
+}
+
+/* ==========================================================================
+   Inventory Modal Column Styling - Visual Hierarchy for Management Interfaces
+   Matches Customer Modal pattern with green/orange/green alternating scheme
+   ========================================================================== */
+
+/* Column styling - ensure containment */
+.inventory-modal-col {
+  overflow: hidden !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Column 1: GREEN background (Item Information) */
+.inventory-modal-col-1 {
+  background: rgba(var(--brand-accent-rgb), 0.06);
+  border: 1px solid rgba(var(--brand-accent-rgb), 0.15);
+}
+
+/* Column 2: ORANGE background (Cost Analysis) */
+.inventory-modal-col-2 {
+  background: rgba(var(--brand-secondary-rgb), 0.06);
+  border: 1px solid rgba(var(--brand-secondary-rgb), 0.15);
+}
+
+/* Column 3: GREEN background (Price Analysis) */
+.inventory-modal-col-3 {
+  background: rgba(var(--brand-accent-rgb), 0.06);
+  border: 1px solid rgba(var(--brand-accent-rgb), 0.15);
+}
+
+/* Force all column children to inherit containment */
+.inventory-modal-col>* {
+  flex-shrink: 1 !important;
+  flex-grow: 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Form inputs within inventory modal columns */
+.inventory-modal-col input:not([type="checkbox"]):not([type="radio"]),
+.inventory-modal-col select,
+.inventory-modal-col textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Inner panels/cards within colored columns */
+.inventory-modal-col .bg-white {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}

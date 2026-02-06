@@ -1,0 +1,179 @@
+/* Admin Dashboard Layout & Metrics (Vite-managed) */
+
+/* Metrics grid and cards */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.metric-card.success {
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: var(--success-color, #10b981);
+}
+
+.metric-card.primary {
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: var(--primary-color, var(--brand-primary));
+}
+
+.metric-card.secondary {
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: var(--secondary-color, #6b7280);
+}
+
+.metric-card.warning {
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: var(--warning-color, #f59e0b);
+}
+
+.metric-card.danger {
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-left-color: var(--danger-color, #ef4444);
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: var(--metric-label-color, #6b7280);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--metric-value-color, #1f2937);
+  margin-bottom: 0.25rem;
+}
+
+.metric-meta {
+  font-size: 0.75rem;
+  color: var(--metric-meta-color, #9ca3af);
+  font-style: italic;
+}
+
+/* Configuration and Settings Grids */
+.config-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--config-border, #f0f0f0);
+}
+
+.config-item:last-child {
+  border-bottom-width: 0;
+}
+
+.config-label {
+  font-weight: 600;
+  color: var(--config-label-color, #374151);
+  flex: 1 1 0%;
+}
+
+.config-value {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background-color: var(--config-value-bg, #f9fafb);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-small, 4px);
+  flex: 2 2 0%;
+  margin-left: 0;
+  word-break: break-all;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .config-value {
+    margin-left: 1.25rem;
+  }
+}
+
+/* Responsive Design - Handled by utility classes above where possible, 
+   but keeping specific screen-size overrides that aren't easily utility-mapped */
+@media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 0.5rem;
+  }
+
+  .admin-header-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .admin-content-header {
+    padding: 1rem;
+  }
+
+  .admin-content-title {
+    font-size: 1.25rem;
+  }
+
+  .admin-filter-section {
+    padding: 1rem;
+  }
+
+  .admin-filter-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-table-section {
+    padding: 0.25rem;
+  }
+}
+
+/* Dashboard Grid System */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.dashboard-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.dashboard-grid .half-width {
+  grid-column: span 1;
+}

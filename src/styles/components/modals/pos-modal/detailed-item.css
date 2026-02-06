@@ -1,0 +1,65 @@
+/* POS Detailed Item Modal Styles (Vite-managed) */
+
+.detailed-item-modal .mb-6 {
+    margin-bottom: 1.5rem !important;
+}
+
+.detailed-item-modal .text-3xl {
+    font-size: 1.875rem !important;
+    line-height: 2.25rem !important;
+    font-weight: 700 !important;
+}
+
+.detailed-item-modal .leading-relaxed {
+    line-height: 1.625 !important;
+}
+
+.detailed-item-modal-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    max-height: 90dvh;
+    max-width: 75vw !important;
+    overflow-x: hidden !important;
+    margin: 0 auto;
+    overscroll-behavior: contain;
+}
+
+.detailed-item-modal .modal-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden !important;
+    padding: 1.5rem;
+    max-width: 100%;
+    scrollbar-gutter: auto;
+}
+
+.detailed-item-modal .modal-body {
+    max-height: 80vh;
+    overflow-y: auto;
+    padding-bottom: 2rem;
+    overflow-x: hidden !important;
+    max-width: 100%;
+}
+
+.detailed-item-modal .grid {
+    max-width: 100%;
+}
+
+.detailed-item-modal * {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+@supports (width: 100dvw) {
+  .detailed-item-modal.show { height: calc(100dvh - var(--wf-header-offset, 0)) !important; }
+  .detailed-item-modal { width: 100dvw !important; max-width: 100dvw !important; }
+  .detailed-item-modal .detailed-item-modal-container {
+    max-width: min(90dvw, 1400px) !important;
+    width: min(90dvw, 1400px) !important;
+  }
+  .detailed-item-modal .modal-body { max-height: 80dvh; }
+  .detailed-item-modal #detailedMainImage { max-height: calc(60dvh - var(--wf-header-offset, 0) - 30px) !important; }
+  .detailed-item-modal .aspect-square { max-height: calc(60dvh - var(--wf-header-offset, 0) - 30px) !important; }
+}

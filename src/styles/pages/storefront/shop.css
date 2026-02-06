@@ -1,0 +1,87 @@
+/* Shop Page (Modularized) */
+
+@import url("./shop/layout.css");
+@import url("./shop/grid.css");
+
+@layer pages-storefront-shop {
+
+  /* Specific styling for filter buttons */
+  .shop-filter-btn {
+    background: var(--button-bg-primary) !important;
+    color: var(--button-text-primary) !important;
+    border: none !important;
+  }
+
+  .shop-filter-btn:hover {
+    background: var(--button-bg-primary-hover) !important;
+  }
+
+  .shop-filter-btn.active {
+    filter: brightness(0.95);
+    box-shadow: 0 0 0 2px white;
+  }
+
+  #shopPage .category-navigation .category-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 15px;
+    height: 42px;
+    font-size: 1.1rem;
+    border-radius: 9999px;
+    font-family: var(--font-primary, inherit);
+    font-weight: 600;
+    background: var(--button-bg-primary) !important;
+    color: #ffffff !important;
+    /* Explicit white for visibility */
+    border: none !important;
+    cursor: pointer;
+  }
+
+  #shopPage .category-navigation .category-btn:hover {
+    background: var(--button-bg-primary-hover) !important;
+    color: #ffffff !important;
+  }
+
+  #shopPage .category-navigation .category-btn.active {
+    filter: brightness(0.92);
+    box-shadow: 0 0 0 2px white;
+    color: #ffffff !important;
+  }
+
+  /* Scrollbars */
+  body[data-page='shop'] #shopPage .shop-content-area {
+    scrollbar-width: thin;
+    scrollbar-color: var(--brand-secondary) var(--brand-primary);
+  }
+
+  body[data-page='shop'] #shopPage .shop-content-area::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  body[data-page='shop'] #shopPage .shop-content-area::-webkit-scrollbar-track {
+    background: var(--brand-primary);
+    border-radius: 10px;
+  }
+
+  body[data-page='shop'] #shopPage .shop-content-area::-webkit-scrollbar-thumb {
+    background-color: var(--brand-secondary);
+    border-radius: 10px;
+    border: 2px solid var(--brand-primary);
+  }
+
+  /* Back Button Wrapper Responsive Logic */
+  .shop-back-btn-wrapper {
+    position: absolute;
+    left: 2rem;
+    display: none;
+    z-index: var(--wf-z-elevated);
+  }
+
+  @media (min-width: 768px) {
+    .shop-back-btn-wrapper {
+      display: block;
+    }
+  }
+}

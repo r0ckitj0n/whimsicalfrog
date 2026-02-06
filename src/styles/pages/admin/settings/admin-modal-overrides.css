@@ -1,0 +1,136 @@
+/* Admin Modal Global Overrides & Behavior */
+
+/* When a modal opts into header actions layout, place Save and Close side-by-side */
+body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .modal-header {
+  position: static !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-left: 1.5rem !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto auto !important;
+  /* title | actions | close */
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+body[data-page^='admin'] .admin-modal.admin-modal--actions-in-header .admin-modal-close {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+}
+
+/* Admin Settings: place close X in top-right of modal header */
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .modal-header {
+  position: relative !important;
+  padding-right: 40px;
+  /* make space for X */
+  padding-left: 1.5rem !important;
+}
+
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .admin-modal-close {
+  position: absolute !important;
+  top: 8px !important;
+  right: 10px !important;
+  text-align: center;
+  border-radius: 9999px;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  /* gray-500 */
+  cursor: pointer;
+}
+
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .admin-modal-close:hover {
+  background: var(--brand-secondary) !important;
+  color: #ffffff !important;
+}
+
+body[data-page^='admin'] .admin-modal:not(.admin-modal--actions-in-header) .admin-modal-close:focus {
+  outline: none;
+}
+
+/* Visibility and State Management */
+body[data-page^='admin'] .admin-modal-overlay,
+body[data-page^='admin'] .modal-overlay,
+body[data-page^='admin'] .room-modal-overlay {
+  display: none;
+  transition: none !important;
+}
+
+body[data-page^='admin'] .admin-modal-overlay[aria-hidden="true"],
+body[data-page^='admin'] .modal-overlay[aria-hidden="true"],
+body[data-page^='admin'] .room-modal-overlay[aria-hidden="true"] {
+  display: none !important;
+}
+
+body[data-page^='admin'] .admin-modal-overlay.show,
+body[data-page^='admin'] .modal-overlay.show,
+body[data-page^='admin'] .room-modal-overlay.show {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Centering and Overlay Tint */
+body[data-page^='admin'] .admin-modal-overlay {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  z-index: var(--wf-z-modal-elevated) !important;
+}
+
+body[data-page^='admin'] .admin-modal-overlay .admin-modal {
+  margin-top: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  /* Size to content with sensible minimum */
+  width: fit-content;
+  min-width: 500px;
+  height: fit-content !important;
+  overflow-x: hidden !important;
+}
+
+body[data-page^='admin'] .admin-modal-overlay .modal-body {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* HARD FALLBACK: Attributes Editor Modal Transparency Fix */
+body[data-page^='admin'] .attr-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(17, 24, 39, 0.6) !important;
+  z-index: var(--wf-z-topmost) !important;
+}
+
+body[data-page^='admin'] .attr-modal-overlay.show {
+  display: block !important;
+}
+
+body[data-page^='admin'] .attr-modal {
+  background: #ffffff !important;
+  z-index: calc(var(--wf-z-topmost) + 1) !important;
+  position: fixed !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+body[data-page^='admin'] .attr-modal-header,
+body[data-page^='admin'] .attr-modal-body {
+  background: #ffffff !important;
+}
+
+/* Override for fullscreen modals that need independent column scrolling */
+body[data-page^='admin'] .admin-modal-overlay .admin-modal.admin-modal-fullscreen {
+  height: var(--admin-modal-content-height, 95vh) !important;
+}
+
+body[data-page^='admin'] .admin-modal-overlay .admin-modal.admin-modal-fullscreen>.modal-body {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}

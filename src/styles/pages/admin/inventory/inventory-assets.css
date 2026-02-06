@@ -1,0 +1,135 @@
+.wf-ai-analyzing {
+  opacity: 1 !important;
+}
+
+.wf-ai-analyzing.wf-ai-analyzing--primary {
+  background-color: var(--brand-secondary) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+.wf-ai-analyzing.wf-ai-analyzing--secondary {
+  background-color: var(--brand-primary) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+/* Toast fade-out */
+.toast {
+  transition: opacity 500ms ease-in-out;
+}
+
+.toast.fade-out {
+  opacity: 0;
+}
+
+.inventory-image-viewer-img {
+  max-width: 95vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+.wf-thumb-wrap {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.wf-thumb-wrap>img,
+.wf-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wf-thumb-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background-color: var(--brand-primary);
+  color: #fff;
+  font-size: 11px;
+  line-height: 20px;
+  text-align: center;
+  font-weight: 700;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.wf-img-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+.wf-img-card {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wf-img-wrap {
+  position: relative;
+  height: 120px;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.wf-img-thumb {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  cursor: pointer;
+  display: block;
+}
+
+.wf-img-thumb--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #94a3b8;
+  background-color: #f1f5f9;
+  width: 100%;
+  height: 100%;
+}
+
+.wf-badge-primary {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background-color: #16a34a;
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.wf-img-meta {
+  font-size: 11px;
+  color: #334155;
+  padding: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top: 1px solid #f1f5f9;
+}
+
+.wf-img-actions {
+  padding: 6px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  gap: 6px;
+}

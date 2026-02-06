@@ -1,0 +1,252 @@
+/* ==============================================
+   ADMIN THEMED SECTIONS
+   ============================================== 
+   
+   Reusable utility classes for creating consistently
+   branded sections in admin modals and panels.
+   
+   BRAND COLOR TEXT RECIPROCITY RULE:
+   - Primary (green) background theme → Secondary (orange) text
+   - Secondary (orange) background theme → Primary (green) text
+   - White is always the primary text for solid brand backgrounds
+   ============================================== */
+
+/* ==============================================
+   PRIMARY THEMED SECTIONS (Green Background)
+   All text uses SECONDARY (orange) color
+   ============================================== */
+
+.wf-section-primary {
+    background-color: #f0fdf4 !important;
+    /* Light green */
+    border: 1px solid #bbf7d0 !important;
+    border-radius: 0.75rem;
+}
+
+.wf-section-primary .wf-section-header {
+    color: var(--brand-secondary, #ea580c) !important;
+    font-weight: 700;
+    border-bottom: 1px solid #bbf7d0;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.wf-section-primary .wf-section-title {
+    color: var(--brand-secondary, #ea580c) !important;
+}
+
+.wf-section-primary .wf-section-value {
+    color: var(--brand-secondary, #ea580c) !important;
+    font-weight: 900;
+}
+
+.wf-section-primary .wf-section-label {
+    color: var(--brand-secondary) !important;
+    opacity: 0.85;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+.wf-section-primary .wf-section-accent {
+    color: var(--brand-secondary, #ea580c) !important;
+}
+
+.wf-section-primary .wf-section-card {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--brand-secondary, #ea580c);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.wf-section-primary .wf-section-divider {
+    border-color: var(--brand-secondary, #fed7aa);
+}
+
+/* ==============================================
+   SECONDARY THEMED SECTIONS (Orange Background)
+   All text uses PRIMARY (green) color
+   ============================================== */
+
+.wf-section-secondary {
+    background-color: #fff7ed !important;
+    /* Light orange */
+    border: 1px solid #fed7aa !important;
+    border-radius: 0.75rem;
+}
+
+.wf-section-secondary .wf-section-header {
+    color: var(--brand-primary, #16a34a) !important;
+    font-weight: 700;
+    border-bottom: 1px solid #fed7aa;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.wf-section-secondary .wf-section-title {
+    color: var(--brand-primary, #16a34a) !important;
+}
+
+.wf-section-secondary .wf-section-value {
+    color: var(--brand-primary, #16a34a) !important;
+    font-weight: 900;
+}
+
+.wf-section-secondary .wf-section-label {
+    color: var(--brand-primary) !important;
+    opacity: 0.85;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+.wf-section-secondary .wf-section-accent {
+    color: var(--brand-primary, #16a34a) !important;
+}
+
+.wf-section-secondary .wf-section-card {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid var(--brand-primary, #16a34a);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.wf-section-secondary .wf-section-divider {
+    border-color: var(--brand-primary, #bbf7d0);
+}
+
+/* ==============================================
+   NEUTRAL THEMED SECTIONS (Slate/Gray Background)
+   Uses standard gray text colors
+   ============================================== */
+
+.wf-section-neutral {
+    background-color: #f8fafc !important;
+    /* Slate-50 */
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem;
+}
+
+.wf-section-neutral .wf-section-header {
+    color: #334155 !important;
+    /* Slate-700 */
+    font-weight: 700;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.wf-section-neutral .wf-section-title {
+    color: #334155 !important;
+}
+
+.wf-section-neutral .wf-section-value {
+    color: #1e293b !important;
+    /* Slate-800 */
+    font-weight: 900;
+}
+
+.wf-section-neutral .wf-section-label {
+    color: #64748b !important;
+    /* Slate-500 */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+}
+
+/* ==============================================
+   LAYOUT HELPERS
+   ============================================== */
+
+.wf-section-padding {
+    padding: 1.25rem;
+}
+
+.wf-section-flex {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Grid layouts for multi-section modals */
+.wf-sections-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.wf-sections-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.wf-sections-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+/* Responsive - stack on smaller screens */
+@media (max-width: 768px) {
+
+    .wf-sections-grid-2,
+    .wf-sections-grid-3,
+    .wf-sections-grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==============================================
+   BUTTON PLACEMENT IN THEMED SECTIONS
+   Primary section → use .btn-primary (green)
+   Secondary section → use .btn-secondary (orange)
+   ============================================== */
+
+/* 
+   Button placement notes:
+   - In .wf-section-primary, use .btn-primary (green bg, white text)
+   - In .wf-section-secondary, use .btn-secondary (orange bg, white text)
+   Buttons inherit standard hover behaviors from buttons-hover.css 
+*/
+
+/* ==============================================
+   STAT/METRIC DISPLAY
+   ============================================== */
+
+.wf-stat-display {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+.wf-stat-display .wf-stat-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.wf-stat-display .wf-stat-label {
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* Inherit theme colors */
+.wf-section-primary .wf-stat-value {
+    color: var(--brand-secondary, #ea580c);
+}
+
+.wf-section-primary .wf-stat-label {
+    color: var(--brand-secondary);
+    opacity: 0.8;
+}
+
+.wf-section-secondary .wf-stat-value {
+    color: var(--brand-primary, #16a34a);
+}
+
+.wf-section-secondary .wf-stat-label {
+    color: var(--brand-primary);
+    opacity: 0.8;
+}

@@ -1,0 +1,39 @@
+#businessInfoModal .admin-modal {
+  --admin-modal-width: clamp(1000px, 95vw, 1600px) !important;
+  width: var(--admin-modal-width, clamp(1000px, 95vw, 1600px)) !important;
+  height: auto !important;
+}
+
+#businessInfoModal .modal-body::-webkit-scrollbar {
+  width: 17px;
+  /* Standard Windows scrollbar width */
+}
+
+#businessInfoModal .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  /* Light gray track */
+}
+
+#businessInfoModal .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  /* Standard gray thumb */
+  border: 1px solid #a6a6a6;
+}
+
+#businessInfoModal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+  /* Darker on hover */
+}
+
+#businessInfoModal .modal-body {
+  scrollbar-width: auto;
+  /* Firefox: standard width */
+}
+
+/* Light grey placeholder text for Business Information modal */
+#businessInfoModal input::placeholder,
+#businessInfoModal textarea::placeholder {
+  color: #d1d5db !important;
+  /* Light grey */
+  opacity: 1;
+}

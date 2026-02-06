@@ -1,0 +1,80 @@
+/* Base Modal System (Vite-managed) - Hardened v1.2.4 */
+
+@layer components.modals {
+  .wf-modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    display: none !important; /* Hidden by default */
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: rgba(0, 0, 0, 0.85) !important;
+    backdrop-filter: blur(15px) !important;
+    z-index: var(--wf-z-modal) !important;
+    padding: 2.5vh 2.5vw !important; /* Forces 95% height cap */
+    box-sizing: border-box !important;
+    width: 100vw !important;
+    height: 100vh !important;
+  }
+
+  .wf-modal-overlay.show {
+    display: flex !important;
+  }
+
+  .wf-modal-overlay.no-tint {
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+  }
+
+  .wf-modal-overlay.custom-positioned {
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  .wf-modal-overlay.custom-positioned .wf-modal-card {
+    pointer-events: auto !important;
+    position: absolute !important;
+  }
+
+  .wf-modal-card {
+    background-color: #ffffff !important;
+    border-radius: 32px !important;
+    width: 100% !important;
+    max-width: 1100px !important;
+    max-height: 100% !important; /* Respects overlay padding */
+    overflow: hidden !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6) !important;
+    color: #111827 !important;
+    box-sizing: border-box !important;
+    border: 1px solid #eee !important;
+  }
+
+  /* Responsive Card Widths */
+  @media (max-width: 768px) {
+    .wf-modal-card {
+      max-width: 100% !important;
+      border-radius: 20px !important;
+    }
+  }
+
+  /* Specific sizing for smaller modals */
+  .wf-modal-card--small {
+    max-width: 400px !important;
+  }
+
+  .wf-modal-card--medium {
+    max-width: 640px !important;
+  }
+
+  .wf-modal-card--large {
+    max-width: 1000px !important;
+  }
+
+  /* Ensure body scroll lock works */
+  body.wf-modal-open {
+    overflow: hidden !important;
+    height: 100vh !important;
+  }
+}

@@ -1,0 +1,5 @@
+/* POS Modal (Modularized) */
+
+@import url("./pos-modal/detailed-item.css");
+@import url("./pos-modal/order-history.css");
+@import url("./pos-modal/base-rules.css");

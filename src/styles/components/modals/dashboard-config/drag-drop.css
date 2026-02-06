@@ -1,0 +1,126 @@
+/* Dashboard Configuration Drag & Drop (Vite-managed) */
+
+.dashboard-config-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    min-height: 500px;
+}
+.dashboard-section-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+.dashboard-section-column.current-sections {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    border: 2px solid #10b981;
+}
+.dashboard-section-column.available-sections {
+    background: linear-gradient(135deg, #fefbf3 0%, #fef7ed 100%);
+    border: 2px solid #f59e0b;
+}
+.section-column-header {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 1rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+.section-column-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+}
+.section-column-description {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0 0 0.5rem 0;
+}
+.section-count-badge {
+    background: #3b82f6;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    display: inline-block;
+    font-weight: 500;
+}
+
+/* Custom scrollbar styling for dashboard sections */
+.section-drop-zone::-webkit-scrollbar { width: 8px; }
+.section-drop-zone::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); border-radius: 4px; }
+.section-drop-zone::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); border-radius: 4px; transition: background 0.2s ease; }
+.section-drop-zone::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+.current-drop-zone::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.4); }
+.current-drop-zone::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.6); }
+.available-drop-zone::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.4); }
+.available-drop-zone::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.6); }
+
+.section-drop-zone {
+    flex: 1;
+    min-height: 400px;
+    max-height: 500px;
+    height: 100%;
+    padding: 1rem;
+    background: transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) rgba(0, 0, 0, 0.05);
+}
+.current-drop-zone { scrollbar-color: rgba(16, 185, 129, 0.4) rgba(16, 185, 129, 0.1); }
+.available-drop-zone { scrollbar-color: rgba(245, 158, 11, 0.4) rgba(245, 158, 11, 0.1); }
+.section-drop-zone.drag-over { border-style: solid; border-width: 3px; background: rgba(59, 130, 246, 0.1); border-color: #3b82f6; }
+.current-drop-zone.drag-over { background: rgba(16, 185, 129, 0.15); border-color: #10b981; }
+.available-drop-zone.drag-over { background: rgba(245, 158, 11, 0.15); border-color: #f59e0b; }
+
+/* Draggable Section Items */
+.draggable-section-item {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: grab;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.draggable-section-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-color: #3b82f6; }
+.draggable-section-item.dragging { z-index: var(--wf-z-cursor, 999); opacity: 0.5; transform: rotate(2deg); cursor: grabbing; }
+
+.section-item-content { display: flex; align-items: start; gap: 0.75rem; }
+.section-item-info { flex: 1; }
+.section-item-title { font-weight: 600; color: #1f2937; margin-bottom: 0.25rem; }
+.section-item-description { font-size: 0.875rem; color: #6b7280; line-height: 1.4; }
+.section-item-controls { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+
+.width-selector {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    background: white;
+    cursor: pointer;
+}
+.width-selector:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
+
+/* Empty state styling */
+.section-drop-zone-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 300px;
+    color: #9ca3af;
+    text-align: center;
+}
+.section-drop-zone-empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+.section-drop-zone-empty-text { font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+.section-drop-zone-empty-hint { font-size: 0.75rem; opacity: 0.8; }

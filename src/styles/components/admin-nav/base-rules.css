@@ -1,0 +1,6 @@
+/* Reports Page Spacing Fix */
+body[data-page^='admin'] .admin-reports-page > div:first-child {
+  margin-bottom: 0.5rem !important;
+}
+
+.admin-reports-spacer { height: 110px; width: 100%; clear: both; }

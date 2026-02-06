@@ -1,0 +1,86 @@
+/* Room Iframe Layout & Backgrounds (Vite-managed) */
+
+/* Room Background Classes - Centralized */
+.room-bg-main {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-bg-room1 {
+    --bg-webp: url('/images/backgrounds/background-room1.webp');
+    --bg-png: url('/images/backgrounds/background-room1.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room1 { background-image: var(--bg-png); }
+
+.room-bg-room2 {
+    --bg-webp: url('/images/backgrounds/background-room2.webp');
+    --bg-png: url('/images/backgrounds/background-room2.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room2 { background-image: var(--bg-png); }
+
+.room-bg-room3 {
+    --bg-webp: url('/images/backgrounds/background-room3.webp');
+    --bg-png: url('/images/backgrounds/background-room3.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room3 { background-image: var(--bg-png); }
+
+.room-bg-room4 {
+    --bg-webp: url('/images/backgrounds/background-room4.webp');
+    --bg-png: url('/images/backgrounds/background-room4.png');
+    background-image: var(--bg-webp);
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.no-webp .room-bg-room4 { background-image: var(--bg-png); }
+
+.room-bg-room5, .room-bg-room6 {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Modal Room Styles - Maintain exact aspect ratio */
+.modal-room-page {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+}
+
+.room-modal-iframe-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.room-modal-content-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: var(--wf-z-elevated, 10);
+}
+
+body.room-modal-open {
+    overflow: hidden;
+}

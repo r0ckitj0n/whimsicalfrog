@@ -1,0 +1,25 @@
+@layer pages-storefront-under-construction {
+  /* Under Construction page styles */
+  .wf-under-construction {
+    text-align: center;
+    padding: 4rem 1rem;
+  }
+  .wf-under-construction-title {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    margin-bottom: 1rem;
+  }
+  .wf-under-construction-text {
+    font-size: 1.25rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  /* Additional styles from main.css */
+  .wf-under-construction-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+  }
+}

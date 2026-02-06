@@ -1,0 +1,103 @@
+/* Admin Generic Layout and Helper Utilities */
+
+/* Grid and Spacing */
+.wf-grid-md-3 { display: grid; grid-template-columns: repeat(1, minmax(0,1fr)); gap: 12px; }
+@media (min-width: 768px) { .wf-grid-md-3 { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.wf-grid { display: grid; gap: 12px; }
+.wf-grid-md-2 { grid-template-columns: repeat(1, minmax(0,1fr)); }
+@media (min-width: 768px) { .wf-grid-md-2 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (min-width: 1280px) { .wf-grid-xl-3 { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+
+.wf-wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.wf-header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+.wf-title { font-size: 20px; font-weight: 700; }
+.wf-row { display:flex; flex-direction:column; gap:6px; }
+.wf-hint { font-size: 12px; color:#6b7280; }
+.wf-section { border:1px solid #e5e7eb; border-radius:8px; padding:12px; margin-bottom:12px; background:#fafafa; }
+.wf-inline { display:flex; align-items:center; gap:8px; }
+.wf-actions-right { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+
+/* Fill and Sizing Helpers */
+.wf-panel-fill { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.wf-card-fill { flex: 1 1 auto; height: 100%; display: flex; flex-direction: column; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; }
+.wf-flex-col { display: flex; flex-direction: column; }
+.wf-flex-1 { flex: 1 1 auto; min-height: 0; }
+.wf-textarea-fill { flex: 1 1 auto; min-height: 0 !important; width: 100% !important; height: 100% !important; display: block !important; box-sizing: border-box !important; border-radius: 0 !important; resize: none !important; }
+.wf-form-textarea-tight { margin: 0 !important; padding: 6px !important; }
+.wf-hidden { display: none !important; }
+.wf-w-full { width: 100% !important; }
+.wf-max-w-none { max-width: none !important; }
+.wf-overflow-auto { overflow: auto !important; -webkit-overflow-scrolling: touch !important; }
+.wf-overflow-visible { overflow: visible !important; }
+.wf-height-auto { height: auto !important; }
+
+/* Scrollbox Presets */
+.admin-scrollbox {
+  max-height: var(--admin-scrollbox-max-height, none);
+  overflow: auto;
+}
+.admin-scrollbox--md { --admin-scrollbox-max-height: 50vh; }
+.admin-scrollbox--lg { --admin-scrollbox-max-height: 60vh; }
+.admin-scrollbox--xl { --admin-scrollbox-max-height: 75vh; }
+
+/* Result and Pill Colors */
+.pill-ok { background: #e0f2fe !important; }
+.pill-err { background: #fee2e2 !important; }
+.wf-ok { color: #166534; }
+.wf-error { color: #991B1B; }
+
+/* Admin Header and Page Title Styles */
+.admin-header-section {
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media print {
+    .admin-card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}
+
+@media (width >= 640px) {
+    .admin-header-section {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.admin-title {
+    margin-bottom: 0.25rem;
+    font-size: var(--admin-title-size, 1.5rem);
+    font-weight: var(--admin-title-weight, 700);
+    color: var(--admin-title-color, var(--brand-primary));
+}
+
+.admin-subtitle {
+    margin: 0;
+    color: var(--admin-subtitle-color, #6b7280);
+    font-size: var(--admin-subtitle-size, 0.875rem);
+}
+
+.admin-meta {
+    margin: 0;
+    color: var(--admin-meta-color, #9ca3af);
+    font-size: var(--admin-meta-size, 0.75rem);
+}
+
+/* Custom scrollbar for admin panels */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}

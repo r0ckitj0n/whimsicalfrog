@@ -1,0 +1,64 @@
+# --- Dependencies ---
+node_modules/
+vendor/
+
+# --- Build Outputs ---
+dist/
+build/
+.cache/
+hot
+
+# --- Environment & Secrets (CRITICAL) ---
+# Ignore all .env files (contains API keys)
+.env
+.env.local
+.env.*
+# But DO track the example file so devs know what keys they need
+!.env.example
+
+# --- PHP Specific ---
+# User sessions usually saved on disk
+sessions/
+# Secret keys for encryption
+config/secret.key
+
+# --- Deploy Keys ---
+whf_deploy_key
+whf_deploy_key.pub
+
+# --- SQL / Database ---
+# Never commit raw SQL dumps (security risk)
+**/*.sql
+*.sql
+# Allow specific schema documentation if needed
+!src/data/database_schema.md
+
+# --- Logs & Debug ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# --- IDE / OS Junk ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# --- Backups / Legacy ---
+backups/
+# Exceptions: Allow specific quarantined files if necessary
+!backups/duplicates/**
+!backups/debug/README.md
+!backups/legacy/**
+!backups/stale/**
+
+# --- Reports ---
+reports/
+!reports/.htaccess
+
+# --- Safety Override ---
+# Allow security files to be tracked even in ignored folders
+!backups/.htaccess
+!logs/.htaccess

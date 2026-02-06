@@ -1,0 +1,128 @@
+/* COMPREHENSIVE FIX FOR QUANTITY BUTTON HORIZONTAL SCROLLBAR */
+
+/* 1. Force modal container to hide horizontal overflow */
+.modal-container.detailed-item-modal-container {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    max-width: 75vw !important;
+    width: 75vw !important;
+}
+
+/* 2. Force modal content and body to not overflow */
+
+/* 3. Target the quantity row container specifically (DISABLED for detailed modal)
+   These rules collapsed the qty row inside the detailed item modal. Removed. */
+/* .detailed-item-modal-container .flex:has(.btn--qty) { } */
+/* .detailed-item-modal-container .quantity-selector { } */
+
+/* 4. Make quantity buttons absolutely tiny */
+.btn--qty {
+    width: 0.75rem;
+    min-width: 12px;
+    max-width: 12px;
+    height: 0.75rem;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-grow: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 8px;
+    line-height: 1;
+}
+
+.modal-body .btn--qty {
+    width: 0.75rem;
+    min-width: 12px;
+    max-width: 12px;
+    height: 0.75rem;
+    padding: 0;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-grow: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 8px;
+    line-height: 1;
+}
+
+/* 5. Make SVG icons inside buttons tiny */
+.btn--qty svg {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+
+.detailed-item-modal-container .btn--qty svg {
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
+    flex-shrink: 0 !important;
+}
+
+/* 6. Make quantity input tiny */
+.input--qty {
+    width: 25px;
+    min-width: 25px;
+    max-width: 25px;
+    height: 0.75rem;
+    padding: 0 1px;
+    margin: 0;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+}
+
+.modal-body .input--qty {
+    width: 25px;
+    min-width: 25px;
+    max-width: 25px;
+    height: 0.75rem;
+    padding: 0 1px;
+    margin: 0;
+    text-align: center;
+    font-size: 10px;
+    line-height: 1;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+}
+
+/* 7. Remove any min-width from parent containers */
+.detailed-item-modal .space-y-4 {
+    min-width: 0 !important;
+}
+
+.detailed-item-modal-container .space-y-4 {
+    min-width: 0 !important;
+}
+
+.detailed-item-modal .flex {
+    min-width: 0 !important;
+}
+
+.detailed-item-modal-container .flex {
+    min-width: 0 !important;
+}
+
+/* 8. Ensure no element can cause horizontal overflow */
+.detailed-item-modal-container * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+}
+
+/* 9. Hide horizontal scrollbar completely as last resort */

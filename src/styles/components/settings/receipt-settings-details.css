@@ -1,0 +1,184 @@
+/* Receipt Settings Modal */
+#receiptSettingsModal .receipt-tab-content {
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 24px;
+}
+#receiptSettingsModal .receipt-tab-content > div {
+    width: 100% !important;
+}
+#receiptSettingsModal .space-y-4 {
+    width: 100% !important;
+}
+#receiptSettingsModal .receipt-message-item {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box;
+}
+#receiptSettingsModal .grid {
+    width: 100% !important;
+}
+#receiptSettingsModal .admin-modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Receipt specialized scrollbar from backup */
+#receiptContent::-webkit-scrollbar {
+  width: 17px;
+}
+
+#receiptContent::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#receiptContent::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border: 1px solid #a6a6a6;
+}
+
+#receiptContent::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Enhanced Receipt Message Settings Modal */
+.receipt-tab-content {
+    padding: 20px 0;
+    display: none;
+}
+.receipt-tab-content.active {
+    display: block;
+    animation: receiptFadeIn 0.3s ease-in;
+}
+
+@keyframes receiptFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.receipt-message-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    transition: all 0.2s ease;
+    margin-bottom: 12px;
+}
+.receipt-message-item:hover {
+    border-color: #cbd5e0;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 8%);
+    transform: translateY(-1px);
+}
+.receipt-message-item.ai-generated {
+    border-color: #3b82f6;
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);
+}
+
+.admin-modal-content .admin-tab-bar {
+    border-bottom: 2px solid #e5e7eb;
+    background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+    box-shadow: 0 2px 4px rgb(0 0 0 / 2%);
+}
+.admin-modal-content .admin-tab {
+    font-weight: 500;
+    padding: 14px 24px;
+    margin: 0 2px;
+    border-radius: 8px 8px 0 0;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.admin-modal-content .admin-tab.active {
+    background: white;
+    border-bottom: 2px solid white;
+    margin-bottom: -2px;
+    box-shadow: 0 -2px 8px rgb(0 0 0 / 8%);
+    color: #1f2937;
+}
+.admin-modal-content .admin-tab:not(.active):hover {
+    background: rgb(255 255 255 / 70%);
+    color: #374151;
+}
+
+.receipt-settings-content {
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.receipt-message-item input[type="text"],
+.receipt-message-item textarea {
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+.receipt-message-item input[type="text"]:focus,
+.receipt-message-item textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 10%);
+    outline: none;
+}
+
+.receipt-message-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.receipt-ai-badge {
+    background: linear-gradient(135deg, #3b82f6, #1e40af);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgb(59 130 246 / 30%);
+}
+
+.receipt-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #6b7280;
+    font-style: italic;
+}
+.receipt-loading::before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e5e7eb;
+    border-top: 2px solid #3b82f6;
+    border-radius: 50%;
+    margin-right: 12px;
+    animation: spin 1s linear infinite;
+}
+
+.receipt-tab {
+    padding: 12px 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: #6b7280;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+.receipt-tab.active {
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
+}
+.receipt-tab:hover {
+    color: #3b82f6;
+    background-color: #f9fafb;
+}
+

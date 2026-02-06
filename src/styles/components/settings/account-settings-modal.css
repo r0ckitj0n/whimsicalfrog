@@ -1,0 +1,40 @@
+@layer components-settings-account {
+  /* Account Settings modal: compact two-column panel (profile vs addresses) */
+  #accountSettingsModal .admin-modal.admin-modal-content {
+    --admin-modal-width: clamp(520px, 70vw, 900px);
+    --admin-modal-max-width: 80vw;
+    width: var(--admin-modal-width) !important;
+    max-width: var(--admin-modal-max-width) !important;
+  }
+
+  #accountSettingsModal .modal-body {
+    padding: 0.75rem 0.75rem 1rem 0.75rem !important;
+  }
+
+  #accountSettingsModal .account-settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    #accountSettingsModal .account-settings-grid {
+      flex-direction: row;
+    }
+
+    #accountSettingsModal .account-settings-primary {
+      flex: 2 1 0;
+      min-width: 0;
+    }
+
+    #accountSettingsModal .account-settings-addresses {
+      flex: 1.5 1 0;
+      min-width: 260px;
+    }
+  }
+
+  /* Automation Manager from backup */
+  #automationManagerContainer {
+    min-height: 400px;
+  }
+}

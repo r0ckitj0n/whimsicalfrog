@@ -1,0 +1,171 @@
+/* ==============================================
+   ROOM MODAL – INTERACTIVE ELEMENTS
+   Buttons, Icons, Navigation, Loading States
+   ============================================== */
+
+/* Back Button */
+.back-button-container {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    pointer-events: auto;
+    z-index: var(--wf-z-elevated);
+}
+
+.room-modal-back-btn {
+    width: auto !important;
+    max-width: max-content !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand-primary);
+    color: #ffffff;
+    border: none !important;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    min-width: 120px;
+    padding: 8px 16px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.room-modal-back-btn:hover {
+    background: var(--brand-secondary) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Room Title Styling */
+.room-modal-title-container {
+    pointer-events: auto;
+}
+
+.room-modal-title {
+    margin: 0;
+    text-align: right;
+    color: #ffffff !important;
+    background-color: var(--brand-primary);
+    padding: 10px 30px;
+    border-bottom-left-radius: 20px;
+    box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.15);
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    font-family: 'Merienda', cursive;
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: var(--wf-z-sticky);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.room-modal-body .room-item-icon,
+.room-overlay-wrapper .room-item-icon {
+    position: absolute;
+    cursor: pointer;
+    z-index: var(--wf-z-elevated);
+    transition: filter 0.2s ease;
+    border-radius: 0;
+    overflow: visible;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.room-modal-body .room-item-icon img,
+.room-overlay-wrapper .room-item-icon img {
+    width: 100% !important;
+    height: auto !important;
+    display: block;
+    object-fit: contain;
+    background: transparent !important;
+}
+
+.room-modal-body .room-item-icon:hover,
+.room-overlay-wrapper .room-item-icon:hover {
+    /* Use filter instead of scale to avoid showing rectangular bounds */
+    filter: brightness(1.1);
+    z-index: var(--wf-z-sticky);
+}
+
+/* Close & Nav Buttons */
+.room-modal-close,
+.room-modal-nav {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--wf-z-sticky);
+    transition: all 0.2s ease;
+}
+
+.room-modal-close {
+    top: 1rem;
+    right: 1rem;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+}
+
+.room-modal-close:hover {
+    background-color: var(--brand-secondary) !important;
+    color: #ffffff !important;
+}
+
+.room-modal-nav {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+}
+
+.room-modal-nav.prev {
+    left: 1rem;
+}
+
+.room-modal-nav.next {
+    right: 1rem;
+}
+
+/* Loading State */
+.room-modal-loading {
+    position: absolute;
+    inset: 0;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--wf-z-sticky);
+}
+
+.room-modal-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid var(--brand-primary);
+    border-radius: 50%;
+    animation: room-modal-spin 1s linear infinite;
+}
+
+@keyframes room-modal-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}

@@ -1,0 +1,13 @@
+/* Inventory modal: fallback thumbnail styles (ensures thumbnails even if module CSS not loaded) */
+#inventoryModalOuter .wf-img-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+  gap: 10px !important;
+}
+#inventoryModalOuter .wf-img-card { background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; overflow: hidden !important; }
+#inventoryModalOuter .wf-img-wrap { position: relative !important; height: 120px !important; background: #f9fafb !important; display:flex !important; align-items:center !important; justify-content:center !important; overflow:hidden !important; }
+#inventoryModalOuter .wf-img-thumb { max-width: 100% !important; max-height: 100% !important; object-fit: contain !important; cursor: pointer !important; display:block !important; }
+#inventoryModalOuter .wf-img-thumb--placeholder { display:flex !important; align-items:center !important; justify-content:center !important; font-size: 20px !important; color:#9ca3af !important; background:#f3f4f6 !important; width:100% !important; height:100% !important; }
+#inventoryModalOuter .wf-badge-primary { position:absolute !important; top:6px !important; left:6px !important; background:#16a34a !important; color:#fff !important; font-size: 11px !important; padding: 2px 6px !important; border-radius: 6px !important; }
+#inventoryModalOuter .wf-img-meta { font-size: 11px !important; color:#374151 !important; padding: 6px 8px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; border-top: 1px solid #f3f4f6 !important; }
+#inventoryModalOuter .wf-img-actions { padding: 6px 8px !important; border-top: 1px solid #f3f4f6 !important; display:flex !important; gap:6px !important; }

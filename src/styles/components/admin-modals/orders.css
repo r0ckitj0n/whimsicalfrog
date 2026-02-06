@@ -1,0 +1,80 @@
+@layer components.admin-modals {
+
+    /* Order Editor Modal Styles */
+    .admin-modal.admin-modal--order-editor {
+        background: #ffffff !important;
+        /* Size to 95% viewport width */
+        height: fit-content !important;
+        max-height: 95vh !important;
+        max-height: 95dvh !important;
+        width: 95vw !important;
+        max-width: 95vw !important;
+        min-width: 720px;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        border: none !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, .25) !important;
+        /* Ensure no margin throws off centering */
+        margin: 0 !important;
+    }
+
+    .admin-modal.admin-modal--order-editor .modal-header {
+        background: #ffffff !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+    }
+
+    .admin-modal.admin-modal--order-editor .modal-body {
+        padding: 2rem !important;
+        flex: 1 1 auto !important;
+        min-height: 0 !important;
+        max-height: calc(95vh - 4.5rem) !important;
+        max-height: calc(95dvh - 4.5rem) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .order-editor-grid {
+        display: grid !important;
+        gap: 2rem !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        align-items: start !important;
+    }
+
+    /* Fix: Allow second column to shrink below content width */
+    .order-editor-grid>div:last-child {
+        min-width: 0 !important;
+    }
+
+    /* Fix: Constrain sections within modal to prevent 100vw overflow */
+    #orderModal section,
+    .admin-modal--order-editor section {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Notes columns - force equal width */
+    #orderModal .order-notes-grid,
+    .admin-modal--order-editor .order-notes-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1.5rem !important;
+        width: 100% !important;
+    }
+
+    /* Ensure child columns don't override the grid sizing */
+    #orderModal .order-notes-grid>div,
+    .admin-modal--order-editor .order-notes-grid>div {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    /* Specific note button override */
+    #orderModal .btn-note-save {
+        background-color: var(--brand-primary) !important;
+        color: #ffffff !important;
+        border: none !important;
+        padding: 6px 12px !important;
+        border-radius: 8px !important;
+    }
+}

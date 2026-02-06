@@ -1,0 +1,24 @@
+/* Admin Action Icon Button Base (Vite-managed) - Base styles only, overrides in emojis.css */
+
+.btn-icon,
+body[data-page^='admin'] .btn-icon,
+body[data-page^='admin'] .btn-icon.btn-primary,
+body[data-page^='admin'] .btn-icon.btn-secondary,
+body[data-page^='admin'] .btn-icon.btn-danger,
+body[data-page^='admin'] .btn-icon.btn-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+
+/* Make row-actions compact */
+.admin-actions-icons .row-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+

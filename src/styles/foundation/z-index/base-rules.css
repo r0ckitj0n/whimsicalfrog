@@ -1,0 +1,31 @@
+/* Route-scoped overrides */
+body[data-page^='admin'] {
+  --wf-admin-overlay-z: var(--z-admin-overlay);
+  --wf-admin-overlay-content-z: var(--z-admin-overlay-content);
+}
+
+/* Specific UI Component Layering */
+.confirmation-modal-overlay.checkout-overlay {
+  z-index: var(--wf-z-admin-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirmation-modal-overlay.receipt-overlay {
+  z-index: var(--wf-z-admin-content) !important;
+  align-items: flex-start !important;
+}
+
+#wf-notification-container {
+  position: fixed;
+  z-index: var(--wf-z-toast);
+}
+
+/* Visibility State Overrides */
+.confirmation-modal-overlay.checkout-overlay[aria-hidden="false"],
+.confirmation-modal-overlay.checkout-overlay[data-force-visible="1"] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}

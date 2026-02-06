@@ -1,0 +1,230 @@
+/* High-Priority Emoji Icon Definitions (Vite-managed) */
+
+/* CANARY STYLE - If you see a bright red border around the table, emojis.css is loading */
+/* html body.admin-view .admin-table {
+    border: 5px solid red !important;
+} */
+
+/* Force all icon-carrying buttons to be truly minimalist and borderless - ULTIMATE SPECIFICITY */
+.btn-icon,
+.admin-action-btn,
+.btn-standard-icon,
+[class*="btn-icon--"],
+.admin-actions-icons .admin-table td:last-child .btn,
+.admin-actions-icons .row-actions .btn,
+.modal-header button:not(.wf-tab):not(.btn-text-primary):not(.btn-text-secondary):not(.btn),
+.wf-modal-header button:not(.wf-tab):not(.btn-text-primary):not(.btn-text-secondary):not(.btn),
+.modal-footer button:not(.wf-tab):not(.btn-text-primary):not(.btn-text-secondary):not(.btn) {
+    /* SURGICAL RESET: Remove button/link browser defaults without breaking box model */
+    background: transparent !important;
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    border-width: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 6px !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 1.4rem !important;
+    color: inherit !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    text-decoration: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    mask: none !important;
+    -webkit-mask: none !important;
+    filter: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Standard Hover Enlarge Effect for all icon buttons */
+.btn-icon:hover,
+.admin-action-btn:hover,
+.btn-standard-icon:hover,
+[class*="btn-icon--"]:hover,
+.modal-header button:hover,
+.wf-modal-header button:hover {
+    transform: scale(1.35) !important;
+    color: var(--brand-secondary, #3b82f6) !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    z-index: var(--wf-z-elevated) !important;
+}
+
+/* Specific color maintenance for header icons on light gradients */
+.modal-header .admin-action-btn:not(:hover),
+.wf-modal-header .admin-action-btn:not(:hover) {
+    color: #475569 !important;
+    /* Slate-600 for visibility on light headers */
+}
+
+.wf-modal-header .admin-action-btn.text-white:hover {
+    color: #ffffff !important;
+    opacity: 0.9 !important;
+}
+
+/* OVERRIDE: Exclude phrase pill buttons from emoji icon styling */
+.flex.flex-wrap button.wf-phrase-pill,
+.flex.flex-wrap.gap-3 button.wf-phrase-pill,
+div.flex.flex-wrap button.wf-phrase-pill,
+button.wf-phrase-pill[class],
+.admin-modal button.wf-phrase-pill,
+.admin-modal-overlay button.wf-phrase-pill,
+.modal-body button.wf-phrase-pill,
+button.wf-phrase-pill.wf-phrase-pill {
+    all: revert !important;
+    display: inline-block !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    padding: 8px 20px !important;
+    margin: 0 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 9999px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #334155 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    line-height: normal !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+}
+
+.flex.flex-wrap button.wf-phrase-pill:hover,
+.flex.flex-wrap.gap-3 button.wf-phrase-pill:hover,
+button.wf-phrase-pill[class]:hover,
+button.wf-phrase-pill.wf-phrase-pill:hover {
+    background-color: #eff6ff !important;
+    border-color: #60a5fa !important;
+    color: #1d4ed8 !important;
+    transform: none !important;
+}
+
+/* Mappings managed dynamically via the Icon Registry (/api/admin_icon_map.php) */
+
+/* Emoji Content Mapping - Ensuring absolute prevalence at the highest specificity */
+/* Mappings removed: view, edit, pencil, check, print, delete, save, refresh, reset, filter, clear, add, duplicate, send, external, close, warning, download, power-on, power-off, back, up, down, settings, maximize, minimize, calendar, shopping-cart, shopping-bag, tag, plus */
+/* These are now managed dynamically via the Icon Registry (/api/admin_icon_map.php) */
+
+/* Global Neutralization of conflicting SVG/Mask properties */
+[class*="btn-icon--"]::before,
+[class*="btn-icon--"]::after,
+.btn-icon::before,
+.btn-icon::after,
+.admin-action-btn::before,
+.admin-action-btn::after {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    background-image: none !important;
+    background-color: transparent !important;
+}
+
+/* Ensure no other pseudo-elements are rendering icons */
+[class*="btn-icon--"]::after,
+.btn-icon::after,
+.admin-action-btn::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* Standardized Emoji Loader */
+.wf-emoji-loader {
+    display: inline-block;
+    animation: wf-spin 2s linear infinite;
+    font-size: 2rem;
+}
+
+@keyframes wf-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Dirty State for Save Buttons - Hidden by default in admin modals */
+/* Must have higher specificity than the .admin-action-btn and modal-header rules above */
+/* Target only header buttons for hiding when not dirty */
+.modal-header .admin-action-btn.btn-icon--save:not(.is-dirty),
+.modal-header .admin-action-btn.btn-icon--plus:not(.is-dirty),
+.wf-modal-header .admin-action-btn.btn-icon--save:not(.is-dirty),
+.wf-modal-header .admin-action-btn.btn-icon--plus:not(.is-dirty) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+
+
+/* Pulsing Save Effect */
+.btn-icon--save.is-dirty,
+.btn-icon--plus.is-dirty {
+    color: var(--brand-warning, #f59e0b) !important;
+    animation: wf-save-pulse 1.5s infinite !important;
+    position: relative;
+    opacity: 1 !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+/* Neutralize pseudo-elements in Account Settings Modal to prevent emoji artifacts */
+/* REVERTED: The user wants emojis now */
+/* html body.admin-view .account-settings-modal .admin-action-btn::before,
+html body.admin-view .account-settings-modal .admin-action-btn::after,
+html body.admin-view .account-settings-modal .btn-icon--save::before,
+html body.admin-view .account-settings-modal .btn-icon--save::after {
+    content: none !important;
+    display: none !important;
+} */
+
+/* Red dot removed */
+.btn-icon--save.is-dirty::after {
+    display: none !important;
+    content: none !important;
+}
+
+@keyframes wf-save-pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+        filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.6));
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Visibility toggle for 'dirty-only' buttons */
+.btn-icon.dirty-only {
+    display: none !important;
+}
+
+.btn-icon.dirty-only.is-dirty {
+    display: inline-flex !important;
+}

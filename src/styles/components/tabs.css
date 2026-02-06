@@ -1,0 +1,54 @@
+.wf-tabs {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  /* Large spacing */
+  padding: 0.5rem;
+}
+
+.wf-tab,
+.admin-modal-overlay .wf-tab {
+  appearance: none !important;
+  background: transparent !important;
+  color: #4b5563 !important;
+  /* gray-600 */
+  border: none !important;
+  padding: 0.75rem 1.75rem !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  border-radius: 9999px !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  gap: 0.75rem !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: unset !important;
+  min-height: unset !important;
+}
+
+.wf-tab:hover,
+.admin-modal-overlay .wf-tab:hover {
+  background: rgba(var(--brand-primary-rgb), 0.05) !important;
+  color: var(--brand-secondary) !important;
+  transform: translateY(-1px) !important;
+}
+
+.wf-tab.is-active,
+.admin-modal-overlay .wf-tab.is-active {
+  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(var(--brand-secondary-rgb), 0.2) !important;
+  z-index: var(--wf-z-elevated) !important;
+}
+
+.wf-tab:focus-visible,
+.admin-modal-overlay .wf-tab:focus-visible {
+  outline: 2px solid var(--brand-secondary) !important;
+  outline-offset: 2px !important;
+}

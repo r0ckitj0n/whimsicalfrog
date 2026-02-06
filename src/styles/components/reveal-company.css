@@ -1,0 +1,59 @@
+@layer components.reveal-company {
+  /* Reveal component (email/phone/address) */
+  .wf-reveal-wrap {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .wf-reveal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .wf-reveal .wf-reveal-label {
+    min-width: 84px;
+    color: #374151; /* gray-700 */
+    font-weight: 600;
+  }
+  .wf-reveal .wf-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    background: var(--primary_color, var(--brand-primary));
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    width: auto; /* override any global button 100% rules */
+    white-space: nowrap;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgb(0 0 0 / 20%);
+  }
+  .wf-reveal .wf-reveal-btn::before { content: '🔒'; margin-right: 8px; }
+  .wf-reveal.is-challenging .wf-reveal-btn::before { content: '🧮'; }
+  .wf-reveal .wf-reveal-btn:hover { filter: brightness(0.95); }
+  .wf-reveal .wf-reveal-challenge {
+    display: none;
+    align-items: center;
+    gap: 6px;
+  }
+  .wf-reveal.is-challenging .wf-reveal-challenge { display: inline-flex; }
+  .wf-reveal .wf-reveal-input {
+    width: 70px;
+    border: 1px solid #d1d5db; /* gray-300 */
+    border-radius: 6px;
+    padding: 4px 6px;
+  }
+  .wf-reveal .wf-reveal-submit {
+    background: #111827; /* gray-900 */
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  .wf-reveal .wf-reveal-value { font-weight: 600; color: #111827; overflow-wrap: anywhere; }
+  .wf-reveal .wf-reveal-link { color: var(--primary_color, var(--brand-primary)); text-decoration: none; }
+  .wf-reveal .wf-reveal-link:hover { text-decoration: underline; }
+}

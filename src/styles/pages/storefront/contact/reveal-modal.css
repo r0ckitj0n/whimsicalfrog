@@ -1,0 +1,124 @@
+/* Reveal Company Info & Data Components (Vite-managed) */
+
+@layer pages-storefront-contact {
+  /* Reveal Company Info Modal Overlay */
+  .wf-revealco-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+    z-index: var(--wf-z-backdrop, 200);
+  }
+  .wf-revealco-overlay.show { opacity: 1; pointer-events: auto; }
+
+  .wf-revealco-modal {
+    width: 100%;
+    max-width: 520px;
+    margin: 12px;
+    padding: 0;
+  }
+
+  .wf-revealco-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 15px 40px rgba(0,0,0,.18);
+    padding: 18px 16px 16px;
+    position: relative;
+  }
+
+  .wf-revealco-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: none;
+    background: transparent;
+    color: #667085;
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .wf-revealco-title {
+    margin: 0 0 10px;
+    font-size: 18px;
+    line-height: 1.2;
+    color: #111827;
+    font-weight: 700;
+  }
+
+  .wf-revealco-hint { margin: 0 0 8px; color: #374151; font-size: 14px; }
+  .wf-revealco-q { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+  .wf-revealco-qtext { font-weight: 700; color: #111827; }
+  
+  .wf-revealco-input {
+    height: 34px;
+    padding: 6px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+  }
+  .wf-revealco-input:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(135,172,58,.18);
+  }
+
+  .wf-revealco-actions { display: flex; gap: 10px; margin-top: 8px; }
+  .wf-revealco-status { min-height: 18px; color: var(--brand-secondary, #b91c1c); font-size: 13px; margin-top: 6px; }
+  .wf-revealco-details { display: grid; gap: 10px; }
+  .wf-revealco-row { display: flex; gap: 10px; align-items: center; }
+  .wf-revealco-label { min-width: 86px; color: #6b7280; font-weight: 600; }
+  .wf-revealco-value { font-weight: 600; color: #111827; overflow-wrap: anywhere; }
+  .wf-revealco-modal .wf-revealco-link { color: var(--brand-primary); text-decoration: none; }
+  .wf-revealco-modal .wf-revealco-link:hover { text-decoration: underline; }
+
+  /* Reveal Email/Phone Component */
+  .wf-reveal-wrap { display: grid; gap: 10px; margin-bottom: 22px; }
+  .wf-reveal { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .wf-reveal .wf-reveal-label { min-width: 84px; color: #374151; font-weight: 600; }
+  
+  .wf-reveal .wf-reveal-btn {
+    display: inline-flex;
+    align-items: center;
+    background: var(--brand-primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    width: auto;
+    white-space: nowrap;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 6px 18px rgb(0 0 0 / 20%);
+  }
+  .wf-reveal .wf-reveal-btn::before { content: '🔒'; margin-right: 8px; }
+  .wf-reveal.is-challenging .wf-reveal-btn::before { content: '🧮'; }
+  
+  .wf-reveal .wf-reveal-challenge { display: none; align-items: center; gap: 6px; }
+  .wf-reveal.is-challenging .wf-reveal-challenge { display: inline-flex; }
+  
+  .wf-reveal .wf-reveal-input {
+    width: 70px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 4px 6px;
+  }
+  
+  .wf-reveal .wf-reveal-submit {
+    background: #111827;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+  
+  .wf-reveal .wf-reveal-value { font-weight: 600; color: #111827; overflow-wrap: anywhere; }
+  .wf-reveal .wf-reveal-link { color: var(--brand-primary); text-decoration: none; }
+  .wf-reveal .wf-reveal-link:hover { text-decoration: underline; }
+}

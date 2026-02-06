@@ -1,0 +1,94 @@
+/* Receipt Message Info Callout */
+.receipt-info-callout {
+    background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.receipt-info-callout p {
+    margin: 0;
+    color: #1e40af;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Specialized Delete Modals */
+.delete-modal-header {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: white;
+    padding: 24px;
+    text-align: center;
+    position: relative;
+    border-radius: 12px 12px 0 0;
+}
+
+.delete-modal-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+}
+
+.delete-modal-subtitle {
+    margin: 8px 0 0;
+    opacity: 0.95;
+    font-size: 16px;
+}
+
+.delete-modal-text-center {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.delete-modal-item-highlight {
+    background: #fef2f2;
+    border: 2px solid #fecaca;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.delete-modal-item-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #dc2626;
+    display: block;
+}
+
+.delete-modal-warning {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 12px 0 0;
+    line-height: 1.4;
+}
+
+.delete-modal-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.delete-modal-btn-cancel {
+    border: 2px solid #d1d5db;
+    background: white;
+    color: #374151;
+}
+
+.delete-modal-btn-confirm {
+    border: 2px solid #dc2626;
+    background: #dc2626;
+    color: white;
+}
+
+.delete-modal-btn-icon {
+    font-size: 18px;
+}

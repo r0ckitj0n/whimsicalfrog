@@ -1,0 +1,28 @@
+/* Receipt Table & Layout Components (Vite-managed) */
+
+@layer pages-storefront-receipt {
+  .receipt-logo { max-height: 3.5rem; width: auto; }
+  .receipt-table { table-layout: fixed; width: 100%; border-collapse: collapse; }
+  
+  .receipt-table th, .receipt-table td { padding: 0.5rem 0.75rem; vertical-align: top; }
+  .receipt-table th { font-weight: 600; text-align: left !important; }
+
+  .receipt-totals {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 18px;
+  }
+  .receipt-totals .label { text-align: right; color: #374151; }
+  .receipt-totals .value { text-align: right; }
+  .receipt-totals .grand-total { color: #dc2626; font-size: 1.5rem; font-weight: 800; }
+
+  .pos-receipt {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px 14px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+    font-family: var(--font-code, monospace);
+  }
+}

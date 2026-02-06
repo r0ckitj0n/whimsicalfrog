@@ -1,0 +1,83 @@
+/* Compact shipping badges (50x50) positioned at top-right of the card */
+
+/* Ensure cards that include badges establish positioning context */
+.card-standard.has-shipping-badges,
+.section-card.has-shipping-badges {
+  position: relative;
+}
+
+/* Container pinned to the top-right inside the card */
+.shipping-badges {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  z-index: var(--wf-z-elevated);
+}
+
+/* Individual badge squares */
+.shipping-badge {
+  width: 100px;
+  height: 100px;
+  min-width: 100px;
+  min-height: 100px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* Color variants (match previous semantics) */
+.shipping-badge.pickup {
+  background: var(--brand-accent-bg); /* green-50 */
+  color: var(--brand-accent);      /* green-700 */
+  border-color: var(--brand-accent-border); /* green-200 */
+}
+.shipping-badge.local {
+  background: var(--brand-warning-bg); /* amber-50 */
+  color: var(--brand-warning);      /* amber-900 */
+  border-color: var(--brand-warning-border); /* amber-300 */
+}
+
+/* Icon size inside badge */
+.shipping-badge svg { width: 92%; height: 92%; display: block; }
+
+/* Optional non-SVG text fallback inside badge */
+.shipping-badge .label {
+  font-family: var(--font-primary, 'Merienda', cursive);
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1.05;
+  text-align: center;
+  padding: 6px;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* Utility: screen-reader only text */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Shipping policy note under dropdown */
+.shipping-policy-note {
+  margin-top: 8px;
+  font-size: 0.95rem;
+  color: #6b7280; /* gray-500 */
+}
+.shipping-policy-note.is-active {
+  color: var(--brand-secondary);
+  font-weight: 600;
+}

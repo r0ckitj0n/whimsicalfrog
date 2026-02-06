@@ -1,0 +1,44 @@
+/* Room Main Overlay & Info (Vite-managed) */
+
+.room-title-overlay {
+    margin-left: auto;
+}
+
+.room-title-overlay .room-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--brand-primary);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 9999px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.room-title-overlay .room-description {
+    margin-top: 6px;
+    background: rgba(0,0,0,0.55);
+    color: var(--brand-primary);
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.no-doors-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgb(0 0 0 / 80%);
+    color: var(--brand-primary);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 18px;
+    text-align: center;
+    z-index: var(--wf-z-toast, 400);
+    font-weight: 600;
+    text-shadow: 1px 1px 2px rgb(0 0 0 / 80%);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 50%);
+}

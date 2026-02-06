@@ -1,0 +1,29 @@
+@layer components-settings-email {
+
+  /* Email Settings modal: match wider business tooling panels */
+  #emailSettingsModal .admin-modal {
+    --admin-modal-width: clamp(1000px, 95vw, 1400px) !important;
+    width: var(--admin-modal-width, clamp(1000px, 95vw, 1400px)) !important;
+    height: auto !important;
+  }
+
+  #shippingSettingsModal .modal-body {
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    /* Allow flex container to constrain height */
+  }
+
+  /* Email history test endpoint input size from backup */
+  #ehdEndpoint {
+    min-width: 260px;
+  }
+
+  /* Email modal visibility helpers from backup */
+  #testEmailSendModal.hidden,
+  #emailTemplateEditModal.hidden,
+  #templateAssignmentModal.hidden {
+    display: none !important;
+  }
+}

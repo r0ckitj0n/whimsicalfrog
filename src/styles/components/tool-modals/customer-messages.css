@@ -1,0 +1,24 @@
+/* Customer Messages / Communications Modal Styles (Vite-managed) */
+
+#customerMessagesModal .admin-modal {
+  --admin-modal-max-height: 92vh;
+}
+
+#customerMessagesModal .modal-body {
+  max-height: 85vh;
+}
+
+#customerMessagesModal .btn.btn-secondary,
+#customerMessagesModal .btn-secondary {
+  background: var(--button-secondary-bg, var(--brand-secondary)) !important;
+  border-color: var(--button-secondary-border, var(--brand-secondary)) !important;
+  color: var(--button-secondary-text, #ffffff) !important;
+}
+
+#customerMessagesModal .btn.btn-secondary:hover,
+#customerMessagesModal .btn-secondary:hover,
+#customerMessagesModal .btn-secondary:focus-visible {
+  background: var(--button-secondary-hover-bg, var(--brand-primary)) !important;
+  border-color: var(--button-secondary-hover-border, var(--brand-primary)) !important;
+  color: var(--button-secondary-hover-text, #ffffff) !important;
+}

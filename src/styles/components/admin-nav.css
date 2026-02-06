@@ -1,0 +1,5 @@
+/* Admin navbar (tabs) styling (Modularized) */
+
+@import url("./admin-nav/layout.css");
+@import url("./admin-nav/tabs.css");
+@import url("./admin-nav/base-rules.css");

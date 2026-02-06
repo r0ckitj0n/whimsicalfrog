@@ -1,0 +1,96 @@
+/* ==============================================
+   DELETE CONFIRMATION MODAL
+   ============================================== */
+
+.delete-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: var(--wf-z-modal) !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-modal.show {
+  display: flex;
+}
+
+.delete-modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--wf-shadow-elevated, 0 20px 40px rgba(0, 0, 0, 0.15));
+}
+
+.delete-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+}
+
+.delete-modal-message {
+  color: #6b7280;
+  margin: 0 0 24px 0;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+body[data-page^='admin'] .delete-modal .delete-modal-actions,
+body[data-page^='admin'] .delete-confirmation-modal .modal-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+
+body[data-page^='admin'] .delete-modal .delete-modal-actions form {
+  margin: 0;
+}
+
+body[data-page^='admin'] .delete-modal .delete-modal-actions .btn-icon,
+body[data-page^='admin'] .delete-confirmation-modal .modal-footer .btn-icon {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 12px;
+}
+
+body[data-page^='admin'] .delete-modal .delete-modal-actions .btn-icon::before,
+body[data-page^='admin'] .delete-confirmation-modal .modal-footer .btn-icon::before {
+  font-size: 28px;
+}
+
+body[data-page^='admin'] .delete-modal .delete-modal-actions .btn-icon--close::before,
+body[data-page^='admin'] .delete-modal .delete-modal-actions .btn-icon--close::after,
+body[data-page^='admin'] .delete-confirmation-modal .modal-footer .btn-icon--close::before,
+body[data-page^='admin'] .delete-confirmation-modal .modal-footer .btn-icon--close::after {
+  width: 24px;
+  height: 3px;
+}
+
+body[data-page^='admin'] .delete-modal .delete-modal-actions .btn-icon--close:hover,
+body[data-page^='admin'] .delete-confirmation-modal .modal-footer .btn-icon--close:hover {
+  background-color: var(--brand-secondary) !important;
+  color: #ffffff !important;
+}
+
+.delete-modal-actions .btn-danger:not(.btn-icon),
+.delete-modal-actions [data-action="confirm-delete-item"]:not(.btn-icon) {
+  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--brand-primary) !important;
+  transition: all 0.2s ease;
+}
+
+.delete-modal-actions .btn-danger:not(.btn-icon):hover,
+.delete-modal-actions [data-action="confirm-delete-item"]:not(.btn-icon):hover {
+  background: var(--brand-secondary) !important;
+  border-color: var(--brand-secondary) !important;
+}

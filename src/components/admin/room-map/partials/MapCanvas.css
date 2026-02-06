@@ -1,0 +1,19 @@
+.map-canvas-container {
+    /* Fill width, height based on aspect ratio for vertical scrolling */
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+
+    /* Maintain ratio - creates natural height */
+    aspect-ratio: var(--map-aspect-ratio, 1280 / 896);
+
+    /* Visual styling */
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: visible;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+
+    /* Ensure it doesn't shrink */
+    flex-shrink: 0;
+}

@@ -1,0 +1,64 @@
+/* POS Order History Styles (Vite-managed) */
+
+.modal-sidebar {
+    max-height: 75vh !important;
+    max-height: 75dvh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.order-history-panel {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+}
+
+.order-history-title {
+    flex-shrink: 0 !important;
+    margin-bottom: 0.5rem !important;
+    padding: 0 !important;
+}
+
+.order-history-content {
+    flex: 1 !important;
+    max-height: 45vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: auto;
+}
+
+.order-history-item {
+    display: block !important;
+    margin-bottom: 0.5rem !important;
+    padding: 0.5rem !important;
+    cursor: pointer !important;
+    border-radius: 4px !important;
+    transition: background-color 0.2s ease !important;
+    text-decoration: none !important;
+    color: inherit !important;
+}
+
+.order-history-item:hover {
+    background-color: #f3f4f6 !important;
+}
+
+.order-history-item:last-child {
+    margin-bottom: 0 !important;
+}
+
+.order-id {
+    margin-bottom: 0.25rem !important;
+    font-size: 0.8rem !important;
+}
+
+.order-detail {
+    margin-bottom: 0.125rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.1 !important;
+}
+
+@supports (width: 100dvw) {
+  .order-history-content { max-height: 45dvh !important; }
+}

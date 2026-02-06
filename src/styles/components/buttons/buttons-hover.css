@@ -1,0 +1,270 @@
+/* ==============================================
+   CENTRALIZED BUTTON HOVER SYSTEM
+   ============================================== 
+   
+   This file is the SINGLE SOURCE OF TRUTH for button hover behaviors.
+   Do NOT duplicate these rules in page/component CSS files.
+   
+   Referenced by: .cursorrules → "Button Hover Behavior Standards"
+   
+   UNIVERSAL RULE:
+   - Primary-colored buttons → invert to secondary on hover
+   - Secondary-colored buttons → invert to primary on hover
+   
+   EXCEPTIONS (documented below):
+   - Danger buttons (.btn-danger) → stay red-based
+   - Card-theme buttons (Settings page) → use card theme colors
+   - Transparent/ghost buttons → text/border changes, bg stays transparent
+   ============================================== */
+
+/* ==============================================
+   GLOBAL RULES (apply to all pages)
+   ============================================== */
+
+/* --- PRIMARY BUTTONS → HOVER TO SECONDARY --- */
+.btn:not(.btn-secondary):not(.btn-text-secondary):not(.btn-outline):not(.btn-ghost):not(.btn-link):not(.btn-danger):not(.btn-icon):not([class*='card-theme']):not(.admin-settings-button):hover,
+.btn-primary:hover,
+.btn-brand:hover,
+.btn-success:hover,
+button.btn:not(.btn-secondary):not(.btn-text-secondary):not(.btn-outline):not(.btn-ghost):not(.btn-link):not(.btn-danger):not(.btn-icon):hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* --- SECONDARY BUTTONS → HOVER TO PRIMARY --- */
+.btn-secondary:not(.btn-icon):hover {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #fff !important;
+}
+
+/* --- TRANSPARENT/OUTLINE BUTTONS --- */
+/* Outline buttons fill with secondary color on hover */
+.btn-outline:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* Ghost and link buttons: text changes to secondary, bg stays transparent */
+.btn-ghost:hover,
+.btn-link:hover {
+    color: var(--brand-secondary) !important;
+    background-color: transparent !important;
+}
+
+/* ==============================================
+   MODAL & CLOSE BUTTONS (ALL MODALS)
+   ============================================== 
+   
+   These rules apply to ALL modals: admin, public,
+   PHP-rendered, and React-rendered. They use high
+   specificity to ensure hover behaviors work even
+   when buttons are deeply nested in modal bodies.
+   ============================================== */
+
+/* Centralized hover for all modal close buttons */
+.modal-close:hover,
+.admin-modal-close:hover,
+.btn-icon--close:hover:not(.btn-icon) {
+    background-color: var(--brand-secondary) !important;
+    color: #ffffff !important;
+}
+
+/* --- ALL MODALS: PRIMARY BUTTONS → HOVER TO SECONDARY --- */
+.modal .btn:not(.btn-secondary):not(.btn-danger):not(.btn-icon):hover,
+.modal .btn-primary:hover,
+.modal-overlay .btn:not(.btn-secondary):not(.btn-danger):not(.btn-icon):hover,
+.modal-overlay .btn-primary:hover,
+.modal-content .btn:not(.btn-secondary):not(.btn-danger):not(.btn-icon):hover,
+.modal-content .btn-primary:hover,
+.modal-body .btn:not(.btn-secondary):not(.btn-danger):not(.btn-icon):hover,
+.modal-body .btn-primary:hover,
+.wf-modal .btn:not(.btn-secondary):not(.btn-danger):not(.btn-icon):hover,
+.wf-modal .btn-primary:hover,
+[role="dialog"] .btn:not(.btn-secondary):not(.btn-danger):not(.btn-icon):hover,
+[role="dialog"] .btn-primary:hover,
+[aria-modal="true"] .btn:not(.btn-secondary):not(.btn-danger):not(.btn-icon):hover,
+[aria-modal="true"] .btn-primary:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* --- ALL MODALS: SECONDARY BUTTONS → HOVER TO PRIMARY --- */
+.modal .btn-secondary:not(.btn-icon):hover,
+.modal-overlay .btn-secondary:not(.btn-icon):hover,
+.modal-content .btn-secondary:not(.btn-icon):hover,
+.modal-body .btn-secondary:not(.btn-icon):hover,
+.wf-modal .btn-secondary:not(.btn-icon):hover,
+[role="dialog"] .btn-secondary:not(.btn-icon):hover,
+[aria-modal="true"] .btn-secondary:not(.btn-icon):hover {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #fff !important;
+}
+
+/* --- ALL MODALS: OUTLINE BUTTONS --- */
+.modal .btn-outline:hover,
+.modal-overlay .btn-outline:hover,
+.modal-content .btn-outline:hover,
+.modal-body .btn-outline:hover,
+.wf-modal .btn-outline:hover,
+[role="dialog"] .btn-outline:hover,
+[aria-modal="true"] .btn-outline:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* --- ALL MODALS: GHOST/LINK BUTTONS --- */
+.modal .btn-ghost:hover,
+.modal .btn-link:hover,
+.modal-overlay .btn-ghost:hover,
+.modal-overlay .btn-link:hover,
+.modal-content .btn-ghost:hover,
+.modal-content .btn-link:hover,
+.modal-body .btn-ghost:hover,
+.modal-body .btn-link:hover,
+.wf-modal .btn-ghost:hover,
+.wf-modal .btn-link:hover,
+[role="dialog"] .btn-ghost:hover,
+[role="dialog"] .btn-link:hover,
+[aria-modal="true"] .btn-ghost:hover,
+[aria-modal="true"] .btn-link:hover {
+    color: var(--brand-secondary) !important;
+    background-color: transparent !important;
+}
+
+/* ==============================================
+   ICON BUTTONS (Emoji-based in admin)
+   ============================================== */
+
+/* Icon buttons hover logic moved to emojis.css for global emoji strategy */
+
+/* ==============================================
+   SEMANTIC EXCEPTIONS (Documented)
+   ============================================== */
+
+/* EXCEPTION: Danger buttons - Safety-critical visual feedback (stays red) */
+.btn-danger:hover,
+[data-button-role="danger"]:hover,
+.btn--db-repair:hover,
+.btn--db-drop:hover,
+.btn--db-reset:hover {
+    background-color: #dc2626 !important;
+    border-color: #dc2626 !important;
+    color: #fff !important;
+}
+
+/* Deeper red on active/focus for danger buttons */
+.btn-danger:active,
+[data-button-role="danger"]:active {
+    background-color: #b91c1c !important;
+    border-color: #b91c1c !important;
+}
+
+/* EXCEPTION: Table action buttons - subtle gray hover (not brand-colored) */
+.table-action-btn:hover {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+}
+
+.table-action-btn-danger:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
+/* ==============================================
+   ADMIN MODAL BUTTON HOVER RULES
+   ============================================== 
+   
+   Ensures all buttons within admin modals follow
+   the Universal Reciprocal Inversion pattern:
+   - Primary → Secondary on hover
+   - Secondary → Primary on hover
+   ============================================== */
+
+/* --- PRIMARY BUTTONS IN ADMIN MODALS → HOVER TO SECONDARY --- */
+.admin-modal .btn:not(.btn-secondary):not(.btn-text-secondary):not(.btn-outline):not(.btn-ghost):not(.btn-link):not(.btn-danger):not(.btn-icon):hover,
+.admin-modal .btn-primary:hover,
+.admin-modal button.btn-primary:hover,
+.admin-modal-overlay .btn:not(.btn-secondary):not(.btn-text-secondary):not(.btn-outline):not(.btn-ghost):not(.btn-link):not(.btn-danger):not(.btn-icon):hover,
+.admin-modal-overlay .btn-primary:hover,
+.admin-modal-content .btn:not(.btn-secondary):not(.btn-text-secondary):not(.btn-outline):not(.btn-ghost):not(.btn-link):not(.btn-danger):not(.btn-icon):hover,
+.admin-modal-content .btn-primary:hover,
+body[data-page^='admin'] .admin-modal .btn:not(.btn-secondary):not(.btn-text-secondary):not(.btn-outline):not(.btn-ghost):not(.btn-link):not(.btn-danger):not(.btn-icon):hover,
+body[data-page^='admin'] .admin-modal .btn-primary:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* --- SECONDARY BUTTONS IN ADMIN MODALS → HOVER TO PRIMARY --- */
+.admin-modal .btn-secondary:not(.btn-icon):hover,
+.admin-modal .btn-text-secondary:not(.btn-icon):hover,
+.admin-modal-overlay .btn-secondary:not(.btn-icon):hover,
+.admin-modal-overlay .btn-text-secondary:not(.btn-icon):hover,
+.admin-modal-content .btn-secondary:not(.btn-icon):hover,
+.admin-modal-content .btn-text-secondary:not(.btn-icon):hover,
+body[data-page^='admin'] .admin-modal .btn-secondary:not(.btn-icon):hover,
+body[data-page^='admin'] .admin-modal .btn-text-secondary:not(.btn-icon):hover,
+body[data-page^='admin'] .btn-text-secondary:hover {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #fff !important;
+}
+
+/* --- PRIMARY BUTTONS IN ADMIN MODALS → HOVER TO SECONDARY --- */
+body[data-page^='admin'] .btn-text-primary:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* --- TRANSPARENT/OUTLINE BUTTONS IN ADMIN MODALS --- */
+.admin-modal .btn-outline:hover,
+.admin-modal-overlay .btn-outline:hover,
+.admin-modal-content .btn-outline:hover,
+body[data-page^='admin'] .admin-modal .btn-outline:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* Ghost and link buttons in admin modals: text changes to secondary */
+.admin-modal .btn-ghost:hover,
+.admin-modal .btn-link:hover,
+.admin-modal-overlay .btn-ghost:hover,
+.admin-modal-overlay .btn-link:hover,
+.admin-modal-content .btn-ghost:hover,
+.admin-modal-content .btn-link:hover,
+body[data-page^='admin'] .admin-modal .btn-ghost:hover,
+body[data-page^='admin'] .admin-modal .btn-link:hover {
+    color: var(--brand-secondary) !important;
+    background-color: transparent !important;
+}
+
+/* Icon/action button hover in admin modals moved to emojis.css */
+
+/* --- MODAL HEADER BUTTONS --- 
+   Hover behavior is now handled by standard text-button classes. */
+
+/* ==============================================
+   ADMIN TEXT BUTTON HOVER (Global Standard)
+   ============================================== */
+
+/* Text Primary → Secondary on hover */
+.btn-text-primary:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff !important;
+}
+
+/* Text Secondary → Primary on hover */
+.btn-text-secondary:hover {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+    color: #fff !important;
+}

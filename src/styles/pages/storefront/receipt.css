@@ -1,0 +1,63 @@
+/* Receipt (Modularized) */
+
+@import url("./receipt/print.css");
+@import url("./receipt/layout.css");
+
+@layer pages-storefront-receipt {
+  /* Receipt header row and totals layout */
+  .brand-header-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+  .brand-title {
+    font-family: var(--font-primary, 'Merienda', 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif) !important;
+  }
+  .brand-tagline {
+    font-family: var(--font-primary, 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif) !important;
+  }
+
+  .receipt-table {
+    table-layout: fixed;
+  }
+  .receipt-table th,
+  .receipt-table td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: top;
+  }
+  .receipt-table th {
+    font-weight: 600;
+    text-align: left !important;
+  }
+  .receipt-table th:nth-child(1),
+  .receipt-table td:nth-child(1),
+  .receipt-table th:nth-child(2),
+  .receipt-table td:nth-child(2) {
+    text-align: left;
+  }
+  .receipt-table th:nth-child(3),
+  .receipt-table td:nth-child(3) {
+    text-align: center;
+  }
+  .receipt-table th:nth-child(4),
+  .receipt-table td:nth-child(4),
+  .receipt-table th:nth-child(5),
+  .receipt-table td:nth-child(5) {
+    text-align: right;
+  }
+
+  .receipt-totals {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 6px 18px;
+  }
+  .receipt-totals .label { text-align: right; color: #374151; }
+  .receipt-totals .value { text-align: right; }
+  .receipt-totals .grand-total {
+    color: #dc2626;
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+}

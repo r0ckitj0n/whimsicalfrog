@@ -1,0 +1,201 @@
+/* Admin Settings Page Layout & Global Overrides */
+
+/* provide a safe default header height variable */
+body[data-page='admin/settings'] {
+  --header-height: 80px;
+}
+
+/* Settings page: force text labels on all buttons (no icon-only) */
+.settings-page .btn-icon,
+.settings-page .btn.btn-icon,
+body[data-page='admin/settings'] .settings-page .btn-icon,
+body[data-page='admin/settings'] .settings-page .btn.btn-icon {
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+  color: inherit !important;
+  line-height: 1.2 !important;
+}
+
+/* Keep labels-only inside settings content by default */
+.settings-page .btn-icon:not([class*="btn-icon--"])::before,
+.settings-page .btn:not(.btn-icon)::before,
+body[data-page='admin/settings'] .settings-page .btn-icon:not([class*="btn-icon--"])::before,
+body[data-page='admin/settings'] .settings-page .btn:not(.btn-icon)::before {
+  content: none;
+}
+
+.settings-page .btn,
+body[data-page='admin/settings'] .settings-page .btn {
+  font-size: 0.875rem !important;
+}
+
+/* Make the primary admin settings wrapper the single scroll container */
+.settings-page {
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+  position: static !important;
+  padding-bottom: 0 !important;
+}
+
+body[data-page='admin/settings'] .settings-page {
+  padding-left: 0.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+/* Hard overrides to prevent any wrapper from reserving bottom space */
+body[data-page='admin/settings'] .admin-dashboard,
+body[data-page='admin/settings'] .page-content,
+body[data-page='admin/settings'] #admin-section-content,
+body[data-page='admin/settings'] .settings-page {
+  min-height: 0 !important;
+  height: auto !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  overflow: visible !important;
+}
+
+/* Settings page: scroll behavior and background */
+body[data-page='admin/settings'] {
+  height: 100% !important;
+  overflow: hidden !important;
+  /* Background is now database-driven via useSiteHydration/bootstrap.php
+     The --wf-body-bg variable is set by JS from the API response.
+     Fallback to roomX background for pre-JS loading states only. */
+  background-image: var(--wf-body-bg, url("/images/backgrounds/background-roomX.webp")) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-attachment: scroll !important;
+}
+
+/* Blue vignette/glow effect seen in screenshot */
+body[data-page='admin/settings']::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: var(--wf-z-elevated);
+  box-shadow: inset 0 0 150px rgba(30, 64, 175, 0.4);
+  background: radial-gradient(circle at center, transparent 30%, rgba(30, 64, 175, 0.2) 100%);
+}
+
+html:has(body[data-page='admin/settings']) {
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Primary scroll container */
+body[data-page='admin/settings'] #admin-section-content {
+  position: fixed !important;
+  top: 55px !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-bottom: 1.5rem !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  box-sizing: border-box !important;
+  /* Precisely calculated: Navbar Bottom (172px) - Container top (55px) = 117px.
+     This places the content boundary at the navbar bottom, allowing the 1.25rem (20px) 
+     margin on .settings-grid to define the visual gap. */
+  padding-top: 117px !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: thin;
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+}
+
+/* Webkit Scrollbar Styling */
+body[data-page='admin/settings'] #admin-section-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body[data-page='admin/settings'] #admin-section-content::-webkit-scrollbar-track {
+  background: var(--brand-primary);
+  border-radius: 10px;
+}
+
+body[data-page='admin/settings'] #admin-section-content::-webkit-scrollbar-thumb {
+  background-color: var(--brand-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--brand-primary);
+}
+
+body[data-page='admin/settings'] #admin-section-content::-webkit-scrollbar-thumb:hover {
+  background-color: #a64c00;
+}
+
+/* Wrapper offsets */
+body[data-page='admin/settings'] #admin-section-content>.settings-page {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 3rem !important;
+}
+
+body[data-page='admin/settings'] .admin-card.compact {
+  padding-bottom: 8px !important;
+}
+
+/* Stacking context safety */
+body[data-page='admin/settings'] .settings-grid {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: center !important;
+  gap: 1.5rem !important;
+  padding: 0 1.5rem !important;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 1.25rem auto 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Cards expand equally to fill available space */
+body[data-page='admin/settings'] .settings-section {
+  flex: 1 1 0 !important;
+  min-width: 220px !important;
+  max-width: 400px !important;
+}
+
+@media (max-width: 768px) {
+  body[data-page='admin/settings'] .settings-grid {
+    gap: 0.5rem !important;
+    padding: 0 0.375rem !important;
+  }
+}
+
+/* Settings Section Card Styling */
+/* MOVED TO settings-components.css */
+
+body[data-page='admin/settings'] .settings-page,
+body[data-page='admin/settings'] #adminSettingsRoot,
+body[data-page='admin/settings'] .settings-grid,
+body[data-page='admin/settings'] .settings-section {
+  position: static;
+  z-index: auto;
+  overflow: visible !important;
+  transform: none !important;
+  contain: initial !important;
+}
+
+body[data-page='admin/settings'] #admin-section-content {
+  transform: none !important;
+  contain: initial !important;
+}
+
+body[data-page='admin/settings'] .settings-section {
+  position: relative;
+  z-index: var(--wf-z-base);
+}

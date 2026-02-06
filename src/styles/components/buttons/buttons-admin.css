@@ -1,0 +1,52 @@
+/* ==============================================
+   ADMIN BUTTON BASE STYLING
+   ============================================== 
+   
+   Base styling for admin buttons. 
+   Hover behaviors are centralized in buttons-hover.css.
+   ============================================== */
+
+/* Primary role buttons */
+body[data-page^='admin'] [data-button-role][data-button-role="primary"]:not(.btn-icon) {
+    background-color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
+    color: #fff;
+}
+
+/* Hover: handled by buttons-hover.css */
+
+/* Secondary role buttons */
+body[data-page^='admin'] [data-button-role][data-button-role="secondary"]:not(.btn-icon) {
+    background-color: var(--brand-secondary);
+    border: 1px solid var(--brand-secondary);
+    color: #fff;
+}
+
+/* Hover: handled by buttons-hover.css */
+
+/* Attribute Editor Modal exception - transparent buttons */
+body[data-page^='admin'] #attrEditorModal [data-button-role][data-button-role="primary"]:not(.btn-icon):not(.btn),
+body[data-page^='admin'] #attrEditorModal [data-button-role][data-button-role="secondary"]:not(.btn-icon):not(.btn) {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-color: transparent !important;
+    color: inherit !important;
+}
+
+/* Class-based primary buttons */
+body[data-page^='admin'] .btn-primary:not(.btn-icon),
+body[data-page^='admin'] .btn-brand:not(.btn-icon),
+body[data-page^='admin'] .btn-success:not(.btn-icon) {
+    background-color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
+    color: #fff;
+}
+
+/* Hover: handled by buttons-hover.css */
+
+/* Generic .btn fallback */
+body[data-page^='admin'] .btn:not(.btn-secondary):not(.btn-outline):not(.btn-ghost):not(.btn-link):not(.btn-danger):not(.btn-success):not(.btn-warning):not(.btn-info):not(.btn-light):not(.btn-icon):not(.btn-text-primary):not(.btn-text-secondary) {
+    background-color: var(--brand-primary);
+    border: 1px solid var(--brand-primary);
+    color: #fff;
+}

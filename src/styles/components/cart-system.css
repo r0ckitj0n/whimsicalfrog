@@ -1,0 +1,113 @@
+/* Cart System UI (Vite-managed) */
+
+.cart-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; background: #f9fafb; }
+.cart-title { font-size: 1.25rem; font-weight: 700; }
+.cart-items { flex: 1; padding: 1rem; overflow-y: auto; }
+.cart-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-bottom: 1px solid #f3f4f6; background: #f9fafb; margin-bottom: 0.5rem; border-radius: 0.375rem; }
+.cart-item-info { flex: 1; }
+.cart-item-name { font-weight: 500; font-size: 0.9rem; }
+.cart-item-price { color: var(--brand-secondary); font-weight: 700; }
+.cart-summary { padding: 1rem; border-top: 2px solid #e5e7eb; background: #f9fafb; }
+.cart-total { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; text-align: center; color: #1f2937; }
+.checkout-btn { width: 100%; padding: 1rem; background: var(--brand-primary); color: #fff; border: none; border-radius: 0.375rem; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+.checkout-btn:hover:not(:disabled) { background: var(--brand-primary-hover, var(--brand-secondary)); }
+.checkout-btn:disabled { background: #d1d5db; cursor: not-allowed; }
+.empty-cart { text-align: center; color: #6b7280; padding: 2rem; font-style: italic; }
+.remove-btn { background: #ef4444; color: #fff; border: none; padding: 0.25rem 0.5rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.8rem; }
+.remove-btn:hover { background: #dc2626; }
+.option-btn { padding: 0.5rem 1rem; border: 2px solid #e5e7eb; background: #fff; border-radius: 0.25rem; cursor: pointer; margin: 0.25rem; transition: all 0.2s; }
+.option-btn:hover { border-color: var(--brand-primary); }
+
+.cart-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 4px;
+  z-index: var(--wf-z-toast);
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+.cart-notification.show {
+  transform: translateX(0);
+}
+
+/* Types */
+.cart-notification.is-success { background: #4CAF50; }
+.cart-notification.is-error { background: #f44336; }
+.cart-notification.is-info { background: #2196F3; }
+
+/* Cart counter visibility is handled via the shared .hidden utility */
+
+/* Item item options line (under item name) */
+.cart-item-options {
+  margin-top: 2px;
+  color: #6b7280; /* gray-500 */
+}
+
+/* Out-of-stock options in selects */
+option.option-out-of-stock {
+  color: #9ca3af; /* gray-400 */
+}
+
+.item-card { background: #fff; border-radius: 0.5rem; padding: 1rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+.item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-color: var(--brand-primary); }
+.item-name { font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem; line-height: 1.3; }
+.item-price { color: var(--brand-secondary); font-weight: 700; font-size: 1.1rem; margin-bottom: 0.25rem; }
+.item-sku { color: #6b7280; font-size: 0.8rem; }
+.item-meta { font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
+
+/* Cart Upsell Simulation Modal: enforce sizing and text colors from backup */
+#cartUpsellSimulationModal .admin-modal {
+  width: var(--admin-modal-width, 1300px) !important;
+  max-width: 98vw !important;
+}
+#cartUpsellSimulationModal .modal-body {
+  /* Ensure no inherited grid/autogrid layout creates phantom columns */
+  display: block !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: calc(95vh - 4.5rem) !important;
+}
+#cartUpsellSimulationModal #cartUpsellSimulationContainer,
+#cartUpsellSimulationModal #cartUpsellSimulationInlineMount {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+#cartUpsellSimulationModal .card {
+  /* Global .card-header uses negative margins; inside modals this can get clipped by overflow */
+  overflow: visible !important;
+  /* Prevent global card height:100% from stretching and pushing later cards out of view */
+  height: auto !important;
+}
+#cartUpsellSimulationModal .card-header {
+  /* Prevent header clipping/overlap caused by negative margins in global card styles */
+  margin: 0 0 0.75rem 0 !important;
+  border-radius: var(--card-border-radius) !important;
+}
+#cartUpsellSimulationModal h1,
+#cartUpsellSimulationModal .card-header,
+#cartUpsellSimulationModal .card-title {
+  color: #1f2937 !important; /* gray-800 */
+}
+#cartUpsellSimulationModal .text-gray-500,
+#cartUpsellSimulationModal .text-gray-600,
+#cartUpsellSimulationModal .text-gray-700,
+#cartUpsellSimulationModal label {
+  color: #4b5563 !important; /* gray-600 */
+}
+
+/* Cart Simulation: recommendation layout should be 2x2 by default, 4-across on wide screens */
+#cartUpsellSimulationModal .wf-cart-sim-recs-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+@media (min-width: 1280px) {
+  #cartUpsellSimulationModal .wf-cart-sim-recs-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}

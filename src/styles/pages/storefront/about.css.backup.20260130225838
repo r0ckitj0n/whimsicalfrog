@@ -1,0 +1,247 @@
+@layer pages-storefront-about {
+
+/* Test from CSS Editor - 2026-01-30 17:55:00 */
+  /* --- About: Cloud-shaped background behind text (no rectangular card) --- */
+  /* Remove Tailwind container constraints on About so the cloud can breathe */
+  body.room-bg-main[data-page='about'] .page-content {
+    max-width: none !important;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: clamp(80px, 12vh, 120px);
+  }
+
+  /* Ensure centering even when room-bg-main is absent */
+  body[data-page='about'] .page-content .prose {
+    max-width: none;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* center cloud card */
+  }
+
+  body[data-page='about'] .page-content {
+    max-width: none !important;
+    padding-left: 0;
+    padding-right: 0;
+    display: flex;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  body[data-page='about'] .page-content .prose>.wf-cloud-card {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .wf-cloud-card {
+    position: relative;
+    display: block;
+    width: auto;
+    max-width: min(2000px, 90vw);
+    margin: clamp(100px, 14vh, 140px) auto 0 auto;
+    padding: clamp(10px, 2vw, 40px) clamp(48px, 8.5vw, 188px) clamp(20px, 4vw, 80px);
+    min-height: auto;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+    overflow-wrap: anywhere;
+  }
+
+  .wf-cloud-card .content {
+    overflow-wrap: anywhere;
+    position: relative;
+    z-index: var(--wf-z-base);
+    max-width: 80ch;
+    margin-inline: auto;
+    color: #111;
+    text-align: center;
+  }
+
+  .wf-cloud-card .content p {
+    margin: 0.25em 0;
+    line-height: 1.35;
+    padding-left: 8%;
+    padding-right: 8%;
+    font-weight: bold;
+  }
+
+  .wf-cloud-card .content>p:first-of-type {
+    margin-top: 0;
+  }
+
+  .wf-cloud-title {
+    margin: 0 0 40px 0 !important;
+    text-align: center;
+    font-family: 'Merienda', cursive;
+    font-size: clamp(1.8rem, 3.8vw, 2.8rem);
+    font-weight: 700;
+    color: #111;
+  }
+
+  .wf-cloud-card::before {
+    content: '';
+    position: absolute;
+    /* Keep within container to avoid horizontal overflow */
+    left: 5%;
+    right: 5%;
+    bottom: -10px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.45);
+    filter: blur(14px);
+    border-radius: 999px;
+    /* soft oval shadow under cloud */
+    z-index: calc(var(--wf-z-negative) - 1);
+    /* shadow behind cloud */
+    display: none;
+    /* remove mist/shadow effect */
+  }
+
+  /* Cloud graphic layer (scaled bigger than content so it fully surrounds text) */
+  .wf-cloud-card::after {
+    content: '';
+    position: absolute;
+    /* Center the cloud graphic and grow equally in all directions */
+    left: 50%;
+    top: 38%;
+    width: calc(100% + 50%);
+    height: calc(100% + 50%);
+    transform: translate(-50%, -50%);
+    background: url('../../../assets/cloud-bg.svg') center/100% 100% no-repeat;
+    z-index: var(--wf-z-negative);
+    pointer-events: none;
+  }
+
+  @media (max-width: 520px) {
+    .wf-cloud-card {
+      max-width: 96vw;
+      min-height: clamp(260px, 38vh, 560px);
+      padding: clamp(22px, 6.5vw, 68px) clamp(20px, 6vw, 60px);
+    }
+
+    .wf-cloud-card::after {
+      width: calc(100% + 20%);
+      height: calc(100% + 25%);
+    }
+  }
+
+  /* About page: scroll locking and cloud button row positioning */
+  html.about-no-scroll {
+    overflow: hidden !important;
+    height: 100%;
+  }
+
+  html.about-no-scroll,
+  body[data-page='about'] {
+    overflow: hidden !important;
+    height: 100% !important;
+    position: fixed;
+    width: 100%;
+    margin: 0;
+  }
+
+  body[data-page='about'] {
+    padding-top: 0 !important;
+    /* override global header offset padding */
+  }
+
+  body[data-page='about'] .page-content {
+    position: fixed;
+    top: var(--wf-header-height);
+    left: 0;
+    right: 0;
+    height: calc(100vh - var(--wf-header-height));
+    height: calc(100dvh - var(--wf-header-height));
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body[data-page='about'] .prose {
+    margin: 0 !important;
+  }
+
+  /* Ensure About cloud card content hugs the cloud and leaves space for button row */
+  body[data-page='about'] .wf-cloud-card .content {
+    padding-top: 0;
+    padding-bottom: 2px;
+    margin-top: -20px;
+  }
+
+  /* Place button row exactly on the cloud card's bottom edge */
+  body[data-page='about'] .wf-cloud-card #aboutButtonsRow {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none !important;
+    margin-top: -10px;
+    display: flex;
+    justify-content: center;
+    z-index: var(--wf-z-elevated);
+    pointer-events: auto;
+  }
+
+  /* Policy modal content box used by About page modal fallback */
+  .policy-content-box {
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  /* Header refinements for About page (Note: Search bar is now allowed here) */
+  /* body[data-page='about'] .header-center removed to allow search bar */
+
+  /* Ensure About footer stays at the bottom since content is fixed */
+  body[data-page='about'] .site-footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: var(--wf-z-sticky) !important;
+    background: transparent !important;
+    padding-bottom: 20px !important;
+    border-top: none !important;
+  }
+
+  /* Hide all redundant footer links and dividers on About */
+  body[data-page='about'] .site-footer .footer-grid-4,
+  body[data-page='about'] .site-footer .footer-grid-3,
+  body[data-page='about'] .site-footer .footer-grid-2,
+  body[data-page='about'] .site-footer .footer-social,
+  body[data-page='about'] .site-footer .footer-newsletter,
+  body[data-page='about'] .site-footer .footer-divider,
+  body[data-page='about'] .site-footer .footer-copyright-links,
+  body[data-page='about'] .site-footer .footer-copyright::before {
+    display: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body[data-page='about'] .footer-copyright {
+    border-top: none !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  body[data-page='about'] .site-footer .footer-copyright-text {
+    color: white !important;
+    opacity: 0.8;
+    font-size: 0.85rem;
+  }
+
+  body[data-page='about'][data-bg-applied="1"] {
+    background-image: var(--body-bg, var(--wf-body-bg, none)) !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    background-attachment: fixed !important;
+  }
+
+  body[data-page='about']::before,
+  body[data-page='about']::after {
+    display: none !important;
+    content: none !important;
+  }
+}

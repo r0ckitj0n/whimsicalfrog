@@ -1,0 +1,53 @@
+.wf-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: var(--wf-z-backdrop, 200);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.wf-modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 90%;
+  border: 2px solid var(--brand-secondary);
+}
+
+.wf-modal-header {
+  background: var(--bg-gradient-brand);
+  color: #fff;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.wf-modal-body { padding: 1.5rem; }
+
+.wf-modal-footer {
+  padding: 1rem 1.5rem;
+  background: #f9fafb;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+/* Global Modal Scroll Focus */
+html.wf-modal-scroll-lock,
+body.wf-modal-scroll-lock {
+  overflow: hidden !important;
+}
+
+.admin-modal-overlay.wf-topmost {
+  pointer-events: auto;
+}
+.admin-modal-overlay:not(.wf-topmost) {
+  pointer-events: none;
+}
+.admin-modal-overlay.wf-topmost .admin-modal-content {
+  overflow: auto;
+}

@@ -1,0 +1,34 @@
+/* Legacy Z-Index Aliases & Compatibility (Vite-managed) */
+
+:root {
+  /* Aliases mapping old custom properties to the new scale */
+  --z-base: var(--z-index-base);
+  --z-base-elevated: var(--z-index-content-front, 15);
+  --z-tooltip: var(--z-index-tooltip, 450);
+  --z-navigation: var(--z-index-page-header);
+  --z-door-areas: var(--z-index-content-front, 15);
+  --z-index-overlay: var(--z-index-overlay-backdrop);
+
+  /* Convenience variables */
+  --wf-overlay-z: var(--z-overlay);
+  --wf-overlay-content-z: var(--z-overlay-content, 1210);
+  --wf-admin-overlay-z: var(--z-admin-overlay);
+  --wf-confirm-overlay-z: var(--z-overlay-topmost);
+
+  --z-popups: var(--z-global-popup);
+  --z-index-landing-page: 110;
+  
+  --z-sticky-header: var(--z-index-page-header);
+  --z-admin-sticky-header: var(--z-sticky-header);
+  --z-dropdown: var(--z-index-dropdown, 400);
+  --z-content-overlay: var(--z-index-overlay-backdrop);
+  --z-index-modal: var(--z-index-modal-base);
+  --z-modal-overlay: var(--z-index-overlay-backdrop);
+  
+  --z-detailed-item-modal: 1500;
+  --z-image-zoom-modal: var(--z-detailed-item-modal);
+  --z-quantity-modal: calc(var(--z-detailed-item-modal) + 1);
+  --z-index-admin-tools: 10110;
+  --z-room-elements: var(--z-index-content-front, 15);
+  --z-image-viewer: 100400;
+}

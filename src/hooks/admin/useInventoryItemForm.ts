@@ -1,0 +1,524 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ApiClient } from '../../core/ApiClient.js';
+import { useInventoryAI } from './useInventoryAI.js';
+import { useCostBreakdown } from './useCostBreakdown.js';
+import { usePriceBreakdown } from './usePriceBreakdown.js';
+import { useAIGenerationOrchestrator, type GenerationStep, type GenerationContext } from './useAIGenerationOrchestrator.js';
+import { IInventoryItem, IItemDetails } from '../../types/inventory.js';
+import type { MarketingData } from './inventory-ai/useMarketingManager.js';
+import type { IAISuggestionsParams, IAISuggestionsResponse } from '../../types/ai.js';
+
+// Re-export for backward compatibility
+export type { IAISuggestionsParams, IAISuggestionsResponse } from '../../types/ai.js';
+
+
+
+/** The hook accepts either IInventoryItem or IItemDetails since data comes from different sources */
+type ItemData = Partial<IInventoryItem> & Partial<IItemDetails> & { sku?: string };
+
+interface UseInventoryItemFormProps {
+    sku: string;
+    mode: 'edit' | 'view' | 'add' | '';
+    item: ItemData | null;
+    addItem: (data: Record<string, unknown>) => Promise<{ success: boolean; error?: string }>;
+    updateCell: (sku: string, column: string, value: string | number | boolean | null) => Promise<{ success: boolean; error?: string }>;
+    // Using generic function type since useInventoryAI has stricter required params
+    fetch_all_suggestions: (params: Record<string, unknown>) => Promise<IAISuggestionsResponse | null>;
+    // Using generic function type since these are React setState dispatchers
+    setCachedPriceSuggestion: (data: unknown) => void;
+    setCachedCostSuggestion: (data: unknown) => void;
+    onSaved?: () => void;
+    onClose: () => void;
+    refresh: () => void;
+    primaryImage?: string;
+}
+
+export const useInventoryItemForm = ({
+    sku,
+    mode,
+    item,
+    addItem,
+    updateCell,
+    // fetch_all_suggestions, // Removed from props
+    // setCachedPriceSuggestion, // Removed from props
+    // setCachedCostSuggestion, // Removed from props
+    onSaved,
+    onClose,
+    refresh,
+    primaryImage
+}: UseInventoryItemFormProps) => {
+    const {
+        is_busy: aiBusy,
+        cached_price_suggestion,
+        cached_cost_suggestion,
+        fetch_all_suggestions,
+        generateMarketing,
+        setCachedCostSuggestion,
+        setCachedPriceSuggestion
+    } = useInventoryAI();
+
+    // New: Use orchestrator for sequential generation
+    const {
+        isGenerating: orchestratorBusy,
+        currentStep: orchestratorStep,
+        progress: orchestratorProgress,
+        orchestrateFullGeneration
+    } = useAIGenerationOrchestrator();
+
+    const isReadOnly = mode === 'view';
+    const isAdding = mode === 'add';
+
+    const [formData, setFormData] = useState<{
+        name: string;
+        category: string;
+        status: IInventoryItem['status'] | 'archived';
+        stock_level: number;
+        reorder_point: number;
+        cost_price: number;
+        retail_price: number;
+        description: string;
+        is_archived: number;
+        weight_oz: number;
+        package_length_in: number;
+        package_width_in: number;
+        package_height_in: number;
+    }>({
+        name: '',
+        category: '',
+        status: 'draft',
+        stock_level: 0,
+        reorder_point: 0,
+        cost_price: 0,
+        retail_price: 0,
+        description: '',
+        is_archived: 0,
+        weight_oz: 0,
+        package_length_in: 0,
+        package_width_in: 0,
+        package_height_in: 0
+    });
+
+    const [isDirty, setIsDirty] = useState(false);
+    const [localSku, setLocalSku] = useState(sku || '');
+    const [isSaving, setIsSaving] = useState(false);
+    const [lockedFields, setLockedFields] = useState<Record<string, boolean>>({});
+    const [lockedWords, setLockedWords] = useState<Record<string, string>>({});
+    const [cachedMarketingData, setCachedMarketingData] = useState<MarketingData | null>(null);
+
+    const { populateFromSuggestion: populateCost } = useCostBreakdown(localSku);
+    const { populateFromSuggestion: populatePrice } = usePriceBreakdown(localSku);
+
+    useEffect(() => {
+        if (sku) setLocalSku(sku);
+    }, [sku]);
+
+    useEffect(() => {
+        let isCancelled = false;
+        const skuForMarketing = isAdding ? localSku : sku;
+
+        const loadExistingMarketing = async () => {
+            if (!skuForMarketing) {
+                setCachedMarketingData(null);
+                return;
+            }
+            try {
+                const apiUrl = `${window.location.origin}/api/get_marketing_suggestion.php?sku=${encodeURIComponent(skuForMarketing)}`;
+                const response = await ApiClient.request<{ success?: boolean; exists?: boolean; data?: MarketingData }>(
+                    apiUrl,
+                    { method: 'GET' }
+                );
+                if (isCancelled) return;
+                const payload = (response?.data && typeof response.data === 'object')
+                    ? response.data
+                    : null;
+                const exists = response?.exists ?? Boolean(payload);
+                if ((response?.success ?? false) && exists && payload) {
+                    setCachedMarketingData(payload);
+                } else {
+                    setCachedMarketingData(null);
+                }
+            } catch (err) {
+                if (isCancelled) return;
+                console.error('Failed to load existing marketing data', err);
+                setCachedMarketingData(null);
+            }
+        };
+
+        void loadExistingMarketing();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [isAdding, localSku, sku]);
+
+    useEffect(() => {
+        // Guard: if we are currently saving or the form is dirty, do NOT overwrite with server/default data
+        if (isDirty || isSaving) return;
+
+        if (isAdding) {
+            setFormData({
+                name: '',
+                category: '',
+                status: 'draft',
+                stock_level: 0,
+                reorder_point: 5,
+                cost_price: 0,
+                retail_price: 0,
+                description: '',
+                is_archived: 0,
+                weight_oz: 0,
+                package_length_in: 0,
+                package_width_in: 0,
+                package_height_in: 0
+            });
+            return;
+        }
+
+        if (item) {
+            const isArchived = Number(item.is_archived) === 1;
+            setFormData({
+                name: item.name || '',
+                category: item.category || '',
+                status: isArchived ? 'archived' : (item.status === 'live' ? 'live' : 'draft'),
+                stock_level: Number(item.stock_quantity || item.stock_level) || 0,
+                reorder_point: Number(item.reorder_point) || 0,
+                cost_price: Number(item.cost_price) || 0,
+                retail_price: Number(item.retail_price || item.price) || 0,
+                description: item.description || '',
+                is_archived: isArchived ? 1 : 0,
+                weight_oz: Number(item.weight_oz) || 0,
+                package_length_in: Number(item.package_length_in) || 0,
+                package_width_in: Number(item.package_width_in) || 0,
+                package_height_in: Number(item.package_height_in) || 0
+            });
+            // Hydrate locked fields from item data
+            if ((item as IItemDetails).locked_fields) {
+                setLockedFields((item as IItemDetails).locked_fields || {});
+            }
+            if ((item as IItemDetails).locked_words) {
+                setLockedWords((item as IItemDetails).locked_words || {});
+            }
+        }
+    }, [item, isAdding, isDirty, isSaving]);
+
+    const handleFieldChange = useCallback((field: string, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        setIsDirty(true);
+    }, []);
+
+    const toggleFieldLock = useCallback((field: string) => {
+        setLockedFields(prev => {
+            const newLocked = { ...prev, [field]: !prev[field] };
+            // Remove false entries to keep the object clean
+            if (!newLocked[field]) delete newLocked[field];
+            return newLocked;
+        });
+        setIsDirty(true);
+    }, []);
+
+    const updateLockedWords = useCallback((field: string, value: string) => {
+        setLockedWords(prev => ({ ...prev, [field]: value }));
+        setIsDirty(true);
+    }, []);
+
+    const generateSku = async () => {
+        if (!formData.category) {
+            if (window.WFToast) window.WFToast.error('Please select a category first');
+            return;
+        }
+        try {
+            const data = await ApiClient.get<{ success: boolean; sku?: string }>('/api/next_sku.php', { cat: formData.category });
+            if (data && data.success && data.sku) {
+                setLocalSku(data.sku);
+                setIsDirty(true);
+            }
+        } catch (err) {
+            if (window.WFToast) window.WFToast.error('Failed to generate SKU');
+        }
+    };
+
+    const triggerGenerationChain = async () => {
+        if (!localSku) {
+            if (window.WFToast) window.WFToast.error('SKU is required for AI analysis');
+            return;
+        }
+
+        if (!primaryImage) {
+            if (window.WFToast) window.WFToast.error('Please upload an image first for AI analysis');
+            return;
+        }
+
+        setIsDirty(true);
+
+        // Use the new sequential orchestrator with locked fields support
+        const generationLockedWords = lockedWords;
+
+        const result = await orchestrateFullGeneration({
+            sku: localSku,
+            primaryImageUrl: primaryImage,
+            initialName: formData.name,
+            initialDescription: formData.description,
+            initialCategory: formData.category,
+            tier: 'standard',
+            lockedFields, // Pass locked fields to orchestrator
+            lockedWords: generationLockedWords,
+            onStepComplete: (step, context, skippedFields) => {
+                // Debug: Log context for troubleshooting
+                console.log('[AI Orchestrator] Step completed:', step, 'Context:', context, 'Skipped:', skippedFields);
+
+                if (step === 'info') {
+                    const changedDimensions: string[] = [];
+                    const hasChanged = (next: number | null, current: number): boolean => {
+                        if (next === null) return false;
+                        return Math.abs(Number(next.toFixed(2)) - Number(current)) > 0.001;
+                    };
+
+                    if (!lockedFields.weight_oz && hasChanged(context.weightOz, formData.weight_oz)) {
+                        changedDimensions.push('weight');
+                    }
+                    if (!lockedFields.package_length_in && hasChanged(context.packageLengthIn, formData.package_length_in)) {
+                        changedDimensions.push('length');
+                    }
+                    if (!lockedFields.package_width_in && hasChanged(context.packageWidthIn, formData.package_width_in)) {
+                        changedDimensions.push('width');
+                    }
+                    if (!lockedFields.package_height_in && hasChanged(context.packageHeightIn, formData.package_height_in)) {
+                        changedDimensions.push('height');
+                    }
+
+                    if (changedDimensions.length > 0) {
+                        window.WFToast?.info?.(`📦 Dimensions updated by AI: ${changedDimensions.join(', ')}`);
+                    }
+                }
+
+                // Update form data progressively after each step, respecting locked fields
+                setFormData(prev => ({
+                    ...prev,
+                    // Name locks constrain wording via lockedWords; they do not freeze regeneration.
+                    name: context.name || prev.name,
+                    description: context.description || prev.description,
+                    category: context.category || prev.category,
+                    weight_oz: (!lockedFields.weight_oz && context.weightOz !== null)
+                        ? Number(context.weightOz.toFixed(2))
+                        : prev.weight_oz,
+                    package_length_in: (!lockedFields.package_length_in && context.packageLengthIn !== null)
+                        ? Number(context.packageLengthIn.toFixed(2))
+                        : prev.package_length_in,
+                    package_width_in: (!lockedFields.package_width_in && context.packageWidthIn !== null)
+                        ? Number(context.packageWidthIn.toFixed(2))
+                        : prev.package_width_in,
+                    package_height_in: (!lockedFields.package_height_in && context.packageHeightIn !== null)
+                        ? Number(context.packageHeightIn.toFixed(2))
+                        : prev.package_height_in,
+                    cost_price: (!lockedFields.cost_price && context.suggestedCost !== null)
+                        ? Number(context.suggestedCost.toFixed(2))
+                        : prev.cost_price,
+                    retail_price: (!lockedFields.retail_price && context.suggestedPrice !== null)
+                        ? Number(context.suggestedPrice.toFixed(2))
+                        : prev.retail_price
+                }));
+
+                // Update cached suggestions for breakdown panels (only if not locked)
+                if (step === 'cost' && context.suggestedCost !== null && !lockedFields.cost_price) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (setCachedCostSuggestion as (data: any) => void)({
+                        suggested_cost: context.suggestedCost,
+                        confidence: context.costConfidence ?? 'N/A',
+                        reasoning: context.costReasoning ?? '',
+                        breakdown: context.costBreakdown ?? {},
+                        analysis: {},
+                        created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                    });
+                }
+                if (step === 'price' && context.suggestedPrice !== null && !lockedFields.retail_price) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (setCachedPriceSuggestion as (data: any) => void)({
+                        success: true,
+                        suggested_price: context.suggestedPrice,
+                        confidence: context.priceConfidence ?? 'N/A',
+                        reasoning: context.priceReasoning ?? '',
+                        components: context.priceComponents ?? [],
+                        factors: {},
+                        analysis: {},
+                        created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                    });
+                }
+                if (step === 'marketing' && context.marketingData) {
+                    setCachedMarketingData(context.marketingData);
+                }
+            }
+        });
+
+        if (result) {
+            console.log('[AI Orchestrator] Final result:', result);
+            setIsDirty(true);
+        }
+    };
+
+    const handleGenerateAll = async () => {
+        // Redirection to the new chain logic
+        return triggerGenerationChain();
+    };
+
+    const handleSave = useCallback(async () => {
+        if (isReadOnly || isSaving) return;
+        if (isAdding && !localSku) {
+            if (window.WFToast) window.WFToast.error('SKU is required');
+            return;
+        }
+
+        const skuToSave = isAdding ? localSku : (item?.sku || '');
+        if (!skuToSave) {
+            if (window.WFToast) window.WFToast.error('SKU is required');
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            if (isAdding) {
+                const res = await addItem({
+                    ...formData,
+                    sku: localSku,
+                    stock_quantity: formData.stock_level
+                });
+                if (res.success) {
+                    if (window.WFToast) window.WFToast.success('Item created successfully');
+                    setIsDirty(false);
+                    onSaved?.();
+                    onClose();
+                } else {
+                    if (window.WFToast) window.WFToast.error(res.error || 'Failed to create item');
+                }
+                return;
+            }
+
+            const updatePromises: Promise<{ success: boolean; error?: string }>[] = [];
+
+            // Main fields handling
+            for (const [field, value] of Object.entries(formData)) {
+                if (field === 'is_archived') continue;
+
+                const itemKey = field === 'stock_level' ? 'stock_quantity' : field as keyof IInventoryItem;
+                const rawOriginalValue = (item as any)?.[itemKey];
+
+                let changed = false;
+                if (typeof value === 'number') {
+                    const normalizedOriginal = Number(rawOriginalValue) || 0;
+                    if (Math.abs(value - normalizedOriginal) > 0.001) changed = true;
+                } else if (String(value) !== String(rawOriginalValue ?? '')) {
+                    changed = true;
+                }
+
+                if (changed) {
+                    if (field === 'status') {
+                        if (value === 'archived') {
+                            if (Number(item?.is_archived) !== 1) {
+                                updatePromises.push(updateCell(skuToSave, 'is_archived', 1));
+                            }
+                            continue;
+                        } else if (Number(item?.is_archived) === 1) {
+                            updatePromises.push(updateCell(skuToSave, 'is_archived', 0));
+                        }
+                    }
+                    updatePromises.push(updateCell(skuToSave, itemKey as string, value));
+                }
+            }
+
+            updatePromises.push(updateCell(skuToSave, 'locked_fields', JSON.stringify(lockedFields)));
+            updatePromises.push(updateCell(skuToSave, 'locked_words', JSON.stringify(lockedWords)));
+
+            if (updatePromises.length > 0 || cached_cost_suggestion || cached_price_suggestion) {
+                if (updatePromises.length > 0) {
+                    const results = await Promise.all(updatePromises);
+                    const allSuccess = results.every(r => r.success);
+                    if (!allSuccess) {
+                        if (window.WFToast) window.WFToast.error('Some fields failed to update');
+                    }
+                }
+
+                // Auto-apply AI suggestion factors to the database tables
+                if (cached_cost_suggestion) {
+                    await populateCost(cached_cost_suggestion);
+                    setCachedCostSuggestion(null);
+                }
+                if (cached_price_suggestion) {
+                    await populatePrice(cached_price_suggestion);
+                    setCachedPriceSuggestion(null);
+                }
+
+                if (window.WFToast) window.WFToast.success('Changes saved successfully');
+                setIsDirty(false);
+                onSaved?.();
+                refresh();
+            } else {
+                if (window.WFToast) window.WFToast.info('No changes to save');
+            }
+        } catch (err: unknown) {
+            console.error('Save failed', err);
+            if (window.WFToast) window.WFToast.error('Failed to save changes');
+        } finally {
+            setIsSaving(false);
+        }
+    }, [
+        isReadOnly,
+        isSaving,
+        isAdding,
+        localSku,
+        item,
+        formData,
+        addItem,
+        updateCell,
+        cached_cost_suggestion,
+        cached_price_suggestion,
+        populateCost,
+        populatePrice,
+        setCachedCostSuggestion,
+        setCachedPriceSuggestion,
+        onSaved,
+        refresh,
+        onClose,
+        lockedFields,
+        lockedWords
+    ]);
+
+    const handleApplyCost = (cost: number) => {
+        handleFieldChange('cost_price', cost);
+        setIsDirty(true);
+    };
+    const handleApplyPrice = (price: number) => {
+        handleFieldChange('retail_price', price);
+        setIsDirty(true);
+    };
+    const handleStockChange = (newTotal: number) => handleFieldChange('stock_level', newTotal);
+
+    const [breakdownRefreshTrigger, setBreakdownRefreshTrigger] = useState(0);
+    const handleBreakdownApplied = () => {
+        setBreakdownRefreshTrigger(prev => prev + 1);
+        setIsDirty(true);
+    };
+
+    return {
+        formData,
+        isDirty,
+        isSaving,
+        localSku,
+        setLocalSku,
+        handleFieldChange,
+        generateSku,
+        handleGenerateAll,
+        handleSave,
+        handleApplyCost,
+        handleApplyPrice,
+        handleStockChange,
+        breakdownRefreshTrigger,
+        handleBreakdownApplied,
+        isReadOnly,
+        isAdding,
+        lockedFields,
+        toggleFieldLock,
+        lockedWords,
+        updateLockedWords,
+        cachedMarketingData
+    };
+};

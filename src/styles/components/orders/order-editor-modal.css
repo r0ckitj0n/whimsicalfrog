@@ -1,0 +1,213 @@
+@layer components-orders {
+  .form-input-inline {
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    background-color: white;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .form-select-inline:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px rgba(var(--brand-primary-rgb), 0.2);
+  }
+
+  .form-input-inline:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 2px rgba(var(--brand-primary-rgb), 0.2);
+  }
+
+  /* Order Modal System Overrides from admin-modals.css */
+  #orderModal.admin-modal-overlay.over-header.show {
+    padding-top: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: var(--z-overlay-topmost) !important;
+  }
+
+  .admin-modal.admin-modal--order-editor {
+    /* Auto-size to content with 95% viewport max */
+    height: fit-content !important;
+    max-height: 95vh !important;
+    max-height: 95dvh !important;
+    width: fit-content !important;
+    max-width: 95vw !important;
+    min-width: 720px;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    /* Reset all margins for perfect centering */
+    margin: 0 !important;
+  }
+
+  .admin-modal.admin-modal--order-editor .modal-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    max-height: calc(95vh - 4.5rem) !important;
+    /* account for header */
+    max-height: calc(95dvh - 4.5rem) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: clamp(0.35rem, 0.25rem + 0.5vw, 0.6rem);
+  }
+
+  #orderModal.admin-modal-overlay.wf-modal--content-scroll .order-modal-body {
+    max-height: calc(var(--admin-modal-max-height, 95vh) - 4.5rem) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Order modal specific styling - auto-size to content */
+  .order-modal .admin-modal,
+  .order-modal .modal-content {
+    width: fit-content !important;
+    min-width: 720px;
+    max-width: 95vw;
+    /* Auto-size to content, capped at 95vh */
+    height: fit-content !important;
+    min-height: 360px;
+    max-height: 95vh !important;
+    max-height: 95dvh !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    resize: none;
+  }
+
+  .order-modal .modal-body {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  /* Remove top offset hack; center overlay vertically to prevent blank space below */
+  body[data-page='admin/orders'] #orderModal {
+    padding-top: 0 !important;
+    align-items: center !important;
+  }
+
+  .order-modal .order-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .order-modal .form-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .order-modal .form-section-header {
+    margin-bottom: 0.5rem;
+  }
+
+  .order-modal .form-section:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Overlay should always cover full viewport; content has its own max-height */
+  .admin-modal-overlay.order-modal {
+    height: 100vh;
+    height: 100dvh;
+    max-height: none !important;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+
+    .order-modal .admin-modal,
+    .order-modal .modal-content {
+      min-width: 600px;
+      max-width: 95vw;
+    }
+
+    .order-modal .order-form-grid {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+
+    .order-modal .admin-modal,
+    .order-modal .modal-content {
+      min-width: 90vw;
+      max-width: 95vw;
+    }
+  }
+
+  /* Final guard to ensure the order editor modal body scrolls */
+  body[data-page='admin/orders'] #orderModal .modal-body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  /* ==========================================================================
+     Order Modal Column Styling - Visual Hierarchy for Management Interfaces
+     Matches Customer Modal pattern with green/orange alternating scheme
+     ========================================================================== */
+
+  /* Order Modal Grid Layout - 3-column standard */
+  .order-modal .order-editor-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.5rem !important;
+    padding: 0 !important;
+  }
+
+  /* Column styling - ensure containment */
+  .order-modal-col {
+    padding: 1rem;
+    border-radius: 1rem;
+    overflow: hidden !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Column 1: GREEN background */
+  .order-modal-col-1 {
+    background: rgba(var(--brand-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--brand-accent-rgb), 0.15);
+  }
+
+  /* Column 2: ORANGE background (Fulfillment) */
+  .order-modal-col-2 {
+    background: rgba(var(--brand-secondary-rgb), 0.06);
+    border: 1px solid rgba(var(--brand-secondary-rgb), 0.15);
+  }
+
+  /* Column 3: GREEN background (Financials) */
+  .order-modal-col-3 {
+    background: rgba(var(--brand-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--brand-accent-rgb), 0.15);
+  }
+
+  /* Force all column children to inherit containment */
+  .order-modal-col>* {
+    flex-shrink: 1 !important;
+    flex-grow: 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Form inputs within order modal columns */
+  .order-modal-col input:not([type="checkbox"]):not([type="radio"]),
+  .order-modal-col select,
+  .order-modal-col textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Responsive: Stack columns on smaller screens */
+  @media (max-width: 900px) {
+    .order-modal .order-editor-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+}

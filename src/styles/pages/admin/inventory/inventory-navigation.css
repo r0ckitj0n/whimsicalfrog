@@ -1,0 +1,90 @@
+/* Brand action button (used for primary actions like Save, Edit Item) */
+.brand-button {
+  background-color: var(--brand-primary);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  transition: all 150ms ease;
+  box-shadow: none;
+}
+
+.brand-button:hover {
+  background-color: var(--brand-secondary);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Note: follows centralized button hover pattern (brand-secondary on hover) */
+
+.brand-button:active {
+  transform: translateY(0);
+}
+
+.brand-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(var(--brand-primary-rgb), 0.3);
+}
+
+/* ensure nested icon/text inherit brand color */
+.brand-button * {
+  color: inherit;
+  fill: currentColor;
+}
+
+.brand-button svg {
+  color: inherit;
+  fill: currentColor;
+}
+
+/* Inventory navigation arrows */
+.nav-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  background-color: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.nav-arrow:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Note: nav arrows use darker shade (contextual, not brand-based) - documented exception */
+
+.nav-arrow:active {
+  transform: scale(0.96);
+}
+
+.nav-arrow svg {
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+}
+
+/* Optional spatial hints if used inline with headers */
+.nav-arrow.left {
+  margin-right: 6px;
+}
+
+.nav-arrow.right {
+  margin-left: 6px;
+}
+
+/* Reduce prominence on very small screens if present */
+@media (max-width: 480px) {
+  .nav-arrow {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nav-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+}

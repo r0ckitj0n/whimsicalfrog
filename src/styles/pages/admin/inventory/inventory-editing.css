@@ -1,0 +1,63 @@
+.editable,
+.editable-field {
+  cursor: pointer;
+  transition: color 200ms ease;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.editable:hover,
+.editable-field:hover {
+  background-color: #f1f5f9;
+  background-color: var(--editable-hover-bg, #f1f5f9);
+}
+
+.editable input,
+.editable select,
+.editable-field input,
+.editable-field select {
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid #3b82f6;
+  border-radius: 4px;
+  font-size: inherit;
+  background-color: #fff;
+  outline: none;
+  font-family: var(--font-secondary, inherit);
+}
+
+.editable input:focus,
+.editable select:focus,
+.editable-field input:focus,
+.editable-field select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Success highlight for updated fields */
+.bg-green-100 {
+  transition: background-color 300ms ease !important;
+  background-color: var(--brand-accent-bg) !important;
+}
+
+/* Flash highlight helpers (removed via JS timeout) */
+.flash-highlight-green {
+  background-color: var(--brand-accent-bg) !important;
+}
+
+.flash-highlight-green-light {
+  background-color: var(--brand-accent-bg) !important;
+}
+
+.flash-highlight-purple {
+  background-color: var(--brand-primary-bg) !important;
+}
+
+.flash-highlight-blue {
+  background-color: var(--brand-primary-bg) !important;
+}
+
+/* Busy state for inline inputs */
+.is-busy {
+  opacity: 0.6;
+}

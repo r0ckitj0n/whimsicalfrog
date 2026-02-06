@@ -1,0 +1,60 @@
+/* Room Main Background & Core Layout (Vite-managed) */
+
+/* Hide PHP skeletons when React is active */
+body[data-page="room_main"] #mainRoomPage:not([id$="-react"]),
+body[data-page="landing"] #landingPage:not([id$="-react"]),
+body[data-page="shop"] .shop-loading-placeholder,
+body[data-page="contact"] .page-content:not(#wf-root .page-content),
+body[data-page="receipt"] .page-content:not(#wf-root .page-content),
+body[data-page="login"] .login-shell-loading,
+body[data-page="login"] .login-loading-placeholder {
+    display: none !important;
+}
+
+.main-room-section {
+    position: fixed;
+    inset: 0;
+    background-color: transparent;
+    background-image: var(--main-room-bg, none);
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    z-index: var(--wf-z-base, 0);
+    overflow-x: hidden;
+    overflow-y: auto;
+    pointer-events: auto;
+}
+
+#wf-root .main-room-section,
+#wf-root .landing-section {
+    z-index: var(--wf-z-base, 0);
+}
+
+.room-header-overlay {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px;
+}
+
+.site-header.universal-page-header {
+    z-index: var(--wf-z-sticky, 100) !important;
+    position: relative;
+}
+
+.room-page-header * { text-shadow: none !important; }
+
+.site-header .header-content {
+    position: relative;
+    z-index: var(--wf-z-elevated, 10) !important;
+}
+
+/* Navigation & Logo */
+.nav-links, .nav-link, .logo-link, .logo-text, .cart-link {
+    z-index: var(--wf-z-sticky, 100) !important;
+    position: relative !important;
+    text-shadow: none !important;
+}

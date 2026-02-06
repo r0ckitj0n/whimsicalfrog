@@ -1,0 +1,13 @@
+/* Admin Marketing: chart container heights (support Tailwind-like utility classes present in markup) */
+.h-\[240px\] {
+  height: 240px;
+}
+
+.h-\[260px\] {
+  height: 260px;
+}
+
+/* Replace inline style in sections/tools/ai_suggestions.php */
+.admin-marketing-page .wf-admin-modal-body {
+  overflow: hidden !important;
+}

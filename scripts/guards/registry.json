@@ -1,0 +1,217 @@
+{
+  "guards": {
+    "quarantine-duplicates": {
+      "description": "Move duplicate-suffixed files into backups/duplicates and bak artifacts into backups/bak to keep the repo clean.",
+      "command": [
+        "bash",
+        "scripts/maintenance/quarantine_duplicates.sh"
+      ]
+    },
+    "guard-repo-hygiene": {
+      "description": "Block root-level stray scripts and duplicate artifacts outside backups/duplicates.",
+      "command": [
+        "node",
+        "scripts/guards/guard-repo-hygiene.mjs"
+      ]
+    },
+    "guard-no-inline-fallbacks": {
+      "description": "Ensure admin modal fallbacks live in Vite modules instead of inline <script> tags.",
+      "command": [
+        "node",
+        "scripts/guards/no-inline-fallbacks.mjs"
+      ]
+    },
+    "guard-modal-panel-utilities": {
+      "description": "Require modal markup to use shared admin modal classes/utilities.",
+      "command": [
+        "node",
+        "scripts/guards/guard-modal-panel-utilities.mjs"
+      ]
+    },
+    "guard-no-inline-styles-attrs": {
+      "description": "Block inline style attributes inside PHP/HTML templates.",
+      "command": [
+        "node",
+        "scripts/guards/guard-no-inline-styles-attrs.mjs"
+      ]
+    },
+    "guard-no-raw-fetch": {
+      "description": "Disallow raw fetch/XHR usage outside the ApiClient allowlist.",
+      "command": [
+        "node",
+        "scripts/guards/no-raw-fetch.mjs"
+      ]
+    },
+    "guard-icons-consistency": {
+      "description": "Keep admin action icons consistent and warn if emoji/icon classes drift.",
+      "command": [
+        "node",
+        "scripts/guards/guard-icons-consistency.mjs"
+      ]
+    },
+    "guard-email-config": {
+      "description": "Ensure email credentials flow through the encrypted secret store (no raw env lookups).",
+      "command": [
+        "node",
+        "scripts/guards/guard-email-config.mjs"
+      ]
+    },
+    "guard-no-iframes": {
+      "description": "Prevent new iframe embeds in live templates (except approved contexts).",
+      "command": [
+        "node",
+        "scripts/guards/guard-no-iframes.mjs"
+      ]
+    },
+    "guard-no-alerts": {
+      "description": "Ban alert()/confirm() usage in production bundles.",
+      "command": [
+        "node",
+        "scripts/guards/guard-no-alerts.mjs"
+      ]
+    },
+    "guard-templates-css": {
+      "description": "Block legacy <link rel=\"stylesheet\"> and inline style attributes in live templates.",
+      "command": [
+        "node",
+        "scripts/guard-templates-css.mjs"
+      ]
+    },
+    "guard-brand-colors": {
+      "description": "Ensure brand color literals are only referenced via approved variables.",
+      "command": [
+        "bash",
+        "-lc",
+        "rg -n \"#6b8e23|#789a34\" --glob '!**/backups/**' --glob '!**/*.backup*' --glob '!**/site-base.css.backup'"
+      ]
+    },
+    "guard-fonts": {
+      "description": "Ensure font stacks come from CSS variables (no direct font-family literals).",
+      "command": [
+        "bash",
+        "-lc",
+        "rg -n \"font-family\\s*:\\s*[^;]+;\" src/ css/ | grep -vF 'var(--font-' | grep -v email-styles.css | grep -v core/utilities.css | grep -v site-base.css.backup"
+      ]
+    },
+    "guard-images": {
+      "description": "Audit images for naming/placement issues before deploys.",
+      "command": [
+        "node",
+        "scripts/guard-images.mjs"
+      ]
+    },
+    "guard-z-index": {
+      "description": "Ensure CSS uses approved z-index tokens/variables.",
+      "command": [
+        "node",
+        "scripts/guard-z-index.mjs"
+      ]
+    },
+    "guard-z-index-tokens": {
+      "description": "Validate z-index tokens JSON stays in sync with CSS variables.",
+      "command": [
+        "node",
+        "scripts/guards/guard-z-index-tokens.mjs"
+      ]
+    },
+    "guard-tooltips-label-only": {
+      "description": "Enforce tooltip attributes on labels (never inputs/selects).",
+      "command": [
+        "node",
+        "scripts/guards/guard-tooltips-label-only.mjs"
+      ]
+    },
+    "guard-api-absolute-paths": {
+      "description": "Ensure API scripts use absolute includes/paths (no ../../../ mistakes).",
+      "command": [
+        "bash",
+        "scripts/guards/guard-api-absolute-paths.sh"
+      ]
+    },
+    "guard-admin-router": {
+      "description": "Verify the unified /admin route stays aligned with the canonical sections loader.",
+      "command": [
+        "node",
+        "scripts/dev/guard-admin-router.mjs"
+      ]
+    },
+    "guard-docs-structure": {
+      "description": "Keep documentation/ organized (uppercase snake-case, required folders present).",
+      "command": [
+        "node",
+        "scripts/dev/guard-docs-structure.mjs"
+      ]
+    },
+    "guard-backups-staged": {
+      "description": "Block staging backup-like files outside backups/ (including tooltip snapshots).",
+      "command": [
+        "node",
+        "scripts/guards/guard-backups-staged.mjs"
+      ],
+      "allowExtraArgs": true
+    },
+    "guard-legacy-scan": {
+      "description": "Scan for legacy inline handlers / data-action styling patterns pending migration.",
+      "command": [
+        "node",
+        "scripts/dev/legacy-scan.mjs"
+      ],
+      "allowExtraArgs": true
+    },
+    "disallow-inline-styles": {
+      "description": "Prevent element.style writes and inline style strings in JS modules.",
+      "command": [
+        "node",
+        "scripts/disallow-inline-styles.mjs"
+      ],
+      "allowExtraArgs": true
+    }
+  },
+  "modes": {
+    "prebuild": [
+      "quarantine-duplicates",
+      "guard-repo-hygiene",
+      "guard-no-inline-fallbacks",
+      "guard-modal-panel-utilities",
+      "guard-no-inline-styles-attrs",
+      "guard-no-raw-fetch",
+      "guard-icons-consistency",
+      "guard-email-config",
+      "guard-no-iframes",
+      "guard-no-alerts"
+    ],
+    "docs": [
+      "guard-docs-structure"
+    ],
+    "css": [
+      "guard-templates-css",
+      "guard-z-index",
+      "guard-z-index-tokens"
+    ],
+    "all": [
+      "quarantine-duplicates",
+      "guard-repo-hygiene",
+      "guard-no-inline-fallbacks",
+      "guard-modal-panel-utilities",
+      "guard-no-inline-styles-attrs",
+      "guard-no-raw-fetch",
+      "disallow-inline-styles",
+      "guard-icons-consistency",
+      "guard-email-config",
+      "guard-no-iframes",
+      "guard-no-alerts",
+      "guard-templates-css",
+      "guard-brand-colors",
+      "guard-fonts",
+      "guard-images",
+      "guard-z-index",
+      "guard-z-index-tokens",
+      "guard-tooltips-label-only",
+      "guard-api-absolute-paths",
+      "guard-admin-router",
+      "guard-docs-structure",
+      "guard-backups-staged",
+      "guard-legacy-scan"
+    ]
+  }
+}

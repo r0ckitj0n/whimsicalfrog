@@ -1,0 +1,305 @@
+/* Admin Settings: Reusable UI Components */
+
+/* Settings Section Card Themes & Component Styles */
+
+.settings-section {
+  background: white !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+.settings-section .section-header {
+  padding: 12px 16px !important;
+  color: white !important;
+  border-top-left-radius: 12px !important;
+  border-top-right-radius: 12px !important;
+  height: 100px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.settings-section.card-theme-emerald .section-header {
+  background-color: #10b981 !important;
+}
+
+.settings-section.card-theme-orange .section-header {
+  background-color: #f97316 !important;
+}
+
+.settings-section.card-theme-blue .section-header {
+  background-color: #3b82f6 !important;
+}
+
+.settings-section.card-theme-red .section-header {
+  background-color: #ef4444 !important;
+}
+
+.settings-section.card-theme-purple .section-header {
+  background-color: #a855f7 !important;
+}
+
+.settings-section .section-title {
+  font-family: 'Merienda', cursive !important;
+  font-size: 1.25rem !important;
+  margin: 0 !important;
+  color: white !important;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2) !important;
+  text-align: center !important;
+}
+
+.settings-section .section-description {
+  font-size: 0.75rem !important;
+  margin: 4px 0 0 0 !important;
+  opacity: 0.9 !important;
+  line-height: 1.2 !important;
+  font-style: italic !important;
+  text-align: center !important;
+  color: white !important;
+}
+
+.settings-section .section-content {
+  padding: 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  flex: 1 !important;
+}
+
+/* Button Styling inside cards */
+.settings-section .admin-settings-button {
+  text-align: left !important;
+  padding: 8px 12px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  transition: all 0.2s !important;
+  border: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Button colors match card header backgrounds - high specificity to override other styles */
+body[data-page='admin/settings'] .settings-section.card-theme-emerald .admin-settings-button {
+  background-color: #10b981 !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-emerald .admin-settings-button:hover {
+  background-color: #059669 !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-orange .admin-settings-button {
+  background-color: #f97316 !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-orange .admin-settings-button:hover {
+  background-color: #ea580c !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-blue .admin-settings-button {
+  background-color: #3b82f6 !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-blue .admin-settings-button:hover {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-red .admin-settings-button {
+  background-color: #ef4444 !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-red .admin-settings-button:hover {
+  background-color: #dc2626 !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-purple .admin-settings-button {
+  background-color: #a855f7 !important;
+  color: white !important;
+}
+
+body[data-page='admin/settings'] .settings-section.card-theme-purple .admin-settings-button:hover {
+  background-color: #9333ea !important;
+  color: white !important;
+}
+
+/* Brand swatch colors from settings - will be dynamically updated via CSS variables */
+.brand-primary-swatch {
+  background-color: var(--brand-primary, #0ea5e9);
+  color: #fff;
+}
+
+.brand-secondary-swatch {
+  background-color: var(--brand-secondary, #6366f1);
+  color: #fff;
+}
+
+.brand-accent-swatch {
+  background-color: var(--brand-accent, #22c55e);
+  color: #fff;
+}
+
+/* Brand swatch colors by palette index */
+.brand-swatch[data-index="0"] {
+  background-color: var(--palette-0, #f3f4f6);
+}
+
+.brand-swatch[data-index="1"] {
+  background-color: var(--palette-1, #e5e7eb);
+}
+
+.brand-swatch[data-index="2"] {
+  background-color: var(--palette-2, #d1d5db);
+}
+
+.brand-swatch[data-index="3"] {
+  background-color: var(--palette-3, #9ca3af);
+}
+
+.brand-swatch[data-index="4"] {
+  background-color: var(--palette-4, #6b7280);
+}
+
+.brand-swatch[data-index="5"] {
+  background-color: var(--palette-5, #4b5563);
+}
+
+.brand-swatch[data-index="6"] {
+  background-color: var(--palette-6, #374151);
+}
+
+.brand-swatch[data-index="7"] {
+  background-color: var(--palette-7, #1f2937);
+}
+
+.brand-swatch[data-index="8"] {
+  background-color: var(--palette-8, #111827);
+}
+
+.brand-swatch[data-index="9"] {
+  background-color: var(--palette-9, #000000);
+}
+
+/* Color chip for attributes */
+.color-chip[data-color] {
+  background-color: var(--chip-color, transparent);
+}
+
+/* Map semantic slugs to colors via CSS */
+:root {
+  --category-system-bg: #DBEAFE;
+  --category-system-fg: #1E40AF;
+  --category-authentication-bg: #FEE2E2;
+  --category-authentication-fg: #991B1B;
+  --category-customization-bg: #EDE9FE;
+  --category-customization-fg: #5B21B6;
+  --category-development-bg: #DCFCE7;
+  --category-development-fg: #166534;
+  --category-documentation-bg: #FEF9C3;
+  --category-documentation-fg: #854D0E;
+  --category-features-bg: #E0E7FF;
+  --category-features-fg: #3730A3;
+  --category-maintenance-bg: #FFEDD5;
+  --category-maintenance-fg: #9A3412;
+  --category-design-bg: #FCE7F3;
+  --category-design-fg: #9D174D;
+  --category-api-bg: #CCFBF1;
+  --category-api-fg: #115E59;
+  --category-general-bg: #F3F4F6;
+  --category-general-fg: #1F2937;
+  --category-default-bg: #F3F4F6;
+  --category-default-fg: #1F2937;
+}
+
+.category-badge.category-system {
+  background-color: var(--category-system-bg, var(--category-default-bg));
+  color: var(--category-system-fg, var(--category-default-fg));
+}
+
+.category-badge.category-authentication {
+  background-color: var(--category-authentication-bg, var(--category-default-bg));
+  color: var(--category-authentication-fg, var(--category-default-fg));
+}
+
+.category-badge.category-customization {
+  background-color: var(--category-customization-bg, var(--category-default-bg));
+  color: var(--category-customization-fg, var(--category-default-fg));
+}
+
+.category-badge.category-development {
+  background-color: var(--category-development-bg, var(--category-default-bg));
+  color: var(--category-development-fg, var(--category-default-fg));
+}
+
+.category-badge.category-documentation {
+  background-color: var(--category-documentation-bg, var(--category-default-bg));
+  color: var(--category-documentation-fg, var(--category-default-fg));
+}
+
+.category-badge.category-features {
+  background-color: var(--category-features-bg, var(--category-default-bg));
+  color: var(--category-features-fg, var(--category-default-fg));
+}
+
+.category-badge.category-maintenance {
+  background-color: var(--category-maintenance-bg, var(--category-default-bg));
+  color: var(--category-maintenance-fg, var(--category-default-fg));
+}
+
+.category-badge.category-design {
+  background-color: var(--category-design-bg, var(--category-default-bg));
+  color: var(--category-design-fg, var(--category-default-fg));
+}
+
+.category-badge.category-api {
+  background-color: var(--category-api-bg, var(--category-default-bg));
+  color: var(--category-api-fg, var(--category-default-fg));
+}
+
+.category-badge.category-general {
+  background-color: var(--category-general-bg, var(--category-default-bg));
+  color: var(--category-general-fg, var(--category-default-fg));
+}
+
+/* Square configuration status chip */
+#squareSettingsBtn .status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+#squareSettingsBtn .status-chip.chip-ok {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border-color: #A7F3D0;
+}
+
+#squareSettingsBtn .status-chip.chip-off {
+  background-color: #FEF2F2;
+  color: #991B1B;
+  border-color: #FECACA;
+}
+
+/* Disabled state for pickers */
+.input-disabled-transparent {
+  opacity: 0.2 !important;
+  pointer-events: none !important;
+}

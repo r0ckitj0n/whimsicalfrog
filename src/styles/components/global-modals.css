@@ -1,0 +1,6 @@
+/* Global Modals (Modularized) */
+
+@import url("./global-modals/overlays.css");
+@import url("./global-modals/containers.css");
+@import url("./global-modals/confirmation.css");
+@import url("./global-modals/base-rules.css");

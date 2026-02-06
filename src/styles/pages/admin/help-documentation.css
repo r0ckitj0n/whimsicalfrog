@@ -1,0 +1,152 @@
+/* Help Documentation Styles */
+
+.help-documentation-container {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 1rem;
+}
+
+.help-header {
+    background-image: linear-gradient(to bottom right, #3b82f6, #8b5cf6);
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.search-container {
+    position: relative;
+}
+
+#helpSearch {
+    width: 100%;
+    padding-left: 3rem;
+    padding-right: 1rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 200ms ease;
+    outline: none;
+}
+
+#helpSearch:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+#searchResults {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-height: 24rem;
+    overflow-y: auto;
+    z-index: var(--wf-z-elevated);
+}
+
+.toc-link {
+    display: block;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-decoration: none;
+    border-radius: 0.375rem;
+    transition: all 200ms ease;
+}
+
+.toc-link:hover {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.toc-link.active {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+    font-weight: 500;
+}
+
+.help-section {
+    margin-bottom: 2rem;
+}
+
+.help-section h2 {
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.help-section h3 {
+    color: #374151;
+    margin-bottom: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.help-section p {
+    color: #6b7280;
+    line-height: 1.625;
+    margin-bottom: 1rem;
+}
+
+.help-section ul,
+.help-section ol {
+    color: #6b7280;
+    line-height: 1.625;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.help-section li {
+    margin-bottom: 0.5rem;
+}
+
+.help-section strong {
+    color: #374151;
+    font-weight: 600;
+}
+
+.help-section code {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+    .help-documentation-container {
+        padding: 0.5rem;
+    }
+
+    .help-documentation-container .grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+
+    .lg\:col-span-1,
+    .lg\:col-span-3 {
+        grid-column: span 1 / span 1;
+    }
+
+    .sticky {
+        position: static;
+    }
+}
+
+/* Print styles */
+@media print {
+
+    .help-header,
+    .search-container,
+    .toc-link {
+        display: none;
+    }
+
+    .help-documentation-container {
+        max-width: none;
+        padding: 0;
+    }
+}

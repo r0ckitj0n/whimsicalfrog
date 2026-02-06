@@ -1,0 +1,51 @@
+/* Canonical Z-Index Tokens (Single Source of Truth) */
+
+:root {
+  --wf-z-wf-root: 5;
+  /* -- Canonical Whimsical Frog Tokens -- */
+  --wf-z-negative: -1;
+  --wf-z-base: 0;
+  --wf-z-elevated: 10;
+  --wf-z-sticky: 1000;
+  --wf-z-backdrop: 11000;
+  --wf-z-modal: 11010;
+  --wf-z-modal-elevated: 11020;
+  --wf-z-modal-nested: 11030;
+  --wf-z-toast: 12000;
+  --wf-z-cursor: 2147483647;
+
+  /* -- High level layers (using canonical prefixes) -- */
+  --wf-z-admin-overlay: 10110;
+  --wf-z-admin-content: 10120;
+  --wf-z-topmost: 2147483647;
+  --wf-z-god-mode: 1600;
+
+  /* -- Standard Semantic Layers -- */
+  --z-index-behind: var(--wf-z-negative);
+  --z-index-far-behind: calc(var(--wf-z-negative) - 1);
+  --z-index-base: var(--wf-z-base);
+  --z-index-raised: var(--wf-z-elevated);
+
+  --z-site-header: var(--wf-z-sticky);
+  --z-index-page-header: var(--wf-z-sticky);
+  --z-index-site-nav: calc(var(--wf-z-sticky) - 10);
+
+  --z-overlay-backdrop: var(--wf-z-backdrop);
+  --z-overlay: var(--wf-z-backdrop);
+
+  --z-index-modal-base: var(--wf-z-modal);
+  --z-modal: var(--wf-z-modal);
+  --z-index-room-modal: var(--wf-z-modal);
+  --z-index-item-modal: var(--wf-z-topmost);
+
+  --z-index-toast: var(--wf-z-toast);
+  --z-notification: var(--wf-z-toast);
+  --z-global-popup: var(--wf-z-toast);
+  --z-popup: var(--wf-z-toast);
+
+  --z-admin-overlay: var(--wf-z-admin-overlay);
+  --z-admin-overlay-content: var(--wf-z-admin-content);
+  --z-overlay-topmost: var(--wf-z-topmost);
+  --z-index-global-notification: 2147483647;
+  --z-index-god-mode: var(--wf-z-god-mode);
+}

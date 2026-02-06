@@ -1,0 +1,66 @@
+/* Automation & Health Tool Styles (Vite-managed) */
+
+/* Health & Diagnostics */
+#healthModal .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  overflow: hidden !important;
+}
+
+#healthModal .modal-body {
+  overflow-y: auto !important;
+  padding-right: 0;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* Automation Manager */
+#automationManagerModal .admin-modal,
+#automationModal .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  height: auto !important;
+  overflow: hidden !important;
+}
+
+#automationManagerModal .modal-body,
+#automationModal .modal-body {
+  overflow-y: auto !important;
+  padding-right: 0;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+}
+
+/* Nested automation modal flattening from backup */
+#automationManagerModal .modal-body .modal-body,
+#automationModal .modal-body .modal-body {
+  flex: 0 0 auto !important;
+  min-height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+#automationManagerModal .modal-body .admin-modal,
+#automationModal .modal-body .admin-modal {
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+#automationManagerModal .modal-body .admin-modal .modal-header,
+#automationModal .modal-body .admin-modal .modal-header {
+  display: none !important;
+}
+
+#automationManagerContent,
+#automationContainer,
+#automationManagerContainer {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: block !important;
+  padding-bottom: 100px !important;
+}

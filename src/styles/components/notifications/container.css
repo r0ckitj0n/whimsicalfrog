@@ -1,0 +1,51 @@
+/* Notification Container & Animations (Vite-managed) */
+
+@layer components.notifications {
+  .wf-notification-container {
+    z-index: var(--wf-z-topmost) !important;
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    left: auto;
+    pointer-events: none;
+    max-width: 420px;
+    width: auto;
+  }
+
+  .wf-notification {
+    pointer-events: auto;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    box-shadow: 0 12px 28px rgb(0 0 0 / 35%), 0 4px 8px rgb(0 0 0 / 15%);
+    backdrop-filter: blur(12px) saturate(180%);
+    border: 2px solid;
+    min-width: 300px;
+    position: relative;
+    transform: translateX(100%) scale(0.9);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+    padding: 20px 24px;
+    background: none;
+    font-family: var(--font-brand, var(--brand-font, inherit));
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+
+  .wf-notification.is-visible {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+
+  .wf-notification:hover {
+    transform: translateX(0) scale(1.02);
+  }
+
+  .wf-notification.slide-out {
+    transform: translateX(120%);
+    opacity: 0;
+    margin-bottom: 0;
+  }
+}

@@ -1,0 +1,121 @@
+@layer components.admin-modals {
+  /* Button styles in admin modals should inherit from global buttons.css */
+  /* Canonical admin button palette removed to allow global theme */
+
+
+  /* Pill-style tabs for Admin Modals (matches Shop Filter style) */
+  #socialManagerContent .admin-pill-tab,
+  body[data-page^='admin'] .admin-modal .admin-pill-tab,
+  body[data-page^='admin'] .admin-pill-tab,
+  .admin-modal .admin-pill-tab,
+  .admin-pill-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none !important;
+
+    /* Force brand background with robust resets */
+    background-color: var(--brand-primary) !important;
+    background: var(--brand-primary) !important;
+    background-image: none !important;
+
+    color: #ffffff !important;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    opacity: 0.85;
+
+    /* Reset user-agent styles */
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    box-shadow: none;
+    text-decoration: none;
+  }
+
+  .admin-modal .admin-pill-tab:hover,
+  .admin-pill-tab:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    background: var(--brand-primary) !important;
+    filter: brightness(0.95);
+    color: #ffffff !important;
+  }
+
+  .admin-modal .admin-pill-tab.active,
+  .admin-pill-tab.active {
+    opacity: 1;
+    background: var(--brand-primary) !important;
+    /* Double ring: inner white gap, outer brand ring */
+    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px var(--brand-primary);
+  }
+
+  #orderModal.admin-modal-overlay.over-header.show {
+    padding-top: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: var(--wf-z-modal-elevated) !important;
+  }
+
+  .admin-modal-overlay.topmost {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    z-index: var(--wf-z-modal-elevated) !important;
+  }
+
+  /* Nested child modals that appear above topmost parent modals */
+  .admin-modal-overlay.topmost-child,
+  .wf-modal-child-overlay {
+    z-index: var(--wf-z-modal-nested) !important;
+  }
+
+  /* Scrollable Modal Body */
+  .wf-admin-modal-body,
+  .wf-modal-body--scroll {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Custom Scrollbar for Admin Modals */
+  .wf-admin-modal-body::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .wf-admin-modal-body::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+  }
+
+  .wf-admin-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .wf-admin-modal-body:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    background-clip: content-box;
+  }
+
+  /* Scrollbar hugging: remove padding from body, add to immediate children */
+  .admin-modal .modal-body.wf-modal-body--scrollable,
+  .admin-modal .modal-body[style*="overflow-y: auto"],
+  .wf-admin-modal-body {
+    padding-right: 0 !important;
+  }
+
+  .admin-modal .modal-body.wf-modal-body--scrollable>*,
+  .admin-modal .modal-body[style*="overflow-y: auto"]>*,
+  .wf-admin-modal-body>* {
+    padding-right: 1.5rem;
+  }
+
+}

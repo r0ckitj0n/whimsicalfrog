@@ -1,0 +1,105 @@
+/* Contact Form Styles (Vite-managed) */
+
+/* Aggressive override for Contact Form inputs and textarea */
+body[data-page='contact'] .wf-contact-form input,
+body[data-page='contact'] .wf-contact-form textarea,
+body[data-page='contact'] .wf-contact-form select,
+body[data-page='contact'] .wf-contact-form input[type="text"],
+body[data-page='contact'] .wf-contact-form input[type="email"],
+body[data-page='contact'] .wf-contact-form input[type="tel"],
+body[data-page='contact'] .wf-contact-form input[type="subject"] {
+  text-align: left !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+  font-size: 0.95rem;
+  background: #fff;
+  color: #111;
+  border: 1.5px solid #d1d5db !important;
+  width: 100%;
+  display: block;
+  margin-bottom: 0.5rem;
+  box-shadow: none !important;
+  border-radius: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body[data-page='contact'] .wf-contact-form input:focus,
+body[data-page='contact'] .wf-contact-form textarea:focus {
+  outline: none;
+  border-color: var(--brand-secondary) !important;
+  box-shadow: 0 0 0 3px rgba(var(--brand-secondary-rgb), 0.1) !important;
+}
+
+@layer pages-storefront-contact {
+  .wf-contact-form {
+    width: 100%;
+    max-width: var(--contact-form-max, 1100px) !important;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  .wf-contact-form label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    display: inline-block;
+    text-align: left;
+    width: auto;
+    color: #fff;
+  }
+
+  .wf-contact-form select {
+    height: 40px !important;
+  }
+
+  .wf-contact-form textarea {
+    min-height: 180px !important;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
+
+  .wf-contact-form input:not([type="submit"]) {
+    height: 38px !important;
+  }
+
+  .wf-contact-form.space-y-4>*+* {
+    margin-top: 0.75rem;
+  }
+
+  .wf-submit-btn {
+    background: var(--brand-secondary);
+    color: #ffffff;
+    border: 2px solid rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform .06s ease, box-shadow .2s ease, filter .2s ease;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+  }
+
+  .wf-submit-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(.98);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, .24);
+  }
+
+  .wf-submit-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(var(--brand-secondary-rgb), 0.35);
+  }
+
+  .wf-submit-btn:disabled {
+    opacity: .7;
+    cursor: not-allowed;
+    filter: grayscale(.1);
+  }
+
+  .wf-honeypot {
+    position: absolute !important;
+    left: -9999px !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
+  }
+}

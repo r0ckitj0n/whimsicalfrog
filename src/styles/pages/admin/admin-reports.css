@@ -1,0 +1,100 @@
+.view-report-btn {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    z-index: var(--wf-z-elevated) !important;
+}
+
+.modal-force-top {
+    z-index: var(--wf-z-admin-overlay) !important;
+}
+
+.reports-modal-hidden {
+    display: none !important;
+}
+
+/* Strong ID-based override for the isolated close button */
+#closeReportsDetailModalBtn {
+    position: absolute !important;
+    top: 12px !important;
+    right: 12px !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0.25rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 9999px !important;
+    background-color: transparent !important;
+    border-style: none !important;
+    cursor: pointer !important;
+    color: #6b7280 !important;
+    z-index: var(--wf-z-elevated) !important;
+}
+
+/* Hover: handled by buttons-hover.css */
+
+/* Standard Admin Modal Close Button (Copied from admin-settings.css to ensure availability) */
+.admin-modal-close {
+    position: absolute !important;
+    top: 0.5rem !important;
+    right: 10px !important;
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    line-height: 1.75rem !important;
+    text-align: center !important;
+    border-radius: 9999px !important;
+    background-color: transparent !important;
+    border-style: none !important;
+    color: #6b7280 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    z-index: var(--wf-z-elevated) !important;
+}
+
+/* Hover: handled by buttons-hover.css */
+
+.admin-modal-close:focus {
+    outline: none;
+}
+
+/* Report Filter Forms */
+.report-filter-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+@media (min-width: 768px) {
+    .report-filter-form {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+}
+
+/* Report Actions */
+.report-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--admin-border-color, #e5e7eb);
+}
+
+@media (max-width: 767px) {
+    .report-actions {
+        justify-content: center;
+    }
+}
+
+/* Table Containers */
+.table-container {
+    overflow-x: auto;
+    border-radius: var(--border-radius-default, 8px);
+    border: 1px solid var(--admin-table-border, #e5e7eb);
+}

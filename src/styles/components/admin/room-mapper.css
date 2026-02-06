@@ -1,0 +1,107 @@
+/* Room Mapper Specific Styles (Vite-managed) */
+
+/* Area Mappings modal: default dark text so inline notices remain legible from backup */
+.aim-modal-dark,
+.aim-modal-dark .modal-body {
+    color: #1f2937 !important;
+}
+
+.room-mapper-container {
+    position: relative;
+    width: 100%;
+}
+
+.room-mapper-clickable-area {
+    position: absolute;
+    border: 2px solid red;
+    background: rgb(255 0 0 / 20%);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.room-mapper-clickable-area:hover {
+    background: rgb(255 0 0 / 40%);
+    transform: scale(1.02);
+}
+
+.room-mapper-container.grid-active .grid-overlay {
+    display: block;
+}
+
+.room-mapper-clickable-area.original-map {
+    border: 2px solid #10b981;
+    background: rgb(16 185 129 / 20%);
+    box-shadow: 0 0 8px rgb(16 185 129 / 30%);
+}
+
+.room-mapper-clickable-area.original-map:hover {
+    background: rgb(16 185 129 / 40%);
+}
+
+.room-mapper-clickable-area.active-map {
+    border: 2px solid #3b82f6;
+    background: rgb(59 130 246 / 20%);
+    box-shadow: 0 0 6px rgb(59 130 246 / 30%);
+}
+
+.room-mapper-clickable-area.active-map:hover {
+    background: rgb(59 130 246 / 40%);
+}
+
+.room-mapper-clickable-area.inactive-map {
+    border: 2px solid #6b7280;
+    background: rgb(107 114 128 / 20%);
+}
+
+.room-mapper-clickable-area.inactive-map:hover {
+    background: rgb(107 114 128 / 40%);
+}
+
+/* Revert overly-aggressive emoji reset for header nav buttons */
+html body.admin-view .modal-header button.aim-header-nav-btn {
+    all: revert !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    padding: 8px 16px !important;
+    border-radius: 0.375rem !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    text-transform: uppercase !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.05em !important;
+    font-size: 10px !important;
+    margin: 0 !important;
+}
+
+html body.admin-view .modal-header button.aim-header-nav-btn.btn-brand {
+    background-color: var(--brand-primary) !important;
+    border: 1px solid var(--brand-primary) !important;
+    color: #ffffff !important;
+}
+
+html body.admin-view .modal-header button.aim-header-nav-btn.btn-secondary {
+    background-color: var(--brand-secondary) !important;
+    border: 1px solid var(--brand-secondary) !important;
+    color: #ffffff !important;
+}
+
+html body.admin-view .modal-header button.aim-header-nav-btn:hover {
+    transform: none !important;
+    opacity: 0.9 !important;
+}
+
+html body.admin-view .modal-header button.aim-header-nav-btn.btn-brand:hover {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+}
+
+html body.admin-view .modal-header button.aim-header-nav-btn.btn-secondary:hover {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+}

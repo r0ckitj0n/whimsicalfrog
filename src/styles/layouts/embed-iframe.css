@@ -1,0 +1,61 @@
+/* Embed iframe CSS: applies only when body[data-embed='1'] (modal context) */
+html:has(body[data-embed='1']) {
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+body[data-embed='1'] {
+  height: auto !important;
+  min-height: auto !important;
+  overflow-y: auto !important; /* default: iframe can scroll */
+  overflow-x: hidden !important;
+}
+
+/* Common admin page containers should not force full height */
+body[data-embed='1'] .admin-marketing-page,
+body[data-embed='1'] .admin-categories-page,
+body[data-embed='1'] .admin-tools-page,
+body[data-embed='1'] .admin-page,
+body[data-embed='1'] #admin-section-content {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+}
+
+/* Also ensure common inner containers don't clip content in embed */
+body[data-embed='1'] .tool-wrap,
+body[data-embed='1'] .aim-tab-panel,
+body[data-embed='1'] .admin-card {
+  overflow: visible !important;
+  max-height: none !important;
+}
+/* Embedded admin pages live inside another overlay that already provides a close button.
+   Hide inner modal close buttons to avoid duplicate “X” controls. */
+body[data-embed='1'] .modal-header .admin-modal-close,
+body[data-embed='1'] .modal-header .modal-close {
+  display: none !important;
+}
+
+/* Prefer responsive panel behavior under embed */
+body[data-embed='1'] .admin-modal.admin-modal-content {
+  height: auto !important;
+}
+
+/* In embedded admin pages, remove child overlay height caps so parent can control expansion */
+body[data-embed='1'] .admin-modal-overlay .admin-modal {
+  max-height: none !important;
+  height: auto !important;
+}
+body[data-embed='1'] .wf-modal--content-scroll .admin-modal {
+  max-height: none !important;
+  height: auto !important;
+}
+body[data-embed='1'] .wf-modal--content-scroll .modal-body {
+  max-height: none !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+}
+
+/* Buttons manager: let page defaults handle table wrapper scroll (no overrides) */

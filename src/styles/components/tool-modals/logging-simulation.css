@@ -1,0 +1,83 @@
+/* Logging & Simulation Tool Styles (Vite-managed) */
+
+/* Logging Modals */
+#loggingStatusResult { max-height: 60vh; overflow-y: auto; }
+#logFileViewerContainer { max-height: 70vh; overflow-y: auto; }
+
+.log-level-badge {
+    padding: 0.25rem 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.log-level-badge.error { background-color: #fee2e2; color: #991b1b; }
+.log-level-badge.warning { background-color: #fef3c7; color: #92400e; }
+.log-level-badge.info { background-color: #e0f2fe; color: #0369a1; }
+.log-level-badge.success { background-color: #dcfce7; color: #166534; }
+
+/* Log Console Utility from backup */
+.wf-log-console { 
+  background: #0b1020; 
+  color: #d1e7ff; 
+  border-radius: 6px; 
+  padding: 10px; 
+  min-height: 140px; 
+  max-height: 300px; 
+  overflow: auto; 
+  font-family: var(--font-code, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace); 
+  font-size: 12px; 
+}
+
+/* Cart Upsell Simulation Modal: enforce sizing and text colors from backup */
+#cartUpsellSimulationModal .admin-modal {
+  width: var(--admin-modal-width, 1300px) !important;
+  max-width: 98vw !important;
+}
+#cartUpsellSimulationModal .modal-body {
+  /* Ensure no inherited grid/autogrid layout creates phantom columns */
+  display: block !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: calc(95vh - 4.5rem) !important;
+}
+#cartUpsellSimulationModal #cartUpsellSimulationContainer,
+#cartUpsellSimulationModal #cartUpsellSimulationInlineMount {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+#cartUpsellSimulationModal .card {
+  /* Global .card-header uses negative margins; inside modals this can get clipped by overflow */
+  overflow: visible !important;
+  /* Prevent global card height:100% from stretching and pushing later cards out of view */
+  height: auto !important;
+}
+#cartUpsellSimulationModal .card-header {
+  /* Prevent header clipping/overlap caused by negative margins in global card styles */
+  margin: 0 0 0.75rem 0 !important;
+  border-radius: var(--card-border-radius) !important;
+}
+#cartUpsellSimulationModal h1,
+#cartUpsellSimulationModal .card-header,
+#cartUpsellSimulationModal .card-title {
+  color: #1f2937 !important; /* gray-800 */
+}
+#cartUpsellSimulationModal .text-gray-500,
+#cartUpsellSimulationModal .text-gray-600,
+#cartUpsellSimulationModal .text-gray-700,
+#cartUpsellSimulationModal label {
+  color: #4b5563 !important; /* gray-600 */
+}
+
+/* Cart Simulation: recommendation layout should be 2x2 by default, 4-across on wide screens */
+#cartUpsellSimulationModal .wf-cart-sim-recs-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+@media (min-width: 1280px) {
+  #cartUpsellSimulationModal .wf-cart-sim-recs-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}

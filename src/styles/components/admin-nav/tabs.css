@@ -1,0 +1,69 @@
+/* Admin Nav Tabs & Accents (Vite-managed) */
+
+.admin-tab-navigation .admin-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  border-radius: 9999px;
+  padding: 0 18px;
+  line-height: 1;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #fff;
+  border: 1px solid;
+  transition: all 150ms ease;
+  position: relative;
+  z-index: var(--wf-z-base);
+  height: var(--token-button-height, 40px);
+  min-height: var(--token-button-height, 40px);
+  background: var(--tab-bg, var(--brand-primary)) !important;
+  border-color: color-mix(in srgb, var(--tab-bg, var(--brand-primary)) 82%, #000 18%);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--tab-bg, var(--brand-primary)) 22%, transparent);
+}
+
+.admin-tab-navigation .admin-nav-tab:hover {
+  filter: brightness(0.98);
+}
+
+.admin-tab-navigation .admin-nav-tab.active {
+  filter: none;
+  box-shadow: 0 0 0 2px white, 0 8px 22px color-mix(in srgb, var(--tab-bg, var(--brand-primary)) 28%, transparent);
+  border-color: color-mix(in srgb, var(--tab-bg, var(--brand-primary)) 86%, #000 14%);
+}
+
+/* Per-tab accents */
+.admin-tab-dashboard {
+  --tab-bg: #ef4444;
+}
+
+.admin-tab-customers {
+  --tab-bg: #06b6d4;
+}
+
+.admin-tab-inventory {
+  --tab-bg: #10b981;
+}
+
+.admin-tab-orders {
+  --tab-bg: #f59e0b;
+}
+
+.admin-tab-pos {
+  --tab-bg: #4f46e5;
+}
+
+.admin-tab-reports {
+  --tab-bg: #8b5cf6;
+}
+
+.admin-tab-marketing {
+  --tab-bg: #ec4899;
+}
+
+.admin-tab-settings {
+  --tab-bg: #000000;
+}

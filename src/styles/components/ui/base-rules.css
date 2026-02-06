@@ -1,0 +1,4 @@
+/* Semantic utility: apply secondary brand color (burnt orange) to text */
+.text-brand-secondary {
+  color: var(--brand-secondary);
+}

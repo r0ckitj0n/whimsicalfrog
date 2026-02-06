@@ -1,0 +1,56 @@
+/* Popup Controls & Actions (Vite-managed) */
+
+/* Buttons */
+.popup-btn, .popup-btn-primary, .popup-btn-secondary, .popup-add-to-cart, .popup-add-btn, .popup-add-to-cart-btn {
+  display: inline-flex !important;
+  width: auto !important;
+  max-width: max-content !important;
+}
+
+/* Primary Add to Cart button styling */
+.item-popup .popup-add-btn {
+  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  padding: 10px 16px !important;
+  font-weight: 700 !important;
+  font-family: var(--font-secondary) !important;
+  cursor: pointer !important;
+  min-width: 160px !important;
+  text-align: center !important;
+}
+
+.item-popup .popup-add-btn:hover,
+.item-popup .popup-add-btn:focus {
+  background: var(--brand-secondary) !important;
+}
+
+/* Disabled state */
+.item-popup .popup-add-btn.is-disabled,
+.item-popup .popup-add-btn[aria-disabled="true"] {
+  background: #9ca3af !important;
+  color: #ffffff !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.2) brightness(0.95);
+  pointer-events: none !important;
+}
+
+/* Footer & Actions */
+.popup-footer {
+  padding-bottom: 0 !important;
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+  padding: 0 12px 5px !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.popup-actions {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: auto !important;
+  padding: 12px !important;
+}

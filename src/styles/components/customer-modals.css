@@ -1,0 +1,473 @@
+/* Customer Modal Styles */
+
+/* src/styles/components/customer-modals.css */
+
+/* Z-index fix: Ensure customer modal appears above EVERYTHING including site header */
+.customer-modal.admin-modal-overlay,
+.customer-modal.admin-modal-overlay.show,
+.customer-modal.admin-modal-overlay.topmost,
+div.customer-modal.admin-modal-overlay {
+    z-index: var(--wf-z-topmost) !important;
+    position: fixed !important;
+}
+
+/* When customer modal is open, lower the site header z-index so modal appears above */
+body:has(.customer-modal.admin-modal-overlay.show) .site-header,
+body:has(.customer-modal.admin-modal-overlay.show) .site-header.universal-page-header {
+    z-index: var(--wf-z-base) !important;
+}
+
+.customer-modal {
+    --nav-arrow-size: 48px;
+}
+
+/* ==========================================================================
+   Admin Section Color Variants - Visual Hierarchy for Management Interfaces
+   Patterned after .ai-data-panel Price Suggestions modal
+   Uses ONLY green/orange alternating scheme for visual rhythm
+   ========================================================================== */
+
+/* Green Section - Light green background with burnt orange text */
+.admin-section--green {
+    background-color: rgba(var(--brand-accent-rgb), 0.08) !important;
+    border: 1px solid rgba(var(--brand-accent-rgb), 0.25) !important;
+    border-radius: 0.75rem;
+}
+
+.admin-section--green>div:first-child,
+.admin-section--green>.admin-section-header {
+    background-color: rgba(var(--brand-accent-rgb), 0.12) !important;
+    border-bottom: 1px solid rgba(var(--brand-accent-rgb), 0.2) !important;
+}
+
+.admin-section--green h5,
+.admin-section--green h3,
+.admin-section--green .section-title {
+    color: var(--brand-secondary) !important;
+}
+
+/* Orange Section - Light orange background with green text */
+.admin-section--orange {
+    background-color: rgba(var(--brand-secondary-rgb), 0.08) !important;
+    border: 1px solid rgba(var(--brand-secondary-rgb), 0.25) !important;
+    border-radius: 0.75rem;
+}
+
+.admin-section--orange>div:first-child,
+.admin-section--orange>.admin-section-header {
+    background-color: rgba(var(--brand-secondary-rgb), 0.12) !important;
+    border-bottom: 1px solid rgba(var(--brand-secondary-rgb), 0.2) !important;
+}
+
+.admin-section--orange h5,
+.admin-section--orange h3,
+.admin-section--orange .section-title {
+    color: var(--brand-primary) !important;
+}
+
+/* Filter section color tints for management pages - alternating scheme */
+.admin-filter--orange {
+    background-color: #fff !important;
+    border: 1px solid rgba(var(--brand-secondary-rgb), 0.15) !important;
+}
+
+.admin-filter--green {
+    background-color: #fff !important;
+    border: 1px solid rgba(var(--brand-accent-rgb), 0.15) !important;
+}
+
+.wf-nav-arrow {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    width: var(--nav-arrow-size);
+    height: var(--nav-arrow-size);
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: calc(var(--wf-z-modal) + 10);
+}
+
+.wf-nav-arrow:hover {
+    background: var(--brand-primary);
+    color: white;
+    box-shadow: 0 8px 24px rgba(var(--brand-primary-rgb), 0.2);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.wf-nav-left {
+    left: 2rem;
+}
+
+.wf-nav-right {
+    right: 2rem;
+}
+
+.wf-nav-arrow svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Modal Body Layout Enhancements */
+.wf-admin-modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.wf-admin-modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.wf-admin-modal-body::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+.wf-admin-modal-body:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* Status Badges */
+.status-pending {
+    background-color: #fefce8;
+    color: #a16207;
+    border: 1px solid #fef9c3;
+}
+
+.status-processing {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #dbeafe;
+}
+
+.status-shipped {
+    background-color: #faf5ff;
+    color: #7e22ce;
+    border: 1px solid #f3e8ff;
+}
+
+.status-delivered {
+    background-color: #f0fdf4;
+    color: #15803d;
+    border: 1px solid #dcfce7;
+}
+
+.status-cancelled {
+    background-color: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fee2e2;
+}
+
+@media (max-width: 1024px) {
+    .wf-nav-arrow {
+        display: none;
+    }
+}
+
+/* ==========================================================================
+   Reusable Contained Section Utility
+   Apply .wf-contained-section to any section that needs to stay within 
+   its parent column/grid cell bounds. Works with flex and grid layouts.
+   ========================================================================== */
+
+/* The section itself must establish containment context */
+.wf-contained-section {
+    width: inherit !important;
+    max-width: inherit !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    contain: inline-size !important;
+    box-sizing: border-box !important;
+}
+
+/* All descendants must respect the container */
+.wf-contained-section *,
+.wf-contained-section>*,
+.wf-contained-section>*>* {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+}
+
+/* Direct children get flex layout */
+.wf-contained-section>* {
+    flex-grow: 0 !important;
+    width: 100% !important;
+}
+
+/* Form inputs within contained sections */
+.wf-contained-section input:not([type="checkbox"]):not([type="radio"]),
+.wf-contained-section select,
+.wf-contained-section textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Customer modal: Force wide layout and 3-column grid */
+.customer-modal .admin-modal,
+.customer-modal .admin-modal-content {
+    width: 90vw !important;
+    max-width: 1400px !important;
+    min-width: 900px !important;
+}
+
+/* Customer modal: Enforce a 3-column grid layout */
+.customer-modal .modal-body {
+    display: block !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Customer modal grid container - Override Tailwind's 12-col grid with equal columns */
+.customer-modal .modal-body>div,
+.customer-modal-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 1.5rem !important;
+    min-height: 600px;
+    padding: 1rem;
+    background: #f3f4f6;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Force all direct column children to be contained within grid cells */
+.customer-modal .modal-body>div>div,
+.customer-modal-col {
+    grid-column: span 1 !important;
+    min-width: 0 !important;
+    /* Grid items should NOT have explicit width - they get it from grid */
+    /* Using stretch alignment instead */
+    justify-self: stretch !important;
+    align-self: stretch !important;
+    box-sizing: border-box !important;
+    /* Create proper containing block */
+    position: relative !important;
+    /* Use flex for internal layout */
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* The actual column styling */
+.customer-modal-col {
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+/* CRITICAL: All flex children must not grow beyond container */
+.customer-modal-col>* {
+    flex-shrink: 1 !important;
+    flex-grow: 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Force nested sections and elements to inherit width */
+.customer-modal-col section,
+.customer-modal-col section>*,
+.customer-modal-col .admin-section--green,
+.customer-modal-col .admin-section--orange,
+.customer-modal-col .admin-section--green>*,
+.customer-modal-col .admin-section--orange>* {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+}
+
+/* Admin sections within customer modal - force single column layout */
+.customer-modal .admin-section--green,
+.customer-modal .admin-section--orange {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Override internal 2-column grids to single column for proper fit */
+.customer-modal .admin-section--green .grid,
+.customer-modal .admin-section--orange .grid,
+.customer-modal-col .grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.25rem !important;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Section header with padding */
+.customer-modal .admin-section--green>div:first-child,
+.customer-modal .admin-section--orange>div:first-child {
+    padding: 0.75rem 1rem;
+}
+
+/* Section body - reduced padding to fit inputs */
+.customer-modal .admin-section--green>div:last-child,
+.customer-modal .admin-section--orange>div:last-child {
+    padding: 1rem;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Form groups inside sections - ensure they fit */
+.customer-modal .form-group {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 0.75rem;
+}
+
+/* All form inputs within customer modal - calc width minus any potential margin */
+.customer-modal input:not([type="checkbox"]),
+.customer-modal select,
+.customer-modal textarea,
+.customer-modal .form-input,
+.customer-modal .form-select {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* View mode text display - constrained with ellipsis */
+.customer-modal .text-sm.text-gray-900,
+.customer-modal .form-group>div:not(.form-label) {
+    max-width: 100%;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
+
+/* Column 1: GREEN background */
+.customer-modal-col-1 {
+    background: rgba(var(--brand-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--brand-accent-rgb), 0.15);
+}
+
+/* Column 2: ORANGE background */
+.customer-modal-col-2 {
+    background: rgba(var(--brand-secondary-rgb), 0.06);
+    border: 1px solid rgba(var(--brand-secondary-rgb), 0.15);
+}
+
+/* Column 3: GREEN background */
+.customer-modal-col-3 {
+    background: rgba(var(--brand-accent-rgb), 0.06);
+    border: 1px solid rgba(var(--brand-accent-rgb), 0.15);
+    padding: 0;
+}
+
+.customer-profile-header {
+    display: none !important;
+}
+
+/* Customer Management Page Styles */
+.customer-filter-form {
+    flex-direction: column;
+    display: flex;
+    gap: var(--form-gap, 1rem);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+@media (width <=768px) {
+    .customer-filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.customer-row:hover {
+    background-color: var(--table-row-hover-bg, #f8fafc);
+}
+
+.customer-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm, 0.75rem);
+}
+
+.customer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color, var(--brand-primary)), var(--primary-dark, var(--brand-secondary)));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.avatar-initials {
+    color: white;
+    font-weight: var(--font-weight-semibold, 600);
+    font-size: var(--font-size-sm, 0.875rem);
+    letter-spacing: 0.5px;
+}
+
+.customer-details {
+    min-width: 0;
+    flex: 1;
+}
+
+.customer-username {
+    color: var(--text-secondary, #6b7280);
+    font-size: var(--font-size-xs, 0.75rem);
+    line-height: 1.3;
+}
+
+.customer-email {
+    color: var(--text-primary, #1f2937);
+    font-size: var(--font-size-sm, 0.875rem);
+}
+
+.order-count {
+    color: var(--text-secondary, #6b7280);
+    font-size: var(--font-size-sm, 0.875rem);
+}
+
+/* Role Badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--badge-padding-y, 0.25rem) var(--badge-padding-x, 0.5rem);
+    border-radius: var(--border-radius-full, 9999px);
+    font-size: var(--font-size-xs, 0.75rem);
+    font-weight: var(--font-weight-semibold, 600);
+    text-transform: capitalize;
+}
+
+.role-customer {
+    background-color: var(--success-bg-light, #d1fae5);
+    color: var(--success-text-dark, #065f46);
+}
+
+.role-admin {
+    background-color: var(--primary-bg-light, #e8f5e8);
+    color: var(--primary-text-dark, #2d5a2d);
+}
+
+/* Loading spinner for customer save button */
+.loading-spinner {
+    display: inline-flex;
+    animation: spin 1s linear infinite;
+    font-size: 1rem;
+    margin-left: 0.5rem;
+}
+
+.loading-spinner.hidden {
+    display: none;
+}

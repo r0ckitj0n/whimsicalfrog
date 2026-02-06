@@ -1,0 +1,4 @@
+/* Page-specific overrides */
+body[data-page^='admin'] {
+  --wf-admin-top-offset: calc(var(--wf-header-height, 64px) + var(--admin-tabs-height, 44px));
+}

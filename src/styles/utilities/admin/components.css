@@ -1,0 +1,100 @@
+.admin-empty-state {
+    text-align: center;
+    color: #6b7280;
+    padding: 3rem 1rem;
+}
+.empty-icon {
+    opacity: 0.6;
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+.empty-title {
+    color: #374151;
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+.empty-subtitle {
+    font-size: 0.875rem;
+    color: #9ca3af;
+}
+
+.admin-info-card {
+    border-radius: var(--border-radius-default, 8px);
+    padding: 1rem;
+    color: #111827;
+}
+
+.info-title {
+    color: var(--brand-secondary);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+.info-text {
+    color: #111827;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+.info-meta {
+    color: #4b5563;
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* System Cleanup Action Buttons */
+.cleanup-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    text-align: center;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-height: 100px;
+    font-size: 0.875rem;
+}
+.cleanup-action-btn:hover {
+    border-color: var(--brand-primary);
+    background: #f0fdf4;
+    color: #15803d;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+}
+.cleanup-action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+.cleanup-action-btn.cleanup-warning:hover {
+    border-color: #dc2626;
+    background: #fef2f2;
+    color: #dc2626;
+}
+.cleanup-action-btn .action-desc {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    line-height: 1.2;
+}
+
+/* Admin Data Table Actions */
+.admin-data-table .admin-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+.admin-data-table .admin-actions a,
+.admin-data-table .admin-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}

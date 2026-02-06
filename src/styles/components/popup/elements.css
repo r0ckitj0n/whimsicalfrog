@@ -1,0 +1,87 @@
+/* Popup Elements & Theming (Vite-managed) */
+
+/* Typography */
+.item-popup * { font-size: 15px !important; line-height: 1.4 !important; }
+.popup-title { font-size: 20px !important; font-weight: 700 !important; text-align: center !important; }
+.popup-price { font-size: 2.5rem !important; line-height: 1.1 !important; font-weight: 700 !important; margin-top: 4px !important; color: var(--brand-secondary) !important; }
+
+/* Stock information */
+#popupStock { text-align: center !important; display: block !important; margin-left: auto !important; margin-right: auto !important; }
+.popup-stock-info.out-of-stock {
+  color: var(--brand-red, #c62828) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  border: 2px solid currentcolor !important;
+  padding: 2px 6px !important;
+  display: inline-block !important;
+  transform: rotate(-6deg);
+}
+
+/* Image visuals */
+.popup-image { width: 100% !important; max-width: 100% !important; height: auto !important; }
+.popup-image[src=""], .popup-image:not([src]), .popup-image[src="about:blank"] { display: none !important; }
+
+/* Badges */
+.popup-badge-container { position: absolute !important; inset: 0 !important; pointer-events: none !important; }
+.popup-badge { 
+  position: absolute !important; 
+  pointer-events: none !important; 
+  background: rgba(0,0,0,0.75) !important; 
+  color: #fff !important; 
+  font-family: var(--font-primary, Merienda, cursive) !important; 
+  font-weight: 800 !important; 
+  font-size: 0.875rem !important; 
+  padding: 4px 8px !important; 
+  border-radius: 8px !important; 
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important; 
+  text-transform: uppercase !important; 
+  letter-spacing: 0.5px !important; 
+}
+.popup-badge.pos-top-left { top: 8px !important; left: 8px !important; }
+.popup-badge.pos-top-right { top: 8px !important; right: 8px !important; }
+.popup-badge.pos-bottom-left { bottom: 8px !important; left: 8px !important; }
+.popup-badge.pos-bottom-right { bottom: 8px !important; right: 8px !important; }
+
+/* Out of Stock (OOS) Overlays */
+.item-popup.oos { overflow: visible !important; }
+.item-popup.oos .popup-badge, .item-popup.oos .popup-badge-container { display: none !important; }
+
+.item-popup.oos .popup-image-container::after {
+  content: 'OUT OF STOCK';
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  z-index: var(--wf-z-modal) !important;
+  background: rgba(17, 24, 39, 0.6);
+  color: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  padding: 8px 14px; text-transform: uppercase; font-weight: 900;
+  font-family: var(--font-secondary);
+  font-size: clamp(0.9rem, 2vw, 1.15rem);
+  line-height: 1.2; letter-spacing: 1px;
+  text-align: center; white-space: normal;
+  width: auto; min-width: 170px; max-width: 96%; box-sizing: border-box; pointer-events: none;
+}
+
+#popupStockBadge {
+  position: absolute !important;
+  top: 50% !important; left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: var(--wf-z-modal) !important;
+  background: rgba(17, 24, 39, 0.6) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,.35) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 170px !important;
+  padding: 8px 14px !important;
+}
+
+#popupStockText {
+  display: block !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+  font-size: clamp(0.9rem, 2vw, 1.15rem) !important;
+  text-transform: uppercase !important;
+  text-align: center !important;
+}

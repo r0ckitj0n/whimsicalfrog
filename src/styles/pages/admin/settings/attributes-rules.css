@@ -1,0 +1,112 @@
+/* Attributes modal: sizing via tokens (neutralize fixed width) */
+body[data-page^='admin'] #attributesModal .modal-body {
+  display: block !important;
+  flex: initial !important;
+  min-height: auto !important;
+  overflow: visible !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+body[data-page^='admin'] #attributesModal #admin-section-content,
+body[data-page^='admin'] #attributesModal #attributesMeasure {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+body[data-page^='admin'] #attributesModal #attributesInlineContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Attributes modal: compact the Inventory Structure Tools header card */
+body[data-page^='admin'] #attributesModal #attributesInlineContainer .admin-card.compact.my-2 {
+  margin-top: 0 !important;
+  margin-bottom: 6px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+body[data-page^='admin'] #attributesModal #attributesInlineContainer .admin-card.compact.my-2 .admin-card-title {
+  font-size: 0.9rem !important;
+}
+
+body[data-page^='admin'] #attributesModal #attributesInlineContainer #sizeColorRedesignBtn {
+  font-size: 0.8rem !important;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+/* Attributes modal: inline prompt visibility */
+body[data-page^='admin'] #attributesModal #attributesInlineContainer #attrPromptModal:not(.show) {
+  display: none !important;
+}
+
+body[data-page^='admin'] #attributesModal #attributesInlineContainer .attr-modal-overlay:not(.show) {
+  display: none !important;
+}
+
+/* Attributes modal: grid layout */
+body[data-page^='admin'] #attributesModal #attributesInlineContainer .attributes-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+/* Attributes modal headers */
+body[data-page^='admin'] #attributesModal #attributesInlineContainer .attributes-grid .card-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+body[data-page^='admin'] #attributesModal #attributesInlineContainer .attributes-grid .card-header .toolbar {
+  position: static !important;
+  transform: none !important;
+  margin-left: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+body[data-page^='admin'] #attributesModal #attributesInlineContainer .attributes-grid .card-body {
+  overflow-x: visible !important;
+}
+
+body[data-page^='admin'] #attributesModal .modal-body > .wf-admin-embed-frame {
+  flex: initial !important;
+  height: auto !important;
+  width: 100% !important;
+  display: block !important;
+  border: 0 !important;
+}
+
+body[data-page^='admin'] #attributesModal .wf-admin-embed-frame--tall {
+  height: 100% !important;
+}
+
+body[data-page^='admin'] #attributesModal .grid {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+body[data-page^='admin'] #attributesModal .attr-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+body[data-page^='admin'] #attributesModal .attr-list {
+  flex: 0 0 auto;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+}

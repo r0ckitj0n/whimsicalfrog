@@ -1,0 +1,26 @@
+/* Cost Suggestion and Item Detail Display Overrides */
+#costSuggestionChoiceDialog {
+  z-index: calc(var(--z-admin-overlay, 10110) + 50) !important;
+}
+
+#categoryDisplay,
+#itemCostDisplay,
+#retailPriceDisplay,
+#currentCostDisplay {
+  color: #111827 !important;
+}
+
+#suggestedCostDisplay {
+  color: #15803d !important;
+}
+
+.ai-estimate-price {
+  color: #111827 !important;
+}
+
+.admin-modal input.ai-estimate-price {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: #111827 !important;
+}

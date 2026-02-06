@@ -1,0 +1,8 @@
+@layer components.notifications {
+  .wf-notification-content { display: flex; align-items: flex-start; gap: 12px; position: relative; }
+  .wf-notification-icon { font-size: 24px; flex-shrink: 0; margin-top: 1px; line-height: 1; }
+  .wf-notification-body { flex: 1; min-width: 0; }
+  .wf-notification-title { font-weight: 600; margin-bottom: 6px; }
+  .wf-notification-message { word-wrap: break-word; font-size: 14px; line-height: 1.4; }
+  .wf-notification-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+}

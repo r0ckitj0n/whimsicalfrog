@@ -1,0 +1,94 @@
+/* Room Item Icons & Elements (Vite-managed) */
+
+.room-item-icon {
+    width: var(--icon-width, 80px);
+    /* Height intentionally NOT set - allows image to dictate natural height */
+    position: absolute;
+    cursor: pointer;
+    z-index: var(--wf-z-elevated, 10);
+    transition: filter 0.2s ease, opacity 0.15s ease;
+    border-radius: 0;
+    overflow: visible;
+    /* No box-shadow to prevent visible rectangles on transparent images */
+    border: none;
+    background: none;
+    opacity: 0;
+    /* Shown via positioned class */
+}
+
+
+.room-item-icon.positioned {
+    opacity: 1;
+}
+
+.room-item-icon:hover {
+    /* Only filter effects - no transform or box-shadow to avoid showing rectangular bounds */
+    filter: brightness(1.1);
+    z-index: calc(var(--wf-z-elevated, 10) + 1);
+}
+
+.room-item-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.room-title-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    max-width: 300px;
+    padding: 15px;
+    background: var(--brand-primary);
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 15%);
+    border: none;
+    backdrop-filter: blur(10px);
+    text-align: right;
+    z-index: var(--wf-z-sticky, 100);
+    pointer-events: auto;
+    transition: all 0.3s ease;
+}
+
+.room-title-overlay:hover {
+    background: var(--brand-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 20%);
+}
+
+.room-title-overlay h1 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 30%);
+}
+
+.room-title-overlay .room-description {
+    margin: 0;
+    font-size: 0.9rem;
+    color: white;
+    line-height: 1.4;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+}
+
+@media (width <=768px) {
+    .room-title-overlay {
+        top: 0.5rem;
+        right: 0.5rem;
+        max-width: 250px;
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+
+    .room-title-overlay h1 {
+        font-size: 1.2rem;
+        margin-bottom: 6px;
+    }
+
+    .room-title-overlay .room-description {
+        font-size: 0.8rem;
+    }
+}

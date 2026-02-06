@@ -1,0 +1,122 @@
+/* Contact Page Layout & Container Styles (Vite-managed) */
+
+/*  body[data-page="contact"] .page-content:not(#wf-root .page-content) {
+    display: none !important;
+  } */
+
+body[data-page='contact'] {
+  --contact-form-max: min(96vw, 1100px);
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+
+@media (min-width: 1024px) {
+  body[data-page='contact'] {
+    --contact-form-max: 1100px;
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-page='contact'] {
+    --contact-form-max: 92vw;
+  }
+}
+
+body[data-page='contact'] .page-content {
+  width: min(100%, 1260px);
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  padding-top: 0 !important;
+  padding-left: 150px !important;
+  padding-right: 0 !important;
+  padding-bottom: 24px !important;
+  position: relative;
+  z-index: var(--wf-z-elevated);
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  background: transparent !important;
+}
+
+body[data-page='contact'] .wf-reveal-company-wrap {
+  width: min(100%, 700px);
+  margin: 20px 0 10px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+body[data-page='contact'] .wf-contact-card {
+  background: var(--brand-primary);
+  color: #fff;
+  border-radius: 12px;
+  padding: clamp(16px, 4vw, 40px);
+  box-shadow: 0 15px 45px rgb(0 0 0 / 25%);
+  margin: 12px 0 0px;
+  width: auto;
+  max-width: min(700px, 50vw) !important;
+  box-sizing: border-box;
+}
+
+body[data-page='contact'] .wf-contact-card h1,
+body[data-page='contact'] .wf-contact-card p,
+body[data-page='contact'] .wf-contact-card label {
+  color: #fff !important;
+}
+
+body[data-page='contact'] .wf-contact-card h1 {
+  margin-top: 0 !important;
+  margin-bottom: 4px !important;
+}
+
+body[data-page='contact'] .wf-contact-card .content {
+  margin-top: 0 !important;
+  margin-bottom: 8px !important;
+  color: #fff !important;
+}
+
+body[data-page='contact'] .wf-contact-card>.prose {
+  width: calc(100% - 20px) !important;
+  max-width: var(--contact-form-max) !important;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* POS-style receipt block used in contact reveal */
+.pos-receipt {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  font-family: var(--wf-font-code, monospace);
+  color: #111;
+}
+
+/* Scrollbars */
+body[data-page='contact'] {
+  scrollbar-color: var(--brand-secondary) var(--brand-primary);
+  scrollbar-gutter: auto;
+}
+
+body[data-page='contact']::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body[data-page='contact']::-webkit-scrollbar-track {
+  background: var(--brand-primary);
+  border-radius: 10px;
+}
+
+body[data-page='contact']::-webkit-scrollbar-thumb {
+  background-color: var(--brand-secondary);
+  border-radius: 10px;
+  border: 2px solid var(--brand-primary);
+}
+
+body[data-page='contact']::-webkit-scrollbar-thumb:hover {
+  background-color: #a64c00;
+}

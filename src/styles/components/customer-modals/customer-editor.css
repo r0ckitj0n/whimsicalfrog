@@ -1,0 +1,30 @@
+@layer components.admin-modals {
+    .customer-modal-grid {
+        display: flex;
+        gap: 1.5rem;
+        width: 100%;
+        min-height: 0;
+    }
+
+    .customer-modal-col {
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .customer-modal-col-1 {
+        flex: 0 0 320px;
+    }
+
+    .customer-modal-col-2 {
+        flex: 1;
+    }
+
+    .customer-modal-col-3 {
+        flex: 0 0 350px;
+    }
+}

@@ -1,0 +1,82 @@
+/* Inventory modal specific layering */
+#inventoryModalOuter {
+  /* Ensure inventory editor always stacks above admin header/nav */
+  z-index: var(--z-overlay-topmost) !important;
+}
+
+/* Ensure confirmation modal is ALWAYS above the inventory modal */
+#confirmationModal {
+  /* Sit above standard overlays but below absolute max */
+  z-index: calc(var(--z-admin-overlay, 10110) + 100) !important;
+}
+
+/* Cost Item Modal also needs to be above inventory */
+#costItemModal {
+  z-index: calc(var(--z-admin-overlay, 10110) + 50) !important;
+}
+
+/* Cost Suggestion Choice Dialog */
+#costSuggestionChoiceDialog {
+  z-index: calc(var(--z-admin-overlay, 10110) + 50) !important;
+}
+
+/* Marketing Manager Modal - when opened from inventory, stack above inventory overlay */
+#marketingManagerModal {
+  z-index: calc(var(--z-overlay-topmost) + 20) !important;
+}
+
+/* Marketing Data Modal should appear above Marketing Manager when both are open */
+#marketingDataModal {
+  z-index: calc(var(--z-overlay-topmost) + 30) !important;
+}
+
+/* Inventory editor: override generic actions-in-header grid so header can stack rows */
+#inventoryModalOuter .admin-modal.admin-modal--actions-in-header .modal-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+/* Center the inventory "I'm feeling lucky" button in the modal header on its own row */
+#inventoryModalOuter .modal-header button[data-action="generate-all-ai"] {
+  display: inline-flex;
+  align-self: center;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Inventory modal: enforce compact body paddings */
+#inventoryModalOuter .modal-body {
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar {
+  width: 17px;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border: 1px solid #a6a6a6;
+}
+
+#inventoryModalOuter .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+#inventoryModalOuter .wf-modal-actions {
+  background: #ffffff;
+  padding-bottom: 0.25rem;
+  padding-top: 0.25rem;
+}
+
+/* Remove panel bottom padding for inventory modal to let content reach edge */
+#inventoryModalOuter .admin-modal.admin-modal-content {
+  padding-bottom: 0 !important;
+}

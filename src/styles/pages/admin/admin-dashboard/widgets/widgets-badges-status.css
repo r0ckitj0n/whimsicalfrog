@@ -1,0 +1,49 @@
+.status-badge.success {
+    background-color: #10b981;
+    color: #fff;
+}
+
+.status-badge.warning {
+    background-color: #f59e0b;
+    color: #fff;
+}
+
+.status-badge.danger {
+    background-color: #ef4444;
+    color: #fff;
+}
+
+.status-badge.primary {
+    background-color: #3b82f6;
+    color: #fff;
+}
+
+.status-badge.secondary {
+    background-color: #6b7280;
+    color: #fff;
+}
+
+.wf-badge {
+    display: inline-block;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 0.375rem;
+    font-size: 12px;
+    line-height: 18px;
+    border-radius: 9999px;
+    background-color: #ef4444;
+    color: #fff;
+    text-align: center;
+}
+
+.order-field-update.wf-field-updating {
+    background-color: #fef3c7;
+}
+
+.order-field-update.wf-field-success {
+    background-color: #dcfce7;
+}
+
+.order-field-update.wf-field-error {
+    background-color: #fecaca;
+}

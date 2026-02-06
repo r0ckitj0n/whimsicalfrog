@@ -1,0 +1,93 @@
+@layer components.global-modals {
+
+  /* Common Header & Footer Components */
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+    padding: 5px 12px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+  }
+
+  .modal-subtitle {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 4px 0 0;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: var(--modal-close-font-size, 24px);
+    color: var(--modal-close-color, #6b7280);
+    cursor: pointer;
+    padding: 0;
+    width: var(--modal-close-size, 30px);
+    height: var(--modal-close-size, 30px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    position: absolute;
+    top: var(--modal-close-top, 10px);
+    right: var(--modal-close-right, 15px);
+  }
+
+  /* Hover: handled by buttons-hover.css */
+
+  .modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  /* Admin Modal Header */
+  .admin-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    color: white;
+    border-radius: 0.5rem 0.5rem 0 0;
+    margin: -1rem -1rem 1rem;
+    position: relative;
+  }
+
+  .admin-modal-header .modal-title {
+    color: white;
+    font-size: 1.5rem;
+  }
+
+  .admin-modal-header .modal-close {
+    color: white;
+  }
+
+  /* Hover: handled by buttons-hover.css */
+
+  /* Modal Button system */
+  .modal-button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    outline: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}

@@ -1,0 +1,63 @@
+/* Email History Drawer (CSS-managed animation + overlay) */
+body[data-page='admin/settings'] .email-drawer {
+  position: absolute;
+  top: 72px;
+  right: 16px;
+  width: 420px;
+  max-width: calc(100% - 32px);
+  height: 60vh;
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  z-index: var(--wf-z-modal); /* above overlay */
+  transition: opacity .15s ease, transform .15s ease;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+body[data-page='admin/settings'] .email-drawer.is-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+body[data-page='admin/settings'] .email-drawer .drawer-header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: var(--wf-z-modal);
+}
+
+body[data-page='admin/settings'] .email-drawer .drawer-meta {
+  position: sticky;
+  top: 40px; /* approximate header height */
+  background: #fff;
+  z-index: var(--wf-z-modal);
+}
+
+body[data-page='admin/settings'] .email-drawer-overlay {
+  z-index: var(--wf-z-backdrop);
+  position: absolute;
+  inset: 0 0 auto 0; /* cover list area by default; will be placed before drawer */
+  top: 72px; /* match drawer top */
+  right: 16px; /* align with drawer right */
+  bottom: auto;
+  left: 0;
+  height: 60vh; /* match drawer height */
+  background: rgba(0,0,0,.08);
+  transition: opacity .15s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+body[data-page='admin/settings'] .email-drawer-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Ensure the Email History modal body is the positioning context */
+body[data-page='admin/settings'] #emailHistoryModal .modal-body {
+  position: relative;
+}

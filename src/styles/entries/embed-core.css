@@ -1,0 +1,37 @@
+@import url("tailwindcss");
+
+@import url('../foundation/tokens.css');
+@import url('../foundation/typography.css');
+@import url('../foundation/z-index.css');
+@import url('../global-rules.css');
+@import url('../layouts/embed-iframe.css');
+@import url('../components/buttons.css');
+@import url('../components/components-base.css');
+@import url('../components/admin-modals.css');
+@import url('../components/modal.css');
+@import url('../components/global-modals.css');
+@import url('../components/room-modal.css');
+@import url('../components/detailed-item-modal.css');
+@import url('../components/search-modal.css');
+@import url('../components/login-modal.css');
+@import url('../components/popup.css');
+@import url('../components/tooltip.css');
+@import url('../components/tooltips.css');
+@import url('../components/notifications.css');
+@import url('../components/qty-button.css');
+@import url('../components/admin-action-icons.css');
+@import url('../components/admin-filters.css');
+@import url('../components/attributes-manager.css');
+@import url('../components/categories-manager.css');
+@import url('../components/tabs.css');
+@import url('../pages/admin/admin-help-bubble.css');
+@import url('../pages/admin/admin-settings.css');
+@import url('../pages/admin/admin-settings-extras.css');
+@import url('../pages/admin/admin-room-map-editor.css');
+@import url('../components/buttons/emojis.css');
+
+@source "../../../src/**/*.{tsx,ts}";
+@source "../../../**/*.php";
+@source "../../../**/*.html";
+
+/* Tailwind utilities are handled by @import "tailwindcss" */

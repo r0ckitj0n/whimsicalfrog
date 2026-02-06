@@ -1,0 +1,107 @@
+<?php
+/**
+ * Room Content Generator Helper
+ * Extracted from api/load_room_content.php to reduce size.
+ */
+
+require_once __DIR__ . '/functions.php';
+
+function wf_normalize_icon_panel_color_value($value)
+{
+    if ($value === null)
+        return null;
+    $raw = trim((string) $value);
+    if ($raw === '' || strcasecmp($raw, 'transparent') === 0 || strcasecmp($raw, 'none') === 0)
+        return 'transparent';
+
+    if (strpos($raw, 'var(') === 0 || preg_match('/^#([0-9a-fA-F]{3}){1,2}$/', $raw)) {
+        if (strpos($raw, '#') === 0 && strlen($raw) === 4) {
+            $raw = '#' . $raw[1] . $raw[1] . $raw[2] . $raw[2] . $raw[3] . $raw[3];
+        }
+        return $raw;
+    }
+    return null;
+}
+
+function wf_cache_get($key)
+{
+    if (function_exists('apcu_fetch')) {
+        $ok = false;
+        $v = apcu_fetch($key, $ok);
+        return $ok ? $v : null;
+    }
+    $f = sys_get_temp_dir() . '/wf_cache_' . md5($key) . '.json';
+    if (is_file($f) && (time() - filemtime($f)) < 300) {
+        $s = @file_get_contents($f);
+        if ($s !== false) {
+            $j = json_decode($s, true);
+            if (is_array($j))
+                return $j;
+        }
+    }
+    return null;
+}
+
+function wf_cache_set($key, $val)
+{
+    if (function_exists('apcu_store')) {
+        apcu_store($key, $val, 300);
+        return;
+    }
+    $f = sys_get_temp_dir() . '/wf_cache_' . md5($key) . '.json';
+    @file_put_contents($f, json_encode($val));
+}
+
+function getRoomMetadata($room_number, $pdo)
+{
+    $rs = Database::queryOne("SELECT room_name, description, render_context, background_url, target_aspect_ratio FROM room_settings WHERE room_number = ?", [$room_number]) ?: [];
+    $categoryData = Database::queryOne(
+        "SELECT c.id AS category_id, c.name AS category_name
+        FROM room_category_assignments rca
+        JOIN categories c ON rca.category_id = c.id
+        WHERE rca.room_number = ? AND rca.is_primary = 1
+        LIMIT 1",
+        [$room_number]
+    );
+    return [
+        'room_number' => $room_number,
+        'room_name' => $rs['room_name'] ?? '',
+        'description' => $rs['description'] ?? '',
+        'render_context' => $rs['render_context'] ?? 'modal',
+        'background_url' => $rs['background_url'] ?? '',
+        'target_aspect_ratio' => $rs['target_aspect_ratio'] ?? null,
+        'category' => $categoryData ? $categoryData['category_name'] : '',
+        'category_id' => $categoryData ? ($categoryData['category_id'] ?? null) : null
+    ];
+}
+
+function loadRoomCoordinates($roomType, $pdo)
+{
+    try {
+        $room_number = (preg_match('/^room(\d+)$/i', (string) $roomType, $m)) ? (string) ((int) $m[1]) : '';
+        $row = Database::queryOne(
+            "SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1",
+            [$room_number]
+        );
+        if ($row) {
+            $coords = json_decode($row['coordinates'], true);
+            if (!empty($coords))
+                return ['coordinates' => $coords];
+        }
+    } catch (Exception $e) {
+        error_log('coords error: ' . $e->getMessage());
+    }
+    return ['coordinates' => []];
+}
+
+
+function getImageUrl($path, $dir, $ext = 'webp')
+{
+    if (empty($path))
+        return '';
+    $cleanPath = ltrim($path, '/');
+    if (strpos($cleanPath, 'images/' . $dir . '/') === 0) {
+        return '/' . preg_replace('/\.[^\.]+$/', '.' . (($ext === 'png') ? 'png' : 'webp'), $cleanPath);
+    }
+    return '/images/' . trim($dir, '/') . '/' . preg_replace('/\.[^\.]+$/', '.' . (($ext === 'png') ? 'png' : 'webp'), $cleanPath);
+}

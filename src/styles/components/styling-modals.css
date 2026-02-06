@@ -1,0 +1,77 @@
+/* Styling & Design Modal Styles */
+
+/* NOTE: #colorsFontsModal rules are in colors-fonts-modal.css */
+
+/* Font Picker Modal */
+#fontPickerModal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: calc(var(--z-overlay-topmost)) !important;
+}
+
+#fontPickerModal .admin-modal {
+  position: relative !important;
+  z-index: calc(var(--z-overlay-topmost) + 1) !important;
+}
+
+/* Size/Color Redesign Modal Styles */
+body[data-page^='admin'] #sizeColorRedesignModal {
+  z-index: calc(var(--z-overlay-topmost) + 10) !important;
+}
+
+#sizeColorRedesignModal .admin-modal {
+  --admin-modal-width: clamp(900px, 95vw, 1200px);
+  width: var(--admin-modal-width, clamp(900px, 95vw, 1200px)) !important;
+  overflow: hidden !important;
+  /* prevent panel-level scrollbar; body will scroll */
+}
+
+/* Reduce overlay padding */
+#sizeColorRedesignModal {
+  padding: 0.25rem !important;
+}
+
+#sizeColorRedesignModal .modal-body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+#sizeColorRedesignModal .modal-body>iframe {
+  display: block !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Attributes embed: never auto-show the inline editor overlay */
+body[data-page^='admin'] #attrEditorModal {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body[data-page^='admin'] #attrEditorModal.show,
+body[data-page^='admin'] #attrEditorModal[aria-hidden="false"] {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Attributes: remove inner padding so panel height equals header + iframe exactly */
+#attributesModal .modal-body {
+  padding: 0 !important;
+}
+
+/* Semantic aliases (map features to presets/tokens) */
+.admin-modal.admin-modal--attributes {
+  --admin-modal-max-height: 90vh;
+}
+
+/* Attributes modal: let shared autosize policy govern width/height, but keep a healthy min-width */
+#attributesModal.admin-modal-overlay {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#attributesModal .admin-modal {
+  min-width: min(960px, 95vw) !important;
+  /* allow 3 columns when viewport allows */
+  max-width: 95vw !important;
+}

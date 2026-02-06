@@ -1,0 +1,92 @@
+<?php
+/**
+ * AI Settings Metadata for WhimsicalFrog
+ * Definitions for valid settings, secret keys, descriptions, and display names.
+ */
+
+function getAiSettingsMetadata()
+{
+    return [
+        'valid_settings' => [
+            'ai_provider',
+            'openai_api_key',
+            'openai_model',
+            'anthropic_api_key',
+            'anthropic_model',
+            'google_api_key',
+            'google_model',
+            'meta_api_key',
+            'meta_model',
+            'ai_temperature',
+            'ai_max_tokens',
+            'ai_timeout',
+            'fallback_to_local',
+            'ai_brand_voice',
+            'ai_content_tone',
+            'ai_cost_temperature',
+            'ai_price_temperature',
+            'ai_cost_multiplier_base',
+            'ai_price_multiplier_base',
+            'ai_conservative_mode',
+            'ai_market_research_weight',
+            'ai_cost_plus_weight',
+            'ai_value_based_weight'
+        ],
+        'secret_keys' => [
+            'openai_api_key',
+            'anthropic_api_key',
+            'google_api_key',
+            'meta_api_key',
+        ],
+        'descriptions' => [
+            'ai_provider' => 'Selected AI provider (jons_ai, openai, anthropic, google)',
+            'openai_api_key' => 'OpenAI API key for ChatGPT access',
+            'openai_model' => 'OpenAI model to use (gpt-3.5-turbo, gpt-4, etc.)',
+            'anthropic_api_key' => 'Anthropic API key for Claude access',
+            'anthropic_model' => 'Anthropic model to use (claude-3-haiku, claude-3-sonnet, etc.)',
+            'google_api_key' => 'Google AI API key for Gemini access',
+            'google_model' => 'Google AI model to use (gemini-pro, etc.)',
+            'meta_api_key' => 'API key for Meta models via OpenRouter',
+            'meta_model' => 'Meta Llama model id (via OpenRouter)',
+            'ai_temperature' => 'AI creativity level (0.0-1.0, higher = more creative)',
+            'ai_max_tokens' => 'Maximum tokens per AI response',
+            'ai_timeout' => 'API timeout in seconds',
+            'fallback_to_local' => "Fallback to Jon's AI if external API fails",
+            'ai_brand_voice' => 'Default brand voice for AI content generation',
+            'ai_content_tone' => 'Default content tone (professional, casual, friendly, etc.)',
+            'ai_cost_temperature' => 'Controls AI creativity for cost suggestions (0.1-1.0, lower = more consistent)',
+            'ai_price_temperature' => 'Controls AI creativity for price suggestions (0.1-1.0, lower = more consistent)',
+            'ai_cost_multiplier_base' => 'Base multiplier for all cost calculations (0.5-2.0)',
+            'ai_price_multiplier_base' => 'Base multiplier for all price calculations (0.5-2.0)',
+            'ai_conservative_mode' => 'When enabled, reduces variability and makes suggestions more conservative',
+            'ai_market_research_weight' => 'Weight given to market research in pricing decisions (0.0-1.0)',
+            'ai_cost_plus_weight' => 'Weight given to cost-plus pricing (0.0-1.0)',
+            'ai_value_based_weight' => 'Weight given to value-based pricing (0.0-1.0)'
+        ],
+        'display_names' => [
+            'ai_provider' => 'AI Provider',
+            'openai_api_key' => 'OpenAI API Key',
+            'openai_model' => 'OpenAI Model',
+            'anthropic_api_key' => 'Anthropic API Key',
+            'anthropic_model' => 'Anthropic Model',
+            'google_api_key' => 'Google API Key',
+            'google_model' => 'Google Model',
+            'meta_api_key' => 'Meta API Key (OpenRouter)',
+            'meta_model' => 'Meta Model',
+            'ai_temperature' => 'AI Temperature',
+            'ai_max_tokens' => 'Max Tokens',
+            'ai_timeout' => 'API Timeout',
+            'fallback_to_local' => 'Fallback to Local',
+            'ai_brand_voice' => 'Brand Voice',
+            'ai_content_tone' => 'Content Tone',
+            'ai_cost_temperature' => 'Cost Temperature',
+            'ai_price_temperature' => 'Price Temperature',
+            'ai_cost_multiplier_base' => 'Cost Base Multiplier',
+            'ai_price_multiplier_base' => 'Price Base Multiplier',
+            'ai_conservative_mode' => 'Conservative Mode',
+            'ai_market_research_weight' => 'Market Research Weight',
+            'ai_cost_plus_weight' => 'Cost-Plus Weight',
+            'ai_value_based_weight' => 'Value-Based Weight'
+        ]
+    ];
+}

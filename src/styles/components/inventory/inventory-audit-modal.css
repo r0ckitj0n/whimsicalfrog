@@ -1,0 +1,105 @@
+.wf-invman-leaf-input {
+  width: 92px;
+}
+
+/* Inventory modal overlay: match compact padding */
+#inventoryModalOuter {
+  padding: 0.25rem !important;
+}
+
+/* Inventory modal specific layering */
+#inventoryModalOuter {
+  /* Ensure inventory editor always stacks above admin header/nav */
+  z-index: var(--wf-z-topmost) !important;
+}
+
+/* Inventory editor: override generic actions-in-header grid so header can stack rows */
+#inventoryModalOuter .admin-modal.admin-modal--actions-in-header .modal-header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+/* Center the inventory "I'm feeling lucky" button in the modal header on its own row */
+#inventoryModalOuter .modal-header button[data-action="generate-all-ai"] {
+  display: inline-flex;
+  align-self: center;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Inventory modal: header/body compact spacing even without .admin-modal wrapper */
+#inventoryModalOuter .modal-header {
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  gap: 0.5rem !important;
+}
+
+#inventoryModalOuter .modal-section:last-of-type {
+  margin-bottom: 0 !important;
+}
+
+/* Inventory modal: mirror compact section styles without relying on `.admin-modal` ancestor */
+#inventoryModalOuter .modal-section {
+  background: var(--admin-modal-section-bg, transparent);
+  border: 1px solid var(--admin-modal-section-border, transparent);
+  border-radius: var(--admin-modal-section-radius, 0.25rem);
+  padding: var(--admin-modal-section-padding, 0.25rem) !important;
+  margin-bottom: var(--admin-modal-section-gap, 0.375rem);
+}
+
+/* Inventory modal Cost/Price analysis: ensure Clear buttons are solid danger buttons */
+#inventoryModalOuter .modal-section .suggestions-container .btn.btn-danger.btn-sm {
+  background: var(--button-danger-bg, #ef4444) !important;
+  border-color: var(--button-danger-border, #ef4444) !important;
+  color: var(--button-danger-text, #ffffff) !important;
+}
+
+#inventoryModalOuter .modal-section .suggestions-container .btn.btn-danger.btn-sm:hover,
+#inventoryModalOuter .modal-section .suggestions-container .btn.btn-danger.btn-sm:focus-visible {
+  background: var(--button-danger-hover-bg, #dc2626) !important;
+  border-color: var(--button-danger-hover-border, #dc2626) !important;
+  color: var(--button-danger-hover-text, #ffffff) !important;
+}
+
+/* Inventory modal: force Item Information rows to use exactly two columns on wider screens */
+#inventoryModalOuter .item-info-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  #inventoryModalOuter .item-info-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Inventory modal: enforce compact body paddings */
+#inventoryModalOuter .modal-body {
+  padding-top: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-bottom: var(--admin-modal-body-padding-y, 0.25rem) !important;
+  padding-left: var(--admin-modal-body-padding-x, 0.375rem) !important;
+  padding-right: var(--admin-modal-body-padding-x, 0.375rem) !important;
+}
+
+#inventoryModalOuter.admin-modal-overlay {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.25rem !important;
+}
+
+#inventoryModalOuter.admin-modal-overlay.show {
+  overflow: hidden;
+}
+
+#inventoryModalOuter .admin-modal {
+  margin: 0 !important;
+  width: clamp(760px, 92vw, 1200px) !important;
+  height: 95vh;
+  max-height: 95vh !important;
+  min-height: 95vh;
+  display: flex;
+}

@@ -1,0 +1,5 @@
+/* Modal Animations & Core Overlays (Modularized) */
+
+@import url("./animations/pos-variants.css");
+@import url("./animations/pos-cash.css");
+@import url("./animations/base-rules.css");

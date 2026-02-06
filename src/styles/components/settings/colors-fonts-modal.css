@@ -1,0 +1,112 @@
+/* Colors & Fonts: guarantee internal scrollbar and reasonable height cap */
+#colorsFontsModal .admin-modal {
+  --admin-modal-width: clamp(1000px, 95vw, 1600px) !important;
+  width: var(--admin-modal-width, clamp(1000px, 95vw, 1600px)) !important;
+  height: auto !important;
+  /* Allow shrinking */
+}
+
+#colorsFontsModal .modal-body {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Font preview pills */
+.admin-modal .font-preview-label {
+  background: rgba(241, 245, 249, 0.9);
+  border-radius: 9999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: var(--admin-modal-text-color, #0f172a) !important;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  position: relative;
+  min-height: 30px;
+  line-height: 1.25;
+  font-weight: 500;
+  max-width: 100%;
+}
+
+.admin-modal .font-preview-label::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.55;
+}
+
+.admin-modal .font-preview-label--primary::before {
+  background: var(--brand-primary, #2563eb);
+}
+
+.admin-modal .font-preview-label--secondary::before {
+  background: var(--brand-secondary);
+}
+
+.admin-modal .font-preview-label--empty {
+  opacity: 0.7;
+}
+
+.admin-modal .font-preview-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--admin-modal-text-color, #0f172a) !important;
+}
+
+.admin-modal .font-preview-detail {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--admin-modal-muted-color, #475569) !important;
+}
+
+.admin-modal .font-preview-sample {
+  font-size: 15px;
+  color: #1f2937 !important;
+  line-height: 1.3;
+}
+
+.admin-modal .font-preview-stack {
+  font-size: 11px;
+  color: #64748b !important;
+  word-break: break-word;
+}
+
+.admin-modal .font-preview-label--primary {
+  font-family: var(--font-primary, var(--brand-font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif));
+}
+
+.admin-modal .font-preview-label--secondary {
+  font-family: var(--font-secondary, var(--brand-font-secondary, 'Merriweather', Georgia, serif));
+}
+
+@media (min-width: 1280px) {
+  #colorsFontsModal #colorsFontsForm .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  #colorsFontsModal #brandPreviewCard {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* Font Picker Modal from backup */
+#fontPickerModal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: var(--z-overlay-topmost) !important;
+}
+
+#fontPickerModal .admin-modal {
+  position: relative !important;
+  z-index: calc(var(--z-overlay-topmost) + 1) !important;
+}

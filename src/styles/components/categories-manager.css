@@ -1,0 +1,167 @@
+/* Categories Manager iframe embed styles */
+#categoriesModal .modal-body>iframe,
+#categoriesModal .modal-body>.wf-admin-embed-frame {
+  display: block !important;
+  min-height: 320px !important;
+}
+
+body[data-categories-embed='1'] .site-header,
+body[data-categories-embed='1'] .universal-page-header,
+body[data-categories-embed='1'] .admin-tab-navigation {
+  display: none !important;
+}
+
+/* Neutral iframe body background to blend with parent modal */
+body[data-categories-embed='1'] {
+  background: transparent !important;
+}
+
+/* Category Management (embed modal) */
+body[data-embed="1"] #categoryManagementRoot {
+  padding: 12px !important;
+  width: 100% !important;
+  max-width: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.75rem !important;
+}
+
+body[data-embed="1"] #categoryManagementRoot .admin-card {
+  padding: 0.75rem !important;
+  margin-bottom: 0 !important;
+  width: 100% !important;
+}
+
+body[data-embed="1"] #categoryManagementRoot .admin-card+.admin-card {
+  margin-top: 0.75rem !important;
+}
+
+body[data-embed="1"] #categoryManagementRoot .admin-card .admin-card {
+  margin-top: 1rem !important;
+}
+
+body[data-embed="1"] #categoryManagementRoot .admin-form-inline {
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+
+body[data-embed="1"] #categoryManagementRoot .admin-table {
+  margin-bottom: 0 !important;
+  width: 100% !important;
+}
+
+body[data-embed="1"] .admin-title {
+  margin-top: 0 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Category modal fragment (inline injection inside categoriesModal) */
+.category-management-root--modal {
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--admin-modal-section-gap, 0.75rem) !important;
+}
+
+.category-management-root--modal>.admin-title {
+  margin-top: 0 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.category-management-root--modal .admin-card {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+.category-management-root--modal .admin-card+.admin-card {
+  margin-top: var(--admin-modal-section-gap, 0.75rem) !important;
+}
+
+.category-management-root--modal .admin-tablist {
+  margin-top: 0.125rem !important;
+  margin-bottom: 0.25rem !important;
+  padding: 0 !important;
+}
+
+.category-management-root--modal #tabPanelAssignments .admin-table-wrapper {
+  max-height: 60vh;
+  overflow: auto;
+  overflow-y: auto;
+}
+
+.category-management-root--modal #tabPanelAssignments .admin-table {
+  min-width: 100%;
+}
+
+.category-management-root--modal #tabPanelAssignments tr.rca-primary td {
+  background: #f8fafc;
+}
+
+#categoryManagementRoot #tabPanelAssignments .admin-card {
+  --categories-assignments-max-width: 1100px;
+  max-width: min(95%, var(--categories-assignments-max-width));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#categoryManagementRoot #tabPanelAssignments .admin-table th:last-child,
+#categoryManagementRoot #tabPanelAssignments .admin-table td:last-child {
+  text-align: center;
+}
+
+#categoryManagementRoot .btn-primary,
+#adminToolsContainer .btn-primary {
+  background-color: var(--brand-primary) !important;
+  border-color: var(--brand-primary) !important;
+  color: #ffffff !important;
+}
+
+#categoryManagementRoot .btn-primary:hover,
+#adminToolsContainer .btn-primary:hover {
+  background-color: var(--brand-secondary) !important;
+  border-color: var(--brand-secondary) !important;
+  color: #ffffff !important;
+}
+
+html body #categoryManagementRoot .wf-tab,
+html body .category-management-root--modal .wf-tab {
+  background-color: var(--brand-primary) !important;
+  background: var(--brand-primary) !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  opacity: 0.95;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) !important;
+}
+
+html body #categoryManagementRoot .wf-tab:hover,
+html body #categoryManagementRoot .wf-tab.is-active,
+html body .category-management-root--modal .wf-tab:hover,
+html body .category-management-root--modal .wf-tab.is-active {
+  background-color: var(--brand-secondary) !important;
+  background: var(--brand-secondary) !important;
+  color: #ffffff !important;
+  opacity: 1;
+  border: 0 !important;
+}
+
+/* Tighten padding for embed (reduce space below modal header) */
+body[data-categories-embed='1'] #admin-section-content {
+  padding: 6px 12px 12px !important;
+}
+
+/* Remove page-level headers inside embeds to maximize space */
+body[data-categories-embed='1'] .admin-header-section {
+  display: none !important;
+}
+
+/* Ensure the first card sits close to the top */
+body[data-categories-embed='1'] .add-category-card {
+  margin-top: 0 !important;
+}
+
+/* Utility for muted text in admin modals */
+.text-admin-muted {
+  color: var(--admin-modal-muted-color, #64748b);
+}

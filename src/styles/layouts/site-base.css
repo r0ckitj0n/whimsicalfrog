@@ -1,0 +1,59 @@
+/* ==============================================
+   Whimsical Frog - Site Base Styles
+   (Lean Refactored Version)
+   ==============================================
+   This file has been refactored down from a 20,000+ line monolith.
+   Legacy styles have been moved to modular component files or replaced with Tailwind.
+*/
+
+:root {
+    /* Site-wide default text color (dark grey) to prevent white-on-white content */
+    --wf-text-default: #1f2937;
+}
+
+/* Base resets handled by global-rules.css. 
+   Redundant rules removed from here. */
+
+/* Prevent horizontal scroll/white strip on admin pages */
+body[data-page^='admin'] {
+    overflow-x: hidden;
+}
+
+/* Extra guard: clip any phantom overflow on admin pages at the root */
+html:has(body[data-page^='admin']) {
+    overflow-x: clip;
+}
+
+/* Also ensure the nav container and content never overflow horizontally */
+body[data-page^='admin'] #admin-section-content {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Make the space behind the fixed admin navbar transparent on all admin pages */
+body[data-page^='admin'] .page-content,
+body[data-page^='admin'] #admin-section-content,
+html:has(body[data-page^='admin']) {
+    background: transparent !important;
+}
+
+/* Remove any white frame/border from the main admin content wrapper so nothing shows behind the navbar */
+body[data-page^='admin'] #admin-section-content {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+body[data-page^='admin'] .admin-content-container {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Room Fallback: basic centering for iframes if not handled by room-iframe.css */
+.room-content-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}

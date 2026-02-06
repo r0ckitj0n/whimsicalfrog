@@ -1,0 +1,228 @@
+/* ==============================================
+   CART MODAL – ITEMS & UPSELLS
+   ============================================== */
+
+/* Cart items panel */
+#cartModalOverlay #cartModalItems {
+  flex: 1 1 auto;
+  overflow-y: auto !important;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-gutter: auto;
+  touch-action: pan-y;
+  scrollbar-width: auto;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* WebKit scrollbar styling */
+#cartModalOverlay #cartModalItems::-webkit-scrollbar {
+  width: 12px;
+}
+
+#cartModalOverlay #cartModalItems::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#cartModalOverlay #cartModalItems::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 6px;
+}
+
+#cartModalOverlay #cartModalItems::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Cart Item Rows */
+#cartModalOverlay .cart-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem !important;
+  padding: 1rem !important;
+  background: #ffffff !important;
+  transition: background-color 0.2s ease !important;
+}
+
+#cartModalOverlay .cart-item:hover {
+  background: #f9fafb !important;
+}
+
+#cartModalOverlay .cart-item-image {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: contain !important;
+  border-radius: 1rem !important;
+  background: #f9fafb !important;
+  padding: 4px !important;
+  flex: 0 0 auto !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+#cartModalOverlay .cart-item-details {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#cartModalOverlay .cart-item-title {
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  color: #111827 !important;
+  margin-bottom: 2px !important;
+}
+
+#cartModalOverlay .cart-item-options {
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  color: #9ca3af !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+#cartModalOverlay .cart-item-price {
+  font-weight: 900 !important;
+  color: var(--brand-primary) !important;
+  margin-top: 4px !important;
+}
+
+#cartModalOverlay .cart-quantity-input {
+  width: 50px !important;
+  height: 36px !important;
+  padding: 4px !important;
+  border: 2px solid #f3f4f6 !important;
+  border-radius: 10px !important;
+  text-align: center !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  color: #111827 !important;
+  background: #ffffff !important;
+  outline: none !important;
+  transition: border-color 0.2s ease !important;
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+/* Hide spinner buttons and show just the number */
+#cartModalOverlay .cart-quantity-input::-webkit-outer-spin-button,
+#cartModalOverlay .cart-quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+}
+
+#cartModalOverlay .cart-quantity-input:focus {
+  border-color: var(--brand-primary) !important;
+}
+
+#cartModalOverlay .cart-item-line-total {
+  width: 80px !important;
+  text-align: right !important;
+  font-weight: 900 !important;
+  color: #111827 !important;
+  font-size: 1rem !important;
+}
+
+/* Transparent/icon buttons - change text/border color on hover */
+#cartModalOverlay .cart-item-remove {
+  color: #d1d5db !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: color 0.2s ease !important;
+}
+
+#cartModalOverlay .cart-item-remove:hover {
+  color: var(--brand-secondary) !important;
+}
+
+/* Quantity arrow buttons - add visible background on hover for prominence */
+#cartModalOverlay .cart-qty-arrows {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+#cartModalOverlay .cart-qty-arrows button,
+#cartModalOverlay .cart-qty-up,
+#cartModalOverlay .cart-qty-down {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 18px !important;
+  color: #6b7280 !important;
+  background: #f3f4f6 !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  padding: 2px !important;
+  transition: all 0.2s ease !important;
+}
+
+#cartModalOverlay .cart-qty-arrows button:hover,
+#cartModalOverlay .cart-qty-up:hover,
+#cartModalOverlay .cart-qty-down:hover {
+  background: var(--brand-secondary) !important;
+  color: #ffffff !important;
+}
+
+/* Upsell System */
+#cartModalOverlay #cartUpsells {
+  margin-top: 1.5rem !important;
+  padding-top: 1.5rem !important;
+  border-top: 2px dashed #f3f4f6 !important;
+}
+
+#cartModalOverlay .cart-upsell-heading {
+  font-family: 'Merienda', cursive !important;
+  font-size: 0.875rem !important;
+  font-weight: 900 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.1em !important;
+  color: var(--brand-primary) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+  margin-bottom: 1rem !important;
+  padding: 0 0.5rem !important;
+}
+
+#cartModalOverlay .cart-upsell-track {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 0.75rem !important;
+  padding: 0.25rem !important;
+}
+
+@media (max-width: 640px) {
+  #cartModalOverlay .cart-upsell-track {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+#cartModalOverlay .cart-upsell-entry {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  padding: 0.75rem !important;
+  border: 1px solid #f3f4f6 !important;
+  border-radius: 1.25rem !important;
+  background: #ffffff !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-align: center !important;
+}
+
+#cartModalOverlay .cart-upsell-entry:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.1) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+#cartModalOverlay .cart-upsell-thumb {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 0.75rem !important;
+  object-fit: contain !important;
+  background: #f9fafb !important;
+  padding: 8px !important;
+  margin-bottom: 0.5rem !important;
+}

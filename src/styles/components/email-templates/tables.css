@@ -1,0 +1,52 @@
+/* Email Order & Table Components (Vite-managed) */
+
+@layer components.email {
+  .email-order-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+
+  .email-order-table th,
+  .email-order-table td {
+    padding: 8px 0;
+    border-bottom: 2px solid var(--brand-primary);
+  }
+
+  .email-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .email-table-cell {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .email-table-cell-center { text-align: center; }
+  .email-table-cell-right { text-align: right; }
+
+  .email-table-header-cell {
+    padding: 10px;
+    border-bottom: 2px solid var(--brand-primary);
+    font-weight: bold;
+  }
+
+  .email-table-row-alt { background-color: #f0f0f0; }
+
+  .email-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .email-summary-label,
+  .email-summary-value {
+    padding: 15px 10px 10px;
+    text-align: right;
+    font-weight: bold;
+    font-size: 18px;
+    border-top: 2px solid var(--brand-primary);
+  }
+
+  .email-summary-value { color: var(--brand-primary); }
+}

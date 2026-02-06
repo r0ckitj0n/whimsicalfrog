@@ -1,0 +1,65 @@
+/* Confirmation Modal System Styles (Vite-managed) */
+
+#confirmationModal {
+  /* Sit above standard overlays but below absolute max */
+  z-index: calc(var(--z-admin-overlay, 10110) + 100) !important;
+}
+
+/* Confirmation modals used by cart and other simple dialogs on admin pages from backup */
+body[data-page^='admin'] .confirmation-modal {
+  background: #ffffff !important;
+}
+
+@layer components.global-modals {
+  .wf-confirmation-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(0 0 0 / 50%);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: var(--z-overlay-topmost);
+  }
+  .wf-confirmation-overlay.show { opacity: 1; visibility: visible; }
+
+  .wf-confirmation-box {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
+    max-width: 500px;
+    width: 90%;
+    margin: 20px;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s ease;
+  }
+  .wf-confirmation-overlay.show .wf-confirmation-box { transform: scale(1) translateY(0); }
+
+  .wf-confirmation-header { padding: 5px 5px 16px; }
+  .wf-confirmation-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 24px; }
+  
+  .wf-confirmation-icon.warning { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; }
+  .wf-confirmation-icon.danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+  .wf-confirmation-icon.info { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+  .wf-confirmation-icon.success { background: var(--bg-gradient-brand); color: white; }
+
+  .wf-confirmation-title { font-size: 20px; font-weight: 600; color: #1f2937; text-align: center; margin-bottom: 8px; }
+  .wf-confirmation-subtitle { font-size: 14px; color: #6b7280; text-align: center; }
+  .wf-confirmation-body { padding: 16px 5px; }
+  .wf-confirmation-message { color: #374151; line-height: 1.6; font-size: 15px; }
+  
+  .wf-confirmation-details {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 14px;
+  }
+  .wf-confirmation-details ul { margin: 0; padding-left: 20px; }
+  .wf-confirmation-details li { margin: 4px 0; color: #4b5563; }
+  .wf-confirmation-footer { padding: 16px 5px 5px; display: flex; gap: 12px; justify-content: flex-end; }
+}

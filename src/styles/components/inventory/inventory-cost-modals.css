@@ -1,0 +1,206 @@
+/* Cost Item Modal also needs to be above inventory from backup */
+#costItemModal {
+  z-index: calc(var(--z-admin-overlay, 10110) + 50) !important;
+}
+
+#costSuggestionChoiceDialog {
+  z-index: calc(var(--z-admin-overlay, 10110) + 50) !important;
+}
+
+.delete-cost-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgb(0 0 0 / 20%);
+    max-width: 400px;
+    width: 90%;
+    animation: slideIn 0.3s ease-out;
+}
+.delete-cost-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.delete-cost-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.delete-cost-body {
+    padding: 20px 24px;
+}
+.delete-cost-body p {
+    margin: 0 0 12px;
+    color: #374151;
+    line-height: 1.5;
+}
+.delete-cost-note {
+    font-size: 0.9rem;
+    color: #6b7280;
+    font-style: italic;
+}
+.delete-cost-actions {
+    padding: 16px 24px 20px;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+.delete-cost-cancel {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    background: white;
+    color: #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+.delete-cost-cancel:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+.delete-cost-confirm {
+    padding: 8px 16px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.delete-cost-confirm:hover {
+    background: #dc2626;
+}
+
+/* Cost management buttons */
+.cost-edit-btn, .cost-delete-btn {
+    padding: 1px;
+    margin-left: 3px;
+    border: none;
+    background: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 10px;
+    opacity: 0.7;
+    transition: all 0.2s;
+}
+.cost-edit-btn svg, .cost-delete-btn svg {
+    width: 12px;
+    height: 12px;
+}
+.cost-edit-btn { color: #4299e1; }
+.cost-delete-btn { color: #f56565; }
+.cost-edit-btn:hover, .cost-delete-btn:hover { opacity: 1; }
+
+/* Inventory Table & Row Styling */
+.editing select {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #4299e1;
+    border-radius: 4px;
+    font-size: inherit;
+    font-family: inherit;
+    background-color: white;
+    box-sizing: border-box;
+    margin: 0;
+    min-width: 0;
+}
+
+.add-cost-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 6px;
+    background-color: #edf2f7;
+    border: 1px dashed #cbd5e0;
+    border-radius: 4px;
+    color: #4a5568;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 5px;
+    transition: all 0.2s;
+}
+
+.add-cost-btn:hover {
+    background-color: #e2e8f0;
+    border-color: #a0aec0;
+}
+
+.add-cost-btn svg {
+    width: 10px;
+    height: 10px;
+    margin-right: 3px;
+}
+
+/* Cost Totals & Labels */
+.cost-totals {
+    background-color: #f3f4f6;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: auto;
+    font-size: 0.8rem;
+}
+
+.cost-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+}
+
+.cost-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* Modal Specific Content */
+.cost-modal-content label {
+    font-size: 0.8rem;
+}
+
+.cost-modal-content input {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.6rem;
+}
+
+.cost-modal-content button {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+}
+
+/* Cost Breakdown Manager (.cbm-) arrow buttons from backup */
+.cbm-arrow-btn {
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000 !important;
+  padding: 4px;
+  border-radius: 4px;
+}
+.cbm-arrow-btn:hover {
+  background-color: #e5e7eb; /* gray-200 */
+}
+.cbm-arrow-btn svg {
+  stroke: #000000 !important;
+}
+
+/* Cost Breakdown Displays from backup */
+#currentCostDisplay,
+#suggestedCostDisplay {
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+.cbm-delimiter {
+  border: 0 !important;
+  border-top: 2px dashed #9ca3af !important;
+  margin: 12px 0 !important;
+  width: 100% !important;
+  display: block !important;
+  height: 0 !important;
+}

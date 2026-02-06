@@ -1,0 +1,75 @@
+/* ==============================================
+   ROOM MODAL – OVERLAY & STATE MANAGEMENT
+   Standardized v1.2.8
+   ============================================== */
+
+.room-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
+  z-index: var(--wf-z-modal) !important;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  overscroll-behavior: contain;
+  padding: 2.5vh 2.5vw !important;
+  box-sizing: border-box !important;
+}
+
+.room-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.room-modal-overlay.popup-active {
+  background-image: linear-gradient(rgb(0 0 0 / 40%), rgb(0 0 0 / 40%)), var(--dynamic-bg-url);
+  background-size: cover;
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Suppression of other modals when room modal is active */
+body.modal-open .modal:not(.room-modal-overlay, .detailed-item-modal) {
+  display: none !important;
+}
+
+/* Interaction with Detailed Item Modal */
+.detailed-item-modal {
+  z-index: var(--wf-z-modal) !important;
+}
+
+/* While any modal is open, prevent room doors from intercepting clicks */
+body.modal-open .door-area,
+body.room-modal-open .door-area {
+  pointer-events: none !important;
+}
+
+/* Bare mode overrides for iframes */
+.room-modal-overlay.bare-mode {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  padding: 0 !important;
+  pointer-events: auto !important;
+}
+
+.room-items-container--api {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Map Editing Clarity: Hide interactive items when editing maps */
+body.hide-map-items .room-items-container,
+body.hide-map-items .room-modal-body>*:not(.room-background) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

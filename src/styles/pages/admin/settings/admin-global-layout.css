@@ -1,0 +1,77 @@
+/* Global Admin Layout & Spacing Rules */
+
+/* Define a global navbar height token for admin pages */
+body[data-page^='admin'] {
+  --admin-tabs-height: 48px;
+}
+
+/* All admin page elements use consistent spacing */
+body[data-page^='admin'] .admin-filters,
+body[data-page^='admin'] .page-filters,
+body[data-page^='admin'] .admin-controls {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* All admin page titles use consistent spacing */
+body[data-page^='admin'] .admin-title,
+body[data-page^='admin'] .page-title,
+body[data-page^='admin'] h1:first-child {
+  margin-top: 0 !important;
+  margin-bottom: 1rem !important;
+  padding-top: 0.5rem !important;
+}
+
+/* All admin pages have consistent header styling */
+body[data-page^='admin'] .admin-header {
+  margin-top: 0 !important;
+  padding-top: 0.5rem !important;
+}
+
+/* Target the filter sections specifically to reduce spacing */
+body[data-page^='admin'] .admin-filter-section,
+body[data-page^='admin'] .admin-filters {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 2px !important;
+}
+
+/* Reduce spacing between filters and table/list content */
+body[data-page^='admin'] .admin-table-section,
+body[data-page^='admin'] .admin-data-table,
+body[data-page^='admin'] .admin-list-section {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Reduce spacing for filter forms */
+body[data-page^='admin'] .admin-filter-form {
+  margin-bottom: 0.5rem !important;
+}
+
+body[data-page^='admin'] .admin-tab-navigation {
+  margin: 0 !important;
+  position: fixed !important;
+  top: 120px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: var(--wf-z-sticky) !important;
+}
+
+/* Ensure the header content (like shopping cart) has breathing room on the right */
+body[data-page^='admin'] .site-header .header-right,
+body[data-page^='admin'] .universal-page-header .header-right,
+body[data-page^='admin'] .site-header .header-content,
+body[data-page^='admin'] .universal-page-header .header-content {
+  padding-right: 1.5rem !important;
+}
+
+/* Admin Print Styles */
+@media print {
+  body[data-page^='admin'] .admin-card {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}

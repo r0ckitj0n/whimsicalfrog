@@ -1,0 +1,197 @@
+/* Marketing Modal Styles */
+
+/* Marketing Manager Modal - when opened from inventory, stack above inventory overlay */
+#marketingManagerModal {
+  z-index: var(--wf-z-modal-elevated) !important;
+}
+
+#marketingManagerModal .admin-modal {
+  width: min(1000px, 98vw) !important;
+}
+
+/* Marketing Data Modal should appear above Marketing Manager when both are open */
+#marketingDataModal {
+  z-index: calc(var(--z-overlay-topmost) + 30) !important;
+}
+
+/* Ensure Marketing Data modal close icon uses secondary brand color on hover */
+#marketingDataModal .btn-icon.btn-icon--close:hover {
+  background: var(--brand-secondary) !important;
+  color: #ffffff !important;
+}
+
+/* Admin pages (replace inline styles) from backup */
+body[data-page='admin/marketing'] #admin-section-content {
+  margin-top: 0 !important;
+  border-top: none !important;
+}
+
+.admin-marketing-page {
+  margin-top: 0 !important;
+}
+
+/* When marketing tools are embedded inside another modal, remove the outer
+   card chrome so only the inner content contributes to sizing. */
+.admin-modal .admin-marketing-page,
+.admin-modal .admin-marketing-page .admin-modal.admin-modal-content {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+}
+
+/* Intent Heuristics Manager Overrides from backup */
+.wf-embed-flat #intentHeuristicsRoot .admin-modal.admin-modal-content,
+body[data-embed="1"] #intentHeuristicsRoot .admin-modal.admin-modal-content {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.wf-embed-flat #intentHeuristicsRoot .admin-modal.admin-modal-content>.modal-body,
+body[data-embed="1"] #intentHeuristicsRoot .admin-modal.admin-modal-content>.modal-body {
+  display: block !important;
+  padding: 0 !important;
+}
+
+#intentHeuristicsRoot .admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 800px) {
+  #intentHeuristicsRoot .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+#intentHeuristicsRoot .input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+#intentHeuristicsRoot .label {
+  font-size: 0.75rem;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+#intentHeuristicsRoot .card {
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: #fff;
+}
+
+#intentHeuristicsRoot .section-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+#intentHeuristicsRoot .help {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+#intentHeuristicsRoot .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--button-secondary-border, #d1d5db);
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.875rem;
+  background: var(--button-secondary-bg, #f4f4f5);
+  color: var(--button-secondary-text, #0f172a);
+}
+
+#intentHeuristicsRoot .btn-primary {
+  background: var(--button-primary-bg, var(--brand-primary));
+  color: var(--button-primary-text, #ffffff);
+  border-color: var(--button-primary-border, var(--brand-primary));
+}
+
+#intentHeuristicsRoot .btn-primary:hover {
+  background: var(--button-primary-hover-bg, var(--brand-secondary));
+  border-color: var(--button-primary-hover-border, var(--brand-secondary));
+  color: var(--button-primary-hover-text, #ffffff);
+}
+
+#intentHeuristicsRoot .btn-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+#intentHeuristicsRoot .badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.375rem;
+  font-size: 0.7rem;
+  margin-right: 0.25rem;
+}
+
+#intentHeuristicsRoot .toast {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  background: #111827;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  font-size: 0.85rem;
+}
+
+/* Marketing Tab Navigation */
+.marketing-tab-nav {
+  background: linear-gradient(to right, #f8fafc, #e2e8f0);
+  border-radius: 12px;
+  padding: 6px;
+  margin-bottom: 24px;
+  border: 1px solid #cbd5e0;
+}
+
+.marketing-tab {
+  padding: 12px 20px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background: transparent;
+  color: #64748b;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  margin: 0 4px;
+}
+
+.marketing-tab:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: #334155;
+  transform: translateY(-1px);
+}
+
+.marketing-tab.active {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb), 0.3);
+  transform: translateY(-2px);
+}
+
+.marketing-tab.active:hover {
+  background: linear-gradient(135deg, var(--brand-secondary), #A04000) !important;
+}

@@ -1,0 +1,14 @@
+/* Admin Settings Conductor */
+@import url('./settings/settings-page-layout.css');
+@import url('./settings/settings-components.css');
+@import url('./settings/settings-fonts.css');
+@import url('./settings/settings-email-history.css');
+@import url('./settings/settings-attributes.css');
+@import url('./settings/settings-dashboard-config.css');
+@import url('./settings/admin-global-layout.css');
+@import url('./settings/admin-modal-overrides.css');
+
+/* Any remaining page-specific overrides can stay here if < 200 lines */
+@layer pages.admin.settings {
+  /* Placeholder for future non-module overrides */
+}

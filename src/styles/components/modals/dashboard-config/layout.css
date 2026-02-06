@@ -1,0 +1,76 @@
+/* Dashboard Configuration Table & Layout (Vite-managed) */
+
+.admin-modal.admin-modal--dashboard-config {
+  --admin-modal-width: clamp(680px, 80vw, 1200px);
+  --admin-modal-max-width: 95vw;
+  --admin-modal-max-height: 85vh;
+}
+
+#dashboardConfigModal .admin-modal.admin-modal-content {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#dashboardConfigModal .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+#dashboardConfigModal .modal-body > .space-y-4 { width: 100%; }
+#dashboardConfigModal .modal-body .overflow-x-auto { width: 100%; }
+
+#dashboardSectionsTable {
+  width: auto !important;
+  display: table !important;
+  table-layout: auto;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+#dashboardSectionsTable th:nth-child(1),
+#dashboardSectionsTable td:nth-child(1),
+#dashboardSectionsTable col:nth-child(1) { width: 80px; }
+#dashboardSectionsTable th:nth-child(2),
+#dashboardSectionsTable td:nth-child(2),
+#dashboardSectionsTable col:nth-child(2) { width: auto; }
+#dashboardSectionsTable th:nth-child(3),
+#dashboardSectionsTable td:nth-child(3),
+#dashboardSectionsTable col:nth-child(3) { width: auto; }
+#dashboardSectionsTable th:nth-child(4),
+#dashboardSectionsTable td:nth-child(4),
+#dashboardSectionsTable col:nth-child(4) { width: 120px; }
+#dashboardSectionsTable th:nth-child(5),
+#dashboardSectionsTable td:nth-child(5),
+#dashboardSectionsTable col:nth-child(5) { width: 90px; text-align: center; }
+
+#dashboardSectionsTable code { word-break: break-all; }
+#dashboardSectionsTable select.dash-width { width: 100%; max-width: 120px; }
+#dashboardSectionsTable input.dash-active {
+  transform: translateY(1px);
+  accent-color: transparent;
+}
+
+#dashboardSectionsTable th,
+#dashboardSectionsTable td { padding: 0.45rem 0.6rem; }
+#dashboardSectionsTable td:nth-child(2),
+#dashboardSectionsTable td:nth-child(3),
+#dashboardSectionsTable th:nth-child(2),
+#dashboardSectionsTable th:nth-child(3) { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Result text colors from backup */
+#dashboardConfigResult.wf-ok { color: var(--brand-accent); } /* green-800 */
+#dashboardConfigResult.wf-error { color: var(--brand-error); } /* red-800 */
+
+.dashboard-config-modal {
+    max-width: 1200px !important;
+    width: 95vw !important;
+    max-height: 90vh !important;
+    min-height: 600px;
+}
+.dashboard-config-body {
+    overflow-y: auto;
+    max-height: calc(90vh - 120px);
+    padding: 1.5rem;
+}

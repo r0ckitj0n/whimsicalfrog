@@ -1,0 +1,73 @@
+/* ==============================================
+   SCROLLBAR UTILITIES
+   ============================================== 
+   Consolidated scrollbar styling for modal bodies,
+   panels, and scrollable containers.
+   
+   Usage: Add .wf-scrollbar class to scrollable elements
+   
+   These utilities use configurable tokens from Admin > CSS Catalog
+   ============================================== */
+
+/* Standard scrollbar (modal bodies, panels) */
+.wf-scrollbar {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-gutter: auto;
+    touch-action: pan-y;
+    scrollbar-width: auto;
+    scrollbar-color: var(--scrollbar-thumb, #c1c1c1) var(--scrollbar-track, #f1f1f1);
+}
+
+.wf-scrollbar::-webkit-scrollbar {
+    width: var(--scrollbar-width, 12px);
+}
+
+.wf-scrollbar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track, #f1f1f1);
+}
+
+.wf-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb, #c1c1c1);
+    border-radius: 6px;
+}
+
+.wf-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--scrollbar-thumb, #c1c1c1) 80%, #000);
+}
+
+/* Thin scrollbar variant (compact UI, sidebars) */
+.wf-scrollbar-thin {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb, #cbd5e1) var(--scrollbar-track, #f1f5f9);
+}
+
+.wf-scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+}
+
+.wf-scrollbar-thin::-webkit-scrollbar-track {
+    background: var(--scrollbar-track, #f1f5f9);
+    border-radius: 4px;
+}
+
+.wf-scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb, #cbd5e1);
+    border-radius: 4px;
+}
+
+.wf-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--scrollbar-thumb, #cbd5e1) 80%, #000);
+}
+
+/* Hidden scrollbar (scrollable but no visible bar) */
+.wf-scrollbar-hidden {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.wf-scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+}

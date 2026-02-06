@@ -1,0 +1,74 @@
+/* Template Management Modals from backup */
+#testEmailSendModal.hidden,
+#emailTemplateEditModal.hidden,
+#templateAssignmentModal.hidden { 
+  display: none !important; 
+}
+
+#templateManagerRoot .admin-table th:last-child,
+#templateManagerRoot .admin-table td:last-child {
+  text-align: center;
+}
+#templateManagerRoot .admin-table th:nth-child(1) { width: 64px; }
+#templateManagerRoot .admin-table th:nth-child(5) { width: 80px; }
+#templateManagerRoot .admin-table th:nth-child(7) { width: 380px; }
+#templateManagerRoot .code-badge { margin-right: 4px; }
+
+@layer components.email {
+  .email-cta-button {
+    display: inline-block;
+    background-color: var(--brand-primary);
+    color: white;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  .email-secondary-cta {
+    display: inline-block;
+    background-color: #2196f3;
+    color: white;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+    margin-left: 10px;
+  }
+
+  .email-info-box {
+    background-color: #e8f4e8;
+    padding: 20px;
+    border-radius: 6px;
+    margin: 20px 0;
+    border-left: 4px solid var(--brand-primary);
+  }
+
+  .email-shipping-box {
+    background-color: #e1f5fe;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 20px 0;
+    border-left: 4px solid #0288d1;
+  }
+
+  .email-title { margin: 0; font-size: 28px; }
+  .email-subtitle { margin: 5px 0 0; font-size: 16px; }
+  .email-section-heading { color: var(--brand-primary); margin-top: 0; }
+  .email-list-item { padding: 8px 0; border-bottom: 1px solid #eee; }
+
+  .email-badge-warning { background-color: #ffeb3b; padding: 2px 6px; border-radius: 3px; }
+  .email-status-received { background-color: #c8e6c9; padding: 2px 6px; border-radius: 3px; }
+  .email-status-pending { background-color: #ffcdd2; padding: 2px 6px; border-radius: 3px; }
+
+  .email-next-steps {
+    border-left: 4px solid var(--brand-primary);
+    text-align: center;
+    margin: 30px 0;
+    padding: 20px;
+    background-color: white;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+  }
+}

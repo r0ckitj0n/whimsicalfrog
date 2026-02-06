@@ -1,0 +1,39 @@
+/* POS modal overlay and content (receipt, confirmations) */
+.pos-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  z-index: var(--wf-z-backdrop, 200);
+}
+
+.pos-modal-content {
+  background: #fff;
+  border-radius: 8px;
+  margin-top: calc(var(--wf-header-height, 80px) + 8px);
+  width: min(90vw, 1400px);
+}
+
+/* Customer modal width overrides */
+.customer-modal .admin-modal,
+.customer-modal .modal-content,
+.admin-modal.wf-admin-panel-visible,
+[class~="admin-modal"][class~="wf-admin-panel-visible"] {
+    width: 90% !important;
+    max-width: none !important;
+    min-width: 90% !important;
+}
+
+.modal-header { padding: 0.75rem 1.5rem !important; }
+.modal-title { margin: 0 !important; font-size: 1.125rem !important; line-height: 1.25 !important; }
+.modal-footer { padding-bottom: env(safe-area-inset-bottom); }
+
+@supports (width: 100dvw) {
+  .wf-modal-force-visible { width: 100dvw !important; height: 100dvh !important; }
+  .image-viewer-overlay img {
+    max-width: 95dvw !important;
+    max-height: calc(100dvh - var(--wf-header-offset, 0) - 20px) !important;
+  }
+}

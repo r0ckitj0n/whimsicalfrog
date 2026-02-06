@@ -1,0 +1,225 @@
+/* Compact Login Modal Styles (Vite-managed) */
+.wf-login-popover-container {
+  position: fixed;
+  top: var(--wf-header-height, 80px);
+  right: 20px;
+  z-index: var(--wf-z-modal, 300);
+  width: 100%;
+  max-width: 380px;
+}
+
+@media (max-width: 768px) {
+  .wf-login-popover-container {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+  }
+
+  .wf-login-card {
+    max-width: 400px;
+  }
+}
+
+.wf-login-card {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  border: 1px solid #f3f4f6;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.wf-login-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.wf-login-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wf-login-icon-box {
+  padding: 8px;
+  background: rgba(var(--brand-primary-rgb), 0.1);
+  color: var(--brand-primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wf-login-title-text {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+}
+
+.wf-login-close-btn {
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wf-login-close-btn:hover {
+  background: var(--brand-secondary) !important;
+  color: #ffffff !important;
+}
+
+.wf-login-tabs {
+  display: flex;
+  padding: 4px;
+  background: #f3f4f6;
+  border-radius: 14px;
+  margin-bottom: 24px;
+}
+
+.wf-login-tab {
+  flex: 1;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.wf-login-tab.is-active {
+  background: #fff;
+  color: var(--brand-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.wf-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wf-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+}
+
+.wf-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.wf-input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(var(--brand-primary-rgb), 0.1);
+}
+
+.wf-login-submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--brand-primary);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+  box-shadow: 0 10px 15px -3px rgba(var(--brand-primary-rgb), 0.3);
+}
+
+.wf-login-submit-btn:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.wf-login-submit-btn:active {
+  transform: translateY(0);
+}
+
+.wf-login-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.wf-login-feedback {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.wf-login-feedback.is-error {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #dc2626;
+}
+
+.wf-login-feedback.is-success {
+  background: #f0fdf4;
+  border: 1px solid #dcfce7;
+  color: #16a34a;
+}
+
+.wf-spin {
+  animation: wf-spin 1s linear infinite;
+}
+
+@keyframes wf-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Note: Base modal caps (max-width, max-height, border-radius) are defined in containers.css */

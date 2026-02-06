@@ -1,0 +1,5 @@
+/* Scope hidden utility to room modal contexts */
+.room-modal-overlay .hidden,
+.modal-room-page .hidden {
+    display: none !important;
+}

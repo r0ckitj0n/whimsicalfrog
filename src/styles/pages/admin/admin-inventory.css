@@ -1,0 +1,7 @@
+/* Admin Inventory UI – semantic styles
+   Styles specific to inventory admin controls.
+*/
+@import url('./inventory/inventory-navigation.css');
+@import url('./inventory/inventory-editing.css');
+@import url('./inventory/inventory-visual-elements.css');
+@import url('./inventory/inventory-assets.css');

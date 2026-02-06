@@ -1,0 +1,55 @@
+/* Room Map Modal Styles (Vite-managed) */
+
+.admin-modal.admin-modal--room-map {
+  --admin-modal-width: 95vw;
+  --admin-modal-max-width: 95vw;
+  --admin-modal-height: 95vh;
+  --admin-modal-max-height: none;
+  --admin-modal-margin: 0;
+  --admin-modal-content-width: 100vw;
+  --admin-modal-content-max-width: 100vw;
+  --admin-modal-content-max-height: none;
+  --admin-modal-content-margin: 0;
+  min-width: 960px;
+  overflow: hidden !important;
+}
+
+.admin-modal--room-map .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.rme-modal-body .wf-admin-embed-frame--tall {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (max-width: 1200px) {
+  body[data-page^='admin'] .admin-modal.admin-modal--room-map {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    height: 95vh !important;
+    max-height: none !important;
+  }
+}
+
+#roomMapManagerModal .admin-modal.admin-modal--room-map,
+#roomMapManagerModal .admin-modal.admin-modal--room-map.admin-modal-content {
+  width: 95vw !important;
+  max-width: 95vw !important;
+  height: 95vh !important;
+  max-height: 95vh !important;
+  margin: auto !important;
+  border-radius: var(--token-admin-modal-radius, 0.5rem) !important;
+}
+
+#roomMapManagerModal .admin-modal--room-map .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  padding: 0.5rem !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}

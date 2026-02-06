@@ -1,0 +1,146 @@
+/* Admin Settings extras: move inline styles into Vite-managed CSS */
+
+/* Shared embed frame styling */
+.wf-admin-embed-frame {
+  width: 100%;
+  height: 70vh;
+  border-width: 0;
+}
+
+/* Compact modal overrides: avoid oversized iframe height */
+.admin-modal.admin-modal--sm .wf-admin-embed-frame,
+.admin-modal.admin-modal--xs .wf-admin-embed-frame {
+  height: auto !important;
+  max-height: 70vh !important;
+  min-height: 220px !important;
+  border-width: 0 !important;
+}
+
+/* Brand preview card uses CSS variables for live preview */
+#brandPreviewCard {
+  background-color: var(--brand-bg, #ffffff);
+  color: var(--brand-text, #111827);
+}
+
+#brandPreviewTitle {
+  font-family: var(--brand-font-primary, inherit);
+  color: var(--brand-primary, #0ea5e9);
+}
+
+#brandPreviewText {
+  font-family: var(--brand-font-secondary, inherit);
+}
+
+/* Smaller swatch sizes to fit more samples */
+#brandPreviewSwatches {
+  gap: 0.25rem !important;
+}
+
+#brandPreviewSwatches>div {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+}
+
+/* Ensure dynamic brand palette swatches are also small */
+#brandPreviewSwatches .brand-swatch {
+  width: 0.875rem !important;
+  height: 0.875rem !important;
+  border-style: solid !important;
+  border-width: 1px !important;
+}
+
+#brandPreviewSwatches>div:nth-child(1) {
+  background-color: var(--brand-primary, #0ea5e9);
+}
+
+#brandPreviewSwatches>div:nth-child(2) {
+  background-color: var(--brand-secondary, #6366f1);
+}
+
+#brandPreviewSwatches>div:nth-child(3) {
+  background-color: var(--brand-accent, #22c55e);
+}
+
+/* Email history test endpoint input size */
+#ehdEndpoint {
+  min-width: 260px;
+}
+
+/* ---- Admin: Shopping Cart Settings modal layout tweaks ---- */
+/* Shopping Cart modal: ensure panel clamps to viewport and body scrolls from backup */
+#shoppingCartModal .admin-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 90vh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+#shoppingCartModal .modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding-right: 0 !important;
+  scrollbar-width: auto;
+}
+
+#shoppingCartModal .modal-body::-webkit-scrollbar {
+  width: 17px;
+}
+
+#shoppingCartModal .modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#shoppingCartModal .modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border: 1px solid #a6a6a6;
+}
+
+#shoppingCartModal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Make the shopper profile panel skinny and give more space to recommendations */
+#shoppingCartModal #cartSimulationPanels {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+#shoppingCartModal #cartSimulationPanels> :first-child {
+  width: 10rem;
+  max-width: 12rem;
+  flex-shrink: 0;
+  padding: 0.25rem;
+}
+
+@media (min-width: 768px) {
+  #shoppingCartModal #cartSimulationPanels> :first-child {
+    width: 12rem;
+  }
+}
+
+#shoppingCartModal #cartSimulationPanels> :nth-child(2) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Slightly smaller text inside the profile panel for compactness */
+#shoppingCartModal #cartSimulationProfile {
+  font-size: 0.75rem;
+}
+
+#shoppingCartModal #cartSimulationProfile ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+#shoppingCartModal #cartSimulationProfile li {
+  margin-top: 0.125rem;
+  margin-bottom: 0.125rem;
+  margin-left: 0;
+  margin-right: 0;
+}

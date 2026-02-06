@@ -1,0 +1,177 @@
+/* Attributes Modal Sizing & Overrides from backup */
+#attributesModal .modal-body {
+  padding: 0 !important;
+}
+
+.admin-modal.admin-modal--attributes {
+  --admin-modal-max-height: 90vh;
+}
+
+#attributesModal.admin-modal-overlay {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#attributesModal .admin-modal {
+  min-width: min(960px, 95vw) !important;
+  /* allow 3 columns when viewport allows */
+  max-width: 95vw !important;
+}
+
+/* Attributes embed: never auto-show the inline editor overlay */
+body[data-page^='admin'] #attrEditorModal {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body[data-page^='admin'] #attrEditorModal.show,
+body[data-page^='admin'] #attrEditorModal[aria-hidden="false"] {
+  display: block !important;
+  visibility: visible !important;
+}
+
+body[data-attributes-embed='1'] {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: auto !important;
+  overflow: hidden !important;
+  /* Delegate scrolling to parent modal */
+}
+
+/* src/styles/components/attributes-manager.css */
+/* Force opaque background for attribute modals to prevent ghosting */
+.attr-modal,
+.attr-modal-header,
+.attr-modal-body {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  filter: none !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Fix for Green Background / Strange Hover Colors in Editors */
+/* Ultra-nuclear: inside this modal only, strip background from all body descendants,
+   then opt back in for controls that should remain white/brand-colored. */
+#attrEditorModal .attr-modal-body,
+#attrEditorModal .attr-modal-body * {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Keep the modal chrome itself solid white */
+#attrEditorModal .attr-modal,
+#attrEditorModal .attr-modal-header,
+#attrEditorModal .attr-modal-body {
+  background: #ffffff !important;
+}
+
+/* Force inputs/selects/textarea to be white/opaque inside this modal */
+#attrEditorModal .attr-modal-body input:not([type="checkbox"]):not([type="radio"]),
+#attrEditorModal .attr-modal-body select,
+#attrEditorModal .attr-modal-body textarea {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  box-shadow: none !important;
+  border: 1px solid #d1d5db !important;
+}
+
+/* Preserve primary button styling inside the editor modal (e.g., Add / Apply) */
+#attrEditorModal .attr-modal-body .btn {
+  background: var(--button-primary-bg, var(--brand-primary)) !important;
+  color: var(--button-primary-text, #ffffff) !important;
+  border-color: var(--button-primary-border, var(--brand-primary)) !important;
+}
+
+/* Ensure no row/grid hover striping survives inside this modal */
+#attrEditorModal .attr-modal-body .row:hover,
+#attrEditorModal .attr-modal-body .grid:hover,
+#attrEditorModal .attr-modal-body div:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Restore centering logic (fix for bottom-right off-screen positioning) */
+.attr-modal {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Specific Fix for Gender/Prompt Modal Transparency */
+#attrPromptModal .attr-modal,
+div#attrPromptModal div.attr-modal,
+.attr-modal.attr-modal--autoheight {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  /* Super-force solid background using box-shadow inset hack */
+  box-shadow: inset 0 0 0 2000px #ffffff, 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  opacity: 1 !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  isolation: isolate !important;
+  z-index: var(--wf-z-modal) !important;
+  transform: translate(-50%, -50%) !important;
+  /* Ensure centering is forced */
+}
+
+#attrPromptModal .attr-modal-header,
+#attrPromptModal .attr-modal-body {
+  background-color: #ffffff !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Keep prompt modal compact */
+#attrPromptModal .attr-modal {
+  width: min(90vw, 500px) !important;
+}
+
+/* Editor Modal (Sizes/Colors): Double width as requested */
+#attrEditorModal .attr-modal {
+  width: min(96vw, 1200px) !important;
+  max-width: min(96vw, 1200px) !important;
+}
+
+/* Ensure close button gets correct brand hover color (Orange #d97706) */
+/* Ultra-high specificity to beat global admin overrides */
+div#attrEditorModal .attr-modal .btn-icon.btn-icon--close:hover,
+div#attrPromptModal .attr-modal .btn-icon.btn-icon--close:hover {
+  background-color: var(--brand-secondary) !important;
+  /* fallback */
+  background-color: var(--brand-secondary) !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  border-color: transparent !important;
+}
+
+/* Save button visibility logic */
+#attrEditorModal:not(.is-dirty) [data-action="attr-editor-save"] {
+  display: none !important;
+}
+
+#attrEditorModal.is-dirty [data-action="attr-editor-save"] {
+  display: inline-flex !important;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

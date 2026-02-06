@@ -1,0 +1,94 @@
+body.pos-body #itemsGrid .pos-item-details {
+    padding-top: 0.25rem;
+    min-height: 96px;
+}
+
+body.pos-body #itemsGrid .pos-item-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+body.pos-body #itemsGrid .item-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    display: block !important;
+    font-weight: 700 !important;
+    font-size: 1rem !important;
+    line-height: 1.25 !important;
+}
+
+body.pos-body #itemsGrid .item-price {
+    margin: 0 !important;
+    font-weight: 800 !important;
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+}
+
+body.pos-body #itemsGrid .pos-price-block {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+body.pos-body #itemsGrid .pos-price-current {
+    font-weight: 900;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: #0f172a;
+}
+
+body.pos-body #itemsGrid .pos-price-original {
+    font-size: 0.875rem;
+    color: #64748b;
+    text-decoration: line-through;
+}
+
+body.pos-body #itemsGrid .pos-price-flag {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    white-space: nowrap;
+}
+
+body.pos-body #itemsGrid .pos-price-flag.is-sale {
+    background-color: #fef2f2;
+    color: #991b1b;
+}
+
+body.pos-body #itemsGrid .pos-price-flag.is-retail {
+    background-color: #eff6ff;
+    color: #1e40af;
+}
+
+body.pos-body #itemsGrid .item-sku {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+body.pos-body #itemsGrid .pos-item-stock {
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    background-color: #ecfdf5;
+    color: #065f46;
+    white-space: nowrap;
+}
+
+body.pos-body #itemsGrid .pos-item-stock.is-low {
+    background-color: #fffbeb;
+    color: #92400e;
+}
+
+body.pos-body #itemsGrid .pos-item-stock.is-oos {
+    background-color: #fef2f2;
+    color: #991b1b;
+}

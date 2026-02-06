@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "hygiene": "node scripts/repo_hygiene.mjs",
+    "hygiene:quick": "node scripts/repo_hygiene.mjs --changed",
     "dev": "VITE_DEV_PORT=5176 VITE_HMR_PORT=5176 printf 'http://localhost:5176' > hot && vite --host localhost --port 5176 --strictPort",
     "dev:5176": "VITE_DEV_PORT=5176 VITE_HMR_PORT=5176 printf 'http://localhost:5176' > hot && vite --host localhost --port 5176 --strictPort",
     "stop": "rm hot",

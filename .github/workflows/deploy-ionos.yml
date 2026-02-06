@@ -1,0 +1,42 @@
+name: Deploy to IONOS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ionos-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Deploy to IONOS
+        env:
+          WF_DEPLOY_HOST: ${{ secrets.WF_DEPLOY_HOST }}
+          WF_DEPLOY_USER: ${{ secrets.WF_DEPLOY_USER }}
+          WF_DEPLOY_PASS: ${{ secrets.WF_DEPLOY_PASS }}
+          DEPLOY_BASE_URL: ${{ secrets.WF_DEPLOY_BASE_URL }}
+          WF_SKIP_RELEASE_BUILD: "0"
+          WF_UPLOAD_MAINTENANCE: "0"
+          WF_UPLOAD_LIVE_ENV: "0"
+          WF_DRY_RUN: "0"
+        run: bash scripts/deploy.sh --lite

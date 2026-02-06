@@ -3,10 +3,10 @@
 # Change to the project root directory
 cd "$(dirname "$0")/.."
 
-# Configuration
-HOST="home419172903.1and1-data.host"
-USER="acc899014616"
-PASS="Palz2516!"
+# Configuration (prefer environment variables for CI/secrets managers)
+HOST="${WF_DEPLOY_HOST:-home419172903.1and1-data.host}"
+USER="${WF_DEPLOY_USER:-acc899014616}"
+PASS="${WF_DEPLOY_PASS:-Palz2516!}"
 REMOTE_PATH="/"
 # Optional public base for sites under a subdirectory (e.g., /wf)
 PUBLIC_BASE="${WF_PUBLIC_BASE:-}"

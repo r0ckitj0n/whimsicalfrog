@@ -1,9 +1,9 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const targetExtensions = ['.php', '.ts', '.tsx', '.js', '.cjs', '.xjs', '.css', '.json', '.log', '.mjs', '.py', '.md'];
 const excludeDirs = ['backups', 'node_modules', 'dist', '.agent', '.git', 'logs'];
@@ -29,6 +29,46 @@ async function getFiles(dir) {
         }
     }
     return files;
+}
+
+async function getChangedFiles(projectRoot) {
+    const commands = [
+        ['diff', '--name-only', '--diff-filter=ACMR'],
+        ['diff', '--cached', '--name-only', '--diff-filter=ACMR'],
+        ['ls-files', '--others', '--exclude-standard']
+    ];
+
+    const changed = new Set();
+    for (const args of commands) {
+        try {
+            const { stdout } = await execFileAsync('git', args, { cwd: projectRoot });
+            for (const line of stdout.split('\n')) {
+                const rel = line.trim();
+                if (rel) changed.add(rel);
+            }
+        } catch (e) {
+            // keep going; one command failing should not block the quick scan
+        }
+    }
+
+    const result = [];
+    for (const relPath of changed) {
+        const fullPath = path.join(projectRoot, relPath);
+        try {
+            const stat = await fs.stat(fullPath);
+            if (!stat.isFile()) continue;
+        } catch (e) {
+            continue;
+        }
+
+        const ext = path.extname(relPath).toLowerCase();
+        if (!targetExtensions.includes(ext)) continue;
+        if (excludeFiles.includes(path.basename(relPath))) continue;
+        if (excludeDirs.some((dir) => relPath === dir || relPath.startsWith(dir + '/'))) continue;
+
+        result.push(fullPath);
+    }
+    return result;
 }
 
 let dbReferences = new Set();
@@ -76,31 +116,44 @@ async function isReferenced(filePath, projectRoot) {
         }
     }
 
+    const findReference = async (pattern, mode) => {
+        const args = ['-n', '--hidden', '--no-messages'];
+        if (mode === 'fixed' || mode === 'word') args.push('-F');
+        if (mode === 'word') args.push('-w');
+        for (const dir of excludeDirs) args.push('--glob', '!' + dir + '/**');
+        for (const file of excludeFiles) args.push('--glob', '!**/' + file);
+        args.push('--glob', '!**/' + fileName);
+        args.push(pattern, '.');
+
+        try {
+            const { stdout } = await execFileAsync('rg', args, { cwd: projectRoot });
+            const lines = stdout.split('\n').map((line) => line.trim()).filter(Boolean);
+            const firstHit = lines.find((line) => !line.startsWith(relPath + ':'));
+            if (!firstHit) return null;
+            return firstHit.replace(/"/g, "'");
+        } catch (e) {
+            if (typeof e?.code === 'number' && e.code === 1) return null; // no matches
+            return null;
+        }
+    };
+
     // 1. Exact filename search
-    const escapedFileName = fileName.replace(/\./g, '\\.');
-    const grepExact = 'grep -rnI "' + escapedFileName + '" . --exclude-dir={' + excludeDirs.join(',') + '} --exclude={' + excludeFiles.join(',') + ',"' + fileName + '"} | head -n 1';
-    try {
-        const { stdout } = await execAsync(grepExact, { cwd: projectRoot });
-        if (stdout.trim().length > 0) return { type: 'filesystem_exact', details: stdout.trim().replace(/"/g, "'") };
-    } catch (e) { }
+    {
+        const hit = await findReference(fileName, 'fixed');
+        if (hit) return { type: 'filesystem_exact', details: hit };
+    }
 
     // 2. Whole-word search for baseName
     if (baseName.length >= 4) {
-        const grepWord = 'grep -rnw "' + baseName + '" . --exclude-dir={' + excludeDirs.join(',') + '} --exclude={' + excludeFiles.join(',') + ',"' + fileName + '"} | head -n 1';
-        try {
-            const { stdout } = await execAsync(grepWord, { cwd: projectRoot });
-            if (stdout.trim().length > 0) return { type: 'filesystem_word', details: stdout.trim().replace(/"/g, "'") };
-        } catch (e) { }
+        const hit = await findReference(baseName, 'word');
+        if (hit) return { type: 'filesystem_word', details: hit };
     }
 
     // 3. Fallback for short names: check with path segments
     if (relPath.includes('/')) {
         const pathRef = relPath.substring(0, relPath.lastIndexOf('.'));
-        const grepPath = 'grep -rnI "' + pathRef + '" . --exclude-dir={' + excludeDirs.join(',') + '} --exclude={' + excludeFiles.join(',') + ',"' + fileName + '"} | head -n 1';
-        try {
-            const { stdout } = await execAsync(grepPath, { cwd: projectRoot });
-            if (stdout.trim().length > 0) return { type: 'filesystem_path', details: stdout.trim().replace(/"/g, "'") };
-        } catch (e) { }
+        const hit = await findReference(pathRef, 'fixed');
+        if (hit) return { type: 'filesystem_path', details: hit };
     }
 
     return null;
@@ -117,10 +170,16 @@ function isDynamicRuntimeEntrypoint(relPath) {
 
 (async () => {
     const projectRoot = process.cwd();
+    const args = new Set(process.argv.slice(2));
+    const changedOnly = args.has('--changed') || args.has('--quick');
     await initContext();
 
-    const allFiles = await getFiles(projectRoot);
-    console.log('Checking ' + allFiles.length + ' files with broad matching (logs excluded)...');
+    const allFiles = changedOnly ? await getChangedFiles(projectRoot) : await getFiles(projectRoot);
+    if (changedOnly) {
+        console.log('Quick mode enabled (--changed): checking ' + allFiles.length + ' changed files...');
+    } else {
+        console.log('Checking ' + allFiles.length + ' files with broad matching (logs excluded)...');
+    }
 
     const knownEntryPoints = [
         'index.html', 'router.php', 'vite.config.ts', 'pm2.config.cjs',

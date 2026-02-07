@@ -49,11 +49,11 @@ export const VersionInfoModal: React.FC<VersionInfoModalProps> = ({
                     <h2 className="text-lg font-semibold text-gray-900">Build & Deploy Version</h2>
                     <button
                         type="button"
-                        className="rounded-md px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                         onClick={onClose}
-                    >
-                        Close
-                    </button>
+                        className="admin-action-btn btn-icon--close admin-modal-close"
+                        aria-label="Close"
+                        data-help-id="modal-close"
+                    />
                 </div>
 
                 <div className="space-y-3 px-5 py-4 text-sm text-gray-800">

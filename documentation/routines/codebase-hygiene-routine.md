@@ -15,8 +15,8 @@ node scripts/repo_hygiene.mjs
 ```
 
 ### 2. Review Findings
-- Review `orphans_to_archive.json`.
-- Check `orphan_progress.json` for the `@type` of references found.
+- Review `.local/state/repo_hygiene/orphans_to_archive.json`.
+- Check `.local/state/repo_hygiene/orphan_progress.json` for the `@type` of references found.
 - **False Orphans:** If a file is actually needed (dynamic reference), add it to `scripts/orphan_whitelist.json`.
 
 ### 3. Archival
@@ -25,7 +25,7 @@ Move confirmed orphans to a timestamped backup directory.
 # Example command
 BACKUP_DIR="backups/archive_$(date +%Y%m%d)"
 mkdir -p "$BACKUP_DIR"
-# Then move confirmed files listed in orphans_to_archive.json into $BACKUP_DIR
+# Then move confirmed files listed in .local/state/repo_hygiene/orphans_to_archive.json into $BACKUP_DIR
 ```
 
 ### 4. Build Verification
@@ -42,3 +42,6 @@ npx tsc --noEmit
 ## Whitelist Management
 The whitelist (`scripts/orphan_whitelist.json`) is the single source of truth for intentional orphans.
 - **Requirement:** Every entry must have a comment/reason prefix.
+
+## Local State Convention
+- All script runtime state files must be written under `/.local/state/` and must not be committed.

@@ -27,6 +27,7 @@ reports/
 # Local tooling/cache noise
 .cache/
 .agent/
+.local/
 tmp/
 coverage/
 *.map

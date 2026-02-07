@@ -6,6 +6,7 @@ vendor/
 dist/
 build/
 .cache/
+.local/
 hot
 
 # --- Environment & Secrets (CRITICAL) ---

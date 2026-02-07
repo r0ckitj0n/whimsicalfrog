@@ -40,6 +40,7 @@
 
 ## 5. Repository Hygiene
 - **Clean as You Code:** Run `scripts/repo_hygiene.mjs` before marking tasks complete.
+- **Runtime State Convention:** Script/runtime state artifacts must be written under `/.local/state/` and must never be tracked in git.
 - **Knowledge Catalog:** Query `agent_knowledge_catalog` before starting complex tasks. Index new tasks using `scripts/catalog-task.php`.
 - **Verification:** Verify all changes via browser preview or `curl`.
 

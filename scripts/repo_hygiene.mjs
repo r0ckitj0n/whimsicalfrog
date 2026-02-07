@@ -9,8 +9,9 @@ const targetExtensions = ['.php', '.ts', '.tsx', '.js', '.cjs', '.xjs', '.css', 
 const excludeDirs = ['backups', 'documentation', 'node_modules', 'scripts', 'vendor', 'dist', '.agent', '.git', 'logs'];
 const excludeFiles = ['all_files.txt', 'orphans_to_archive.json', 'repo_hygiene.mjs', 'orphan_progress.json', 'dump_db_schema.php', 'fetch_db_strings.php', 'db_strings.json', 'package.json', 'package-lock.json', 'composer.json', 'composer.lock', '.cursorrules', 'autostart.log', 'orphan_whitelist.json'];
 
-const PROGRESS_FILE = 'orphan_progress.json';
-const RESULTS_FILE = 'orphans_to_archive.json';
+const LOCAL_STATE_DIR = path.join('.local', 'state', 'repo_hygiene');
+const PROGRESS_FILE = path.join(LOCAL_STATE_DIR, 'orphan_progress.json');
+const RESULTS_FILE = path.join(LOCAL_STATE_DIR, 'orphans_to_archive.json');
 const DB_STRINGS_FILE = 'db_strings.json';
 const WHITELIST_FILE = 'scripts/orphan_whitelist.json';
 
@@ -250,6 +251,7 @@ function buildTopDirectorySummary(paths, maxItems = 10) {
         top_orphan_dirs: topDirs,
         findings: findings
     };
+    await fs.mkdir(path.join(projectRoot, LOCAL_STATE_DIR), { recursive: true });
     await fs.writeFile(path.join(projectRoot, PROGRESS_FILE), JSON.stringify(finalState, null, 2));
     await fs.writeFile(path.join(projectRoot, RESULTS_FILE), JSON.stringify(orphans, null, 2));
 

@@ -7,31 +7,73 @@
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
 require_once __DIR__ . '/../includes/auth.php';
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
-    if (strpos($host, ':') !== false) {
-        $host = explode(':', $host)[0];
+
+if (!function_exists('wf_whoami_emit')) {
+    function wf_whoami_emit(array $payload, int $statusCode = 200): void
+    {
+        if (!headers_sent()) {
+            http_response_code($statusCode);
+            header('Content-Type: application/json');
+            header('Cache-Control: no-store, no-cache, must-revalidate');
+        }
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+}
+
+register_shutdown_function(static function (): void {
+    $last = error_get_last();
+    if ($last === null) {
+        return;
+    }
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+    if (!in_array($last['type'] ?? null, $fatalTypes, true)) {
+        return;
     }
 
-    $cookieDomain = '';
-    if ($host !== 'localhost' && !filter_var($host, FILTER_VALIDATE_IP)) {
-        $parts = explode('.', $host);
-        $baseDomain = $host;
-        if (count($parts) >= 2) {
-            $baseDomain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
-        }
-        $cookieDomain = '.' . $baseDomain;
+    error_log('[whoami] Fatal shutdown: ' . ($last['message'] ?? 'unknown'));
+    if (!headers_sent()) {
+        wf_whoami_emit([
+            'success' => true,
+            'user_id' => null,
+            'error' => 'whoami_fallback_fatal'
+        ], 200);
     }
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
-    session_init([
-        'name' => 'PHPSESSID',
-        'lifetime' => 0,
-        'path' => '/',
-        'domain' => $cookieDomain,
-        'secure' => $isHttps,
-        'httponly' => true,
-        'samesite' => 'None',
-    ]);
+});
+try {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        $host = $_SERVER['HTTP_HOST'] ?? 'whimsicalfrog.us';
+        if (strpos($host, ':') !== false) {
+            $host = explode(':', $host)[0];
+        }
+
+        $cookieDomain = '';
+        if ($host !== 'localhost' && !filter_var($host, FILTER_VALIDATE_IP)) {
+            $parts = explode('.', $host);
+            $baseDomain = $host;
+            if (count($parts) >= 2) {
+                $baseDomain = $parts[count($parts) - 2] . '.' . $parts[count($parts) - 1];
+            }
+            $cookieDomain = '.' . $baseDomain;
+        }
+        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
+        session_init([
+            'name' => 'PHPSESSID',
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => $cookieDomain,
+            'secure' => $isHttps,
+            'httponly' => true,
+            'samesite' => 'None',
+        ]);
+    }
+} catch (\Throwable $e) {
+    error_log('[whoami] session_init failed: ' . $e->getMessage());
+    wf_whoami_emit([
+        'success' => true,
+        'user_id' => null,
+        'error' => 'whoami_fallback_session_init'
+    ], 200);
 }
 
 // Important: reconstruct session from WF_AUTH if needed
@@ -60,91 +102,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-$user_id = null; // normalized (string) id for client consumption
-$user_id_raw = null;
-$username = null;
-$role = null;
-
-if (!empty($_SESSION['user'])) {
-    $user = $_SESSION['user'];
-    // Prefer explicit user_id, fallback to id
-    if (isset($user['user_id'])) {
-        $user_id_raw = is_scalar($user['user_id']) ? (string) $user['user_id'] : null;
-    } elseif (isset($user['id'])) {
-        $user_id_raw = is_scalar($user['id']) ? (string) $user['id'] : null;
-    }
-    $username = $user['username'] ?? null;
-    $role = $user['role'] ?? null;
-    $first_name = $user['first_name'] ?? null;
-    $last_name = $user['last_name'] ?? null;
-    $email = $user['email'] ?? null;
-    $phone_number = $user['phone_number'] ?? null;
-} elseif (isset($_SESSION['user_id'])) {
-    $user_id_raw = is_scalar($_SESSION['user_id']) ? (string) $_SESSION['user_id'] : null;
-}
-
-// Normalize: preserve string IDs (do not coerce to int)
-if ($user_id_raw !== null && $user_id_raw !== '') {
-    $user_id = $user_id_raw;
-}
-
-// Bump a heartbeat counter to verify session persistence across requests
 try {
-    $_SESSION['__wf_heartbeat'] = (int) ($_SESSION['__wf_heartbeat'] ?? 0) + 1;
-} catch (\Throwable $e) { /* noop */
-}
+    $user_id = null; // normalized (string) id for client consumption
+    $user_id_raw = null;
+    $username = null;
+    $role = null;
+    $first_name = null;
+    $last_name = null;
+    $email = null;
+    $phone_number = null;
 
-// Check WF_AUTH fallback cookie
-$wfAuthRaw = $_COOKIE[wf_auth_cookie_name()] ?? null;
-$wfAuthParsed = wf_auth_parse_cookie($wfAuthRaw ?? '');
-// Presence of PHPSESSID cookie
-$sessCookiePresent = isset($_COOKIE[session_name()]);
-// Env hints
-$envHost = $_SERVER['HTTP_HOST'] ?? null;
-$envXfp = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null;
-$envHttps = $_SERVER['HTTPS'] ?? null;
-$cookieHdrLen = isset($_SERVER['HTTP_COOKIE']) ? strlen((string) $_SERVER['HTTP_COOKIE']) : null;
+    if (!empty($_SESSION['user'])) {
+        $user = $_SESSION['user'];
+        // Prefer explicit user_id, fallback to id
+        if (isset($user['user_id'])) {
+            $user_id_raw = is_scalar($user['user_id']) ? (string) $user['user_id'] : null;
+        } elseif (isset($user['id'])) {
+            $user_id_raw = is_scalar($user['id']) ? (string) $user['id'] : null;
+        }
+        $username = $user['username'] ?? null;
+        $role = $user['role'] ?? null;
+        $first_name = $user['first_name'] ?? null;
+        $last_name = $user['last_name'] ?? null;
+        $email = $user['email'] ?? null;
+        $phone_number = $user['phone_number'] ?? null;
+    } elseif (isset($_SESSION['user_id'])) {
+        $user_id_raw = is_scalar($_SESSION['user_id']) ? (string) $_SESSION['user_id'] : null;
+    }
 
-// Standard success payload with temporary diagnostics (safe)
-$payload = [
-    'success' => true,
-    'user_id' => $user_id,
-    'sid' => session_id(),
-    'sessionActive' => session_status() === PHP_SESSION_ACTIVE,
-    'hasUserSession' => !empty($_SESSION['user']),
-    'heartbeat' => $_SESSION['__wf_heartbeat'] ?? null,
-    'savePath' => ini_get('session.save_path'),
-    'wfAuthPresent' => $wfAuthRaw !== null,
-    'wfAuthParsedUserId' => is_array($wfAuthParsed) ? ($wfAuthParsed['user_id'] ?? null) : null,
-    'phpSessCookiePresent' => $sessCookiePresent,
-    'httpHost' => $envHost,
-    'xForwardedProto' => $envXfp,
-    'httpsFlag' => $envHttps,
-    'cookieHeaderLen' => $cookieHdrLen,
-];
-if ($user_id_raw !== null && $user_id_raw !== '') {
-    $payload['user_id_raw'] = $user_id_raw;
-}
-if ($username !== null) {
-    $payload['username'] = (string) $username;
-}
-if ($role !== null) {
-    $payload['role'] = (string) $role;
-}
-if ($first_name !== null) {
-    $payload['first_name'] = (string) $first_name;
-}
-if ($last_name !== null) {
-    $payload['last_name'] = (string) $last_name;
-}
-if ($email !== null) {
-    $payload['email'] = (string) $email;
-}
-if ($phone_number !== null) {
-    $payload['phone_number'] = (string) $phone_number;
-}
+    // Normalize: preserve string IDs (do not coerce to int)
+    if ($user_id_raw !== null && $user_id_raw !== '') {
+        $user_id = $user_id_raw;
+    }
 
-echo json_encode($payload);
+    // Bump a heartbeat counter to verify session persistence across requests
+    try {
+        $_SESSION['__wf_heartbeat'] = (int) ($_SESSION['__wf_heartbeat'] ?? 0) + 1;
+    } catch (\Throwable $e) {
+        error_log('[whoami] heartbeat update failed: ' . $e->getMessage());
+    }
+
+    // Check WF_AUTH fallback cookie
+    $wfAuthRaw = $_COOKIE[wf_auth_cookie_name()] ?? null;
+    $wfAuthParsed = wf_auth_parse_cookie($wfAuthRaw ?? '');
+    // Presence of PHPSESSID cookie
+    $sessCookiePresent = isset($_COOKIE[session_name()]);
+    // Env hints
+    $envHost = $_SERVER['HTTP_HOST'] ?? null;
+    $envXfp = $_SERVER['HTTP_X_FORWARDED_PROTO'] ?? null;
+    $envHttps = $_SERVER['HTTPS'] ?? null;
+    $cookieHdrLen = isset($_SERVER['HTTP_COOKIE']) ? strlen((string) $_SERVER['HTTP_COOKIE']) : null;
+
+    // Standard success payload with temporary diagnostics (safe)
+    $payload = [
+        'success' => true,
+        'user_id' => $user_id,
+        'sid' => session_id(),
+        'sessionActive' => session_status() === PHP_SESSION_ACTIVE,
+        'hasUserSession' => !empty($_SESSION['user']),
+        'heartbeat' => $_SESSION['__wf_heartbeat'] ?? null,
+        'savePath' => ini_get('session.save_path'),
+        'wfAuthPresent' => $wfAuthRaw !== null,
+        'wfAuthParsedUserId' => is_array($wfAuthParsed) ? ($wfAuthParsed['user_id'] ?? null) : null,
+        'phpSessCookiePresent' => $sessCookiePresent,
+        'httpHost' => $envHost,
+        'xForwardedProto' => $envXfp,
+        'httpsFlag' => $envHttps,
+        'cookieHeaderLen' => $cookieHdrLen,
+    ];
+    if ($user_id_raw !== null && $user_id_raw !== '') {
+        $payload['user_id_raw'] = $user_id_raw;
+    }
+    if ($username !== null) {
+        $payload['username'] = (string) $username;
+    }
+    if ($role !== null) {
+        $payload['role'] = (string) $role;
+    }
+    if ($first_name !== null) {
+        $payload['first_name'] = (string) $first_name;
+    }
+    if ($last_name !== null) {
+        $payload['last_name'] = (string) $last_name;
+    }
+    if ($email !== null) {
+        $payload['email'] = (string) $email;
+    }
+    if ($phone_number !== null) {
+        $payload['phone_number'] = (string) $phone_number;
+    }
+
+    wf_whoami_emit($payload, 200);
+} catch (\Throwable $e) {
+    error_log('[whoami] request failed: ' . $e->getMessage());
+    wf_whoami_emit([
+        'success' => true,
+        'user_id' => null,
+        'error' => 'whoami_fallback_runtime'
+    ], 200);
+}
 
 // Optional: verbose diagnostics when explicitly requested
 try {
@@ -167,5 +223,6 @@ try {
         ]);
         error_log($log);
     }
-} catch (\Throwable $e) { /* noop */
+} catch (\Throwable $e) {
+    error_log('[whoami] debug logging failed: ' . $e->getMessage());
 }

@@ -14,7 +14,7 @@ current_css_counts.txt
 .idea/
 .vscode/
 *.swp
-reports/
+/reports/
 !reports/.htaccess
 
 # Secrets and credentials

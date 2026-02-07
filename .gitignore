@@ -56,7 +56,7 @@ backups/
 !backups/stale/**
 
 # --- Reports ---
-reports/
+/reports/
 !reports/.htaccess
 
 # --- Safety Override ---

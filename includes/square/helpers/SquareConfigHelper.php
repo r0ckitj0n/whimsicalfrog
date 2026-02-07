@@ -92,6 +92,31 @@ class SquareConfigHelper
             'square_production_access_token', 'square_production_webhook_signature_key'
         ];
 
+        $toPersist = [];
+        $pendingSecrets = [];
+        foreach ($input as $key => $value) {
+            if (!in_array($key, $allowed, true)) {
+                continue;
+            }
+
+            if (in_array($key, $secretKeys, true)) {
+                if (is_string($value) && $value !== '') {
+                    $pendingSecrets[$key] = $value;
+                }
+                $value = '';
+            }
+
+            $toPersist[$key] = $value;
+        }
+
+        // Write secrets before DB transaction to avoid DDL side effects
+        // from secret table initialization while a transaction is active.
+        foreach ($pendingSecrets as $secretKey => $secretValue) {
+            if (!secret_set($secretKey, $secretValue)) {
+                throw new Exception("Failed to save secret: {$secretKey}");
+            }
+        }
+
         Database::beginTransaction();
         try {
             $sql = "INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description) 
@@ -99,15 +124,7 @@ class SquareConfigHelper
                     ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = CURRENT_TIMESTAMP";
 
             $savedCount = 0;
-            foreach ($input as $key => $value) {
-                if (!in_array($key, $allowed)) continue;
-
-                if (in_array($key, $secretKeys, true)) {
-                    if (is_string($value) && $value !== '') {
-                        secret_set($key, $value);
-                    }
-                    $value = '';
-                }
+            foreach ($toPersist as $key => $value) {
 
                 if (is_array($value)) {
                     $value = json_encode($value);
@@ -126,10 +143,16 @@ class SquareConfigHelper
                     $savedCount++;
                 }
             }
-            Database::commit();
+            $pdo = Database::getInstance();
+            if ($pdo instanceof PDO && $pdo->inTransaction()) {
+                Database::commit();
+            }
             return ['success' => true, 'message' => "Saved $savedCount Square settings successfully"];
         } catch (Exception $e) {
-            Database::rollBack();
+            $pdo = Database::getInstance();
+            if ($pdo instanceof PDO && $pdo->inTransaction()) {
+                Database::rollBack();
+            }
             throw $e;
         }
     }

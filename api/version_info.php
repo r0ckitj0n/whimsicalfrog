@@ -38,6 +38,40 @@ $committedAt = $git['commit_committed_at'] ?: ($metadata['commit_committed_at'] 
 $builtAt = $metadata['built_at'] ?? null;
 $deployedAt = $metadata['deployed_at'] ?? null;
 
+if (!$builtAt) {
+    $manifestCandidates = [
+        $projectRoot . '/dist/.vite/manifest.json',
+        $projectRoot . '/dist/manifest.json',
+    ];
+    foreach ($manifestCandidates as $manifestPath) {
+        if (is_file($manifestPath)) {
+            $mtime = @filemtime($manifestPath);
+            if (is_int($mtime) && $mtime > 0) {
+                $builtAt = gmdate('c', $mtime);
+                break;
+            }
+        }
+    }
+}
+
+if (!$builtAt && $committedAt) {
+    $builtAt = $committedAt;
+}
+
+if (!$deployedAt) {
+    $prodMarkerPath = $projectRoot . '/.disable-vite-dev';
+    if (is_file($prodMarkerPath)) {
+        $mtime = @filemtime($prodMarkerPath);
+        if (is_int($mtime) && $mtime > 0) {
+            $deployedAt = gmdate('c', $mtime);
+        }
+    }
+}
+
+if (!$deployedAt) {
+    $deployedAt = $builtAt ?: ($committedAt ?: null);
+}
+
 $hasGitData = !empty($git['commit_hash']) || !empty($git['commit_committed_at']);
 $hasArtifactData = !empty($metadata);
 $source = 'unknown';

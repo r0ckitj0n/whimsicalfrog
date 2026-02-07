@@ -1,6 +1,8 @@
 <?php
 // includes/orders/helpers/OrderPaymentHelper.php
 
+require_once __DIR__ . '/../../square/helpers/SquareConfigHelper.php';
+
 class OrderPaymentHelper
 {
     /**
@@ -8,21 +10,20 @@ class OrderPaymentHelper
      */
     public static function processSquarePayment($token, $amount, $address = null)
     {
-        $squareEnabled = (bool) BusinessSettings::get('square_enabled', false);
-        $squareEnv = (string) BusinessSettings::get('square_environment', 'sandbox');
-
-        $credentials = self::getSquareCredentials($squareEnv);
-        if (!$squareEnabled || empty($credentials['token']) || empty($credentials['location_id'])) {
+        $credentials = self::getSquareCredentials();
+        if (!$credentials['enabled'] || empty($credentials['token']) || empty($credentials['location_id'])) {
             self::logError('Square not properly configured', [
-                'env' => $squareEnv,
-                'enabled' => $squareEnabled,
+                'env' => $credentials['environment'] ?? 'sandbox',
+                'enabled' => $credentials['enabled'],
                 'has_token' => !empty($credentials['token']),
                 'has_location' => !empty($credentials['location_id'])
             ]);
             throw new Exception('Payment configuration error');
         }
 
-        $baseUrl = $squareEnv === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com';
+        $baseUrl = ($credentials['environment'] ?? 'sandbox') === 'production'
+            ? 'https://connect.squareup.com'
+            : 'https://connect.squareupsandbox.com';
         $amountCents = (int) round($amount * 100);
 
         if ($amountCents <= 0) {
@@ -87,29 +88,61 @@ class OrderPaymentHelper
         return $data['payment']['id'] ?? null;
     }
 
-    private static function getSquareCredentials($env)
+    private static function getSquareCredentials()
     {
-        $tokenKey = ($env === 'production') ? 'square_production_access_token' : 'square_sandbox_access_token';
-        $locKey = ($env === 'production') ? 'square_production_location_id' : 'square_sandbox_location_id';
+        // Use SquareConfigHelper so keys are resolved from category='square',
+        // avoiding cross-category collisions in generic BusinessSettings::get().
+        try {
+            if (class_exists('SquareConfigHelper')) {
+                $resolved = SquareConfigHelper::getResolvedCredentials();
+                return [
+                    'enabled' => self::toBool($resolved['enabled'] ?? false),
+                    'environment' => (string) ($resolved['environment'] ?? 'sandbox'),
+                    'token' => (string) ($resolved['access_token'] ?? ''),
+                    'location_id' => (string) ($resolved['location_id'] ?? ''),
+                ];
+            }
+        } catch (Exception $e) {
+            self::logError('Square resolved credential lookup failed', ['error' => $e->getMessage()]);
+        }
+
+        // Legacy fallback (used only if helper resolution is unavailable).
+        $squareEnabled = self::toBool(BusinessSettings::get('square_enabled', false));
+        $squareEnv = (string) BusinessSettings::get('square_environment', 'sandbox');
+        $tokenKey = ($squareEnv === 'production') ? 'square_production_access_token' : 'square_sandbox_access_token';
+        $locKey = ($squareEnv === 'production') ? 'square_production_location_id' : 'square_sandbox_location_id';
 
         $token = '';
         if (function_exists('secret_get')) {
-            // @reason: Secret store access is optional - fallback to BusinessSettings
-            try {
-                $token = secret_get($tokenKey) ?: secret_get('square_access_token');
-            } catch (Exception $e) {
-            }
+            $token = (string) (secret_get($tokenKey) ?: secret_get('square_access_token') ?: '');
         }
-        if (empty($token)) {
-            $token = BusinessSettings::get('square_access_token', '');
+        if ($token === '') {
+            $token = (string) BusinessSettings::get($tokenKey, BusinessSettings::get('square_access_token', ''));
         }
 
         $locationId = (string) BusinessSettings::get($locKey, '');
-        if (empty($locationId)) {
+        if ($locationId === '') {
             $locationId = (string) BusinessSettings::get('square_location_id', '');
         }
 
-        return ['token' => $token, 'location_id' => $locationId];
+        return [
+            'enabled' => $squareEnabled,
+            'environment' => $squareEnv,
+            'token' => $token,
+            'location_id' => $locationId,
+        ];
+    }
+
+    private static function toBool($value)
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value)) {
+            return (int) $value === 1;
+        }
+        $normalized = strtolower(trim((string) $value));
+        return in_array($normalized, ['1', 'true', 'yes', 'on', 'y'], true);
     }
 
     private static function logError($message, $context)

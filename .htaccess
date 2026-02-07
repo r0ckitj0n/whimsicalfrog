@@ -14,6 +14,11 @@
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
+    # If a hashed dist asset is missing, return 404 (do not fall through to HTML)
+    RewriteCond %{REQUEST_URI} ^/dist/assets/.+\.(js|mjs|css|map)$ [NC]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ - [R=404,L]
+
     # Rewrite /assets/ to /dist/assets/ (for legacy support or internal consistency)
     RewriteRule ^assets/(.*)$ /dist/assets/$1 [L]
 

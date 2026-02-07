@@ -160,12 +160,16 @@ class SquareConfigHelper
             'sync_fields' => json_decode($settings['sync_fields'] ?? '[]', true) ?: []
         ];
 
-        // Resolve secrets
+        // Resolve secrets (fallback to DB values for compatibility with older saves)
         $tokenKey = $prefix . 'access_token';
-        $resolved['access_token'] = secret_get($tokenKey) ?: secret_get('square_access_token') ?: '';
+        $resolved['access_token'] = secret_get($tokenKey)
+            ?: secret_get('square_access_token')
+            ?: ($settings[$tokenKey] ?? $settings['square_access_token'] ?? '');
         
         $whKey = $prefix . 'webhook_signature_key';
-        $resolved['webhook_signature_key'] = secret_get($whKey) ?: secret_get('square_webhook_signature_key') ?: '';
+        $resolved['webhook_signature_key'] = secret_get($whKey)
+            ?: secret_get('square_webhook_signature_key')
+            ?: ($settings[$whKey] ?? $settings['square_webhook_signature_key'] ?? '');
 
         return $resolved;
     }

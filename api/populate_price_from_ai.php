@@ -47,14 +47,12 @@ try {
     $confidence = is_numeric($confidenceRaw) ? (float) $confidenceRaw : null;
     $qualityTier = $data['quality_tier'] ?? null;
 
-    // Build dynamic SET clause to only update quality_tier if provided
+    // Build dynamic SET clause to only update price-specific tier if provided
     $setClauses = ['ai_price_confidence = ?', 'ai_price_at = ?'];
     $params = [$confidence, $suggestion['created_at'] ?? date('Y-m-d H:i:s')];
     
     if ($qualityTier !== null) {
-        $setClauses[] = 'quality_tier = ?';
         $setClauses[] = 'price_quality_tier = ?';
-        $params[] = $qualityTier;
         $params[] = $qualityTier;
     }
     $params[] = $sku;

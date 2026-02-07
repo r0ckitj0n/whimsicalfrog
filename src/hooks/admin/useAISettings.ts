@@ -101,8 +101,9 @@ export const useAISettings = () => {
             );
             if (res) {
                 const modelsList = Array.isArray(res) ? res : res.models || res.data || [];
-                setModels(modelsList);
-                return modelsList;
+                const visionModels = (modelsList as Array<{ supportsVision?: boolean }>).filter(m => m.supportsVision === true);
+                setModels(visionModels);
+                return visionModels;
             }
             return [];
         } catch (err: unknown) {

@@ -7,6 +7,7 @@ import { ApiClient } from '../../../core/ApiClient.js';
 import { COST_CATEGORY, CostCategory } from '../../../core/constants.js';
 import { CostSummary } from './cost-breakdown/CostSummary.js';
 import { FactorList } from './cost-breakdown/FactorList.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface CostBreakdownManagerProps {
     sku?: string;
@@ -96,7 +97,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
         }
     };
 
-    const handleSaveAll = useCallback(async () => {
+    const handleSaveAll = useCallback(async (): Promise<boolean> => {
         try {
             let latestTotal = breakdown.totals.total;
 
@@ -117,10 +118,20 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
             await fetchBreakdown();
             setHasUserChanges(false);
             if (window.WFToast) window.WFToast.success('All changes saved to inventory');
+            return true;
         } catch (err) {
             if (window.WFToast) window.WFToast.error('Failed to update inventory cost');
+            return false;
         }
     }, [selectedSku, hasPendingSuggestion, populateFromSuggestion, fetchBreakdown, breakdown.totals.total]);
+
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty: hasUserChanges,
+        isBlocked: isLoading || isGenerating,
+        onClose,
+        onSave: handleSaveAll,
+        closeAfterSave: true
+    });
 
     const categories = [
         { id: COST_CATEGORY.MATERIALS, label: 'Materials', emoji: '🧪' },
@@ -137,7 +148,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -190,7 +201,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                                 data-help-id="common-save"
                             />
                             <button
-                                onClick={onClose}
+                                onClick={() => { void attemptClose(); }}
                                 className="admin-action-btn btn-icon--close"
                                 data-help-id="common-close"
                             />

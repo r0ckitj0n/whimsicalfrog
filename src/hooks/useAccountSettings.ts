@@ -67,9 +67,9 @@ export const useAccountSettings = () => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
-    const handleSaveProfile = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!user) return;
+    const handleSaveProfile = async (e?: React.FormEvent): Promise<boolean> => {
+        e?.preventDefault();
+        if (!user) return false;
 
         setIsSaving(true);
 
@@ -102,12 +102,14 @@ export const useAccountSettings = () => {
                 setIsEditing(false);
                 setIsInitialized(false); // Force re-initialize after save
                 setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '' }));
+                return true;
             } else {
                 throw new Error(res?.error || 'Failed to update profile');
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Update failed';
             if (window.WFToast) window.WFToast.error(message);
+            return false;
         } finally {
             setIsSaving(false);
         }

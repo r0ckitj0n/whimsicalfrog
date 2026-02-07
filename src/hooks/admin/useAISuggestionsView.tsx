@@ -185,10 +185,10 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
                 // Update LOCAL form state progressively as each step completes
                 setLocalFormData(prev => ({
                     ...prev,
-                    // Name locks constrain wording via lockedWords; they do not freeze regeneration.
-                    name: context.name || prev.name,
-                    description: context.description || prev.description,
-                    category: context.category || prev.category,
+                    // Image-first generation owns these fields; locked words are enforced upstream.
+                    name: context.name,
+                    description: context.description,
+                    category: context.category,
                     cost_price: (!lockedFields.cost_price && context.suggestedCost !== null) ? context.suggestedCost : prev.cost_price,
                     retail_price: (!lockedFields.retail_price && context.suggestedPrice !== null) ? context.suggestedPrice : prev.retail_price
                 }));
@@ -241,9 +241,9 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
         if (result) {
             setLocalFormData(prev => ({
                 ...prev,
-                name: result.name || prev.name,
-                description: result.description || prev.description,
-                category: result.category || prev.category,
+                name: result.name,
+                description: result.description,
+                category: result.category,
                 cost_price: (!lockedFields.cost_price && result.suggestedCost !== null) ? result.suggestedCost : prev.cost_price,
                 retail_price: (!lockedFields.retail_price && result.suggestedPrice !== null) ? result.suggestedPrice : prev.retail_price
             }));
@@ -324,36 +324,43 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ onClose, title }) 
 
         const primaryImageUrl = `/images/items/${currentItem.sku}A.webp`;
         const infoLockedWords = lockedWords;
-
-        const infoResult = await generateInfoOnly({
-            sku: currentItem.sku,
-            primaryImageUrl,
-            previousName: localFormData.name || currentItem.name || '',
-            lockedFields,
-            lockedWords: infoLockedWords,
-            includeMarketingRefinement: true
-        });
-
-        if (infoResult) {
-            setLocalFormData(prev => ({
-                ...prev,
-                name: infoResult.name || prev.name,
-                description: infoResult.description || prev.description,
-                category: infoResult.category || prev.category
-            }));
-            setIsDirty(true);
-            if (infoResult.marketingData) {
-                setCachedMarketingData(infoResult.marketingData);
-            }
-        }
-
-        if (infoResult?.marketingData) {
-            setLocalMarketing({
-                targetAudience: infoResult.marketingData.target_audience,
-                sellingPoints: infoResult.marketingData.selling_points,
-                marketingChannels: infoResult.marketingData.marketing_channels || []
+        if (window.WFToast) window.WFToast.info('Generating AI item information...');
+        try {
+            const infoResult = await generateInfoOnly({
+                sku: currentItem.sku,
+                primaryImageUrl,
+                previousName: localFormData.name || currentItem.name || '',
+                lockedFields,
+                lockedWords: infoLockedWords,
+                includeMarketingRefinement: true
             });
-            setIsDirty(true);
+
+            if (infoResult) {
+                setLocalFormData(prev => ({
+                    ...prev,
+                    name: infoResult.name || prev.name,
+                    description: infoResult.description || prev.description,
+                    category: infoResult.category || prev.category
+                }));
+                setIsDirty(true);
+                if (infoResult.marketingData) {
+                    setCachedMarketingData(infoResult.marketingData);
+                }
+                if (window.WFToast) window.WFToast.success('Item information generated');
+            } else if (window.WFToast) {
+                window.WFToast.error('Failed to generate item information');
+            }
+
+            if (infoResult?.marketingData) {
+                setLocalMarketing({
+                    targetAudience: infoResult.marketingData.target_audience,
+                    sellingPoints: infoResult.marketingData.selling_points,
+                    marketingChannels: infoResult.marketingData.marketing_channels || []
+                });
+                setIsDirty(true);
+            }
+        } catch (_err) {
+            if (window.WFToast) window.WFToast.error('Failed to generate item information');
         }
     };
 

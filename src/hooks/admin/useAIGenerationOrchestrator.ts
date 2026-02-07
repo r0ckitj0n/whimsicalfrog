@@ -169,28 +169,13 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         return result;
     };
 
-    const applyKeywordHintsToText = (value: string, hintValue?: string): string => {
-        if (!hintValue) return value;
-        const { phrases, words } = parseLockedTokens(hintValue);
-        const result = value || '';
-        const hasAnyPhrase = phrases.some((p) => p && result.toLowerCase().includes(p.toLowerCase()));
-        const hasAnyWord = words.some((w) => w && containsToken(result, w));
-        if (hasAnyPhrase || hasAnyWord) return result;
-        const preferredHint = phrases.find(Boolean) || words.find(Boolean);
-        return preferredHint ? `${result} ${preferredHint}`.trim() : result;
-    };
-
     const applyGeneratedTextWithPolicy = (
         generatedValue: string,
         previousValue: string,
-        fieldLocked: boolean,
         wordConstraint?: string
     ): string => {
         const candidate = generatedValue || previousValue || '';
-        if (fieldLocked && wordConstraint) {
-            return applyLockedWordsToText(candidate, wordConstraint);
-        }
-        return applyKeywordHintsToText(candidate, wordConstraint);
+        return applyLockedWordsToText(candidate, wordConstraint);
     };
 
     const applyGeneratedNameWithPolicy = (
@@ -200,7 +185,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         wordConstraint: string | undefined,
         contextText: string
     ): string => {
-        let nextName = applyGeneratedTextWithPolicy(generatedName, previousName, fieldLocked, wordConstraint);
+        let nextName = applyGeneratedTextWithPolicy(generatedName, previousName, wordConstraint);
         if (fieldLocked && wordConstraint) {
             nextName = enforceNameVariation(nextName, previousName, contextText);
         }
@@ -226,7 +211,8 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
      */
     const executeInfoStep = useCallback(async (
         sku: string,
-        primaryImageUrl: string
+        primaryImageUrl: string,
+        lockedWords?: Record<string, string>
     ): Promise<GenerationStepResult> => {
         try {
             console.log('[AI Orchestrator] executeInfoStep called with:', { sku, primaryImageUrl: primaryImageUrl?.substring(0, 100) });
@@ -249,7 +235,9 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 sku,
                 imageData: primaryImageUrl,
                 useImages: true,
-                step: 'info'
+                step: 'info',
+                locked_words: lockedWords || {},
+                image_first_priority: true
             });
 
             console.log('[AI Orchestrator] executeInfoStep response:', response);
@@ -586,9 +574,9 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         const context: GenerationContext = {
             sku,
             primaryImageUrl,
-            name: params.initialName || '',
-            description: params.initialDescription || '',
-            category: params.initialCategory || '',
+            name: '',
+            description: '',
+            category: '',
             tier,
             weightOz: null,
             packageLengthIn: null,
@@ -610,7 +598,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
             setCurrentStep('info');
             window.WFToast?.info?.('🖼️ Analyzing image for item details...');
 
-            const infoResult = await executeInfoStep(sku, primaryImageUrl);
+            const infoResult = await executeInfoStep(sku, primaryImageUrl, lockedWords);
             setProgress(25);
 
             if (infoResult.success) {
@@ -625,10 +613,13 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                 context.description = applyGeneratedTextWithPolicy(
                     infoResult.data.description || '',
                     context.description || '',
-                    Boolean(lockedFields.description),
                     lockedWords.description
                 );
-                context.category = infoResult.data.category || context.category;
+                context.category = applyGeneratedTextWithPolicy(
+                    infoResult.data.category || '',
+                    context.category || '',
+                    lockedWords.category
+                );
                 context.weightOz = infoResult.data.weightOz ?? context.weightOz;
                 context.packageLengthIn = infoResult.data.packageLengthIn ?? context.packageLengthIn;
                 context.packageWidthIn = infoResult.data.packageWidthIn ?? context.packageWidthIn;
@@ -638,7 +629,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
             } else {
                 // If info generation fails but we have initial values, continue
                 if (!context.name) {
-                    toastError('Failed to generate item info. Please provide a name manually.');
+                    toastError(infoResult.error || 'Image analysis failed. Switch to a vision-capable model in AI Settings and run Test Provider.');
                     setIsGenerating(false);
                     setCurrentStep(null);
                     return null;
@@ -716,7 +707,6 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                     context.description = applyGeneratedTextWithPolicy(
                         refinedDescriptionSource,
                         context.description || '',
-                        Boolean(lockedFields.description),
                         lockedWords.description
                     );
                 }
@@ -783,7 +773,7 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
         setIsGenerating(true);
         setCurrentStep('info');
         try {
-            const result = await executeInfoStep(params.sku, params.primaryImageUrl);
+            const result = await executeInfoStep(params.sku, params.primaryImageUrl, params.lockedWords || {});
             if (!result.success) return null;
             const lockedWords = params.lockedWords || {};
             const lockedFields = params.lockedFields || {};
@@ -794,7 +784,6 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
             let nextDescription = applyGeneratedTextWithPolicy(
                 result.data.description || '',
                 '',
-                Boolean(lockedFields.description),
                 lockedWords.description
             );
             let nextName = applyGeneratedNameWithPolicy(
@@ -828,7 +817,6 @@ export const useAIGenerationOrchestrator = (): UseAIGenerationOrchestratorReturn
                     nextDescription = applyGeneratedTextWithPolicy(
                         refinedDescriptionSource,
                         nextDescription,
-                        Boolean(lockedFields.description),
                         lockedWords.description
                     );
                 }

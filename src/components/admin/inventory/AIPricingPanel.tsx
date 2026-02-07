@@ -2,6 +2,7 @@ import React from 'react';
 import { useInventoryAI, PriceSuggestion } from '../../../hooks/admin/useInventoryAI.js';
 import { usePriceBreakdown } from '../../../hooks/admin/usePriceBreakdown.js';
 import { PriceComponent } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
+import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
 import { AI_TIER } from '../../../core/constants.js';
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { formatTime } from '../../../core/date-utils.js';
@@ -45,27 +46,35 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
     } = useInventoryAI();
 
     // Prefer prop over hook state - allows parent to pass in orchestrated suggestions
-    const cached_price_suggestion = propCachedSuggestion !== undefined ? propCachedSuggestion : hookCachedSuggestion;
+    const cached_price_suggestion = propCachedSuggestion ?? hookCachedSuggestion;
 
-    const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt } = usePriceBreakdown(sku);
+    const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = usePriceBreakdown(sku);
 
     const [isApplying, setIsApplying] = React.useState(false);
 
     const handleSuggest = async () => {
-        const suggestion = await fetch_price_suggestion({
-            sku,
-            name,
-            description,
-            category,
-            cost_price,
-            tier
-        });
-        if (suggestion && onSuggestionUpdated) {
-            onSuggestionUpdated(suggestion);
-        }
-        if (suggestion && !isReadOnly) {
-            // Mark as dirty so save button appears
-            if (onApplied) onApplied();
+        if (window.WFToast) window.WFToast.info('Generating AI price suggestion...');
+        try {
+            const suggestion = await fetch_price_suggestion({
+                sku,
+                name,
+                description,
+                category,
+                cost_price,
+                tier
+            });
+            if (suggestion && onSuggestionUpdated) {
+                onSuggestionUpdated(suggestion);
+            }
+            if (suggestion && !isReadOnly) {
+                // Mark as dirty so save button appears
+                if (onApplied) onApplied();
+                if (toastSuccess) toastSuccess('Price suggestion generated');
+            } else if (!suggestion && toastError) {
+                toastError('Failed to generate price suggestion');
+            }
+        } catch (_err) {
+            if (toastError) toastError('Failed to generate price suggestion');
         }
     };
 
@@ -76,8 +85,85 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
             if (updated) {
                 setCachedPriceSuggestion(updated);
                 if (onSuggestionUpdated) onSuggestionUpdated(updated);
+                if (!isReadOnly && onApplyPrice) onApplyPrice(updated.suggested_price);
             }
+            return;
         }
+
+        // No cached suggestion yet: immediately generate one for the new tier so
+        // the suggested value updates without requiring an extra Generate click.
+        // Fallback order: breakdown amount -> AI generation.
+        void (async () => {
+            if (window.WFToast) window.WFToast.info('Recalculating price for selected tier...');
+            try {
+                const fetched = await fetchBreakdown();
+                const storedTotal = Number(fetched?.totals?.stored || 0);
+                const factorsTotal = Number(fetched?.totals?.total || 0);
+                const breakdownTotal = storedTotal > 0 ? storedTotal : factorsTotal;
+
+                if (Number.isFinite(breakdownTotal) && breakdownTotal > 0) {
+                    const currentMult = getPriceTierMultiplier(tier || 'standard') || 1;
+                    const targetMult = getPriceTierMultiplier(newTier || 'standard') || 1;
+                    const basePrice = breakdownTotal / currentMult;
+                    const retieredPrice = Number((basePrice * targetMult).toFixed(2));
+                    const factorScale = targetMult / currentMult;
+                    const scaledComponents: PriceComponent[] = Array.isArray(fetched?.factors)
+                        ? fetched.factors
+                            .map((factor) => {
+                                const amount = Number(factor?.amount || 0);
+                                if (!Number.isFinite(amount) || amount <= 0) return null;
+                                return {
+                                    type: String(factor?.type || 'analysis'),
+                                    label: String(factor?.label || 'Pricing Factor'),
+                                    amount: Number((amount * factorScale).toFixed(2)),
+                                    explanation: String(factor?.explanation || '')
+                                } as PriceComponent;
+                            })
+                            .filter((item): item is PriceComponent => item !== null)
+                        : [];
+
+                    const synthesized: PriceSuggestion = {
+                        success: true,
+                        suggested_price: retieredPrice,
+                        confidence: savedConfidence ?? 0,
+                        reasoning: 'Derived from existing pricing breakdown and retiered.',
+                        components: scaledComponents,
+                        factors: {
+                            requested_pricing_tier: (newTier || 'standard').toLowerCase(),
+                            tier_multiplier: targetMult,
+                            final_before_tier: Number(basePrice.toFixed(2))
+                        },
+                        analysis: {},
+                        created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+                    };
+
+                    setCachedPriceSuggestion(synthesized);
+                    if (onSuggestionUpdated) onSuggestionUpdated(synthesized);
+                    if (!isReadOnly && onApplyPrice) onApplyPrice(synthesized.suggested_price);
+                    if (toastSuccess) toastSuccess('Suggested price updated from breakdown');
+                    return;
+                }
+
+                const suggestion = await fetch_price_suggestion({
+                    sku,
+                    name,
+                    description,
+                    category,
+                    cost_price,
+                    tier: newTier
+                });
+                if (!suggestion) {
+                    if (toastError) toastError('Failed to recalculate suggested price');
+                    return;
+                }
+                setCachedPriceSuggestion(suggestion);
+                if (onSuggestionUpdated) onSuggestionUpdated(suggestion);
+                if (!isReadOnly && onApplyPrice) onApplyPrice(suggestion.suggested_price);
+                if (toastSuccess) toastSuccess('Suggested price updated');
+            } catch (_err) {
+                if (toastError) toastError('Failed to recalculate suggested price');
+            }
+        })();
     };
 
     const handleApply = () => {
@@ -142,23 +228,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
                 </div>
             )}
 
-            {cached_price_suggestion ? (
-                <div className="mb-6 p-4 bg-purple-50 border border-purple-100 rounded-xl animate-in fade-in duration-300">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">AI Suggested Retail</span>
-                        <span className="text-lg font-bold text-purple-600">
-                            ${cached_price_suggestion.suggested_price.toFixed(2)}
-                        </span>
-                    </div>
-                    <p className="text-xs text-gray-600 italic leading-relaxed mb-3">
-                        "{cached_price_suggestion.reasoning}"
-                    </p>
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-gray-400">Confidence: <span className="font-bold">{Math.round((Number(cached_price_suggestion.confidence) || 0) * 100)}%</span></span>
-                        <span className="text-[10px] text-gray-400">As of: <span className="font-bold">{formatTime(cached_price_suggestion.created_at || Date.now())}</span></span>
-                    </div>
-                </div>
-            ) : savedConfidence !== null && (
+            {!cached_price_suggestion && savedConfidence !== null && (
                 <div className="mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applied AI Metadata</span>
@@ -168,6 +238,15 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
                         {savedAt && (
                             <span className="text-[10px] text-gray-400">Applied: <span className="font-bold">{formatTime(savedAt)}</span></span>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {cached_price_suggestion && (
+                <div className="ai-data-panel ai-data-panel--inverted mb-3">
+                    <div className="flex justify-between items-center">
+                        <span className="ai-data-label text-sm font-medium text-white/80">Suggested Retail:</span>
+                        <span className="ai-data-value--large text-white">${cached_price_suggestion.suggested_price.toFixed(2)}</span>
                     </div>
                 </div>
             )}

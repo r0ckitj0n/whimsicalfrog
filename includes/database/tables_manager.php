@@ -52,17 +52,36 @@ function handle_update_cell($input)
         }
     }
 
-    // Special handling: when updating items.category, also update category_id FK
+    // Special handling: when updating items.category, also update category_id FK when schema supports it.
     if ($tableName === 'items' && $column === 'category') {
-        // Look up category_id from the category name
-        $categoryRow = Database::queryOne("SELECT id FROM categories WHERE name = ?", [$newValue]);
-        if ($categoryRow && isset($categoryRow['id'])) {
-            // Update category_id FK and legacy category text field
-            $sql = "UPDATE `$tableName` SET `category_id` = ?, `category` = ? WHERE " . implode(' AND ', $where_conditions) . " LIMIT 1";
-            $params = array_merge([$categoryRow['id'], $newValue], $whereParams);
+        $hasCategoryId = false;
+        try {
+            $columns = Database::queryAll("SHOW COLUMNS FROM items");
+            foreach ($columns as $columnInfo) {
+                if (($columnInfo['Field'] ?? '') === 'category_id') {
+                    $hasCategoryId = true;
+                    break;
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('handle_update_cell category_id schema check failed: ' . $e->getMessage());
+        }
+
+        if ($hasCategoryId) {
+            // Look up category_id from the category name
+            $categoryRow = Database::queryOne("SELECT id FROM categories WHERE name = ?", [$newValue]);
+            if ($categoryRow && isset($categoryRow['id'])) {
+                $sql = "UPDATE `$tableName` SET `category_id` = ?, `category` = ? WHERE " . implode(' AND ', $where_conditions) . " LIMIT 1";
+                $params = array_merge([$categoryRow['id'], $newValue], $whereParams);
+                return Database::execute($sql, $params);
+            }
+
+            // If no category match, keep category text and clear FK to avoid stale category references.
+            $sql = "UPDATE `$tableName` SET `category_id` = NULL, `category` = ? WHERE " . implode(' AND ', $where_conditions) . " LIMIT 1";
+            $params = array_merge([$newValue], $whereParams);
             return Database::execute($sql, $params);
         }
-        // If category not found in categories table, just update the text field (fallback)
+        // No category_id column: update legacy text field only.
     }
 
     $sql = "UPDATE `$tableName` SET `$column` = ? WHERE " . implode(' AND ', $where_conditions) . " LIMIT 1";

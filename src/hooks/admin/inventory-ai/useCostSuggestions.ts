@@ -115,10 +115,63 @@ export const useCostSuggestions = () => {
         }
     }, [normalizeBreakdown]);
 
+    const retier_cost_suggestion = useCallback((source: CostSuggestion, targetTier: string, currentTier: string = 'standard'): CostSuggestion | null => {
+        if (!source) return null;
+
+        const currentMult = getPriceTierMultiplier(currentTier || 'standard') || 1;
+        const targetMult = getPriceTierMultiplier(targetTier || 'standard') || 1;
+        const suggested = Number(source.suggested_cost);
+        const baselineFromSource = Number(source.baseline_cost);
+        const baseline = Number.isFinite(baselineFromSource) && baselineFromSource > 0
+            ? baselineFromSource
+            : (Number.isFinite(suggested) && suggested > 0 ? suggested / currentMult : 0);
+
+        if (!Number.isFinite(baseline) || baseline <= 0) return null;
+
+        const retiered: CostSuggestion = {
+            ...source,
+            baseline_cost: Number(baseline.toFixed(2)),
+            suggested_cost: Number((baseline * targetMult).toFixed(2)),
+            _cachedAt: Date.now()
+        };
+
+        if (retiered.breakdown && typeof retiered.breakdown === 'object') {
+            const nextBreakdown: Record<string, unknown> = {};
+            const ratio = targetMult / (currentMult || 1);
+
+            Object.entries(retiered.breakdown).forEach(([key, val]) => {
+                if (typeof val === 'number') {
+                    nextBreakdown[key] = Number((val * ratio).toFixed(2));
+                    return;
+                }
+                if (Array.isArray(val)) {
+                    nextBreakdown[key] = val.map(item => {
+                        if (item && typeof item === 'object') {
+                            const nextItem = { ...item } as Record<string, unknown>;
+                            if (typeof nextItem.cost === 'number') {
+                                nextItem.cost = Number((nextItem.cost * ratio).toFixed(2));
+                            }
+                            return nextItem;
+                        }
+                        return item;
+                    });
+                    return;
+                }
+                nextBreakdown[key] = val;
+            });
+
+            retiered.breakdown = nextBreakdown;
+        }
+
+        setCachedCostSuggestion(retiered);
+        return retiered;
+    }, []);
+
     return {
         is_busy,
         cached_cost_suggestion,
         setCachedCostSuggestion,
-        fetch_cost_suggestion
+        fetch_cost_suggestion,
+        retier_cost_suggestion
     };
 };

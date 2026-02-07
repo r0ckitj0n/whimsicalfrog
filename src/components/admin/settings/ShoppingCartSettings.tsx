@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useShoppingCartSettings, IShoppingCartSettings } from '../../../hooks/admin/useShoppingCartSettings.js';
 import { isDraftDirty } from '../../../core/utils.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface ShoppingCartSettingsProps {
     onClose?: () => void;
@@ -30,14 +31,22 @@ export const ShoppingCartSettings: React.FC<ShoppingCartSettingsProps> = ({ onCl
         }));
     };
 
-    const handleSave = async () => {
+    const handleSave = async (): Promise<boolean> => {
         const success = await saveSettings(localSettings);
         if (success && window.WFToast) {
             window.WFToast.success('Shopping cart settings updated!');
         }
+        return success;
     };
 
     const isDirty = isDraftDirty(localSettings, settings);
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: handleSave,
+        closeAfterSave: true
+    });
 
     const modalContent = (
         <div
@@ -45,7 +54,7 @@ export const ShoppingCartSettings: React.FC<ShoppingCartSettingsProps> = ({ onCl
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -75,7 +84,7 @@ export const ShoppingCartSettings: React.FC<ShoppingCartSettingsProps> = ({ onCl
                             data-help-id="common-refresh"
                         />
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="common-close"
                         />

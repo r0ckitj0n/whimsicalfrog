@@ -9,6 +9,7 @@ import { LegalSection } from './business/LegalSection.js';
 import { FooterSection } from './business/FooterSection.js';
 import { AboutSection } from './business/AboutSection.js';
 import { PoliciesSection } from './business/PoliciesSection.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface BusinessInfoManagerProps {
     onClose?: () => void;
@@ -37,15 +38,17 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
         }
     }, [info, isLoading, initialState]);
 
-    const handleSave = async (e?: React.FormEvent) => {
+    const handleSave = async (e?: React.FormEvent): Promise<boolean> => {
         e?.preventDefault();
         const res = await saveInfo(editInfo);
         if (res.success) {
             setInitialState({ ...editInfo });
             setHasUserEdited(false);
             if (window.WFToast) window.WFToast.success('Business information saved successfully');
+            return true;
         } else {
             if (window.WFToast) window.WFToast.error(res.error || 'Failed to save');
+            return false;
         }
     };
 
@@ -58,6 +61,13 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
         if (!initialState || !hasUserEdited) return false;
         return isDraftDirty(editInfo, initialState);
     }, [editInfo, initialState, hasUserEdited]);
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: handleSave,
+        closeAfterSave: true
+    });
 
     if (isLoading && !info.business_name) {
         return createPortal(
@@ -77,7 +87,7 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -108,7 +118,7 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
                         )}
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="business-info-close"
                         />

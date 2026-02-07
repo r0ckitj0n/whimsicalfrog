@@ -5,6 +5,7 @@ import { useItemDetails } from '../../../../hooks/useItemDetails.js';
 import { useInventory } from '../../../../hooks/admin/useInventory.js';
 import { useInventoryAI } from '../../../../hooks/admin/useInventoryAI.js';
 import { useInventoryItemForm } from '../../../../hooks/admin/useInventoryItemForm.js';
+import { useModalContext } from '../../../../context/ModalContext.js';
 import { AiManager } from '../../../../core/ai/AiManager.js';
 import type { MarketingData } from '../../../../hooks/admin/inventory-ai/useMarketingManager.js';
 
@@ -32,6 +33,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
 }) => {
     const isAdding = mode === 'add';
     const [, setSearchParams] = useSearchParams();
+    const { confirm: confirmModal } = useModalContext();
     const { item, images, isLoading: detailsLoading, error, refresh } = useItemDetails(sku);
     const { items: inventoryItems, categories, updateCell, addItem } = useInventory();
     const {
@@ -72,6 +74,8 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         formData,
         isDirty,
         localSku,
+        cached_cost_suggestion,
+        cached_price_suggestion,
         setLocalSku,
         handleFieldChange,
         generateSku,
@@ -80,6 +84,8 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         handleApplyCost,
         handleApplyPrice,
         handleStockChange,
+        handleCostSuggestionUpdated,
+        handlePriceSuggestionUpdated,
         breakdownRefreshTrigger,
         handleBreakdownApplied,
         isReadOnly,
@@ -168,6 +174,30 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         };
     }, [isAdding, localSku, sku]);
 
+    useEffect(() => {
+        if (isAdding || !item) {
+            setCostTier('standard');
+            setPriceTier('standard');
+            return;
+        }
+
+        const itemWithTier = item as IItemDetails & { cost_quality_tier?: string; price_quality_tier?: string };
+        setCostTier(itemWithTier.cost_quality_tier || 'standard');
+        setPriceTier(itemWithTier.price_quality_tier || 'standard');
+    }, [item, isAdding]);
+
+    const persistTierSelection = async (field: 'cost_quality_tier' | 'price_quality_tier', value: string) => {
+        if (isAdding || !sku || isReadOnly) return;
+        try {
+            const res = await updateCell(sku, field, value);
+            if (!res?.success && window.WFToast) {
+                window.WFToast.error(res?.error || 'Failed to save tier selection');
+            }
+        } catch (err) {
+            if (window.WFToast) window.WFToast.error('Failed to save tier selection');
+        }
+    };
+
     const handleSkuSelect = (nextSku: string) => {
         if (!nextSku || nextSku === sku || isAdding) return;
         setSearchParams(prev => {
@@ -181,6 +211,32 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             }
             return prev;
         });
+    };
+
+    const attemptClose = async () => {
+        if (isSaving) return;
+        if (!isDirty) {
+            onClose();
+            return;
+        }
+
+        const shouldSave = await confirmModal({
+            title: 'Unsaved Changes',
+            message: 'Save changes before closing this modal?',
+            subtitle: 'Choose Save to keep edits, or Discard to close without saving.',
+            confirmText: 'Save',
+            cancelText: 'Discard',
+            confirmStyle: 'warning',
+            iconKey: 'warning'
+        });
+
+        if (shouldSave) {
+            const didSave = await handleSave();
+            if (didSave && !isAdding) onClose();
+            return;
+        }
+
+        onClose();
     };
 
     if (isLoading) {
@@ -218,7 +274,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
     const modalContent = (
         <div
             className="fixed inset-0 z-[var(--wf-z-modal)] flex items-center justify-center bg-black/60 backdrop-blur-sm inventory-modal"
-            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+            onClick={(e) => { if (e.target === e.currentTarget) void attemptClose(); }}
         >
             <div
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] max-h-[95vh] mx-4 my-auto animate-in fade-in zoom-in-95 overflow-hidden flex flex-col"
@@ -290,7 +346,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                             />
                         )}
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close inventory-modal-close-btn shrink-0"
                             data-help-id="common-close"
                             data-emoji="×"
@@ -336,10 +392,15 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onCurrentCostChange={handleApplyCost}
                                 onBreakdownApplied={handleBreakdownApplied}
                                 tier={costTier}
-                                onTierChange={setCostTier}
+                                onTierChange={(tier) => {
+                                    setCostTier(tier);
+                                    void persistTierSelection('cost_quality_tier', tier);
+                                }}
                                 breakdownRefreshTrigger={breakdownRefreshTrigger}
                                 lockedFields={lockedFields}
                                 onToggleFieldLock={toggleFieldLock}
+                                cachedSuggestion={cached_cost_suggestion}
+                                onSuggestionUpdated={handleCostSuggestionUpdated}
                             />
 
                             <PriceAnalysisColumn
@@ -350,10 +411,15 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onCurrentRetailChange={handleApplyPrice}
                                 onBreakdownApplied={handleBreakdownApplied}
                                 tier={priceTier}
-                                onTierChange={setPriceTier}
+                                onTierChange={(tier) => {
+                                    setPriceTier(tier);
+                                    void persistTierSelection('price_quality_tier', tier);
+                                }}
                                 breakdownRefreshTrigger={breakdownRefreshTrigger}
                                 lockedFields={lockedFields}
                                 onToggleFieldLock={toggleFieldLock}
+                                cachedSuggestion={cached_price_suggestion}
+                                onSuggestionUpdated={handlePriceSuggestionUpdated}
                             />
                         </div>
 

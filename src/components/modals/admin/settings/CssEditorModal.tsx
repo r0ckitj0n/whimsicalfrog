@@ -8,6 +8,7 @@ import 'prismjs/components/prism-css';
 import 'prismjs/themes/prism-tomorrow.css';
 import { ApiClient } from '../../../../core/ApiClient.js';
 import logger from '../../../../core/logger.js';
+import { useUnsavedChangesCloseGuard } from '../../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface CssEditorModalProps {
     filePath: string;
@@ -73,7 +74,7 @@ export const CssEditorModal: React.FC<CssEditorModalProps> = ({ filePath, target
         }
     };
 
-    const handleSave = async () => {
+    const handleSave = async (): Promise<boolean> => {
         setIsSaving(true);
         setError(null);
         setSaveSuccess(false);
@@ -86,26 +87,26 @@ export const CssEditorModal: React.FC<CssEditorModalProps> = ({ filePath, target
                 setOriginalCode(code);
                 setSaveSuccess(true);
                 setTimeout(() => setSaveSuccess(false), 3000);
+                return true;
             } else {
                 setError(response?.message || 'Failed to save file');
+                return false;
             }
         } catch (err) {
             logger.error('[CssEditorModal] Failed to save file', err);
             setError('Unable to save file');
+            return false;
         } finally {
             setIsSaving(false);
         }
     };
-
-    const handleClose = () => {
-        if (isDirty) {
-            if (confirm('You have unsaved changes. Are you sure you want to close?')) {
-                onClose();
-            }
-        } else {
-            onClose();
-        }
-    };
+    const handleClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isSaving,
+        onClose,
+        onSave: handleSave,
+        closeAfterSave: true
+    });
 
     return (
         <div
@@ -113,7 +114,7 @@ export const CssEditorModal: React.FC<CssEditorModalProps> = ({ filePath, target
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) handleClose();
+                if (e.target === e.currentTarget) void handleClose();
             }}
         >
             <div
@@ -139,7 +140,7 @@ export const CssEditorModal: React.FC<CssEditorModalProps> = ({ filePath, target
                             data-help-id="common-save"
                         />
                         <button
-                            onClick={handleClose}
+                            onClick={() => { void handleClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="common-close"
                         />

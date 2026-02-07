@@ -9,6 +9,7 @@ import { ShortcutsTab } from './room-manager/tabs/ShortcutsTab.js';
 import { VisualsTab } from './room-manager/tabs/VisualsTab.js';
 import { CategoriesTab } from './room-manager/tabs/CategoriesTab.js';
 import { BoundariesTab } from './room-manager/tabs/BoundariesTab.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface UnifiedRoomManagerProps {
     onClose?: () => void;
@@ -81,9 +82,15 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
     const handleRenderContextChange = (val: string) => { setRenderContext(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, render_context: val })); };
     const handleIconPanelColorChange = (val: string) => { setIconPanelColor(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, icon_panel_color: val })); };
     const handleTargetAspectRatioChange = (val: number) => { setTargetAspectRatio(val); if (selectedRoom) setRoomForm(prev => ({ ...prev, target_aspect_ratio: val })); };
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty: isGlobalDirty,
+        onClose,
+        onSave: handleGlobalSave,
+        closeAfterSave: true
+    });
 
     const modalContent = (
-        <div className="admin-modal-overlay over-header show topmost" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
+        <div className="admin-modal-overlay over-header show topmost" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>
             <div
                 className="admin-modal admin-modal-content show bg-white rounded-lg shadow-xl overflow-hidden flex flex-col admin-modal-fullscreen"
                 style={{ '--admin-modal-content-height': '95vh' } as React.CSSProperties}
@@ -131,7 +138,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                 data-help-id="common-save"
                             />
                         )}
-                        <button onClick={onClose} className="admin-action-btn btn-icon--close shrink-0" data-help-id="common-close" />
+                        <button onClick={() => { void attemptClose(); }} className="admin-action-btn btn-icon--close shrink-0" data-help-id="common-close" />
                     </div>
                 </div>
 

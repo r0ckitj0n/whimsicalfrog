@@ -12,7 +12,7 @@ class OpenAIProvider extends BaseProvider
         ];
 
         foreach ($images as $imageUrl) {
-            $content[] = ['type' => 'input_image', 'image_url' => ['url' => $imageUrl]];
+            $content[] = ['type' => 'input_image', 'image_url' => $imageUrl];
         }
 
         return [
@@ -182,7 +182,7 @@ class OpenAIProvider extends BaseProvider
 
         $imageUrl = "data:{$img['mime_type']};base64,{$img['data']}";
         $data = [
-            'model' => 'gpt-4o', // Vision-capable model
+            'model' => $this->settings['openai_model'],
             'input' => $this->buildInput($prompt, [$imageUrl]),
             'max_output_tokens' => 500
         ];
@@ -239,7 +239,7 @@ class OpenAIProvider extends BaseProvider
         }
 
         $data = [
-            'model' => 'gpt-4o',
+            'model' => $this->settings['openai_model'],
             'instructions' => 'You are a marketing expert. Analyze images and text to create content. Respond strictly with JSON.',
             'input' => $this->buildInput($prompt, $imageUrls),
             'temperature' => (float) $this->settings['ai_temperature'],
@@ -269,7 +269,7 @@ class OpenAIProvider extends BaseProvider
         }
 
         $data = [
-            'model' => 'gpt-4o',
+            'model' => $this->settings['openai_model'],
             'instructions' => 'You are a pricing expert. Analyze images and text to suggest pricing. Respond strictly with JSON.',
             'input' => $this->buildInput($prompt, $imageUrls),
             'temperature' => 0.7,
@@ -300,7 +300,7 @@ class OpenAIProvider extends BaseProvider
         }
 
         $data = [
-            'model' => 'gpt-4o',
+            'model' => $this->settings['openai_model'],
             'instructions' => 'You are a manufacturing and cost estimation expert. Analyze images and text to suggest production costs. Respond strictly with JSON.',
             'input' => $this->buildInput($prompt, $imageUrls),
             'temperature' => 0.3,
@@ -323,7 +323,7 @@ class OpenAIProvider extends BaseProvider
 
         $imageUrl = "data:{$img['mime_type']};base64,{$img['data']}";
         $data = [
-            'model' => 'gpt-4o',
+            'model' => $this->settings['openai_model'],
             'input' => $this->buildInput($prompt, [$imageUrl]),
             'temperature' => 0.1,
             'max_output_tokens' => 300

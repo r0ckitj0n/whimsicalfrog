@@ -6,6 +6,7 @@ import { useEmailManagerLogic } from '../../../hooks/admin/useEmailManagerLogic.
 import { TemplateList } from './email-templates/TemplateList.js';
 import { AssignmentList } from './email-templates/AssignmentList.js';
 import { TemplateEditor } from './email-templates/TemplateEditor.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface EmailTemplatesManagerProps {
     onClose?: () => void;
@@ -46,6 +47,13 @@ export const EmailTemplatesManager: React.FC<EmailTemplatesManagerProps> = ({ on
         { id: 'welcome', label: 'Welcome' },
         { id: 'password_reset', label: 'Password Reset' }
     ];
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: api.isLoading,
+        onClose,
+        onSave: handleSaveAssignments,
+        closeAfterSave: true
+    });
 
     if (api.isLoading && !api.templates.length) {
         const loadingContent = (
@@ -54,7 +62,7 @@ export const EmailTemplatesManager: React.FC<EmailTemplatesManagerProps> = ({ on
                 <p className="text-gray-500 font-medium">Loading email templates...</p>
             </div>
         );
-        return standalone ? createPortal(<div className="admin-modal-overlay over-header show topmost" onClick={(e) => e.target === e.currentTarget && onClose?.()}>{loadingContent}</div>, document.body) : loadingContent;
+        return standalone ? createPortal(<div className="admin-modal-overlay over-header show topmost" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>{loadingContent}</div>, document.body) : loadingContent;
     }
 
     const modalContent = (
@@ -72,7 +80,7 @@ export const EmailTemplatesManager: React.FC<EmailTemplatesManagerProps> = ({ on
                     <button onClick={() => api.fetchAll()} className="admin-action-btn btn-icon--refresh" data-help-id="common-refresh" type="button" />
                     {activeTab === 'templates' && <button onClick={handleCreate} className="admin-action-btn btn-icon--add" data-help-id="common-add" type="button" />}
                     <button onClick={handleSaveAssignments} disabled={api.isLoading || !isDirty} className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />
-                    {standalone && <button onClick={onClose} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />}
+                    {standalone && <button onClick={() => { void attemptClose(); }} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />}
                 </div>
             </div>
 
@@ -92,7 +100,7 @@ export const EmailTemplatesManager: React.FC<EmailTemplatesManagerProps> = ({ on
         </div>
     );
 
-    return standalone ? createPortal(<div className="admin-modal-overlay over-header show topmost" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && onClose?.()}>{modalContent}</div>, document.body) : modalContent;
+    return standalone ? createPortal(<div className="admin-modal-overlay over-header show topmost" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>{modalContent}</div>, document.body) : modalContent;
 };
 
 export default EmailTemplatesManager;

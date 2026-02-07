@@ -28,17 +28,20 @@ export const useCouponManagerLogic = ({
         setLocalCoupon(empty as ICoupon);
     }, []);
 
-    const handleSave = useCallback(async () => {
+    const handleSave = useCallback(async (): Promise<boolean> => {
         if (localCoupon) {
             const res = await saveCoupon(localCoupon);
             if (res?.success) {
                 setEditingCoupon(null);
                 setLocalCoupon(null);
                 if (window.WFToast) window.WFToast.success('Coupon saved successfully');
+                return true;
             } else {
                 if (window.WFToast) window.WFToast.error(res?.error || 'Failed to save coupon');
+                return false;
             }
         }
+        return false;
     }, [localCoupon, saveCoupon]);
 
     const isDirty = useMemo(() => {

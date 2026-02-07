@@ -7,6 +7,7 @@ import { SubscriberTable } from './newsletter/SubscriberTable.js';
 import { CampaignList } from './newsletter/CampaignList.js';
 import { CampaignEditor } from './newsletter/CampaignEditor.js';
 import { isDraftDirty } from '../../../core/utils.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface NewsletterManagerProps {
     onClose?: () => void;
@@ -94,8 +95,8 @@ export const NewsletterManager: React.FC<NewsletterManagerProps> = ({ onClose, t
         setCampaignView('list');
     };
 
-    const handleSaveCampaign = async () => {
-        if (!localCampaign) return;
+    const handleSaveCampaign = async (): Promise<boolean> => {
+        if (!localCampaign) return false;
         const data = {
             id: editingCampaign?.id,
             subject: localCampaign.subject.trim(),
@@ -108,7 +109,9 @@ export const NewsletterManager: React.FC<NewsletterManagerProps> = ({ onClose, t
             setEditingCampaign(null);
             setLocalCampaign(null);
             setCampaignView('list');
+            return true;
         }
+        return false;
     };
 
     const isCampaignDirty = useMemo(() => {
@@ -156,6 +159,13 @@ export const NewsletterManager: React.FC<NewsletterManagerProps> = ({ onClose, t
         }
     };
 
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty: activeTab === 'campaigns' && campaignView === 'editor' && isCampaignDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: handleSaveCampaign,
+        closeAfterSave: true
+    });
 
     const modalContent = (
         <div
@@ -163,7 +173,7 @@ export const NewsletterManager: React.FC<NewsletterManagerProps> = ({ onClose, t
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -210,7 +220,7 @@ export const NewsletterManager: React.FC<NewsletterManagerProps> = ({ onClose, t
                             type="button"
                         />
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="newsletter-close"
                             type="button"

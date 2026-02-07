@@ -18,6 +18,7 @@ import { SiteCoreBridge } from '../SiteCoreBridge.js';
 import { AnalyticsBridge } from '../AnalyticsBridge.js';
 import { Header } from './shell/Header.js';
 import { Footer } from './shell/Footer.js';
+import { GlobalProcessingOverlay } from './GlobalProcessingOverlay.js';
 import { useSearchParams } from 'react-router-dom';
 import { SETTINGS_MODAL_SECTIONS } from '../core/constants.js';
 import { AdminLoading } from './admin/AdminLoading.js';
@@ -221,9 +222,9 @@ export const AppShell: React.FC = () => {
                 )}
             </Suspense>
 
+            <GlobalProcessingOverlay />
             <NotificationContainer />
             <div id="receipt-view-container"></div>
         </div>
     );
 };
-

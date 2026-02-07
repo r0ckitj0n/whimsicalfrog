@@ -10,7 +10,15 @@ function wf_handle_docs_proxy()
         return;
 
     header('Content-Type: application/json; charset=utf-8');
-    $root = realpath(__DIR__ . '/../documentation');
+    $preferredRoot = realpath(__DIR__ . '/../documentation/help-library');
+    $fallbackRoot = realpath(__DIR__ . '/../documentation');
+    $root = $preferredRoot ?: $fallbackRoot;
+
+    if (!$root) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Documentation root not found']);
+        exit;
+    }
     $action = $_GET['docs'];
 
     $safe = function ($rel) use ($root) {

@@ -158,8 +158,6 @@
 
 .inventory-modal-close-btn {
   z-index: var(--wf-z-elevated) !important;
-  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-  transform-origin: center !important;
 }
 
 .inventory-modal-close-btn .inventory-modal-close-glyph {
@@ -168,16 +166,6 @@
   line-height: 1 !important;
   font-weight: 700 !important;
   color: #475569 !important;
-}
-
-.inventory-modal-close-btn:hover .inventory-modal-close-glyph,
-.inventory-modal-close-btn:focus-visible .inventory-modal-close-glyph {
-  color: #ffffff !important;
-}
-
-.inventory-modal-close-btn:hover,
-.inventory-modal-close-btn:focus-visible {
-  transform: scale(1.35) !important;
 }
 
 /* ==========================================================================

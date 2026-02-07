@@ -1,13 +1,14 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { ISocialPostTemplate, ISocialImage } from '../../../../../hooks/admin/useSocialPosts.js';
+import { useUnsavedChangesCloseGuard } from '../../../../../hooks/useUnsavedChangesCloseGuard.js';
 
 import { SOCIAL_PLATFORM } from '../../../../../core/constants.js';
 
 interface PostEditorModalProps {
     template: Partial<ISocialPostTemplate>;
     images: ISocialImage[];
-    onSave: (e: React.FormEvent) => void;
+    onSave: () => Promise<boolean>;
     onClose: () => void;
     setTemplate: (t: Partial<ISocialPostTemplate>) => void;
     isLoading: boolean;
@@ -27,14 +28,21 @@ export const PostEditorModal: React.FC<PostEditorModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(e);
+        void onSave();
     };
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave,
+        closeAfterSave: true
+    });
 
     const modalContent = (
         <div
             className="wf-modal-child-overlay fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -54,7 +62,7 @@ export const PostEditorModal: React.FC<PostEditorModalProps> = ({
                             type="button"
                         />
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="btn-icon btn-icon--close"
                             aria-label="Close"
                             data-help-id="common-close"

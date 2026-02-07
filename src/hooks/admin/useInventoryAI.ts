@@ -18,7 +18,8 @@ export const useInventoryAI = () => {
         is_busy: costBusy,
         cached_cost_suggestion,
         setCachedCostSuggestion,
-        fetch_cost_suggestion
+        fetch_cost_suggestion,
+        retier_cost_suggestion
     } = useCostSuggestions();
 
     const {
@@ -64,8 +65,8 @@ export const useInventoryAI = () => {
         fetch_all_suggestions,
         generateMarketing,
         retier_price_suggestion,
+        retier_cost_suggestion,
         setCachedPriceSuggestion,
         setCachedCostSuggestion
     };
 };
-

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePriceBreakdown } from '../../../hooks/admin/usePriceBreakdown.js';
-import { useInventoryAI } from '../../../hooks/admin/useInventoryAI.js';
+import type { PriceSuggestion } from '../../../hooks/admin/useInventoryAI.js';
+import type { IPriceFactor } from '../../../hooks/admin/usePriceBreakdown.js';
 
 interface PriceBreakdownTableProps {
     sku: string;
@@ -12,6 +13,7 @@ interface PriceBreakdownTableProps {
     currentPrice?: number;
     onCurrentPriceChange?: (price: number) => void;
     tier?: string;
+    cachedSuggestion?: PriceSuggestion | null;
 }
 
 export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
@@ -21,16 +23,12 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
     category,
     isReadOnly = false,
     refreshTrigger = 0,
-    currentPrice,
-    onCurrentPriceChange,
-    tier = 'standard'
+    tier = 'standard',
+    cachedSuggestion = null
 }) => {
-    const { is_busy, fetch_price_suggestion } = useInventoryAI();
     const { breakdown, is_busy: isPriceLoading, error, fetchBreakdown, populateFromSuggestion, applySuggestionLocally, updateFactor } = usePriceBreakdown(sku);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editValue, setEditValue] = useState<string>('');
-    const [isEditingCurrent, setIsEditingCurrent] = useState(false);
-    const [currentEditValue, setCurrentEditValue] = useState<string>('');
 
     useEffect(() => {
         if (sku) {
@@ -60,21 +58,19 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
         setEditValue('');
     };
 
-    const startEditCurrent = () => {
-        if (isReadOnly || currentPrice === undefined || onCurrentPriceChange === undefined) return;
-        setIsEditingCurrent(true);
-        const safeCurrent = Number.isFinite(currentPrice) ? currentPrice : (breakdown.totals?.stored ?? 0);
-        setCurrentEditValue(safeCurrent.toFixed(2));
-    };
+    const pendingFactors: IPriceFactor[] = (cachedSuggestion?.components || []).map((comp, idx) => ({
+        id: -(idx + 1),
+        sku,
+        label: comp.label || 'AI Component',
+        amount: comp.amount || 0,
+        type: comp.type || 'ai',
+        explanation: comp.explanation || '',
+        source: 'ai',
+        created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+    }));
 
-    const commitEditCurrent = () => {
-        const amount = parseFloat(currentEditValue);
-        if (!isNaN(amount) && onCurrentPriceChange) {
-            onCurrentPriceChange(amount);
-        }
-        setIsEditingCurrent(false);
-        setCurrentEditValue('');
-    };
+    const displayFactors = breakdown.factors.length > 0 ? breakdown.factors : pendingFactors;
+    const isPendingOnly = breakdown.factors.length === 0 && pendingFactors.length > 0;
 
     if (!sku) return null;
 
@@ -83,57 +79,27 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
 
             {error && <div className="p-2 mb-2 bg-[var(--brand-error)]/5 border border-[var(--brand-error)]/20 text-[var(--brand-error)] text-sm rounded">{error}</div>}
 
-            <div className={`ai-data-panel ai-data-panel--inverted mb-2 ${currentPrice !== undefined && Math.abs(currentPrice - (breakdown.totals?.stored || 0)) > 0.01 ? 'border-l-4 border-yellow-400' : ''}`}>
+            <div className="ai-data-panel ai-data-panel--inverted mb-2">
                 <div className="flex justify-between items-center">
-                    <span className="ai-data-label text-sm font-medium text-white/80">
-                        {currentPrice !== undefined ? 'Current Retail:' : 'Stored Retail:'}
-                    </span>
-                    {isEditingCurrent ? (
-                        <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-500">$</span>
-                            <input
-                                type="number"
-                                step="0.01"
-                                className="w-24 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold focus:ring-1 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/20 bg-white text-gray-900"
-                                value={currentEditValue}
-                                onChange={(e) => setCurrentEditValue(e.target.value)}
-                                onBlur={commitEditCurrent}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') commitEditCurrent();
-                                    if (e.key === 'Escape') {
-                                        setIsEditingCurrent(false);
-                                        setCurrentEditValue('');
-                                    }
-                                }}
-                                autoFocus
-                                disabled={isReadOnly}
-                            />
-                        </div>
-                    ) : (
-                        <span
-                            className={`ai-data-value--large text-white ${!isReadOnly && currentPrice !== undefined ? 'cursor-pointer hover:underline' : ''}`}
-                            onClick={startEditCurrent}
-                            title={!isReadOnly && currentPrice !== undefined ? 'Click to edit' : undefined}
-                        >
-                            ${(currentPrice !== undefined ? currentPrice : (breakdown.totals?.stored ?? 0)).toFixed(2)}
-                        </span>
-                    )}
+                    <span className="ai-data-label text-sm font-medium text-white/80">Current Retail:</span>
+                    <span className="ai-data-value--large text-white">${(breakdown.totals?.stored ?? 0).toFixed(2)}</span>
                 </div>
-                {currentPrice !== undefined && Math.abs(currentPrice - (breakdown.totals?.stored || 0)) > 0.01 && (
-                    <div className="text-[10px] text-yellow-200/60 mt-1 italic">
-                        Unsaved: DB reflects ${(breakdown.totals?.stored || 0).toFixed(2)}
-                    </div>
-                )}
             </div>
 
             <div className="divide-y divide-gray-200 border border-gray-200 rounded bg-white overflow-hidden">
                 <div className="px-3 py-2 space-y-1 min-h-[100px]">
-                    {breakdown.factors.length === 0 ? (
+                    {displayFactors.length === 0 ? (
                         <div className="text-center py-8 text-gray-400 italic text-xs">
                             No pricing breakdown components found.
                         </div>
                     ) : (
-                        breakdown.factors.map((f) => (
+                        <>
+                            {isPendingOnly && (
+                                <div className="text-[10px] text-amber-600 italic py-1">
+                                    Showing pending AI breakdown. Save item to persist to database.
+                                </div>
+                            )}
+                            {displayFactors.map((f: { id: number; label: string; amount: number; explanation?: string }) => (
                             <div key={f.id} className="flex flex-col py-2 border-b last:border-0">
                                 <div className="flex items-center justify-between gap-2">
                                     <span className="text-gray-800 text-sm font-semibold">{f.label}</span>
@@ -171,7 +137,8 @@ export const PriceBreakdownTable: React.FC<PriceBreakdownTableProps> = ({
                                     </p>
                                 )}
                             </div>
-                        ))
+                            ))}
+                        </>
                     )}
                 </div>
             </div>

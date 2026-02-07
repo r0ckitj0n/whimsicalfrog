@@ -8,6 +8,7 @@ import { ExtendedPalette } from './branding/ExtendedPalette.js';
 import { PublicInterfaceColors } from './branding/PublicInterfaceColors.js';
 import { TypographySection } from './branding/TypographySection.js';
 import { LayoutSection } from './branding/LayoutSection.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface BrandStylingProps {
     onClose?: () => void;
@@ -40,9 +41,16 @@ export const BrandStyling: React.FC<BrandStylingProps> = ({ onClose, title }) =>
     });
 
     useEffect(() => { api.fetchTokens(); }, [api.fetchTokens]);
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: api.isLoading,
+        onClose,
+        onSave: handleSave,
+        closeAfterSave: true
+    });
 
     const modalContent = (
-        <div className="admin-modal-overlay over-header show topmost" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
+        <div className="admin-modal-overlay over-header show topmost" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>
             <div className="admin-modal admin-modal-content show bg-white rounded-lg shadow-xl w-[1000px] max-w-[95vw] h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header border-b border-gray-100 bg-white sticky top-0 z-20 px-6 py-4 flex items-start justify-between">
                     <div className="flex flex-col gap-4">
@@ -56,7 +64,7 @@ export const BrandStyling: React.FC<BrandStylingProps> = ({ onClose, title }) =>
                     <div className="flex items-center gap-2">
                         <button onClick={() => api.fetchTokens()} className="admin-action-btn btn-icon--refresh" data-help-id="common-refresh" type="button" />
                         <button onClick={handleSave} disabled={api.isLoading} className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />
-                        <button onClick={onClose} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />
+                        <button onClick={() => { void attemptClose(); }} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />
                     </div>
                 </div>
                 <div className="modal-body wf-admin-modal-body flex-1 overflow-hidden p-0 flex flex-col">

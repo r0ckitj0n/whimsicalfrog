@@ -5,6 +5,7 @@ import { isDraftDirty } from '../../../core/utils.js';
 import { ProviderConfiguration } from './ai/ProviderConfiguration.js';
 import { BehaviorParameters } from './ai/BehaviorParameters.js';
 import { PricingWeights } from './ai/PricingWeights.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface AISettingsManagerProps {
     onClose?: () => void;
@@ -61,17 +62,20 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
         }
     }, [localSettings?.ai_provider, fetchModels]);
 
-    const handleSave = async (e?: React.FormEvent) => {
+    const handleSave = async (e?: React.FormEvent): Promise<boolean> => {
         if (e) e.preventDefault();
         if (localSettings) {
             const success = await saveSettings(localSettings);
             if (success) {
                 setInitialState(localSettings);
                 if (window.WFToast) window.WFToast.success('AI settings saved successfully!');
+                return true;
             } else {
                 if (window.WFToast) window.WFToast.error('Failed to save settings');
+                return false;
             }
         }
+        return false;
     };
 
     const handleTest = async () => {
@@ -94,6 +98,23 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
         }
     };
 
+    const providers = [
+        { id: 'jons_ai', label: "Jon's AI (Local Fallback)" },
+        { id: 'openai', label: 'OpenAI' },
+        { id: 'anthropic', label: 'Anthropic' },
+        { id: 'google', label: 'Google' },
+        { id: 'meta', label: 'Meta' }
+    ];
+
+    const isDirty = !!localSettings && !!initialState && isDraftDirty(localSettings, initialState);
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading || isTesting,
+        onClose,
+        onSave: () => handleSave(),
+        closeAfterSave: true
+    });
+
     if (!localSettings) return createPortal(
         <div className="admin-modal-overlay over-header show topmost">
             <div className="admin-modal admin-modal-content show bg-white rounded-lg shadow-xl w-[1000px] max-w-[95vw] h-[80vh] flex items-center justify-center p-12 text-center text-gray-500">
@@ -103,23 +124,13 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
         document.body
     );
 
-    const providers = [
-        { id: 'jons_ai', label: "Jon's AI (Local Fallback)" },
-        { id: 'openai', label: 'OpenAI' },
-        { id: 'anthropic', label: 'Anthropic' },
-        { id: 'google', label: 'Google' },
-        { id: 'meta', label: 'Meta' }
-    ];
-
-    const isDirty = isDraftDirty(localSettings, initialState);
-
     const modalContent = (
         <div
             className="admin-modal-overlay over-header show topmost"
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -139,7 +150,7 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                             <button
                                 type="button"
                                 onClick={handleTest}
-                                disabled={isTesting || localSettings.ai_provider === 'jons_ai'}
+                                disabled={isTesting}
                                 className="admin-action-btn btn-icon--refresh"
                                 data-help-id="ai-test-provider"
                             />
@@ -151,7 +162,7 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                                 data-help-id="ai-save-settings"
                             />
                             <button
-                                onClick={onClose}
+                                onClick={() => { void attemptClose(); }}
                                 className="admin-action-btn btn-icon--close"
                                 data-help-id="ai-close-manager"
                             />
@@ -191,6 +202,10 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                                 )}
                             </div>
                         )}
+
+                        <div className="p-3 mb-8 rounded-xl border border-blue-100 bg-blue-50 text-[11px] text-blue-700 font-semibold">
+                            Generate requires image analysis. Use <span className="font-black">Test Provider</span> and make sure the Image test passes for the selected model.
+                        </div>
 
                         <form onSubmit={handleSave} className="space-y-0">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">

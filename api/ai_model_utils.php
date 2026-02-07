@@ -4,6 +4,15 @@
  * Handles model listing, fetching from external APIs, and caching.
  */
 
+function ai_filter_vision_models(array $models): array
+{
+    $filtered = array_values(array_filter($models, function ($m) {
+        return is_array($m) && !empty($m['supportsVision']);
+    }));
+
+    return $filtered;
+}
+
 /**
  * Live model listing with 1-day DB caching; force bypass supported
  */
@@ -23,7 +32,7 @@ function ai_list_models(string $provider, bool $force = false): array
                 if ($row && !empty($row['setting_value'])) {
                     $list = json_decode($row['setting_value'], true);
                     if (is_array($list))
-                        return $list;
+                        return ai_filter_vision_models($list);
                 }
             }
         }
@@ -50,7 +59,7 @@ function ai_list_models(string $provider, bool $force = false): array
         error_log('[ai_model_utils] model cache write failed: ' . $e->getMessage());
     }
 
-    return $models;
+    return ai_filter_vision_models($models);
 }
 
 function ai_fetch_openai_models(): array
@@ -170,7 +179,7 @@ function ai_list_models_openrouter(string $provider, bool $force = false): array
                 if ($row && !empty($row['setting_value'])) {
                     $list = json_decode($row['setting_value'], true);
                     if (is_array($list))
-                        return $list;
+                        return ai_filter_vision_models($list);
                 }
             }
         }
@@ -187,5 +196,5 @@ function ai_list_models_openrouter(string $provider, bool $force = false): array
         error_log('[ai_model_utils] openrouter cache write failed: ' . $e->getMessage());
     }
 
-    return $models;
+    return ai_filter_vision_models($models);
 }

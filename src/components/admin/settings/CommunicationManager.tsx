@@ -5,6 +5,7 @@ import { EmailTemplatesManager } from './EmailTemplatesManager.js';
 import { EmailHistory } from './EmailHistory.js';
 import { EmailSettingsPanel } from './email-templates/EmailSettingsPanel.js';
 import { isDraftDirty } from '../../../core/utils.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface CommunicationManagerProps {
     onClose?: () => void;
@@ -54,6 +55,14 @@ export const CommunicationManager: React.FC<CommunicationManagerProps> = ({
         onClose?.();
     };
 
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty: activeTab === 'settings' && isDirty,
+        isBlocked: isLoading,
+        onClose: handleBack,
+        onSave: handleSave,
+        closeAfterSave: true
+    });
+
     const tabs = [
         { id: 'settings', label: 'Email Configuration', icon: '⚙️' },
         { id: 'templates', label: 'Message Templates', icon: '📝' },
@@ -78,7 +87,7 @@ export const CommunicationManager: React.FC<CommunicationManagerProps> = ({
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -122,7 +131,7 @@ export const CommunicationManager: React.FC<CommunicationManagerProps> = ({
                             />
                         )}
                         <button
-                            onClick={handleBack}
+                            onClick={() => { void attemptClose(); }}
                             className={`admin-action-btn btn-icon--close`}
                             data-help-id="common-close"
                         />

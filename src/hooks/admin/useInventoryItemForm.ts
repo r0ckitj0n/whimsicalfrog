@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiClient } from '../../core/ApiClient.js';
 import { useInventoryAI } from './useInventoryAI.js';
@@ -108,6 +108,16 @@ export const useInventoryItemForm = ({
 
     const { populateFromSuggestion: populateCost } = useCostBreakdown(localSku);
     const { populateFromSuggestion: populatePrice } = usePriceBreakdown(localSku);
+    const isDirtyRef = useRef(isDirty);
+    const isSavingRef = useRef(isSaving);
+
+    useEffect(() => {
+        isDirtyRef.current = isDirty;
+    }, [isDirty]);
+
+    useEffect(() => {
+        isSavingRef.current = isSaving;
+    }, [isSaving]);
 
     useEffect(() => {
         if (sku) setLocalSku(sku);
@@ -153,8 +163,8 @@ export const useInventoryItemForm = ({
     }, [isAdding, localSku, sku]);
 
     useEffect(() => {
-        // Guard: if we are currently saving or the form is dirty, do NOT overwrite with server/default data
-        if (isDirty || isSaving) return;
+        // Guard: do not clobber in-progress local edits.
+        if (isDirtyRef.current || isSavingRef.current) return;
 
         if (isAdding) {
             setFormData({
@@ -200,7 +210,7 @@ export const useInventoryItemForm = ({
                 setLockedWords((item as IItemDetails).locked_words || {});
             }
         }
-    }, [item, isAdding, isDirty, isSaving]);
+    }, [item, isAdding]);
 
     const handleFieldChange = useCallback((field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -295,10 +305,10 @@ export const useInventoryItemForm = ({
                 // Update form data progressively after each step, respecting locked fields
                 setFormData(prev => ({
                     ...prev,
-                    // Name locks constrain wording via lockedWords; they do not freeze regeneration.
-                    name: context.name || prev.name,
-                    description: context.description || prev.description,
-                    category: context.category || prev.category,
+                    // Image-first generation owns these fields; locked words are enforced upstream.
+                    name: context.name,
+                    description: context.description,
+                    category: context.category,
                     weight_oz: (!lockedFields.weight_oz && context.weightOz !== null)
                         ? Number(context.weightOz.toFixed(2))
                         : prev.weight_oz,
@@ -361,17 +371,17 @@ export const useInventoryItemForm = ({
         return triggerGenerationChain();
     };
 
-    const handleSave = useCallback(async () => {
-        if (isReadOnly || isSaving) return;
+    const handleSave = useCallback(async (): Promise<boolean> => {
+        if (isReadOnly || isSaving) return false;
         if (isAdding && !localSku) {
             if (window.WFToast) window.WFToast.error('SKU is required');
-            return;
+            return false;
         }
 
         const skuToSave = isAdding ? localSku : (item?.sku || '');
         if (!skuToSave) {
             if (window.WFToast) window.WFToast.error('SKU is required');
-            return;
+            return false;
         }
 
         setIsSaving(true);
@@ -387,10 +397,11 @@ export const useInventoryItemForm = ({
                     setIsDirty(false);
                     onSaved?.();
                     onClose();
+                    return true;
                 } else {
                     if (window.WFToast) window.WFToast.error(res.error || 'Failed to create item');
+                    return false;
                 }
-                return;
             }
 
             const updatePromises: Promise<{ success: boolean; error?: string }>[] = [];
@@ -451,15 +462,19 @@ export const useInventoryItemForm = ({
                 setIsDirty(false);
                 onSaved?.();
                 refresh();
+                return true;
             } else {
                 if (window.WFToast) window.WFToast.info('No changes to save');
+                return true;
             }
         } catch (err: unknown) {
             console.error('Save failed', err);
             if (window.WFToast) window.WFToast.error('Failed to save changes');
+            return false;
         } finally {
             setIsSaving(false);
         }
+        return false;
     }, [
         isReadOnly,
         isSaving,
@@ -492,6 +507,16 @@ export const useInventoryItemForm = ({
     };
     const handleStockChange = (newTotal: number) => handleFieldChange('stock_level', newTotal);
 
+    const handleCostSuggestionUpdated = (suggestion: unknown) => {
+        setCachedCostSuggestion(suggestion as Parameters<typeof setCachedCostSuggestion>[0]);
+        setIsDirty(true);
+    };
+
+    const handlePriceSuggestionUpdated = (suggestion: unknown) => {
+        setCachedPriceSuggestion(suggestion as Parameters<typeof setCachedPriceSuggestion>[0]);
+        setIsDirty(true);
+    };
+
     const [breakdownRefreshTrigger, setBreakdownRefreshTrigger] = useState(0);
     const handleBreakdownApplied = () => {
         setBreakdownRefreshTrigger(prev => prev + 1);
@@ -502,6 +527,8 @@ export const useInventoryItemForm = ({
         formData,
         isDirty,
         isSaving,
+        cached_cost_suggestion,
+        cached_price_suggestion,
         localSku,
         setLocalSku,
         handleFieldChange,
@@ -511,6 +538,8 @@ export const useInventoryItemForm = ({
         handleApplyCost,
         handleApplyPrice,
         handleStockChange,
+        handleCostSuggestionUpdated,
+        handlePriceSuggestionUpdated,
         breakdownRefreshTrigger,
         handleBreakdownApplied,
         isReadOnly,

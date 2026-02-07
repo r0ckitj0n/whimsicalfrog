@@ -2,6 +2,7 @@
    Imports sub-components to stay under file line limits. */
 
 @import url("./ui/image-placeholders.css");
+@import url("./ui/global-processing-overlay.css");
 @import url("./admin/cost-management.css");
 @import url("./admin/room-mapper.css");
 @import url("./admin/receipt-settings.css");

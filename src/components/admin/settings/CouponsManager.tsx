@@ -3,6 +3,7 @@ import { useCoupons } from '../../../hooks/admin/useCoupons.js';
 import { useCouponManagerLogic } from '../../../hooks/admin/useCouponManagerLogic.js';
 import { CouponTable } from './coupons/CouponTable.js';
 import { CouponEditModal } from '../../modals/admin/settings/coupons/CouponEditModal.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface CouponsManagerProps {
     onClose?: () => void;
@@ -36,8 +37,16 @@ export const CouponsManager: React.FC<CouponsManagerProps> = ({ onClose, title }
         }
     }, [api.fetchCoupons]);
 
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty: Boolean(editingCoupon && isDirty),
+        isBlocked: api.isLoading,
+        onClose,
+        onSave: handleSave,
+        closeAfterSave: true
+    });
+
     return (
-        <div className="admin-modal-overlay over-header show topmost" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && onClose?.()}>
+        <div className="admin-modal-overlay over-header show topmost" role="dialog" aria-modal="true" onClick={(e) => e.target === e.currentTarget && void attemptClose()}>
             <div className="admin-modal admin-modal-content show bg-white rounded-lg shadow-xl w-[1000px] max-w-[95vw] h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-header flex items-center border-b border-gray-100 gap-4 px-6 py-4 sticky top-0 bg-white z-20">
                     <h2 className="text-xl font-black text-gray-800 flex items-center gap-3"><span className="text-2xl">🎟️</span> {title || 'Coupon Manager'}</h2>
@@ -47,7 +56,7 @@ export const CouponsManager: React.FC<CouponsManagerProps> = ({ onClose, title }
                             {editingCoupon && <button onClick={handleSave} disabled={api.isLoading || !isDirty} className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />}
                             <button onClick={api.fetchCoupons} className="admin-action-btn btn-icon--refresh" data-help-id="common-refresh" type="button" />
                             <button onClick={handleCreate} className="admin-action-btn btn-icon--add" data-help-id="common-add" type="button" />
-                            <button onClick={onClose} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />
+                            <button onClick={() => { void attemptClose(); }} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />
                         </div>
                     </div>
                 </div>

@@ -10,6 +10,7 @@ import { GlobalSizesTab } from './attributes/GlobalSizesTab.js';
 import { SizeTemplatesTab } from './attributes/SizeTemplatesTab.js';
 import { ColorTemplatesTab } from './attributes/ColorTemplatesTab.js';
 import { SizeColorRedesign } from './attributes/SizeColorRedesign.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface AttributesManagerProps {
     onClose?: () => void;
@@ -62,6 +63,13 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
         { id: 'sizes', label: 'Size Templates' },
         { id: 'colors', label: 'Color Templates' }
     ];
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: handleSaveTemplate,
+        closeAfterSave: true
+    });
 
     const modalContent = (
         <div
@@ -69,7 +77,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -119,7 +127,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                             type="button"
                         />
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="attributes-close"
                             type="button"

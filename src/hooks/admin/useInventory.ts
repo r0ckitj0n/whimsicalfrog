@@ -89,8 +89,11 @@ export const useInventory = (initialFilters: IInventoryFilters = { search: '', c
                 new_value: value,
                 row_data: { sku: sku }
             });
-            // The API returns 200/success even if 0 rows affected (value same), 
-            // but we ensure frontend state stays synced.
+            if (!res?.success) {
+                return { success: false, error: res?.error || 'Update failed' };
+            }
+
+            // The API returns success for both updated and no-op writes; keep local state synced.
             setItems(prev => prev.map(item => item.sku === sku ? { ...item, [column]: value } : item));
             return { success: true };
         } catch (err) {

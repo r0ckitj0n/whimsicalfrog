@@ -2,6 +2,7 @@ import React from 'react';
 import { AICostPanel } from '../AICostPanel.js';
 import { CostBreakdownTable } from '../CostBreakdownTable.js';
 import { FieldLockIcon } from '../FieldLockIcon.js';
+import type { CostSuggestion } from '../../../../hooks/admin/useInventoryAI.js';
 
 interface CostAnalysisColumnProps {
     sku: string;
@@ -22,6 +23,8 @@ interface CostAnalysisColumnProps {
     lockedFields?: Record<string, boolean>;
     /** Toggle lock status for a field */
     onToggleFieldLock?: (field: string) => void;
+    cachedSuggestion?: CostSuggestion | null;
+    onSuggestionUpdated?: (suggestion: CostSuggestion) => void;
 }
 
 export const CostAnalysisColumn: React.FC<CostAnalysisColumnProps> = ({
@@ -35,7 +38,9 @@ export const CostAnalysisColumn: React.FC<CostAnalysisColumnProps> = ({
     onTierChange,
     breakdownRefreshTrigger,
     lockedFields = {},
-    onToggleFieldLock
+    onToggleFieldLock,
+    cachedSuggestion = null,
+    onSuggestionUpdated
 }) => {
     return (
         <div className="bg-gradient-to-br from-amber-50 via-orange-50/70 to-white rounded-2xl p-5 border border-amber-200 shadow-sm">
@@ -62,6 +67,8 @@ export const CostAnalysisColumn: React.FC<CostAnalysisColumnProps> = ({
                     onApplied={onBreakdownApplied}
                     tier={tier}
                     onTierChange={onTierChange}
+                    cachedSuggestion={cachedSuggestion}
+                    onSuggestionUpdated={onSuggestionUpdated}
                 />
             </div>
 
@@ -80,6 +87,7 @@ export const CostAnalysisColumn: React.FC<CostAnalysisColumnProps> = ({
                         currentPrice={formData.cost_price}
                         onCurrentPriceChange={onCurrentCostChange || onApplyCost}
                         tier={tier}
+                        cachedBreakdown={cachedSuggestion?.breakdown || null}
                     />
                 </div>
             </div>

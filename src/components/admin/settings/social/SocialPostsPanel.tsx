@@ -76,8 +76,7 @@ export const SocialPostsPanel: React.FC<SocialPostsPanelProps> = ({
         }
     };
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSave = async (): Promise<boolean> => {
         if (editingTemplate) {
             const success = await saveTemplate(editingTemplate);
             if (success) {
@@ -85,8 +84,10 @@ export const SocialPostsPanel: React.FC<SocialPostsPanelProps> = ({
                 if (window.WFToast) {
                     window.WFToast.success('Template saved.');
                 }
+                return true;
             }
         }
+        return false;
     };
 
     return (

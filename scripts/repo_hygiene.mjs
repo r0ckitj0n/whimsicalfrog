@@ -6,7 +6,7 @@ import { promisify } from 'util';
 const execFileAsync = promisify(execFile);
 
 const targetExtensions = ['.php', '.ts', '.tsx', '.js', '.cjs', '.xjs', '.css', '.json', '.log', '.mjs', '.py', '.md'];
-const excludeDirs = ['backups', 'node_modules', 'dist', '.agent', '.git', 'logs'];
+const excludeDirs = ['backups', 'documentation', 'node_modules', 'scripts', 'vendor', 'dist', '.agent', '.git', 'logs'];
 const excludeFiles = ['all_files.txt', 'orphans_to_archive.json', 'repo_hygiene.mjs', 'orphan_progress.json', 'dump_db_schema.php', 'fetch_db_strings.php', 'db_strings.json', 'package.json', 'package-lock.json', 'composer.json', 'composer.lock', '.cursorrules', 'autostart.log', 'orphan_whitelist.json'];
 
 const PROGRESS_FILE = 'orphan_progress.json';
@@ -168,6 +168,23 @@ function isDynamicRuntimeEntrypoint(relPath) {
     return false;
 }
 
+function isLikelyActionableOrphan(relPath) {
+    if (relPath.startsWith('documentation/')) return false;
+    if (relPath.startsWith('reports/')) return false;
+    return true;
+}
+
+function buildTopDirectorySummary(paths, maxItems = 10) {
+    const counts = new Map();
+    for (const relPath of paths) {
+        const top = relPath.includes('/') ? relPath.split('/')[0] : '.';
+        counts.set(top, (counts.get(top) || 0) + 1);
+    }
+    return Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, maxItems);
+}
+
 (async () => {
     const projectRoot = process.cwd();
     const args = new Set(process.argv.slice(2));
@@ -223,9 +240,14 @@ function isDynamicRuntimeEntrypoint(relPath) {
         }
     }
 
+    const actionableOrphans = orphans.filter(isLikelyActionableOrphan);
+    const topDirs = buildTopDirectorySummary(orphans);
+
     const finalState = {
         processed: Array.from(processedSet),
         orphans: orphans,
+        actionable_orphans: actionableOrphans,
+        top_orphan_dirs: topDirs,
         findings: findings
     };
     await fs.writeFile(path.join(projectRoot, PROGRESS_FILE), JSON.stringify(finalState, null, 2));
@@ -233,4 +255,17 @@ function isDynamicRuntimeEntrypoint(relPath) {
 
     console.log('\n--- Final Orphan List ---');
     console.log('Total Orphans: ' + orphans.length);
+    console.log('Likely Actionable Orphans: ' + actionableOrphans.length);
+    if (topDirs.length > 0) {
+        console.log('Top orphan directories:');
+        for (const [dir, count] of topDirs) {
+            console.log('  - ' + dir + ': ' + count);
+        }
+    }
+    if (actionableOrphans.length > 0) {
+        console.log('\nActionable sample (up to 20):');
+        for (const orphan of actionableOrphans.slice(0, 20)) {
+            console.log('  * ' + orphan);
+        }
+    }
 })();

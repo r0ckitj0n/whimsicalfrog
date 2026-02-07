@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { useSecrets, ISecret } from '../../../hooks/admin/useSecrets.js';
 import { formatDateTime } from '../../../core/date-utils.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 
 interface SecretsManagerProps {
@@ -82,13 +83,21 @@ export const SecretsManager: React.FC<SecretsManagerProps> = ({ onClose, title }
 
     const isDirty = editingSecret !== null && editingSecret.value !== '';
 
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: handleSave,
+        closeAfterSave: true
+    });
+
     const modalContent = (
         <div
             className="admin-modal-overlay over-header show topmost"
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -127,7 +136,7 @@ export const SecretsManager: React.FC<SecretsManagerProps> = ({ onClose, title }
                                 type="button"
                             />
                             <button
-                                onClick={onClose}
+                                onClick={() => { void attemptClose(); }}
                                 className="admin-action-btn btn-icon--close"
                                 data-help-id="common-close"
                                 type="button"

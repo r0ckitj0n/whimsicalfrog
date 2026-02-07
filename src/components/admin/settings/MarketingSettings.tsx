@@ -8,6 +8,7 @@ import { VerbiageEditor } from './receipt/VerbiageEditor.js';
 import { MessageList } from './receipt/MessageList.js';
 import { MessageEditorModal } from '../../modals/admin/settings/receipt/MessageEditorModal.js';
 import { PhraseManager } from './marketing/PhraseManager.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface MarketingSettingsProps {
     onClose?: () => void;
@@ -80,26 +81,31 @@ export const MarketingSettings: React.FC<MarketingSettingsProps> = ({ onClose, t
         });
     };
 
-    const handleSaveMessage = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSaveMessage = async (e?: React.FormEvent): Promise<boolean> => {
+        e?.preventDefault();
         if (editingMessage) {
             const res = await saveMessage(editingMessage);
             if (res?.success) {
                 setEditingMessage(null);
                 if (window.WFToast) window.WFToast.success('Message saved successfully');
+                return true;
             } else {
                 if (window.WFToast) window.WFToast.error(res?.error || 'Failed to save message');
+                return false;
             }
         }
+        return false;
     };
 
-    const handleSaveVerbiage = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSaveVerbiage = async (e?: React.FormEvent): Promise<boolean> => {
+        e?.preventDefault();
         const res = await saveVerbiage(localVerbiage);
         if (res.success) {
             if (window.WFToast) window.WFToast.success('Verbiage updated successfully');
+            return true;
         } else {
             if (window.WFToast) window.WFToast.error(res.error || 'Failed to save verbiage');
+            return false;
         }
     };
 
@@ -123,6 +129,13 @@ export const MarketingSettings: React.FC<MarketingSettingsProps> = ({ onClose, t
     };
 
     const filteredMessages = messages.filter(m => m.type === activeTab);
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty: activeTab === 'receipt' && isVerbiageDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: () => handleSaveVerbiage(),
+        closeAfterSave: true
+    });
 
     const tabs = [
         { id: 'phrases', label: 'Phrases' },
@@ -139,7 +152,7 @@ export const MarketingSettings: React.FC<MarketingSettingsProps> = ({ onClose, t
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -193,7 +206,7 @@ export const MarketingSettings: React.FC<MarketingSettingsProps> = ({ onClose, t
                             />
                         )}
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="marketing-close-manager"
                             type="button"

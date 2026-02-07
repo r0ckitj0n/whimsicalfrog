@@ -56,15 +56,17 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
         setCustomer({ ...customer, ...data });
     };
 
-    const handleSaveProfile = async () => {
-        if (!customer) return;
+    const handleSaveProfile = async (): Promise<boolean> => {
+        if (!customer) return false;
         const res = await updateCustomer(user_id, customer);
         if (res.success) {
             setOriginalCustomer({ ...customer }); // Sync original on success
             onSaved();
             if (window.WFToast) window.WFToast.success('Changes saved successfully');
+            return true;
         } else {
             if (window.WFToast) window.WFToast.error(res.error || 'Failed to save changes');
+            return false;
         }
     };
 
@@ -131,6 +133,32 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
         else onNavigate(all_customer_ids[0]);
     };
 
+    const attemptClose = async () => {
+        if (isLoading) return;
+        if (!isDirty) {
+            onClose();
+            return;
+        }
+
+        const shouldSave = await confirmModal({
+            title: 'Unsaved Changes',
+            message: 'Save changes before closing this modal?',
+            subtitle: 'Choose Save to keep edits, or Discard to close without saving.',
+            confirmText: 'Save',
+            cancelText: 'Discard',
+            confirmStyle: 'warning',
+            iconKey: 'warning'
+        });
+
+        if (shouldSave) {
+            const didSave = await handleSaveProfile();
+            if (didSave) onClose();
+            return;
+        }
+
+        onClose();
+    };
+
     if (!customer) {
         return (
             <div className="fixed inset-0 z-[var(--wf-z-modal)] flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -146,7 +174,7 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
         <div
             className="customer-modal admin-modal-overlay wf-overlay-viewport wf-modal--content-scroll wf-modal-single-scroll over-header topmost show"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div className="wf-overlay-scrim"></div>
@@ -175,14 +203,14 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
                         )}
                         {isDirty && (
                             <button
-                                onClick={handleSaveProfile}
+                                onClick={() => { void handleSaveProfile(); }}
                                 className="admin-action-btn btn-icon--save is-dirty"
                                 data-help-id="modal-save"
                                 disabled={isLoading}
                             />
                         )}
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close admin-modal-close"
                             data-help-id="modal-close"
                         />
@@ -230,4 +258,3 @@ export const CustomerEditorModal: React.FC<CustomerEditorModalProps> = ({
         </div>
     );
 };
-

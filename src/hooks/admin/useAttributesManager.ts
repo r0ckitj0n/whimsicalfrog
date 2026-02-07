@@ -199,15 +199,17 @@ export const useAttributesManager = () => {
         if (template) setEditingColor(template);
     }, [fetchColorTemplate]);
 
-    const handleSaveTemplate = useCallback(async () => {
+    const handleSaveTemplate = useCallback(async (): Promise<boolean> => {
         if (localSize) {
             const res = await saveSizeTemplate(localSize);
             if (res?.success) {
                 setEditingSize(null);
                 setLocalSize(null);
                 if (window.WFToast) window.WFToast.success('Size template saved');
+                return true;
             } else if (window.WFToast) {
                 window.WFToast.error(res?.message || 'Failed to save size template');
+                return false;
             }
         } else if (localColor) {
             const res = await saveColorTemplate(localColor);
@@ -215,10 +217,13 @@ export const useAttributesManager = () => {
                 setEditingColor(null);
                 setLocalColor(null);
                 if (window.WFToast) window.WFToast.success('Color template saved');
+                return true;
             } else if (window.WFToast) {
                 window.WFToast.error(res?.message || 'Failed to save color template');
+                return false;
             }
         }
+        return false;
     }, [localSize, localColor, saveSizeTemplate, saveColorTemplate]);
 
     const isDirty = useMemo(() => {

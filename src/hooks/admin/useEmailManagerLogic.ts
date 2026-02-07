@@ -127,7 +127,7 @@ export const useEmailManagerLogic = ({
         });
     }, []);
 
-    const handleSaveAssignments = useCallback(async () => {
+    const handleSaveAssignments = useCallback(async (): Promise<boolean> => {
         const changed: Record<string, number | null> = {};
 
         for (const [emailType, templateId] of Object.entries(pendingAssignments)) {
@@ -142,14 +142,16 @@ export const useEmailManagerLogic = ({
             }
         }
 
-        if (Object.keys(changed).length === 0) return;
+        if (Object.keys(changed).length === 0) return true;
 
         const success = await saveAllAssignments(changed);
         if (success) {
             setInitialAssignments({ ...pendingAssignments });
             if (window.WFToast) window.WFToast.success('Assignments saved');
+            return true;
         } else {
             if (window.WFToast) window.WFToast.error('Failed to save assignments');
+            return false;
         }
     }, [pendingAssignments, initialAssignments, saveAllAssignments]);
 

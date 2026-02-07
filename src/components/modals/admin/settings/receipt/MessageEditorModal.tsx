@@ -1,10 +1,11 @@
 import React from 'react';
 import { IReceiptMessage } from '../../../../../hooks/admin/useReceiptSettings.js';
+import { useUnsavedChangesCloseGuard } from '../../../../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface MessageEditorModalProps {
     editingMessage: Partial<IReceiptMessage>;
     setEditingMessage: (msg: Partial<IReceiptMessage> | null) => void;
-    onSave: (e: React.FormEvent) => void;
+    onSave: () => Promise<boolean>;
     isLoading: boolean;
 }
 
@@ -20,8 +21,15 @@ export const MessageEditorModal: React.FC<MessageEditorModalProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(e);
+        void onSave();
     };
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose: () => setEditingMessage(null),
+        onSave,
+        closeAfterSave: true
+    });
 
     return (
         <div className="fixed inset-0 z-[var(--wf-z-modal)] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-in fade-in duration-200">
@@ -39,7 +47,7 @@ export const MessageEditorModal: React.FC<MessageEditorModalProps> = ({
                             type="button"
                         />
                         <button
-                            onClick={() => setEditingMessage(null)}
+                            onClick={() => { void attemptClose(); }}
                             className="btn-icon btn-icon--close"
                             data-help-id="common-close"
                             type="button"

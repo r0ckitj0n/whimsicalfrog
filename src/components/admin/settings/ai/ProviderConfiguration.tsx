@@ -88,13 +88,18 @@ export const ProviderConfiguration: React.FC<ProviderConfigurationProps> = ({
                                 ))}
                             </select>
                         ) : (
-                            <input
-                                type="text"
-                                value={(settings[modelField] as string) || ''}
-                                onChange={e => onChange(modelField, e.target.value)}
-                                placeholder="Enter model identifier..."
-                                className="w-full p-3 px-4 bg-white border-2 border-white rounded-xl text-xs font-mono font-bold focus:border-brand-primary/30 outline-none transition-all shadow-sm"
-                            />
+                            <>
+                                <input
+                                    type="text"
+                                    value={(settings[modelField] as string) || ''}
+                                    onChange={e => onChange(modelField, e.target.value)}
+                                    placeholder="Enter vision-capable model identifier..."
+                                    className="w-full p-3 px-4 bg-white border-2 border-white rounded-xl text-xs font-mono font-bold focus:border-brand-primary/30 outline-none transition-all shadow-sm"
+                                />
+                                <p className="text-[11px] font-bold text-amber-600 px-1 mt-2">
+                                    No vision-capable models found in list. Use Refresh or enter a known vision model ID.
+                                </p>
+                            </>
                         )}
                         {showVisionWarning && (
                             <p className="text-[11px] font-bold text-red-500 px-1 mt-2 flex items-center gap-1.5">
@@ -107,4 +112,3 @@ export const ProviderConfiguration: React.FC<ProviderConfigurationProps> = ({
         </div>
     );
 };
-

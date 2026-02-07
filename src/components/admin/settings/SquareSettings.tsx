@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSquareSettings, ISquareSettings } from '../../../hooks/admin/useSquareSettings.js';
 import { isDraftDirty } from '../../../core/utils.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 import { ENVIRONMENT } from '../../../core/constants.js';
 
@@ -47,15 +48,18 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
         }
     }, [settings, isLoading, initialSettings]); // Used initialSettings
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSave = async (e?: React.FormEvent): Promise<boolean> => {
+        e?.preventDefault();
         if (editSettings) {
             const success = await saveSettings(editSettings);
             if (success) {
                 setInitialSettings({ ...editSettings! }); // Used initialSettings
                 if (window.WFToast) window.WFToast.success('Square configuration updated');
+                return true;
             }
+            return false;
         }
+        return false;
     };
 
     const handleTest = async () => {
@@ -90,6 +94,13 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
             setEditSettings({ ...editSettings, [field]: value });
         }
     };
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: () => handleSave(),
+        closeAfterSave: true
+    });
 
     if (!editSettings && isLoading) {
         return createPortal(
@@ -109,7 +120,7 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -135,7 +146,7 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
                             data-help-id="common-save"
                         />
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="common-close"
                         />

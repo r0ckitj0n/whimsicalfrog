@@ -32,12 +32,14 @@ export const useBrandingManagerLogic = ({
         }
     }, [tokens, isLoading]);
 
-    const handleSave = useCallback(async () => {
+    const handleSave = useCallback(async (): Promise<boolean> => {
         const success = await saveTokens(editTokens);
         if (success) {
             if (window.WFToast) window.WFToast.success('Branding updated successfully!');
+            return true;
         } else {
             if (window.WFToast) window.WFToast.error('Failed to update branding');
+            return false;
         }
     }, [editTokens, saveTokens]);
 

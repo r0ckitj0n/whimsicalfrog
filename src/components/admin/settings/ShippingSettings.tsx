@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { useShippingSettings, IShippingRates } from '../../../hooks/admin/useShippingSettings.js';
 import { isDraftDirty } from '../../../core/utils.js';
+import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
 
 
 
@@ -44,12 +45,13 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
         };
     }, []);
 
-    const handleSave = async (payload: Partial<IShippingRates>, message: string) => {
+    const handleSave = async (payload: Partial<IShippingRates>, message: string): Promise<boolean> => {
         const success = await saveRates(payload);
         if (success) {
             setInitialRates(prev => prev ? ({ ...prev, ...payload }) : payload);
             if (window.WFToast) window.WFToast.success(message);
         }
+        return success;
     };
 
     const handleSaveBaseRates = () => {
@@ -107,6 +109,13 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
         if (!initialRates) return false;
         return isDraftDirty(editRates, initialRates);
     }, [editRates, initialRates]);
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty,
+        isBlocked: isLoading,
+        onClose,
+        onSave: () => handleSave(editRates, 'All logistics saved!'),
+        closeAfterSave: true
+    });
 
     if (!rates && isLoading) {
         return createPortal(
@@ -126,7 +135,7 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
             role="dialog"
             aria-modal="true"
             onClick={(e) => {
-                if (e.target === e.currentTarget) onClose?.();
+                if (e.target === e.currentTarget) void attemptClose();
             }}
         >
             <div
@@ -152,7 +161,7 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
                             data-help-id="common-save"
                         />
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             data-help-id="common-close"
                         />

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ProfileForm } from './partials/ProfileForm.js';
 import { AddressSection } from './partials/AddressSection.js';
 import { useAccountSettings } from '../../hooks/useAccountSettings.js';
+import { useUnsavedChangesCloseGuard } from '../../hooks/useUnsavedChangesCloseGuard.js';
 
 interface AccountSettingsModalProps {
     isOpen: boolean;
@@ -40,6 +41,13 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
         if (isOpen) reset();
     }, [isOpen]);
 
+    const attemptClose = useUnsavedChangesCloseGuard({
+        isDirty: isProfileDirty,
+        isBlocked: isSaving,
+        onClose,
+        onSave: () => handleSaveProfile(),
+        closeAfterSave: true
+    });
 
     if (!isOpen || !user) return null;
 
@@ -60,7 +68,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                 padding: '2.5vh 2.5vw',
                 boxSizing: 'border-box'
             }}
-            onClick={(e) => e.target === e.currentTarget && onClose()}
+            onClick={(e) => e.target === e.currentTarget && void attemptClose()}
         >
             <div
                 className="wf-modal-card my-auto animate-in zoom-in-95 slide-in-from-bottom-4 duration-300 overflow-hidden flex flex-col"
@@ -115,7 +123,7 @@ export const AccountSettingsModal: React.FC<AccountSettingsModalProps> = ({
                             />
                         )}
                         <button
-                            onClick={onClose}
+                            onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"
                             aria-label="Close"
                         />

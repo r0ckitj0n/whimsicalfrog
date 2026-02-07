@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
 import { useCostBreakdown } from '../../../hooks/admin/useCostBreakdown.js';
-import { useInventoryAI } from '../../../hooks/admin/useInventoryAI.js';
 import { ICostBreakdown, ICostItem } from '../../../types/index.js';
 
 import { COST_CATEGORY } from '../../../core/constants.js';
@@ -16,7 +15,7 @@ interface CostBreakdownTableProps {
     onCurrentPriceChange?: (price: number) => void;
     tier?: string;
     /** Optional raw breakdown from AI generation (simple key-value pairs) */
-    cachedBreakdown?: Record<string, number> | null;
+    cachedBreakdown?: Record<string, unknown> | null;
 }
 
 export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
@@ -26,12 +25,9 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
     category,
     isReadOnly = false,
     refreshTrigger = 0,
-    currentPrice,
-    onCurrentPriceChange,
     tier = 'standard',
     cachedBreakdown
 }) => {
-    const { is_busy, fetch_cost_suggestion } = useInventoryAI();
     const { breakdown: hookBreakdown, isLoading, error, fetchBreakdown, saveCostFactor, clearBreakdown, populateFromSuggestion, applySuggestionLocally } = useCostBreakdown(sku);
 
     useEffect(() => {
@@ -43,14 +39,34 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
     // Convert simple key-value breakdown to ICostBreakdown if provided
     const breakdown: ICostBreakdown = useMemo(() => {
         if (cachedBreakdown && Object.keys(cachedBreakdown).length > 0) {
-            const createItem = (cat: string, cost: number | undefined): ICostItem[] => {
-                if (!cost || cost === 0) return [];
-                return [{
-                    id: `ai-${cat}-${Date.now()}`,
-                    sku,
-                    label: `AI Estimated ${cat}`,
-                    cost
-                }];
+            const createItem = (cat: string, raw: unknown): ICostItem[] => {
+                if (typeof raw === 'number' && raw !== 0) {
+                    return [{
+                        id: `ai-${cat}-${Date.now()}`,
+                        sku,
+                        label: `AI Estimated ${cat}`,
+                        cost: raw
+                    }];
+                }
+                if (Array.isArray(raw)) {
+                    return raw
+                        .map((item, idx) => {
+                            if (!item || typeof item !== 'object') return null;
+                            const itemRecord = item as Record<string, unknown>;
+                            const itemCost = typeof itemRecord.cost === 'number' ? itemRecord.cost : 0;
+                            if (!itemCost) return null;
+                            return {
+                                id: `ai-${cat}-${Date.now()}-${idx}`,
+                                sku,
+                                label: typeof itemRecord.label === 'string'
+                                    ? itemRecord.label
+                                    : `AI Estimated ${cat} ${idx + 1}`,
+                                cost: itemCost
+                            } as ICostItem;
+                        })
+                        .filter((item): item is ICostItem => item !== null);
+                }
+                return [];
             };
 
             const materials = createItem('materials', cachedBreakdown.materials);
@@ -68,7 +84,10 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
                     labor: labor.reduce((sum, it) => sum + it.cost, 0),
                     energy: energy.reduce((sum, it) => sum + it.cost, 0),
                     equipment: equipment.reduce((sum, it) => sum + it.cost, 0),
-                    total: (cachedBreakdown.materials || 0) + (cachedBreakdown.labor || 0) + (cachedBreakdown.energy || 0) + (cachedBreakdown.equipment || 0),
+                    total: materials.reduce((sum, it) => sum + it.cost, 0)
+                        + labor.reduce((sum, it) => sum + it.cost, 0)
+                        + energy.reduce((sum, it) => sum + it.cost, 0)
+                        + equipment.reduce((sum, it) => sum + it.cost, 0),
                     stored: hookBreakdown.totals?.stored || 0
                 }
             };
@@ -93,8 +112,6 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
 
     const [editingCategory, setEditingCategory] = React.useState<string | null>(null);
     const [editValue, setEditValue] = React.useState<string>('');
-    const [isEditingCurrent, setIsEditingCurrent] = React.useState(false);
-    const [currentEditValue, setCurrentEditValue] = React.useState<string>('');
 
     const startEditCategory = (category: string, amount: number) => {
         if (isReadOnly) return;
@@ -111,21 +128,6 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
         setEditValue('');
     };
 
-    const startEditCurrent = () => {
-        if (isReadOnly || currentPrice === undefined || onCurrentPriceChange === undefined) return;
-        setIsEditingCurrent(true);
-        setCurrentEditValue(currentPrice.toFixed(2));
-    };
-
-    const commitEditCurrent = () => {
-        const amount = parseFloat(currentEditValue);
-        if (!isNaN(amount) && onCurrentPriceChange) {
-            onCurrentPriceChange(amount);
-        }
-        setIsEditingCurrent(false);
-        setCurrentEditValue('');
-    };
-
     if (!sku) return null;
 
     return (
@@ -133,47 +135,11 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
 
             {error && <div className="p-2 mb-2 bg-[var(--brand-error)]/5 border border-[var(--brand-error)]/20 text-[var(--brand-error)] text-sm rounded">{error}</div>}
 
-            <div id="costSuggestionDisplay" className={`ai-data-panel mb-2 ${currentPrice !== undefined && Math.abs(currentPrice - (breakdown.totals?.stored || 0)) > 0.01 ? 'border-l-4 border-yellow-400' : ''}`}>
+            <div id="costSuggestionDisplay" className="ai-data-panel mb-2">
                 <div className="flex justify-between items-center">
-                    <span className="ai-data-label text-sm font-medium">
-                        {currentPrice !== undefined ? 'Current Cost:' : 'Authoritative Cost:'}
-                    </span>
-                    {isEditingCurrent ? (
-                        <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-500">$</span>
-                            <input
-                                type="number"
-                                step="0.01"
-                                className="w-24 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold focus:ring-1 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/20"
-                                value={currentEditValue}
-                                onChange={(e) => setCurrentEditValue(e.target.value)}
-                                onBlur={commitEditCurrent}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') commitEditCurrent();
-                                    if (e.key === 'Escape') {
-                                        setIsEditingCurrent(false);
-                                        setCurrentEditValue('');
-                                    }
-                                }}
-                                autoFocus
-                                disabled={isReadOnly}
-                            />
-                        </div>
-                    ) : (
-                        <span
-                            className={`ai-data-value--large ${!isReadOnly && currentPrice !== undefined ? 'cursor-pointer hover:underline' : ''}`}
-                            onClick={startEditCurrent}
-                            title={!isReadOnly && currentPrice !== undefined ? 'Click to edit' : undefined}
-                        >
-                            ${(currentPrice !== undefined ? currentPrice : (breakdown.totals?.total ?? 0)).toFixed(2)}
-                        </span>
-                    )}
+                    <span className="ai-data-label text-sm font-medium">Current Cost:</span>
+                    <span className="ai-data-value--large">${(breakdown.totals?.stored ?? 0).toFixed(2)}</span>
                 </div>
-                {currentPrice !== undefined && Math.abs(currentPrice - (breakdown.totals?.stored || 0)) > 0.01 && (
-                    <div className="text-[10px] text-yellow-600 mt-1 italic">
-                        Unsaved: DB reflects ${(breakdown.totals?.stored || 0).toFixed(2)}
-                    </div>
-                )}
             </div>
 
             <div className="divide-y divide-gray-200 border border-gray-200 rounded bg-white overflow-hidden">

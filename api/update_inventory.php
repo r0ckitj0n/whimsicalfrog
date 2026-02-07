@@ -26,6 +26,33 @@ function ensureAiTierColumnsExistForInventoryUpdate(): void
     }
 }
 
+function hasCategoryIdColumnOnItems(): bool
+{
+    try {
+        $cols = Database::queryAll("SHOW COLUMNS FROM items");
+        foreach ($cols as $c) {
+            if (($c['Field'] ?? '') === 'category_id') {
+                return true;
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('Failed checking category_id column in update_inventory: ' . $e->getMessage());
+    }
+    return false;
+}
+
+function findCategoryIdByName(string $categoryName): ?int
+{
+    try {
+        $row = Database::queryOne("SELECT id FROM categories WHERE name = ? LIMIT 1", [$categoryName]);
+        if (!$row || !isset($row['id'])) return null;
+        return (int) $row['id'];
+    } catch (Throwable $e) {
+        error_log('Failed resolving category_id in update_inventory: ' . $e->getMessage());
+        return null;
+    }
+}
+
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::methodNotAllowed('Method not allowed');
@@ -63,8 +90,18 @@ try {
             Response::error('Invalid field', null, 400);
         }
 
-        // Update the field
-        $affected = Database::execute("UPDATE items SET `$field` = ? WHERE sku = ?", [$value, $sku]);
+        // Keep category text + category_id aligned when schema supports category_id.
+        if ($field === 'category' && hasCategoryIdColumnOnItems()) {
+            $categoryValue = is_string($value) ? trim($value) : (string) $value;
+            $categoryId = $categoryValue !== '' ? findCategoryIdByName($categoryValue) : null;
+            $affected = Database::execute(
+                "UPDATE items SET `category` = ?, `category_id` = ? WHERE sku = ?",
+                [$categoryValue, $categoryId, $sku]
+            );
+        } else {
+            // Update the field
+            $affected = Database::execute("UPDATE items SET `$field` = ? WHERE sku = ?", [$value, $sku]);
+        }
 
         if ($affected > 0) {
             Response::updated();
@@ -103,7 +140,15 @@ try {
         $locked_words = isset($data['locked_words']) ? json_encode($data['locked_words']) : null;
 
         // Update the item (full update)
-        $affected = Database::execute('UPDATE items SET name = ?, category = ?, stock_quantity = ?, reorder_point = ?, cost_price = ?, retail_price = ?, description = ?, status = ?, weight_oz = ?, package_length_in = ?, package_width_in = ?, package_height_in = ?, locked_fields = ?, locked_words = ? WHERE sku = ?', [$name, $category, $stock_quantity, $reorder_point, $cost_price, $retail_price, $description, $status, $weight_oz, $package_length_in, $package_width_in, $package_height_in, $locked_fields, $locked_words, $sku]);
+        if (hasCategoryIdColumnOnItems()) {
+            $categoryId = $category !== '' ? findCategoryIdByName((string) $category) : null;
+            $affected = Database::execute(
+                'UPDATE items SET name = ?, category = ?, category_id = ?, stock_quantity = ?, reorder_point = ?, cost_price = ?, retail_price = ?, description = ?, status = ?, weight_oz = ?, package_length_in = ?, package_width_in = ?, package_height_in = ?, locked_fields = ?, locked_words = ? WHERE sku = ?',
+                [$name, $category, $categoryId, $stock_quantity, $reorder_point, $cost_price, $retail_price, $description, $status, $weight_oz, $package_length_in, $package_width_in, $package_height_in, $locked_fields, $locked_words, $sku]
+            );
+        } else {
+            $affected = Database::execute('UPDATE items SET name = ?, category = ?, stock_quantity = ?, reorder_point = ?, cost_price = ?, retail_price = ?, description = ?, status = ?, weight_oz = ?, package_length_in = ?, package_width_in = ?, package_height_in = ?, locked_fields = ?, locked_words = ? WHERE sku = ?', [$name, $category, $stock_quantity, $reorder_point, $cost_price, $retail_price, $description, $status, $weight_oz, $package_length_in, $package_width_in, $package_height_in, $locked_fields, $locked_words, $sku]);
+        }
 
         if ($affected > 0) {
             Response::updated();

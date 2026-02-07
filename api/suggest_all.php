@@ -37,6 +37,13 @@ $imageData = $input['imageData'] ?? null;
 $brandVoice = trim($input['brandVoice'] ?? '');
 $contentTone = trim($input['contentTone'] ?? '');
 $step = trim($input['step'] ?? ''); // Step-by-step mode: 'info', 'cost', 'price', 'marketing', or empty for full
+$lockedWords = is_array($input['locked_words'] ?? null) ? $input['locked_words'] : [];
+$imageFirstPriority = array_key_exists('image_first_priority', $input)
+    ? filter_var($input['image_first_priority'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+    : true;
+if ($imageFirstPriority === null) {
+    $imageFirstPriority = true;
+}
 
 // Validate step parameter if provided
 $validSteps = ['info', 'cost', 'price', 'marketing', ''];
@@ -46,6 +53,109 @@ if (!in_array($step, $validSteps)) {
 
 if (empty($name) && empty($category) && (!$useImages || (empty($sku) && empty($imageData)))) {
     Response::error('At least Name, Category, or Image analysis is required for AI generation.', 400);
+}
+
+if ($imageFirstPriority && ($step === '' || $step === 'info')) {
+    $name = '';
+    $description = '';
+    $category = '';
+}
+
+function wf_parse_locked_tokens($value)
+{
+    if (!is_string($value) || trim($value) === '') {
+        return [[], []];
+    }
+    preg_match_all('/"([^"]+)"/', $value, $phraseMatches);
+    $phrases = array_values(array_filter(array_map('trim', $phraseMatches[1] ?? [])));
+    $remaining = trim(preg_replace('/"([^"]+)"/', ' ', $value) ?? '');
+    $words = array_values(array_filter(preg_split('/\s+/', $remaining) ?: []));
+    return [$phrases, $words];
+}
+
+function wf_apply_locked_words($candidate, $constraint)
+{
+    $candidate = trim((string) $candidate);
+    if (!is_string($constraint) || trim($constraint) === '') {
+        return $candidate;
+    }
+    [$phrases, $words] = wf_parse_locked_tokens($constraint);
+    $result = $candidate;
+    foreach ($phrases as $phrase) {
+        if ($phrase !== '' && stripos($result, $phrase) === false) {
+            $result = trim($result . ' ' . $phrase);
+        }
+    }
+    foreach ($words as $word) {
+        if ($word === '') {
+            continue;
+        }
+        $pattern = '/\b' . preg_quote($word, '/') . '\b/i';
+        if (!preg_match($pattern, $result)) {
+            $result = trim($result . ' ' . $word);
+        }
+    }
+    return $result;
+}
+
+function wf_resolve_category_from_analysis($analysisCategory, $title, $description, $existingCategories)
+{
+    $analysisCategory = trim((string) $analysisCategory);
+    $title = strtolower(trim((string) $title));
+    $description = strtolower(trim((string) $description));
+    $analysisLower = strtolower($analysisCategory);
+    $text = trim($title . ' ' . $description . ' ' . $analysisLower);
+
+    if (!is_array($existingCategories) || count($existingCategories) === 0) {
+        return $analysisCategory;
+    }
+
+    $bestCategory = $analysisCategory;
+    $bestScore = -INF;
+
+    foreach ($existingCategories as $candidateRaw) {
+        $candidate = trim((string) $candidateRaw);
+        if ($candidate === '') {
+            continue;
+        }
+        $candidateLower = strtolower($candidate);
+        $score = 0.0;
+
+        if ($analysisLower !== '' && $candidateLower === $analysisLower) {
+            $score += 60.0;
+        }
+
+        if ($candidateLower !== '' && preg_match('/\b' . preg_quote($candidateLower, '/') . '\b/i', $text)) {
+            $score += 30.0;
+        }
+
+        $tokens = preg_split('/[^a-z0-9]+/i', $candidateLower) ?: [];
+        foreach ($tokens as $token) {
+            $token = trim($token);
+            if ($token === '' || strlen($token) < 3) {
+                continue;
+            }
+            if (preg_match('/\b' . preg_quote($token, '/') . '\b/i', $text)) {
+                $score += 10.0;
+            }
+        }
+
+        $isHatCategory = preg_match('/\b(hat|hats|cap|caps|beanie|headwear)\b/i', $candidateLower) === 1;
+        $mentionsHatInImageText = preg_match('/\b(hat|hats|cap|caps|beanie|headwear)\b/i', $text) === 1;
+        if ($isHatCategory && !$mentionsHatInImageText) {
+            $score -= 40.0;
+        }
+
+        if ($score > $bestScore) {
+            $bestScore = $score;
+            $bestCategory = $candidate;
+        }
+    }
+
+    if (is_infinite($bestScore) || $bestScore <= 0) {
+        return $analysisCategory;
+    }
+    return $bestCategory;
 }
 
 try {
@@ -118,6 +228,16 @@ try {
     // 0. Generate Info Suggestion if name is missing or if explicitly requested (implied by combined call)
     // Step mode: info - only run this step if step === 'info' or step === '' (full)
     if ($step === '' || $step === 'info') {
+        if (!$useImages) {
+            Response::error('Image analysis is required for Generate. Enable image-based generation and try again.', null, 400);
+        }
+        if (!$aiProviders->currentModelSupportsImages()) {
+            Response::error('Selected AI model does not support image analysis. Switch to a vision-capable model in AI Settings and re-test the provider.', null, 400);
+        }
+        if (empty($images)) {
+            Response::error('Image analysis is required, but no usable image was found for this item. Add a primary image and try again.', null, 400);
+        }
+
         // Debug logging for info step
         error_log("suggest_all.php [info step]: images count=" . count($images) . ", useImages=" . ($useImages ? 'true' : 'false') . ", supportsImages=" . ($aiProviders->currentModelSupportsImages() ? 'true' : 'false'));
 
@@ -136,28 +256,34 @@ try {
                 error_log("suggest_all.php [info step]: analyzeItemImage returned: " . json_encode($analysis));
 
                 if ($analysis) {
+                    $resolvedCategory = wf_resolve_category_from_analysis(
+                        $analysis['category'] ?? '',
+                        $analysis['title'] ?? '',
+                        $analysis['description'] ?? '',
+                        $existingCategories
+                    );
+
                     $results['info_suggestion'] = [
                         'success' => true,
-                        'name' => $analysis['title'] ?? '',
-                        'description' => $analysis['description'] ?? '',
-                        'category' => $analysis['category'] ?? '',
+                        'name' => wf_apply_locked_words($analysis['title'] ?? '', $lockedWords['name'] ?? ''),
+                        'description' => wf_apply_locked_words($analysis['description'] ?? '', $lockedWords['description'] ?? ''),
+                        'category' => wf_apply_locked_words($resolvedCategory, $lockedWords['category'] ?? ''),
                         'confidence' => $analysis['confidence'] ?? 'medium',
-                        'reasoning' => ($analysis['reasoning'] ?? '') . " (Derived from visual analysis. Existing fields may be improved based on image details.)"
+                        'reasoning' => ($analysis['reasoning'] ?? '') . " (Image-first analysis applied.)"
                     ];
-                    // Update local variables for subsequent suggestions - allowing replacement
+                    // Update local variables for subsequent suggestions (image-first chain).
                     $name = $results['info_suggestion']['name'];
                     $description = $results['info_suggestion']['description'];
                     $category = $results['info_suggestion']['category'];
                 } else {
                     error_log("suggest_all.php [info step]: analyzeItemImage returned null/empty");
+                    Response::error('Image analysis failed for the current model. Switch to a vision-capable model in AI Settings and run Test Provider before generating.', null, 400);
                 }
             } catch (Exception $e) {
                 error_log("Info analysis failed in suggest_all: " . $e->getMessage());
-                if ($step === 'info') {
-                    $results['info_suggestion'] = ['success' => false, 'error' => $e->getMessage()];
-                }
+                Response::error('Image analysis failed: ' . $e->getMessage() . '. Switch to a vision-capable model in AI Settings and run Test Provider.', null, 400);
             }
-        } else if (empty($name) && !empty($category)) {
+        } else if (!$imageFirstPriority && empty($name) && !empty($category)) {
             // Fallback: Generate info from category if name/images are missing
             try {
                 $analysis = $aiProviders->generateMarketingContent('', '', $category);

@@ -276,10 +276,16 @@ class AIProviders
 
     public function testProvider($provider)
     {
+        $resolvedModel = $this->settings['openai_model']
+            ?? $this->settings['anthropic_model']
+            ?? $this->settings['google_model']
+            ?? $this->settings['meta_model']
+            ?? 'unknown';
+
         $results = [
             'text_test' => ['success' => false, 'message' => 'Not tested'],
             'image_test' => ['success' => false, 'message' => 'Not tested'],
-            'model' => $this->settings['anthropic_model'] ?? $this->settings['openai_model'] ?? $this->settings['google_model'] ?? 'unknown'
+            'model' => $resolvedModel
         ];
 
         try {
@@ -300,14 +306,34 @@ class AIProviders
             // Test 2: Image analysis (if supported)
             if ($p->supportsImages()) {
                 try {
-                    // Use a small test image - the favicon as a simple test
-                    $testImagePath = __DIR__ . '/../favicon.ico';
-                    if (!file_exists($testImagePath)) {
-                        // Try to find any image in the images folder
-                        $testImagePath = __DIR__ . '/../images/items/WF-GEN-001A.png';
+                    // Prefer real product images with provider-supported mime types.
+                    $candidateImages = [
+                        __DIR__ . '/../images/items/WF-GEN-001A.png',
+                        __DIR__ . '/../images/items/WF-GEN-001A.webp',
+                        __DIR__ . '/../images/items/WF-GEN-001A.jpg',
+                        __DIR__ . '/../images/items/WF-GEN-001A.jpeg'
+                    ];
+
+                    $testImagePath = '';
+                    foreach ($candidateImages as $candidate) {
+                        if (file_exists($candidate)) {
+                            $testImagePath = $candidate;
+                            break;
+                        }
                     }
 
-                    if (file_exists($testImagePath)) {
+                    // Fallback: scan for any usable item image
+                    if ($testImagePath === '') {
+                        $globbed = array_merge(
+                            glob(__DIR__ . '/../images/items/*.{png,jpg,jpeg,webp}', GLOB_BRACE) ?: [],
+                            glob(__DIR__ . '/../images/backgrounds/*.{png,jpg,jpeg,webp}', GLOB_BRACE) ?: []
+                        );
+                        if (!empty($globbed)) {
+                            $testImagePath = $globbed[0];
+                        }
+                    }
+
+                    if ($testImagePath !== '' && file_exists($testImagePath)) {
                         error_log("testProvider: Testing image analysis with: $testImagePath");
                         $imageRes = $p->analyzeItemImage($testImagePath, ['Test', 'Category']);
                         error_log("testProvider: Image analysis result: " . json_encode($imageRes));
@@ -318,7 +344,7 @@ class AIProviders
                             $results['image_test'] = ['success' => false, 'message' => 'Image analysis returned empty result'];
                         }
                     } else {
-                        $results['image_test'] = ['success' => false, 'message' => 'No test image found'];
+                        $results['image_test'] = ['success' => false, 'message' => 'No compatible test image found (.png/.jpg/.jpeg/.webp).'];
                     }
                 } catch (Exception $e) {
                     $errMsg = $e->getMessage();
@@ -332,18 +358,25 @@ class AIProviders
                     }
                 }
             } else {
-                $results['image_test'] = ['success' => true, 'message' => 'Provider does not support images (skipped)'];
+                $results['image_test'] = [
+                    'success' => false,
+                    'message' => 'Selected provider/model does not support image analysis. Choose a vision-capable model.'
+                ];
             }
 
-            // Overall success if at least text works
-            $overallSuccess = $results['text_test']['success'];
+            // Overall success requires BOTH text and image tests.
+            $overallSuccess = $results['text_test']['success'] && $results['image_test']['success'];
             if ($overallSuccess) {
                 $this->markTestSuccess($provider);
             }
 
-            $message = $results['text_test']['success']
-                ? ($results['image_test']['success'] ? '✅ All tests passed!' : '⚠️ Text works, image failed: ' . $results['image_test']['message'])
-                : '❌ Text test failed: ' . $results['text_test']['message'];
+            $message = $overallSuccess
+                ? '✅ Text + image analysis tests passed.'
+                : (
+                    !$results['image_test']['success']
+                    ? '❌ Image analysis test failed. Switch to a vision-capable model in AI Settings.'
+                    : '❌ Text test failed: ' . $results['text_test']['message']
+                );
 
             return [
                 'success' => $overallSuccess,

@@ -36,7 +36,7 @@ try {
 
     $qualityTier = $data['quality_tier'] ?? null;
 
-    // Build dynamic SET clause to only update quality_tier if provided
+    // Build dynamic SET clause to only update cost-specific tier if provided
     $setClauses = ['ai_cost_confidence = ?', 'ai_cost_at = ?'];
     $params = [
         $suggestion['confidence'] ?? 0,
@@ -44,9 +44,7 @@ try {
     ];
     
     if ($qualityTier !== null) {
-        $setClauses[] = 'quality_tier = ?';
         $setClauses[] = 'cost_quality_tier = ?';
-        $params[] = $qualityTier;
         $params[] = $qualityTier;
     }
     $params[] = $sku;

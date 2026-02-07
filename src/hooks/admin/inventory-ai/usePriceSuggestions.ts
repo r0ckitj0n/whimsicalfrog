@@ -196,15 +196,23 @@ export const usePriceSuggestions = () => {
 
                 const normalized = normalizePriceSuggestionData(data);
                 if (normalized) {
-                    normalized.factors.final_before_tier = normalized.suggested_price;
-                    normalized.factors.tier_multiplier = getPriceTierMultiplier(params.tier || 'standard');
-                    normalized.factors.requested_pricing_tier = (params.tier || 'standard').toLowerCase();
-                    normalized._cachedAt = Date.now();
+                    const requestedTier = params.tier || 'standard';
+                    const requestedMult = getPriceTierMultiplier(requestedTier);
+                    const rawFinalBeforeTier = Number(normalized.factors.final_before_tier);
+                    const hasValidFinalBeforeTier = Number.isFinite(rawFinalBeforeTier) && rawFinalBeforeTier > 0;
 
-                    const tiered = retier_price_suggestion(normalized, params.tier || 'standard') || normalized;
-                    tiered._cachedAt = normalized._cachedAt;
-                    setCachedPriceSuggestion(tiered);
-                    return tiered;
+                    // Important: API suggested_price is already tiered for the requested tier.
+                    // Keep a stable untiered base so future re-tier operations do not compound.
+                    const untieredBase = hasValidFinalBeforeTier
+                        ? rawFinalBeforeTier
+                        : (requestedMult > 0 ? Number((normalized.suggested_price / requestedMult).toFixed(2)) : normalized.suggested_price);
+
+                    normalized.factors.final_before_tier = untieredBase;
+                    normalized.factors.tier_multiplier = requestedMult;
+                    normalized.factors.requested_pricing_tier = requestedTier.toLowerCase();
+                    normalized._cachedAt = Date.now();
+                    setCachedPriceSuggestion(normalized);
+                    return normalized;
                 }
             }
             return null;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { useOrderEditorForm } from '../../../../hooks/admin/useOrderEditorForm.js';
+import { useModalContext } from '../../../../context/ModalContext.js';
 import { OrderBasicsColumn } from '../../../admin/orders/partials/OrderBasicsColumn.js';
 import { OrderFulfillmentColumn } from '../../../admin/orders/partials/OrderFulfillmentColumn.js';
 import { OrderFinancialsColumn } from '../../../admin/orders/partials/OrderFinancialsColumn.js';
@@ -24,6 +25,7 @@ export const OrderEditorModal: React.FC<OrderEditorModalProps> = ({
     onClose,
     onSaved
 }) => {
+    const { confirm: confirmModal } = useModalContext();
     const {
         order,
         items,
@@ -49,6 +51,31 @@ export const OrderEditorModal: React.FC<OrderEditorModalProps> = ({
         window.location.reload();
     };
 
+    const attemptClose = async () => {
+        if (isSaving) return;
+        if (!isDirty) {
+            onClose();
+            return;
+        }
+
+        const shouldSave = await confirmModal({
+            title: 'Unsaved Changes',
+            message: 'Save changes before closing this modal?',
+            subtitle: 'Choose Save to keep edits, or Discard to close without saving.',
+            confirmText: 'Save',
+            cancelText: 'Discard',
+            confirmStyle: 'warning',
+            iconKey: 'warning'
+        });
+
+        if (shouldSave) {
+            await handleSave();
+            return;
+        }
+
+        onClose();
+    };
+
     if (!order) return createPortal(<OrderLoadingOverlay />, document.body);
 
     const modalContent = (
@@ -57,7 +84,7 @@ export const OrderEditorModal: React.FC<OrderEditorModalProps> = ({
             className="admin-modal-overlay over-header show topmost order-modal"
             role="dialog"
             aria-modal="true"
-            onClick={(e) => e.target === e.currentTarget && onClose()}
+            onClick={(e) => e.target === e.currentTarget && void attemptClose()}
         >
             <div
                 className="admin-modal admin-modal-content admin-modal--order-editor show bg-white rounded-lg shadow-xl"
@@ -68,7 +95,7 @@ export const OrderEditorModal: React.FC<OrderEditorModalProps> = ({
                     mode={mode}
                     isSaving={isSaving}
                     isDirty={isDirty}
-                    onClose={onClose}
+                    onClose={() => { void attemptClose(); }}
                     handleSave={handleSave}
                     handleSwitchToEdit={handleSwitchToEdit}
                 />
@@ -108,4 +135,3 @@ export const OrderEditorModal: React.FC<OrderEditorModalProps> = ({
 
     return createPortal(modalContent, document.body);
 };
-

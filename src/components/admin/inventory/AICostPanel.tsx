@@ -1,6 +1,7 @@
 import React from 'react';
 import { useInventoryAI } from '../../../hooks/admin/useInventoryAI.js';
 import { useCostBreakdown } from '../../../hooks/admin/useCostBreakdown.js';
+import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
 import { AI_TIER } from '../../../core/constants.js';
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { formatTime } from '../../../core/date-utils.js';
@@ -37,27 +38,118 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     onSuggestionUpdated,
     showStoredMetadata = true
 }) => {
-    const { is_busy, cached_cost_suggestion: hookCachedSuggestion, fetch_cost_suggestion } = useInventoryAI();
+    const {
+        is_busy,
+        cached_cost_suggestion: hookCachedSuggestion,
+        fetch_cost_suggestion,
+        retier_cost_suggestion,
+        setCachedCostSuggestion
+    } = useInventoryAI();
     // Prefer prop over hook state - allows parent to pass in orchestrated suggestions
-    const cached_cost_suggestion = propCachedSuggestion !== undefined ? propCachedSuggestion : hookCachedSuggestion;
-    const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt } = useCostBreakdown(sku);
+    const cached_cost_suggestion = propCachedSuggestion ?? hookCachedSuggestion;
+    const { populateFromSuggestion, confidence: savedConfidence, appliedAt: savedAt, fetchBreakdown } = useCostBreakdown(sku);
     const [isApplying, setIsApplying] = React.useState(false);
 
     const handleSuggest = async () => {
-        const suggestion = await fetch_cost_suggestion({
-            sku,
-            name,
-            description,
-            category,
-            tier
-        });
-        if (suggestion && onSuggestionUpdated) {
-            onSuggestionUpdated(suggestion);
+        if (window.WFToast) window.WFToast.info('Generating AI cost suggestion...');
+        try {
+            const suggestion = await fetch_cost_suggestion({
+                sku,
+                name,
+                description,
+                category,
+                tier
+            });
+            if (suggestion && onSuggestionUpdated) {
+                onSuggestionUpdated(suggestion);
+            }
+            if (suggestion && !isReadOnly) {
+                // Success - mark form as dirty so save button appears
+                if (onApplied) onApplied();
+                if (toastSuccess) toastSuccess('Cost suggestion generated');
+            } else if (!suggestion && toastError) {
+                toastError('Failed to generate cost suggestion');
+            }
+        } catch (_err) {
+            if (toastError) toastError('Failed to generate cost suggestion');
         }
-        if (suggestion && !isReadOnly) {
-            // Success - mark form as dirty so save button appears
-            if (onApplied) onApplied();
+    };
+
+    const handleTierChange = (newTier: string) => {
+        onTierChange(newTier);
+        if (cached_cost_suggestion) {
+            const updated = retier_cost_suggestion(cached_cost_suggestion, newTier, tier);
+            if (!updated) return;
+
+            setCachedCostSuggestion(updated);
+            if (onSuggestionUpdated) onSuggestionUpdated(updated);
+            if (!isReadOnly && onApplyCost) onApplyCost(updated.suggested_cost);
+            return;
         }
+
+        // No cached suggestion yet: immediately generate one for the new tier so
+        // the suggested value updates without requiring an extra Generate click.
+        // Fallback order: breakdown amount -> AI generation.
+        void (async () => {
+            if (window.WFToast) window.WFToast.info('Recalculating cost for selected tier...');
+            try {
+                const fetched = await fetchBreakdown();
+                const storedTotal = Number(fetched?.totals?.stored || 0);
+                const factorsTotal = Number(fetched?.totals?.total || 0);
+                const breakdownTotal = storedTotal > 0 ? storedTotal : factorsTotal;
+
+                if (Number.isFinite(breakdownTotal) && breakdownTotal > 0) {
+                    const currentMult = getPriceTierMultiplier(tier || 'standard') || 1;
+                    const targetMult = getPriceTierMultiplier(newTier || 'standard') || 1;
+                    const baseCost = breakdownTotal / currentMult;
+                    const retieredCost = Number((baseCost * targetMult).toFixed(2));
+                    const categoryTotal = (rows: Array<{ cost?: number | string }> | undefined): number => {
+                        if (!Array.isArray(rows)) return 0;
+                        return rows.reduce((sum, row) => sum + (Number(row?.cost || 0) || 0), 0);
+                    };
+                    const scaledBreakdown = {
+                        materials: Number((categoryTotal(fetched?.materials) * (targetMult / currentMult)).toFixed(2)),
+                        labor: Number((categoryTotal(fetched?.labor) * (targetMult / currentMult)).toFixed(2)),
+                        energy: Number((categoryTotal(fetched?.energy) * (targetMult / currentMult)).toFixed(2)),
+                        equipment: Number((categoryTotal(fetched?.equipment) * (targetMult / currentMult)).toFixed(2))
+                    };
+
+                    const synthesized: CostSuggestion = {
+                        suggested_cost: retieredCost,
+                        baseline_cost: Number(baseCost.toFixed(2)),
+                        confidence: savedConfidence ?? 0,
+                        created_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                        breakdown: scaledBreakdown,
+                        analysis: {},
+                        reasoning: 'Derived from existing cost breakdown and retiered.'
+                    };
+
+                    setCachedCostSuggestion(synthesized);
+                    if (onSuggestionUpdated) onSuggestionUpdated(synthesized);
+                    if (!isReadOnly && onApplyCost) onApplyCost(synthesized.suggested_cost);
+                    if (toastSuccess) toastSuccess('Suggested cost updated from breakdown');
+                    return;
+                }
+
+                const suggestion = await fetch_cost_suggestion({
+                    sku,
+                    name,
+                    description,
+                    category,
+                    tier: newTier
+                });
+                if (!suggestion) {
+                    if (toastError) toastError('Failed to recalculate suggested cost');
+                    return;
+                }
+                setCachedCostSuggestion(suggestion);
+                if (onSuggestionUpdated) onSuggestionUpdated(suggestion);
+                if (!isReadOnly && onApplyCost) onApplyCost(suggestion.suggested_cost);
+                if (toastSuccess) toastSuccess('Suggested cost updated');
+            } catch (_err) {
+                if (toastError) toastError('Failed to recalculate suggested cost');
+            }
+        })();
     };
 
     // AI Suggested Cost is read-only by design
@@ -93,7 +185,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
                         <label className="text-xs text-gray-600 block mb-1 font-medium uppercase tracking-wider">Quality Tier</label>
                         <select
                             value={tier}
-                            onChange={(e) => onTierChange(e.target.value)}
+                            onChange={(e) => handleTierChange(e.target.value)}
                             className="w-full text-sm p-2 border border-gray-300 rounded bg-white shadow-sm focus:ring-2 focus:ring-[var(--brand-primary)]/20 outline-none"
                         >
                             <option value={AI_TIER.PREMIUM}>Premium (High Quality / +15%)</option>
@@ -115,23 +207,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
                 </div>
             )}
 
-            {cached_cost_suggestion ? (
-                <div className="mb-6 p-4 bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/10 rounded-xl animate-in fade-in duration-300">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-[10px] font-bold text-[var(--brand-primary)] uppercase tracking-widest">AI Suggested Cost</span>
-                        <span className="text-lg font-bold text-[var(--brand-primary)]">
-                            ${cached_cost_suggestion.suggested_cost.toFixed(2)}
-                        </span>
-                    </div>
-                    <p className="text-xs text-gray-600 italic leading-relaxed mb-3">
-                        "{cached_cost_suggestion.reasoning}"
-                    </p>
-                    <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-gray-400">Confidence: <span className="font-bold">{Math.round((Number(cached_cost_suggestion.confidence) || 0) * 100)}%</span></span>
-                        <span className="text-[10px] text-gray-400">As of: <span className="font-bold">{formatTime(cached_cost_suggestion.created_at || Date.now())}</span></span>
-                    </div>
-                </div>
-            ) : showStoredMetadata && savedConfidence !== null && (
+            {!cached_cost_suggestion && showStoredMetadata && savedConfidence !== null && (
                 <div className="mb-6 p-4 bg-gray-50 border border-gray-100 rounded-xl">
                     <div className="flex justify-between items-center mb-2">
                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Applied AI Metadata</span>
@@ -141,6 +217,15 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
                         {savedAt && (
                             <span className="text-[10px] text-gray-400">Applied: <span className="font-bold">{formatTime(savedAt)}</span></span>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {cached_cost_suggestion && (
+                <div className="ai-data-panel mb-3">
+                    <div className="flex justify-between items-center">
+                        <span className="ai-data-label text-sm font-medium">Suggested Cost:</span>
+                        <span className="ai-data-value--large">${cached_cost_suggestion.suggested_cost.toFixed(2)}</span>
                     </div>
                 </div>
             )}

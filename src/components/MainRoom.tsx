@@ -153,19 +153,29 @@ export const MainRoom: React.FC = () => {
                                 boxSizing: 'border-box',
                                 overflow: 'visible',
                                 display: 'flex',
-                                alignItems: 'center',
+                                alignItems: 'flex-start',
                                 justifyContent: 'center'
                             }}
                             onClick={() => handleDoorClick(dest)}
                         >
-                            <picture className="block w-full h-full">
+                            <picture
+                                className="block w-full h-full"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    justifyContent: 'center',
+                                    overflow: 'visible'
+                                }}
+                            >
                                 <source srcSet={imgWebp} type="image/webp" />
                                 <img
                                     src={imgUrl}
                                     alt=""
-                                    className="w-full h-full"
+                                    className="block"
                                     style={{
-                                        objectFit: 'contain',
+                                        width: '100%',
+                                        height: 'auto',
+                                        maxWidth: '100%',
                                         transition: 'filter 0.3s ease',
                                         willChange: 'filter'
                                     }}

@@ -384,6 +384,30 @@ EOL
   else
     echo -e "${YELLOW}⏭️  Skipping live .env upload (missing .env.live or WF_UPLOAD_LIVE_ENV!=1)${NC}"
   fi
+  # Always perform a dedicated dist sync.
+  # Rationale: primary mirror excludes dist/**, so this pass is required in all modes,
+  # including --full (WF_FULL_REPLACE=1), to publish the latest frontend bundles.
+  echo -e "${GREEN}📦 Ensuring dist assets & manifest are updated...${NC}"
+  cat > deploy_dist.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+mirror --reverse --delete --verbose --overwrite --no-perms \
+  dist dist
+bye
+EOL
+  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+    echo -e "${YELLOW}DRY-RUN: Skipping dist sync${NC}"
+  elif lftp -f deploy_dist.txt; then
+    echo -e "${GREEN}✅ Dist assets & manifest synced${NC}"
+  else
+    echo -e "${RED}❌ Dist sync failed.${NC}"
+    rm -f deploy_dist.txt
+    exit 1
+  fi
+  rm -f deploy_dist.txt
+
   # Secondary passes are unnecessary in full-replace mode
   if [ "${WF_FULL_REPLACE:-0}" != "1" ]; then
     if [ "$MODE" != "dist-only" ]; then
@@ -432,29 +456,6 @@ EOL
       fi
       rm -f deploy_signs.txt
     fi
-    # Perform a second, targeted mirror for dist WITHOUT --ignore-time
-    # Rationale: manifest.json and hashed bundles can change without size changes; ensure they upload
-    echo -e "${GREEN}📦 Ensuring dist assets & manifest are updated (mtime-based)...${NC}"
-    cat > deploy_dist.txt << EOL
-set sftp:auto-confirm yes
-set ssl:verify-certificate no
-set cmd:fail-exit yes
-open sftp://$USER:$PASS@$HOST
-mirror --reverse --delete --verbose --only-newer --no-perms \
-  dist dist
-bye
-EOL
-    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-      echo -e "${YELLOW}DRY-RUN: Skipping dist sync (mtime-based)${NC}"
-    elif lftp -f deploy_dist.txt; then
-      echo -e "${GREEN}✅ Dist assets & manifest synced (mtime-based)${NC}"
-    else
-      echo -e "${RED}❌ Dist sync failed.${NC}"
-      rm -f deploy_dist.txt
-      exit 1
-    fi
-    rm -f deploy_dist.txt
-
     if [ "$MODE" != "dist-only" ]; then
       # Perform a dedicated sync for includes subdirectories
       # Rationale: PHP include subdirectories like item_sizes/, traits/, helpers/, etc.

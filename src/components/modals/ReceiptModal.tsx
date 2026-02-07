@@ -120,17 +120,21 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order_id, isOpen, on
                     </h2>
                     <div className="flex items-center gap-2">
                         <button
+                            type="button"
                             onClick={handlePrint}
-                            className="bg-[var(--brand-secondary)] text-white px-5 py-2 rounded-full font-bold text-sm shadow-lg hover:brightness-110 transition-all"
-                        >
-                            Print
-                        </button>
+                            className="admin-action-btn btn-icon--print"
+                            data-help-id="orders-action-print"
+                            aria-label="Print receipt"
+                            title="Print"
+                        />
                         <button
+                            type="button"
                             onClick={onClose}
-                            className="bg-[var(--brand-primary)] text-white px-5 py-2 rounded-full font-bold text-sm shadow-lg hover:brightness-110 transition-all"
-                        >
-                            Close
-                        </button>
+                            className="admin-action-btn btn-icon--close"
+                            data-help-id="common-close"
+                            aria-label="Close receipt"
+                            title="Close"
+                        />
                     </div>
                 </div>
 

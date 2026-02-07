@@ -66,7 +66,7 @@ function resetToDefaults($pdo)
             ['site_name', 'text', 'Whimsical Frog', 'branding', 'Main website name/title'],
             ['site_tagline', 'text', 'Custom Crafts & Creative Designs', 'branding', 'Website tagline/subtitle'],
             ['site_logo_url', 'url', '/images/WhimsicalFrog_Logo.webp', 'branding', 'Main logo image URL'],
-            ['site_favicon_url', 'url', '/images/logos/logo-whimsicalfrog-hourglass.png', 'branding', 'Favicon URL'],
+            ['site_favicon_url', 'url', '/favicon.ico', 'branding', 'Favicon URL'],
             ['brand_primary_color', 'color', '#87ac3a', 'branding', 'Primary brand color'],
             ['brand_secondary_color', 'color', '#556B2F', 'branding', 'Secondary brand color'],
             ['brand_accent_color', 'color', '#BF5700', 'branding', 'Accent brand color'],

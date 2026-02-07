@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({ settings }) => {
 
     const siteName = settings?.name || "Whimsical Frog";
     const siteTagline = settings?.tagline;
-    const logoImage = settings?.logo || "/images/logos/logo-whimsicalfrog-hourglass.png";
+    const logoImage = settings?.logo || "/images/logos/logo-whimsicalfrog.webp";
 
     useEffect(() => {
         if (typeof window === 'undefined') return;

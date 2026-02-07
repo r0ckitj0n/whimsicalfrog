@@ -11,11 +11,25 @@ export const useVersionInfo = (enabled: boolean) => {
         setIsLoading(true);
         setError(null);
         try {
-            const response = await ApiClient.get<IVersionInfoResponse>('/api/version_info.php');
-            if (!response?.success || !response.data) {
+            const response = await ApiClient.get<IVersionInfoResponse & Partial<IVersionInfo>>('/api/version_info.php');
+            if (!response?.success) {
                 throw new Error(response?.message || 'Failed to load version info');
             }
-            setVersionInfo(response.data);
+
+            // ApiClient may flatten { success, data: {...} } into { success, ...data }.
+            const parsed = response.data ?? {
+                commit_hash: response.commit_hash ?? null,
+                commit_short_hash: response.commit_short_hash ?? null,
+                commit_subject: response.commit_subject ?? null,
+                committed_for_testing_at: response.committed_for_testing_at ?? null,
+                built_at: response.built_at ?? null,
+                deployed_for_live_at: response.deployed_for_live_at ?? null,
+                server_time: response.server_time ?? new Date().toISOString(),
+                mode: response.mode ?? 'dev',
+                source: response.source ?? 'unknown'
+            };
+
+            setVersionInfo(parsed);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Failed to load version info';
             setError(message);

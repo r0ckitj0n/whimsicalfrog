@@ -61,7 +61,7 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
 
     const saveMap = async (room: string, name: string, areas: IMapArea[]) => {
         try {
-            const res = await ApiClient.post<{ success: boolean; message?: string; error?: string }>('/api/room_maps.php', {
+            const res = await ApiClient.post<{ success: boolean; message?: string; error?: string; map_id?: string | number; updated_existing?: boolean }>('/api/room_maps.php', {
                 action: 'save',
                 room,
                 map_name: name,

@@ -50,6 +50,14 @@ if [ "$is_tracked_branch" -ne 1 ]; then
 fi
 
 # Determine whether this push updates the tracked branch.
+refs_source() {
+  if [ -n "${WF_PUSH_REFS_FILE:-}" ] && [ -f "${WF_PUSH_REFS_FILE}" ]; then
+    cat "${WF_PUSH_REFS_FILE}"
+  else
+    cat
+  fi
+}
+
 pushing_tracked_branch=0
 while read -r local_ref local_sha remote_ref remote_sha; do
   [ -z "${local_ref:-}" ] && continue
@@ -61,7 +69,7 @@ while read -r local_ref local_sha remote_ref remote_sha; do
       pushing_tracked_branch=1
       ;;
   esac
-done
+done < <(refs_source)
 
 if [ "$pushing_tracked_branch" -ne 1 ]; then
   log "Push does not update refs/heads/$CURRENT_BRANCH; skipping."

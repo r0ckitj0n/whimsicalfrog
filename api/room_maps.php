@@ -63,10 +63,42 @@ try {
                 // Handle both pre-encoded JSON string and array
                 $coords = $input['coordinates'] ?? [];
                 $coordinates = is_string($coords) ? $coords : json_encode($coords);
-                if (Database::execute("INSERT INTO room_maps (room_number, map_name, coordinates, is_active) VALUES (?, ?, ?, FALSE)", [$rn, $input['map_name'] ?? 'Unnamed Map', $coordinates])) {
-                    Response::success(['map_id' => Database::lastInsertId()]);
-                } else
+                $mapName = trim((string)($input['map_name'] ?? 'Unnamed Map'));
+                if ($mapName === '') {
+                    $mapName = 'Unnamed Map';
+                }
+
+                $existing = Database::queryOne(
+                    "SELECT id FROM room_maps WHERE room_number = ? AND map_name = ? ORDER BY updated_at DESC LIMIT 1",
+                    [$rn, $mapName]
+                );
+
+                if ($existing && !empty($existing['id'])) {
+                    $existingId = (int)$existing['id'];
+                    $ok = Database::execute(
+                        "UPDATE room_maps SET coordinates = ?, updated_at = NOW() WHERE id = ?",
+                        [$coordinates, $existingId]
+                    );
+                    if ($ok) {
+                        Database::execute(
+                            "DELETE FROM room_maps WHERE room_number = ? AND map_name = ? AND id <> ?",
+                            [$rn, $mapName, $existingId]
+                        );
+                        Response::success(['map_id' => $existingId, 'updated_existing' => true]);
+                    }
                     Response::error('Save failed');
+                } else {
+                    if (Database::execute("INSERT INTO room_maps (room_number, map_name, coordinates, is_active) VALUES (?, ?, ?, FALSE)", [$rn, $mapName, $coordinates])) {
+                        $newId = (int)Database::lastInsertId();
+                        Database::execute(
+                            "DELETE FROM room_maps WHERE room_number = ? AND map_name = ? AND id <> ?",
+                            [$rn, $mapName, $newId]
+                        );
+                        Response::success(['map_id' => $newId, 'updated_existing' => false]);
+                    } else {
+                        Response::error('Save failed');
+                    }
+                }
             } elseif ($action === 'apply' || $action === 'activate') {
                 $map_id = $input['id'] ?? $input['map_id'] ?? 0;
                 Database::beginTransaction();
@@ -117,13 +149,13 @@ try {
                         $map['coordinates'] = decodeRoomMapCoordinates($map['coordinates']);
                     Response::success(['map' => $map]);
                 } else {
-                    $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? ORDER BY created_at DESC", [$rn]);
+                    $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC", [$rn]);
                     foreach ($maps as &$m)
                         $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                     Response::success(['maps' => $maps]);
                 }
             } else {
-                $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps ORDER BY room_number, created_at DESC");
+                $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps ORDER BY room_number, updated_at DESC");
                 foreach ($maps as &$m)
                     $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                 Response::success(['maps' => $maps]);

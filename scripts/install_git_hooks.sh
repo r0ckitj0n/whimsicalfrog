@@ -54,6 +54,12 @@ fi
 
 cd "$REPO_ROOT"
 
+# Capture push refs once so multiple scripts can read them.
+WF_PUSH_REFS_FILE="$(mktemp -t wf-pre-push-refs.XXXXXX)"
+trap 'rm -f "$WF_PUSH_REFS_FILE"' EXIT INT TERM
+cat > "$WF_PUSH_REFS_FILE"
+export WF_PUSH_REFS_FILE
+
 echo "[pre-push] Running repo hygiene..."
 node "$REPO_ROOT/scripts/repo_hygiene.mjs"
 
@@ -67,5 +73,5 @@ git config push.followTags true
 echo "[hooks] Installed pre-commit hook at .git/hooks/pre-commit"
 echo "[hooks] Hook will run scripts/commit_mode_sync.sh on every commit."
 echo "[hooks] Installed pre-push hook at .git/hooks/pre-push"
-echo "[hooks] Hook will run repo_hygiene.mjs and then scripts/release_track_on_push.sh on pushes."
+echo "[hooks] Hook runs repo_hygiene.mjs and release tracking on pushes."
 echo "[hooks] Set git config push.followTags=true for this repository."

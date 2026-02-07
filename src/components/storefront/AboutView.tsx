@@ -45,16 +45,24 @@ export const AboutView: React.FC<AboutViewProps> = ({ data }) => {
                 </div>
             </div>
 
-            <button
-                type="button"
-                className="fixed bottom-4 right-4 rounded-full border border-white/40 bg-black/35 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/50"
+            <div
+                className="group fixed bottom-3 right-3"
                 style={{ zIndex: 'var(--wf-z-modal)' }}
-                onClick={() => setIsVersionModalOpen(true)}
-                aria-label="Show code version details"
-                title="Show build and deploy version info"
             >
-                Version Info
-            </button>
+                <div
+                    className="absolute bottom-1 right-1 h-2 w-2 rounded-full bg-white/30 transition-colors duration-200 group-hover:bg-white/70"
+                    aria-hidden="true"
+                />
+                <button
+                    type="button"
+                    className="rounded-full border border-white/35 bg-black/45 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm opacity-0 transition-opacity duration-200 hover:bg-black/60 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/60"
+                    onClick={() => setIsVersionModalOpen(true)}
+                    aria-label="Show code version details"
+                    title="Show build and deploy version info"
+                >
+                    Version Info
+                </button>
+            </div>
 
             <VersionInfoModal
                 isOpen={isVersionModalOpen}

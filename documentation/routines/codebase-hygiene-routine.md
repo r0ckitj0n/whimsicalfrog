@@ -22,9 +22,10 @@ node scripts/repo_hygiene.mjs
 ### 3. Archival
 Move confirmed orphans to a timestamped backup directory.
 ```bash
-# Example command (requires archive script)
+# Example command
 BACKUP_DIR="backups/archive_$(date +%Y%m%d)"
-node scripts/archive_orphans.mjs $BACKUP_DIR
+mkdir -p "$BACKUP_DIR"
+# Then move confirmed files listed in orphans_to_archive.json into $BACKUP_DIR
 ```
 
 ### 4. Build Verification

@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { IMapArea, IRoomMapEditorHook, IRoomBoundariesHook, IRoomMap } from '../../../types/room.js';
 import { isDraftDirty } from '../../../core/utils.js';
 import { useModalContext } from '../../../context/ModalContext.js';
+import { normalizeMapAreas } from './mapCoordinates.js';
 
 export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEditorHook): IRoomBoundariesHook => {
     const { prompt: promptModal, confirm: confirmModal } = useModalContext();
@@ -89,23 +90,9 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
     const handleLoadMap = useCallback((id: string | number) => {
         const map = boundaries.savedMaps.find((m: IRoomMap) => String(m.id) === String(id));
         if (!map) return;
-        const rawCoords = map.coordinates;
-        try {
-            const coords = typeof rawCoords === 'string' ? JSON.parse(rawCoords) : rawCoords;
-            const loaded = (Array.isArray(coords) ? coords : (coords?.rectangles || coords?.polygons || [])).map((a: Partial<IMapArea>, idx: number) => ({
-                ...a,
-                id: a.id || String(Date.now() + idx),
-                selector: a.selector || `.area-${idx + 1}`,
-                top: a.top ?? 0,
-                left: a.left ?? 0,
-                width: a.width ?? 100,
-                height: a.height ?? 100
-            })) as IMapArea[];
-            setAreas(loaded);
-            setCurrentMapId(map.id);
-        } catch (err) {
-            console.error('[Boundaries] Failed to load map coordinates', err);
-        }
+        const loaded = normalizeMapAreas(map.coordinates);
+        setAreas(loaded);
+        setCurrentMapId(map.id);
     }, [boundaries]);
 
     return {

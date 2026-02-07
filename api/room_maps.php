@@ -8,6 +8,45 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/response.php';
 require_once __DIR__ . '/../includes/helpers/RoomMapHelper.php';
 
+/**
+ * Decode coordinate payloads that may be nested JSON strings from legacy rows.
+ *
+ * @param mixed $raw
+ * @return mixed
+ */
+function decodeRoomMapCoordinates($raw) {
+    $coords = is_string($raw) ? json_decode($raw, true) : $raw;
+
+    for ($i = 0; $i < 3; $i++) {
+        if (!is_string($coords)) {
+            break;
+        }
+        $decoded = json_decode($coords, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            break;
+        }
+        $coords = $decoded;
+    }
+
+    if (is_array($coords)) {
+        if (isset($coords['rectangles']) && is_string($coords['rectangles'])) {
+            $decodedRects = json_decode($coords['rectangles'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $coords['rectangles'] = $decodedRects;
+            }
+        }
+
+        if (isset($coords['polygons']) && is_string($coords['polygons'])) {
+            $decodedPolygons = json_decode($coords['polygons'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $coords['polygons'] = $decodedPolygons;
+            }
+        }
+    }
+
+    return $coords;
+}
+
 try {
     Database::getInstance();
     RoomMapHelper::ensureTable();
@@ -75,18 +114,18 @@ try {
                 if ($action === 'get_active' || ($_GET['active_only'] ?? '') === 'true') {
                     $map = Database::queryOne("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1", [$rn]);
                     if ($map)
-                        $map['coordinates'] = json_decode($map['coordinates'], true);
+                        $map['coordinates'] = decodeRoomMapCoordinates($map['coordinates']);
                     Response::success(['map' => $map]);
                 } else {
                     $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? ORDER BY created_at DESC", [$rn]);
                     foreach ($maps as &$m)
-                        $m['coordinates'] = json_decode($m['coordinates'], true);
+                        $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                     Response::success(['maps' => $maps]);
                 }
             } else {
                 $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps ORDER BY room_number, created_at DESC");
                 foreach ($maps as &$m)
-                    $m['coordinates'] = json_decode($m['coordinates'], true);
+                    $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                 Response::success(['maps' => $maps]);
             }
             break;

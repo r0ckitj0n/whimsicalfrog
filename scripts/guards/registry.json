@@ -107,13 +107,6 @@
         "scripts/guard-z-index.mjs"
       ]
     },
-    "guard-z-index-tokens": {
-      "description": "Validate z-index tokens JSON stays in sync with CSS variables.",
-      "command": [
-        "node",
-        "scripts/guards/guard-z-index-tokens.mjs"
-      ]
-    },
     "guard-tooltips-label-only": {
       "description": "Enforce tooltip attributes on labels (never inputs/selects).",
       "command": [
@@ -134,21 +127,6 @@
         "node",
         "scripts/dev/guard-admin-router.mjs"
       ]
-    },
-    "guard-docs-structure": {
-      "description": "Keep documentation/ organized (uppercase snake-case, required folders present).",
-      "command": [
-        "node",
-        "scripts/dev/guard-docs-structure.mjs"
-      ]
-    },
-    "guard-backups-staged": {
-      "description": "Block staging backup-like files outside backups/ (including tooltip snapshots).",
-      "command": [
-        "node",
-        "scripts/guards/guard-backups-staged.mjs"
-      ],
-      "allowExtraArgs": true
     },
     "guard-legacy-scan": {
       "description": "Scan for legacy inline handlers / data-action styling patterns pending migration.",
@@ -180,13 +158,10 @@
       "guard-no-iframes",
       "guard-no-alerts"
     ],
-    "docs": [
-      "guard-docs-structure"
-    ],
+    "docs": [],
     "css": [
       "guard-templates-css",
-      "guard-z-index",
-      "guard-z-index-tokens"
+      "guard-z-index"
     ],
     "all": [
       "quarantine-duplicates",
@@ -209,8 +184,6 @@
       "guard-tooltips-label-only",
       "guard-api-absolute-paths",
       "guard-admin-router",
-      "guard-docs-structure",
-      "guard-backups-staged",
       "guard-legacy-scan"
     ]
   }

@@ -176,6 +176,11 @@ fi
 if [ "$MODE" != "env-only" ]; then
   echo -e "${GREEN}🧹 Quarantining any duplicate files created during build...${NC}"
   bash scripts/dev/quarantine_duplicates.sh || true
+
+  if [ -x "./scripts/write_version_metadata.sh" ]; then
+    echo -e "${GREEN}🧾 Updating deploy version metadata...${NC}"
+    ./scripts/write_version_metadata.sh --deployed
+  fi
 fi
 
 # Create lftp commands for file deployment

@@ -8,7 +8,6 @@ import { useCategories } from '../../hooks/admin/useCategories.js';
 import {
     IRoomData,
     IRoomConnectionsResponse,
-    IMapArea,
     IUnifiedRoomManagerHook,
     IRoomMap,
     ISitemapEntry
@@ -20,6 +19,7 @@ import { useRoomNavigation } from './room-manager/useRoomNavigation.js';
 import { useRoomVisuals } from './room-manager/useRoomVisuals.js';
 import { useRoomShortcuts } from './room-manager/useRoomShortcuts.js';
 import { useRoomBoundaries } from './room-manager/useRoomBoundaries.js';
+import { normalizeMapAreas } from './room-manager/mapCoordinates.js';
 
 interface UseUnifiedRoomManagerProps {
     onClose?: () => void;
@@ -112,24 +112,9 @@ export const useUnifiedRoomManager = ({
 
         if (activeMap) {
             boundariesTab.setCurrentMapId(activeMap.id);
-            const rawCoords = activeMap.coordinates;
-            try {
-                const coords = typeof rawCoords === 'string' ? JSON.parse(rawCoords) : rawCoords;
-                const activeAreas = (Array.isArray(coords) ? coords : (coords?.rectangles || coords?.polygons || [])).map((a: Partial<IMapArea>, idx: number) => ({
-                    ...a,
-                    id: a.id || String(Date.now() + idx),
-                    selector: a.selector || `.area-${idx + 1}`,
-                    top: a.top ?? 0,
-                    left: a.left ?? 0,
-                    width: a.width ?? 100,
-                    height: a.height ?? 100
-                })) as IMapArea[];
-                boundariesTab.setAreas(activeAreas);
-                boundariesTab.setLastSavedAreas(activeAreas);
-            } catch (_) {
-                boundariesTab.setAreas([]);
-                boundariesTab.setLastSavedAreas([]);
-            }
+            const activeAreas = normalizeMapAreas(activeMap.coordinates);
+            boundariesTab.setAreas(activeAreas);
+            boundariesTab.setLastSavedAreas(activeAreas);
         } else {
             boundariesTab.setAreas([]);
             boundariesTab.setLastSavedAreas([]);

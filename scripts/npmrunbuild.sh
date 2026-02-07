@@ -45,4 +45,9 @@ mkdir -p "$DIST_DIR"
 echo "[npmrunbuild] Running npm run build from $PROJECT_ROOT..."
 npm run build
 
+if [ -x "./scripts/write_version_metadata.sh" ]; then
+  echo "[npmrunbuild] Writing version metadata..."
+  ./scripts/write_version_metadata.sh
+fi
+
 echo "[npmrunbuild] Build completed successfully."

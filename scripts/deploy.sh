@@ -70,6 +70,25 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+require_dist_artifacts() {
+  if [ "$MODE" = "env-only" ]; then
+    return 0
+  fi
+
+  if [ ! -s "dist/index.html" ]; then
+    echo -e "${RED}❌ Missing dist/index.html. Refusing to deploy.${NC}"
+    exit 1
+  fi
+  if [ ! -s "dist/.vite/manifest.json" ]; then
+    echo -e "${RED}❌ Missing dist/.vite/manifest.json. Refusing to deploy.${NC}"
+    exit 1
+  fi
+  if ! ls dist/assets/*.js >/dev/null 2>&1; then
+    echo -e "${RED}❌ Missing dist/assets/*.js bundles. Refusing to deploy.${NC}"
+    exit 1
+  fi
+}
+
 # Ensure a fresh frontend build via the shared release orchestrator (build-only)
 if [ "$SKIP_BUILD" != "1" ] && [ "$MODE" != "env-only" ]; then
   echo -e "${GREEN}🏗  Running release.sh build (no deploy)...${NC}"
@@ -185,6 +204,9 @@ if [ "$MODE" != "env-only" ]; then
   fi
 fi
 
+# Never deploy if required build artifacts are missing.
+require_dist_artifacts
+
 # Create lftp commands for file deployment
 echo -e "${GREEN}📁 Preparing file deployment...${NC}"
 cat > deploy_commands.txt << EOL
@@ -212,6 +234,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob ".env.*" \
   --exclude-glob "backups/**" \
   --exclude-glob "logs/**" \
+  --exclude-glob "dist/**" \
   --exclude-glob "src/**" \
   --include-glob documentation/.htaccess \
   --include-glob reports/.htaccess \
@@ -282,7 +305,9 @@ EOL
     elif lftp -f upload_root_index.txt; then
       echo -e "${GREEN}✅ Root index fallback uploaded${NC}"
     else
-      echo -e "${YELLOW}⚠️  Root index fallback upload failed; continuing${NC}"
+      echo -e "${RED}❌ Root index fallback upload failed.${NC}"
+      rm -f upload_root_index.txt
+      exit 1
     fi
     rm -f upload_root_index.txt
   fi
@@ -401,7 +426,9 @@ EOL
     elif lftp -f deploy_dist.txt; then
       echo -e "${GREEN}✅ Dist assets & manifest synced (mtime-based)${NC}"
     else
-      echo -e "${YELLOW}⚠️  Dist sync failed; continuing${NC}"
+      echo -e "${RED}❌ Dist sync failed.${NC}"
+      rm -f deploy_dist.txt
+      exit 1
     fi
     rm -f deploy_dist.txt
 

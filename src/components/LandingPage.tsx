@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useRoomCoordinates } from '../hooks/useRoomCoordinates.js';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ApiClient } from '../core/ApiClient.js';
 
 interface IDoorDestination {
@@ -18,6 +18,7 @@ interface IDoorDestination {
  */
 export const LandingPage: React.FC = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const params = new URLSearchParams(location.search);
     const section = params.get('section');
     const roomIdParam = params.get('room_id');
@@ -40,6 +41,10 @@ export const LandingPage: React.FC = () => {
 
     useEffect(() => {
         if (!isVisible) return;
+        if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
+            navigate('/shop', { replace: true });
+            return;
+        }
 
         const loadData = async () => {
             const [destRes, bgRes] = await Promise.allSettled([

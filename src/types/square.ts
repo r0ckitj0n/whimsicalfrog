@@ -1,11 +1,34 @@
 import { ENVIRONMENT, Environment } from '../core/constants.js';
 
 export interface ISquareSettings {
+    square_enabled?: boolean;
     square_application_id: string;
     square_access_token: string;
     square_location_id: string;
     square_environment: Environment;
     square_sync_enabled: boolean;
+    square_sandbox_application_id: string;
+    square_sandbox_access_token: string;
+    square_sandbox_location_id: string;
+    square_production_application_id: string;
+    square_production_access_token: string;
+    square_production_location_id: string;
+}
+
+export interface ISquareSettingsApiRecord {
+    square_enabled?: string | number | boolean;
+    square_environment?: Environment;
+    square_application_id?: string;
+    square_access_token?: string;
+    square_location_id?: string;
+    square_sandbox_application_id?: string;
+    square_sandbox_access_token?: string;
+    square_sandbox_location_id?: string;
+    square_production_application_id?: string;
+    square_production_access_token?: string;
+    square_production_location_id?: string;
+    auto_sync_enabled?: string | number | boolean;
+    square_sync_enabled?: string | number | boolean;
 }
 
 // Re-export for convenience

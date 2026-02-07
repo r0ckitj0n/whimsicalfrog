@@ -93,7 +93,6 @@ echo json_encode([
         'commit_hash' => $commitHash ?: null,
         'commit_short_hash' => $commitShortHash ?: null,
         'commit_subject' => $commitSubject ?: null,
-        'committed_for_testing_at' => $committedAt ?: null,
         'built_at' => $builtAt ?: null,
         'deployed_for_live_at' => $deployedAt ?: null,
         'server_time' => gmdate('c'),

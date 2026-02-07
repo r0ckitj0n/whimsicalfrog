@@ -256,6 +256,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob images/.htaccess \
   --exclude-glob images/items/.htaccess \
   --exclude-glob config/my.cnf \
+  --exclude-glob config/secret.key \
   --exclude-glob "* [0-9].*" \
   --exclude-glob "* [0-9]/*" \
   --exclude-glob "* copy*" \

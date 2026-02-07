@@ -21,7 +21,6 @@ export const useVersionInfo = (enabled: boolean) => {
                 commit_hash: response.commit_hash ?? null,
                 commit_short_hash: response.commit_short_hash ?? null,
                 commit_subject: response.commit_subject ?? null,
-                committed_for_testing_at: response.committed_for_testing_at ?? null,
                 built_at: response.built_at ?? null,
                 deployed_for_live_at: response.deployed_for_live_at ?? null,
                 server_time: response.server_time ?? new Date().toISOString(),

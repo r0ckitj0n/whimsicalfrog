@@ -91,7 +91,44 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
 
     const handleChange = <K extends keyof ISquareSettings>(field: K, value: ISquareSettings[K]) => {
         if (editSettings) {
-            setEditSettings({ ...editSettings, [field]: value });
+            const next = { ...editSettings, [field]: value };
+
+            if (field === 'square_environment') {
+                const env = value as ISquareSettings['square_environment'];
+                if (env === ENVIRONMENT.PRODUCTION) {
+                    next.square_application_id = next.square_production_application_id || '';
+                    next.square_location_id = next.square_production_location_id || '';
+                    next.square_access_token = next.square_production_access_token || '';
+                } else {
+                    next.square_application_id = next.square_sandbox_application_id || '';
+                    next.square_location_id = next.square_sandbox_location_id || '';
+                    next.square_access_token = next.square_sandbox_access_token || '';
+                }
+            }
+
+            if (field === 'square_application_id') {
+                if (next.square_environment === ENVIRONMENT.PRODUCTION) {
+                    next.square_production_application_id = String(value);
+                } else {
+                    next.square_sandbox_application_id = String(value);
+                }
+            }
+            if (field === 'square_location_id') {
+                if (next.square_environment === ENVIRONMENT.PRODUCTION) {
+                    next.square_production_location_id = String(value);
+                } else {
+                    next.square_sandbox_location_id = String(value);
+                }
+            }
+            if (field === 'square_access_token') {
+                if (next.square_environment === ENVIRONMENT.PRODUCTION) {
+                    next.square_production_access_token = String(value);
+                } else {
+                    next.square_sandbox_access_token = String(value);
+                }
+            }
+
+            setEditSettings(next);
         }
     };
     const attemptClose = useUnsavedChangesCloseGuard({

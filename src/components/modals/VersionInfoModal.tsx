@@ -64,7 +64,6 @@ export const VersionInfoModal: React.FC<VersionInfoModalProps> = ({
                         <>
                             <p><span className="font-semibold">Commit:</span> {versionInfo.commit_short_hash || 'Unavailable'}</p>
                             <p><span className="font-semibold">Commit Subject:</span> {versionInfo.commit_subject || 'Unavailable'}</p>
-                            <p><span className="font-semibold">Committed For Testing:</span> {renderTimestamp(versionInfo.committed_for_testing_at)}</p>
                             <p><span className="font-semibold">Built:</span> {renderTimestamp(versionInfo.built_at)}</p>
                             <p><span className="font-semibold">Deployed To Live:</span> {renderTimestamp(versionInfo.deployed_for_live_at)}</p>
                             <p><span className="font-semibold">Mode:</span> {versionInfo.mode}</p>

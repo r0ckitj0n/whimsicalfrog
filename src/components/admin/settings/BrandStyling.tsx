@@ -63,7 +63,7 @@ export const BrandStyling: React.FC<BrandStylingProps> = ({ onClose, title }) =>
                     </div>
                     <div className="flex items-center gap-2">
                         <button onClick={() => api.fetchTokens()} className="admin-action-btn btn-icon--refresh" data-help-id="common-refresh" type="button" />
-                        <button onClick={handleSave} disabled={api.isLoading} className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />
+                        <button onClick={handleSave} disabled={api.isLoading} className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />
                         <button onClick={() => { void attemptClose(); }} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />
                     </div>
                 </div>

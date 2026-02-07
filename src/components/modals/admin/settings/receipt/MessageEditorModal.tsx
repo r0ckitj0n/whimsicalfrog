@@ -42,7 +42,7 @@ export const MessageEditorModal: React.FC<MessageEditorModalProps> = ({
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading}
-                            className={`btn-icon btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
+                            className={`btn-icon btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                             data-help-id="common-save"
                             type="button"
                         />

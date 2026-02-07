@@ -31,6 +31,7 @@ $category = trim($input['category'] ?? '');
 $sku = trim($input['sku'] ?? '');
 $qualityTier = trim($input['quality_tier'] ?? 'standard');
 $useImages = $input['useImages'] ?? false;
+$imageData = $input['imageData'] ?? null;
 
 if (empty($name)) {
     Response::error('Item name is required for cost suggestion.', null, 400);
@@ -39,7 +40,20 @@ if (empty($name)) {
 try {
     $aiProviders = getAIProviders();
     $images = [];
-    if ($useImages && !empty($sku)) {
+    if ($useImages && !empty($imageData)) {
+        // Prefer explicitly provided primary image path/data.
+        if (is_string($imageData) && strpos($imageData, '/') === 0 && strpos($imageData, 'data:') !== 0) {
+            $basePath = dirname(__DIR__);
+            $absolutePath = $basePath . $imageData;
+            if (file_exists($absolutePath)) {
+                $images[] = $absolutePath;
+            }
+        } else if (is_string($imageData)) {
+            $images[] = $imageData;
+        }
+    }
+
+    if ($useImages && empty($images) && !empty($sku)) {
         try {
             $imageRows = Database::queryAll("SELECT image_path FROM item_images WHERE sku = ? ORDER BY sort_order ASC LIMIT 3", [$sku]);
             foreach ($imageRows as $row) {
@@ -59,11 +73,12 @@ try {
         $costData = $aiProviders->generateCostSuggestion($name, $description, $category);
     }
 
-    // Default to market-average heuristic for cost suggestions
+    // Default to market-average heuristic for cost suggestions only when AI output is missing/invalid.
     $heuristic = CostHeuristics::analyze($name, $description, $category, Database::getInstance(), $qualityTier);
-    if (!empty($heuristic['cost'])) {
+    $aiCost = isset($costData['cost']) ? (float) $costData['cost'] : 0.0;
+    if ($aiCost <= 0.0 && !empty($heuristic['cost'])) {
         $costData = $heuristic;
-        $costData['reasoning'] = ($costData['reasoning'] ?? '') . ' • Market-average default applied.';
+        $costData['reasoning'] = ($costData['reasoning'] ?? '') . ' • AI output unavailable, market-average fallback applied.';
     }
 
     // Apply tier multiplier

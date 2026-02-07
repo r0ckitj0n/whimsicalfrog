@@ -225,3 +225,32 @@ html body.admin-view .account-settings-modal .btn-icon--save::after {
 .btn-icon.dirty-only.is-dirty {
     display: inline-flex !important;
 }
+
+.admin-action-btn.dirty-only {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.admin-action-btn.dirty-only.is-dirty {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+/* Beat high-specificity modal header button resets that force inline-flex */
+.modal-header button.admin-action-btn.btn-icon--save.dirty-only:not(.is-dirty),
+.modal-header button.admin-action-btn.btn-icon--plus.dirty-only:not(.is-dirty),
+.wf-modal-header button.admin-action-btn.btn-icon--save.dirty-only:not(.is-dirty),
+.wf-modal-header button.admin-action-btn.btn-icon--plus.dirty-only:not(.is-dirty),
+.modal-header button.btn-icon.btn-icon--save.dirty-only:not(.is-dirty),
+.modal-header button.btn-icon.btn-icon--plus.dirty-only:not(.is-dirty),
+.wf-modal-header button.btn-icon.btn-icon--save.dirty-only:not(.is-dirty),
+.wf-modal-header button.btn-icon.btn-icon--plus.dirty-only:not(.is-dirty) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}

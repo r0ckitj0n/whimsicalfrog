@@ -50,6 +50,7 @@ export const useCostSuggestions = () => {
         category: string;
         tier?: string;
         useImages?: boolean;
+        imageData?: string;
     }) => {
         setIsBusy(true);
         try {
@@ -59,7 +60,8 @@ export const useCostSuggestions = () => {
                 description: params.description,
                 category: params.category,
                 quality_tier: params.tier || 'standard',
-                useImages: params.useImages ?? true
+                useImages: params.useImages ?? true,
+                imageData: params.imageData
             });
 
             if (data && data.success) {

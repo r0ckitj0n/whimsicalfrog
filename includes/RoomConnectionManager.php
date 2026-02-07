@@ -8,6 +8,41 @@ require_once __DIR__ . '/database.php';
 
 class RoomConnectionManager
 {
+    private const ROOM_TARGET_EXPR_TEMPLATE = "
+        CASE
+            WHEN TRIM(%s.content_target) REGEXP '^room:[0-9A-Za-z]+$' THEN SUBSTRING(TRIM(%s.content_target), 6)
+            ELSE TRIM(%s.content_target)
+        END
+    ";
+
+    private const ROOM_TARGET_FILTER_EXPR_TEMPLATE = "
+        (
+            (TRIM(%s.content_target) REGEXP '^[0-9A-Za-z]+$' AND %s.mapping_type IN ('content', 'button'))
+            OR TRIM(%s.content_target) REGEXP '^room:[0-9A-Za-z]+$'
+        )
+    ";
+
+    private const ROOM_TARGET_EXISTS_FILTER_EXPR_TEMPLATE = "
+        (
+            TRIM(%s.content_target) = CONCAT('room:', rc.target_room)
+            OR (TRIM(%s.content_target) = rc.target_room AND %s.mapping_type IN ('content', 'button'))
+        )
+    ";
+
+    private static function roomTargetExpr(string $alias = 'am'): string
+    {
+        return sprintf(self::ROOM_TARGET_EXPR_TEMPLATE, $alias, $alias, $alias);
+    }
+
+    private static function roomTargetFilterExpr(string $alias = 'am'): string
+    {
+        return sprintf(self::ROOM_TARGET_FILTER_EXPR_TEMPLATE, $alias, $alias, $alias);
+    }
+
+    private static function roomTargetExistsFilterExpr(string $alias = 'am'): string
+    {
+        return sprintf(self::ROOM_TARGET_EXISTS_FILTER_EXPR_TEMPLATE, $alias, $alias, $alias);
+    }
 
     /**
      * Get all connection types: internal, external, and header.
@@ -17,10 +52,7 @@ class RoomConnectionManager
         $internal = Database::queryAll("
             SELECT 
                 am.room_number as source_room,
-                CASE 
-                    WHEN am.content_target LIKE 'room:%' THEN SUBSTRING(am.content_target, 6)
-                    ELSE am.content_target
-                END as target_room,
+                " . self::roomTargetExpr('am') . " as target_room,
                 rs_source.room_name as source_name,
                 rs_target.room_name as target_name,
                 am.area_selector,
@@ -29,13 +61,10 @@ class RoomConnectionManager
             FROM area_mappings am
             LEFT JOIN room_settings rs_source ON am.room_number = rs_source.room_number
             LEFT JOIN room_settings rs_target ON 
-                (am.content_target LIKE 'room:%' AND SUBSTRING(am.content_target, 6) = rs_target.room_number)
-                OR (am.content_target NOT LIKE 'room:%' AND am.content_target = rs_target.room_number)
+                (" . self::roomTargetExpr('am') . " = rs_target.room_number)
             WHERE am.room_number IS NOT NULL
-            AND (
-                (am.content_target REGEXP '^[0-9A-Za-z]$' AND am.mapping_type IN ('content', 'button'))
-                OR am.content_target LIKE 'room:%'
-            )
+            AND am.is_active = 1
+            AND " . self::roomTargetFilterExpr('am') . "
             ORDER BY rs_source.room_name, rs_target.room_name
         ");
 
@@ -50,6 +79,7 @@ class RoomConnectionManager
             FROM area_mappings am
             LEFT JOIN room_settings rs_source ON am.room_number = rs_source.room_number
             WHERE am.room_number IS NOT NULL
+            AND am.is_active = 1
             AND am.link_url IS NOT NULL 
             AND am.link_url != ''
             ORDER BY rs_source.room_name
@@ -124,17 +154,12 @@ class RoomConnectionManager
     {
         $roomMappings = Database::queryAll("
             SELECT DISTINCT 
-                room_number as source_room,
-                CASE 
-                    WHEN content_target LIKE 'room:%' THEN SUBSTRING(content_target, 6)
-                    ELSE content_target
-                END as target_room
-            FROM area_mappings 
-            WHERE room_number IS NOT NULL
-            AND (
-                (content_target REGEXP '^[0-9A-Za-z]$' AND mapping_type IN ('content', 'button'))
-                OR content_target LIKE 'room:%'
-            )
+                am.room_number as source_room,
+                " . self::roomTargetExpr('am') . " as target_room
+            FROM area_mappings am
+            WHERE am.room_number IS NOT NULL
+            AND am.is_active = 1
+            AND " . self::roomTargetFilterExpr('am') . "
         ");
 
         $added = 0;
@@ -187,10 +212,8 @@ class RoomConnectionManager
             WHERE NOT EXISTS (
                 SELECT 1 FROM area_mappings am 
                 WHERE am.room_number = rc.source_room 
-                AND (
-                    am.content_target = CONCAT('room:', rc.target_room)
-                    OR (am.content_target = rc.target_room AND am.mapping_type IN ('content', 'button'))
-                )
+                AND am.is_active = 1
+                AND " . self::roomTargetExistsFilterExpr('am') . "
             )
         ");
 

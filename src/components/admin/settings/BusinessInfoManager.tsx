@@ -112,7 +112,7 @@ export const BusinessInfoManager: React.FC<BusinessInfoManagerProps> = ({ onClos
                                 type="button"
                                 onClick={() => handleSave()}
                                 disabled={isLoading}
-                                className="admin-action-btn btn-icon--save is-dirty"
+                                className="admin-action-btn btn-icon--save dirty-only is-dirty"
                                 data-help-id="business-info-save"
                             />
                         )}

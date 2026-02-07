@@ -154,12 +154,14 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
                             className="admin-action-btn btn-icon--refresh"
                             data-help-id="common-refresh"
                         />
-                        <button
-                            onClick={() => handleSave(editRates, 'All logistics saved!')}
-                            disabled={isLoading || !isDirty}
-                            className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
-                            data-help-id="common-save"
-                        />
+                        {isDirty && (
+                            <button
+                                onClick={() => handleSave(editRates, 'All logistics saved!')}
+                                disabled={isLoading}
+                                className="admin-action-btn btn-icon--save dirty-only is-dirty"
+                                data-help-id="common-save"
+                            />
+                        )}
                         <button
                             onClick={() => { void attemptClose(); }}
                             className="admin-action-btn btn-icon--close"

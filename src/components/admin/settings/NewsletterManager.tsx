@@ -208,7 +208,7 @@ export const NewsletterManager: React.FC<NewsletterManagerProps> = ({ onClose, t
                             <button
                                 onClick={handleSaveCampaign}
                                 disabled={isLoading || !isCampaignDirty}
-                                className={`admin-action-btn btn-icon--save ${isCampaignDirty ? 'is-dirty' : ''}`}
+                                className={`admin-action-btn btn-icon--save dirty-only ${isCampaignDirty ? 'is-dirty' : ''}`}
                                 data-help-id="newsletter-save-campaign"
                                 type="button"
                             />

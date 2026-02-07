@@ -115,7 +115,7 @@ export const AttributesManager: React.FC<AttributesManagerProps> = ({ onClose, t
                             <button
                                 onClick={handleSaveTemplate}
                                 disabled={isLoading || !isDirty}
-                                className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
+                                className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                                 data-help-id="attributes-save-template"
                                 type="button"
                             />

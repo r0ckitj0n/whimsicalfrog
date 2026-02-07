@@ -5,6 +5,7 @@ import { useModalContext } from '../../../context/ModalContext.js';
 import { RegistryHeader } from './action-icons/RegistryHeader.js';
 import { AddIconForm } from './action-icons/AddIconForm.js';
 import { IconTable } from './action-icons/IconTable.js';
+import { isDraftDirty } from '../../../core/utils.js';
 
 const DEFAULT_MAPPINGS: Record<string, string> = {
     add: '➕', edit: '✏️', duplicate: '📄', delete: '🗑️', view: '👁️', preview: '👁️', 'preview-inline': '🪟',
@@ -29,6 +30,7 @@ export const ActionIconsManager: React.FC<ActionIconsManagerProps> = ({ onClose,
     const { confirm: confirmModal } = useModalContext();
 
     const [localMap, setLocalMap] = useState<Record<string, string>>({});
+    const [initialMap, setInitialMap] = useState<Record<string, string>>({});
     const [newKey, setNewKey] = useState('');
     const [newEmoji, setNewEmoji] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -37,14 +39,19 @@ export const ActionIconsManager: React.FC<ActionIconsManagerProps> = ({ onClose,
         if (isLoading) return;
         if (iconMap && Object.keys(iconMap).length > 0) {
             setLocalMap(iconMap);
+            setInitialMap(iconMap);
         } else {
             setLocalMap(DEFAULT_MAPPINGS);
+            setInitialMap(DEFAULT_MAPPINGS);
         }
     }, [iconMap, isLoading]);
+
+    const isDirty = isDraftDirty(localMap, initialMap);
 
     const handleSave = async () => {
         const res = await saveIconMap(localMap);
         if (res.success) {
+            setInitialMap(localMap);
             if (window.WFToast) window.WFToast.success('Mappings saved');
         } else {
             if (window.WFToast) window.WFToast.error(res.error || 'Failed to save');
@@ -144,6 +151,7 @@ export const ActionIconsManager: React.FC<ActionIconsManagerProps> = ({ onClose,
                             <div className="bg-white border border-gray-100 rounded-[2.5rem] shadow-xl overflow-hidden flex flex-col min-h-[600px]">
                                 <RegistryHeader
                                     isLoading={isLoading}
+                                    isDirty={isDirty}
                                     onRefresh={refresh}
                                     onReset={handleReset}
                                     onSave={handleSave}
@@ -186,4 +194,3 @@ export const ActionIconsManager: React.FC<ActionIconsManagerProps> = ({ onClose,
 
     return createPortal(modalContent, document.body);
 };
-

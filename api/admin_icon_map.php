@@ -98,31 +98,23 @@ function wf_icon_build_css($map)
   $css = [];
   $css[] = '@charset "UTF-8";';
 
-  // Force minimalist button styling directly in this generated CSS
+  // Keep runtime CSS narrowly focused on icon glyph content only.
+  // Layout/visibility rules live in src/styles/components/buttons/emojis.css.
   $css[] = "
-    /* NUCLEAR NEUTRALIZATION - Minimalist footprint. Layout handled by emojis.css */
-    .admin-action-btn, .btn-icon, .btn-standard-icon, [class*='btn-icon--'] {
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 32px !important;
-        height: 32px !important;
-        min-width: 32px !important;
-        min-height: 32px !important;
-        font-size: 1.4rem !important;
-        line-height: 1 !important;
-        cursor: pointer !important;
-        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-    }
-    
-    .admin-action-btn:hover, .btn-icon:hover, .btn-standard-icon:hover, [class*='btn-icon--']:hover {
-        transform: scale(1.35) !important;
-    }
-
-    /* Ensure pseudo-elements are visible for registry icons */
+    /* Ensure pseudo-elements can render icon glyphs */
     .admin-action-btn::before, .btn-icon::before, [class*='btn-icon--']::before {
         display: inline-block !important;
-        content: attr(data-emoji) !important; /* Fallback if content override fails */
+        content: attr(data-emoji) !important;
+    }
+
+    /* Never force-show dirty-only save/plus buttons */
+    .admin-action-btn.dirty-only:not(.is-dirty),
+    .btn-icon.dirty-only:not(.is-dirty),
+    .btn-standard-icon.dirty-only:not(.is-dirty) {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
     }
   ";
 

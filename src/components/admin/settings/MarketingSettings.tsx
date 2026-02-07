@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useMarketingSettings } from '../../../hooks/admin/useMarketingSettings.js';
 import { useReceiptSettings, IReceiptMessage, IReceiptVerbiage } from '../../../hooks/admin/useReceiptSettings.js';
@@ -50,6 +50,14 @@ export const MarketingSettings: React.FC<MarketingSettingsProps> = ({ onClose, t
     const [editingMessage, setEditingMessage] = useState<Partial<IReceiptMessage> | null>(null);
     const [localVerbiage, setLocalVerbiage] = useState<IReceiptVerbiage>(verbiage);
     const hasInitiallyLoaded = useRef(false);
+    const alphaCollator = useMemo(
+        () => new Intl.Collator(undefined, { sensitivity: 'base', ignorePunctuation: true }),
+        []
+    );
+    const normalizeForSort = (value?: string) =>
+        (value || '')
+            .trim()
+            .replace(/^[^a-z0-9]+/i, '');
 
     const isLoading = isMarketingLoading || isReceiptLoading;
     const error = marketingError || receiptError;
@@ -128,7 +136,18 @@ export const MarketingSettings: React.FC<MarketingSettingsProps> = ({ onClose, t
         }
     };
 
-    const filteredMessages = messages.filter(m => m.type === activeTab);
+    const filteredMessages = useMemo(
+        () => messages
+            .filter(m => m.type === activeTab)
+            .sort((a, b) => {
+                const aSortText = normalizeForSort(a.title) || normalizeForSort(a.condition_value) || normalizeForSort(a.content);
+                const bSortText = normalizeForSort(b.title) || normalizeForSort(b.condition_value) || normalizeForSort(b.content);
+                const sortTextCompare = alphaCollator.compare(aSortText, bSortText);
+                if (sortTextCompare !== 0) return sortTextCompare;
+                return a.id - b.id;
+            }),
+        [messages, activeTab, alphaCollator]
+    );
     const attemptClose = useUnsavedChangesCloseGuard({
         isDirty: activeTab === 'receipt' && isVerbiageDirty,
         isBlocked: isLoading,
@@ -200,7 +219,7 @@ export const MarketingSettings: React.FC<MarketingSettingsProps> = ({ onClose, t
                             <button
                                 onClick={handleSaveVerbiage}
                                 disabled={isLoading || !isVerbiageDirty}
-                                className={`admin-action-btn btn-icon--save ${isVerbiageDirty ? 'is-dirty' : ''}`}
+                                className={`admin-action-btn btn-icon--save dirty-only ${isVerbiageDirty ? 'is-dirty' : ''}`}
                                 data-help-id="marketing-save-receipt-verbiage"
                                 type="button"
                             />

@@ -4,12 +4,41 @@ require_once __DIR__ . '/../includes/Constants.php';
 require_once __DIR__ . '/../includes/response.php';
 
 try {
+    $normalizeFactorId = static function ($rawId): ?int {
+        if ($rawId === null || $rawId === '') {
+            return null;
+        }
+
+        if (is_int($rawId)) {
+            return $rawId > 0 ? $rawId : null;
+        }
+
+        if (is_string($rawId)) {
+            $trimmed = trim($rawId);
+            if ($trimmed === '') {
+                return null;
+            }
+
+            if (ctype_digit($trimmed)) {
+                $parsed = (int) $trimmed;
+                return $parsed > 0 ? $parsed : null;
+            }
+
+            if (preg_match('/(\d+)$/', $trimmed, $matches) === 1) {
+                $parsed = (int) $matches[1];
+                return $parsed > 0 ? $parsed : null;
+            }
+        }
+
+        return null;
+    };
+
     $data = Response::getJsonInput();
     $sku = $data['sku'] ?? '';
     $category = $data['category'] ?? '';
     $cost = $data['cost'] ?? 0;
     $label = $data['label'] ?? '';
-    $id = $data['id'] ?? null;
+    $id = $normalizeFactorId($data['id'] ?? null);
     $originalLabel = $data['originalLabel'] ?? null;
     $createdBy = $data['created_by'] ?? null;
 
@@ -23,7 +52,7 @@ try {
 
     $category = strtolower($category);
 
-    if ($id) {
+    if ($id !== null) {
         // Update by ID (preferred method)
         Database::execute(
             "UPDATE cost_factors SET cost = ?, label = ?, updated_at = NOW() WHERE id = ? AND sku = ?",

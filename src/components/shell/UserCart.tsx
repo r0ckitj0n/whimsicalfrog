@@ -88,16 +88,6 @@ export const UserCart: React.FC<UserCartProps> = ({
                     <span className="admin-action-btn btn-icon--shopping-cart" style={{ width: '32px', height: '32px', fontSize: '24px' }} />
                 </div>
             </a>
-
-            {/* Mobile Menu Toggle */}
-            <button
-                className="mobile-menu-toggle"
-                aria-label="Toggle mobile menu"
-                aria-expanded={isMenuOpen}
-                onClick={onToggleMenu}
-            >
-                <span className="admin-action-btn btn-icon--settings" style={{ width: '24px', height: '24px', fontSize: '20px' }} />
-            </button>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 interface PhraseItem {
     id: number;
@@ -42,6 +42,31 @@ export const PhraseManager: React.FC<PhraseManagerProps> = ({
     const [newEncouragement, setNewEncouragement] = useState('');
     const [inlineEditingId, setInlineEditingId] = useState<string | null>(null);
     const [tempValue, setTempValue] = useState('');
+    const alphaCollator = useMemo(
+        () => new Intl.Collator(undefined, { sensitivity: 'base', ignorePunctuation: true }),
+        []
+    );
+    const normalizeForSort = (value: string) =>
+        value
+            .trim()
+            .replace(/^[^a-z0-9]+/i, '');
+    const sortPhraseItems = (a: PhraseItem, b: PhraseItem) => {
+        const textCompare = alphaCollator.compare(
+            normalizeForSort(a.text),
+            normalizeForSort(b.text)
+        );
+        if (textCompare !== 0) return textCompare;
+        return a.id - b.id;
+    };
+
+    const sortedCartTexts = useMemo(
+        () => [...cartTexts].sort(sortPhraseItems),
+        [cartTexts]
+    );
+    const sortedEncouragements = useMemo(
+        () => [...encouragements].sort(sortPhraseItems),
+        [encouragements]
+    );
 
     const handleAddCartText = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -198,7 +223,7 @@ export const PhraseManager: React.FC<PhraseManagerProps> = ({
                         </div>
                     </form>
 
-                    {cartTexts.map(t => renderPhraseItem(t, 'cart'))}
+                    {sortedCartTexts.map(t => renderPhraseItem(t, 'cart'))}
                     {cartTexts.length === 0 && !isMarketingLoading && (
                         <div className="py-6 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-100 m-1">
                             <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Empty</span>
@@ -239,7 +264,7 @@ export const PhraseManager: React.FC<PhraseManagerProps> = ({
                         </div>
                     </form>
 
-                    {encouragements.map(e => renderPhraseItem(e, 'encouragement'))}
+                    {sortedEncouragements.map(e => renderPhraseItem(e, 'encouragement'))}
                     {encouragements.length === 0 && !isMarketingLoading && (
                         <div className="py-6 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-100 m-1">
                             <span className="text-[9px] font-black uppercase tracking-widest text-slate-300">Empty</span>

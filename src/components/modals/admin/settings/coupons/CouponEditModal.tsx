@@ -2,6 +2,7 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { ICoupon } from '../../../../../hooks/admin/useCoupons.js';
 import { DISCOUNT_TYPE } from '../../../../../core/constants.js';
+import { isDraftDirty } from '../../../../../core/utils.js';
 
 interface CouponEditModalProps {
     editingCoupon: ICoupon;
@@ -9,6 +10,8 @@ interface CouponEditModalProps {
     setLocalCoupon: (coupon: ICoupon) => void;
     onSave: () => void;
     onCancel: () => void;
+    isDirty: boolean;
+    isSaving: boolean;
 }
 
 export const CouponEditModal: React.FC<CouponEditModalProps> = ({
@@ -16,8 +19,12 @@ export const CouponEditModal: React.FC<CouponEditModalProps> = ({
     localCoupon,
     setLocalCoupon,
     onSave,
-    onCancel
+    onCancel,
+    isDirty,
+    isSaving
 }) => {
+    const isModalDirty = isDirty || isDraftDirty(localCoupon, editingCoupon);
+
     return createPortal(
         <div
             className="admin-modal-overlay topmost-child show fixed inset-0 flex items-center justify-center p-8 bg-blue-900/20 backdrop-blur-sm animate-in fade-in duration-200"
@@ -29,17 +36,27 @@ export const CouponEditModal: React.FC<CouponEditModalProps> = ({
                 role="dialog"
                 aria-modal="true"
             >
-                <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-white">
+                <div className="modal-header px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-white">
                     <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">
                         {editingCoupon.id ? 'Edit Coupon' : 'New Coupon'}
                     </h3>
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="admin-action-btn btn-icon--close"
-                        aria-label="Close"
-                        data-help-id="common-close"
-                    />
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={onSave}
+                            disabled={isSaving || !isModalDirty}
+                            className={`admin-action-btn btn-icon--save dirty-only ${isModalDirty ? 'is-dirty' : ''}`}
+                            aria-label="Save Coupon"
+                            data-help-id="common-save"
+                        />
+                        <button
+                            type="button"
+                            onClick={onCancel}
+                            className="admin-action-btn btn-icon--close"
+                            aria-label="Close"
+                            data-help-id="common-close"
+                        />
+                    </div>
                 </div>
                 <form onSubmit={(e) => { e.preventDefault(); onSave(); }} className="p-10 space-y-8 bg-slate-50/50">
                     <div className="space-y-3">

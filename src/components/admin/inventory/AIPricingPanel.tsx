@@ -3,9 +3,9 @@ import { useInventoryAI, PriceSuggestion } from '../../../hooks/admin/useInvento
 import { usePriceBreakdown } from '../../../hooks/admin/usePriceBreakdown.js';
 import { PriceComponent } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
 import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
-import { AI_TIER } from '../../../core/constants.js';
 import { toastSuccess, toastError } from '../../../core/toast.js';
 import { formatTime } from '../../../core/date-utils.js';
+import { QualityTierControl } from './QualityTierControl.js';
 
 interface AIPricingPanelProps {
     sku: string;
@@ -202,18 +202,7 @@ export const AIPricingPanel: React.FC<AIPricingPanelProps> = ({
 
             {!isReadOnly && (
                 <div className="space-y-3 mb-4">
-                    <div>
-                        <label className="text-xs text-gray-600 block mb-1 font-medium uppercase tracking-wider">Quality Positioning</label>
-                        <select
-                            value={tier}
-                            onChange={(e) => handleTierChange(e.target.value)}
-                            className="w-full text-sm p-2 border border-gray-300 rounded bg-white shadow-sm focus:ring-2 focus:ring-[var(--brand-primary)] outline-none"
-                        >
-                            <option value={AI_TIER.PREMIUM}>Premium (High Quality / +15%)</option>
-                            <option value={AI_TIER.STANDARD}>Standard (Market Average)</option>
-                            <option value={AI_TIER.CONSERVATIVE}>Conservative (Economy / -15%)</option>
-                        </select>
-                    </div>
+                    <QualityTierControl value={tier} onChange={handleTierChange} />
                     <div className="flex items-center gap-2">
                         <button
                             type="button"

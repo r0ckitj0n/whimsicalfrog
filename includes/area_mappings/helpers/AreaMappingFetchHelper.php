@@ -5,6 +5,12 @@ require_once __DIR__ . '/AreaMappingSchemaHelper.php';
 class AreaMappingFetchHelper
 {
     /**
+     * Cache of room active states keyed by normalized room number.
+     * @var array<string,bool>|null
+     */
+    private static $roomActiveMap = null;
+
+    /**
      * Fetch area mappings for a room, with enrichment
      */
     public static function fetchMappings($room_number)
@@ -333,6 +339,9 @@ img.is_primary = 1 WHERE $where ORDER BY $orderExpr", [$category_id]);
 
         // 1. Add explicit mappings first (with coordinates)
         foreach ($explicit as $em) {
+            if (!self::isMappingDestinationActive($em)) {
+                continue;
+            }
             $selector = $em['area_selector'] ?? '';
             $em['coords'] = $coordsMap[$selector] ?? null;
             $combined[] = $em;
@@ -375,5 +384,67 @@ img.is_primary = 1 WHERE $where ORDER BY $orderExpr", [$category_id]);
             'coordinates_count' => count($coords),
             'debug' => $debugMode ? $dbg : null
         ];
+    }
+
+    /**
+     * Exclude mappings that target inactive rooms in room_settings.
+     */
+    private static function isMappingDestinationActive(array $mapping)
+    {
+        $target = trim((string) ($mapping['content_target'] ?? ''));
+        if ($target === '') {
+            return true;
+        }
+
+        $candidate = $target;
+        if (stripos($candidate, 'room:') === 0) {
+            $candidate = substr($candidate, 5);
+        }
+
+        if ($candidate === '' || preg_match('#^https?://#i', $candidate)) {
+            return true;
+        }
+
+        $normalized = self::normalizeRoomNumber($candidate);
+        if ($normalized === null || $normalized === '') {
+            return true;
+        }
+
+        $activeMap = self::getRoomActiveMap();
+        if (!array_key_exists($normalized, $activeMap)) {
+            // Not a known room target; keep mapping visible.
+            return true;
+        }
+
+        return (bool) $activeMap[$normalized];
+    }
+
+    /**
+     * Load room active states once per request.
+     * @return array<string,bool>
+     */
+    private static function getRoomActiveMap()
+    {
+        if (is_array(self::$roomActiveMap)) {
+            return self::$roomActiveMap;
+        }
+
+        $map = [];
+        try {
+            $rows = Database::queryAll("SELECT room_number, is_active FROM room_settings");
+            foreach ($rows as $row) {
+                $room = self::normalizeRoomNumber($row['room_number'] ?? '');
+                if ($room === null || $room === '') {
+                    continue;
+                }
+                $map[$room] = ((int) ($row['is_active'] ?? 0) === 1);
+            }
+        } catch (Throwable $e) {
+            // Fail open: do not hide mappings if room state cannot be resolved.
+            return [];
+        }
+
+        self::$roomActiveMap = $map;
+        return self::$roomActiveMap;
     }
 }

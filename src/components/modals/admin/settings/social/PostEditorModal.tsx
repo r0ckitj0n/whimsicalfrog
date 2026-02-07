@@ -57,7 +57,7 @@ export const PostEditorModal: React.FC<PostEditorModalProps> = ({
                         <button
                             onClick={handleSubmit}
                             disabled={isLoading}
-                            className={`btn-icon btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
+                            className={`btn-icon btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                             data-help-id="common-save"
                             type="button"
                         />

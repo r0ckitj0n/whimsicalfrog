@@ -138,6 +138,7 @@ export const MainRoom: React.FC = () => {
                     const styles = getScaledStyles(coord);
                     const imgUrl = dest.image.startsWith('/') ? dest.image : `/${dest.image}`;
                     const imgWebp = imgUrl.replace(/\.png$/, '.webp');
+                    const hasPanelColor = !!iconPanelColor && iconPanelColor !== 'transparent';
 
                     return (
                         <div
@@ -145,18 +146,26 @@ export const MainRoom: React.FC = () => {
                             className={`room-item-icon absolute group cursor-pointer transition-opacity duration-300 overflow-visible ${!isLoading && coordinates.length > 0 ? 'opacity-100' : 'opacity-0'}`}
                             style={{
                                 ...styles,
-                                background: 'none',
-                                overflow: 'visible'
+                                height: 'var(--door-height)',
+                                backgroundColor: iconPanelColor || 'transparent',
+                                borderRadius: hasPanelColor ? '10px' : undefined,
+                                padding: hasPanelColor ? '6px' : '0',
+                                boxSizing: 'border-box',
+                                overflow: 'visible',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
                             }}
                             onClick={() => handleDoorClick(dest)}
                         >
-                            <picture className="block w-full">
+                            <picture className="block w-full h-full">
                                 <source srcSet={imgWebp} type="image/webp" />
                                 <img
                                     src={imgUrl}
                                     alt=""
-                                    className="w-full h-auto"
+                                    className="w-full h-full"
                                     style={{
+                                        objectFit: 'contain',
                                         transition: 'filter 0.3s ease',
                                         willChange: 'filter'
                                     }}

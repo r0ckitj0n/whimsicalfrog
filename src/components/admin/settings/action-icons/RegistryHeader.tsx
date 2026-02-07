@@ -2,6 +2,7 @@ import React from 'react';
 
 interface RegistryHeaderProps {
     isLoading: boolean;
+    isDirty: boolean;
     onRefresh: () => void;
     onReset: () => void;
     onSave: () => void;
@@ -9,6 +10,7 @@ interface RegistryHeaderProps {
 
 export const RegistryHeader: React.FC<RegistryHeaderProps> = ({
     isLoading,
+    isDirty,
     onRefresh,
     onReset,
     onSave
@@ -34,8 +36,8 @@ export const RegistryHeader: React.FC<RegistryHeaderProps> = ({
                 />
                 <button
                     onClick={onSave}
-                    disabled={isLoading}
-                    className="admin-action-btn btn-icon--save"
+                    disabled={isLoading || !isDirty}
+                    className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                     data-help-id="action-icon-save"
                     type="button"
                 />

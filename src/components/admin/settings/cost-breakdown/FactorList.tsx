@@ -6,7 +6,7 @@ interface FactorListProps {
     category: string;
     factors: ICostItem[];
     onDelete: (category: string, id: number | string) => void;
-    onUpdate: (category: string, id: number | string, cost: number, newLabel: string) => Promise<boolean>;
+    onUpdate: (category: string, id: number | string, cost: number, newLabel: string) => void;
     onAdd: (category: string) => void;
     onRefresh: () => void;
 }
@@ -41,7 +41,6 @@ export const FactorList: React.FC<FactorListProps> = ({
 }) => {
     const { user } = useAuthContext();
     const [editing, setEditing] = useState<EditingState | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
 
     const startEditing = (factor: ICostItem) => {
         setEditing({
@@ -55,7 +54,7 @@ export const FactorList: React.FC<FactorListProps> = ({
         setEditing(null);
     };
 
-    const saveEditing = async () => {
+    const saveEditing = () => {
         if (!editing) return;
 
         const cost = parseFloat(editing.cost);
@@ -68,14 +67,9 @@ export const FactorList: React.FC<FactorListProps> = ({
         const username = user?.username || user?.email || 'Admin';
         const newLabel = generateAutoLabel(username);
 
-        setIsSaving(true);
-        const success = await onUpdate(category, editing.id, cost, newLabel);
-        setIsSaving(false);
-
-        if (success) {
-            setEditing(null);
-            if (window.WFToast) window.WFToast.success('Factor updated');
-        }
+        onUpdate(category, editing.id, cost, newLabel);
+        setEditing(null);
+        if (window.WFToast) window.WFToast.success('Change staged. Use the top Save button to apply.');
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -119,6 +113,7 @@ export const FactorList: React.FC<FactorListProps> = ({
                                             value={editing.cost}
                                             onChange={(e) => setEditing({ ...editing, cost: e.target.value })}
                                             onKeyDown={handleKeyDown}
+                                            onBlur={saveEditing}
                                             className="text-xl font-black text-gray-900 font-mono w-24 px-2 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 text-right"
                                             placeholder="0.00"
                                             autoFocus
@@ -136,13 +131,6 @@ export const FactorList: React.FC<FactorListProps> = ({
                             </div>
                             {isEditing ? (
                                 <div className="flex items-center gap-1">
-                                    <button
-                                        onClick={saveEditing}
-                                        disabled={isSaving}
-                                        className="admin-action-btn btn-icon--save"
-                                        type="button"
-                                        data-help-id="modal-save"
-                                    />
                                     <button
                                         onClick={cancelEditing}
                                         className="admin-action-btn btn-icon--close"

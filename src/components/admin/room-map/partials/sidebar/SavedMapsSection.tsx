@@ -77,6 +77,7 @@ export const SavedMapsSection: React.FC<SavedMapsSectionProps> = ({
                                 checked={!!map.is_active}
                                 onChange={(e) => {
                                     e.stopPropagation();
+                                    onLoadMap(map.id!);
                                     onActivateMap(map.id!);
                                 }}
                                 onClick={(e) => {

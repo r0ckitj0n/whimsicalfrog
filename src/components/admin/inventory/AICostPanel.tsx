@@ -2,9 +2,10 @@ import React from 'react';
 import { useInventoryAI } from '../../../hooks/admin/useInventoryAI.js';
 import { useCostBreakdown } from '../../../hooks/admin/useCostBreakdown.js';
 import { getPriceTierMultiplier } from '../../../hooks/admin/inventory-ai/usePriceSuggestions.js';
-import { AI_TIER } from '../../../core/constants.js';
 import { toastSuccess, toastError } from '../../../core/toast.js';
+import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
 import { formatTime } from '../../../core/date-utils.js';
+import { QualityTierControl } from './QualityTierControl.js';
 
 import { CostSuggestion } from '../../../hooks/admin/useInventoryAI.js';
 
@@ -51,28 +52,20 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
     const [isApplying, setIsApplying] = React.useState(false);
 
     const handleSuggest = async () => {
-        if (window.WFToast) window.WFToast.info('Generating AI cost suggestion...');
-        try {
-            const suggestion = await fetch_cost_suggestion({
-                sku,
-                name,
-                description,
-                category,
-                tier
-            });
-            if (suggestion && onSuggestionUpdated) {
-                onSuggestionUpdated(suggestion);
-            }
-            if (suggestion && !isReadOnly) {
-                // Success - mark form as dirty so save button appears
-                if (onApplied) onApplied();
-                if (toastSuccess) toastSuccess('Cost suggestion generated');
-            } else if (!suggestion && toastError) {
-                toastError('Failed to generate cost suggestion');
-            }
-        } catch (_err) {
-            if (toastError) toastError('Failed to generate cost suggestion');
-        }
+        await generateCostSuggestion({
+            sku,
+            name,
+            description,
+            category,
+            tier,
+            isReadOnly,
+            imageData: `/images/items/${sku}A.webp`,
+            fetchCostSuggestion: fetch_cost_suggestion,
+            onSuggestionGenerated: (suggestion) => {
+                onSuggestionUpdated?.(suggestion);
+            },
+            onApplied
+        });
     };
 
     const handleTierChange = (newTier: string) => {
@@ -181,18 +174,7 @@ export const AICostPanel: React.FC<AICostPanelProps> = ({
 
             {!isReadOnly && (
                 <div className="space-y-3 mb-4">
-                    <div>
-                        <label className="text-xs text-gray-600 block mb-1 font-medium uppercase tracking-wider">Quality Tier</label>
-                        <select
-                            value={tier}
-                            onChange={(e) => handleTierChange(e.target.value)}
-                            className="w-full text-sm p-2 border border-gray-300 rounded bg-white shadow-sm focus:ring-2 focus:ring-[var(--brand-primary)]/20 outline-none"
-                        >
-                            <option value={AI_TIER.PREMIUM}>Premium (High Quality / +15%)</option>
-                            <option value={AI_TIER.STANDARD}>Standard (Market Average)</option>
-                            <option value={AI_TIER.CONSERVATIVE}>Conservative (Economy / -15%)</option>
-                        </select>
-                    </div>
+                    <QualityTierControl value={tier} onChange={handleTierChange} />
                     <div className="flex items-center gap-2">
                         <button
                             type="button"

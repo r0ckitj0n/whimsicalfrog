@@ -142,7 +142,7 @@ export const SquareSettings: React.FC<SquareSettingsProps> = ({ onClose, title }
                         <button
                             onClick={handleSave}
                             disabled={isLoading || !isDirty}
-                            className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
+                            className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                             data-help-id="common-save"
                         />
                         <button

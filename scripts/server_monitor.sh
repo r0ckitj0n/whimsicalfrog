@@ -273,6 +273,23 @@ class ConcurrentPHPHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         # Suppress default logging to avoid cluttering console
         pass
+
+    def end_headers(self):
+        # Prevent stale hashed-bundle mismatches in local builds.
+        # If older JS/CSS module files are cached while dist is rebuilt,
+        # dynamic imports can request removed chunk hashes.
+        try:
+            parsed = urllib.parse.urlparse(self.path)
+            path = (parsed.path or "").lower()
+            if path.startswith("/dist/assets/") and (
+                path.endswith(".js") or path.endswith(".mjs") or path.endswith(".css")
+            ):
+                self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
+        except Exception:
+            pass
+        super().end_headers()
     
     def do_GET(self):
         self.handle_request()

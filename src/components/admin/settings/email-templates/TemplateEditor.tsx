@@ -33,7 +33,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={handleSubmit}
-                            className={`btn-icon btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
+                            className={`btn-icon btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                             data-help-id="modal-save"
                             type="button"
                         />

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import { IMapArea } from '../../../../types/room.js';
 import { useMapDragging } from '../../../../hooks/admin/useMapDragging.js';
 import { ApiClient } from '../../../../core/ApiClient.js';
@@ -7,10 +7,8 @@ import { SignLayer } from './canvas/SignLayer.js';
 import { HotspotLayer } from './canvas/HotspotLayer.js';
 import './MapCanvas.css';
 
-interface ISignDestination {
+interface IPreviewItem {
     area_selector: string;
-    label: string;
-    target: string;
     image: string;
 }
 
@@ -49,8 +47,15 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 }) => {
     const svgRef = useRef<SVGSVGElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [signDestinations, setSignDestinations] = useState<ISignDestination[]>([]);
+    const [previewItems, setPreviewItems] = useState<IPreviewItem[]>([]);
+    const [activeAreaSelectors, setActiveAreaSelectors] = useState<string[]>([]);
     const [containerHeight, setContainerHeight] = useState<number | null>(null);
+
+    const normalizeSelector = (selector: string) => {
+        const value = String(selector || '').trim().toLowerCase();
+        if (!value) return '';
+        return value.startsWith('.') ? value : `.${value}`;
+    };
 
     // Calculate container height based on width and aspect ratio to enable scrolling
     useEffect(() => {
@@ -87,29 +92,90 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
         isEditMode
     );
 
-    // Fetch sign destinations for the current room
+    // Fetch preview items from live view mappings only (no fallback sources).
     useEffect(() => {
+        let cancelled = false;
+
         if (!roomId) {
-            setSignDestinations([]);
-            return;
+            setPreviewItems([]);
+            setActiveAreaSelectors([]);
+            return () => {
+                cancelled = true;
+            };
         }
 
-        const fetchSignDestinations = async () => {
+        const fetchPreviewItems = async () => {
             try {
-                const data = await ApiClient.get<{ destinations: ISignDestination[] }>(
+                const data = await ApiClient.get<{ success: boolean; mappings?: Array<Record<string, unknown>>; data?: { mappings?: Array<Record<string, unknown>> } }>(
                     '/api/area_mappings.php',
-                    { action: 'door_sign_destinations', room: roomId }
+                    { action: 'get_live_view', room: roomId }
                 );
-                if (data?.destinations) {
-                    setSignDestinations(data.destinations);
+                const rows = data?.mappings || data?.data?.mappings || [];
+                const normalizedRows = rows.map((row) => {
+                    const mappingType = String(row.mapping_type || '').toLowerCase();
+                    const mappingIsActive = row.is_active === true || row.is_active === 1 || row.is_active === '1' || row.derived === true;
+                    const areaSelector = normalizeSelector(String(row.area_selector || ''));
+                    let image = '';
+                    if (mappingType === 'item' || mappingType === 'category') {
+                        image = String(row.image_url || '');
+                    } else if (
+                        mappingType === 'content'
+                        || mappingType === 'button'
+                        || mappingType === 'link'
+                        || mappingType === 'page'
+                        || mappingType === 'modal'
+                        || mappingType === 'action'
+                    ) {
+                        image = String(row.content_image || row.link_image || '');
+                    }
+                    return {
+                        area_selector: areaSelector,
+                        image,
+                        mappingIsActive,
+                    };
+                });
+
+                const activeSelectors = normalizedRows
+                    .filter((row) => row.mappingIsActive && row.area_selector)
+                    .map((row) => row.area_selector);
+
+                const mapped = normalizedRows
+                    .filter((row) => row.mappingIsActive && row.area_selector && row.image)
+                    .map(({ area_selector, image }) => ({ area_selector, image }));
+
+                if (!cancelled) {
+                    setPreviewItems([]);
+                    setActiveAreaSelectors([]);
+                    if (mapped.length > 0) {
+                        setPreviewItems(mapped);
+                    }
+                    if (activeSelectors.length > 0) {
+                        setActiveAreaSelectors(Array.from(new Set(activeSelectors)));
+                    }
                 }
             } catch (err) {
-                console.error('[MapCanvas] Failed to fetch sign destinations', err);
+                console.error('[MapCanvas] Failed to fetch preview items', err);
+                if (!cancelled) {
+                    setPreviewItems([]);
+                    setActiveAreaSelectors([]);
+                }
             }
         };
 
-        fetchSignDestinations();
+        fetchPreviewItems();
+
+        return () => {
+            cancelled = true;
+        };
     }, [roomId]);
+
+    const filteredAreas = useMemo(() => {
+        if (activeAreaSelectors.length === 0) {
+            return [];
+        }
+        const activeSet = new Set(activeAreaSelectors);
+        return areas.filter((area) => activeSet.has(normalizeSelector(area.selector)));
+    }, [areas, activeAreaSelectors]);
 
     const tar = typeof aspectRatio === 'number' ? aspectRatio : (parseFloat(String(aspectRatio)) || (1024 / 768));
     const isFullScale = roomId === 'A' || roomId === '0' || tar > 1.4;
@@ -147,15 +213,16 @@ export const MapCanvas: React.FC<MapCanvasProps> = ({
 
             {/* 1. Live Sign Images Layer */}
             <SignLayer
-                areas={areas}
-                signDestinations={signDestinations}
+                areas={filteredAreas}
+                signDestinations={previewItems}
                 dims={dims}
+                iconPanelColor={iconPanelColor}
             />
 
             {/* 2. Hotspots Layer */}
             <HotspotLayer
                 svgRef={svgRef}
-                areas={areas}
+                areas={filteredAreas}
                 selectedIds={selectedIds}
                 isEditMode={isEditMode}
                 dims={dims}

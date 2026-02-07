@@ -4,36 +4,65 @@ interface LogoProps {
     siteName: string;
     siteTagline?: string;
     logoImage?: string;
-    href?: string;
-    onClick?: (e: React.MouseEvent) => void;
+    imageHref?: string;
+    titleHref?: string;
+    isTitleMenuButton?: boolean;
+    onTitleClick?: (e: React.MouseEvent) => void;
 }
 
-export const Logo: React.FC<LogoProps> = ({ siteName, siteTagline, logoImage, href = '/room_main', onClick }) => {
-    const handleClick = (e: React.MouseEvent) => {
-        if (onClick) {
+export const Logo: React.FC<LogoProps> = ({
+    siteName,
+    siteTagline,
+    logoImage,
+    imageHref = '/',
+    titleHref = '/room_main',
+    isTitleMenuButton = false,
+    onTitleClick
+}) => {
+    const handleTitleClick = (e: React.MouseEvent) => {
+        if (onTitleClick) {
             e.preventDefault();
-            onClick(e);
+            onTitleClick(e);
         }
     };
 
+    const textContent = (
+        <div className="logo-text-container">
+            <div className="logo-text font-title-primary italic">{siteName}</div>
+            {siteTagline && <div className="logo-tagline font-title-secondary opacity-90">{siteTagline}</div>}
+        </div>
+    );
+
     return (
-        <a href={href} className="logo-link" aria-label={`${siteName} - Main Room`} onClick={handleClick}>
+        <div className="logo-link">
             {logoImage && (
-                <picture>
-                    <source srcSet={logoImage.replace(/\.(png|jpe?g)$/i, '.webp')} type="image/webp" />
-                    <img
-                        src={logoImage}
-                        alt={siteName}
-                        className="header-logo"
-                        loading="lazy"
-                    />
-                </picture>
+                <a href={imageHref} className="logo-image-link" aria-label={`${siteName} - Landing Page`}>
+                    <picture>
+                        <source srcSet={logoImage.replace(/\.(png|jpe?g)$/i, '.webp')} type="image/webp" />
+                        <img
+                            src={logoImage}
+                            alt={siteName}
+                            className="header-logo"
+                            loading="lazy"
+                        />
+                    </picture>
+                </a>
             )}
 
-            <div className="logo-text-container">
-                <div className="logo-text font-title-primary italic">{siteName}</div>
-                {siteTagline && <div className="logo-tagline font-title-secondary opacity-90">{siteTagline}</div>}
-            </div>
-        </a>
+            {isTitleMenuButton ? (
+                <button
+                    type="button"
+                    className="logo-text-trigger"
+                    aria-label={`Open ${siteName} menu`}
+                    onClick={handleTitleClick}
+                >
+                    {textContent}
+                </button>
+            ) : (
+                <a href={titleHref} className="logo-text-trigger" aria-label={`${siteName} - Main Room`} onClick={handleTitleClick}>
+                    {textContent}
+                </a>
+            )}
+        </div>
     );
 };

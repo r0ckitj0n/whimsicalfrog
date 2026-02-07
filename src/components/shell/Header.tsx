@@ -71,8 +71,10 @@ export const Header: React.FC<HeaderProps> = ({ settings }) => {
                             siteName={siteName}
                             siteTagline={siteTagline}
                             logoImage={logoImage}
-                            href="/room_main"
-                            onClick={isCompactHeader ? () => setIsMenuOpen((prev) => !prev) : undefined}
+                            imageHref="/"
+                            titleHref="/room_main"
+                            isTitleMenuButton={isCompactHeader}
+                            onTitleClick={isCompactHeader ? () => setIsMenuOpen((prev) => !prev) : undefined}
                         />
                         <Navigation />
                     </div>

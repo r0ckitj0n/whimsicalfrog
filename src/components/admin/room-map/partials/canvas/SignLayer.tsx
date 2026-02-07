@@ -12,12 +12,14 @@ interface SignLayerProps {
     areas: IMapArea[];
     signDestinations: ISignDestination[];
     dims: { w: number, h: number };
+    iconPanelColor?: string;
 }
 
 export const SignLayer: React.FC<SignLayerProps> = ({
     areas,
     signDestinations,
-    dims
+    dims,
+    iconPanelColor = 'transparent'
 }) => {
     const getSignForArea = (area: IMapArea): ISignDestination | undefined => {
         const areaSelector = area.selector.startsWith('.') ? area.selector : `.${area.selector}`;
@@ -39,6 +41,7 @@ export const SignLayer: React.FC<SignLayerProps> = ({
                 const leftPercent = (area.left / dims.w) * 100;
                 const topPercent = (area.top / dims.h) * 100;
                 const widthPercent = (area.width / dims.w) * 100;
+                const heightPercent = (area.height / dims.h) * 100;
 
                 return (
                     <div
@@ -48,17 +51,25 @@ export const SignLayer: React.FC<SignLayerProps> = ({
                             left: `${leftPercent}%`,
                             top: `${topPercent}%`,
                             width: `${widthPercent}%`,
-                            zIndex: 15
+                            height: `${heightPercent}%`,
+                            zIndex: 15,
+                            backgroundColor: iconPanelColor,
+                            borderRadius: '10px',
+                            padding: iconPanelColor === 'transparent' ? 0 : '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                         }}
                     >
-                        <picture className="block w-full">
+                        <picture className="block w-full h-full">
                             <source srcSet={imgWebp} type="image/webp" />
                             <img
                                 src={imgUrl}
                                 alt=""
                                 style={{
                                     width: '100%',
-                                    height: 'auto',
+                                    height: '100%',
+                                    objectFit: 'contain',
                                     display: 'block'
                                 }}
                             />

@@ -134,7 +134,7 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                         {isGlobalDirty && (
                             <button
                                 onClick={handleGlobalSave}
-                                className="admin-action-btn btn-icon--save is-dirty"
+                                className="admin-action-btn btn-icon--save dirty-only is-dirty"
                                 data-help-id="common-save"
                             />
                         )}

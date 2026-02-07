@@ -143,8 +143,19 @@ if (is_file($filePath)) {
         header('Content-Type: ' . $mimes[$ext]);
     }
 
-    // Cache for 1 hour in dev
-    header('Cache-Control: public, max-age=3600');
+    // Avoid stale hashed bundle mismatch in local prod-mode:
+    // if JS/CSS under /dist/assets is cached, a refreshed build can remove old chunk names
+    // while the browser still executes a cached parent module.
+    $isDistAsset = strpos($requestedPath, '/dist/assets/') === 0;
+    $isScriptOrStyle = in_array($ext, ['js', 'mjs', 'css'], true);
+    if ($isDistAsset && $isScriptOrStyle) {
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+    } else {
+        // Cache static files for 1 hour in local dev to reduce repeated disk reads.
+        header('Cache-Control: public, max-age=3600');
+    }
     readfile($filePath);
     exit;
 }

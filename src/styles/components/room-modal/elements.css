@@ -70,9 +70,12 @@
     transition: filter 0.2s ease;
     border-radius: 0;
     overflow: visible;
-    background: none !important;
+    background-color: var(--icon-panel-color, transparent) !important;
     border: none !important;
     box-shadow: none !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    padding: 6px !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -81,7 +84,7 @@
 .room-modal-body .room-item-icon img,
 .room-overlay-wrapper .room-item-icon img {
     width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
     display: block;
     object-fit: contain;
     background: transparent !important;

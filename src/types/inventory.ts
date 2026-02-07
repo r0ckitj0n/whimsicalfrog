@@ -127,6 +127,9 @@ export interface IItemDetails {
     // Field Lock State
     locked_fields?: Record<string, boolean>;
     locked_words?: Record<string, string>;
+    quality_tier?: string;
+    cost_quality_tier?: string;
+    price_quality_tier?: string;
 }
 
 export interface IItemDetailsResponse {
@@ -341,4 +344,3 @@ export interface IInventoryArchiveResponse {
     audit?: IInventoryAuditData;
     message?: string;
 }
-

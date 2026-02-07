@@ -118,7 +118,7 @@ export const SecretsManager: React.FC<SecretsManagerProps> = ({ onClose, title }
                                 <button
                                     onClick={handleSave}
                                     disabled={isLoading || !isDirty}
-                                    className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`}
+                                    className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`}
                                     data-help-id="secrets-save"
                                     type="button"
                                 />

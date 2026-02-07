@@ -79,7 +79,7 @@ export const EmailTemplatesManager: React.FC<EmailTemplatesManagerProps> = ({ on
                 <div className="flex items-center gap-2">
                     <button onClick={() => api.fetchAll()} className="admin-action-btn btn-icon--refresh" data-help-id="common-refresh" type="button" />
                     {activeTab === 'templates' && <button onClick={handleCreate} className="admin-action-btn btn-icon--add" data-help-id="common-add" type="button" />}
-                    <button onClick={handleSaveAssignments} disabled={api.isLoading || !isDirty} className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />
+                    <button onClick={handleSaveAssignments} disabled={api.isLoading || !isDirty} className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />
                     {standalone && <button onClick={() => { void attemptClose(); }} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />}
                 </div>
             </div>

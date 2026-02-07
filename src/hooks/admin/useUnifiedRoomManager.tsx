@@ -216,6 +216,7 @@ export const useUnifiedRoomManager = ({
                 const res = await boundaries.activateMap(id, selectedRoom);
                 if (res.success) {
                     if (window.WFToast) window.WFToast.success('Map activated');
+                    boundariesTab.handleLoadMap(id);
                     boundariesTab.setCurrentMapId(id);
                 } else if (window.WFToast) {
                     window.WFToast.error(res.error || 'Failed to activate map');

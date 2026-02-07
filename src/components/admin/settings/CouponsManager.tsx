@@ -53,7 +53,7 @@ export const CouponsManager: React.FC<CouponsManagerProps> = ({ onClose, title }
                     <div className="flex-1" />
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                            {editingCoupon && <button onClick={handleSave} disabled={api.isLoading || !isDirty} className={`admin-action-btn btn-icon--save ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />}
+                            {editingCoupon && <button onClick={handleSave} disabled={api.isLoading || !isDirty} className={`admin-action-btn btn-icon--save dirty-only ${isDirty ? 'is-dirty' : ''}`} data-help-id="common-save" type="button" />}
                             <button onClick={api.fetchCoupons} className="admin-action-btn btn-icon--refresh" data-help-id="common-refresh" type="button" />
                             <button onClick={handleCreate} className="admin-action-btn btn-icon--add" data-help-id="common-add" type="button" />
                             <button onClick={() => { void attemptClose(); }} className="admin-action-btn btn-icon--close" data-help-id="common-close" type="button" />
@@ -82,6 +82,8 @@ export const CouponsManager: React.FC<CouponsManagerProps> = ({ onClose, title }
                         setLocalCoupon={setLocalCoupon}
                         onSave={handleSave}
                         onCancel={() => { setEditingCoupon(null); setLocalCoupon(null); }}
+                        isDirty={isDirty}
+                        isSaving={api.isLoading}
                     />
                 )}
             </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { IMapArea, IRoomMapEditorHook, IRoomBoundariesHook, IRoomMap } from '../../../types/room.js';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { normalizeMapAreas } from './mapCoordinates.js';
@@ -27,7 +27,8 @@ const areCoordinatesDirty = (draft: IMapArea[], base: IMapArea[]) => {
 
 export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEditorHook): IRoomBoundariesHook => {
     const { prompt: promptModal, confirm: confirmModal } = useModalContext();
-    const [areas, setAreas] = useState<IMapArea[]>([]);
+    const [areas, setAreasState] = useState<IMapArea[]>([]);
+    const areasRef = useRef<IMapArea[]>([]);
     const [lastSavedAreas, setLastSavedAreas] = useState<IMapArea[]>([]);
     const [renderContext, setRenderContext] = useState<string>('modal');
     const [bgUrl, setBgUrl] = useState<string>('');
@@ -43,6 +44,15 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
         targetAspectRatio: 1024 / 768
     });
 
+    useEffect(() => {
+        areasRef.current = areas;
+    }, [areas]);
+
+    const setAreas = useCallback((nextAreas: IMapArea[]) => {
+        areasRef.current = nextAreas;
+        setAreasState(nextAreas);
+    }, []);
+
     const handleSaveBoundaries = useCallback(async () => {
         if (!selectedRoom) return;
         const name = await promptModal({
@@ -51,7 +61,8 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
             input: { defaultValue: `Map ${new Date().toLocaleString()}` }
         });
         if (!name) return;
-        const res = await boundaries.saveMap(selectedRoom, name, areas);
+        const latestAreas = areasRef.current;
+        const res = await boundaries.saveMap(selectedRoom, name, latestAreas);
         if (res.success) {
             if (window.WFToast) window.WFToast.success('Map saved');
             if (res.map && res.map.coordinates) {
@@ -62,14 +73,14 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
                     setCurrentMapId(res.map.id);
                 }
             } else {
-                setLastSavedAreas([...areas]);
+                setLastSavedAreas([...latestAreas]);
                 if ('map_id' in res && res.map_id !== undefined && res.map_id !== null) {
                     setCurrentMapId(res.map_id as string | number);
                 }
             }
             await boundaries.fetchSavedMaps(selectedRoom);
         }
-    }, [selectedRoom, areas, promptModal, boundaries]);
+    }, [selectedRoom, promptModal, boundaries, setAreas]);
 
     const handleSaveSettings = useCallback(async (onSuccess?: () => void) => {
         if (!selectedRoom) return;

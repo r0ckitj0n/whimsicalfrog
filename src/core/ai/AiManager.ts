@@ -72,6 +72,7 @@ export class AiManager {
         category: string;
         quality_tier?: string;
         useImages?: boolean;
+        imageData?: string;
     }): Promise<Record<string, unknown>> {
         return ApiClient.post<Record<string, unknown>>('suggest_cost.php', params);
     }

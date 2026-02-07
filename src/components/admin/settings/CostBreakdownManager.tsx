@@ -4,10 +4,13 @@ import { useCostBreakdown } from '../../../hooks/admin/useCostBreakdown.js';
 import { useInventoryAI } from '../../../hooks/admin/useInventoryAI.js';
 import { useAIContentGenerator } from '../../../hooks/admin/useAIContentGenerator.js';
 import { ApiClient } from '../../../core/ApiClient.js';
-import { COST_CATEGORY, CostCategory } from '../../../core/constants.js';
+import { COST_CATEGORY, CostCategory, AI_TIER } from '../../../core/constants.js';
 import { CostSummary } from './cost-breakdown/CostSummary.js';
 import { FactorList } from './cost-breakdown/FactorList.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
+import { IItemDetailsResponse } from '../../../types/inventory.js';
+import { QualityTierControl } from '../inventory/QualityTierControl.js';
+import { generateCostSuggestion } from '../../../hooks/admin/inventory-ai/generateCostSuggestion.js';
 
 interface CostBreakdownManagerProps {
     sku?: string;
@@ -17,7 +20,15 @@ interface CostBreakdownManagerProps {
 
 export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku: propSku, onClose, title }) => {
     const [selectedSku, setSelectedSku] = useState(propSku || '');
+    const [costTier, setCostTier] = useState<string>(AI_TIER.STANDARD);
+    const [isGeneratingCost, setIsGeneratingCost] = useState(false);
     const [hasUserChanges, setHasUserChanges] = useState(false);
+    const [pendingFactorUpdates, setPendingFactorUpdates] = useState<Record<string, {
+        category: string;
+        id: number | string;
+        cost: number;
+        label: string;
+    }>>({});
 
     const {
         breakdown,
@@ -25,7 +36,6 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
         error,
         fetchBreakdown,
         saveCostFactor,
-        updateCostFactor,
         deleteCostFactor,
         clearBreakdown,
         populateFromSuggestion,
@@ -34,16 +44,48 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
     } = useCostBreakdown(selectedSku);
 
     const { items, isLoadingItems } = useAIContentGenerator();
-    const { fetch_cost_suggestion, is_busy: isGenerating } = useInventoryAI();
+    const { fetch_cost_suggestion } = useInventoryAI();
     const [activeCategory, setActiveCategory] = useState<CostCategory>(COST_CATEGORY.MATERIALS);
 
     useEffect(() => {
         if (propSku) setSelectedSku(propSku);
     }, [propSku]);
 
+    useEffect(() => {
+        if (!selectedSku) {
+            setCostTier(AI_TIER.STANDARD);
+            return;
+        }
+
+        let isCancelled = false;
+        const loadSavedTier = async () => {
+            try {
+                const res = await ApiClient.get<IItemDetailsResponse>('/api/get_item_details.php', { sku: selectedSku });
+                if (isCancelled) return;
+
+                const savedTier = res?.item?.cost_quality_tier;
+                if (savedTier === AI_TIER.PREMIUM || savedTier === AI_TIER.CONSERVATIVE || savedTier === AI_TIER.STANDARD) {
+                    setCostTier(savedTier);
+                    return;
+                }
+                setCostTier(AI_TIER.STANDARD);
+            } catch (err) {
+                if (!isCancelled) {
+                    setCostTier(AI_TIER.STANDARD);
+                }
+            }
+        };
+
+        void loadSavedTier();
+        return () => {
+            isCancelled = true;
+        };
+    }, [selectedSku]);
+
     // Reset dirty state when SKU changes
     useEffect(() => {
         setHasUserChanges(false);
+        setPendingFactorUpdates({});
     }, [selectedSku]);
 
     const hasFetchedRef = useRef<string | null>(null);
@@ -57,6 +99,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
     }, [selectedSku, fetchBreakdown]);
 
     const handleGenerateAI = async () => {
+        if (isGeneratingCost) return;
         if (!selectedSku) return;
 
         const currentItem = items.find(it => it.sku === selectedSku);
@@ -65,20 +108,41 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
             return;
         }
 
+        setIsGeneratingCost(true);
         try {
-            const suggestion = await fetch_cost_suggestion({
+            await generateCostSuggestion({
                 sku: currentItem.sku,
                 name: currentItem.name,
                 description: currentItem.description || '',
-                category: currentItem.category || ''
+                category: currentItem.category || '',
+                tier: costTier,
+                showApplyingToast: true,
+                imageData: `/images/items/${currentItem.sku}A.webp`,
+                fetchCostSuggestion: fetch_cost_suggestion,
+                onSuggestionGenerated: (suggestion) => {
+                    applySuggestionLocally(suggestion);
+                    setHasUserChanges(true);
+                    window.WFToast?.success?.('Preview ready. Click Save to persist changes.');
+                }
             });
-            if (suggestion) {
-                applySuggestionLocally(suggestion);
-                setHasUserChanges(true);
-                if (window.WFToast) window.WFToast.success('AI suggestion generated (unsaved preview)');
-            }
-        } catch (err) {
-            if (window.WFToast) window.WFToast.error('Failed to generate AI suggestion');
+        } finally {
+            setIsGeneratingCost(false);
+        }
+    };
+
+    const handleTierChange = async (nextTier: string) => {
+        setCostTier(nextTier);
+        if (!selectedSku) return;
+
+        try {
+            await ApiClient.post('/api/database_tables.php?action=update_cell', {
+                table: 'items',
+                column: 'cost_quality_tier',
+                new_value: nextTier,
+                row_data: { sku: selectedSku }
+            });
+        } catch (_err) {
+            if (window.WFToast) window.WFToast.error('Failed to save cost quality tier');
         }
     };
 
@@ -97,6 +161,29 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
         }
     };
 
+    const handleStageFactorUpdate = (category: string, id: number | string, cost: number, label: string) => {
+        const key = `${category}:${String(id)}`;
+        setPendingFactorUpdates(prev => ({
+            ...prev,
+            [key]: { category, id, cost, label }
+        }));
+        setHasUserChanges(true);
+    };
+
+    const handleDeleteFactor = async (category: string, id: number | string) => {
+        const success = await deleteCostFactor(category, id);
+        if (!success) return;
+
+        const key = `${category}:${String(id)}`;
+        setPendingFactorUpdates(prev => {
+            if (!(key in prev)) return prev;
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+        setHasUserChanges(true);
+    };
+
     const handleSaveAll = useCallback(async (): Promise<boolean> => {
         try {
             let latestTotal = breakdown.totals.total;
@@ -108,6 +195,25 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                 }
             }
 
+            const stagedUpdates = Object.values(pendingFactorUpdates);
+            for (const update of stagedUpdates) {
+                const res = await ApiClient.post<{ success: boolean; message?: string; error?: string }>('/api/save_cost_factor.php', {
+                    sku: selectedSku,
+                    category: update.category,
+                    cost: update.cost,
+                    label: update.label,
+                    id: update.id
+                });
+                if (!res?.success) {
+                    throw new Error(res?.error || res?.message || 'Failed to update staged cost factor');
+                }
+            }
+
+            const refreshedBreakdown = await fetchBreakdown();
+            if (refreshedBreakdown) {
+                latestTotal = refreshedBreakdown.totals.total;
+            }
+
             await ApiClient.post('/api/database_tables.php?action=update_cell', {
                 table: 'items',
                 column: 'cost_price',
@@ -115,19 +221,19 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                 row_data: { sku: selectedSku }
             });
 
-            await fetchBreakdown();
             setHasUserChanges(false);
+            setPendingFactorUpdates({});
             if (window.WFToast) window.WFToast.success('All changes saved to inventory');
             return true;
         } catch (err) {
             if (window.WFToast) window.WFToast.error('Failed to update inventory cost');
             return false;
         }
-    }, [selectedSku, hasPendingSuggestion, populateFromSuggestion, fetchBreakdown, breakdown.totals.total]);
+    }, [selectedSku, hasPendingSuggestion, populateFromSuggestion, fetchBreakdown, breakdown.totals.total, pendingFactorUpdates]);
 
     const attemptClose = useUnsavedChangesCloseGuard({
         isDirty: hasUserChanges,
-        isBlocked: isLoading || isGenerating,
+        isBlocked: isLoading || isGeneratingCost,
         onClose,
         onSave: handleSaveAll,
         closeAfterSave: true
@@ -140,7 +246,16 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
         { id: COST_CATEGORY.EQUIPMENT, label: 'Equipment', emoji: '⚙️' }
     ];
 
-    const currentFactors = breakdown[activeCategory] || [];
+    const currentFactors = (breakdown[activeCategory] || []).map((factor) => {
+        const key = `${activeCategory}:${String(factor.id)}`;
+        const staged = pendingFactorUpdates[key];
+        if (!staged) return factor;
+        return {
+            ...factor,
+            cost: staged.cost,
+            label: staged.label
+        };
+    });
 
     const modalContent = (
         <div
@@ -167,7 +282,7 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                                 value={selectedSku}
                                 onChange={(e) => setSelectedSku(e.target.value)}
                                 className="w-full text-xs font-bold p-2.5 px-4 pr-10 border-2 border-slate-50 rounded-xl bg-slate-50 text-slate-600 outline-none focus:border-brand-primary/30 transition-all cursor-pointer appearance-none truncate"
-                                disabled={isLoadingItems || isGenerating}
+                                disabled={isLoadingItems || isGeneratingCost}
                             >
                                 <option value="">Select Item...</option>
                                 {items.map(it => (
@@ -181,25 +296,35 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                     </div>
 
                     <div className="flex items-center gap-4">
+                        <div className="w-64">
+                            <QualityTierControl
+                                value={costTier}
+                                onChange={(tier) => { void handleTierChange(tier); }}
+                                disabled={isGeneratingCost || isLoading || !selectedSku}
+                            />
+                        </div>
+
                         <button
                             onClick={handleGenerateAI}
-                            disabled={isGenerating || isLoading || !selectedSku}
+                            disabled={isGeneratingCost || isLoading || !selectedSku}
                             className="btn-text-secondary flex items-center gap-2"
                             data-help-id="ai-generate-cost"
                         >
-                            {isGenerating ? 'Analyzing...' : 'Generate All'}
+                            {isGeneratingCost ? 'Analyzing...' : 'Generate All'}
                         </button>
 
                         <div className="h-8 border-l border-gray-100 mx-2" />
 
                         <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={handleSaveAll}
-                                disabled={isLoading || !selectedSku || !hasUserChanges}
-                                className={`admin-action-btn btn-icon--save ${hasUserChanges ? 'is-dirty' : ''}`}
-                                data-help-id="common-save"
-                            />
+                            {hasUserChanges && (
+                                <button
+                                    type="button"
+                                    onClick={handleSaveAll}
+                                    disabled={isLoading || !selectedSku}
+                                    className="admin-action-btn btn-icon--save dirty-only is-dirty"
+                                    data-help-id="common-save"
+                                />
+                            )}
                             <button
                                 onClick={() => { void attemptClose(); }}
                                 className="admin-action-btn btn-icon--close"
@@ -279,8 +404,8 @@ export const CostBreakdownManager: React.FC<CostBreakdownManagerProps> = ({ sku:
                                             <FactorList
                                                 category={activeCategory}
                                                 factors={currentFactors}
-                                                onDelete={deleteCostFactor}
-                                                onUpdate={updateCostFactor}
+                                                onDelete={handleDeleteFactor}
+                                                onUpdate={handleStageFactorUpdate}
                                                 onAdd={handleAddFactor}
                                                 onRefresh={fetchBreakdown}
                                             />

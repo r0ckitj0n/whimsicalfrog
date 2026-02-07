@@ -54,9 +54,18 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
         const res = await boundaries.saveMap(selectedRoom, name, areas);
         if (res.success) {
             if (window.WFToast) window.WFToast.success('Map saved');
-            setLastSavedAreas([...areas]);
-            if ('map_id' in res && res.map_id !== undefined && res.map_id !== null) {
-                setCurrentMapId(res.map_id as string | number);
+            if (res.map && res.map.coordinates) {
+                const persisted = normalizeMapAreas(res.map.coordinates);
+                setAreas(persisted);
+                setLastSavedAreas(persisted);
+                if (res.map.id !== undefined && res.map.id !== null) {
+                    setCurrentMapId(res.map.id);
+                }
+            } else {
+                setLastSavedAreas([...areas]);
+                if ('map_id' in res && res.map_id !== undefined && res.map_id !== null) {
+                    setCurrentMapId(res.map_id as string | number);
+                }
             }
             await boundaries.fetchSavedMaps(selectedRoom);
         }

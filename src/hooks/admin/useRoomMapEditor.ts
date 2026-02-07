@@ -27,12 +27,12 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
             const tb = b.created_at ? Date.parse(b.created_at) : NaN;
 
             if (!Number.isNaN(ta) && !Number.isNaN(tb)) {
-                return ta - tb;
+                return tb - ta;
             }
-            if (!Number.isNaN(ta)) return -1;
-            if (!Number.isNaN(tb)) return 1;
+            if (!Number.isNaN(ta)) return 1;
+            if (!Number.isNaN(tb)) return -1;
 
-            return Number(a.id ?? 0) - Number(b.id ?? 0);
+            return Number(b.id ?? 0) - Number(a.id ?? 0);
         });
     }, []);
 
@@ -81,7 +81,7 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
 
     const saveMap = async (room: string, name: string, areas: IMapArea[]) => {
         try {
-            const res = await ApiClient.post<{ success: boolean; message?: string; error?: string; map_id?: string | number; updated_existing?: boolean }>('/api/room_maps.php', {
+            const res = await ApiClient.post<{ success: boolean; message?: string; error?: string; map_id?: string | number; updated_existing?: boolean; map?: IRoomMap }>('/api/room_maps.php', {
                 action: 'save',
                 room,
                 map_name: name,

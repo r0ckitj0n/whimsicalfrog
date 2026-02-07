@@ -115,7 +115,14 @@ try {
                             [$rn, $mapName, $existingId]
                         );
                         ensureRoomHasActiveMap($rn);
-                        Response::success(['map_id' => $existingId, 'updated_existing' => true]);
+                        $savedMap = Database::queryOne(
+                            "SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE id = ? LIMIT 1",
+                            [$existingId]
+                        );
+                        if ($savedMap) {
+                            $savedMap['coordinates'] = decodeRoomMapCoordinates($savedMap['coordinates']);
+                        }
+                        Response::success(['map_id' => $existingId, 'updated_existing' => true, 'map' => $savedMap]);
                     }
                     Response::error('Save failed');
                 } else {
@@ -126,7 +133,14 @@ try {
                             [$rn, $mapName, $newId]
                         );
                         ensureRoomHasActiveMap($rn);
-                        Response::success(['map_id' => $newId, 'updated_existing' => false]);
+                        $savedMap = Database::queryOne(
+                            "SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE id = ? LIMIT 1",
+                            [$newId]
+                        );
+                        if ($savedMap) {
+                            $savedMap['coordinates'] = decodeRoomMapCoordinates($savedMap['coordinates']);
+                        }
+                        Response::success(['map_id' => $newId, 'updated_existing' => false, 'map' => $savedMap]);
                     } else {
                         Response::error('Save failed');
                     }
@@ -225,13 +239,13 @@ try {
                         $map['coordinates'] = decodeRoomMapCoordinates($map['coordinates']);
                     Response::success(['map' => $map]);
                 } else {
-                    $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? ORDER BY created_at ASC, id ASC", [$rn]);
+                    $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? ORDER BY created_at DESC, id DESC", [$rn]);
                     foreach ($maps as &$m)
                         $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                     Response::success(['maps' => $maps]);
                 }
             } else {
-                $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps ORDER BY room_number, created_at ASC, id ASC");
+                $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps ORDER BY room_number, created_at DESC, id DESC");
                 foreach ($maps as &$m)
                     $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                 Response::success(['maps' => $maps]);

@@ -23,6 +23,8 @@ export const ItemDetailsActions: React.FC<ItemDetailsActionsProps> = ({
     disabled,
     buttonText = 'Own This'
 }) => {
+    const resolvedButtonText = (buttonText || '').trim() || 'Add to Cart';
+
     return (
         <div style={{ marginTop: '32px', width: '100%' }}>
             <style dangerouslySetInnerHTML={{
@@ -140,6 +142,7 @@ export const ItemDetailsActions: React.FC<ItemDetailsActionsProps> = ({
                     type="button"
                 >
                     <span className="btn-icon--shopping-cart" style={{ fontSize: '22px' }} aria-hidden="true" />
+                    <span style={{ color: '#ffffff', fontWeight: 900 }}>{resolvedButtonText}</span>
                 </button>
             </div>
         </div>

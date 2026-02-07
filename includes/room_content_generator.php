@@ -55,14 +55,26 @@ function wf_cache_set($key, $val)
 function getRoomMetadata($room_number, $pdo)
 {
     $rs = Database::queryOne("SELECT room_name, description, render_context, background_url, target_aspect_ratio FROM room_settings WHERE room_number = ?", [$room_number]) ?: [];
-    $categoryData = Database::queryOne(
-        "SELECT c.id AS category_id, c.name AS category_name
+    $categoryRows = Database::queryAll(
+        "SELECT c.id AS category_id, c.name AS category_name, rca.is_primary, rca.display_order
         FROM room_category_assignments rca
         JOIN categories c ON rca.category_id = c.id
-        WHERE rca.room_number = ? AND rca.is_primary = 1
-        LIMIT 1",
+        WHERE rca.room_number = ?
+        ORDER BY rca.is_primary DESC, rca.display_order ASC, c.id ASC",
         [$room_number]
     );
+    $categoryIds = [];
+    $categoryNames = [];
+    foreach ($categoryRows as $row) {
+        $catId = (int) ($row['category_id'] ?? 0);
+        if ($catId > 0 && !in_array($catId, $categoryIds, true)) {
+            $categoryIds[] = $catId;
+        }
+        $catName = trim((string) ($row['category_name'] ?? ''));
+        if ($catName !== '' && !in_array($catName, $categoryNames, true)) {
+            $categoryNames[] = $catName;
+        }
+    }
     return [
         'room_number' => $room_number,
         'room_name' => $rs['room_name'] ?? '',
@@ -70,8 +82,10 @@ function getRoomMetadata($room_number, $pdo)
         'render_context' => $rs['render_context'] ?? 'modal',
         'background_url' => $rs['background_url'] ?? '',
         'target_aspect_ratio' => $rs['target_aspect_ratio'] ?? null,
-        'category' => $categoryData ? $categoryData['category_name'] : '',
-        'category_id' => $categoryData ? ($categoryData['category_id'] ?? null) : null
+        'category' => implode(', ', $categoryNames),
+        'category_id' => $categoryIds[0] ?? null,
+        'category_ids' => $categoryIds,
+        'categories' => $categoryNames
     ];
 }
 

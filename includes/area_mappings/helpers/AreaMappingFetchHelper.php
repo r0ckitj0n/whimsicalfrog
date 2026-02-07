@@ -306,27 +306,58 @@ GROUP BY item_sku",
             }
         }
 
-        $catRow = Database::queryOne("SELECT c.id AS category_id, c.name AS category_name FROM room_category_assignments rca
-JOIN categories c ON rca.category_id = c.id WHERE rca.room_number = ? AND rca.is_primary = 1 LIMIT 1", [$canonical]);
-        $category_id = $catRow['category_id'] ?? null;
-        $categoryName = $catRow['category_name'] ?? '';
+        $categoryRows = Database::queryAll(
+            "SELECT c.id AS category_id, c.name AS category_name, rca.is_primary, rca.display_order
+FROM room_category_assignments rca
+JOIN categories c ON rca.category_id = c.id
+WHERE rca.room_number = ?
+ORDER BY rca.is_primary DESC, rca.display_order ASC, c.id ASC",
+            [$canonical]
+        );
+        $categoryIds = [];
+        $categoryNames = [];
+        foreach ($categoryRows as $row) {
+            $catId = (int) ($row['category_id'] ?? 0);
+            if ($catId <= 0) {
+                continue;
+            }
+            if (!in_array($catId, $categoryIds, true)) {
+                $categoryIds[] = $catId;
+            }
+            $catName = trim((string) ($row['category_name'] ?? ''));
+            if ($catName !== '' && !in_array($catName, $categoryNames, true)) {
+                $categoryNames[] = $catName;
+            }
+        }
+        $primaryCategoryId = $categoryIds[0] ?? null;
+        $categoryName = implode(', ', $categoryNames);
 
         $items = [];
         $itemsHasActive = AreaMappingSchemaHelper::hasColumn('items', 'is_active');
         $itemsHasDisplayOrder = AreaMappingSchemaHelper::hasColumn('items', 'display_order');
         $orderExpr = $itemsHasDisplayOrder ? 'display_order, sku ASC' : 'sku ASC';
 
-        if ($category_id) {
-            $where = "i.category_id = ? AND i.status = 'live' AND i.is_archived = 0";
+        if (!empty($categoryIds)) {
+            $placeholders = implode(',', array_fill(0, count($categoryIds), '?'));
+            $where = "i.category_id IN ($placeholders) AND i.status = 'live' AND i.is_archived = 0";
             if ($itemsHasActive)
                 $where .= ' AND i.is_active = 1';
+            $categoryOrderExpr = implode(',', array_map('intval', $categoryIds));
             $items = Database::queryAll("SELECT i.sku, i.name, i.category, i.retail_price, i.stock_quantity,
 COALESCE(img.image_path, i.image_url) AS image_path FROM items i LEFT JOIN item_images img ON i.sku = img.sku AND
-img.is_primary = 1 WHERE $where ORDER BY $orderExpr", [$category_id]);
+img.is_primary = 1 WHERE $where ORDER BY FIELD(i.category_id, $categoryOrderExpr), $orderExpr", $categoryIds);
         }
         // Note: Removed legacy category text field fallback. Use category_id FK as SSoT.
 
         $explicit = self::fetchMappings($canonical);
+        $hasAssignedCategories = !empty($categoryIds);
+        if ($hasAssignedCategories) {
+            // Category-assigned rooms should render item slots from category membership,
+            // not pinned explicit item mappings that can drift from category contents.
+            $explicit = array_values(array_filter($explicit, function ($mapping) {
+                return ($mapping['mapping_type'] ?? '') !== 'item';
+            }));
+        }
         $explicitSelectors = [];
         foreach ($explicit as $em) {
             $sel = $em['area_selector'] ?? '';
@@ -334,6 +365,7 @@ img.is_primary = 1 WHERE $where ORDER BY $orderExpr", [$category_id]);
                 $explicitSelectors[] = $sel;
             }
         }
+        $occupiedSelectors = array_fill_keys($explicitSelectors, true);
 
         $combined = [];
 
@@ -348,11 +380,14 @@ img.is_primary = 1 WHERE $where ORDER BY $orderExpr", [$category_id]);
         }
 
         // 2. Add derived mappings for slots not taken by explicit ones
+        $nextAreaIndex = 1;
         foreach ($items as $i => $it) {
-            $selector = '.area-' . ($i + 1);
-            if (in_array($selector, $explicitSelectors)) {
-                continue;
+            while (isset($occupiedSelectors['.area-' . $nextAreaIndex])) {
+                $nextAreaIndex++;
             }
+            $selector = '.area-' . $nextAreaIndex;
+            $occupiedSelectors[$selector] = true;
+            $nextAreaIndex++;
 
             $sku = $it['sku'] ?? null;
             $imgPath = $it['image_path'] ?? '';
@@ -381,6 +416,9 @@ img.is_primary = 1 WHERE $where ORDER BY $orderExpr", [$category_id]);
             'success' => true,
             'mappings' => $combined,
             'category' => $categoryName,
+            'category_id' => $primaryCategoryId,
+            'category_ids' => $categoryIds,
+            'categories' => $categoryNames,
             'coordinates_count' => count($coords),
             'debug' => $debugMode ? $dbg : null
         ];

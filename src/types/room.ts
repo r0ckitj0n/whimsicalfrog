@@ -2,6 +2,9 @@
 export interface IRoomMetadata {
     room_name?: string;
     category?: string;
+    categories?: string[];
+    category_id?: number | null;
+    category_ids?: number[];
     room_number?: string | number;
 }
 

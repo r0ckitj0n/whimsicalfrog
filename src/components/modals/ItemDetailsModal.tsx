@@ -111,6 +111,118 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
                 .detailed-item-modal-card .content-scroller::-webkit-scrollbar-thumb:hover { background: var(--brand-secondary) !important; }
                 .detailed-item-modal-card .content-scroller { scrollbar-width: auto !important; scrollbar-color: var(--brand-primary) rgba(0, 0, 0, 0.05) !important; overflow-y: auto !important; overflow-x: hidden !important; }
                 .detailed-item-modal-card .image-column, .detailed-item-modal-card .details-column { overflow: visible !important; height: auto !important; }
+                @media (max-width: 1024px) {
+                    .detailed-item-modal {
+                        padding: 16px !important;
+                    }
+                    .detailed-item-modal-card {
+                        max-height: calc(100vh - 32px) !important;
+                    }
+                    .modal-content-wrapper {
+                        flex-direction: column !important;
+                    }
+                    .detailed-item-modal-card .image-column,
+                    .detailed-item-modal-card .details-column {
+                        width: 100% !important;
+                        flex: 1 1 auto !important;
+                    }
+                    .detailed-item-modal-card .image-column {
+                        border-right: 0 !important;
+                        border-bottom: 1px solid #f0f0f0 !important;
+                    }
+                }
+                @media (max-width: 768px) {
+                    .detailed-item-modal {
+                        align-items: flex-end !important;
+                        padding: 0 !important;
+                    }
+                    .detailed-item-modal-card {
+                        width: 100% !important;
+                        height: 100vh !important;
+                        max-height: 100vh !important;
+                        border-radius: 20px 20px 0 0 !important;
+                        border-left: 0 !important;
+                        border-right: 0 !important;
+                        border-bottom: 0 !important;
+                    }
+                    .detailed-item-modal-card .wf-modal-header {
+                        padding: 12px 14px !important;
+                    }
+                    .detailed-item-modal-card .wf-modal-header .admin-card-title {
+                        font-size: 1.05rem !important;
+                        line-height: 1.25 !important;
+                    }
+                    .detailed-item-modal-card .wf-modal-header .btn-icon--shopping-bag {
+                        font-size: 18px !important;
+                    }
+                    .detailed-item-modal-card .image-column {
+                        padding: 14px !important;
+                        border-bottom: 1px solid #f0f0f0 !important;
+                    }
+                    .detailed-item-modal-card .image-column .image-column-inner {
+                        gap: 14px !important;
+                    }
+                    .detailed-item-modal-card .image-column .image-slot-card {
+                        height: 260px !important;
+                        border-radius: 16px !important;
+                    }
+                    .detailed-item-modal-card .image-column .image-slot-carousel {
+                        height: 220px !important;
+                    }
+                    .detailed-item-modal-card .details-column {
+                        padding: 18px 14px 24px !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-block {
+                        margin-bottom: 20px !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-title {
+                        font-size: 1.7rem !important;
+                        line-height: 1.15 !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-price {
+                        font-size: 2rem !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-status {
+                        font-size: 0.75rem !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-description {
+                        padding: 12px 14px !important;
+                        font-size: 0.95rem !important;
+                        line-height: 1.55 !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-feature {
+                        width: 100% !important;
+                        padding: 12px 14px !important;
+                        font-size: 0.95rem !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-option-groups {
+                        gap: 20px !important;
+                    }
+                    .detailed-item-modal-card .details-column .details-actions-wrap {
+                        margin-top: 22px !important;
+                        padding-top: 20px !important;
+                    }
+                    .detailed-item-modal-card .details-column .item-actions-row-v73 {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        gap: 12px !important;
+                    }
+                    .detailed-item-modal-card .details-column .qty-selector-v73 {
+                        width: 100% !important;
+                        justify-content: space-between !important;
+                    }
+                    .detailed-item-modal-card .details-column .specs-toggle-btn {
+                        padding: 14px 16px !important;
+                        font-size: 0.95rem !important;
+                    }
+                    .detailed-item-modal-card .details-column .specs-panel {
+                        padding: 16px !important;
+                    }
+                    .detailed-item-modal-card .details-column .specs-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 16px !important;
+                    }
+                }
             ` }} />
             <div
                 className="wf-modal-card detailed-item-modal-card animate-in zoom-in-95 duration-300"

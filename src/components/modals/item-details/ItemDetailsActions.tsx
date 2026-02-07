@@ -102,7 +102,7 @@ export const ItemDetailsActions: React.FC<ItemDetailsActionsProps> = ({
                     transform: scale(0.95) !important;
                 }
             ` }} />
-            <div style={{
+            <div className="item-actions-row-v73" style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',

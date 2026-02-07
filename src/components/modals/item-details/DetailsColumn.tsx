@@ -50,35 +50,35 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
             flexDirection: 'column',
             background: 'white'
         }}>
-            <div style={{ marginBottom: '40px' }}>
+            <div className="details-block" style={{ marginBottom: '40px' }}>
                 <div style={{ fontSize: '12px', fontWeight: '900', color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: '0.25em', marginBottom: '12px' }}>
                     {item.category || 'Whimsical Original'}
                 </div>
-                <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#111827', marginBottom: '8px', lineHeight: '1.1', fontFamily: "'Merienda', cursive", letterSpacing: '-0.02em' }}>
+                <h2 className="details-title" style={{ fontSize: '36px', fontWeight: '900', color: '#111827', marginBottom: '8px', lineHeight: '1.1', fontFamily: "'Merienda', cursive", letterSpacing: '-0.02em' }}>
                     {item.name}
                 </h2>
-                <div style={{ color: 'var(--brand-secondary)', fontSize: '42px', fontWeight: '900', letterSpacing: '-0.01em', marginBottom: '12px' }}>
+                <div className="details-price" style={{ color: 'var(--brand-secondary)', fontSize: '42px', fontWeight: '900', letterSpacing: '-0.01em', marginBottom: '12px' }}>
                     ${total_price.toFixed(2)}
                 </div>
-                <div style={{ fontSize: '15px', color: '#9ca3af', fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div className="details-status" style={{ fontSize: '15px', color: '#9ca3af', fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Status: <span style={{ color: maxQty > 0 ? 'var(--brand-primary)' : 'var(--brand-error)' }}>{maxQty > 0 ? `${maxQty} available now` : 'Sold out'}</span>
                 </div>
 
                 {item.description && (
                     <div style={{ marginTop: '24px' }}>
                         <div style={{ fontWeight: '900', color: '#111827', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Item Story</div>
-                        <div style={{ lineHeight: '1.7', color: '#4b5563', background: '#ffffff', padding: '16px 20px', borderRadius: '12px', border: '1px solid #eee', whiteSpace: 'pre-line' }}>
+                        <div className="details-description" style={{ lineHeight: '1.7', color: '#4b5563', background: '#ffffff', padding: '16px 20px', borderRadius: '12px', border: '1px solid #eee', whiteSpace: 'pre-line' }}>
                             {item.description}
                         </div>
                     </div>
                 )}
             </div>
 
-            <div style={{ marginBottom: '40px' }}>
+            <div className="details-block" style={{ marginBottom: '40px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--brand-primary)', fontWeight: '900', fontSize: '14px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     ★ Why You'll Love This
                 </div>
-                <div style={{
+                <div className="details-feature" style={{
                     backgroundColor: '#ffffff',
                     color: 'var(--brand-primary)',
                     padding: '16px 28px',
@@ -99,7 +99,7 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+            <div className="details-option-groups" style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
                 {availableGenders.length > 0 && (
                     <StyleSelection
                         availableGenders={availableGenders}
@@ -123,7 +123,7 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
                 )}
             </div>
 
-            <div style={{ marginTop: '60px', paddingTop: '40px', borderTop: '2px solid #f9fafb' }}>
+            <div className="details-actions-wrap" style={{ marginTop: '60px', paddingTop: '40px', borderTop: '2px solid #f9fafb' }}>
                 <ItemDetailsActions
                     total_price={total_price}
                     quantity={quantity}

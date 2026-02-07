@@ -33,9 +33,9 @@ export const ImageColumn: React.FC<ImageColumnProps> = ({ item, uniqueImages }) 
             padding: '60px',
             borderRight: '1px solid #f0f0f0'
         }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', width: '100%' }}>
+            <div className="image-column-inner" style={{ display: 'flex', flexDirection: 'column', gap: '30px', width: '100%' }}>
                 {/* Slot 1: Fixed Primary */}
-                <div style={{ width: '100%', height: '480px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', border: '1px solid #f0f0f0', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                <div className="image-slot-card image-slot-primary" style={{ width: '100%', height: '480px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', border: '1px solid #f0f0f0', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                     {slot1 ? (
                         <img
                             src={slot1}
@@ -54,7 +54,7 @@ export const ImageColumn: React.FC<ImageColumnProps> = ({ item, uniqueImages }) 
 
                 {/* Slot 2: Carousel for remaining (if available) */}
                 {carouselItems.length > 0 && (
-                    <div style={{ width: '100%', height: '480px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', border: '1px solid #f0f0f0', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+                    <div className="image-slot-card image-slot-carousel" style={{ width: '100%', height: '480px', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', borderRadius: '24px', overflow: 'hidden', border: '1px solid #f0f0f0', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
                         <img
                             src={carouselItems[carouselIndex]}
                             alt={`${item.name} detail ${carouselIndex + 1}`}

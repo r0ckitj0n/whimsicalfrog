@@ -2577,7 +2577,7 @@
     },
     "src/commerce/cart-access.ts": {
       "type": "filesystem_word",
-      "details": "./src/hooks/admin/usePOS.ts:4:import { setCartOverride } from '../../commerce/cart-access.js';"
+      "details": "./src/hooks/use-cart.ts:2:import { cart as cartStore } from '../commerce/cart-access.js';"
     },
     "src/commerce/cart-system.ts": {
       "type": "filesystem_word",
@@ -3341,7 +3341,7 @@
     },
     "src/components/admin/settings/log-viewer/LogSidebar.tsx": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/settings/ModalTemplate.tsx.example:5:import { LogSidebar } from './log-viewer/LogSidebar.js';"
+      "details": "./src/components/admin/settings/LogViewer.tsx:5:import { LogSidebar } from './log-viewer/LogSidebar.js';"
     },
     "src/components/admin/settings/marketing/ChartCard.tsx": {
       "type": "filesystem_word",
@@ -3505,7 +3505,7 @@
     },
     "src/components/modals/GlobalModal.tsx": {
       "type": "filesystem_word",
-      "details": "./src/components/modals/GlobalModalWrapper.tsx:12:const GlobalModal = lazy(() => import('./GlobalModal.js').then(m => ({ default: m.GlobalModal })));"
+      "details": "./src/types/global.d.ts:83:    GlobalModal?: {"
     },
     "src/components/modals/GlobalModalWrapper.tsx": {
       "type": "filesystem_word",
@@ -3513,7 +3513,7 @@
     },
     "src/components/modals/ItemDetailsModal.tsx": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/POSView.tsx:9:import { ItemDetailsModal } from '../modals/ItemDetailsModal.js';"
+      "details": "./src/components/modals/GlobalModalWrapper.tsx:10:const ItemDetailsModal = lazy(() => import('./ItemDetailsModal.js').then(m => ({ default: m.ItemDetailsModal })));"
     },
     "src/components/modals/LoginModal.tsx": {
       "type": "filesystem_exact",
@@ -3709,7 +3709,7 @@
     },
     "src/components/shell/Footer.tsx": {
       "type": "filesystem_word",
-      "details": "./src/components/storefront/ReceiptView.tsx:66:            {/* Footer Links */}"
+      "details": "./src/components/modals/PaymentModal.tsx:124:                {/* Footer */}"
     },
     "src/components/shell/Header.tsx": {
       "type": "filesystem_word",
@@ -4021,7 +4021,7 @@
     },
     "src/hooks/admin/useAISettings.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/settings/AISettingsManager.tsx:3:import { useAISettings, IAISettings } from '../../../hooks/admin/useAISettings.js';"
+      "details": "./src/components/admin/settings/ai/PricingWeights.tsx:2:import { IAISettings } from '../../../../hooks/admin/useAISettings.js';"
     },
     "src/hooks/admin/useAISuggestions.ts": {
       "type": "filesystem_word",
@@ -4101,7 +4101,7 @@
     },
     "src/hooks/admin/useDashboard.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/settings/DashboardConfig.tsx:4:import { useDashboard } from '../../../hooks/admin/useDashboard.js';"
+      "details": "./src/components/admin/dashboard/AdminDashboard.tsx:2:import { useDashboard } from '../../../hooks/admin/useDashboard.js';"
     },
     "src/hooks/admin/useDashboardConfig.ts": {
       "type": "filesystem_word",
@@ -4141,7 +4141,7 @@
     },
     "src/hooks/admin/useHealthChecks.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/settings/DashboardConfig.tsx:5:import { useHealthChecks } from '../../../hooks/admin/useHealthChecks.js';"
+      "details": "./src/components/admin/dashboard/AdminDashboard.tsx:3:import { useHealthChecks } from '../../../hooks/admin/useHealthChecks.js';"
     },
     "src/hooks/admin/useHelpGuides.ts": {
       "type": "filesystem_word",
@@ -4201,7 +4201,7 @@
     },
     "src/hooks/admin/useNewsletter.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/settings/newsletter/CampaignList.tsx:2:import { INewsletterCampaign } from '../../../../hooks/admin/useNewsletter.js';"
+      "details": "./src/components/admin/settings/NewsletterManager.tsx:4:import { useNewsletter, INewsletterCampaign } from '../../../hooks/admin/useNewsletter.js';"
     },
     "src/hooks/admin/useOptionSettings.ts": {
       "type": "filesystem_word",
@@ -4345,7 +4345,7 @@
     },
     "src/hooks/useHeader.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/HeaderManager.tsx:2:import { useHeader } from '../hooks/useHeader.js';"
+      "details": "./src/components/shell/Header.tsx:9:import { useHeader } from '../../hooks/useHeader.js';"
     },
     "src/hooks/useItemDetails.ts": {
       "type": "filesystem_word",
@@ -4429,7 +4429,7 @@
     },
     "src/styles/components/admin-action-icons/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
+      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
     },
     "src/styles/components/admin-action-icons/library.css": {
       "type": "filesystem_exact",
@@ -4437,7 +4437,7 @@
     },
     "src/styles/components/admin-action-icons.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/admin-core.css:41:@import url('../components/admin-action-icons.css');"
+      "details": "./src/styles/pages/admin/settings/settings-attributes.css:4:@import url('../../../components/admin-action-icons.css');"
     },
     "src/styles/components/admin-filters/base-rules.css": {
       "type": "filesystem_exact",
@@ -4449,7 +4449,7 @@
     },
     "src/styles/components/admin-filters/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
+      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
     },
     "src/styles/components/admin-filters/sticky-tables.css": {
       "type": "filesystem_exact",
@@ -4457,7 +4457,7 @@
     },
     "src/styles/components/admin-filters.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/admin-core.css:42:@import url('../components/admin-filters.css');"
+      "details": "./src/styles/entries/embed-core.css:23:@import url('../components/admin-filters.css');"
     },
     "src/styles/components/admin-forms.css": {
       "type": "filesystem_exact",
@@ -4473,7 +4473,7 @@
     },
     "src/styles/components/admin-modals/inventory.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/admin-core.css:52:@import url('../pages/admin/admin-inventory.css');"
+      "details": "./src/styles/components/admin-modals.css:3:@import url('./admin-modals/inventory.css');"
     },
     "src/styles/components/admin-modals/orders.css": {
       "type": "filesystem_exact",
@@ -4501,11 +4501,11 @@
     },
     "src/styles/components/admin-nav/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
+      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
     },
     "src/styles/components/admin-nav/tabs.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/admin-nav.css:4:@import url('./admin-nav/tabs.css');"
+      "details": "./src/styles/pages/admin/settings/settings-attributes.css:3:@import url('../../../components/tabs.css');"
     },
     "src/styles/components/admin-nav.css": {
       "type": "filesystem_exact",
@@ -4569,7 +4569,7 @@
     },
     "src/styles/components/cards.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-dashboard/widgets.css:1:@import url('./widgets/widgets-test-cards.css');"
+      "details": "./src/styles/components/aux-styles.css:3:@import url('./cards.css');"
     },
     "src/styles/components/cart-modal/controls.css": {
       "type": "filesystem_exact",
@@ -4593,7 +4593,7 @@
     },
     "src/styles/components/categories-manager.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/embed-core.css:25:@import url('../components/categories-manager.css');"
+      "details": "./src/styles/entries/admin-core.css:44:@import url('../components/categories-manager.css');"
     },
     "src/styles/components/checkout-badges.css": {
       "type": "filesystem_exact",
@@ -4617,7 +4617,7 @@
     },
     "src/styles/components/email-templates/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
+      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
     },
     "src/styles/components/email-templates/layout.css": {
       "type": "filesystem_exact",
@@ -4637,7 +4637,7 @@
     },
     "src/styles/components/global-modals/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
+      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
     },
     "src/styles/components/global-modals/confirmation.css": {
       "type": "filesystem_exact",
@@ -4645,7 +4645,7 @@
     },
     "src/styles/components/global-modals/containers.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/login-modal.css:225:/* Note: Base modal caps (max-width, max-height, border-radius) are defined in containers.css */"
+      "details": "./src/styles/components/global-modals.css:4:@import url('./global-modals/containers.css');"
     },
     "src/styles/components/global-modals/overlays.css": {
       "type": "filesystem_exact",
@@ -4721,7 +4721,7 @@
     },
     "src/styles/components/modal.css": {
       "type": "filesystem_exact",
-      "details": "./api/global_css_rules.php:11: * - css/room-modal.css"
+      "details": "./src/components/modals/LoginModal.tsx:10:import '../../styles/components/login-modal.css';"
     },
     "src/styles/components/modals/animations/base-rules.css": {
       "type": "filesystem_exact",
@@ -4745,7 +4745,7 @@
     },
     "src/styles/components/modals/dashboard-config/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-settings.css:2:@import url('./settings/settings-page-layout.css');"
+      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
     },
     "src/styles/components/modals/dashboard-config.css": {
       "type": "filesystem_exact",
@@ -4797,7 +4797,7 @@
     },
     "src/styles/components/notifications/variants.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/notifications.css:4:@import url('./notifications/variants.css');"
+      "details": "./src/styles/components/modals/modal-animations.css:3:@import url('./animations/pos-variants.css');"
     },
     "src/styles/components/notifications.css": {
       "type": "filesystem_exact",
@@ -4833,7 +4833,7 @@
     },
     "src/styles/components/qty-button.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/public-core.css:30:@import url('../components/qty-button.css');"
+      "details": "./src/styles/entries/admin-core.css:40:@import url('../components/qty-button.css');"
     },
     "src/styles/components/reveal-company.css": {
       "type": "filesystem_exact",
@@ -4841,7 +4841,7 @@
     },
     "src/styles/components/room-iframe/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
+      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
     },
     "src/styles/components/room-iframe/elements.css": {
       "type": "filesystem_exact",
@@ -4849,11 +4849,11 @@
     },
     "src/styles/components/room-iframe/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
+      "details": "./src/styles/utilities/admin-utilities.css:2:@import url('./admin/layout.css');"
     },
     "src/styles/components/room-iframe.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/public-core.css:17:@import url('../components/room-iframe.css');"
+      "details": "./src/styles/layouts/site-base.css:54:/* Room Fallback: basic centering for iframes if not handled by room-iframe.css */"
     },
     "src/styles/components/room-main/doors.css": {
       "type": "filesystem_exact",
@@ -4861,7 +4861,7 @@
     },
     "src/styles/components/room-main/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
+      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
     },
     "src/styles/components/room-main/overlays.css": {
       "type": "filesystem_exact",
@@ -4893,7 +4893,7 @@
     },
     "src/styles/components/search-modal/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
+      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
     },
     "src/styles/components/search-modal/results.css": {
       "type": "filesystem_exact",
@@ -4917,7 +4917,7 @@
     },
     "src/styles/components/settings/colors-fonts-modal.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/styling-modals.css:3:/* NOTE: #colorsFontsModal rules are in colors-fonts-modal.css */"
+      "details": "./src/styles/components/settings-modals.css:3:@import url('./settings/colors-fonts-modal.css');"
     },
     "src/styles/components/settings/email-settings-modal.css": {
       "type": "filesystem_exact",
@@ -4957,7 +4957,7 @@
     },
     "src/styles/components/tabs.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/admin-core.css:45:@import url('../components/tabs.css');"
+      "details": "./src/styles/entries/embed-core.css:26:@import url('../components/tabs.css');"
     },
     "src/styles/components/tool-modals/automation-health.css": {
       "type": "filesystem_exact",
@@ -4965,7 +4965,7 @@
     },
     "src/styles/components/tool-modals/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
+      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
     },
     "src/styles/components/tool-modals/customer-messages.css": {
       "type": "filesystem_exact",
@@ -5001,15 +5001,15 @@
     },
     "src/styles/entries/admin-core.css": {
       "type": "filesystem_exact",
-      "details": "./includes/vite/ViteDevLoader.php:25:        'js/admin-settings.js' => ['src/styles/entries/admin-core.css'],"
+      "details": "./vite.config.ts:123:        'css/admin-core.css': resolve(__dirname, 'src/styles/entries/admin-core.css'),"
     },
     "src/styles/entries/embed-core.css": {
       "type": "filesystem_exact",
-      "details": "./vite.config.ts:125:        'css/embed-core.css': resolve(__dirname, 'src/styles/entries/embed-core.css'),"
+      "details": "./includes/vite/ViteDevLoader.php:29:        'css/embed-core.css' => ['src/styles/entries/embed-core.css'],"
     },
     "src/styles/entries/public-core.css": {
       "type": "filesystem_exact",
-      "details": "./index.html:20:    <link rel='stylesheet' href='/src/styles/entries/public-core.css'>"
+      "details": "./vite.config.ts:124:        'css/public-core.css': resolve(__dirname, 'src/styles/entries/public-core.css'),"
     },
     "src/styles/foundation/dev-status.css": {
       "type": "filesystem_exact",
@@ -5017,7 +5017,7 @@
     },
     "src/styles/foundation/tokens.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/foundation/z-index.css:3:@import url('./z-index/tokens.css');"
+      "details": "./vite-proxy.php:86:// Vite serves imports like `../foundation/tokens.css`. In JS-injected styles,"
     },
     "src/styles/foundation/typography.css": {
       "type": "filesystem_exact",
@@ -5033,7 +5033,7 @@
     },
     "src/styles/foundation/z-index/tokens.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/foundation/z-index.css:3:@import url('./z-index/tokens.css');"
+      "details": "./vite-proxy.php:86:// Vite serves imports like `../foundation/tokens.css`. In JS-injected styles,"
     },
     "src/styles/foundation/z-index.css": {
       "type": "filesystem_exact",
@@ -5041,7 +5041,7 @@
     },
     "src/styles/global-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/layouts/site-base.css:14:/* Base resets handled by global-rules.css."
+      "details": "./src/styles/entries/public-core.css:6:@import url('../global-rules.css');"
     },
     "src/styles/layouts/embed-iframe.css": {
       "type": "filesystem_exact",
@@ -5133,11 +5133,11 @@
     },
     "src/styles/pages/admin/admin-room-map-editor.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/embed-core.css:30:@import url('../pages/admin/admin-room-map-editor.css');"
+      "details": "./src/styles/entries/admin-core.css:59:@import url('../pages/admin/admin-room-map-editor.css');"
     },
     "src/styles/pages/admin/admin-settings-extras.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/admin-core.css:54:@import url('../pages/admin/admin-settings-extras.css');"
+      "details": "./src/styles/entries/embed-core.css:29:@import url('../pages/admin/admin-settings-extras.css');"
     },
     "src/styles/pages/admin/admin-settings.css": {
       "type": "filesystem_exact",
@@ -5145,7 +5145,7 @@
     },
     "src/styles/pages/admin/email-settings.css": {
       "type": "filesystem_exact",
-      "details": "./includes/vite/ViteDevLoader.php:26:        'js/admin-email-settings.js' => ['src/styles/pages/admin/email-settings.css'],"
+      "details": "./src/styles/entries/admin-core.css:62:@import url('../pages/admin/email-settings.css');"
     },
     "src/styles/pages/admin/help-documentation.css": {
       "type": "filesystem_exact",
@@ -5209,7 +5209,7 @@
     },
     "src/styles/pages/admin/settings/settings-components.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-settings.css:3:@import url('./settings/settings-components.css');"
+      "details": "./src/styles/pages/admin/settings/settings-page-layout.css:180:/* MOVED TO settings-components.css */"
     },
     "src/styles/pages/admin/settings/settings-dashboard-config.css": {
       "type": "filesystem_exact",
@@ -5249,7 +5249,7 @@
     },
     "src/styles/pages/storefront/receipt/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
+      "details": "./src/styles/components/email-templates.css:1:@import url('./email-templates/layout.css');"
     },
     "src/styles/pages/storefront/receipt/print.css": {
       "type": "filesystem_exact",
@@ -5433,7 +5433,7 @@
     },
     "src/ui/search-modal.ts": {
       "type": "filesystem_word",
-      "details": "./src/styles/entries/public-core.css:20:@import url('../components/search-modal.css');"
+      "details": "./src/styles/entries/embed-core.css:15:@import url('../components/search-modal.css');"
     },
     "stylelint.config.cjs": {
       "type": "entry_point",

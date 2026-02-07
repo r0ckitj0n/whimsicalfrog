@@ -41,3 +41,28 @@ jobs:
           WF_DRY_RUN: "0"
           WF_STRICT_VERIFY: "1"
         run: bash scripts/deploy.sh --lite
+
+      - name: Kill Switch Verify Live Build
+        env:
+          BASE_URL: ${{ secrets.WF_DEPLOY_BASE_URL }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${BASE_URL:-}" ]; then
+            BASE_URL="https://whimsicalfrog.us"
+          fi
+
+          echo "[kill-switch] Checking homepage and manifest at $BASE_URL"
+          HTTP_MANIFEST_CODE="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE_URL/dist/.vite/manifest.json")"
+          if [ "$HTTP_MANIFEST_CODE" != "200" ]; then
+            echo "[kill-switch] ERROR: manifest returned HTTP $HTTP_MANIFEST_CODE"
+            exit 1
+          fi
+
+          HOME_HTML="$(curl -sS "$BASE_URL/")"
+          if echo "$HOME_HTML" | grep -q "/src/"; then
+            echo "[kill-switch] ERROR: homepage still references /src/"
+            exit 1
+          fi
+
+          echo "[kill-switch] OK: manifest is 200 and homepage has no /src/ references."

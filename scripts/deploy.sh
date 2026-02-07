@@ -206,6 +206,7 @@ mirror $MIRROR_FLAGS \
   --exclude-glob ".env.*" \
   --exclude-glob "backups/**" \
   --exclude-glob "logs/**" \
+  --exclude-glob "src/**" \
   --include-glob documentation/.htaccess \
   --include-glob reports/.htaccess \
   --exclude-glob "**/*.log" \
@@ -388,6 +389,7 @@ rm deploy_commands.txt
 # Ensure no Vite hot file exists on the live server (prevents accidental dev mode)
 if [ "$MODE" != "env-only" ]; then
   echo -e "${GREEN}🧹 Enforcing production mode on server (remove dev artifacts)...${NC}"
+  ARCHIVE_TS="$(date '+%Y%m%d-%H%M%S')"
   cat > enforce_prod_marker.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -407,10 +409,13 @@ EOL
   cat > cleanup_prod.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
+set cmd:fail-exit no
 open sftp://$USER:$PASS@$HOST
+mkdir -p backups
+mkdir -p backups/src-archives
+mv src backups/src-archives/src-${ARCHIVE_TS}
 rm -f hot
 rm -f index.html
-rm -rf src
 rm -f dist/.htaccess
 bye
 EOL

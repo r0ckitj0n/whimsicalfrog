@@ -100,13 +100,38 @@ try {
                     }
                 }
             } elseif ($action === 'apply' || $action === 'activate') {
-                $map_id = $input['id'] ?? $input['map_id'] ?? 0;
+                $map_id = (int)($input['id'] ?? $input['map_id'] ?? 0);
+                if ($map_id <= 0) {
+                    Response::error('Invalid map id');
+                }
+
+                $targetMap = Database::queryOne("SELECT id, room_number FROM room_maps WHERE id = ? LIMIT 1", [$map_id]);
+                if (!$targetMap) {
+                    Response::error('Map not found');
+                }
+
+                $mapRoom = RoomMapHelper::normalizeRoomNumber($targetMap['room_number'] ?? '');
+                if ($rn === '') {
+                    $rn = $mapRoom;
+                }
+
+                if ($rn === '' || $mapRoom === '') {
+                    Response::error('Room is required to activate map');
+                }
+
+                if ($rn !== $mapRoom) {
+                    Response::error('Selected room does not match map room');
+                }
+
                 Database::beginTransaction();
                 try {
                     Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_number = ?", [$rn]);
-                    Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ?", [$map_id]);
+                    $rows = Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ? AND room_number = ?", [$map_id, $rn]);
+                    if ($rows < 1) {
+                        throw new Exception('Activation update failed');
+                    }
                     Database::commit();
-                    Response::updated();
+                    Response::updated(['map_id' => $map_id, 'room' => $rn]);
                 } catch (Exception $e) {
                     Database::rollBack();
                     Response::serverError($e->getMessage());

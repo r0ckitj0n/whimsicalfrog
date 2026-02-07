@@ -37,14 +37,18 @@ export const SavedMapsSection: React.FC<SavedMapsSectionProps> = ({
                 {savedMaps.map(map => (
                     <div
                         key={map.id}
-                        className={`flex items-center justify-between p-2 rounded-lg group transition-all cursor-pointer border-2
+                        className={`flex items-center justify-between p-2 rounded-lg group transition-all border-2
                             ${String(map.id) === String(selectedMapId) ? 'ring-2 ring-blue-500 ring-offset-1' : ''}
                             ${map.is_active
                                 ? 'bg-[var(--brand-primary)]/5 border-[var(--brand-primary)] shadow-sm'
                                 : 'bg-white border-gray-100 hover:border-gray-300'}`}
-                        onClick={() => onLoadMap(map.id!)}
                     >
-                        <div className="min-w-0">
+                        <button
+                            type="button"
+                            className="min-w-0 flex-1 text-left cursor-pointer"
+                            onClick={() => onLoadMap(map.id!)}
+                            data-help-id="load-map"
+                        >
                             <div className="flex items-center gap-2">
                                 <div className="text-xs font-bold text-gray-900 truncate">{map.map_name}</div>
                                 {!!map.is_active && (
@@ -54,7 +58,7 @@ export const SavedMapsSection: React.FC<SavedMapsSectionProps> = ({
                                 )}
                             </div>
                             <div className="text-[9px] text-gray-400">{map.created_at}</div>
-                        </div>
+                        </button>
                         <div
                             className="flex gap-1 items-center"
                             onClick={(e) => e.stopPropagation()}
@@ -71,13 +75,14 @@ export const SavedMapsSection: React.FC<SavedMapsSectionProps> = ({
                             <input
                                 type="checkbox"
                                 checked={!!map.is_active}
-                                readOnly
-                                onClick={(e) => {
+                                onChange={(e) => {
                                     e.stopPropagation();
                                     onActivateMap(map.id!);
                                 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                }}
                                 onPointerDown={(e) => e.stopPropagation()}
-                                style={{ accentColor: 'var(--brand-primary)' }}
                                 className="relative z-10 w-4 h-4 cursor-pointer"
                                 data-help-id={map.is_active ? 'map-active' : 'map-activate'}
                             />

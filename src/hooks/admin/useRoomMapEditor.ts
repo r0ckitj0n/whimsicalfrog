@@ -21,6 +21,21 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
         is_active: map.is_active === true || map.is_active === 1 || (map.is_active as unknown) === '1'
     }), []);
 
+    const sortMapsChronologically = useCallback((maps: IRoomMap[]): IRoomMap[] => {
+        return [...maps].sort((a, b) => {
+            const ta = a.created_at ? Date.parse(a.created_at) : NaN;
+            const tb = b.created_at ? Date.parse(b.created_at) : NaN;
+
+            if (!Number.isNaN(ta) && !Number.isNaN(tb)) {
+                return ta - tb;
+            }
+            if (!Number.isNaN(ta)) return -1;
+            if (!Number.isNaN(tb)) return 1;
+
+            return Number(a.id ?? 0) - Number(b.id ?? 0);
+        });
+    }, []);
+
     const fetchRooms = useCallback(async () => {
         try {
             const res = await ApiClient.get<IRoomListResponse[]>('/api/get_rooms.php');
@@ -44,14 +59,14 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
         try {
             const res = await ApiClient.get<IRoomMapResponse>('/api/room_maps.php', { action: 'list', room });
             if (res.success) {
-                setSavedMaps((res.maps || []).map(normalizeSavedMap));
+                setSavedMaps(sortMapsChronologically((res.maps || []).map(normalizeSavedMap)));
             }
         } catch (err) {
             logger.error('[useRoomMapEditor] fetchSavedMaps failed', err);
         } finally {
             setIsLoading(false);
         }
-    }, [normalizeSavedMap]);
+    }, [normalizeSavedMap, sortMapsChronologically]);
 
     const loadActiveMap = useCallback(async (room: string) => {
         if (!room) return null;

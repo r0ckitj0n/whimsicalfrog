@@ -225,13 +225,13 @@ try {
                         $map['coordinates'] = decodeRoomMapCoordinates($map['coordinates']);
                     Response::success(['map' => $map]);
                 } else {
-                    $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC", [$rn]);
+                    $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps WHERE room_number = ? ORDER BY created_at ASC, id ASC", [$rn]);
                     foreach ($maps as &$m)
                         $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                     Response::success(['maps' => $maps]);
                 }
             } else {
-                $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps ORDER BY room_number, updated_at DESC");
+                $maps = Database::queryAll("SELECT id, room_number, map_name, coordinates, is_active, created_at, updated_at FROM room_maps ORDER BY room_number, created_at ASC, id ASC");
                 foreach ($maps as &$m)
                     $m['coordinates'] = decodeRoomMapCoordinates($m['coordinates']);
                 Response::success(['maps' => $maps]);

@@ -1,8 +1,29 @@
 import { useState, useCallback, useMemo } from 'react';
 import { IMapArea, IRoomMapEditorHook, IRoomBoundariesHook, IRoomMap } from '../../../types/room.js';
-import { isDraftDirty } from '../../../core/utils.js';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { normalizeMapAreas } from './mapCoordinates.js';
+
+const normalizeAreasForDirtyCheck = (areas: IMapArea[]) =>
+    areas.map((a) => ({
+        top: Number(a.top ?? 0),
+        left: Number(a.left ?? 0),
+        width: Number(a.width ?? 0),
+        height: Number(a.height ?? 0)
+    }));
+
+const areCoordinatesDirty = (draft: IMapArea[], base: IMapArea[]) => {
+    const d = normalizeAreasForDirtyCheck(draft);
+    const b = normalizeAreasForDirtyCheck(base);
+    if (d.length !== b.length) return true;
+    for (let i = 0; i < d.length; i += 1) {
+        const rowD = d[i];
+        const rowB = b[i];
+        if (rowD.top !== rowB.top || rowD.left !== rowB.left || rowD.width !== rowB.width || rowD.height !== rowB.height) {
+            return true;
+        }
+    }
+    return false;
+};
 
 export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEditorHook): IRoomBoundariesHook => {
     const { prompt: promptModal, confirm: confirmModal } = useModalContext();
@@ -64,7 +85,7 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
         Math.abs(targetAspectRatio - initialSettings.targetAspectRatio) > 0.0001
         , [renderContext, bgUrl, iconPanelColor, targetAspectRatio, initialSettings]);
 
-    const isBoundaryDirty = useMemo(() => isDraftDirty(areas, lastSavedAreas), [areas, lastSavedAreas]);
+    const isBoundaryDirty = useMemo(() => areCoordinatesDirty(areas, lastSavedAreas), [areas, lastSavedAreas]);
 
     const handleDeleteMap = useCallback(async (id: string | number) => {
         const confirmed = await confirmModal({ title: 'Delete Map', message: 'Delete?', confirmText: 'Delete', confirmStyle: 'danger' });
@@ -102,6 +123,7 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
         if (!map) return;
         const loaded = normalizeMapAreas(map.coordinates);
         setAreas(loaded);
+        setLastSavedAreas(loaded);
         setCurrentMapId(map.id);
     }, [boundaries]);
 

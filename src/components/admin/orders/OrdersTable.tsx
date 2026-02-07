@@ -162,6 +162,14 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                                             #{order.id}
                                         </td>
                                         <td className="px-4 py-3 border-b-2 border-gray-300">
+                                            <div className="text-sm text-gray-900 font-semibold truncate">
+                                                {order.username || (order.user_id ? `User #${order.user_id}` : 'Guest')}
+                                            </div>
+                                            <div className="text-[10px] text-gray-400 font-medium">
+                                                {order.user_id ? `ID ${order.user_id}` : 'No account'}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 border-b-2 border-gray-300">
                                             <div className="text-sm text-gray-900">{date}</div>
                                             <div className="text-[10px] text-gray-400 font-medium">{time}</div>
                                         </td>

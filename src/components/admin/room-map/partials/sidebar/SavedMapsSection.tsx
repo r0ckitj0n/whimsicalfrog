@@ -55,7 +55,11 @@ export const SavedMapsSection: React.FC<SavedMapsSectionProps> = ({
                             </div>
                             <div className="text-[9px] text-gray-400">{map.created_at}</div>
                         </div>
-                        <div className="flex gap-1 items-center">
+                        <div
+                            className="flex gap-1 items-center"
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                        >
                             {map.map_name !== 'Original' && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onRenameMap(map.id!); }}
@@ -67,9 +71,14 @@ export const SavedMapsSection: React.FC<SavedMapsSectionProps> = ({
                             <input
                                 type="checkbox"
                                 checked={!!map.is_active}
-                                onChange={(e) => { e.stopPropagation(); onActivateMap(map.id!); }}
-                                onClick={(e) => e.stopPropagation()}
-                                className="w-4 h-4 accent-[var(--brand-primary)] cursor-pointer"
+                                readOnly
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onActivateMap(map.id!);
+                                }}
+                                onPointerDown={(e) => e.stopPropagation()}
+                                style={{ accentColor: 'var(--brand-primary)' }}
+                                className="relative z-10 w-4 h-4 cursor-pointer"
                                 data-help-id={map.is_active ? 'map-active' : 'map-activate'}
                             />
                             <button

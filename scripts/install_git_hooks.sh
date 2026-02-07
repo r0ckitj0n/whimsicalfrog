@@ -24,6 +24,11 @@ if [ ! -x "$ROOT_DIR/scripts/release_track_on_push.sh" ]; then
   chmod +x "$ROOT_DIR/scripts/release_track_on_push.sh"
 fi
 
+if [ ! -x "$ROOT_DIR/scripts/auto_deploy_on_push.sh" ]; then
+  echo "[hooks] Making scripts/auto_deploy_on_push.sh executable..."
+  chmod +x "$ROOT_DIR/scripts/auto_deploy_on_push.sh"
+fi
+
 PRE_COMMIT_HOOK_PATH="$ROOT_DIR/.git/hooks/pre-commit"
 PRE_PUSH_HOOK_PATH="$ROOT_DIR/.git/hooks/pre-push"
 
@@ -64,7 +69,10 @@ echo "[pre-push] Running repo hygiene..."
 node "$REPO_ROOT/scripts/repo_hygiene.mjs"
 
 echo "[pre-push] Running release tracking..."
-exec "$REPO_ROOT/scripts/release_track_on_push.sh" "$@"
+"$REPO_ROOT/scripts/release_track_on_push.sh" "$@"
+
+echo "[pre-push] Running auto deploy..."
+exec "$REPO_ROOT/scripts/auto_deploy_on_push.sh" "$@"
 EOF
 
 chmod +x "$PRE_PUSH_HOOK_PATH"
@@ -73,5 +81,5 @@ git config push.followTags true
 echo "[hooks] Installed pre-commit hook at .git/hooks/pre-commit"
 echo "[hooks] Hook will run scripts/commit_mode_sync.sh on every commit."
 echo "[hooks] Installed pre-push hook at .git/hooks/pre-push"
-echo "[hooks] Hook runs repo_hygiene.mjs and release tracking on pushes."
+echo "[hooks] Hook runs repo_hygiene.mjs, release tracking, and auto-deploy on pushes."
 echo "[hooks] Set git config push.followTags=true for this repository."

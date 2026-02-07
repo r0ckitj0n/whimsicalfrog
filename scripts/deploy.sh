@@ -409,6 +409,28 @@ EOL
         echo -e "${YELLOW}⚠️  Background image sync failed; continuing${NC}"
       fi
       rm -f deploy_backgrounds.txt
+
+      # Perform a dedicated sync for signs with --overwrite.
+      # Rationale: sign assets are frequently replaced in-place (same filename), and
+      # same-size edits can be skipped by size/time heuristics in the primary mirror.
+      echo -e "${GREEN}🪧 Ensuring sign images are updated (force overwrite)...${NC}"
+      cat > deploy_signs.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+mirror --reverse --delete --verbose --overwrite --no-perms \
+  images/signs images/signs
+bye
+EOL
+      if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+        echo -e "${YELLOW}DRY-RUN: Skipping sign sync (force overwrite)${NC}"
+      elif lftp -f deploy_signs.txt; then
+        echo -e "${GREEN}✅ Sign images synced (force overwrite)${NC}"
+      else
+        echo -e "${YELLOW}⚠️  Sign image sync failed; continuing${NC}"
+      fi
+      rm -f deploy_signs.txt
     fi
     # Perform a second, targeted mirror for dist WITHOUT --ignore-time
     # Rationale: manifest.json and hashed bundles can change without size changes; ensure they upload

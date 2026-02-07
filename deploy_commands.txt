@@ -1,0 +1,10 @@
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+# Log sessions to logs/lftp_deploy.log (appends by default)
+debug 3 -o logs/lftp_deploy.log
+open sftp://acc899014616:Palz2516!@home419172903.1and1-data.host
+# Note: SFTP lacks checksums. In full-replace mode we use --overwrite to force upload.
+# In fast mode, we use size-only + only-newer to avoid re-uploading identical files.
+mirror --reverse --delete --verbose --no-perms --overwrite --only-newer   --exclude-glob .git/   --exclude-glob node_modules/   --exclude-glob .vscode/   --exclude-glob hot   --exclude-glob "**/.DS_Store"   --exclude-glob "sessions/**"   --exclude-glob .env   --exclude-glob ".env.*"   --exclude-glob "backups/**"   --exclude-glob "logs/**"   --include-glob documentation/.htaccess   --include-glob reports/.htaccess   --exclude-glob "**/*.log"   --exclude-glob "**/*.sh"   --exclude-glob "**/*.plist"   --exclude-glob temp_cron.txt   --exclude-glob SERVER_MANAGEMENT.md   --exclude-glob factory-tutorial/   --exclude-glob backup.sql   --exclude-glob backup_*.tar.gz   --exclude-glob *_backup_*.tar.gz   --exclude-glob .tmp*   --exclude-glob ".tmp2 *"   --exclude-glob deploy_commands.txt   --exclude-glob fix_clown_frog_image.sql   --exclude-glob images/.htaccess   --exclude-glob images/items/.htaccess   --exclude-glob config/my.cnf   --exclude-glob "* [0-9].*"   --exclude-glob "* [0-9]/*"   --exclude-glob "* copy*"   --include-glob credentials.json   . /
+bye

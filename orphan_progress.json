@@ -2577,7 +2577,7 @@
     },
     "src/commerce/cart-access.ts": {
       "type": "filesystem_word",
-      "details": "./src/hooks/use-cart.ts:2:import { cart as cartStore } from '../commerce/cart-access.js';"
+      "details": "./src/hooks/admin/usePOS.ts:4:import { setCartOverride } from '../../commerce/cart-access.js';"
     },
     "src/commerce/cart-system.ts": {
       "type": "filesystem_word",
@@ -3341,7 +3341,7 @@
     },
     "src/components/admin/settings/log-viewer/LogSidebar.tsx": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/settings/LogViewer.tsx:5:import { LogSidebar } from './log-viewer/LogSidebar.js';"
+      "details": "./src/components/admin/settings/ModalTemplate.tsx.example:5:import { LogSidebar } from './log-viewer/LogSidebar.js';"
     },
     "src/components/admin/settings/marketing/ChartCard.tsx": {
       "type": "filesystem_word",
@@ -3489,7 +3489,7 @@
     },
     "src/components/contact/BusinessInfo.tsx": {
       "type": "filesystem_word",
-      "details": "./src/components/ContactManager.tsx:4:import { BusinessInfo } from './contact/BusinessInfo.js';"
+      "details": "./src/components/storefront/receipt/ReceiptHeader.tsx:3:interface BusinessInfo {"
     },
     "src/components/contact/ContactForm.tsx": {
       "type": "filesystem_word",
@@ -3505,7 +3505,7 @@
     },
     "src/components/modals/GlobalModal.tsx": {
       "type": "filesystem_word",
-      "details": "./src/types/global.d.ts:83:    GlobalModal?: {"
+      "details": "./src/components/modals/GlobalModalWrapper.tsx:12:const GlobalModal = lazy(() => import('./GlobalModal.js').then(m => ({ default: m.GlobalModal })));"
     },
     "src/components/modals/GlobalModalWrapper.tsx": {
       "type": "filesystem_word",
@@ -3709,7 +3709,7 @@
     },
     "src/components/shell/Footer.tsx": {
       "type": "filesystem_word",
-      "details": "./src/components/modals/PaymentModal.tsx:124:                {/* Footer */}"
+      "details": "./src/components/storefront/ReceiptView.tsx:66:            {/* Footer Links */}"
     },
     "src/components/shell/Header.tsx": {
       "type": "filesystem_word",
@@ -3717,7 +3717,7 @@
     },
     "src/components/shell/Logo.tsx": {
       "type": "filesystem_word",
-      "details": "./src/styles/components/room-main/layout.css:55:/* Navigation & Logo */"
+      "details": "./src/components/storefront/receipt/ReceiptHeader.tsx:21:                    alt='Whimsical Frog Brand Logo'"
     },
     "src/components/shell/MobileMenu.tsx": {
       "type": "filesystem_word",
@@ -3825,7 +3825,7 @@
     },
     "src/core/api/JsonResponseParser.ts": {
       "type": "filesystem_word",
-      "details": "./src/hooks/admin/useIntentHeuristics.ts:66:            // JsonResponseParser automatically unwraps 'data' and throws on success:false"
+      "details": "./src/hooks/admin/useDbStatus.ts:22:                // JsonResponseParser unwraps the 'data' property, so we access local/live directly"
     },
     "src/core/api/types.ts": {
       "type": "filesystem_word",
@@ -4017,7 +4017,7 @@
     },
     "src/hooks/admin/useAIGenerationOrchestrator.ts": {
       "type": "filesystem_word",
-      "details": "./src/hooks/admin/useAISuggestionsView.tsx:5:import { useAIGenerationOrchestrator, type GenerationContext } from './useAIGenerationOrchestrator.js';"
+      "details": "./src/hooks/admin/useInventoryItemForm.ts:7:import { useAIGenerationOrchestrator, type GenerationStep, type GenerationContext } from './useAIGenerationOrchestrator.js';"
     },
     "src/hooks/admin/useAISettings.ts": {
       "type": "filesystem_word",
@@ -4141,7 +4141,7 @@
     },
     "src/hooks/admin/useHealthChecks.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/dashboard/AdminDashboard.tsx:3:import { useHealthChecks } from '../../../hooks/admin/useHealthChecks.js';"
+      "details": "./src/components/admin/settings/DashboardConfig.tsx:5:import { useHealthChecks } from '../../../hooks/admin/useHealthChecks.js';"
     },
     "src/hooks/admin/useHelpGuides.ts": {
       "type": "filesystem_word",
@@ -4149,7 +4149,7 @@
     },
     "src/hooks/admin/useIntentHeuristics.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/admin/settings/heuristics/BudgetTab.tsx:2:import { IIntentHeuristics } from '../../../../hooks/admin/useIntentHeuristics.js';"
+      "details": "./src/components/admin/settings/IntentHeuristicsManager.tsx:4:import { useIntentHeuristics, getDefaultHeuristics, IIntentHeuristics } from '../../../hooks/admin/useIntentHeuristics.js';"
     },
     "src/hooks/admin/useInventory.ts": {
       "type": "filesystem_word",
@@ -4349,7 +4349,7 @@
     },
     "src/hooks/useItemDetails.ts": {
       "type": "filesystem_word",
-      "details": "./src/components/modals/item-details/DetailsColumn.tsx:2:import { IItemDetails, IItemOption } from '../../../hooks/useItemDetails.js';"
+      "details": "./src/hooks/useItemOptions.ts:2:import { IItemDetails, IItemOption } from './useItemDetails.js';"
     },
     "src/hooks/useItemModal.ts": {
       "type": "filesystem_word",
@@ -4389,7 +4389,7 @@
     },
     "src/hooks/useSiteHydration.ts": {
       "type": "filesystem_word",
-      "details": "./src/styles/pages/admin/settings/settings-page-layout.css:68:  /* Background is now database-driven via useSiteHydration/bootstrap.php"
+      "details": "./src/components/admin/POSView.tsx:3:import { useSiteHydration } from '../../hooks/useSiteHydration.js';"
     },
     "src/hooks/useSquare.ts": {
       "type": "filesystem_word",
@@ -4429,7 +4429,7 @@
     },
     "src/styles/components/admin-action-icons/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
+      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
     },
     "src/styles/components/admin-action-icons/library.css": {
       "type": "filesystem_exact",
@@ -4437,7 +4437,7 @@
     },
     "src/styles/components/admin-action-icons.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/embed-core.css:22:@import url('../components/admin-action-icons.css');"
+      "details": "./src/styles/entries/admin-core.css:41:@import url('../components/admin-action-icons.css');"
     },
     "src/styles/components/admin-filters/base-rules.css": {
       "type": "filesystem_exact",
@@ -4445,7 +4445,7 @@
     },
     "src/styles/components/admin-filters/controls.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/admin-filters.css:4:@import url('./admin-filters/controls.css');"
+      "details": "./src/styles/components/popup.css:5:@import url('./popup/controls.css');"
     },
     "src/styles/components/admin-filters/layout.css": {
       "type": "filesystem_exact",
@@ -4457,7 +4457,7 @@
     },
     "src/styles/components/admin-filters.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/embed-core.css:23:@import url('../components/admin-filters.css');"
+      "details": "./src/styles/entries/admin-core.css:42:@import url('../components/admin-filters.css');"
     },
     "src/styles/components/admin-forms.css": {
       "type": "filesystem_exact",
@@ -4481,7 +4481,7 @@
     },
     "src/styles/components/admin-modals/overlays.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/global-modals.css:3:@import url('./global-modals/overlays.css');"
+      "details": "./src/styles/components/admin-modals.css:2:@import url('./admin-modals/overlays.css');"
     },
     "src/styles/components/admin-modals/shared.css": {
       "type": "filesystem_exact",
@@ -4497,15 +4497,15 @@
     },
     "src/styles/components/admin-nav/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
+      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
     },
     "src/styles/components/admin-nav/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
+      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
     },
     "src/styles/components/admin-nav/tabs.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/settings/settings-attributes.css:3:@import url('../../../components/tabs.css');"
+      "details": "./src/styles/components/admin-nav.css:4:@import url('./admin-nav/tabs.css');"
     },
     "src/styles/components/admin-nav.css": {
       "type": "filesystem_exact",
@@ -4529,7 +4529,7 @@
     },
     "src/styles/components/attributes-manager.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/embed-core.css:24:@import url('../components/attributes-manager.css');"
+      "details": "./src/styles/pages/admin/settings/settings-attributes.css:5:@import url('../../../components/attributes-manager.css');"
     },
     "src/styles/components/aux-styles.css": {
       "type": "filesystem_exact",
@@ -4565,7 +4565,7 @@
     },
     "src/styles/components/buttons.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/admin-modals/shared.css:2:  /* Button styles in admin modals should inherit from global buttons.css */"
+      "details": "./src/styles/entries/public-core.css:12:@import url('../components/buttons.css');"
     },
     "src/styles/components/cards.css": {
       "type": "filesystem_exact",
@@ -4589,7 +4589,7 @@
     },
     "src/styles/components/cart-system.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/admin-core.css:34:@import url('../components/cart-system.css');"
+      "details": "./src/styles/entries/public-core.css:23:@import url('../components/cart-system.css');"
     },
     "src/styles/components/categories-manager.css": {
       "type": "filesystem_exact",
@@ -4617,11 +4617,11 @@
     },
     "src/styles/components/email-templates/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
+      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
     },
     "src/styles/components/email-templates/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
+      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
     },
     "src/styles/components/email-templates/tables.css": {
       "type": "filesystem_exact",
@@ -4661,7 +4661,7 @@
     },
     "src/styles/components/inventory/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
+      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
     },
     "src/styles/components/inventory/inventory-audit-modal.css": {
       "type": "filesystem_exact",
@@ -4725,7 +4725,7 @@
     },
     "src/styles/components/modals/animations/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
+      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
     },
     "src/styles/components/modals/animations/pos-cash.css": {
       "type": "filesystem_exact",
@@ -4745,7 +4745,7 @@
     },
     "src/styles/components/modals/dashboard-config/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/utilities/admin-utilities.css:2:@import url('./admin/layout.css');"
+      "details": "./src/styles/pages/admin/admin-settings.css:2:@import url('./settings/settings-page-layout.css');"
     },
     "src/styles/components/modals/dashboard-config.css": {
       "type": "filesystem_exact",
@@ -4793,7 +4793,7 @@
     },
     "src/styles/components/notifications/container.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/notifications.css:3:@import url('./notifications/container.css');"
+      "details": "./src/styles/components/room-modal.css:2:@import url('./room-modal/container.css');"
     },
     "src/styles/components/notifications/variants.css": {
       "type": "filesystem_exact",
@@ -4877,11 +4877,11 @@
     },
     "src/styles/components/room-modal/elements.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/popup.css:4:@import url('./popup/elements.css');"
+      "details": "./src/styles/pages/admin/admin-inventory.css:6:@import url('./inventory/inventory-visual-elements.css');"
     },
     "src/styles/components/room-modal/overlay.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/room-modal.css:1:@import url('./room-modal/overlay.css');"
+      "details": "./src/styles/components/cart-modal.css:1:@import url('./cart-modal/overlay.css');"
     },
     "src/styles/components/room-modal.css": {
       "type": "filesystem_exact",
@@ -4893,7 +4893,7 @@
     },
     "src/styles/components/search-modal/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
+      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
     },
     "src/styles/components/search-modal/results.css": {
       "type": "filesystem_exact",
@@ -4957,7 +4957,7 @@
     },
     "src/styles/components/tabs.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/settings/settings-attributes.css:3:@import url('../../../components/tabs.css');"
+      "details": "./src/styles/entries/admin-core.css:45:@import url('../components/tabs.css');"
     },
     "src/styles/components/tool-modals/automation-health.css": {
       "type": "filesystem_exact",
@@ -4965,7 +4965,7 @@
     },
     "src/styles/components/tool-modals/base-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/email-templates.css:3:@import url('./email-templates/base-rules.css');"
+      "details": "./src/styles/foundation/z-index.css:5:@import url('./z-index/base-rules.css');"
     },
     "src/styles/components/tool-modals/customer-messages.css": {
       "type": "filesystem_exact",
@@ -5001,7 +5001,7 @@
     },
     "src/styles/entries/admin-core.css": {
       "type": "filesystem_exact",
-      "details": "./vite.config.ts:123:        'css/admin-core.css': resolve(__dirname, 'src/styles/entries/admin-core.css'),"
+      "details": "./includes/vite/ViteDevLoader.php:25:        'js/admin-settings.js' => ['src/styles/entries/admin-core.css'],"
     },
     "src/styles/entries/embed-core.css": {
       "type": "filesystem_exact",
@@ -5009,7 +5009,7 @@
     },
     "src/styles/entries/public-core.css": {
       "type": "filesystem_exact",
-      "details": "./vite.config.ts:124:        'css/public-core.css': resolve(__dirname, 'src/styles/entries/public-core.css'),"
+      "details": "./index.html:20:    <link rel='stylesheet' href='/src/styles/entries/public-core.css'>"
     },
     "src/styles/foundation/dev-status.css": {
       "type": "filesystem_exact",
@@ -5017,11 +5017,11 @@
     },
     "src/styles/foundation/tokens.css": {
       "type": "filesystem_exact",
-      "details": "./vite-proxy.php:86:// Vite serves imports like `../foundation/tokens.css`. In JS-injected styles,"
+      "details": "./src/styles/foundation/z-index.css:3:@import url('./z-index/tokens.css');"
     },
     "src/styles/foundation/typography.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/utilities/admin-utilities.css:3:@import url('./admin/typography.css');"
+      "details": "./src/styles/entries/public-core.css:4:@import url('../foundation/typography.css');"
     },
     "src/styles/foundation/z-index/base-rules.css": {
       "type": "filesystem_exact",
@@ -5033,7 +5033,7 @@
     },
     "src/styles/foundation/z-index/tokens.css": {
       "type": "filesystem_exact",
-      "details": "./vite-proxy.php:86:// Vite serves imports like `../foundation/tokens.css`. In JS-injected styles,"
+      "details": "./src/styles/foundation/z-index.css:3:@import url('./z-index/tokens.css');"
     },
     "src/styles/foundation/z-index.css": {
       "type": "filesystem_exact",
@@ -5041,7 +5041,7 @@
     },
     "src/styles/global-rules.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/public-core.css:6:@import url('../global-rules.css');"
+      "details": "./src/styles/layouts/site-base.css:14:/* Base resets handled by global-rules.css."
     },
     "src/styles/layouts/embed-iframe.css": {
       "type": "filesystem_exact",
@@ -5057,7 +5057,7 @@
     },
     "src/styles/layouts/site-base.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/admin-core.css:7:@import url('../layouts/site-base.css');"
+      "details": "./src/styles/entries/public-core.css:7:@import url('../layouts/site-base.css');"
     },
     "src/styles/main.css": {
       "type": "filesystem_exact",
@@ -5065,7 +5065,7 @@
     },
     "src/styles/pages/admin/admin-dashboard/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/components/email-templates.css:1:@import url('./email-templates/layout.css');"
+      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
     },
     "src/styles/pages/admin/admin-dashboard/widgets/widgets-badges-status.css": {
       "type": "filesystem_exact",
@@ -5137,7 +5137,7 @@
     },
     "src/styles/pages/admin/admin-settings-extras.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/entries/embed-core.css:29:@import url('../pages/admin/admin-settings-extras.css');"
+      "details": "./src/styles/entries/admin-core.css:54:@import url('../pages/admin/admin-settings-extras.css');"
     },
     "src/styles/pages/admin/admin-settings.css": {
       "type": "filesystem_exact",
@@ -5209,7 +5209,7 @@
     },
     "src/styles/pages/admin/settings/settings-components.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/settings/settings-page-layout.css:180:/* MOVED TO settings-components.css */"
+      "details": "./src/styles/pages/admin/admin-settings.css:3:@import url('./settings/settings-components.css');"
     },
     "src/styles/pages/admin/settings/settings-dashboard-config.css": {
       "type": "filesystem_exact",
@@ -5249,7 +5249,7 @@
     },
     "src/styles/pages/storefront/receipt/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
+      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
     },
     "src/styles/pages/storefront/receipt/print.css": {
       "type": "filesystem_exact",
@@ -5265,7 +5265,7 @@
     },
     "src/styles/pages/storefront/shop/layout.css": {
       "type": "filesystem_exact",
-      "details": "./src/styles/pages/admin/admin-pos.css:1:@import url('./pos/pos-layout.css');"
+      "details": "./src/styles/pages/admin/admin-dashboard.css:3:@import url('./admin-dashboard/layout.css');"
     },
     "src/styles/pages/storefront/shop.css": {
       "type": "filesystem_exact",

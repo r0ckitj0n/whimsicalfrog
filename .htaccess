@@ -18,7 +18,7 @@
     RewriteRule ^assets/(.*)$ /dist/assets/$1 [L]
 
     # Block sensitive directories from being served directly
-    RewriteRule ^(\.git|\.github|\.vscode|brain|includes|config|logs|node_modules|scripts|tmp|vendor)/ - [F,L]
+    RewriteRule ^(\.git|\.github|\.vscode|brain|includes|config|logs|node_modules|scripts|src|tmp|vendor)/ - [F,L]
 
     # Block sensitive files
     <FilesMatch "^(\.env|composer\.(json|lock)|package(-lock)?\.json|tsconfig\.json|phpunit\.xml(\.dist)?|.*\.sql|.*\.sqlite|.*\.db|.*\.log|.*\.sh)$">

@@ -39,4 +39,5 @@ jobs:
           WF_UPLOAD_MAINTENANCE: "0"
           WF_UPLOAD_LIVE_ENV: "0"
           WF_DRY_RUN: "0"
+          WF_STRICT_VERIFY: "1"
         run: bash scripts/deploy.sh --lite

@@ -18,6 +18,7 @@ BASE_URL="${DEPLOY_BASE_URL}${PUBLIC_BASE}"
 MODE="lite"
 SKIP_BUILD="${WF_SKIP_RELEASE_BUILD:-0}"
 PURGE="${WF_PURGE_REMOTE:-0}"
+STRICT_VERIFY="${WF_STRICT_VERIFY:-0}"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -386,18 +387,36 @@ rm deploy_commands.txt
 
 # Ensure no Vite hot file exists on the live server (prevents accidental dev mode)
 if [ "$MODE" != "env-only" ]; then
-  echo -e "${GREEN}🧹 Removing any stray Vite hot file on server...${NC}"
+  echo -e "${GREEN}🧹 Enforcing production mode on server (remove dev artifacts)...${NC}"
+  cat > enforce_prod_marker.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+lcd .
+put /dev/null -o .disable-vite-dev
+bye
+EOL
+  if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+    echo -e "${YELLOW}DRY-RUN: Skipping production marker upload (.disable-vite-dev)${NC}"
+  else
+    lftp -f enforce_prod_marker.txt > /dev/null 2>&1 || true
+  fi
+  rm -f enforce_prod_marker.txt
+
   cat > cleanup_prod.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
 open sftp://$USER:$PASS@$HOST
 rm -f hot
-# rm -f index.html (Disabled to support native index.html entry)
+rm -f index.html
+rm -rf src
+rm -f dist/.htaccess
 bye
 EOL
 
   if [ "${WF_DRY_RUN:-0}" = "1" ]; then
-    echo -e "${YELLOW}DRY-RUN: Skipping remote cleanup (hot + index.html)${NC}"
+    echo -e "${YELLOW}DRY-RUN: Skipping remote cleanup (hot/index.html/src/dist/.htaccess)${NC}"
   else
     lftp -f cleanup_prod.txt > /dev/null 2>&1 || true
   fi
@@ -407,6 +426,7 @@ fi
 # Verify deployment (HTTP-based, avoids dotfile visibility issues)
 if [ "$MODE" != "env-only" ]; then
   echo -e "${GREEN}🔍 Verifying deployment over HTTP...${NC}"
+  VERIFY_FAILED=0
   
   # Check Vite manifest availability (prefer .vite/manifest.json)
   HTTP_MANIFEST_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/dist/.vite/manifest.json")
@@ -417,6 +437,7 @@ if [ "$MODE" != "env-only" ]; then
     echo -e "${GREEN}✅ Vite manifest accessible over HTTP${NC}"
   else
     echo -e "${YELLOW}⚠️  Vite manifest not accessible over HTTP (code $HTTP_MANIFEST_CODE)${NC}"
+    VERIFY_FAILED=1
   fi
   
   # Extract one JS and one CSS asset from homepage HTML and verify
@@ -426,14 +447,18 @@ if [ "$MODE" != "env-only" ]; then
   if [ -n "$APP_JS" ]; then
     CODE_JS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$APP_JS")
     echo -e "  • JS $APP_JS -> HTTP $CODE_JS"
+    if [ "$CODE_JS" != "200" ]; then VERIFY_FAILED=1; fi
   else
     echo -e "  • JS: ⚠️ Not found in homepage HTML"
+    VERIFY_FAILED=1
   fi
   if [ -n "$MAIN_CSS" ]; then
     CODE_CSS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL$MAIN_CSS")
     echo -e "  • CSS $MAIN_CSS -> HTTP $CODE_CSS"
+    if [ "$CODE_CSS" != "200" ]; then VERIFY_FAILED=1; fi
   else
     echo -e "  • CSS: ⚠️ Not found in homepage HTML"
+    VERIFY_FAILED=1
   fi
   
   # Fix permissions automatically after deployment
@@ -509,6 +534,11 @@ EOL
     lftp -f delete_server_duplicates.txt || true
   fi
   rm delete_server_duplicates.txt
+
+  if [ "${STRICT_VERIFY}" = "1" ] && [ "$VERIFY_FAILED" != "0" ]; then
+    echo -e "${RED}❌ Strict verification failed. Deployment is not healthy.${NC}"
+    exit 1
+  fi
 fi
 
 # Test image accessibility (use a stable asset; path can be overridden)

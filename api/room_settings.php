@@ -260,6 +260,14 @@ try {
         default:
             Response::methodNotAllowed();
     }
-} catch (Exception $e) {
-    Response::error($e->getMessage(), null, 400);
+} catch (Throwable $e) {
+    error_log('[room_settings] Error: ' . $e->getMessage());
+    $code = (int) $e->getCode();
+    if ($code >= 400 && $code < 500) {
+        Response::error($e->getMessage(), null, $code);
+    }
+    if ($e instanceof Exception) {
+        Response::error($e->getMessage(), null, 400);
+    }
+    Response::serverError('Room settings request failed: ' . $e->getMessage());
 }

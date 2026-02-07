@@ -239,7 +239,7 @@ try {
         // If nothing is found, return success with null background (avoid 404s for new rooms)
         Response::success(['background' => null, 'message' => 'No background found for room ' . $room_number]);
     }
-} catch (PDOException $e) {
-    // Strict: surface DB errors to caller
-    Response::serverError('Database error: ' . $e->getMessage());
+} catch (Throwable $e) {
+    error_log('[get_background] Error: ' . $e->getMessage());
+    Response::serverError('Background lookup failed: ' . $e->getMessage());
 }

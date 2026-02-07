@@ -149,7 +149,14 @@ try {
         default:
             Response::methodNotAllowed();
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log("Area Mappings API Error: " . $e->getMessage());
-    Response::error($e->getMessage(), null, $e->getCode() ?: 500);
+    $code = (int) $e->getCode();
+    if ($code >= 400 && $code < 500) {
+        Response::error($e->getMessage(), null, $code);
+    }
+    if ($e instanceof Exception) {
+        Response::error($e->getMessage(), null, 400);
+    }
+    Response::serverError('Area mappings request failed: ' . $e->getMessage());
 }

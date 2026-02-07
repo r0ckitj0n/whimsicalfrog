@@ -42,22 +42,29 @@ export const LandingPage: React.FC = () => {
         if (!isVisible) return;
 
         const loadData = async () => {
-            try {
-                // Fetch door sign destinations from database
-                const destData = await ApiClient.get<{ destinations: IDoorDestination[] }>(
+            const [destRes, bgRes] = await Promise.allSettled([
+                ApiClient.get<{ destinations: IDoorDestination[] }>(
                     '/api/area_mappings.php',
                     { action: 'door_sign_destinations', room: 'A' }
-                );
-                if (destData?.destinations) {
-                    setDestinations(destData.destinations);
-                }
-
-                // Fetch background from database
-                const bgData = await ApiClient.get<{ background: { webp_filename?: string; png_filename?: string; image_filename?: string } }>(
+                ),
+                ApiClient.get<{ background: { webp_filename?: string; png_filename?: string; image_filename?: string } }>(
                     '/api/get_background.php',
                     { room: 'A' }
-                );
-                const fetchedBg = bgData?.background?.webp_filename || bgData?.background?.png_filename || bgData?.background?.image_filename;
+                )
+            ]);
+
+            if (destRes.status === 'fulfilled') {
+                if (destRes.value?.destinations) {
+                    setDestinations(destRes.value.destinations);
+                }
+            } else {
+                console.error('[LandingPage] Failed to load door sign destinations', destRes.reason);
+            }
+
+            if (bgRes.status === 'fulfilled') {
+                const fetchedBg = bgRes.value?.background?.webp_filename
+                    || bgRes.value?.background?.png_filename
+                    || bgRes.value?.background?.image_filename;
 
                 if (fetchedBg) {
                     const buildUrl = (v: string) => {
@@ -69,8 +76,8 @@ export const LandingPage: React.FC = () => {
                     };
                     setBgUrl(buildUrl(fetchedBg));
                 }
-            } catch (err) {
-                console.error('[LandingPage] Failed to load data', err);
+            } else {
+                console.error('[LandingPage] Failed to load background', bgRes.reason);
             }
         };
 

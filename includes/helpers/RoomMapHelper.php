@@ -8,7 +8,11 @@ class RoomMapHelper {
     public static function normalizeRoomNumber($value): string {
         if ($value === null || $value === '') return '';
         $v = trim((string)$value);
+        $lv = strtolower($v);
+        if (in_array($lv, ['main', 'room_main', 'room-main', 'roommain'], true)) return '0';
+        if (in_array($lv, ['landing', 'room_landing', 'room-landing'], true)) return 'A';
         if (preg_match('/^room(\d+)$/i', $v, $m)) return (string)((int)$m[1]);
+        if (preg_match('/^room([A-Za-z])$/', $v, $m)) return strtoupper($m[1]);
         if (preg_match('/^[A-Za-z]$/', $v)) return strtoupper($v);
         if (preg_match('/^\d+$/', $v)) return (string)((int)$v);
         return $v;

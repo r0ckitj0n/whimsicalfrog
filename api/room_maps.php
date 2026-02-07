@@ -47,6 +47,36 @@ function decodeRoomMapCoordinates($raw) {
     return $coords;
 }
 
+/**
+ * Ensure a room has exactly one active map when possible.
+ * If no active map exists, activate the most recently updated map.
+ *
+ * @param string $roomNumber
+ * @return void
+ */
+function ensureRoomHasActiveMap(string $roomNumber): void {
+    if ($roomNumber === '') {
+        return;
+    }
+
+    $active = Database::queryOne(
+        "SELECT id FROM room_maps WHERE room_number = ? AND is_active = TRUE ORDER BY updated_at DESC LIMIT 1",
+        [$roomNumber]
+    );
+    if ($active && !empty($active['id'])) {
+        return;
+    }
+
+    $fallback = Database::queryOne(
+        "SELECT id FROM room_maps WHERE room_number = ? ORDER BY updated_at DESC LIMIT 1",
+        [$roomNumber]
+    );
+    if ($fallback && !empty($fallback['id'])) {
+        Database::execute("UPDATE room_maps SET is_active = FALSE WHERE room_number = ?", [$roomNumber]);
+        Database::execute("UPDATE room_maps SET is_active = TRUE WHERE id = ? AND room_number = ?", [(int)$fallback['id'], $roomNumber]);
+    }
+}
+
 try {
     Database::getInstance();
     RoomMapHelper::ensureTable();
@@ -84,6 +114,7 @@ try {
                             "DELETE FROM room_maps WHERE room_number = ? AND map_name = ? AND id <> ?",
                             [$rn, $mapName, $existingId]
                         );
+                        ensureRoomHasActiveMap($rn);
                         Response::success(['map_id' => $existingId, 'updated_existing' => true]);
                     }
                     Response::error('Save failed');
@@ -94,6 +125,7 @@ try {
                             "DELETE FROM room_maps WHERE room_number = ? AND map_name = ? AND id <> ?",
                             [$rn, $mapName, $newId]
                         );
+                        ensureRoomHasActiveMap($rn);
                         Response::success(['map_id' => $newId, 'updated_existing' => false]);
                     } else {
                         Response::error('Save failed');
@@ -149,11 +181,30 @@ try {
                     Response::error('Invalid parameters for rename');
                 }
             } elseif ($action === 'delete') {
-                $id = $input['id'] ?? $input['map_id'] ?? 0;
-                if (Database::execute("DELETE FROM room_maps WHERE id = ?", [$id]))
+                $id = (int)($input['id'] ?? $input['map_id'] ?? 0);
+                if ($id <= 0) {
+                    Response::error('Invalid map id');
+                }
+
+                $target = Database::queryOne("SELECT room_number FROM room_maps WHERE id = ? LIMIT 1", [$id]);
+                if (!$target) {
+                    Response::error('Map not found');
+                }
+
+                $targetRoom = RoomMapHelper::normalizeRoomNumber($target['room_number'] ?? '');
+                Database::beginTransaction();
+                try {
+                    $deleted = Database::execute("DELETE FROM room_maps WHERE id = ?", [$id]);
+                    if (!$deleted) {
+                        throw new Exception('Delete failed');
+                    }
+                    ensureRoomHasActiveMap($targetRoom);
+                    Database::commit();
                     Response::success();
-                else
-                    Response::error('Delete failed');
+                } catch (Exception $e) {
+                    Database::rollBack();
+                    Response::serverError($e->getMessage());
+                }
             } elseif ($action === 'promote_active_to_original') {
                 try {
                     $id = RoomMapHelper::promoteToOriginal($rn, (int) ($input['id'] ?? $input['map_id'] ?? 0));
@@ -188,11 +239,28 @@ try {
             break;
 
         case 'DELETE':
-            $id = $input['map_id'] ?? 0;
-            if (Database::execute("DELETE FROM room_maps WHERE id = ?", [$id]))
+            $id = (int)($input['map_id'] ?? 0);
+            if ($id <= 0) {
+                Response::error('Invalid map id');
+            }
+            $target = Database::queryOne("SELECT room_number FROM room_maps WHERE id = ? LIMIT 1", [$id]);
+            if (!$target) {
+                Response::error('Map not found');
+            }
+            $targetRoom = RoomMapHelper::normalizeRoomNumber($target['room_number'] ?? '');
+            Database::beginTransaction();
+            try {
+                $deleted = Database::execute("DELETE FROM room_maps WHERE id = ?", [$id]);
+                if (!$deleted) {
+                    throw new Exception('Delete failed');
+                }
+                ensureRoomHasActiveMap($targetRoom);
+                Database::commit();
                 Response::success();
-            else
-                Response::error('Delete failed');
+            } catch (Exception $e) {
+                Database::rollBack();
+                Response::serverError($e->getMessage());
+            }
             break;
 
         default:

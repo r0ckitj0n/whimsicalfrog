@@ -93,12 +93,14 @@ ORDER BY am.display_order, am.id",
         if ($v === '')
             return null;
         $lv = strtolower($v);
-        if ($lv === 'main')
+        if (in_array($lv, ['main', 'room_main', 'room-main', 'roommain'], true))
             return '0';
-        if ($lv === 'landing')
+        if (in_array($lv, ['landing', 'room_landing', 'room-landing'], true))
             return 'A';
         if (preg_match('/^room(\d+)$/i', $v, $m))
             return (string) ((int) $m[1]);
+        if (preg_match('/^room([A-Za-z])$/', $v, $m))
+            return strtoupper($m[1]);
         if (is_numeric($v))
             return (string) ((int) $v);
         return $v;

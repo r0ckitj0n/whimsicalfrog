@@ -216,7 +216,6 @@ export const useUnifiedRoomManager = ({
                 const res = await boundaries.activateMap(id, selectedRoom);
                 if (res.success) {
                     if (window.WFToast) window.WFToast.success('Map activated');
-                    boundaries.fetchSavedMaps(selectedRoom);
                     boundariesTab.setCurrentMapId(id);
                 } else if (window.WFToast) {
                     window.WFToast.error(res.error || 'Failed to activate map');
@@ -225,8 +224,12 @@ export const useUnifiedRoomManager = ({
         }, [selectedRoom, boundaries, boundariesTab]),
 
         handleDeleteMap: useCallback(async (id: string | number) => {
-            if (selectedRoom) await boundaries.deleteMap(id);
-        }, [selectedRoom, boundaries]),
+            if (!selectedRoom) return;
+            await boundariesTab.handleDeleteMap(id);
+            if (String(boundariesTab.currentMapId) === String(id)) {
+                boundariesTab.setCurrentMapId(undefined);
+            }
+        }, [selectedRoom, boundariesTab]),
 
         // Unified Handlers
         handleRoomChange,

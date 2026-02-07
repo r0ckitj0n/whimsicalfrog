@@ -78,7 +78,19 @@ function getRoomMetadata($room_number, $pdo)
 function loadRoomCoordinates($roomType, $pdo)
 {
     try {
-        $room_number = (preg_match('/^room(\d+)$/i', (string) $roomType, $m)) ? (string) ((int) $m[1]) : '';
+        $raw = trim((string) $roomType);
+        $lv = strtolower($raw);
+        if (in_array($lv, ['main', 'room_main', 'room-main', 'roommain'], true)) {
+            $room_number = '0';
+        } elseif (in_array($lv, ['landing', 'room_landing', 'room-landing'], true)) {
+            $room_number = 'A';
+        } elseif (preg_match('/^room(\d+)$/i', $raw, $m)) {
+            $room_number = (string) ((int) $m[1]);
+        } elseif (preg_match('/^room([A-Za-z])$/', $raw, $m)) {
+            $room_number = strtoupper($m[1]);
+        } else {
+            $room_number = $raw;
+        }
         $row = Database::queryOne(
             "SELECT coordinates FROM room_maps WHERE room_number = ? AND is_active = 1 ORDER BY updated_at DESC LIMIT 1",
             [$room_number]

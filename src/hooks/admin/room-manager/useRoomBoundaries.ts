@@ -72,10 +72,15 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
             const res = await boundaries.deleteMap(id);
             if (res.success) {
                 if (window.WFToast) window.WFToast.success('Deleted');
-                boundaries.fetchSavedMaps(selectedRoom);
+                await boundaries.fetchSavedMaps(selectedRoom);
+                if (String(currentMapId) === String(id)) {
+                    setCurrentMapId(undefined);
+                }
+            } else if (window.WFToast) {
+                window.WFToast.error(res.error || 'Delete failed');
             }
         }
-    }, [selectedRoom, boundaries, confirmModal]);
+    }, [selectedRoom, boundaries, confirmModal, currentMapId]);
 
     const handleRenameMap = useCallback(async (id: string | number) => {
         const map = boundaries.savedMaps.find((m: IRoomMap) => String(m.id) === String(id));
@@ -85,7 +90,9 @@ export const useRoomBoundaries = (selectedRoom: string, boundaries: IRoomMapEdit
             const res = await boundaries.renameMap(id, newName);
             if (res.success) {
                 if (window.WFToast) window.WFToast.success('Renamed');
-                boundaries.fetchSavedMaps(selectedRoom);
+                await boundaries.fetchSavedMaps(selectedRoom);
+            } else if (window.WFToast) {
+                window.WFToast.error(res.error || 'Rename failed');
             }
         }
     }, [selectedRoom, boundaries, promptModal]);

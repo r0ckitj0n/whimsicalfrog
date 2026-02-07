@@ -228,7 +228,12 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                                     currentMapId={currentMapId}
                                     onLoadActive={() => handleRoomChange(selectedRoom)}
                                     onSaveMap={handleSaveBoundaries}
-                                    onToggleTool={setActiveTool}
+                                    onToggleTool={(tool) => {
+                                        setActiveTool(tool);
+                                        if (tool === 'create') {
+                                            setIsEditMode(true);
+                                        }
+                                    }}
                                     activeTool={activeTool}
                                     snapSize={snapSize}
                                     onSnapSizeChange={setSnapSize}

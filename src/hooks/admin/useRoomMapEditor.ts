@@ -16,6 +16,11 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
     const [savedMaps, setSavedMaps] = useState<IRoomMap[]>([]);
     const [error, setError] = useState<string | null>(null);
 
+    const normalizeSavedMap = useCallback((map: IRoomMap): IRoomMap => ({
+        ...map,
+        is_active: map.is_active === true || map.is_active === 1 || (map.is_active as unknown) === '1'
+    }), []);
+
     const fetchRooms = useCallback(async () => {
         try {
             const res = await ApiClient.get<IRoomListResponse[]>('/api/get_rooms.php');
@@ -39,25 +44,25 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
         try {
             const res = await ApiClient.get<IRoomMapResponse>('/api/room_maps.php', { action: 'list', room });
             if (res.success) {
-                setSavedMaps(res.maps || []);
+                setSavedMaps((res.maps || []).map(normalizeSavedMap));
             }
         } catch (err) {
             logger.error('[useRoomMapEditor] fetchSavedMaps failed', err);
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [normalizeSavedMap]);
 
     const loadActiveMap = useCallback(async (room: string) => {
         if (!room) return null;
         try {
             const res = await ApiClient.get<IRoomMapResponse>('/api/room_maps.php', { action: 'get_active', room });
-            return res.success ? (res.map || null) : null;
+            return res.success ? (res.map ? normalizeSavedMap(res.map) : null) : null;
         } catch (err) {
             logger.error('[useRoomMapEditor] loadActiveMap failed', err);
             return null;
         }
-    }, []);
+    }, [normalizeSavedMap]);
 
     const saveMap = async (room: string, name: string, areas: IMapArea[]) => {
         try {
@@ -67,6 +72,9 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
                 map_name: name,
                 coordinates: JSON.stringify({ rectangles: areas })
             });
+            if (res.success) {
+                await fetchSavedMaps(room);
+            }
             return res;
         } catch (err) {
             logger.error('[useRoomMapEditor] saveMap failed', err);
@@ -80,6 +88,9 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
                 action: 'delete',
                 id
             });
+            if (res.success) {
+                setSavedMaps(prev => prev.filter(m => String(m.id) !== String(id)));
+            }
             return res;
         } catch (err) {
             logger.error('[useRoomMapEditor] deleteMap failed', err);
@@ -108,6 +119,13 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
                 id,
                 room
             });
+            if (res.success) {
+                setSavedMaps(prev => prev.map(m => ({
+                    ...m,
+                    is_active: String(m.id) === String(id)
+                })));
+                await fetchSavedMaps(room);
+            }
             return res;
         } catch (err) {
             logger.error('[useRoomMapEditor] activateMap failed', err);

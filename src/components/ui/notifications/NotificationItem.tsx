@@ -96,7 +96,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
                             e.stopPropagation();
                             onRemove(id);
                         }}
-                        className="btn-icon btn-icon--close p-1 ml-2 flex items-center justify-center opacity-60 hover:opacity-100 transition-colors"
+                        className="btn-icon btn-icon--close p-1 ml-2 flex items-center justify-center opacity-60 transition-transform"
                         aria-label="Close notification"
                         data-help-id="common-close"
                     />

@@ -67,13 +67,13 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRe
                     <div className="cart-qty-arrows flex flex-col">
                         <button
                             type="button"
-                            className="admin-action-btn btn-icon--up text-gray-400 hover:text-brand-secondary transition-colors p-0.5"
+                            className="admin-action-btn btn-icon--up text-gray-400 transition-transform p-0.5"
                             onClick={() => onUpdateQuantity(item.sku, item.quantity + 1)}
                             aria-label="Increase quantity"
                         />
                         <button
                             type="button"
-                            className="admin-action-btn btn-icon--down text-gray-400 hover:text-brand-secondary transition-colors p-0.5"
+                            className="admin-action-btn btn-icon--down text-gray-400 transition-transform p-0.5"
                             onClick={() => onUpdateQuantity(item.sku, Math.max(0, item.quantity - 1))}
                             aria-label="Decrease quantity"
                         />
@@ -86,7 +86,7 @@ export const CartItem: React.FC<CartItemProps> = ({ item, onUpdateQuantity, onRe
 
                 <button
                     type="button"
-                    className="admin-action-btn btn-icon--delete remove-from-cart text-gray-300 hover:text-brand-secondary transition-colors"
+                    className="admin-action-btn btn-icon--delete remove-from-cart text-gray-300 transition-transform"
                     onClick={() => onRemove(item.sku)}
                     aria-label="Remove item"
                     data-help-id="cart-remove-item"

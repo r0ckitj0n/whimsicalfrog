@@ -31,7 +31,7 @@ export const AddIconForm: React.FC<AddIconFormProps> = ({
                         value={newKey}
                         onChange={e => onNewKeyChange(e.target.value)}
                         placeholder="e.g. 'checkout', 'apply'..."
-                        className="form-input w-full pl-10 pr-4 py-3 text-sm rounded-2xl border-gray-200 bg-white focus:ring-4 focus:ring-[var(--brand-primary)]/5 focus:border-[var(--brand-primary)]/20 transition-all font-mono font-bold text-gray-700"
+                        className="form-input w-full pl-10 pr-4 py-3 text-sm rounded-2xl border-gray-200 bg-white focus:ring-4 focus:ring-[var(--brand-primary)]/5 focus:border-[var(--brand-primary)]/20 transition-transform font-mono font-bold text-gray-700"
                     />
                 </div>
 
@@ -49,7 +49,7 @@ export const AddIconForm: React.FC<AddIconFormProps> = ({
                 <button
                     type="submit"
                     disabled={!newKey.trim() || !newEmoji.trim()}
-                    className={`admin-action-btn btn-icon--add !w-12 !h-12 !rounded-2xl shadow-sm hover:shadow-md transition-all self-center ${!newKey.trim() || !newEmoji.trim() ? 'opacity-30 grayscale' : ''}`}
+                    className={`admin-action-btn btn-icon--add !w-12 !h-12 !rounded-2xl shadow-sm transition-transform self-center ${!newKey.trim() || !newEmoji.trim() ? 'opacity-30 grayscale' : ''}`}
                     data-help-id="action-icon-add-btn"
                 />
             </form>

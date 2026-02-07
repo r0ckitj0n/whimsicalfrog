@@ -56,11 +56,9 @@
 .modal-header button:hover,
 .wf-modal-header button:hover {
     transform: scale(1.35) !important;
-    color: var(--brand-secondary, #3b82f6) !important;
     background: transparent !important;
     background-color: transparent !important;
     box-shadow: none !important;
-    opacity: 1 !important;
     z-index: var(--wf-z-elevated) !important;
 }
 
@@ -73,7 +71,6 @@
 
 .wf-modal-header .admin-action-btn.text-white:hover {
     color: #ffffff !important;
-    opacity: 0.9 !important;
 }
 
 /* OVERRIDE: Exclude phrase pill buttons from emoji icon styling */

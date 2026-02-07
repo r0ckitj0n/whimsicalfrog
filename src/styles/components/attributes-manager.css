@@ -141,17 +141,12 @@ div#attrPromptModal div.attr-modal,
   max-width: min(96vw, 1200px) !important;
 }
 
-/* Ensure close button gets correct brand hover color (Orange #d97706) */
+/* Ensure close button uses standardized enlarge-only hover behavior */
 /* Ultra-high specificity to beat global admin overrides */
 div#attrEditorModal .attr-modal .btn-icon.btn-icon--close:hover,
 div#attrPromptModal .attr-modal .btn-icon.btn-icon--close:hover {
-  background-color: var(--brand-secondary) !important;
-  /* fallback */
-  background-color: var(--brand-secondary) !important;
-  color: #ffffff !important;
-  opacity: 1 !important;
-  cursor: pointer !important;
-  border-color: transparent !important;
+  transform: scale(1.35) !important;
+  background: transparent !important;
 }
 
 /* Save button visibility logic */

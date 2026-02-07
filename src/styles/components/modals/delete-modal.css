@@ -77,8 +77,8 @@ body[data-page^='admin'] .delete-confirmation-modal .modal-footer .btn-icon--clo
 
 body[data-page^='admin'] .delete-modal .delete-modal-actions .btn-icon--close:hover,
 body[data-page^='admin'] .delete-confirmation-modal .modal-footer .btn-icon--close:hover {
-  background-color: var(--brand-secondary) !important;
-  color: #ffffff !important;
+  transform: scale(1.35) !important;
+  background: transparent !important;
 }
 
 .delete-modal-actions .btn-danger:not(.btn-icon),

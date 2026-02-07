@@ -69,8 +69,8 @@
 }
 
 .search-modal-close:hover {
-  background-color: var(--brand-secondary) !important;
-  color: #ffffff !important;
+  transform: scale(1.35) !important;
+  background: transparent !important;
 }
 
 .search-modal-body { padding: 20px; min-height: 200px; }

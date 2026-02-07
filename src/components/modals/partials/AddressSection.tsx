@@ -110,7 +110,7 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
                                 <button
                                     type="button"
                                     onClick={() => setEditingAddress(null)}
-                                    className="btn btn-xs btn-secondary hover:bg-[var(--brand-secondary)] hover:text-white transition-colors"
+                                    className="btn btn-xs btn-secondary transition-transform"
                                     data-help-id="modal-cancel"
                                 >
                                     Cancel
@@ -124,17 +124,17 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
 
             <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                 {addresses.map((addr) => (
-                    <div key={addr.id} className={`p-4 border rounded-2xl space-y-2 transition-all ${addr.is_default ? 'bg-[var(--brand-primary)]/5 border-[var(--brand-primary)]/20' : 'bg-white hover:border-gray-300'}`}>
+                    <div key={addr.id} className={`p-4 border rounded-2xl space-y-2 transition-transform ${addr.is_default ? 'bg-[var(--brand-primary)]/5 border-[var(--brand-primary)]/20' : 'bg-white hover:border-gray-300'}`}>
                         <div className="flex items-start justify-between">
                             <div className="text-sm font-black text-gray-900 uppercase tracking-tight">
                                 {addr.address_name}
                                 {Boolean(addr.is_default) && <span className="ml-2 text-[9px] text-[var(--brand-primary)]">(Default)</span>}
                             </div>
                             <div className="flex gap-1">
-                                <button onClick={() => setEditingAddress(addr)} className="admin-action-btn btn-icon--edit p-1 text-gray-400 hover:text-[var(--brand-primary)] transition-colors" />
+                                <button onClick={() => setEditingAddress(addr)} className="admin-action-btn btn-icon--edit p-1 text-gray-400 transition-transform" />
                                 <button
                                     onClick={() => handleDeleteAddress(addr.id)}
-                                    className="admin-action-btn btn-icon--delete p-1 text-gray-400 hover:bg-[var(--brand-secondary)] hover:text-white rounded-lg transition-colors"
+                                    className="admin-action-btn btn-icon--delete p-1 text-gray-400 rounded-lg transition-transform"
                                     data-help-id="address-delete"
                                 />
                             </div>

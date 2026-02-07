@@ -45,7 +45,7 @@ export const useItemDetails = (sku: string) => {
                     }
                     itemData.image = cleanPath;
                 } else {
-                    itemData.image = '/images/logos/logo-whimsicalfrog.webp';
+                    itemData.image = '/images/logos/logo-whimsicalfrog-hourglass.png';
                 }
 
                 setItem(itemData);

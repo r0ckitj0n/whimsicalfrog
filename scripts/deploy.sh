@@ -633,7 +633,7 @@ fi
 
 # Test image accessibility (use a stable asset; path can be overridden)
 echo -e "${GREEN}🌍 Testing image accessibility...${NC}"
-TEST_LOGO_PATH="${BRAND_LOGO_PATH:-/images/logos/logo-whimsicalfrog.webp}"
+TEST_LOGO_PATH="${BRAND_LOGO_PATH:-/images/logos/logo-whimsicalfrog-hourglass.webp}"
 # If TEST_LOGO_PATH is absolute (starts with http), use as-is; otherwise prefix with BASE_URL
 if [[ "$TEST_LOGO_PATH" =~ ^https?:// ]]; then
   TEST_LOGO_URL="$TEST_LOGO_PATH"

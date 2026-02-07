@@ -9,6 +9,7 @@
     "dev": "VITE_DEV_PORT=5176 VITE_HMR_PORT=5176 printf 'http://localhost:5176' > hot && vite --host localhost --port 5176 --strictPort",
     "dev:5176": "VITE_DEV_PORT=5176 VITE_HMR_PORT=5176 printf 'http://localhost:5176' > hot && vite --host localhost --port 5176 --strictPort",
     "stop": "rm hot",
+    "checkpoint": "node scripts/dev/checkpoint.mjs",
     "quarantine:dupes": "bash scripts/maintenance/quarantine_duplicates.sh",
     "guards": "echo '[guards] disabled (see .cursorrules for rules)'",
     "prebuild": "echo '[prebuild] disabled (see .cursorrules for rules)'",

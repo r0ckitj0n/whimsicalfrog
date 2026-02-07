@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthContext } from '../../context/AuthContext.js';
 import { useCart } from '../../hooks/use-cart.js';
 import { Logo } from './Logo.js';
@@ -21,13 +21,38 @@ export const Header: React.FC<HeaderProps> = ({ settings }) => {
     const { isLoggedIn, user, isAdmin } = useAuthContext();
     const { count, total } = useCart();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isCompactHeader, setIsCompactHeader] = useState(() =>
+        typeof window !== 'undefined' ? window.matchMedia('(max-width: 1000px)').matches : false
+    );
 
     // useHeader handles CSS variables and scroll effects
     const { headerHeight } = useHeader();
 
     const siteName = settings?.name || "Whimsical Frog";
     const siteTagline = settings?.tagline;
-    const logoImage = settings?.logo || "/images/logos/logo-whimsicalfrog.webp";
+    const logoImage = settings?.logo || "/images/logos/logo-whimsicalfrog-hourglass.png";
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const mediaQuery = window.matchMedia('(max-width: 1000px)');
+
+        const handleMediaChange = () => {
+            setIsCompactHeader(mediaQuery.matches);
+            if (!mediaQuery.matches) {
+                setIsMenuOpen(false);
+            }
+        };
+
+        handleMediaChange();
+
+        if (typeof mediaQuery.addEventListener === 'function') {
+            mediaQuery.addEventListener('change', handleMediaChange);
+            return () => mediaQuery.removeEventListener('change', handleMediaChange);
+        }
+
+        mediaQuery.addListener(handleMediaChange);
+        return () => mediaQuery.removeListener(handleMediaChange);
+    }, []);
 
     // Replicate PHP logic: Hide header on landing page for guest users
     const page = document.body.getAttribute('data-page');
@@ -47,6 +72,7 @@ export const Header: React.FC<HeaderProps> = ({ settings }) => {
                             siteTagline={siteTagline}
                             logoImage={logoImage}
                             href="/room_main"
+                            onClick={isCompactHeader ? () => setIsMenuOpen((prev) => !prev) : undefined}
                         />
                         <Navigation />
                     </div>

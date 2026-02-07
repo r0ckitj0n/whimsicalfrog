@@ -17,10 +17,13 @@ export const ReceiptHeader: React.FC<ReceiptHeaderProps> = ({ business_info }) =
         <div className="text-center receipt-message-center">
             <div className="brand-header-row wf-brand-font flex flex-col items-center mb-4">
                 <img 
-                    src="/images/logos/logo-whimsicalfrog.webp" 
+                    src="/images/logos/logo-whimsicalfrog-hourglass.webp" 
                     alt="Whimsical Frog Brand Logo" 
                     className="header-logo receipt-logo mb-2" 
                     loading="lazy"
+                    onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/images/logos/logo-whimsicalfrog-hourglass.png';
+                    }}
                 />
                 <div>
                     <h1 className="text-brand-primary wf-brand-font brand-title text-3xl font-bold">{business_info.name}</h1>

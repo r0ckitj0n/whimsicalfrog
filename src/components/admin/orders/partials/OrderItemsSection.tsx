@@ -10,7 +10,7 @@ interface OrderItemsSectionProps {
 
 export const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ items, mode, updateItemQty, removeItem }) => {
     const getThumbnailUrl = (item: IOrderItem) => {
-        return item.image_url || '/images/logos/logo-whimsicalfrog.webp';
+        return item.image_url || '/images/logos/logo-whimsicalfrog-hourglass.webp';
     };
 
     return (
@@ -38,7 +38,7 @@ export const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ items, mod
                                     className="object-contain bg-gray-50 w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-100"
                                     loading="lazy"
                                     onError={(e) => {
-                                        (e.target as HTMLImageElement).src = '/images/logos/logo-whimsicalfrog.webp';
+                                        (e.target as HTMLImageElement).src = '/images/logos/logo-whimsicalfrog-hourglass.png';
                                     }}
                                 />
                             </div>

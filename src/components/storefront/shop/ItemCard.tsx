@@ -22,7 +22,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
     return (
         <div
-            className={`group bg-white rounded-[8px] shadow-[0_2px_8px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 flex flex-col overflow-hidden border border-[#DDDDDD] ${item.stock <= 0 ? 'opacity-75 grayscale-[0.2]' : ''}`}
+            className={`group cursor-pointer bg-white rounded-[8px] shadow-[0_2px_8px_0px_rgba(0,0,0,0.1)] hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-all duration-300 flex flex-col overflow-hidden border border-[#DDDDDD] ${item.stock <= 0 ? 'opacity-75 grayscale-[0.2]' : ''}`}
             onClick={() => onAddToCart(item)}
         >
             {/* Product Image */}

@@ -83,6 +83,42 @@ body[data-page='admin/orders'] .page-content {
   padding-right: 0 !important;
 }
 
+/* Cursor affordance defaults for interactive UI elements */
+:where(
+  a[href],
+  button,
+  summary,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  select,
+  label[for],
+  .admin-action-btn,
+  .mobile-nav-link,
+  .logo-link,
+  .wf-notification,
+  .wf-notification-overlay,
+  .wf-modal-overlay,
+  .admin-modal-overlay,
+  .wf-revealco-overlay
+) {
+  cursor: pointer;
+}
+
+:where(
+  button:disabled,
+  input[type="button"]:disabled,
+  input[type="submit"]:disabled,
+  input[type="reset"]:disabled,
+  select:disabled,
+  [role="button"][aria-disabled="true"],
+  .disabled,
+  .is-disabled
+) {
+  cursor: not-allowed;
+}
+
 /* ==============================================
    BUTTON HOVER BEHAVIORS
    ============================================== 

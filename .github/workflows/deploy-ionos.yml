@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: deploy-ionos-main
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -40,6 +40,7 @@ jobs:
           WF_UPLOAD_LIVE_ENV: "0"
           WF_DRY_RUN: "0"
           WF_STRICT_VERIFY: "1"
+          WF_UPLOAD_VENDOR: "0"
         run: bash scripts/deploy.sh --lite
 
       - name: Kill Switch Verify Live Build

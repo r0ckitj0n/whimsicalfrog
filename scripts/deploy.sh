@@ -19,6 +19,7 @@ MODE="lite"
 SKIP_BUILD="${WF_SKIP_RELEASE_BUILD:-0}"
 PURGE="${WF_PURGE_REMOTE:-0}"
 STRICT_VERIFY="${WF_STRICT_VERIFY:-0}"
+UPLOAD_VENDOR="${WF_UPLOAD_VENDOR:-0}"
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -198,7 +199,12 @@ open sftp://$USER:$PASS@$HOST
 mirror $MIRROR_FLAGS \
   --exclude-glob .git/ \
   --exclude-glob node_modules/ \
+  --exclude-glob vendor/** \
+  --exclude-glob .local/ \
+  --exclude-glob .cache/ \
+  --exclude-glob .agent/ \
   --exclude-glob .vscode/ \
+  --exclude-glob .DS_Store \
   --exclude-glob hot \
   --exclude-glob "**/.DS_Store" \
   --exclude-glob "sessions/**" \
@@ -209,12 +215,14 @@ mirror $MIRROR_FLAGS \
   --exclude-glob "src/**" \
   --include-glob documentation/.htaccess \
   --include-glob reports/.htaccess \
+  --exclude-glob "*.log" \
   --exclude-glob "**/*.log" \
   --exclude-glob "**/*.sh" \
   --exclude-glob "**/*.plist" \
   --exclude-glob temp_cron.txt \
   --exclude-glob SERVER_MANAGEMENT.md \
   --exclude-glob factory-tutorial/ \
+  --exclude-glob index.html \
   --exclude-glob backup.sql \
   --exclude-glob backup_*.tar.gz \
   --exclude-glob *_backup_*.tar.gz \
@@ -256,6 +264,51 @@ if [ "$MODE" != "env-only" ] && [ "$MODE" != "dist-only" ]; then
 fi
 if [ "${DRY_DEPLOY_SUCCESS}" = "1" ]; then
   echo -e "${GREEN}✅ Files deployed successfully${NC}"
+  # Safety fallback: publish built dist/index.html at web root as index.html.
+  # This avoids exposing the source root index.html (/src/*) and provides a fallback
+  # when host rewrite rules are bypassed or temporarily inconsistent.
+  if [ "$MODE" != "env-only" ]; then
+    echo -e "${GREEN}🧷 Publishing built index fallback (dist/index.html -> /index.html)...${NC}"
+    cat > upload_root_index.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+put dist/index.html -o index.html
+bye
+EOL
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping root index fallback upload${NC}"
+    elif lftp -f upload_root_index.txt; then
+      echo -e "${GREEN}✅ Root index fallback uploaded${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Root index fallback upload failed; continuing${NC}"
+    fi
+    rm -f upload_root_index.txt
+  fi
+  # Optional: upload Composer vendor tree (off by default to keep deploys lean).
+  if [ "$MODE" != "env-only" ] && [ "${UPLOAD_VENDOR}" = "1" ]; then
+    echo -e "${GREEN}📦 Uploading vendor/ (WF_UPLOAD_VENDOR=1)...${NC}"
+    cat > deploy_vendor.txt << EOL
+set sftp:auto-confirm yes
+set ssl:verify-certificate no
+set cmd:fail-exit yes
+open sftp://$USER:$PASS@$HOST
+mirror --reverse --delete --verbose --only-newer --no-perms \
+  vendor vendor
+bye
+EOL
+    if [ "${WF_DRY_RUN:-0}" = "1" ]; then
+      echo -e "${YELLOW}DRY-RUN: Skipping vendor sync${NC}"
+    elif lftp -f deploy_vendor.txt; then
+      echo -e "${GREEN}✅ Vendor synced${NC}"
+    else
+      echo -e "${YELLOW}⚠️  Vendor sync failed; continuing${NC}"
+    fi
+    rm -f deploy_vendor.txt
+  else
+    echo -e "${YELLOW}⏭️  Skipping vendor sync (set WF_UPLOAD_VENDOR=1 to enable)${NC}"
+  fi
   # Optional: Upload maintenance utility (disabled by default to avoid mkdir errors on some hosts)
   if [ "${WF_UPLOAD_MAINTENANCE:-0}" = "1" ]; then
     echo -e "${GREEN}🧰 Uploading maintenance utilities (prune_sessions.sh)...${NC}"
@@ -390,6 +443,10 @@ rm deploy_commands.txt
 if [ "$MODE" != "env-only" ]; then
   echo -e "${GREEN}🧹 Enforcing production mode on server (remove dev artifacts)...${NC}"
   ARCHIVE_TS="$(date '+%Y%m%d-%H%M%S')"
+  VENDOR_PRUNE_CMD="rm -r vendor || true"
+  if [ "${UPLOAD_VENDOR}" = "1" ]; then
+    VENDOR_PRUNE_CMD=":"
+  fi
   cat > enforce_prod_marker.txt << EOL
 set sftp:auto-confirm yes
 set ssl:verify-certificate no
@@ -415,7 +472,8 @@ mkdir -p backups
 mkdir -p backups/src-archives
 mv src backups/src-archives/src-${ARCHIVE_TS}
 rm -f hot
-rm -f index.html
+rm -r node_modules || true
+${VENDOR_PRUNE_CMD}
 rm -f dist/.htaccess
 bye
 EOL

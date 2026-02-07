@@ -28,46 +28,56 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
     };
 
     return (
-        <div className={`mobile-menu ${isOpen ? 'show' : ''}`} id="mobile-menu" role="navigation" aria-label="Mobile navigation">
-            <div className="mobile-nav-links">
-                <a href="/" className="mobile-nav-link" onClick={onClose}>Home</a>
-                <a href="/shop" className="mobile-nav-link" onClick={onClose}>Shop</a>
-                <a href="/about" className="mobile-nav-link" onClick={onClose}>About</a>
-                <a href="/contact" className="mobile-nav-link" onClick={onClose}>Contact</a>
+        <>
+            <button
+                type="button"
+                className="mobile-menu-overlay"
+                aria-label="Close menu"
+                onClick={onClose}
+            />
 
-                <div className="mobile-auth-section">
-                    {isLoggedIn ? (
-                        <>
-                            <a href="#" className="mobile-nav-link" onClick={handleAction(openAccountSettings)}>
-                                {username || 'User'}
-                            </a>
-                            {isAdmin && (
-                                <a href="/admin?section=settings" className="mobile-nav-link" onClick={onClose}>
-                                    Settings
+            <div className={`mobile-menu ${isOpen ? 'show' : ''}`} id="mobile-menu" role="navigation" aria-label="Mobile navigation">
+                <div className="mobile-nav-links">
+                    <a href="/" className="mobile-nav-link" onClick={onClose}>Home</a>
+                    <a href="/room_main" className="mobile-nav-link" onClick={onClose}>Main Room</a>
+                    <a href="/shop" className="mobile-nav-link" onClick={onClose}>Shop</a>
+                    <a href="/about" className="mobile-nav-link" onClick={onClose}>About</a>
+                    <a href="/contact" className="mobile-nav-link" onClick={onClose}>Contact</a>
+
+                    <div className="mobile-auth-section">
+                        {isLoggedIn ? (
+                            <>
+                                <a href="#" className="mobile-nav-link" onClick={handleAction(openAccountSettings)}>
+                                    {username || 'User'}
                                 </a>
-                            )}
-                            <a href="#" className="mobile-nav-link" onClick={handleAction(logout)}>Logout</a>
-                        </>
-                    ) : (
-                        <>
-                            <a href="/login" className="mobile-nav-link" onClick={handleAction(openLogin)}>Login</a>
-                            <a href="/login" className="mobile-nav-link" onClick={handleAction(() => openRegister())}>Register</a>
-                        </>
-                    )}
+                                {isAdmin && (
+                                    <a href="/admin?section=settings" className="mobile-nav-link" onClick={onClose}>
+                                        Settings
+                                    </a>
+                                )}
+                                <a href="#" className="mobile-nav-link" onClick={handleAction(logout)}>Logout</a>
+                            </>
+                        ) : (
+                            <>
+                                <a href="/login" className="mobile-nav-link" onClick={handleAction(openLogin)}>Login</a>
+                                <a href="/login" className="mobile-nav-link" onClick={handleAction(() => openRegister())}>Register</a>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mobile-search">
+                    <form action="/shop" method="GET" role="search">
+                        <input
+                            type="search"
+                            name="q"
+                            className="search-bar"
+                            placeholder="Search"
+                            aria-label="Search"
+                        />
+                    </form>
                 </div>
             </div>
-
-            <div className="mobile-search">
-                <form action="/shop" method="GET" role="search">
-                    <input
-                        type="search"
-                        name="q"
-                        className="search-bar"
-                        placeholder="Search"
-                        aria-label="Search"
-                    />
-                </form>
-            </div>
-        </div>
+        </>
     );
 };

@@ -4,10 +4,11 @@ interface LogoProps {
     siteName: string;
     siteTagline?: string;
     logoImage?: string;
+    href?: string;
     onClick?: (e: React.MouseEvent) => void;
 }
 
-export const Logo: React.FC<LogoProps> = ({ siteName, siteTagline, logoImage, onClick }) => {
+export const Logo: React.FC<LogoProps> = ({ siteName, siteTagline, logoImage, href = '/room_main', onClick }) => {
     const handleClick = (e: React.MouseEvent) => {
         if (onClick) {
             e.preventDefault();
@@ -16,7 +17,7 @@ export const Logo: React.FC<LogoProps> = ({ siteName, siteTagline, logoImage, on
     };
 
     return (
-        <a href="/" className="logo-link" aria-label={`${siteName} - Home`} onClick={handleClick}>
+        <a href={href} className="logo-link" aria-label={`${siteName} - Main Room`} onClick={handleClick}>
             {logoImage && (
                 <picture>
                     <source srcSet={logoImage.replace(/\.(png|jpe?g)$/i, '.webp')} type="image/webp" />

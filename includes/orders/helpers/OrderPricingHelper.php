@@ -8,6 +8,20 @@ class OrderPricingHelper
     private static $salePctCache = [];
 
     /**
+     * Support both current coupons.is_active and legacy coupons.active schemas.
+     */
+    private static function isCouponActive(array $coupon): bool
+    {
+        if (array_key_exists('is_active', $coupon)) {
+            return (bool) $coupon['is_active'];
+        }
+        if (array_key_exists(WF_Constants::FIELD_ACTIVE, $coupon)) {
+            return (bool) $coupon[WF_Constants::FIELD_ACTIVE];
+        }
+        return false;
+    }
+
+    /**
      * Compute subtotal, shipping, tax, and total for an order
      */
     public static function computePricing($item_ids, $quantities, $shipping_method, $shipping_address, $coupon_code, $debug = false, $user_id = null)
@@ -180,8 +194,10 @@ class OrderPricingHelper
         if (!$code)
             return ['code' => null, 'discount' => 0.0];
 
-        $coupon = Database::queryOne("SELECT * FROM coupons WHERE code = ? AND active = 1", [$code]);
+        $coupon = Database::queryOne("SELECT * FROM coupons WHERE code = ?", [$code]);
         if (!$coupon)
+            return ['code' => $code, 'discount' => 0.0];
+        if (!self::isCouponActive($coupon))
             return ['code' => $code, 'discount' => 0.0];
 
         if ($coupon['expires_at'] && strtotime($coupon['expires_at']) < time())

@@ -4,6 +4,20 @@ require_once __DIR__ . '/../includes/Constants.php';
 
 header('Content-Type: application/json');
 
+/**
+ * Support both current coupons.is_active and legacy coupons.active schemas.
+ */
+function wf_coupon_is_active(array $coupon): bool
+{
+    if (array_key_exists('is_active', $coupon)) {
+        return (bool) $coupon['is_active'];
+    }
+    if (array_key_exists(WF_Constants::FIELD_ACTIVE, $coupon)) {
+        return (bool) $coupon[WF_Constants::FIELD_ACTIVE];
+    }
+    return false;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'message' => 'Method not allowed']);
@@ -30,7 +44,7 @@ try {
         exit;
     }
     
-    if (!$coupon[WF_Constants::FIELD_ACTIVE]) {
+    if (!wf_coupon_is_active($coupon)) {
         echo json_encode(['success' => false, 'message' => 'This coupon is inactive']);
         exit;
     }

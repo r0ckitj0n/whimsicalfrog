@@ -30,6 +30,20 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
 }) => {
     const requiresMinimum = minimumCheckoutTotal > 0;
     const belowMinimum = requiresMinimum && total < minimumCheckoutTotal;
+    const openCheckout = () => {
+        if (typeof window === 'undefined') return;
+        if (typeof window.openPaymentModal === 'function') {
+            window.openPaymentModal();
+            return;
+        }
+        if (window.WF_PaymentModal?.open) {
+            window.WF_PaymentModal.open();
+            return;
+        }
+        if (window.showError) {
+            window.showError('Checkout unavailable: missing payment opener APIs (window.openPaymentModal and window.WF_PaymentModal.open).');
+        }
+    };
 
     return (
         <div className="cart-modal-footer-content p-6 bg-gray-50 border-t border-gray-100 space-y-4">
@@ -107,16 +121,18 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
                 <button
                     type="button"
                     onClick={() => {
-                        if (belowMinimum) return;
+                        if (belowMinimum) {
+                            if (typeof window !== 'undefined' && window.showError) {
+                                window.showError(`Minimum order total is $${minimumCheckoutTotal.toFixed(2)}.`);
+                            }
+                            return;
+                        }
                         // Close this modal immediately to prevent seeing the empty cart splash
                         // once the order is placed and the cart is cleared.
                         onClose();
-                        if (typeof window !== 'undefined' && window.openPaymentModal) {
-                            window.openPaymentModal();
-                        }
+                        openCheckout();
                     }}
-                    disabled={belowMinimum}
-                    className={`cart-checkout-btn ${belowMinimum ? 'opacity-60 cursor-not-allowed' : ''}`}
+                    className={`cart-checkout-btn ${belowMinimum ? 'opacity-80' : ''}`}
                 >
                     Checkout • ${total.toFixed(2)}
                 </button>

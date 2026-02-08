@@ -4,7 +4,7 @@ import { ISizeTemplate, ISizeTemplateItem } from '../../../../hooks/admin/useGlo
 interface SizeTemplateEditorProps {
     template: Partial<ISizeTemplate>;
     onChange?: (data: ISizeTemplate) => void;
-    onSave: (data: Partial<ISizeTemplate>) => Promise<{ success: boolean; message?: string } | void>;
+    onSave: () => Promise<boolean>;
     onCancel: () => void;
 }
 
@@ -60,13 +60,7 @@ export const SizeTemplateEditor: React.FC<SizeTemplateEditorProps> = ({ template
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({
-            ...template,
-            template_name: name,
-            category,
-            description,
-            sizes: items
-        });
+        void onSave();
     };
 
     return (

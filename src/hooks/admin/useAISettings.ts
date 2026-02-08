@@ -17,7 +17,7 @@ export const useAISettings = () => {
     const [settings, setSettings] = useState<IAISettings | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [models, setModels] = useState<Array<{ id: string; name: string; description?: string }>>([]);
+    const [models, setModels] = useState<IAIModel[]>([]);
 
     const fetchSettings = useCallback(async () => {
         setIsLoading(true);
@@ -100,8 +100,8 @@ export const useAISettings = () => {
                 `/api/ai_settings.php?action=list_models&provider=${provider}&force=${force ? 1 : 0}`
             );
             if (res) {
-                const modelsList = Array.isArray(res) ? res : res.models || res.data || [];
-                const visionModels = (modelsList as Array<{ supportsVision?: boolean }>).filter(m => m.supportsVision === true);
+                const modelsList: IAIModel[] = Array.isArray(res) ? res : (res.models || res.data || []);
+                const visionModels = modelsList.filter(m => m.supportsVision === true);
                 setModels(visionModels);
                 return visionModels;
             }

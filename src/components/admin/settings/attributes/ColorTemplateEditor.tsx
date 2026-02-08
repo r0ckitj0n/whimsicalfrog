@@ -4,7 +4,7 @@ import { IColorTemplate, IColorTemplateItem } from '../../../../hooks/admin/useG
 interface ColorTemplateEditorProps {
     template: Partial<IColorTemplate>;
     onChange?: (data: IColorTemplate) => void;
-    onSave: (data: Partial<IColorTemplate>) => Promise<{ success: boolean; message?: string } | void>;
+    onSave: () => Promise<boolean>;
     onCancel: () => void;
 }
 
@@ -60,13 +60,7 @@ export const ColorTemplateEditor: React.FC<ColorTemplateEditorProps> = ({ templa
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave({
-            ...template,
-            template_name: name,
-            category,
-            description,
-            colors: items
-        });
+        void onSave();
     };
 
     return (

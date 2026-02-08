@@ -172,6 +172,7 @@ export const usePOS = () => {
                 subtotal: pricing.subtotal,
                 tax_amount: pricing.tax,
                 tax_rate: 0.0825, // Fallback rate
+                coupon_code: cart.getCoupon()?.code,
                 payment_method,
                 square_token,
                 payment_status: PAYMENT_STATUS.PAID,

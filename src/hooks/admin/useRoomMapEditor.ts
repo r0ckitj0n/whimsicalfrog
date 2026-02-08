@@ -18,7 +18,10 @@ export const useRoomMapEditor = (): IRoomMapEditorHook => {
 
     const normalizeSavedMap = useCallback((map: IRoomMap): IRoomMap => ({
         ...map,
-        is_active: map.is_active === true || map.is_active === 1 || (map.is_active as unknown) === '1'
+        is_active: (() => {
+            const raw = map.is_active as unknown;
+            return raw === true || raw === 1 || raw === '1';
+        })()
     }), []);
 
     const sortMapsChronologically = useCallback((maps: IRoomMap[]): IRoomMap[] => {

@@ -3,8 +3,8 @@ import { IMapArea } from '../../../../../types/room.js';
 
 interface ISignDestination {
     area_selector: string;
-    label: string;
-    target: string;
+    label?: string;
+    target?: string;
     image: string;
 }
 

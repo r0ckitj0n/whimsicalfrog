@@ -8,6 +8,7 @@ import { useInventoryItemForm } from '../../../../hooks/admin/useInventoryItemFo
 import { useModalContext } from '../../../../context/ModalContext.js';
 import { AiManager } from '../../../../core/ai/AiManager.js';
 import type { MarketingData } from '../../../../hooks/admin/inventory-ai/useMarketingManager.js';
+import type { IItemDetails } from '../../../../types/inventory.js';
 
 // Partials
 import { ItemInfoColumn } from '../../../admin/inventory/partials/ItemInfoColumn.js';

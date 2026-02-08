@@ -137,7 +137,7 @@ export const useUnifiedRoomManager = ({
 
     const isGlobalDirty = boundariesTab.isSettingsDirty || shortcuts.isContentDirty || boundariesTab.isBoundaryDirty || isRoomFormDirty;
 
-    const handleGlobalSave = useCallback(async (): Promise<boolean> => {
+    const handleGlobalSave = useCallback(async (): Promise<void> => {
         if (isRoomFormDirty) await overview.handleSaveRoom();
         if (boundariesTab.isBoundaryDirty) await boundariesTab.handleSaveBoundaries();
         if (boundariesTab.isSettingsDirty) await boundariesTab.handleSaveSettings();
@@ -147,7 +147,6 @@ export const useUnifiedRoomManager = ({
         if (!isGlobalDirty && window.WFToast) {
             window.WFToast.info('No changes to save');
         }
-        return true;
     }, [isRoomFormDirty, boundariesTab.isBoundaryDirty, boundariesTab.isSettingsDirty, shortcuts.isContentDirty, isGlobalDirty, setIsEditMode]);
 
     // Destination Options for Shortcuts

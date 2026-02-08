@@ -65,7 +65,8 @@ export const useInventoryItemForm = ({
         isGenerating: orchestratorBusy,
         currentStep: orchestratorStep,
         progress: orchestratorProgress,
-        orchestrateFullGeneration
+        orchestrateFullGeneration,
+        generateInfoOnly
     } = useAIGenerationOrchestrator();
 
     const isReadOnly = mode === 'view';
@@ -394,6 +395,57 @@ export const useInventoryItemForm = ({
         return triggerGenerationChain();
     };
 
+    const handleGenerateInfoAndMarketing = async () => {
+        if (!localSku) {
+            window.WFToast?.error?.('SKU is required for AI analysis');
+            return;
+        }
+        if (!hasUploadedImage || !primaryImage) {
+            window.WFToast?.error?.('Please upload an image first for AI analysis');
+            return;
+        }
+
+        setIsDirty(true);
+        const result = await generateInfoOnly({
+            sku: localSku,
+            primaryImageUrl: primaryImage,
+            previousName: formData.name,
+            lockedFields,
+            lockedWords,
+            includeMarketingRefinement: true
+        });
+
+        if (!result) {
+            window.WFToast?.error?.('Failed to generate item information');
+            return;
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            name: result.name || prev.name,
+            description: result.description || prev.description,
+            category: result.category || prev.category,
+            weight_oz: (typeof result.weightOz === 'number' && !lockedFields.weight_oz)
+                ? Number(result.weightOz.toFixed(2))
+                : prev.weight_oz,
+            package_length_in: (typeof result.packageLengthIn === 'number' && !lockedFields.package_length_in)
+                ? Number(result.packageLengthIn.toFixed(2))
+                : prev.package_length_in,
+            package_width_in: (typeof result.packageWidthIn === 'number' && !lockedFields.package_width_in)
+                ? Number(result.packageWidthIn.toFixed(2))
+                : prev.package_width_in,
+            package_height_in: (typeof result.packageHeightIn === 'number' && !lockedFields.package_height_in)
+                ? Number(result.packageHeightIn.toFixed(2))
+                : prev.package_height_in
+        }));
+
+        if (result.marketingData) {
+            setCachedMarketingData(result.marketingData);
+        }
+
+        window.WFToast?.success?.('Generated item information and marketing');
+    };
+
     const handleSave = useCallback(async (): Promise<boolean> => {
         if (isReadOnly || isSaving) return false;
         if (isAdding && !localSku) {
@@ -557,6 +609,7 @@ export const useInventoryItemForm = ({
         handleFieldChange,
         generateSku,
         handleGenerateAll,
+        handleGenerateInfoAndMarketing,
         handleSave,
         handleApplyCost,
         handleApplyPrice,

@@ -25,7 +25,7 @@ interface ItemInfoColumnProps {
     onLocalSkuChange: (val: string) => void;
     onFieldChange: (field: string, value: string | number) => void;
     onGenerateSku: () => Promise<void>;
-    onGenerateAll: () => Promise<void>;
+    onGenerateInfoAndMarketing: () => Promise<void>;
     isBusy: boolean;
     primaryImage: string;
     /** Fields that are locked from AI overwrites */
@@ -49,7 +49,7 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
     onLocalSkuChange,
     onFieldChange,
     onGenerateSku,
-    onGenerateAll,
+    onGenerateInfoAndMarketing,
     isBusy,
     primaryImage,
     lockedFields = {},
@@ -79,7 +79,7 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
             {!isReadOnly && (
                 <div className="px-4 py-3 border-b border-slate-200 bg-white">
                     <button
-                        onClick={onGenerateAll}
+                        onClick={onGenerateInfoAndMarketing}
                         disabled={isBusy}
                         className="btn btn-primary text-xs py-2 px-3 w-full flex items-center justify-center gap-2"
                         data-help-id="inventory-info-generate-below-image"
@@ -144,7 +144,7 @@ export const ItemInfoColumn: React.FC<ItemInfoColumnProps> = ({
                             lockedWords={lockedWords}
                             onLockedWordsChange={onLockedWordsChange}
                             isReadOnly={isReadOnly}
-                            onGenerate={onGenerateAll}
+                            onGenerate={onGenerateInfoAndMarketing}
                         />
                     </div>
                 ) : (

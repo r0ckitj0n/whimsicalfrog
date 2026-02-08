@@ -25,6 +25,8 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
     category,
     isReadOnly = false,
     refreshTrigger = 0,
+    currentPrice,
+    onCurrentPriceChange,
     tier = 'standard',
     cachedBreakdown
 }) => {
@@ -112,6 +114,8 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
 
     const [editingCategory, setEditingCategory] = React.useState<string | null>(null);
     const [editValue, setEditValue] = React.useState<string>('');
+    const [isEditingCurrent, setIsEditingCurrent] = React.useState(false);
+    const [currentEditValue, setCurrentEditValue] = React.useState('');
 
     const startEditCategory = (category: string, amount: number) => {
         if (isReadOnly) return;
@@ -130,6 +134,29 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
 
     if (!sku) return null;
 
+    const currentCostValue = typeof currentPrice === 'number'
+        ? currentPrice
+        : (breakdown.totals?.stored ?? 0);
+
+    const startEditCurrent = () => {
+        if (isReadOnly || !onCurrentPriceChange) return;
+        setIsEditingCurrent(true);
+        setCurrentEditValue(currentCostValue.toFixed(2));
+    };
+
+    const commitEditCurrent = () => {
+        if (!onCurrentPriceChange) {
+            setIsEditingCurrent(false);
+            return;
+        }
+        const value = parseFloat(currentEditValue);
+        if (!Number.isNaN(value)) {
+            onCurrentPriceChange(value);
+        }
+        setIsEditingCurrent(false);
+        setCurrentEditValue('');
+    };
+
     return (
         <div className="cost-breakdown-wrapper">
 
@@ -138,7 +165,35 @@ export const CostBreakdownTable: React.FC<CostBreakdownTableProps> = ({
             <div id="costSuggestionDisplay" className="ai-data-panel mb-2">
                 <div className="flex justify-between items-center">
                     <span className="ai-data-label text-sm font-medium">Current Cost:</span>
-                    <span className="ai-data-value--large">${(breakdown.totals?.stored ?? 0).toFixed(2)}</span>
+                    {isEditingCurrent ? (
+                        <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500">$</span>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="w-24 text-right border border-gray-300 rounded px-2 py-1 text-sm font-bold focus:ring-1 focus:ring-[var(--brand-primary)]/20 focus:border-[var(--brand-primary)]/20"
+                                value={currentEditValue}
+                                onChange={(e) => setCurrentEditValue(e.target.value)}
+                                onBlur={commitEditCurrent}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') commitEditCurrent();
+                                    if (e.key === 'Escape') {
+                                        setIsEditingCurrent(false);
+                                        setCurrentEditValue('');
+                                    }
+                                }}
+                                autoFocus
+                            />
+                        </div>
+                    ) : (
+                        <span
+                            className={`ai-data-value--large ${!isReadOnly && onCurrentPriceChange ? 'cursor-pointer hover:underline' : ''}`}
+                            onClick={startEditCurrent}
+                            title={!isReadOnly && onCurrentPriceChange ? 'Click to edit current cost' : undefined}
+                        >
+                            ${currentCostValue.toFixed(2)}
+                        </span>
+                    )}
                 </div>
             </div>
 

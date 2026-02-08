@@ -85,6 +85,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
         handleFieldChange,
         generateSku,
         handleGenerateAll,
+        handleGenerateInfoAndMarketing,
         handleSave,
         handleApplyCost,
         handleApplyPrice,
@@ -451,7 +452,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onLocalSkuChange={setLocalSku}
                                 onFieldChange={handleFieldChange}
                                 onGenerateSku={generateSku}
-                                onGenerateAll={handleGenerateAll}
+                                onGenerateInfoAndMarketing={handleGenerateInfoAndMarketing}
                                 isBusy={is_busy}
                                 primaryImage={resolvedPrimaryImage}
                                 lockedFields={lockedFields}

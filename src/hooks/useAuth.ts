@@ -6,6 +6,11 @@ import logger from '../core/logger.js';
 import { ROLE } from '../core/constants.js';
 
 export const useAuth = () => {
+    const hasAdminAccess = (role?: string): boolean => {
+        const normalized = (role || '').toLowerCase().trim();
+        return normalized === ROLE.ADMIN || normalized === 'superadmin' || normalized === 'devops' || normalized === 'administrator';
+    };
+
     const [state, setState] = useState<IAuthState>({
         user: null,
         isLoggedIn: false,
@@ -29,7 +34,7 @@ export const useAuth = () => {
                 setState({
                     user,
                     isLoggedIn: true,
-                    isAdmin: user.role.toLowerCase() === ROLE.ADMIN,
+                    isAdmin: hasAdminAccess(user.role),
                     isLoading: false
                 });
                 return user;

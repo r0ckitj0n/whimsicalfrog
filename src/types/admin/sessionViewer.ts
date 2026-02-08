@@ -31,6 +31,7 @@ export interface SessionViewerData {
     php_sessions: SessionViewerPhpSessionRecord[];
     php_session_save_path: string;
     php_session_scan_error?: string;
+    analytics_query_error?: string;
 }
 
 export interface SessionViewerResponse {

@@ -23,7 +23,13 @@ function wf_auth_make_cookie($user_id, int $ttlSeconds = 60 * 60 * 24 * 7): arra
     $ts = (string) time();
     $data = $uid . '|' . $ts;
     $sig = hash_hmac('sha256', $data, wf_auth_secret());
-    $val = base64_encode($uid) . '|' . base64_encode($ts) . '|' . base64_encode($sig);
+    // Use URL-safe base64 payload to avoid runtime-specific cookie value filtering.
+    $val = base64_encode(json_encode([
+        'u' => $uid,
+        't' => $ts,
+        's' => $sig,
+        'v' => 2,
+    ]));
     $expires = time() + $ttlSeconds;
     return [$val, $expires];
 }
@@ -33,6 +39,27 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
     if (!$cookieVal) {
         return null;
     }
+    // v2 payload format (base64-encoded JSON object)
+    $decodedJson = base64_decode($cookieVal, true);
+    if ($decodedJson !== false) {
+        $obj = json_decode($decodedJson, true);
+        if (is_array($obj) && isset($obj['u'], $obj['t'], $obj['s'])) {
+            $uid = (string) $obj['u'];
+            $ts = (string) $obj['t'];
+            $sig = (string) $obj['s'];
+            $data = $uid . '|' . $ts;
+            $calc = hash_hmac('sha256', $data, wf_auth_secret());
+            if (!hash_equals($calc, $sig)) {
+                return null;
+            }
+            if (!ctype_digit($ts) || (time() - (int) $ts) > 60 * 60 * 24 * 7) {
+                return null;
+            }
+            return ['user_id' => $uid, 'ts' => (int) $ts];
+        }
+    }
+
+    // Legacy v1 payload format: base64(uid)|base64(ts)|base64(sig)
     $parts = explode('|', $cookieVal);
     if (count($parts) !== 3) {
         return null;
@@ -48,7 +75,6 @@ function wf_auth_parse_cookie(?string $cookieVal): ?array
     if (!hash_equals($calc, $sig)) {
         return null;
     }
-    // Optional: expire after 7 days
     if (!ctype_digit($ts) || (time() - (int) $ts) > 60 * 60 * 24 * 7) {
         return null;
     }

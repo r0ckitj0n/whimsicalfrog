@@ -185,7 +185,8 @@ export const useSiteHydration = () => {
                     document.body.setAttribute('data-is-logged-in', data.auth.isLoggedIn ? 'true' : 'false');
                     if (data.auth.user_id) document.body.setAttribute('data-user-id', String(data.auth.user_id));
 
-                    const isAdmin = data.auth.userData?.role === 'admin' || data.auth.userData?.role === 'Administrator';
+                    const role = String(data.auth.userData?.role || '').toLowerCase().trim();
+                    const isAdmin = role === 'admin' || role === 'administrator' || role === 'superadmin' || role === 'devops';
                     document.body.setAttribute('data-is-admin', isAdmin ? 'true' : 'false');
                     if (isAdmin) document.body.classList.add('admin-view');
                 }

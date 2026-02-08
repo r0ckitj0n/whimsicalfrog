@@ -93,8 +93,13 @@ function isAdmin()
         return false;
     }
 
-    $role = strtolower($user['role'] ?? '');
-    return $role === WF_Constants::ROLE_ADMIN;
+    $role = strtolower(trim((string) ($user['role'] ?? '')));
+    return in_array($role, [
+        WF_Constants::ROLE_ADMIN,
+        WF_Constants::ROLE_SUPERADMIN,
+        WF_Constants::ROLE_DEVOPS,
+        'administrator',
+    ], true);
 }
 
 

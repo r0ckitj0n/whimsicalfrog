@@ -76,6 +76,33 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
         });
     };
 
+    const getResultExplanation = () => {
+        if (!result) return '';
+
+        const scanned = result.scanned ?? 0;
+        const missing = result.missing ?? 0;
+        const updated = result.updated ?? 0;
+        const skipped = result.skipped ?? 0;
+
+        if (scanned === 0) {
+            return 'No inventory items were scanned.';
+        }
+
+        if (missing === 0 && updated === 0) {
+            return `Scan complete: all ${scanned} items already had valid shipping dimensions, so nothing needed to be fixed.`;
+        }
+
+        if (updated > 0 && skipped > 0) {
+            return `Completed: fixed ${updated} item${updated === 1 ? '' : 's'} with missing values and skipped ${skipped} item${skipped === 1 ? '' : 's'} that were already complete.`;
+        }
+
+        if (updated > 0) {
+            return `Completed: fixed ${updated} item${updated === 1 ? '' : 's'} with missing shipping dimensions.`;
+        }
+
+        return `Scan complete: ${missing} item${missing === 1 ? '' : 's'} were missing values, but no updates were applied. Check AI provider/image availability and try again.`;
+    };
+
     return (
         <div
             className="admin-modal-overlay over-header show topmost"
@@ -152,6 +179,7 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
                                         <span className="mr-4">Updated: {result.updated ?? 0}</span>
                                         <span>Skipped: {result.skipped ?? 0}</span>
                                     </div>
+                                    <p className="text-xs text-slate-600 mb-1">{getResultExplanation()}</p>
                                     {result.preview?.length ? (
                                         <div className="mt-3">
                                             <strong className="text-sm">Examples:</strong>

@@ -45,20 +45,9 @@ try {
     $dom = $isLocal ? '' : ('.' . $bd);
     $sec = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
 
-    // Set WF_AUTH cookie to client
-    [$val, $exp] = wf_auth_make_cookie($uid);
-    $sameSite = $sec ? 'None' : 'Lax';
-    $opts1 = [ 'expires' => $exp, 'path' => '/', 'secure' => $sec, 'httponly' => true, 'samesite' => $sameSite ];
-    if (!empty($dom)) {
-        $opts1['domain'] = $dom;
-    }
-    @setcookie(wf_auth_cookie_name(), $val, $opts1);
-    // Also a visible hint for quick UI checks
-    $opts2 = [ 'expires' => $exp, 'path' => '/', 'secure' => $sec, 'httponly' => false, 'samesite' => $sameSite ];
-    if (!empty($dom)) {
-        $opts2['domain'] = $dom;
-    }
-    @setcookie('WF_AUTH_V', base64_encode(json_encode(['uid' => (string)$uid, 'role' => $row['role'] ?? null])), $opts2);
+    // Some proxy layers preserve only one Set-Cookie header; set hint first, auth last.
+    wf_auth_set_client_hint($uid, $row['role'] ?? null, $dom, $sec);
+    wf_auth_set_cookie($uid, $dom, $sec);
 
     // Build redirect target
     $scheme = $sec ? 'https' : 'http';

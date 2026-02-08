@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { ApiClient } from '../../../core/ApiClient.js';
 import type { SessionViewerData, SessionViewerResponse } from '../../../types/admin/sessionViewer.js';
 
 interface SessionViewerProps {
@@ -22,7 +21,14 @@ export function SessionViewer({ onClose, title }: SessionViewerProps) {
         setLoading(true);
         setError(null);
         try {
-            const json = await ApiClient.get<SessionViewerResponse>('/api/session_diagnostics.php', { action: 'get' });
+            // Use direct same-origin fetch here to avoid backend-origin cookie mismatches.
+            const response = await fetch(`/api/session_diagnostics.php?action=get&cb=${Date.now()}`, {
+                credentials: 'include',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const json = (await response.json()) as SessionViewerResponse;
             if (json.success) {
                 setData(json.data || null);
             } else {
@@ -197,6 +203,11 @@ export function SessionViewer({ onClose, title }: SessionViewerProps) {
 
                             <div className="admin-card mb-4">
                                 <div className="admin-card-title mb-2">Recent Analytics Sessions</div>
+                                {data.analytics_query_error && (
+                                    <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2">
+                                        Analytics query warning: {data.analytics_query_error}
+                                    </div>
+                                )}
                                 <div className="bg-gray-50 p-4 rounded overflow-auto max-h-[360px] border border-gray-200">
                                     {data.recent_sessions.length === 0 ? (
                                         <span className="text-gray-500 italic">No analytics sessions found.</span>

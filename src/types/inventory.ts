@@ -219,6 +219,16 @@ export interface IInventoryResponse {
 export interface ICommonApiResponse {
     success: boolean;
     error?: string;
+    details?: unknown;
+}
+
+export interface IAddInventoryResponse extends ICommonApiResponse {
+    data?: {
+        id?: string;
+        sku?: string;
+        created?: boolean;
+        updated?: boolean;
+    };
 }
 
 /** Audit item structure used in inventory health checks */

@@ -3,6 +3,7 @@ import { ImageGallery } from '../ImageGallery.js';
 import { NestedInventoryTable } from '../NestedInventoryTable.js';
 import { OptionSettingsPanel } from '../OptionSettingsPanel.js';
 import { FieldLockIcon } from '../FieldLockIcon.js';
+import type { IItemImage } from '../../../../types/inventory.js';
 
 interface MediaAndVariantsSectionProps {
     sku: string;
@@ -19,6 +20,7 @@ interface MediaAndVariantsSectionProps {
     onFieldChange: (field: string, value: string | number) => void;
     lockedFields?: Record<string, boolean>;
     onToggleFieldLock?: (field: string) => void;
+    onImagesChanged?: (images: IItemImage[]) => void;
 }
 
 export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = ({
@@ -30,7 +32,8 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
     formData,
     onFieldChange,
     lockedFields = {},
-    onToggleFieldLock
+    onToggleFieldLock,
+    onImagesChanged
 }) => {
     return (
         <div className="flex flex-col gap-5 pt-0 bg-gradient-to-b from-slate-50 to-slate-100/70 border-t border-slate-200">
@@ -41,7 +44,12 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
                     </h3>
                 </div>
                 <div className="p-4">
-                <ImageGallery sku={isAdding ? '' : sku} isEdit={mode === 'edit' || isAdding} isReadOnly={isReadOnly} />
+                <ImageGallery
+                    sku={sku}
+                    isEdit={mode === 'edit' || isAdding}
+                    isReadOnly={isReadOnly}
+                    onImagesChanged={onImagesChanged}
+                />
                 </div>
             </div>
 
@@ -146,7 +154,7 @@ export const MediaAndVariantsSection: React.FC<MediaAndVariantsSectionProps> = (
                     Nested Inventory Editor (by Gender → Color → Size)
                 </p>
                 <NestedInventoryTable
-                    sku={isAdding ? '' : sku}
+                    sku={sku}
                     isReadOnly={isReadOnly || isAdding}
                     onStockChange={onStockChange}
                 />

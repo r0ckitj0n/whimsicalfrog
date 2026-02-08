@@ -26,6 +26,16 @@ try {
     if (empty($sku)) { echo json_encode(['success' => false, 'error' => 'SKU required']); exit; }
     if (!isset($_FILES['images']) || empty($_FILES['images']['name'][0])) { echo json_encode(['success' => false, 'error' => 'No images']); exit; }
 
+    // Ensure add-mode image-first uploads work even before full item details are saved.
+    $itemExists = Database::queryOne("SELECT sku FROM items WHERE sku = ? LIMIT 1", [$sku]);
+    if (!$itemExists) {
+        Database::execute(
+            "INSERT INTO items (sku, name, category, stock_quantity, reorder_point, cost_price, retail_price, description, status)
+             VALUES (?, ?, ?, 0, 5, 0, 0, '', ?)",
+            [$sku, $sku, 'General', 'draft']
+        );
+    }
+
     $projectRoot = dirname(__DIR__);
     $itemsDir = $projectRoot . '/images/items/';
     if (!is_dir($itemsDir)) mkdir($itemsDir, 0755, true);

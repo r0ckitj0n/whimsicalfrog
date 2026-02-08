@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
-import type { IInventoryItem, IInventoryFilters, IInventoryResponse, ICommonApiResponse } from '../../types/inventory.js';
+import type { IInventoryItem, IInventoryFilters, IInventoryResponse, ICommonApiResponse, IAddInventoryResponse } from '../../types/inventory.js';
 
 // Re-export for backward compatibility
 export type { IInventoryItem, IInventoryFilters, IInventoryResponse, ICommonApiResponse } from '../../types/inventory.js';
@@ -104,15 +104,17 @@ export const useInventory = (initialFilters: IInventoryFilters = { search: '', c
 
     const addItem = async (itemData: Partial<IInventoryItem>) => {
         try {
-            const res = await ApiClient.post<ICommonApiResponse>('/api/add_inventory.php', itemData);
+            const res = await ApiClient.post<IAddInventoryResponse>('/api/add_inventory.php', itemData);
             if (res && res.success) {
                 await fetchInventory();
                 return { success: true };
             }
-            return { success: false, error: res?.error || 'Add failed' };
+            const detailMessage = typeof res?.details === 'string' ? res.details : '';
+            return { success: false, error: detailMessage || res?.error || 'Add failed' };
         } catch (err) {
             logger.error('[useInventory] add failed', err);
-            return { success: false, error: 'Network error' };
+            const message = err instanceof Error ? err.message : 'Network error';
+            return { success: false, error: message };
         }
     };
 

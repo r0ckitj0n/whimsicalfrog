@@ -32,6 +32,7 @@ interface UseInventoryItemFormProps {
     onClose: () => void;
     refresh: () => void;
     primaryImage?: string;
+    hasUploadedImage?: boolean;
 }
 
 export const useInventoryItemForm = ({
@@ -46,7 +47,8 @@ export const useInventoryItemForm = ({
     onSaved,
     onClose,
     refresh,
-    primaryImage
+    primaryImage,
+    hasUploadedImage = false
 }: UseInventoryItemFormProps) => {
     const {
         is_busy: aiBusy,
@@ -122,6 +124,30 @@ export const useInventoryItemForm = ({
     useEffect(() => {
         if (sku) setLocalSku(sku);
     }, [sku]);
+
+    useEffect(() => {
+        if (!isAdding || localSku) return;
+        let isCancelled = false;
+
+        const bootstrapSku = async () => {
+            try {
+                const fallbackCategory = formData.category || 'General';
+                const data = await ApiClient.get<{ success: boolean; sku?: string }>('/api/next_sku.php', { cat: fallbackCategory });
+                if (!isCancelled && data?.success && data.sku) {
+                    setLocalSku(data.sku);
+                }
+            } catch (err) {
+                if (!isCancelled) {
+                    console.error('Failed to bootstrap SKU for add mode', err);
+                }
+            }
+        };
+
+        void bootstrapSku();
+        return () => {
+            isCancelled = true;
+        };
+    }, [formData.category, isAdding, localSku]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -233,12 +259,9 @@ export const useInventoryItemForm = ({
     }, []);
 
     const generateSku = async () => {
-        if (!formData.category) {
-            if (window.WFToast) window.WFToast.error('Please select a category first');
-            return;
-        }
         try {
-            const data = await ApiClient.get<{ success: boolean; sku?: string }>('/api/next_sku.php', { cat: formData.category });
+            const requestedCategory = formData.category || 'General';
+            const data = await ApiClient.get<{ success: boolean; sku?: string }>('/api/next_sku.php', { cat: requestedCategory });
             if (data && data.success && data.sku) {
                 setLocalSku(data.sku);
                 setIsDirty(true);
@@ -254,7 +277,7 @@ export const useInventoryItemForm = ({
             return;
         }
 
-        if (!primaryImage) {
+        if (!hasUploadedImage || !primaryImage) {
             if (window.WFToast) window.WFToast.error('Please upload an image first for AI analysis');
             return;
         }

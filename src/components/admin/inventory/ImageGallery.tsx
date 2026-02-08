@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useInventoryImages } from '../../../hooks/admin/useInventoryImages.js';
 import { IItemImage } from '../../../types/index.js';
 
@@ -6,12 +6,17 @@ interface ImageGalleryProps {
     sku: string;
     isEdit?: boolean;
     isReadOnly?: boolean;
+    onImagesChanged?: (images: IItemImage[]) => void;
 }
 
-export const ImageGallery: React.FC<ImageGalleryProps> = ({ sku, isEdit = false, isReadOnly = false }) => {
+export const ImageGallery: React.FC<ImageGalleryProps> = ({ sku, isEdit = false, isReadOnly = false, onImagesChanged }) => {
     const { images, isLoading, uploadProgress, error, deleteImage, setPrimaryImage, uploadImages } = useInventoryImages(sku);
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<IItemImage | null>(null);
+
+    useEffect(() => {
+        onImagesChanged?.(images);
+    }, [images, onImagesChanged]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {

@@ -102,6 +102,24 @@ switch ($action) {
         $currentSessionId = session_id();
         $phpSessionScanError = null;
         $phpSessions = wf_list_php_sessions($currentSessionId, 100, $phpSessionScanError);
+        if ($currentSessionId !== '') {
+            $hasCurrent = false;
+            foreach ($phpSessions as $row) {
+                if (($row['session_id'] ?? '') === $currentSessionId) {
+                    $hasCurrent = true;
+                    break;
+                }
+            }
+            if (!$hasCurrent) {
+                array_unshift($phpSessions, [
+                    'session_id' => $currentSessionId,
+                    'last_modified' => date('Y-m-d H:i:s'),
+                    'file_path' => '',
+                    'bytes' => 0,
+                    'is_current' => true,
+                ]);
+            }
+        }
 
         // Mask sensitive values in $_SERVER
         $serverData = $_SERVER;

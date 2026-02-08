@@ -1,5 +1,5 @@
 import React from 'react';
-import { IItemDetails, IItemOption } from '../../../hooks/useItemDetails.js';
+import { IItemDetails } from '../../../hooks/useItemDetails.js';
 import { StyleSelection } from './StyleSelection.js';
 import { ColorSelection } from './ColorSelection.js';
 import { SizeSelection } from './SizeSelection.js';
@@ -42,64 +42,47 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
     availableSizes
 }) => {
     return (
-        <div className="details-column" style={{
-            width: '50%',
-            flex: '0 0 50%',
-            padding: '60px',
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'white'
-        }}>
-            <div className="details-block" style={{ marginBottom: '40px' }}>
-                <div style={{ fontSize: '12px', fontWeight: '900', color: 'var(--brand-primary)', textTransform: 'uppercase', letterSpacing: '0.25em', marginBottom: '12px' }}>
+        <div className="details-column flex w-full flex-col bg-white px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:w-1/2 lg:flex-[0_0_50%] lg:px-10 lg:pb-10">
+            <div className="details-block mb-6 sm:mb-8">
+                <div className="mb-2 text-[11px] font-black uppercase tracking-[0.22em] text-[var(--brand-primary)] sm:text-xs">
                     {item.category || 'Whimsical Original'}
                 </div>
-                <h2 className="details-title" style={{ fontSize: '36px', fontWeight: '900', color: '#111827', marginBottom: '8px', lineHeight: '1.1', fontFamily: "'Merienda', cursive", letterSpacing: '-0.02em' }}>
+                <h2 className="details-title mb-2 font-merienda text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl">
                     {item.name}
                 </h2>
-                <div className="details-price" style={{ color: 'var(--brand-secondary)', fontSize: '42px', fontWeight: '900', letterSpacing: '-0.01em', marginBottom: '12px' }}>
+                <div className="details-price mb-2 text-4xl font-black tracking-tight text-[var(--brand-secondary)] sm:text-[2.75rem]">
                     ${total_price.toFixed(2)}
                 </div>
-                <div className="details-status" style={{ fontSize: '15px', color: '#9ca3af', fontStyle: 'italic', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Status: <span style={{ color: maxQty > 0 ? 'var(--brand-primary)' : 'var(--brand-error)' }}>{maxQty > 0 ? `${maxQty} available now` : 'Sold out'}</span>
+                <div className="details-status text-xs font-bold uppercase tracking-[0.08em] text-slate-400 sm:text-sm">
+                    Status:{' '}
+                    <span className={maxQty > 0 ? 'text-[var(--brand-primary)]' : 'text-[var(--brand-error)]'}>
+                        {maxQty > 0 ? `${maxQty} available now` : 'Sold out'}
+                    </span>
                 </div>
 
                 {item.description && (
-                    <div style={{ marginTop: '24px' }}>
-                        <div style={{ fontWeight: '900', color: '#111827', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '12px' }}>Item Story</div>
-                        <div className="details-description" style={{ lineHeight: '1.7', color: '#4b5563', background: '#ffffff', padding: '16px 20px', borderRadius: '12px', border: '1px solid #eee', whiteSpace: 'pre-line' }}>
+                    <div className="mt-5">
+                        <div className="mb-2 text-xs font-black uppercase tracking-[0.06em] text-slate-800">Item Story</div>
+                        <div className="details-description whitespace-pre-line rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-600 sm:text-[15px]">
                             {item.description}
                         </div>
                     </div>
                 )}
             </div>
 
-            <div className="details-block" style={{ marginBottom: '40px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--brand-primary)', fontWeight: '900', fontSize: '14px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+            <div className="details-block mb-6 sm:mb-8">
+                <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-[0.1em] text-[var(--brand-primary)] sm:text-sm">
                     ★ Why You'll Love This
                 </div>
-                <div className="details-feature" style={{
-                    backgroundColor: '#ffffff',
-                    color: 'var(--brand-primary)',
-                    padding: '16px 28px',
-                    borderRadius: '16px',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    width: 'fit-content',
-                    border: '2px solid var(--brand-primary)',
-                    boxShadow: '0 4px 12px rgba(var(--brand-primary-rgb), 0.1)'
-                }}>
-                    <span className="btn-icon--check" style={{ fontSize: '20px' }} aria-hidden="true" />
-                    <span style={{ lineHeight: '1.4' }}>
+                <div className="details-feature flex w-full items-start gap-3 rounded-2xl border-2 border-[var(--brand-primary)] bg-white p-4 text-sm font-semibold text-[var(--brand-primary)] shadow-[0_4px_12px_rgba(var(--brand-primary-rgb),0.1)] sm:text-base">
+                    <span className="btn-icon--check mt-0.5 text-lg sm:text-xl" aria-hidden="true" />
+                    <span className="leading-snug sm:leading-relaxed">
                         {item.features ? item.features.split('\n')[0] : "Hand-crafted quality and unique design."}
                     </span>
                 </div>
             </div>
 
-            <div className="details-option-groups" style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+            <div className="details-option-groups flex flex-col gap-6 sm:gap-7">
                 {availableGenders.length > 0 && (
                     <StyleSelection
                         availableGenders={availableGenders}
@@ -123,7 +106,7 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
                 )}
             </div>
 
-            <div className="details-actions-wrap" style={{ marginTop: '60px', paddingTop: '40px', borderTop: '2px solid #f9fafb' }}>
+            <div className="details-actions-wrap sticky bottom-0 z-10 -mx-4 mt-8 border-t border-slate-200 bg-white/95 px-4 pb-4 pt-3 backdrop-blur sm:static sm:mx-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-0 sm:backdrop-blur-none">
                 <ItemDetailsActions
                     total_price={total_price}
                     quantity={quantity}

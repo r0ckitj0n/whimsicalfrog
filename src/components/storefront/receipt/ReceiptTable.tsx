@@ -62,10 +62,13 @@ export const ReceiptTable: React.FC<ReceiptTableProps> = ({
                         <td className="text-right p-2">Tax</td>
                         <td className="text-right p-2">${tax}</td>
                     </tr>
-                    <tr className="text-lg">
-                        <td colSpan={3}></td>
-                        <td className="text-right p-2 receipt-total-label"><strong>Total</strong></td>
-                        <td className="text-right p-2"><span className="receipt-total">${total}</span></td>
+                    <tr>
+                        <td colSpan={5} className="p-2">
+                            <div className="receipt-grand-total-row flex items-baseline justify-end gap-3 whitespace-nowrap pr-1 text-base sm:gap-4 sm:text-lg">
+                                <span className="receipt-total-label"><strong>Total</strong></span>
+                                <span className="receipt-total">${total}</span>
+                            </div>
+                        </td>
                     </tr>
                 </tfoot>
             </table>

@@ -50,6 +50,20 @@ export const useInventoryItemForm = ({
     primaryImage,
     hasUploadedImage = false
 }: UseInventoryItemFormProps) => {
+    const extractSkuFromResponse = (response: unknown): string => {
+        if (!response || typeof response !== 'object') return '';
+        const directSku = (response as { sku?: unknown }).sku;
+        if (typeof directSku === 'string' && directSku.trim()) return directSku.trim();
+        const nestedSku = (response as { data?: { sku?: unknown } }).data?.sku;
+        if (typeof nestedSku === 'string' && nestedSku.trim()) return nestedSku.trim();
+        return '';
+    };
+
+    const makeFallbackSku = (): string => {
+        const stamp = Date.now().toString().slice(-6);
+        return `WF-TMP-${stamp}`;
+    };
+
     const {
         is_busy: aiBusy,
         cached_price_suggestion,
@@ -133,13 +147,18 @@ export const useInventoryItemForm = ({
         const bootstrapSku = async () => {
             try {
                 const fallbackCategory = formData.category || 'General';
-                const data = await ApiClient.get<{ success: boolean; sku?: string }>('/api/next_sku.php', { cat: fallbackCategory });
-                if (!isCancelled && data?.success && data.sku) {
-                    setLocalSku(data.sku);
+                const response = await ApiClient.get<{ success: boolean; sku?: string; data?: { sku?: string } }>(
+                    '/api/next_sku.php',
+                    { cat: fallbackCategory }
+                );
+                const parsedSku = extractSkuFromResponse(response);
+                if (!isCancelled && response?.success && parsedSku) {
+                    setLocalSku(parsedSku);
                 }
             } catch (err) {
                 if (!isCancelled) {
                     console.error('Failed to bootstrap SKU for add mode', err);
+                    setLocalSku(makeFallbackSku());
                 }
             }
         };
@@ -262,13 +281,25 @@ export const useInventoryItemForm = ({
     const generateSku = async () => {
         try {
             const requestedCategory = formData.category || 'General';
-            const data = await ApiClient.get<{ success: boolean; sku?: string }>('/api/next_sku.php', { cat: requestedCategory });
-            if (data && data.success && data.sku) {
-                setLocalSku(data.sku);
+            const response = await ApiClient.get<{ success: boolean; sku?: string; data?: { sku?: string } }>(
+                '/api/next_sku.php',
+                { cat: requestedCategory }
+            );
+            const parsedSku = extractSkuFromResponse(response);
+            if (response && response.success && parsedSku) {
+                setLocalSku(parsedSku);
                 setIsDirty(true);
+            } else {
+                const fallbackSku = makeFallbackSku();
+                setLocalSku(fallbackSku);
+                setIsDirty(true);
+                window.WFToast?.info?.('Using temporary SKU for upload. Save item to finalize details.');
             }
         } catch (err) {
-            if (window.WFToast) window.WFToast.error('Failed to generate SKU');
+            const fallbackSku = makeFallbackSku();
+            setLocalSku(fallbackSku);
+            setIsDirty(true);
+            if (window.WFToast) window.WFToast.info('SKU service unavailable; using temporary SKU');
         }
     };
 

@@ -60,6 +60,24 @@ export const AppShell: React.FC = () => {
         }
     }, [setIsCartOpen]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined' || !isLoggedIn) return;
+        if (!window.__WF_PENDING_CHECKOUT_AFTER_LOGIN) return;
+
+        window.__WF_PENDING_CHECKOUT_AFTER_LOGIN = false;
+        setTimeout(() => {
+            if (typeof window.openPaymentModal === 'function') {
+                window.openPaymentModal();
+                return;
+            }
+            if (window.WF_PaymentModal?.open) {
+                window.WF_PaymentModal.open();
+                return;
+            }
+            window.showError?.('Login succeeded, but checkout could not open because payment modal APIs are missing.');
+        }, 75);
+    }, [isLoggedIn]);
+
     const {
         isOpen: isRoomOpen,
         currentRoom,

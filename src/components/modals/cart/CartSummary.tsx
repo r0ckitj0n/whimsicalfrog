@@ -1,5 +1,6 @@
 import React from 'react';
 import { Coupon } from '../../../commerce/cart/types.js';
+import { useAuthContext } from '../../../context/AuthContext.js';
 
 interface CartSummaryProps {
     subtotal: number;
@@ -28,6 +29,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
     onClearCart,
     onClose,
 }) => {
+    const { isLoggedIn } = useAuthContext();
     const requiresMinimum = minimumCheckoutTotal > 0;
     const belowMinimum = requiresMinimum && total < minimumCheckoutTotal;
     const openCheckout = () => {
@@ -124,6 +126,19 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
                         if (belowMinimum) {
                             if (typeof window !== 'undefined' && window.showError) {
                                 window.showError(`Minimum order total is $${minimumCheckoutTotal.toFixed(2)}.`);
+                            }
+                            return;
+                        }
+                        if (!isLoggedIn) {
+                            if (typeof window !== 'undefined') {
+                                window.__WF_PENDING_CHECKOUT_AFTER_LOGIN = true;
+                                if (typeof window.openLoginModal === 'function') {
+                                    onClose();
+                                    window.openLoginModal();
+                                    return;
+                                }
+                                window.__WF_PENDING_CHECKOUT_AFTER_LOGIN = false;
+                                window.showError?.('Checkout requires login, but the login modal opener is unavailable.');
                             }
                             return;
                         }

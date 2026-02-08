@@ -116,6 +116,7 @@ declare global {
     __WF_SHOW_UPSELLS?: boolean;
     __WF_CONFIRM_CLEAR_CART?: boolean;
     __WF_MINIMUM_CHECKOUT_TOTAL?: number;
+    __WF_PENDING_CHECKOUT_AFTER_LOGIN?: boolean;
     __WF_SELECT_AUTOSORT_INSTALLED?: boolean;
     WFModalUtils?: {
       ensureOnBody: (el: HTMLElement | null) => HTMLElement | null;

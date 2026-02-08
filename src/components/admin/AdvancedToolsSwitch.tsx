@@ -81,7 +81,7 @@ export const AdvancedToolsSwitch: React.FC<AdvancedToolsSwitchProps> = ({
 
             {section === ADMIN_SECTION.INVENTORY_ARCHIVE && createPortal(
                 <div id="inventory-archive-react-root">
-                    <InventoryArchive onClose={backToAdvancedTools} title={modalTitle} />
+                    <InventoryArchive onClose={closeSettingsModal} title={modalTitle} />
                 </div>,
                 document.body
             )}

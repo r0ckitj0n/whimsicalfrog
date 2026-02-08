@@ -229,34 +229,31 @@ switch ($action) {
             $status['local'] = ['online' => false, 'error' => $e->getMessage()];
         }
 
-        // Only try live if user has elevated permissions
-        if (user_has_any_role([WF_Constants::ROLE_SUPERADMIN, WF_Constants::ROLE_DEVOPS])) {
-            try {
-                $result = getPdoForEnv(WF_Constants::ENV_LIVE);
-                if ($result instanceof PDO) {
-                    $pdo = $result;
+        // Status endpoint explicitly allows admin/superadmin/devops; always probe live here.
+        try {
+            $cfg = wf_get_db_config(WF_Constants::ENV_LIVE);
+            $pdo = Database::createConnection(
+                $cfg['host'],
+                $cfg['db'],
+                $cfg['user'],
+                $cfg['pass'],
+                $cfg['port'] ?? 3306,
+                $cfg['socket'] ?? null,
+                [PDO::ATTR_TIMEOUT => 5]
+            );
 
-                    // Get database info
-                    $verRow = QueryExecutor::queryOne($pdo, "SELECT VERSION() as version");
-                    $dbRow = QueryExecutor::queryOne($pdo, "SELECT DATABASE() as db");
+            // Get database info
+            $verRow = QueryExecutor::queryOne($pdo, "SELECT VERSION() as version");
+            $dbRow = QueryExecutor::queryOne($pdo, "SELECT DATABASE() as db");
 
-                    $cfg = wf_get_db_config(WF_Constants::ENV_LIVE);
-
-                    $status['live'] = [
-                        'online' => true,
-                        'mysql_version' => $verRow['version'] ?? 'Unknown',
-                        'database' => $dbRow['db'] ?? $cfg['db'],
-                        'host' => $cfg['host']
-                    ];
-                } else {
-                    $status['live'] = [
-                        'online' => false,
-                        'error' => is_array($result) ? ($result['error'] ?? 'Unknown error') : 'Connection failed'
-                    ];
-                }
-            } catch (Throwable $e) {
-                $status['live'] = ['online' => false, 'error' => $e->getMessage()];
-            }
+            $status['live'] = [
+                'online' => true,
+                'mysql_version' => $verRow['version'] ?? 'Unknown',
+                'database' => $dbRow['db'] ?? $cfg['db'],
+                'host' => $cfg['host']
+            ];
+        } catch (Throwable $e) {
+            $status['live'] = ['online' => false, 'error' => $e->getMessage()];
         }
 
         Response::json(['success' => true, 'data' => $status]);

@@ -125,6 +125,12 @@ export const AppShell: React.FC = () => {
         if (window.location.pathname.includes('/receipt')) {
             const lastRoom = localStorage.getItem('wf_last_room') || '0';
             window.location.href = `/room_main?room_id=${lastRoom}`;
+            return;
+        }
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('order_id')) {
+            url.searchParams.delete('order_id');
+            window.history.replaceState({}, '', url.toString());
         }
     };
 

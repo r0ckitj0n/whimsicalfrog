@@ -122,11 +122,24 @@ export const usePaymentModal = (isOpen: boolean, onClose: () => void) => {
         if (res.success) {
             onClose();
             if (window.showSuccess) {
-                window.showSuccess('Order placed successfully! Redirecting to receipt...');
+                window.showSuccess('Order placed successfully! Opening receipt...');
             }
             setTimeout(() => {
-                window.location.href = `/receipt?order_id=${res.order_id}`;
-            }, 1500);
+                const orderId = String(res.order_id || '');
+                if (!orderId) return;
+
+                // Open receipt in-app to avoid full-page /receipt route issues.
+                if (window.WF_ReceiptModal?.open) {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('order_id', orderId);
+                    window.history.pushState({}, '', url.toString());
+                    window.WF_ReceiptModal.open(orderId);
+                    return;
+                }
+
+                // Last-resort fallback if receipt bridge is unavailable.
+                window.location.href = `/room_main?order_id=${encodeURIComponent(orderId)}`;
+            }, 300);
         }
         setIsPlacingOrder(false);
     };

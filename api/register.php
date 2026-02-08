@@ -108,7 +108,8 @@ try {
         'status' => 'active',
         'vip' => '0',
         'preferred_contact' => 'email',
-        'preferred_language' => 'English'
+        'preferred_language' => 'English',
+        'profile_completion_required' => '1'
     ]);
 
     // Log successful registration
@@ -127,7 +128,8 @@ try {
         'role' => $role,
         'first_name' => $first_name,
         'last_name' => $last_name,
-        'phone_number' => $phone_number
+        'phone_number' => $phone_number,
+        'profile_completion_required' => true
     ], 'User registered successfully');
 
 } catch (PDOException $e) {

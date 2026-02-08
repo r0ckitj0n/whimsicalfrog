@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useApp } from '../context/AppContext.js';
 
-export type AuthModalMode = 'login' | 'register' | 'account-settings' | 'none';
+export type AuthModalMode = 'login' | 'register' | 'account-settings' | 'profile-completion' | 'none';
 
 export const useAuthModal = () => {
     const { 
@@ -29,6 +29,11 @@ export const useAuthModal = () => {
         setMode('account-settings');
     }, [setMode]);
 
+    const openProfileCompletion = useCallback((redirect?: string) => {
+        setMode('profile-completion');
+        if (redirect) setReturnTo(redirect);
+    }, [setMode, setReturnTo]);
+
     const close = useCallback(() => {
         setMode('none');
         setReturnTo(null);
@@ -42,6 +47,7 @@ export const useAuthModal = () => {
         openLogin,
         openRegister,
         openAccountSettings,
+        openProfileCompletion,
         close,
         setMode
     };

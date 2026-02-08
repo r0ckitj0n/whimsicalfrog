@@ -4,6 +4,7 @@ import { useAuthModal } from './useAuthModal.js';
 import { useApp } from '../context/AppContext.js';
 import { useNotificationContext } from '../context/NotificationContext.js';
 import { IRegisterData } from '../types/auth.js';
+import { buildPostAuthRedirectPlan } from '../core/auth-redirect.js';
 
 /**
  * Hook for managing login and registration state and actions.
@@ -11,7 +12,7 @@ import { IRegisterData } from '../types/auth.js';
  */
 export const useLogin = (initialMode: 'login' | 'register' = 'login', onClose: () => void) => {
     const { login, register, isLoading } = useAuthContext();
-    const { returnTo, close: closeAuth } = useAuthModal();
+    const { returnTo, openProfileCompletion } = useAuthModal();
     const { setIsCartOpen } = useApp();
     const { success: showSuccess, error: showError } = useNotificationContext();
     const [mode, setMode] = useState<'login' | 'register'>(initialMode);
@@ -45,18 +46,22 @@ export const useLogin = (initialMode: 'login' | 'register' = 'login', onClose: (
                 // Sync login state to DOM for immediate recognition by global listeners
                 document.body.setAttribute('data-is-logged-in', 'true');
 
-                // Show success toast
-                showSuccess('Welcome back! 🐸', { duration: 3000 });
+                if (res.profile_completion_required) {
+                    showSuccess('Welcome to Whimsical Frog! Please complete your profile to continue.', { duration: 6000 });
+                    openProfileCompletion(returnTo || undefined);
+                } else {
+                    showSuccess('Welcome back! 🐸', { duration: 3000 });
+                    onClose();
 
-                onClose();
-
-                // Redirect to Main Room after a brief delay for toast visibility
-                if (returnTo === 'cart') {
-                    setIsCartOpen(true);
-                } else if (window.location.pathname.toLowerCase().includes('/login')) {
-                    setTimeout(() => {
-                        window.location.href = '/room_main';
-                    }, 500);
+                    const plan = buildPostAuthRedirectPlan(returnTo);
+                    if (plan.openCart) {
+                        setIsCartOpen(true);
+                    } else if (plan.redirectPath) {
+                        const redirectPath = plan.redirectPath;
+                        setTimeout(() => {
+                            window.location.href = redirectPath;
+                        }, 250);
+                    }
                 }
             } else {
                 setError(res.error || 'Login failed');

@@ -7,6 +7,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
 require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/user_meta.php';
 
 if (!function_exists('wf_whoami_emit')) {
     function wf_whoami_emit(array $payload, int $statusCode = 200): void
@@ -111,6 +112,8 @@ try {
     $last_name = null;
     $email = null;
     $phone_number = null;
+    $address_line_1 = null;
+    $profile_completion_required = false;
 
     if (!empty($_SESSION['user'])) {
         $user = $_SESSION['user'];
@@ -126,6 +129,8 @@ try {
         $last_name = $user['last_name'] ?? null;
         $email = $user['email'] ?? null;
         $phone_number = $user['phone_number'] ?? null;
+        $address_line_1 = $user['address_line_1'] ?? null;
+        $profile_completion_required = !empty($user['profile_completion_required']);
     } elseif (isset($_SESSION['user_id'])) {
         $user_id_raw = is_scalar($_SESSION['user_id']) ? (string) $_SESSION['user_id'] : null;
     }
@@ -133,6 +138,12 @@ try {
     // Normalize: preserve string IDs (do not coerce to int)
     if ($user_id_raw !== null && $user_id_raw !== '') {
         $user_id = $user_id_raw;
+        try {
+            $meta = get_user_meta_bulk($user_id_raw);
+            $profile_completion_required = isset($meta['profile_completion_required']) && (string) $meta['profile_completion_required'] === '1';
+        } catch (\Throwable $e) {
+            error_log('[whoami] users_meta lookup failed: ' . $e->getMessage());
+        }
     }
 
     // Bump a heartbeat counter to verify session persistence across requests
@@ -191,6 +202,10 @@ try {
     if ($phone_number !== null) {
         $payload['phone_number'] = (string) $phone_number;
     }
+    if ($address_line_1 !== null) {
+        $payload['address_line_1'] = (string) $address_line_1;
+    }
+    $payload['profile_completion_required'] = $profile_completion_required;
 
     wf_whoami_emit($payload, 200);
 } catch (\Throwable $e) {

@@ -11,6 +11,7 @@ require_once __DIR__ . '/../includes/database_logger.php';
 require_once __DIR__ . '/../includes/auth_cookie.php';
 require_once __DIR__ . '/../includes/helpers/LoginHelper.php';
 require_once __DIR__ . '/../includes/helpers/AuthSessionHelper.php';
+require_once __DIR__ . '/../includes/user_meta.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_init([
@@ -65,6 +66,9 @@ try {
     $user = LoginHelper::validateAuth((string) $data['username'], (string) $data['password']);
 
     if ($user) {
+        $meta = get_user_meta_bulk($user['id']);
+        $profileCompletionRequired = isset($meta['profile_completion_required']) && (string) $meta['profile_completion_required'] === '1';
+
         if (session_status() !== PHP_SESSION_ACTIVE)
             session_start();
         @session_regenerate_id(false);
@@ -76,7 +80,9 @@ try {
             'role' => $user['role'],
             'first_name' => $user['first_name'] ?? null,
             'last_name' => $user['last_name'] ?? null,
-            'phone_number' => $user['phone_number'] ?? null
+            'phone_number' => $user['phone_number'] ?? null,
+            'address_line_1' => $user['address_line_1'] ?? null,
+            'profile_completion_required' => $profileCompletionRequired
         ];
         $_SESSION['auth_time'] = time();
 
@@ -100,6 +106,8 @@ try {
             'first_name' => $user['first_name'] ?? null,
             'last_name' => $user['last_name'] ?? null,
             'phone_number' => $user['phone_number'] ?? null,
+            'address_line_1' => $user['address_line_1'] ?? null,
+            'profile_completion_required' => $profileCompletionRequired,
             'redirectUrl' => $_SESSION['redirect_after_login'] ?? null
         ]);
         exit;

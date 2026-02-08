@@ -27,7 +27,7 @@ import { GlobalModalWrapper } from './modals/GlobalModalWrapper.js';
 import { MainPageRenderer } from './MainPageRenderer.js';
 
 export const AppShell: React.FC = () => {
-    const { isLoggedIn } = useAuthContext();
+    const { isLoggedIn, user } = useAuthContext();
     usePageRouter();
     useGlobalListeners();
 
@@ -102,8 +102,15 @@ export const AppShell: React.FC = () => {
     const {
         mode: authMode,
         setMode: setAuthMode,
+        openProfileCompletion,
         close: closeAuthModal
     } = useAuthModal();
+
+    useEffect(() => {
+        if (!isLoggedIn || !user?.profile_completion_required) return;
+        if (authMode === 'profile-completion') return;
+        openProfileCompletion();
+    }, [isLoggedIn, user?.profile_completion_required, authMode, openProfileCompletion]);
 
     const {
         shop_data,

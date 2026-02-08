@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ApiClient } from '../core/ApiClient.js';
-import { IAuthState, IUserProfile, IWhoAmIResponse, ILoginResponse } from '../types/auth.js';
+import { IAuthState, IUserProfile, IWhoAmIResponse, ILoginResponse, ILoginResult } from '../types/auth.js';
 import logger from '../core/logger.js';
 
 import { ROLE } from '../core/constants.js';
@@ -29,7 +29,9 @@ export const useAuth = () => {
                     role: res.role || ROLE.CUSTOMER,
                     first_name: res.first_name,
                     last_name: res.last_name,
-                    phone_number: res.phone_number
+                    phone_number: res.phone_number,
+                    address_line_1: res.address_line_1,
+                    profile_completion_required: Boolean(res.profile_completion_required)
                 };
                 setState({
                     user,
@@ -50,13 +52,16 @@ export const useAuth = () => {
         fetchWhoAmI();
     }, [fetchWhoAmI]);
 
-    const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const login = async (username: string, password: string): Promise<ILoginResult> => {
         setState(prev => ({ ...prev, isLoading: true }));
         try {
             const res = await ApiClient.post<ILoginResponse>('/functions/process_login.php', { username, password });
             if (res && res.success) {
                 await fetchWhoAmI();
-                return { success: true };
+                return {
+                    success: true,
+                    profile_completion_required: Boolean(res.profile_completion_required)
+                };
             }
             return { success: false, error: res?.error || 'Invalid credentials' };
         } catch (err) {

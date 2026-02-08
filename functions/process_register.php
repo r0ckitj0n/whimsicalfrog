@@ -4,6 +4,7 @@
 require_once dirname(__DIR__) . '/api/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/response.php';
+require_once dirname(__DIR__) . '/includes/user_meta.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -97,6 +98,10 @@ try {
         $zip_code
     ]);
 
+    set_user_meta_many($user_id, [
+        'profile_completion_required' => '1'
+    ]);
+
     // Log successful registration using centralized logging
     Logger::info("User registered successfully", [
         'user_id' => $user_id,
@@ -115,7 +120,10 @@ try {
         'email' => $email,
         'role' => 'Customer',
         'first_name' => $first_name,
-        'last_name' => $last_name
+        'last_name' => $last_name,
+        'phone_number' => $phone_number,
+        'address_line_1' => $address_line_1,
+        'profile_completion_required' => true
     ];
 
     // Return success response using centralized method
@@ -126,6 +134,9 @@ try {
         'role' => 'Customer',
         'first_name' => $first_name,
         'last_name' => $last_name,
+        'phone_number' => $phone_number,
+        'address_line_1' => $address_line_1,
+        'profile_completion_required' => true,
         'autoLogin' => true
     ], 'Registration successful');
 

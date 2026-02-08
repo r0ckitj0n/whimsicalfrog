@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from 'react';
 import type { IRoomMetadata, IRoomBackground } from '../../types/room.js';
 
 const LoginModal = lazy(() => import('./LoginModal.js').then(m => ({ default: m.LoginModal })));
+const ProfileCompletionModal = lazy(() => import('./ProfileCompletionModal.js').then(m => ({ default: m.ProfileCompletionModal })));
 const CartModal = lazy(() => import('./CartModal.js').then(m => ({ default: m.CartModal })));
 const AccountSettingsModal = lazy(() => import('./AccountSettingsModal.js').then(m => ({ default: m.AccountSettingsModal })));
 const PolicyModal = lazy(() => import('./PolicyModal.js').then(m => ({ default: m.PolicyModal })));
@@ -80,6 +81,10 @@ export const GlobalModalWrapper: React.FC<GlobalModalWrapperProps> = ({
                 isOpen={authMode === 'login' || authMode === 'register'}
                 initialMode={authMode === 'register' ? 'register' : 'login'}
                 onClose={closeAuthModal}
+            />
+
+            <ProfileCompletionModal
+                isOpen={authMode === 'profile-completion'}
             />
 
             <CartModal

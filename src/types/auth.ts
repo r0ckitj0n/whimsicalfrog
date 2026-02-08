@@ -6,6 +6,8 @@ export interface IUserProfile {
     first_name?: string;
     last_name?: string;
     phone_number?: string;
+    address_line_1?: string;
+    profile_completion_required?: boolean;
 }
 
 export interface IAuthState {
@@ -24,11 +26,20 @@ export interface IWhoAmIResponse {
     role?: string;
     first_name: string;
     last_name: string;
+    address_line_1?: string;
+    profile_completion_required?: boolean;
 }
 
 export interface ILoginResponse {
     success: boolean;
     error?: string;
+    profile_completion_required?: boolean;
+}
+
+export interface ILoginResult {
+    success: boolean;
+    error?: string;
+    profile_completion_required?: boolean;
 }
 
 export interface IRegisterData {
@@ -37,6 +48,20 @@ export interface IRegisterData {
     email: string;
     first_name: string;
     last_name: string;
+}
+
+export interface ICompleteProfileRequest {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    address_line_1: string;
+}
+
+export interface ICompleteProfileResponse {
+    success: boolean;
+    error?: string;
+    message?: string;
 }
 
 export interface ISecret {

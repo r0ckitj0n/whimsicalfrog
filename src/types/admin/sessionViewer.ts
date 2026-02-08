@@ -12,6 +12,14 @@ export interface SessionViewerSessionRecord {
     conversion_value: number;
 }
 
+export interface SessionViewerPhpSessionRecord {
+    session_id: string;
+    last_modified: string;
+    file_path: string;
+    bytes: number;
+    is_current: boolean;
+}
+
 export interface SessionViewerData {
     session: Record<string, unknown>;
     cookies: Record<string, string>;
@@ -20,6 +28,9 @@ export interface SessionViewerData {
     session_status: number;
     php_version: string;
     recent_sessions: SessionViewerSessionRecord[];
+    php_sessions: SessionViewerPhpSessionRecord[];
+    php_session_save_path: string;
+    php_session_scan_error?: string;
 }
 
 export interface SessionViewerResponse {

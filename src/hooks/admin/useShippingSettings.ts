@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import type { IShippingRates } from '../../types/shipping.js';
+import type { ItemDimensionsBackfillResult, ItemDimensionsToolsApiResponse } from '../../types/item-dimensions-tools.js';
 
 // Re-export for backward compatibility
 export type { IShippingRates } from '../../types/shipping.js';
@@ -56,11 +57,11 @@ export const useShippingSettings = () => {
         }
     }, [fetchRates]);
 
-    const runDimensionsTool = useCallback(async (action: 'ensure_columns' | 'run_all'): Promise<{ updated: number; skipped: number } | null> => {
+    const runDimensionsTool = useCallback(async (action: 'ensure_columns' | 'run_all'): Promise<ItemDimensionsBackfillResult | null> => {
         setIsLoading(true);
         setError(null);
         try {
-            let res: { success: boolean; data?: { updated: number; skipped: number }; error?: string; message?: string } | null = null;
+            let res: ItemDimensionsToolsApiResponse | null = null;
             if (action === 'run_all') {
                 res = await ApiClient.post('/api/item_dimensions_tools.php', { action, use_ai: 1 });
             } else {
@@ -68,10 +69,10 @@ export const useShippingSettings = () => {
             }
 
             if (res && res.success) {
-                // With the API update, results are now directly in res.data
-                return res.data || { updated: 0, skipped: 0 };
+                return res.data || res;
             } else {
-                throw new Error(res?.error || res?.message || 'Dimensions tool failed');
+                const err = (res as { error?: string; message?: string } | null);
+                throw new Error(err?.error || err?.message || 'Dimensions tool failed');
             }
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Unknown error';

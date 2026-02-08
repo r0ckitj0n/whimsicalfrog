@@ -8,6 +8,7 @@ const SquareSettings = lazy(() => import('./settings/SquareSettings.js').then(m 
 const CommunicationManager = lazy(() => import('./settings/CommunicationManager.js').then(m => ({ default: m.CommunicationManager })));
 const DashboardConfig = lazy(() => import('./settings/DashboardConfig.js').then(m => ({ default: m.DashboardConfig })));
 const AISettingsManager = lazy(() => import('./settings/AISettingsManager.js').then(m => ({ default: m.AISettingsManager })));
+const AutomationManager = lazy(() => import('./settings/AutomationManager.js').then(m => ({ default: m.AutomationManager })));
 const CostBreakdownManager = lazy(() => import('./settings/CostBreakdownManager.js').then(m => ({ default: m.CostBreakdownManager })));
 const AISuggestions = lazy(() => import('./settings/AISuggestions.js').then(m => ({ default: m.AISuggestions })));
 const IntentHeuristicsManager = lazy(() => import('./settings/IntentHeuristicsManager.js').then(m => ({ default: m.IntentHeuristicsManager })));
@@ -25,6 +26,7 @@ interface SettingsSwitchProps {
     section: string;
     modalTitle: string;
     closeSettingsModal: () => void;
+    backToAdvancedTools: () => void;
     searchParams: URLSearchParams;
 }
 
@@ -32,6 +34,7 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
     section,
     modalTitle,
     closeSettingsModal,
+    backToAdvancedTools,
     searchParams
 }) => {
     return (
@@ -86,6 +89,13 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
                 document.body
             )}
 
+            {section === ADMIN_SECTION.AUTOMATION && createPortal(
+                <div id="automation-react-root">
+                    <AutomationManager onClose={closeSettingsModal} title={modalTitle} />
+                </div>,
+                document.body
+            )}
+
             {section === ADMIN_SECTION.COST_BREAKDOWN && createPortal(
                 <div id="cost-breakdown-react-root">
                     <CostBreakdownManager onClose={closeSettingsModal} title={modalTitle} />
@@ -102,7 +112,7 @@ export const SettingsSwitch: React.FC<SettingsSwitchProps> = ({
 
             {section === ADMIN_SECTION.INTENT_HEURISTICS && createPortal(
                 <div id="intent-heuristics-react-root">
-                    <IntentHeuristicsManager onClose={closeSettingsModal} title={modalTitle} />
+                    <IntentHeuristicsManager onClose={backToAdvancedTools} title={modalTitle} />
                 </div>,
                 document.body
             )}

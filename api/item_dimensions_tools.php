@@ -1,7 +1,8 @@
 <?php
 // Item Dimensions Tools
-// Ensures weight and package dimension columns exist on items, and backfills missing values with
-// sensible industry-standard defaults based on category/SKU. Safe to run multiple times.
+// Ensures weight and package dimension columns exist on items, scans all inventory for missing
+// shipping attributes, and backfills gaps using the same AI dimension-generation flow used by
+// item-level "Generate All" (image-aware info + dimensions suggestion), with heuristic fallback.
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/../includes/Constants.php';
@@ -31,7 +32,14 @@ try {
         Response::serverError('Database error');
     }
 
-    $results = ['ensured' => false, 'updated' => 0, 'skipped' => 0, 'preview' => []];
+    $results = [
+        'ensured' => false,
+        'scanned' => 0,
+        'missing' => 0,
+        'updated' => 0,
+        'skipped' => 0,
+        'preview' => []
+    ];
 
     // 1) Ensure columns
     $ensureColumns = function () {
@@ -59,21 +67,125 @@ try {
         return false;
     };
 
-    // 2) Backfill missing values using category/SKU heuristics
+    // 2) Backfill missing values using image-aware AI dimensions (same flow as item "Generate")
+    // and heuristic fallback.
     $backfillMissing = function () use (&$results, $useAI) {
+        $normalizeDimensionValue = static function ($value): ?float {
+            if (!is_numeric($value)) {
+                return null;
+            }
+            $num = round((float) $value, 2);
+            if (!is_finite($num) || $num <= 0) {
+                return null;
+            }
+            return $num;
+        };
+
+        $normalizeDimensionsSuggestion = static function ($raw) use ($normalizeDimensionValue): ?array {
+            if (!is_array($raw)) {
+                return null;
+            }
+
+            $weight = $normalizeDimensionValue($raw['weight_oz'] ?? null);
+            $dimensions = is_array($raw['dimensions_in'] ?? null) ? $raw['dimensions_in'] : [];
+            $length = $normalizeDimensionValue($dimensions['length'] ?? null);
+            $width = $normalizeDimensionValue($dimensions['width'] ?? null);
+            $height = $normalizeDimensionValue($dimensions['height'] ?? null);
+
+            if ($weight === null || $length === null || $width === null || $height === null) {
+                return null;
+            }
+
+            return [
+                'weight_oz' => $weight,
+                'package_length_in' => $length,
+                'package_width_in' => $width,
+                'package_height_in' => $height
+            ];
+        };
+
+        $resolveCategoryFromAnalysis = static function ($analysisCategory, $title, $description, $existingCategories) {
+            $analysisCategory = trim((string) $analysisCategory);
+            $title = strtolower(trim((string) $title));
+            $description = strtolower(trim((string) $description));
+            $analysisLower = strtolower($analysisCategory);
+            $text = trim($title . ' ' . $description . ' ' . $analysisLower);
+
+            if (!is_array($existingCategories) || count($existingCategories) === 0) {
+                return $analysisCategory;
+            }
+
+            $bestCategory = $analysisCategory;
+            $bestScore = -INF;
+
+            foreach ($existingCategories as $candidateRaw) {
+                $candidate = trim((string) $candidateRaw);
+                if ($candidate === '') {
+                    continue;
+                }
+                $candidateLower = strtolower($candidate);
+                $score = 0.0;
+
+                if ($analysisLower !== '' && $candidateLower === $analysisLower) {
+                    $score += 60.0;
+                }
+
+                if ($candidateLower !== '' && preg_match('/\b' . preg_quote($candidateLower, '/') . '\b/i', $text)) {
+                    $score += 30.0;
+                }
+
+                $tokens = preg_split('/[^a-z0-9]+/i', $candidateLower) ?: [];
+                foreach ($tokens as $token) {
+                    $token = trim($token);
+                    if ($token === '' || strlen($token) < 3) {
+                        continue;
+                    }
+                    if (preg_match('/\b' . preg_quote($token, '/') . '\b/i', $text)) {
+                        $score += 10.0;
+                    }
+                }
+
+                $isHatCategory = preg_match('/\b(hat|hats|cap|caps|beanie|headwear)\b/i', $candidateLower) === 1;
+                $mentionsHatInImageText = preg_match('/\b(hat|hats|cap|caps|beanie|headwear)\b/i', $text) === 1;
+                if ($isHatCategory && !$mentionsHatInImageText) {
+                    $score -= 40.0;
+                }
+
+                if ($score > $bestScore) {
+                    $bestScore = $score;
+                    $bestCategory = $candidate;
+                }
+            }
+
+            if (is_infinite($bestScore) || $bestScore <= 0) {
+                return $analysisCategory;
+            }
+            return $bestCategory;
+        };
+
         $rows = Database::queryAll(
-            "SELECT sku, category, weight_oz, package_length_in, package_width_in, package_height_in \n" .
+            "SELECT sku, name, description, category, weight_oz, package_length_in, package_width_in, package_height_in \n" .
             "FROM items"
         );
+        $results['scanned'] = count($rows);
         $updated = 0;
         $skipped = 0;
         $preview = [];
         $ai = null;
+        $supportsImages = false;
+        $existingCategories = [];
         if ($useAI) {
             try {
                 $ai = new AIProviders();
+                $supportsImages = $ai->currentModelSupportsImages();
+                $categoryRows = Database::queryAll("SELECT DISTINCT category FROM items WHERE category IS NOT NULL ORDER BY category");
+                $existingCategories = array_values(array_filter(array_map(static function ($row) {
+                    return trim((string) ($row['category'] ?? array_values($row)[0] ?? ''));
+                }, $categoryRows)));
             } catch (\Throwable $e) {
+                error_log('item_dimensions_tools.php AI init failed: ' . $e->getMessage());
                 $ai = null;
+                $supportsImages = false;
             }
         }
 
@@ -105,6 +217,8 @@ try {
         foreach ($rows as $r) {
             $sku = (string) ($r['sku'] ?? '');
             $cat = strtoupper((string) ($r['category'] ?? ''));
+            $name = trim((string) ($r['name'] ?? ''));
+            $description = trim((string) ($r['description'] ?? ''));
             $w = $r['weight_oz'];
             $L = $r['package_length_in'];
             $W = $r['package_width_in'];
@@ -112,6 +226,9 @@ try {
 
             $needsWeight = !is_numeric($w) || (float) $w <= 0;
             $needsDims = !is_numeric($L) || !is_numeric($W) || !is_numeric($H) || ((float) $L <= 0 || (float) $W <= 0 || (float) $H <= 0);
+            if ($needsWeight || $needsDims) {
+                $results['missing']++;
+            }
 
             if (!$needsWeight && !$needsDims) {
                 $skipped++;
@@ -126,24 +243,48 @@ try {
             // Prefer AI suggestion when requested
             if ($useAI && $ai) {
                 try {
-                    // For AI context, fetch name/description lazily
-                    $ctx = Database::queryOne("SELECT name, description FROM items WHERE sku = ?", [$sku]);
-                    $sugg = $ai->generateDimensionsSuggestion($ctx['name'] ?? $sku, $ctx['description'] ?? '', $r['category'] ?? '');
-                    if (is_array($sugg)) {
-                        if ($newW === null)
-                            $newW = (float) ($sugg['weight_oz'] ?? 0);
-                        if ($newL === null || $newWi === null || $newH === null) {
-                            $dims = $sugg['dimensions_in'] ?? [];
-                            if ($newL === null)
-                                $newL = (float) ($dims['length'] ?? 0);
-                            if ($newWi === null)
-                                $newWi = (float) ($dims['width'] ?? 0);
-                            if ($newH === null)
-                                $newH = (float) ($dims['height'] ?? 0);
+                    // Match item-modal "info" path: image-aware info context, then dimensions suggestion.
+                    $ctxName = $name !== '' ? $name : $sku;
+                    $ctxDescription = $description;
+                    $ctxCategory = (string) ($r['category'] ?? '');
+
+                    if ($supportsImages) {
+                        $images = AIProviders::getItemImages($sku, 1);
+                        if (!empty($images)) {
+                            $analysis = $ai->analyzeItemImage($images[0], $existingCategories);
+                            if (is_array($analysis)) {
+                                $resolvedCategory = $resolveCategoryFromAnalysis(
+                                    $analysis['category'] ?? '',
+                                    $analysis['title'] ?? '',
+                                    $analysis['description'] ?? '',
+                                    $existingCategories
+                                );
+                                $ctxName = trim((string) ($analysis['title'] ?? $ctxName));
+                                $ctxDescription = trim((string) ($analysis['description'] ?? $ctxDescription));
+                                $ctxCategory = trim((string) ($resolvedCategory !== '' ? $resolvedCategory : $ctxCategory));
+                            }
+                        }
+                    }
+
+                    $sugg = $ai->generateDimensionsSuggestion($ctxName, $ctxDescription, $ctxCategory);
+                    $normalized = $normalizeDimensionsSuggestion($sugg);
+                    if ($normalized !== null) {
+                        if ($newW === null) {
+                            $newW = (float) $normalized['weight_oz'];
+                        }
+                        if ($newL === null) {
+                            $newL = (float) $normalized['package_length_in'];
+                        }
+                        if ($newWi === null) {
+                            $newWi = (float) $normalized['package_width_in'];
+                        }
+                        if ($newH === null) {
+                            $newH = (float) $normalized['package_height_in'];
                         }
                     }
                 } catch (\Throwable $e) {
-                    // fall back to heuristics
+                    error_log("item_dimensions_tools.php AI dimensions failed for {$sku}: " . $e->getMessage());
+                    // fall back to defaults below
                 }
             }
 

@@ -1,19 +1,7 @@
 import React, { useState } from 'react';
 import { useModalContext } from '../../../context/ModalContext.js';
 import { ApiClient } from '../../../core/ApiClient.js';
-
-
-interface BackfillResult {
-    ensured?: boolean;
-    updated?: number;
-    skipped?: number;
-    results?: BackfillResult;
-    preview?: Array<{
-        sku?: string;
-        weight_oz?: number;
-        LxWxH_in?: number[];
-    }>;
-}
+import type { ItemDimensionsBackfillResult, ItemDimensionsToolsApiResponse } from '../../../types/item-dimensions-tools.js';
 
 interface ItemDimensionsToolsProps {
     onClose?: () => void;
@@ -21,7 +9,7 @@ interface ItemDimensionsToolsProps {
 
 export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
     const [status, setStatus] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
-    const [result, setResult] = useState<BackfillResult | null>(null);
+    const [result, setResult] = useState<ItemDimensionsBackfillResult | null>(null);
     const [loading, setLoading] = useState(false);
 
     const ensureColumns = async () => {
@@ -30,9 +18,9 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
         setResult(null);
 
         try {
-            const json = await ApiClient.get<{ success?: boolean; data?: BackfillResult; results?: BackfillResult } & BackfillResult>('/api/item_dimensions_tools.php', { action: 'ensure_columns' });
-            const data = json.data || json;
-            setResult(data.results || data);
+            const json = await ApiClient.get<ItemDimensionsToolsApiResponse>('/api/item_dimensions_tools.php', { action: 'ensure_columns' });
+            const data = json.data ?? json.results ?? json;
+            setResult(data);
             setStatus({ text: 'Columns ensured', type: 'success' });
         } catch (err) {
             setStatus({ text: 'Failed to ensure columns', type: 'error' });
@@ -58,13 +46,13 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
 
 
         setLoading(true);
-        setStatus({ text: 'Running backfill...', type: 'info' });
+        setStatus({ text: 'Scanning items and generating missing dimensions...', type: 'info' });
         setResult(null);
 
         try {
-            const json = await ApiClient.post<{ success?: boolean; data?: BackfillResult; results?: BackfillResult } & BackfillResult>('/api/item_dimensions_tools.php', { action: 'run_all', use_ai: 1 });
-            const data = json.data || json;
-            setResult(data.results || data);
+            const json = await ApiClient.post<ItemDimensionsToolsApiResponse>('/api/item_dimensions_tools.php', { action: 'run_all', use_ai: 1 });
+            const data = json.data ?? json.results ?? json;
+            setResult(data);
             setStatus({ text: 'Backfill complete', type: 'success' });
         } catch (err) {
             setStatus({ text: 'Backfill failed', type: 'error' });
@@ -117,7 +105,7 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
 
                 <div className="modal-body wf-admin-modal-body flex-1 overflow-y-auto p-6 bg-white min-h-[400px]">
                     <p className="text-gray-600 mb-6">
-                        Manage weight and package dimension columns on items. Backfill missing values with AI or industry-standard defaults.
+                        Scan all inventory for blank shipping dimensions, then run the same AI dimensions-generation flow used by Item Information Generate.
                     </p>
 
                     {/* Actions */}
@@ -159,6 +147,8 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
                                 <>
                                     <div className="text-sm mb-2">
                                         <span className="mr-4">Ensured: {result.ensured ? 'Yes' : 'No'}</span>
+                                        <span className="mr-4">Scanned: {result.scanned ?? 0}</span>
+                                        <span className="mr-4">Missing: {result.missing ?? 0}</span>
                                         <span className="mr-4">Updated: {result.updated ?? 0}</span>
                                         <span>Skipped: {result.skipped ?? 0}</span>
                                     </div>

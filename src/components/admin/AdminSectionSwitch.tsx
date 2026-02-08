@@ -53,6 +53,7 @@ export const AdminSectionSwitch: React.FC<AdminSectionSwitchProps> = ({
                 section={section}
                 modalTitle={modalTitle}
                 closeSettingsModal={closeSettingsModal}
+                backToAdvancedTools={backToAdvancedTools}
                 searchParams={searchParams}
             />
 

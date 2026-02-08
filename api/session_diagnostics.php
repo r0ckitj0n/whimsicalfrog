@@ -5,6 +5,66 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 
 header('Content-Type: application/json');
 
+function wf_resolve_session_save_dir(string $savePath): string
+{
+    // PHP save_path may be "N;MODE;/path" - use the last segment as the directory.
+    if (strpos($savePath, ';') !== false) {
+        $parts = explode(';', $savePath);
+        $candidate = trim((string) end($parts));
+        return $candidate !== '' ? $candidate : $savePath;
+    }
+    return $savePath;
+}
+
+function wf_list_php_sessions(string $currentSessionId, int $limit = 100, ?string &$scanError = null): array
+{
+    $savePathRaw = (string) ini_get('session.save_path');
+    $saveDir = wf_resolve_session_save_dir($savePathRaw);
+    if ($saveDir === '' || !is_dir($saveDir)) {
+        $scanError = 'session.save_path directory not found';
+        return [];
+    }
+    if (!is_readable($saveDir)) {
+        $scanError = 'session.save_path is not readable by PHP process';
+        return [];
+    }
+
+    $rows = [];
+    $entries = @scandir($saveDir);
+    if (!is_array($entries)) {
+        $scanError = 'Unable to scan session.save_path directory';
+        return [];
+    }
+    foreach ($entries as $entry) {
+        if (!str_starts_with($entry, 'sess_')) {
+            continue;
+        }
+        $fullPath = $saveDir . DIRECTORY_SEPARATOR . $entry;
+        if (!is_file($fullPath)) {
+            continue;
+        }
+        $sid = substr($entry, 5);
+        $mtime = @filemtime($fullPath);
+        $size = @filesize($fullPath);
+        $rows[] = [
+            'session_id' => $sid,
+            'last_modified' => $mtime ? date('Y-m-d H:i:s', $mtime) : '',
+            'file_path' => $fullPath,
+            'bytes' => $size !== false ? (int) $size : 0,
+            'is_current' => $sid === $currentSessionId,
+        ];
+    }
+
+    usort($rows, static function (array $a, array $b): int {
+        return strcmp((string) $b['last_modified'], (string) $a['last_modified']);
+    });
+
+    if (count($rows) > $limit) {
+        return array_slice($rows, 0, $limit);
+    }
+    return $rows;
+}
+
 // Require admin
 if (!function_exists('isAdmin') || !isAdmin()) {
     http_response_code(403);
@@ -39,6 +99,10 @@ switch ($action) {
             exit;
         }
 
+        $currentSessionId = session_id();
+        $phpSessionScanError = null;
+        $phpSessions = wf_list_php_sessions($currentSessionId, 100, $phpSessionScanError);
+
         // Mask sensitive values in $_SERVER
         $serverData = $_SERVER;
         $sensitiveKeys = ['PHP_AUTH_PW', 'HTTP_AUTHORIZATION', 'HTTP_COOKIE'];
@@ -54,10 +118,13 @@ switch ($action) {
                 'session' => $_SESSION ?? [],
                 'cookies' => $_COOKIE ?? [],
                 'server' => $serverData,
-                'session_id' => session_id(),
+                'session_id' => $currentSessionId,
                 'session_status' => session_status(),
                 'php_version' => PHP_VERSION,
                 'recent_sessions' => $recentSessions,
+                'php_sessions' => $phpSessions,
+                'php_session_save_path' => wf_resolve_session_save_dir((string) ini_get('session.save_path')),
+                'php_session_scan_error' => $phpSessionScanError,
             ]
         ]);
         break;

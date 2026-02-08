@@ -158,6 +158,44 @@ export function SessionViewer({ onClose, title }: SessionViewerProps) {
                             </div>
 
                             <div className="admin-card mb-4">
+                                <div className="admin-card-title mb-2">Active PHP Sessions</div>
+                                <div className="text-xs text-gray-500 mb-2">
+                                    Save Path: <code>{data.php_session_save_path || '(unknown)'}</code>
+                                </div>
+                                {data.php_session_scan_error && (
+                                    <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2">
+                                        {data.php_session_scan_error}
+                                    </div>
+                                )}
+                                <div className="bg-gray-50 p-4 rounded overflow-auto max-h-[360px] border border-gray-200">
+                                    {data.php_sessions.length === 0 ? (
+                                        <span className="text-gray-500 italic">No PHP session files found.</span>
+                                    ) : (
+                                        <table className="w-full text-left text-sm">
+                                            <thead>
+                                                <tr className="border-b border-gray-300">
+                                                    <th className="py-2 pr-3">Session</th>
+                                                    <th className="py-2 pr-3">Last Modified</th>
+                                                    <th className="py-2 pr-3">Bytes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.php_sessions.map((item) => (
+                                                    <tr key={`${item.session_id}-${item.last_modified}`} className={`border-b border-gray-200 last:border-0 align-top ${item.is_current ? 'bg-green-50' : ''}`}>
+                                                        <td className="py-2 pr-3 font-mono text-xs break-all">
+                                                            {item.session_id || '(empty)'}{item.is_current ? ' (current)' : ''}
+                                                        </td>
+                                                        <td className="py-2 pr-3 whitespace-nowrap">{item.last_modified}</td>
+                                                        <td className="py-2 pr-3">{item.bytes}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="admin-card mb-4">
                                 <div className="admin-card-title mb-2">Recent Analytics Sessions</div>
                                 <div className="bg-gray-50 p-4 rounded overflow-auto max-h-[360px] border border-gray-200">
                                     {data.recent_sessions.length === 0 ? (

@@ -4,6 +4,7 @@ import { useModalContext } from '../../../context/ModalContext.js';
 import { useShippingSettings, IShippingRates } from '../../../hooks/admin/useShippingSettings.js';
 import { isDraftDirty } from '../../../core/utils.js';
 import { useUnsavedChangesCloseGuard } from '../../../hooks/useUnsavedChangesCloseGuard.js';
+import type { ItemDimensionsBackfillResult } from '../../../types/item-dimensions-tools.js';
 
 
 
@@ -24,7 +25,7 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
 
     const [editRates, setEditRates] = useState<Partial<IShippingRates>>({});
     const [initialRates, setInitialRates] = useState<Partial<IShippingRates> | null>(null);
-    const [toolResult, setToolResult] = useState<{ updated: number; skipped: number } | null>(null);
+    const [toolResult, setToolResult] = useState<ItemDimensionsBackfillResult | null>(null);
     const hasFetched = React.useRef(false);
 
     useEffect(() => {
@@ -87,7 +88,9 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
             setToolResult(res);
             if (res) {
                 if (window.WFToast) {
-                    window.WFToast.success(`AI Backfill complete! Updated: ${res.updated}, Skipped: ${res.skipped}`);
+                    window.WFToast.success(
+                        `AI Backfill complete! Scanned: ${res.scanned ?? 0}, Missing: ${res.missing ?? 0}, Updated: ${res.updated ?? 0}, Skipped: ${res.skipped ?? 0}`
+                    );
                 }
             }
         }
@@ -244,7 +247,7 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
                             <h4 className="font-bold text-slate-700 flex items-center gap-2">
                                 <span className="text-xl">🤖</span> Shipping Data Automation
                             </h4>
-                            <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">Ensures all inventory items have correctly formatted weight and dimension columns, then uses AI to predict missing values based on item descriptions.</p>
+                            <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">Scans all inventory for blank dimensions, then runs the same AI dimensions generation flow used by Item Information (image + item context) to fill missing values.</p>
                             <div className="flex gap-4 pt-2">
                                 <button
                                     type="button"
@@ -274,7 +277,7 @@ export const ShippingSettings: React.FC<ShippingSettingsProps> = ({ onClose, tit
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-[8px] font-black text-slate-400 uppercase">Processing Log</p>
-                                            <p>Updated {toolResult.updated || 0} / Skipped {toolResult.skipped || 0}</p>
+                                            <p>Scanned {toolResult.scanned || 0} / Missing {toolResult.missing || 0} / Updated {toolResult.updated || 0} / Skipped {toolResult.skipped || 0}</p>
                                         </div>
                                     </div>
                                 </div>

@@ -26,9 +26,8 @@ export const SecretsManager: React.FC<SecretsManagerProps> = ({ onClose, title }
     const [csrfToken] = useState(() => (document.getElementById('secretsCsrf') as HTMLInputElement)?.value || '');
 
     useEffect(() => {
-        if (isLoading) return;
         fetchSecrets();
-    }, [fetchSecrets, isLoading]);
+    }, [fetchSecrets]);
 
     const handleAdd = () => {
         setEditingSecret({ key: '', value: '' });

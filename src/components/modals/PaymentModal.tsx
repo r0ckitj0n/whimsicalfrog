@@ -49,8 +49,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 backgroundColor: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(8px)',
                 width: '100vw',
-                height: '100vh',
-                padding: '2.5vh 2.5vw',
+                height: '100dvh',
+                padding: 'max(12px, env(safe-area-inset-top, 0px)) max(12px, 2.5vw) max(12px, env(safe-area-inset-bottom, 0px))',
                 boxSizing: 'border-box'
             }}
             onClick={(e) => e.target === e.currentTarget && onClose()}
@@ -60,6 +60,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                 style={{
                     maxWidth: '1000px',
                     width: '100%',
+                    height: 'min(100%, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 24px))',
                     maxHeight: '100%',
                     backgroundColor: 'white',
                     borderRadius: '24px',
@@ -90,7 +91,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     </h2>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6" style={{ background: '#faf8f5' }}>
+                <div className="flex-1 overflow-y-auto p-6" style={{ background: '#faf8f5', minHeight: 0, WebkitOverflowScrolling: 'touch' }}>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="space-y-5">
                             <AddressSelection
@@ -127,6 +128,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose }) =
                     flexDirection: 'column',
                     gap: '0.4rem',
                     padding: '0.75rem 1.75rem',
+                    paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
                     background: '#faf8f5',
                     borderTop: '1px solid #e5e2dc',
                     flexShrink: 0

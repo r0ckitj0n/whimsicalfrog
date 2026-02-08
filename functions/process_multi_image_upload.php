@@ -95,6 +95,6 @@ try {
     }
 
     echo json_encode(['success' => true, 'uploadedImages' => $uploadedImages, 'warnings' => $errors]);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useItemDetails } from '../../../../hooks/useItemDetails.js';
@@ -16,6 +16,7 @@ import { CostAnalysisColumn } from '../../../admin/inventory/partials/CostAnalys
 import { PriceAnalysisColumn } from '../../../admin/inventory/partials/PriceAnalysisColumn.js';
 import { MediaAndVariantsSection } from '../../../admin/inventory/partials/MediaAndVariantsSection.js';
 import { AIMarketingPanel } from '../../../admin/inventory/AIMarketingPanel.js';
+import { ImageGallery } from '../../../admin/inventory/ImageGallery.js';
 
 interface InventoryItemModalProps {
     sku: string;
@@ -126,6 +127,14 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
             : (workingImages[0]?.image_path ? `/${workingImages[0].image_path.replace(/^\/+/, '')}` : '/images/placeholder.webp'))
         : primaryImage;
     const hasUploadedImage = workingImages.length > 0;
+    const handleWorkingImagesChanged = useCallback((nextImages: IItemImage[]) => {
+        setWorkingImages(prev => {
+            if (isAdding && prev.length > 0 && nextImages.length === 0) {
+                return prev;
+            }
+            return nextImages;
+        });
+    }, [isAdding]);
 
     const isLoading = detailsLoading && !isAdding;
     const [costTier, setCostTier] = useState('standard');
@@ -407,17 +416,12 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                             Preparing SKU for upload...
                                         </div>
                                     ) : (
-                                        <MediaAndVariantsSection
+                                        <ImageGallery
                                             sku={activeSku}
-                                            isAdding={isAdding}
-                                            mode={mode}
+                                            isEdit
                                             isReadOnly={isReadOnly}
-                                            onStockChange={handleStockChange}
-                                            formData={formData}
-                                            onFieldChange={handleFieldChange}
-                                            lockedFields={lockedFields}
-                                            onToggleFieldLock={toggleFieldLock}
-                                            onImagesChanged={setWorkingImages}
+                                            onImagesChanged={handleWorkingImagesChanged}
+                                            variant="upload-only"
                                         />
                                     )}
                                 </div>
@@ -508,7 +512,7 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 onFieldChange={handleFieldChange}
                                 lockedFields={lockedFields}
                                 onToggleFieldLock={toggleFieldLock}
-                                onImagesChanged={setWorkingImages}
+                                onImagesChanged={handleWorkingImagesChanged}
                             />
                         )}
 

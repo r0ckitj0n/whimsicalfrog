@@ -7,9 +7,16 @@ interface ImageGalleryProps {
     isEdit?: boolean;
     isReadOnly?: boolean;
     onImagesChanged?: (images: IItemImage[]) => void;
+    variant?: 'full' | 'upload-only';
 }
 
-export const ImageGallery: React.FC<ImageGalleryProps> = ({ sku, isEdit = false, isReadOnly = false, onImagesChanged }) => {
+export const ImageGallery: React.FC<ImageGalleryProps> = ({
+    sku,
+    isEdit = false,
+    isReadOnly = false,
+    onImagesChanged,
+    variant = 'full'
+}) => {
     const { images, isLoading, uploadProgress, error, deleteImage, setPrimaryImage, uploadImages } = useInventoryImages(sku);
     const [isViewerOpen, setIsViewerOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<IItemImage | null>(null);
@@ -36,6 +43,45 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ sku, isEdit = false,
 
     if (!sku) return null;
 
+    if (variant === 'upload-only') {
+        return (
+            <div>
+                {error && <div className="p-2 mb-2 bg-[var(--brand-error)]/5 border border-[var(--brand-error)]/20 text-[var(--brand-error)] text-sm rounded">{error}</div>}
+                {!isReadOnly && (
+                    <div className="multi-image-upload-section">
+                        <input
+                            type="file"
+                            id="singleStepImageUpload"
+                            multiple
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleFileChange}
+                        />
+                        <label
+                            htmlFor="singleStepImageUpload"
+                            className="inline-flex items-center gap-2 rounded-lg px-4 py-2 font-bold uppercase tracking-widest text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition-colors cursor-pointer"
+                        >
+                            Upload Image
+                        </label>
+                        {uploadProgress > 0 && (
+                            <div className="mt-3 text-xs text-slate-600">Uploading ({uploadProgress}%)...</div>
+                        )}
+                    </div>
+                )}
+                {images.length > 0 && (
+                    <div className="mt-3 rounded-xl border border-slate-200 bg-white p-2 max-w-xs">
+                        <img
+                            src={`/${images[0].image_path}`}
+                            alt={images[0].alt_text || `Inventory image for item ${sku}`}
+                            className="w-full h-36 object-cover rounded-lg"
+                            loading="lazy"
+                        />
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div>
             <div id="imagesSection" className="images-section-container">
@@ -59,7 +105,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({ sku, isEdit = false,
 
                     <div id="currentImagesList" className="wf-img-grid grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                         {images.map((image) => (
-                            <div key={image.id} className="wf-img-card group relative border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                            <div key={`${image.id}-${image.image_path}`} className="wf-img-card group relative border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
                                 <button
                                     type="button"
                                     className="wf-img-wrap aspect-square relative cursor-pointer w-full text-left"

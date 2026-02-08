@@ -214,6 +214,69 @@ class AIImageProcessor
     }
 
     /**
+     * Convert an image to dual output formats (WebP + optional PNG fallback).
+     */
+    public function convertToDualFormat($imagePath, $options = [])
+    {
+        $defaults = [
+            'webp_quality' => 90,
+            'png_compression' => 1,
+            'preserve_transparency' => true,
+            'force_png' => true
+        ];
+        $opts = array_merge($defaults, $options);
+
+        $result = [
+            'success' => false,
+            'source_path' => $imagePath,
+            'webp_path' => null,
+            'png_path' => null
+        ];
+
+        if (!file_exists($imagePath)) {
+            return $result;
+        }
+
+        try {
+            $imageInfo = getimagesize($imagePath);
+            if (!$imageInfo) {
+                throw new Exception('Invalid image for conversion');
+            }
+
+            $sourceImage = GDImageHelper::createImageResource($imagePath, $imageInfo[2]);
+            if (!$sourceImage) {
+                throw new Exception('Failed to open source image for conversion');
+            }
+
+            $pathInfo = pathinfo($imagePath);
+            $basePath = $pathInfo['dirname'] . '/' . $pathInfo['filename'];
+            $webpPath = $basePath . '.webp';
+            $pngPath = $basePath . '.png';
+
+            if (!GDImageHelper::saveToWebP($sourceImage, $webpPath, (int)$opts['webp_quality'])) {
+                imagedestroy($sourceImage);
+                throw new Exception('Failed to generate WebP output');
+            }
+            $result['webp_path'] = $webpPath;
+
+            if (!empty($opts['force_png'])) {
+                if (!GDImageHelper::saveToPNG($sourceImage, $pngPath, (int)$opts['png_compression'])) {
+                    imagedestroy($sourceImage);
+                    throw new Exception('Failed to generate PNG output');
+                }
+                $result['png_path'] = $pngPath;
+            }
+
+            imagedestroy($sourceImage);
+            $result['success'] = true;
+        } catch (Throwable $e) {
+            error_log('convertToDualFormat failed: ' . $e->getMessage());
+        }
+
+        return $result;
+    }
+
+    /**
      * Update database with processing information
      */
     public function updateProcessedImageRecord($sku, $originalPath, $processedPath, $processingData)

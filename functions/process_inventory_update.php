@@ -269,6 +269,17 @@ try {
 
             case 'nuke':
             case 'delete_forever':
+                $orderRefs = Database::queryOne(
+                    'SELECT COUNT(*) AS cnt FROM order_items WHERE sku = ?',
+                    [$item_sku]
+                );
+                if ((int) ($orderRefs['cnt'] ?? 0) > 0) {
+                    returnError(
+                        'Cannot permanently delete this item because it appears in order history. Keep it archived to preserve records.',
+                        409
+                    );
+                }
+
                 // Only allow hard delete once item is archived to avoid accidental data loss.
                 if (InventoryHelper::hardDeleteItem($item_sku, true)) {
                     returnSuccess('Item permanently deleted');
@@ -283,6 +294,9 @@ try {
     }
 } catch (PDOException $e) {
     error_log("Database error in process_inventory_update.php: " . $e->getMessage());
+    if ((string) $e->getCode() === '23000') {
+        returnError('Cannot permanently delete this item because related records still reference it.', 409);
+    }
     returnError('Database error occurred. Please check server logs.', 500);
 } catch (Exception $e) {
     error_log("General error in process_inventory_update.php: " . $e->getMessage());

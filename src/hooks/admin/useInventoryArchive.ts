@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { ApiClient } from '../../core/ApiClient.js';
 import logger from '../../core/logger.js';
 import type {
+    ICommonApiResponse,
     IInventoryArchiveMetrics,
     IInventoryAuditItem,
     IInventoryAuditData,
@@ -76,15 +77,22 @@ export const useInventoryArchive = () => {
 
     const nukeItem = async (sku: string) => {
         try {
-            const res = await ApiClient.request<{ success: boolean }>((`/functions/process_inventory_update.php?action=nuke&sku=${encodeURIComponent(sku)}`), { method: 'DELETE' });
+            const res = await ApiClient.request<ICommonApiResponse>((`/functions/process_inventory_update.php?action=nuke&sku=${encodeURIComponent(sku)}`), { method: 'DELETE' });
             if (res && res.success) {
                 await fetchArchive();
-                return true;
+                return { success: true };
             }
+            return { success: false, error: res?.error || 'Failed to permanently delete item.' };
         } catch (err) {
             logger.error('[InventoryArchive] nuke failed', err);
+            if (err instanceof Error) {
+                const separator = ' - ';
+                const idx = err.message.indexOf(separator);
+                const msg = idx >= 0 ? err.message.slice(idx + separator.length).trim() : err.message;
+                return { success: false, error: msg || 'Failed to permanently delete item.' };
+            }
         }
-        return false;
+        return { success: false, error: 'Failed to permanently delete item.' };
     };
 
     return {

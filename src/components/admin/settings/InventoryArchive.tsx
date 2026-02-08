@@ -64,9 +64,11 @@ export const InventoryArchive: React.FC<InventoryArchiveProps> = ({ onClose, tit
         });
 
         if (confirmed) {
-            const success = await nukeItem(sku);
-            if (success && window.WFToast) {
+            const result = await nukeItem(sku);
+            if (result.success && window.WFToast) {
                 window.WFToast.success('Item permanently deleted.');
+            } else if (window.WFToast) {
+                window.WFToast.error(result.error || 'Failed to permanently delete item.');
             }
         }
     };

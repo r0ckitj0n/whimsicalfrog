@@ -81,7 +81,16 @@ function require_csrf_if_mutating(string $action): void
 function connectLocal()
 {
     try {
-        return Database::getInstance();
+        $cfg = wf_get_db_config(WF_Constants::ENV_LOCAL);
+        return Database::createConnection(
+            $cfg['host'],
+            $cfg['db'],
+            $cfg['user'],
+            $cfg['pass'],
+            $cfg['port'] ?? 3306,
+            $cfg['socket'] ?? null,
+            [PDO::ATTR_TIMEOUT => 5]
+        );
     } catch (Throwable $e) {
         return ['error' => $e->getMessage()];
     }
@@ -89,7 +98,15 @@ function connectLocal()
 
 function getPdoForEnv(string $env = WF_Constants::ENV_LOCAL)
 {
-    if ($env === WF_Constants::ENV_LOCAL || $env === 'current') {
+    if ($env === 'current') {
+        try {
+            return Database::getInstance();
+        } catch (Throwable $e) {
+            return ['error' => $e->getMessage()];
+        }
+    }
+
+    if ($env === WF_Constants::ENV_LOCAL) {
         return connectLocal();
     }
     // live requires elevated role

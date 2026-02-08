@@ -1,15 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { ApiClient } from '../../../core/ApiClient.js';
-
-interface SessionData {
-    session: Record<string, unknown>;
-    cookies: Record<string, string>;
-    server: Record<string, string>;
-    session_id: string;
-    session_status: number;
-    php_version: string;
-}
+import type { SessionViewerData, SessionViewerResponse } from '../../../types/admin/sessionViewer.js';
 
 interface SessionViewerProps {
     onClose?: () => void;
@@ -17,7 +9,7 @@ interface SessionViewerProps {
 }
 
 export function SessionViewer({ onClose, title }: SessionViewerProps) {
-    const [data, setData] = useState<SessionData | null>(null);
+    const [data, setData] = useState<SessionViewerData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
@@ -30,7 +22,7 @@ export function SessionViewer({ onClose, title }: SessionViewerProps) {
         setLoading(true);
         setError(null);
         try {
-            const json = await ApiClient.get<{ success: boolean; error?: string; data?: SessionData }>('/api/session_diagnostics.php', { action: 'get' });
+            const json = await ApiClient.get<SessionViewerResponse>('/api/session_diagnostics.php', { action: 'get' });
             if (json.success) {
                 setData(json.data || null);
             } else {
@@ -163,6 +155,36 @@ export function SessionViewer({ onClose, title }: SessionViewerProps) {
                             <div className="text-sm text-gray-600 mb-4">
                                 <span className="mr-4">Session ID: <code>{data.session_id || 'None'}</code></span>
                                 <span>PHP: <code>{data.php_version}</code></span>
+                            </div>
+
+                            <div className="admin-card mb-4">
+                                <div className="admin-card-title mb-2">Recent Analytics Sessions</div>
+                                <div className="bg-gray-50 p-4 rounded overflow-auto max-h-[360px] border border-gray-200">
+                                    {data.recent_sessions.length === 0 ? (
+                                        <span className="text-gray-500 italic">No analytics sessions found.</span>
+                                    ) : (
+                                        <table className="w-full text-left text-sm">
+                                            <thead>
+                                                <tr className="border-b border-gray-300">
+                                                    <th className="py-2 pr-3">Session</th>
+                                                    <th className="py-2 pr-3">Last Activity</th>
+                                                    <th className="py-2 pr-3">Pages</th>
+                                                    <th className="py-2 pr-3">Landing Page</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {data.recent_sessions.map((item) => (
+                                                    <tr key={`${item.session_id}-${item.last_activity}`} className="border-b border-gray-200 last:border-0 align-top">
+                                                        <td className="py-2 pr-3 font-mono text-xs break-all">{item.session_id || '(empty)'}</td>
+                                                        <td className="py-2 pr-3 whitespace-nowrap">{item.last_activity}</td>
+                                                        <td className="py-2 pr-3">{item.total_page_views}</td>
+                                                        <td className="py-2 pr-3 break-all">{item.landing_page || '-'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
                             </div>
 
                             {renderDataSection('$_SESSION', 'session', data.session)}

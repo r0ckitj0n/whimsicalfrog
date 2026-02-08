@@ -41,7 +41,7 @@ try {
         default:
             Response::error('Invalid action', null, 400);
     }
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log("Analytics error: " . $e->getMessage());
-    Response::success(['note' => 'Analytics unavailable']);
+    Response::error('Analytics unavailable', ['details' => $e->getMessage()], 500);
 }

@@ -21,6 +21,24 @@ switch ($action) {
             session_start();
         }
 
+        $recentSessions = [];
+        try {
+            $recentSessions = Database::queryAll(
+                "SELECT session_id, user_id, ip_address, user_agent, landing_page, referrer, started_at, last_activity, total_page_views, converted, conversion_value
+                 FROM analytics_sessions
+                 ORDER BY last_activity DESC
+                 LIMIT 100"
+            );
+        } catch (Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Failed to load analytics sessions',
+                'details' => $e->getMessage(),
+            ]);
+            exit;
+        }
+
         // Mask sensitive values in $_SERVER
         $serverData = $_SERVER;
         $sensitiveKeys = ['PHP_AUTH_PW', 'HTTP_AUTHORIZATION', 'HTTP_COOKIE'];
@@ -39,6 +57,7 @@ switch ($action) {
                 'session_id' => session_id(),
                 'session_status' => session_status(),
                 'php_version' => PHP_VERSION,
+                'recent_sessions' => $recentSessions,
             ]
         ]);
         break;

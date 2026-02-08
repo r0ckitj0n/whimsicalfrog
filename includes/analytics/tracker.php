@@ -2,11 +2,32 @@
 /**
  * Analytics Tracking Logic
  */
+require_once __DIR__ . '/../session.php';
+
+function getAnalyticsSessionId()
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_init([
+            'name' => 'PHPSESSID',
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => '',
+            'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+    $sessionId = session_id();
+    if ($sessionId === '') {
+        throw new RuntimeException('Unable to establish analytics session id');
+    }
+    return $sessionId;
+}
 
 function trackVisit()
 {
     $input = json_decode(file_get_contents('php://input'), true);
-    $sessionId = session_id();
+    $sessionId = getAnalyticsSessionId();
     $deviceInfo = parseUserAgent($_SERVER['HTTP_USER_AGENT'] ?? '');
 
     Database::execute(
@@ -27,7 +48,7 @@ function trackVisit()
 function trackPageView()
 {
     $input = json_decode(file_get_contents('php://input'), true);
-    $sessionId = session_id();
+    $sessionId = getAnalyticsSessionId();
     
     Database::execute(
         "INSERT INTO page_views (session_id, page_url, page_title, page_type, item_sku) VALUES (?, ?, ?, ?, ?)",

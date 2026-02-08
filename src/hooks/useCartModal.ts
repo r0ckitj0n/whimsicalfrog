@@ -25,9 +25,33 @@ export const useCartModal = (isOpen: boolean, onClose: () => void) => {
     const [upsells, setUpsells] = useState<IUpsellItem[]>([]);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const [isLoadingUpsells, setIsLoadingUpsells] = useState(false);
+    const [showUpsells, setShowUpsells] = useState<boolean>(() => (typeof window !== 'undefined' ? window.__WF_SHOW_UPSELLS !== false : true));
+    const [confirmClearCart, setConfirmClearCart] = useState<boolean>(() => (typeof window !== 'undefined' ? window.__WF_CONFIRM_CLEAR_CART !== false : true));
+    const [minimumCheckoutTotal, setMinimumCheckoutTotal] = useState<number>(() => {
+        if (typeof window === 'undefined') return 0;
+        const parsed = Number(window.__WF_MINIMUM_CHECKOUT_TOTAL);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+    });
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const refreshRuntimeSettings = () => {
+            setShowUpsells(window.__WF_SHOW_UPSELLS !== false);
+            setConfirmClearCart(window.__WF_CONFIRM_CLEAR_CART !== false);
+            const nextMinimum = Number(window.__WF_MINIMUM_CHECKOUT_TOTAL);
+            setMinimumCheckoutTotal(Number.isFinite(nextMinimum) ? Math.max(0, nextMinimum) : 0);
+        };
+
+        refreshRuntimeSettings();
+        window.addEventListener('wf:cart-settings-updated', refreshRuntimeSettings);
+        return () => window.removeEventListener('wf:cart-settings-updated', refreshRuntimeSettings);
+    }, []);
 
     const fetchUpsells = useCallback(async () => {
-        if (items.length === 0) return;
+        if (!showUpsells || items.length === 0) {
+            setUpsells([]);
+            return;
+        }
         setIsLoadingUpsells(true);
         try {
             const skus = items.map(i => i.sku);
@@ -46,13 +70,13 @@ export const useCartModal = (isOpen: boolean, onClose: () => void) => {
         } finally {
             setIsLoadingUpsells(false);
         }
-    }, [items]);
+    }, [items, showUpsells]);
 
     useEffect(() => {
-        if (isOpen && items.length > 0) {
+        if (isOpen && showUpsells && items.length > 0) {
             fetchUpsells();
         }
-    }, [isOpen, items.length, fetchUpsells]);
+    }, [isOpen, showUpsells, items.length, fetchUpsells]);
 
 
     const handleApplyCoupon = async (e: React.FormEvent) => {
@@ -68,6 +92,21 @@ export const useCartModal = (isOpen: boolean, onClose: () => void) => {
         }
     };
 
+    const handleClearCart = async () => {
+        if (confirmClearCart && typeof window !== 'undefined' && window.WF_Confirm) {
+            const confirmed = await window.WF_Confirm({
+                title: 'Empty Cart?',
+                message: 'This will remove all items from your cart.',
+                confirmText: 'Empty Cart',
+                cancelText: 'Keep Items',
+                confirmStyle: 'warning',
+                iconKey: 'delete'
+            });
+            if (!confirmed) return;
+        }
+        clearCart();
+    };
+
     return {
         items,
         total,
@@ -78,9 +117,10 @@ export const useCartModal = (isOpen: boolean, onClose: () => void) => {
         upsells,
         isApplyingCoupon,
         isLoadingUpsells,
+        minimumCheckoutTotal,
         updateQuantity,
         removeItem,
-        clearCart,
+        clearCart: handleClearCart,
         removeCoupon,
         addItem,
         handleApplyCoupon

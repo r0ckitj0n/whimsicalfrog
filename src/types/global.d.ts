@@ -113,6 +113,9 @@ declare global {
     __WF_DEV_MODE?: boolean;
     __WF_OPEN_CART_ON_ADD?: boolean;
     __WF_CART_MERGE_DUPES?: boolean;
+    __WF_SHOW_UPSELLS?: boolean;
+    __WF_CONFIRM_CLEAR_CART?: boolean;
+    __WF_MINIMUM_CHECKOUT_TOTAL?: number;
     __WF_SELECT_AUTOSORT_INSTALLED?: boolean;
     WFModalUtils?: {
       ensureOnBody: (el: HTMLElement | null) => HTMLElement | null;
@@ -266,4 +269,3 @@ declare global {
     _wfStrictImageGuard?: (event: ErrorEvent) => void;
   }
 }
-

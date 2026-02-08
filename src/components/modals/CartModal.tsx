@@ -26,6 +26,7 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
         upsells,
         isApplyingCoupon,
         isLoadingUpsells,
+        minimumCheckoutTotal,
         updateQuantity,
         removeItem,
         clearCart,
@@ -96,6 +97,7 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
                             <CartSummary
                                 subtotal={subtotal}
                                 total={total}
+                                minimumCheckoutTotal={minimumCheckoutTotal}
                                 coupon={coupon}
                                 coupon_code={coupon_code}
                                 isApplyingCoupon={isApplyingCoupon}

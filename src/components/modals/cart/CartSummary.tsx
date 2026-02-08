@@ -4,19 +4,21 @@ import { Coupon } from '../../../commerce/cart/types.js';
 interface CartSummaryProps {
     subtotal: number;
     total: number;
+    minimumCheckoutTotal: number;
     coupon: Coupon | null;
     coupon_code: string;
     isApplyingCoupon: boolean;
     onApplyCoupon: (e: React.FormEvent) => void;
     onCouponCodeChange: (code: string) => void;
     onRemoveCoupon: () => void;
-    onClearCart: () => void;
+    onClearCart: () => Promise<void> | void;
     onClose: () => void;
 }
 
 export const CartSummary: React.FC<CartSummaryProps> = ({
     subtotal,
     total,
+    minimumCheckoutTotal,
     coupon,
     coupon_code,
     isApplyingCoupon,
@@ -26,6 +28,9 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
     onClearCart,
     onClose,
 }) => {
+    const requiresMinimum = minimumCheckoutTotal > 0;
+    const belowMinimum = requiresMinimum && total < minimumCheckoutTotal;
+
     return (
         <div className="cart-modal-footer-content p-6 bg-gray-50 border-t border-gray-100 space-y-4">
             {/* Coupon Section */}
@@ -93,7 +98,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
             <div className="flex gap-3 pt-2">
                 <button
                     type="button"
-                    onClick={onClearCart}
+                    onClick={() => { void onClearCart(); }}
                     className="px-4 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-brand-secondary transition-colors"
                     data-help-id="cart-empty"
                 >
@@ -102,6 +107,7 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
                 <button
                     type="button"
                     onClick={() => {
+                        if (belowMinimum) return;
                         // Close this modal immediately to prevent seeing the empty cart splash
                         // once the order is placed and the cart is cleared.
                         onClose();
@@ -109,11 +115,18 @@ export const CartSummary: React.FC<CartSummaryProps> = ({
                             window.openPaymentModal();
                         }
                     }}
-                    className="cart-checkout-btn"
+                    disabled={belowMinimum}
+                    className={`cart-checkout-btn ${belowMinimum ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                     Checkout • ${total.toFixed(2)}
                 </button>
             </div>
+
+            {belowMinimum && (
+                <p className="text-[10px] font-black uppercase tracking-widest text-brand-secondary">
+                    Minimum order total is ${minimumCheckoutTotal.toFixed(2)}
+                </p>
+            )}
         </div>
     );
 };

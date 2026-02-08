@@ -59,6 +59,14 @@ export const usePayment = () => {
             return { success: false };
         }
 
+        const minimumCheckoutTotal = typeof window !== 'undefined'
+            ? Math.max(0, Number(window.__WF_MINIMUM_CHECKOUT_TOTAL) || 0)
+            : 0;
+        if (minimumCheckoutTotal > 0 && pricing.total < minimumCheckoutTotal) {
+            setError(`Minimum order total is $${minimumCheckoutTotal.toFixed(2)}.`);
+            return { success: false };
+        }
+
         setIsLoading(true);
         setError(null);
 

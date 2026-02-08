@@ -8,8 +8,28 @@ import { CartState, CartStoreOptions, CartItem, Coupon, ICartAPI } from './cart/
 import * as Notifications from './cart/notifications.js';
 import * as Storage from './cart/storage.js';
 import * as Logic from './cart/logic.js';
+import type { IShoppingCartSettings } from '../types/commerce.js';
 
 const DEFAULT_STORAGE_KEY = 'whimsical_frog_cart';
+const DEFAULT_RUNTIME_SETTINGS: IShoppingCartSettings = {
+    open_cart_on_add: true,
+    merge_duplicates: true,
+    show_upsells: true,
+    confirm_clear_cart: true,
+    minimum_checkout_total: 0
+};
+
+const toBoolean = (value: unknown, fallback: boolean): boolean => {
+    if (typeof value === 'boolean') return value;
+    if (value === 1 || value === '1' || value === 'true') return true;
+    if (value === 0 || value === '0' || value === 'false') return false;
+    return fallback;
+};
+
+const toNumber = (value: unknown, fallback: number): number => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+};
 
 export function createCartStore({
     storageKey = DEFAULT_STORAGE_KEY,
@@ -27,6 +47,28 @@ export function createCartStore({
     };
 
     const listeners = new Set<(detail: { action: string; state: CartState;[key: string]: unknown }) => void>();
+
+    function applyRuntimeSettings(raw: Partial<IShoppingCartSettings> = {}): void {
+        if (typeof window === 'undefined') return;
+        window.__WF_OPEN_CART_ON_ADD = toBoolean(raw.open_cart_on_add, DEFAULT_RUNTIME_SETTINGS.open_cart_on_add);
+        window.__WF_CART_MERGE_DUPES = toBoolean(raw.merge_duplicates, DEFAULT_RUNTIME_SETTINGS.merge_duplicates);
+        window.__WF_SHOW_UPSELLS = toBoolean(raw.show_upsells, DEFAULT_RUNTIME_SETTINGS.show_upsells);
+        window.__WF_CONFIRM_CLEAR_CART = toBoolean(raw.confirm_clear_cart, DEFAULT_RUNTIME_SETTINGS.confirm_clear_cart);
+        window.__WF_MINIMUM_CHECKOUT_TOTAL = Math.max(0, toNumber(raw.minimum_checkout_total, DEFAULT_RUNTIME_SETTINGS.minimum_checkout_total));
+    }
+
+    async function hydrateRuntimeSettings(): Promise<void> {
+        try {
+            const res = await api_client.get<{ success?: boolean; settings?: Partial<IShoppingCartSettings> }>('/api/business_settings.php?category=shopping_cart');
+            if (res?.success && res.settings) {
+                applyRuntimeSettings(res.settings);
+                return;
+            }
+        } catch (err) {
+            console.warn('[Cart] Failed to hydrate runtime settings', err);
+        }
+        applyRuntimeSettings(DEFAULT_RUNTIME_SETTINGS);
+    }
 
     function notify(type: string, msg: string, title = '', duration = 5000): void {
         Notifications.notify(state.notifications, type, msg, title, duration);
@@ -111,7 +153,7 @@ export function createCartStore({
 
         const win = window;
         if (win.__WF_OPEN_CART_ON_ADD === true) {
-            // win.WF_CartModal?.open?.(); // TODO: Add to Window interface if needed
+            win.WF_CartModal?.open?.();
         }
 
         emit('add', { item: { ...item } });
@@ -198,6 +240,15 @@ export function createCartStore({
     if (typeof window !== 'undefined') {
         interface LegacyCartWindow {
             cart?: ICartAPI;
+            __WF_OPEN_CART_ON_ADD?: boolean;
+            __WF_CART_MERGE_DUPES?: boolean;
+            __WF_SHOW_UPSELLS?: boolean;
+            __WF_CONFIRM_CLEAR_CART?: boolean;
+            __WF_MINIMUM_CHECKOUT_TOTAL?: number;
+            WF_CartModal?: {
+                open?: () => void;
+                close?: () => void;
+            };
             WF_Cart?: {
                 addItem: (item: CartItem, qty?: number) => void;
                 removeItem: (sku: string) => void;
@@ -211,6 +262,13 @@ export function createCartStore({
             };
         }
         const win = window as unknown as LegacyCartWindow;
+        applyRuntimeSettings(DEFAULT_RUNTIME_SETTINGS);
+        void hydrateRuntimeSettings();
+        window.addEventListener('wf:cart-settings-updated', ((event: Event) => {
+            const customEvent = event as CustomEvent<Partial<IShoppingCartSettings>>;
+            applyRuntimeSettings(customEvent.detail || {});
+        }) as EventListener);
+
         if (!win.cart) win.cart = api;
 
         // Legacy bridge for WF_Cart API

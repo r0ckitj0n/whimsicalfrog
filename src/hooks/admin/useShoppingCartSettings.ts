@@ -27,6 +27,9 @@ export const useShoppingCartSettings = () => {
                     ...prev,
                     ...res.settings
                 }));
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('wf:cart-settings-updated', { detail: res.settings }));
+                }
             }
         } catch (err) {
             logger.error('[useShoppingCartSettings] fetch failed', err);
@@ -47,6 +50,9 @@ export const useShoppingCartSettings = () => {
             });
             if (res?.success) {
                 setSettings(prev => ({ ...prev, ...newSettings }));
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('wf:cart-settings-updated', { detail: newSettings }));
+                }
                 return true;
             }
             return false;

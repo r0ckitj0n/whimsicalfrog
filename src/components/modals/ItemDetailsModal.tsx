@@ -114,7 +114,7 @@ export const ItemDetailsModal: React.FC<ItemDetailsModalProps> = ({ sku, isOpen,
                     {isLoading && !item ? (
                         <ItemDetailsLoading />
                     ) : item ? (
-                        <div className="modal-content-wrapper flex min-h-full w-full flex-col lg:flex-row">
+                        <div className="modal-content-wrapper flex min-h-full w-full flex-col md:flex-row">
                             <ImageColumn item={item} uniqueImages={uniqueImages} />
                             <DetailsColumn
                                 item={item}

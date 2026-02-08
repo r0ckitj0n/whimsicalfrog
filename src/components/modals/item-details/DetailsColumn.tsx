@@ -42,7 +42,7 @@ export const DetailsColumn: React.FC<DetailsColumnProps> = ({
     availableSizes
 }) => {
     return (
-        <div className="details-column flex w-full flex-col bg-white px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6 lg:w-1/2 lg:flex-[0_0_50%] lg:px-10 lg:pb-10">
+        <div className="details-column flex w-full flex-col bg-white px-4 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-6 md:w-1/2 md:flex-[0_0_50%] md:px-10 md:pb-10">
             <div className="details-block mb-6 sm:mb-8">
                 <div className="mb-2 text-[11px] font-black uppercase tracking-[0.22em] text-[var(--brand-primary)] sm:text-xs">
                     {item.category || 'Whimsical Original'}

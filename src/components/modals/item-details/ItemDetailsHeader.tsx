@@ -7,7 +7,7 @@ interface ItemDetailsHeaderProps {
 
 export const ItemDetailsHeader: React.FC<ItemDetailsHeaderProps> = ({ title, onClose }) => {
     return (
-        <div className="wf-modal-header sticky top-0 z-20 flex shrink-0 items-center justify-between border-b border-white/15 bg-[var(--bg-gradient-brand,linear-gradient(135deg,#87ac3a_0%,#769632_100%))] px-4 py-3 sm:px-6 sm:py-4">
+        <div className="wf-modal-header sticky top-0 z-20 flex shrink-0 items-center justify-between border-b border-white/15 bg-[var(--brand-primary)] px-4 py-3 sm:px-6 sm:py-4">
             <div className="min-w-0 pr-3">
                 <div className="flex items-center gap-2 sm:gap-3">
                     <span className="btn-icon--shopping-bag text-lg text-white sm:text-2xl" aria-hidden="true" />

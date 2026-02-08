@@ -31,9 +31,9 @@ export const ImageColumn: React.FC<ImageColumnProps> = ({ item, uniqueImages }) 
     };
 
     return (
-        <div className="image-column w-full border-b border-slate-200 bg-slate-50/60 lg:w-1/2 lg:flex-[0_0_50%] lg:border-b-0 lg:border-r">
-            <div className="image-column-inner flex w-full flex-col gap-4 p-4 sm:gap-5 sm:p-6 lg:gap-6 lg:p-10">
-                <div className="image-slot-card image-slot-primary relative flex h-64 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:h-80 lg:h-[460px]">
+        <div className="image-column w-full border-b border-slate-200 bg-slate-50/60 md:w-1/2 md:flex-[0_0_50%] md:border-b-0 md:border-r">
+            <div className="image-column-inner flex w-full flex-col gap-4 p-4 sm:gap-5 sm:p-6 md:gap-6 md:p-10">
+                <div className="image-slot-card image-slot-primary relative flex h-64 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:h-80 md:h-[460px]">
                     {activeImage ? (
                         <img
                             src={activeImage}

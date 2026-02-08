@@ -118,7 +118,7 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
                                 disabled={loading}
                                 className="btn-text-secondary disabled:opacity-50"
                             >
-                                Ensure Database Columns
+                                Find Empty Shipping Dimensions
                             </button>
                             <button
                                 type="button"
@@ -126,7 +126,7 @@ export function ItemDimensionsTools({ onClose }: ItemDimensionsToolsProps) {
                                 disabled={loading}
                                 className="btn-text-primary disabled:opacity-50"
                             >
-                                Run AI/Heuristic Backfill
+                                Fix Missing Shipping Dimensions
                             </button>
                         </div>
 

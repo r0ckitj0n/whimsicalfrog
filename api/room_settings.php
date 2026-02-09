@@ -56,14 +56,16 @@ try {
                 }
 
                 // Use upsert to handle re-creating previously deactivated rooms
-                $sql = "INSERT INTO room_settings (room_number, room_name, door_label, description, display_order, is_active) 
-                        VALUES (?, ?, ?, ?, ?, ?)
+                $sql = "INSERT INTO room_settings (room_number, room_name, door_label, description, display_order, is_active, render_context, target_aspect_ratio) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                         ON DUPLICATE KEY UPDATE 
                             room_name = VALUES(room_name),
                             door_label = VALUES(door_label),
                             description = VALUES(description),
                             display_order = VALUES(display_order),
-                            is_active = VALUES(is_active)";
+                            is_active = VALUES(is_active),
+                            render_context = VALUES(render_context),
+                            target_aspect_ratio = VALUES(target_aspect_ratio)";
 
                 Database::execute($sql, [
                     (string) $input['room_number'],
@@ -71,7 +73,9 @@ try {
                     trim($input['door_label']),
                     $input['description'] ?? '',
                     $input['display_order'] ?? 0,
-                    isset($input['is_active']) ? (int) !!$input['is_active'] : 1
+                    isset($input['is_active']) ? (int) !!$input['is_active'] : 1,
+                    in_array(($input['render_context'] ?? 'modal'), ['modal', 'fullscreen', 'fixed'], true) ? (string) $input['render_context'] : 'modal',
+                    is_numeric($input['target_aspect_ratio'] ?? null) ? (float) $input['target_aspect_ratio'] : (1024 / 768)
                 ]);
                 Response::success(['message' => 'Created', 'room_id' => Database::lastInsertId()]);
 

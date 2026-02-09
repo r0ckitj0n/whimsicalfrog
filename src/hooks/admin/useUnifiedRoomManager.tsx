@@ -210,12 +210,13 @@ export const useUnifiedRoomManager = ({
         }, [selectedRoom, backgrounds]),
 
         handleGenerateBackground: useCallback(async (request: import('../../types/room-generation.js').IRoomImageGenerationRequest) => {
-            if (!selectedRoom) {
+            const roomNumber = String(request.room_number || selectedRoom || '').trim();
+            if (!roomNumber) {
                 return { success: false, error: 'No room selected' };
             }
             return backgrounds.generateRoomBackground({
                 ...request,
-                room_number: selectedRoom
+                room_number: roomNumber
             });
         }, [selectedRoom, backgrounds]),
 

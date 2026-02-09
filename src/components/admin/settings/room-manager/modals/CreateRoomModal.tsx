@@ -25,7 +25,7 @@ interface CreateRoomFormState {
     vibe_adjectives: string;
     color_scheme: string;
     background_thematic_elements: string;
-    image_size: '1024x1024' | '1536x1024' | '1024x1536';
+    scale_mode: 'modal' | 'fullscreen' | 'fixed';
     generate_image: boolean;
 }
 
@@ -116,8 +116,20 @@ const defaultFormState: CreateRoomFormState = {
     vibe_adjectives: AUTOGENERATE_LABEL,
     color_scheme: AUTOGENERATE_LABEL,
     background_thematic_elements: AUTOGENERATE_LABEL,
-    image_size: '1536x1024',
+    scale_mode: 'modal',
     generate_image: true
+};
+
+const imageSizeForScaleMode: Record<CreateRoomFormState['scale_mode'], IRoomImageGenerationRequest['size']> = {
+    modal: '1024x1024',
+    fullscreen: '1536x1024',
+    fixed: '1024x1536'
+};
+
+const targetAspectRatioForScaleMode: Record<CreateRoomFormState['scale_mode'], number> = {
+    modal: 1024 / 768,
+    fullscreen: 1280 / 896,
+    fixed: 1024 / 768
 };
 
 const parsePlaceholderKeys = (prompt: string): string[] => {
@@ -336,6 +348,8 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             door_label: form.door_label.trim(),
             display_order: form.display_order,
             description: form.description,
+            render_context: form.scale_mode,
+            target_aspect_ratio: targetAspectRatioForScaleMode[form.scale_mode],
             is_active: true
         });
 
@@ -351,7 +365,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                 template_key: selectedTemplateKey,
                 variables: resolvedVariables,
                 provider: 'openai',
-                size: form.image_size,
+                size: imageSizeForScaleMode[form.scale_mode],
                 background_name: `${form.room_number.trim()} - ${form.room_name.trim()}`
             });
             if (!genRes.success) {
@@ -462,16 +476,21 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Image Size</label>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Scale Mode</label>
                                     <select
-                                        value={form.image_size}
-                                        onChange={(e) => updateForm('image_size', e.target.value as CreateRoomFormState['image_size'])}
+                                        value={form.scale_mode}
+                                        onChange={(e) => updateForm('scale_mode', e.target.value as CreateRoomFormState['scale_mode'])}
                                         className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
                                     >
-                                        <option value="1536x1024">Landscape (1536x1024)</option>
-                                        <option value="1024x1024">Square (1024x1024)</option>
-                                        <option value="1024x1536">Portrait (1024x1536)</option>
+                                        <option value="modal">Modal (4:3)</option>
+                                        <option value="fullscreen">Full Screen (dynamic)</option>
+                                        <option value="fixed">Fixed</option>
                                     </select>
+                                    <p className="text-[10px] text-slate-500 mt-1">
+                                        Image generation size follows scale mode:
+                                        {' '}
+                                        <span className="font-bold">{imageSizeForScaleMode[form.scale_mode]}</span>
+                                    </p>
                                 </div>
                             </div>
 

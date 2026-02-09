@@ -142,9 +142,10 @@ export const useRoomOverview = (): IRoomOverviewHook => {
         if (!confirmed) return;
 
         try {
-            const data = await ApiClient.post<IRoomSettingsResponse>('/api/room_settings.php', {
-                action: 'delete_room',
-                room_number: String(roomNumber)
+            const data = await ApiClient.delete<IRoomSettingsResponse>('/api/room_settings.php', {
+                body: JSON.stringify({
+                    room_number: String(roomNumber)
+                })
             });
 
             if (data?.success) {

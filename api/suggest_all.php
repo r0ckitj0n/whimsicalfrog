@@ -158,6 +158,42 @@ function wf_resolve_category_from_analysis($analysisCategory, $title, $descripti
     return $bestCategory;
 }
 
+function wf_compose_ai_failure_details($aiProviders, $baseMessage, $exceptionMessage = '')
+{
+    $details = [];
+    if (method_exists($aiProviders, 'getLastRunDiagnostics')) {
+        $details = $aiProviders->getLastRunDiagnostics();
+    }
+
+    $provider = trim((string) ($details['provider'] ?? 'unknown'));
+    $model = trim((string) ($details['model'] ?? 'unknown'));
+    $providerError = trim((string) ($details['provider_error'] ?? ''));
+    $fallbackUsed = !empty($details['fallback_used']) ? 'yes' : 'no';
+    $fallbackAttempted = !empty($details['fallback_attempted']) ? 'yes' : 'no';
+    $method = trim((string) ($details['method'] ?? 'unknown'));
+
+    $parts = [
+        $baseMessage,
+        "provider={$provider}",
+        "model={$model}",
+        "method={$method}",
+        "fallback_attempted={$fallbackAttempted}",
+        "fallback_used={$fallbackUsed}",
+    ];
+
+    if ($providerError !== '') {
+        $parts[] = "provider_error={$providerError}";
+    }
+    if ($exceptionMessage !== '') {
+        $parts[] = "error={$exceptionMessage}";
+    }
+
+    return [
+        'message' => implode(' | ', $parts),
+        'details' => $details
+    ];
+}
+
 try {
     $aiProviders = getAIProviders();
     $images = [];
@@ -232,7 +268,12 @@ try {
             Response::error('Image analysis is required for Generate. Enable image-based generation and try again.', null, 400);
         }
         if (!$aiProviders->currentModelSupportsImages()) {
-            Response::error('Selected AI model does not support image analysis. Switch to a vision-capable model in AI Settings and re-test the provider.', null, 400);
+            $unsupported = wf_compose_ai_failure_details(
+                $aiProviders,
+                'Selected AI model does not support image analysis',
+                'Switch to a vision-capable model in AI Settings and re-test the provider'
+            );
+            Response::error($unsupported['message'], $unsupported['details'], 400);
         }
         if (empty($images)) {
             Response::error('Image analysis is required, but no usable image was found for this item. Add a primary image and try again.', null, 400);
@@ -255,7 +296,12 @@ try {
                 $analysis = $aiProviders->analyzeItemImage($images[0], $existingCategories);
                 error_log("suggest_all.php [info step]: analyzeItemImage returned: " . json_encode($analysis));
 
-                if ($analysis) {
+                $analysisLooksValid = is_array($analysis)
+                    && !empty(trim((string) ($analysis['title'] ?? '')))
+                    && !empty(trim((string) ($analysis['category'] ?? '')))
+                    && empty($analysis['error']);
+
+                if ($analysisLooksValid) {
                     $resolvedCategory = wf_resolve_category_from_analysis(
                         $analysis['category'] ?? '',
                         $analysis['title'] ?? '',
@@ -277,11 +323,18 @@ try {
                     $category = $results['info_suggestion']['category'];
                 } else {
                     error_log("suggest_all.php [info step]: analyzeItemImage returned null/empty");
-                    Response::error('Image analysis failed for the current model. Switch to a vision-capable model in AI Settings and run Test Provider before generating.', null, 400);
+                    $parseError = is_array($analysis) ? trim((string) ($analysis['error'] ?? '')) : '';
+                    $failure = wf_compose_ai_failure_details(
+                        $aiProviders,
+                        'Image analysis failed',
+                        $parseError !== '' ? $parseError : 'Provider returned incomplete analysis payload'
+                    );
+                    Response::error($failure['message'], $failure['details'], 400);
                 }
             } catch (Exception $e) {
                 error_log("Info analysis failed in suggest_all: " . $e->getMessage());
-                Response::error('Image analysis failed: ' . $e->getMessage() . '. Switch to a vision-capable model in AI Settings and run Test Provider.', null, 400);
+                $failure = wf_compose_ai_failure_details($aiProviders, 'Image analysis failed', $e->getMessage());
+                Response::error($failure['message'], $failure['details'], 400);
             }
         } else if (!$imageFirstPriority && empty($name) && !empty($category)) {
             // Fallback: Generate info from category if name/images are missing

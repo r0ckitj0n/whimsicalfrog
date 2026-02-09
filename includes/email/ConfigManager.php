@@ -50,32 +50,54 @@ class EmailConfigManager
         if ($smtpUsername !== '') secret_set('smtp_username', $smtpUsername);
         if ($smtpPassword !== '') secret_set('smtp_password', $smtpPassword);
 
-        $isFlagOn = fn($k) => isset($post[$k]) && (string)$post[$k] === '1';
+        $isFlagOn = fn($k) => isset($post[$k]) && (string) $post[$k] === '1';
+        $asBool = function ($value, $default = false) {
+            if ($value === null) {
+                return (bool) $default;
+            }
+            if (is_bool($value)) {
+                return $value;
+            }
+            $normalized = strtolower(trim((string) $value));
+            return in_array($normalized, ['1', 'true', 'yes', 'on'], true);
+        };
         $prefer = fn($pk, $ek) => !empty($post[$pk]) ? (string)$post[$pk] : ($existing[$ek] ?? '');
 
-        $map = [
-            'bcc_email'       => $isFlagOn('clear_bccEmail') ? '' : $prefer('bccEmail', 'bcc_email'),
-            'reply_to'        => $isFlagOn('clear_replyTo') ? '' : $prefer('replyTo', 'reply_to'),
-            'smtp_enabled'    => isset($post['smtpEnabled']) ? 'true' : 'false',
-            'smtp_host'       => $isFlagOn('clear_smtpHost') ? '' : $prefer('smtpHost', 'smtp_host'),
-            'smtp_port'       => $isFlagOn('clear_smtpPort') ? '' : $prefer('smtpPort', 'smtp_port'),
-            'smtp_username'   => $isFlagOn('clear_smtpUsername') ? '' : $prefer('smtpUsername', 'smtp_username'),
-            'smtp_encryption' => $isFlagOn('clear_smtpEncryption') ? '' : $prefer('smtpEncryption', 'smtp_encryption'),
+        $settingsToPersist = [
+            ['category' => 'email', 'key' => 'admin_email', 'value' => trim((string) ($post['adminEmail'] ?? '')), 'type' => 'text'],
+            ['category' => 'email', 'key' => 'bcc_email', 'value' => $isFlagOn('clear_bccEmail') ? '' : $prefer('bccEmail', 'bcc_email'), 'type' => 'text'],
+            ['category' => 'email', 'key' => 'reply_to', 'value' => $isFlagOn('clear_replyTo') ? '' : $prefer('replyTo', 'reply_to'), 'type' => 'text'],
+            ['category' => 'email', 'key' => 'smtp_enabled', 'value' => $asBool($post['smtpEnabled'] ?? null, false) ? 'true' : 'false', 'type' => 'boolean'],
+            ['category' => 'email', 'key' => 'smtp_host', 'value' => $isFlagOn('clear_smtpHost') ? '' : $prefer('smtpHost', 'smtp_host'), 'type' => 'text'],
+            ['category' => 'email', 'key' => 'smtp_port', 'value' => $isFlagOn('clear_smtpPort') ? '' : $prefer('smtpPort', 'smtp_port'), 'type' => 'number'],
+            ['category' => 'email', 'key' => 'smtp_username', 'value' => $isFlagOn('clear_smtpUsername') ? '' : $prefer('smtpUsername', 'smtp_username'), 'type' => 'text'],
+            ['category' => 'email', 'key' => 'smtp_encryption', 'value' => $isFlagOn('clear_smtpEncryption') ? '' : $prefer('smtpEncryption', 'smtp_encryption'), 'type' => 'text'],
+            ['category' => 'business_info', 'key' => 'business_email', 'value' => trim((string) ($post['fromEmail'] ?? '')), 'type' => 'text'],
+            ['category' => 'business_info', 'key' => 'business_name', 'value' => trim((string) ($post['fromName'] ?? '')), 'type' => 'text'],
+            ['category' => 'business_info', 'key' => 'business_support_email', 'value' => trim((string) ($post['supportEmail'] ?? '')), 'type' => 'text'],
         ];
 
-        foreach ($map as $key => $val) {
-            $type = ($key === 'smtp_enabled') ? 'boolean' : (($key === 'smtp_port') ? 'number' : 'text');
+        foreach ($settingsToPersist as $setting) {
             $params = [
-                ':category' => 'email',
-                ':key' => $key,
-                ':value' => (string)$val,
-                ':type' => $type,
-                ':display_name' => ucwords(str_replace('_', ' ', $key)),
-                ':description' => 'Email setting ' . $key,
+                ':category' => (string) $setting['category'],
+                ':key' => (string) $setting['key'],
+                ':value_insert' => (string) $setting['value'],
+                ':value_update' => (string) $setting['value'],
+                ':type' => (string) $setting['type'],
+                ':display_name' => ucwords(str_replace('_', ' ', (string) $setting['key'])),
+                ':description' => 'Email setting ' . (string) $setting['key'],
             ];
             Database::execute("INSERT INTO business_settings (category, setting_key, setting_value, setting_type, display_name, description)
                 VALUES (:category, :key, :value, :type, :display_name, :description)
-                ON DUPLICATE KEY UPDATE setting_value = :value, updated_at = CURRENT_TIMESTAMP", $params);
+                ON DUPLICATE KEY UPDATE setting_value = :value_update, updated_at = CURRENT_TIMESTAMP", [
+                    ':category' => $params[':category'],
+                    ':key' => $params[':key'],
+                    ':value' => $params[':value_insert'],
+                    ':type' => $params[':type'],
+                    ':display_name' => $params[':display_name'],
+                    ':description' => $params[':description'],
+                    ':value_update' => $params[':value_update'],
+                ]);
         }
 
         if (class_exists('BusinessSettings')) BusinessSettings::clearCache();

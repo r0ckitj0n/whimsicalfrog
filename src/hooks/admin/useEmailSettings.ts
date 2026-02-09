@@ -38,8 +38,9 @@ export const useEmailSettings = () => {
         try {
             interface IPayload extends Partial<IEmailSettings> {
                 smtpPassword?: string;
+                action: 'save';
             }
-            const payload: IPayload = { ...newSettings };
+            const payload: IPayload = { ...newSettings, action: 'save' };
             if (smtpPassword) {
                 payload.smtpPassword = smtpPassword;
             }

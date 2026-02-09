@@ -20,6 +20,7 @@ class AIProviders
     private $settings;
     private $provider;
     private $localProvider;
+    private $lastRunDiagnostics;
 
     public function __construct()
     {
@@ -41,6 +42,15 @@ class AIProviders
 
         $this->localProvider = new LocalProvider($this->settings);
         $this->initProvider();
+        $this->lastRunDiagnostics = [
+            'method' => null,
+            'provider' => $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI,
+            'model' => null,
+            'fallback_attempted' => false,
+            'fallback_used' => false,
+            'provider_error' => null,
+            'fallback_error' => null,
+        ];
     }
 
     private function loadSettingsDirectly()
@@ -140,24 +150,86 @@ class AIProviders
     /**
      * Helper to run with optional fallback
      */
+    private function resolveActiveModelForDiagnostics()
+    {
+        $provider = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
+        switch ($provider) {
+            case WF_Constants::AI_PROVIDER_OPENAI:
+                return $this->settings['openai_model'] ?? null;
+            case WF_Constants::AI_PROVIDER_ANTHROPIC:
+                return $this->settings['anthropic_model'] ?? null;
+            case WF_Constants::AI_PROVIDER_GOOGLE:
+                return $this->settings['google_model'] ?? null;
+            case WF_Constants::AI_PROVIDER_META:
+                return $this->settings['meta_model'] ?? null;
+            case WF_Constants::AI_PROVIDER_JONS_AI:
+            default:
+                return 'jons-ai';
+        }
+    }
+
+    private function getProviderForMethod($method)
+    {
+        // Local provider does not support image analysis; use the selected provider directly so errors are not masked.
+        if ($method === 'analyzeItemImage' || $method === 'detectObjectBoundaries') {
+            return $this->provider;
+        }
+        if ($this->settings['fallback_to_local'] && $this->provider !== $this->localProvider) {
+            return $this->provider;
+        }
+        return $this->provider;
+    }
+
     private function runWithFallback($method, ...$args)
     {
+        $providerName = $this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI;
+        $modelName = $this->resolveActiveModelForDiagnostics();
+        $fallbackAllowed = !in_array($method, ['analyzeItemImage', 'detectObjectBoundaries'], true);
+        $this->lastRunDiagnostics = [
+            'method' => $method,
+            'provider' => $providerName,
+            'model' => $modelName,
+            'fallback_attempted' => false,
+            'fallback_used' => false,
+            'provider_error' => null,
+            'fallback_error' => null,
+        ];
+
         try {
-            if (method_exists($this->provider, $method)) {
-                $result = call_user_func_array([$this->provider, $method], $args);
-                $this->markUsageSuccess($this->settings['ai_provider'] ?? WF_Constants::AI_PROVIDER_JONS_AI);
+            $activeProvider = $this->getProviderForMethod($method);
+            if (method_exists($activeProvider, $method)) {
+                $result = call_user_func_array([$activeProvider, $method], $args);
+                $this->markUsageSuccess($providerName);
                 return $result;
             }
             throw new Exception("Method $method not implemented by provider");
-        } catch (Exception $e) {
-            error_log("AI Provider Error: " . $e->getMessage());
-            if ($this->settings['fallback_to_local'] && $this->provider !== $this->localProvider) {
+        } catch (Throwable $e) {
+            $this->lastRunDiagnostics['provider_error'] = $e->getMessage();
+            error_log("AI Provider Error [{$providerName}/{$method}]: " . $e->getMessage());
+            if ($fallbackAllowed && $this->settings['fallback_to_local'] && $this->provider !== $this->localProvider) {
+                $this->lastRunDiagnostics['fallback_attempted'] = true;
                 if (method_exists($this->localProvider, $method)) {
-                    return call_user_func_array([$this->localProvider, $method], $args);
+                    try {
+                        $result = call_user_func_array([$this->localProvider, $method], $args);
+                        $this->lastRunDiagnostics['fallback_used'] = true;
+                        return $result;
+                    } catch (Throwable $fallbackError) {
+                        $this->lastRunDiagnostics['fallback_error'] = $fallbackError->getMessage();
+                        throw new Exception(
+                            "Primary provider '{$providerName}' failed: {$e->getMessage()}; local fallback failed: {$fallbackError->getMessage()}",
+                            0,
+                            $e
+                        );
+                    }
                 }
             }
-            throw $e;
+            throw new Exception("Primary provider '{$providerName}' failed: {$e->getMessage()}", 0, $e);
         }
+    }
+
+    public function getLastRunDiagnostics()
+    {
+        return $this->lastRunDiagnostics;
     }
 
     // --- Public API ---
@@ -374,7 +446,7 @@ class AIProviders
                 ? '✅ Text + image analysis tests passed.'
                 : (
                     !$results['image_test']['success']
-                    ? '❌ Image analysis test failed. Switch to a vision-capable model in AI Settings.'
+                    ? '❌ Image analysis test failed: ' . ($results['image_test']['message'] ?? 'Unknown image analysis error')
                     : '❌ Text test failed: ' . $results['text_test']['message']
                 );
 

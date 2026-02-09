@@ -460,9 +460,20 @@ export const useInventoryItemForm = ({
             }
 
             const updatePromises: Promise<{ success: boolean; error?: string }>[] = [];
+            const originalRetail = Number((item as any)?.retail_price ?? (item as any)?.price) || 0;
+            const currentRetail = Number(formData.retail_price) || 0;
+            const suggestedRetail = Number((cached_price_suggestion as any)?.suggested_price) || 0;
+            const shouldBackfillRetailFromSuggestion =
+                !lockedFields.retail_price &&
+                suggestedRetail > 0 &&
+                Math.abs(currentRetail - originalRetail) <= 0.001;
+
+            const dataToSave = shouldBackfillRetailFromSuggestion
+                ? { ...formData, retail_price: Number(suggestedRetail.toFixed(2)) }
+                : formData;
 
             // Main fields handling
-            for (const [field, value] of Object.entries(formData)) {
+            for (const [field, value] of Object.entries(dataToSave)) {
                 if (field === 'is_archived') continue;
 
                 const itemKey = field === 'stock_level' ? 'stock_quantity' : field as keyof IInventoryItem;
@@ -568,7 +579,16 @@ export const useInventoryItemForm = ({
     };
 
     const handlePriceSuggestionUpdated = (suggestion: unknown) => {
-        setCachedPriceSuggestion(suggestion as Parameters<typeof setCachedPriceSuggestion>[0]);
+        const typedSuggestion = suggestion as Parameters<typeof setCachedPriceSuggestion>[0];
+        setCachedPriceSuggestion(typedSuggestion);
+
+        const suggestedPrice = Number((typedSuggestion as any)?.suggested_price);
+        if (!lockedFields.retail_price && Number.isFinite(suggestedPrice) && suggestedPrice > 0) {
+            setFormData(prev => ({
+                ...prev,
+                retail_price: Number(suggestedPrice.toFixed(2))
+            }));
+        }
         setIsDirty(true);
     };
 

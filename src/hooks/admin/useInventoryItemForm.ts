@@ -50,15 +50,6 @@ export const useInventoryItemForm = ({
     primaryImage,
     hasUploadedImage = false
 }: UseInventoryItemFormProps) => {
-    const extractSkuFromResponse = (response: unknown): string => {
-        if (!response || typeof response !== 'object') return '';
-        const directSku = (response as { sku?: unknown }).sku;
-        if (typeof directSku === 'string' && directSku.trim()) return directSku.trim();
-        const nestedSku = (response as { data?: { sku?: unknown } }).data?.sku;
-        if (typeof nestedSku === 'string' && nestedSku.trim()) return nestedSku.trim();
-        return '';
-    };
-
     const makeFallbackSku = (): string => {
         const stamp = Date.now().toString().slice(-6);
         return `WF-TMP-${stamp}`;
@@ -142,32 +133,8 @@ export const useInventoryItemForm = ({
 
     useEffect(() => {
         if (!isAdding || localSku) return;
-        let isCancelled = false;
-
-        const bootstrapSku = async () => {
-            try {
-                const fallbackCategory = formData.category || 'General';
-                const response = await ApiClient.get<{ success: boolean; sku?: string; data?: { sku?: string } }>(
-                    '/api/next_sku.php',
-                    { cat: fallbackCategory }
-                );
-                const parsedSku = extractSkuFromResponse(response);
-                if (!isCancelled && response?.success && parsedSku) {
-                    setLocalSku(parsedSku);
-                }
-            } catch (err) {
-                if (!isCancelled) {
-                    console.error('Failed to bootstrap SKU for add mode', err);
-                    setLocalSku(makeFallbackSku());
-                }
-            }
-        };
-
-        void bootstrapSku();
-        return () => {
-            isCancelled = true;
-        };
-    }, [formData.category, isAdding, localSku]);
+        setLocalSku(makeFallbackSku());
+    }, [isAdding, localSku]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -279,28 +246,10 @@ export const useInventoryItemForm = ({
     }, []);
 
     const generateSku = async () => {
-        try {
-            const requestedCategory = formData.category || 'General';
-            const response = await ApiClient.get<{ success: boolean; sku?: string; data?: { sku?: string } }>(
-                '/api/next_sku.php',
-                { cat: requestedCategory }
-            );
-            const parsedSku = extractSkuFromResponse(response);
-            if (response && response.success && parsedSku) {
-                setLocalSku(parsedSku);
-                setIsDirty(true);
-            } else {
-                const fallbackSku = makeFallbackSku();
-                setLocalSku(fallbackSku);
-                setIsDirty(true);
-                window.WFToast?.info?.('Using temporary SKU for upload. Save item to finalize details.');
-            }
-        } catch (err) {
-            const fallbackSku = makeFallbackSku();
-            setLocalSku(fallbackSku);
-            setIsDirty(true);
-            if (window.WFToast) window.WFToast.info('SKU service unavailable; using temporary SKU');
-        }
+        const fallbackSku = makeFallbackSku();
+        setLocalSku(fallbackSku);
+        setIsDirty(true);
+        window.WFToast?.info?.('Temporary SKU assigned. Final category SKU is generated when saving.');
     };
 
     const triggerGenerationChain = async () => {

@@ -382,7 +382,9 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 aria-label={isAdding ? 'Create item' : 'Save item'}
                                 title={isAdding ? 'Create item' : 'Save item'}
                             >
-                                <span aria-hidden="true">{isAdding ? '+' : 'S'}</span>
+                                <span aria-hidden="true" className="text-[10px] font-bold uppercase tracking-wide">
+                                    {isAdding ? 'Create' : 'Save'}
+                                </span>
                             </button>
                         )}
                         <button

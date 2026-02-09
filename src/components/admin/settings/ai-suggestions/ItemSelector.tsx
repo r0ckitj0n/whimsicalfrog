@@ -115,7 +115,11 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({
                                     <input
                                         type="text"
                                         value={draftValue}
-                                        onChange={(e) => setDraftValue(e.target.value)}
+                                        onChange={(e) => {
+                                            const next = e.target.value;
+                                            setDraftValue(next);
+                                            onNameChange?.(next.trim());
+                                        }}
                                         onBlur={commitEdit}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') commitEdit();
@@ -184,7 +188,11 @@ export const ItemSelector: React.FC<ItemSelectorProps> = ({
                                         {editingField === 'description' ? (
                                             <textarea
                                                 value={draftValue}
-                                                onChange={(e) => setDraftValue(e.target.value)}
+                                                onChange={(e) => {
+                                                    const next = e.target.value;
+                                                    setDraftValue(next);
+                                                    onDescriptionChange?.(next.trim());
+                                                }}
                                                 onBlur={commitEdit}
                                                 rows={3}
                                                 autoFocus

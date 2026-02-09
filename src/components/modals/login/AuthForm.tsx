@@ -7,6 +7,7 @@ interface IAuthFormData {
     first_name?: string;
     last_name?: string;
     address_line_1?: string;
+    address_line_2?: string;
     city?: string;
     state?: string;
     zip_code?: string;
@@ -84,11 +85,23 @@ export const AuthForm: React.FC<AuthFormProps> = ({
                         </div>
 
                         <div className="flex flex-col">
-                            <label>Address</label>
+                            <label>Address Line 1</label>
                             <input
                                 type="text"
                                 name="address_line_1"
                                 value={formData.address_line_1 || ''}
+                                onChange={handleInputChange}
+                                className="form-input"
+                                placeholder=""
+                            />
+                        </div>
+
+                        <div className="flex flex-col">
+                            <label>Address Line 2</label>
+                            <input
+                                type="text"
+                                name="address_line_2"
+                                value={formData.address_line_2 || ''}
                                 onChange={handleInputChange}
                                 className="form-input"
                                 placeholder=""

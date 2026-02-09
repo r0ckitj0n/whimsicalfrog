@@ -283,16 +283,6 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         setSelectedTemplateKey(foundPreferred?.template_key || roomTemplates[0].template_key);
     }, [isOpen, roomTemplates, settingsTemplateKey]);
 
-    useEffect(() => {
-        setForm((prev) => {
-            const nextTheme = prev.room_theme.trim() !== '' ? prev.room_theme : prev.room_name;
-            return {
-                ...prev,
-                room_theme: nextTheme
-            };
-        });
-    }, [form.room_name]);
-
     const updateForm = <K extends keyof CreateRoomFormState>(key: K, value: CreateRoomFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
@@ -342,6 +332,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         }
 
         setIsSubmitting(true);
+        window.WFToast?.info?.('Step 1/3: Creating room...');
         const createRes = await onCreateRoom({
             room_number: form.room_number.trim(),
             room_name: form.room_name.trim(),
@@ -358,8 +349,10 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             window.WFToast?.error?.(createRes.error || 'Failed to create room');
             return;
         }
+        window.WFToast?.success?.('Step 1/3 complete: Room created');
 
         if (form.generate_image) {
+            window.WFToast?.info?.('Step 2/3: Generating background image...');
             const genRes = await onGenerateBackground({
                 room_number: form.room_number.trim(),
                 template_key: selectedTemplateKey,
@@ -373,9 +366,10 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                 setIsSubmitting(false);
                 return;
             }
+            window.WFToast?.success?.('Step 2/3 complete: Background generated');
         }
 
-        window.WFToast?.success?.(form.generate_image ? 'Room created and image generated' : 'Room created');
+        window.WFToast?.success?.(form.generate_image ? 'Step 3/3 complete: Room setup finished' : 'Step 2/2 complete: Room setup finished');
         setIsSubmitting(false);
         setShowPromptPreview(false);
         onClose();
@@ -386,7 +380,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     return (
         <>
             <div className="fixed inset-0 z-[var(--z-overlay-modal)] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-                <div className="w-full max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
+                <div className="relative w-full max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
                     <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
                         <div>
                             <h3 className="text-sm font-black uppercase tracking-widest text-slate-700">Create Room</h3>
@@ -538,6 +532,15 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                             </button>
                         </div>
                     </div>
+
+                    {isSubmitting && (
+                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
+                            <span className="wf-emoji-loader text-5xl">🐸</span>
+                            <p className="mt-3 text-sm font-black uppercase tracking-widest text-slate-700">
+                                Creating Room...
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 

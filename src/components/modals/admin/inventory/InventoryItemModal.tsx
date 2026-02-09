@@ -373,14 +373,15 @@ export const InventoryItemModal: React.FC<InventoryItemModalProps> = ({
                                 data-help-id="inventory-item-edit"
                             />
                         )}
-                        {(isDirty || (isAdding && hasUploadedImage)) && (
+                        {isDirty && (
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className={`admin-action-btn ${isAdding ? 'btn-icon--plus' : 'btn-icon--save'} is-dirty ${isSaving ? 'is-loading' : ''}`}
+                                className={`admin-action-btn dirty-only ${isAdding ? 'btn-icon--plus' : 'btn-icon--save'} is-dirty ${isSaving ? 'is-loading' : ''}`}
                                 data-help-id={isAdding ? 'inventory-item-create' : 'inventory-item-save'}
                                 aria-label={isAdding ? 'Create item' : 'Save item'}
                                 title={isAdding ? 'Create item' : 'Save item'}
+                                style={{ animation: 'wf-save-pulse 1.5s infinite' }}
                             >
                                 <span aria-hidden="true" className="text-[10px] font-bold uppercase tracking-wide">
                                     {isAdding ? 'Create' : 'Save'}

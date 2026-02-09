@@ -101,6 +101,7 @@ try {
     if (isset($data['sku']) && isset($data['name'])) {
         // New format from admin interface
         $skuInput = trim((string)$data['sku']);
+        $sourceTempSku = trim((string)($data['source_temp_sku'] ?? ''));
         $name = trim((string)$data['name']);
         if ($name === '') {
             Response::error('Both sku and name are required', null, 422);
@@ -147,6 +148,14 @@ try {
         if ($affected !== false) {
             if ($isTemporarySku && $skuInput !== '' && $skuInput !== $sku) {
                 wf_migrate_temp_sku_records($skuInput, $sku);
+            }
+            if (
+                !$isTemporarySku &&
+                $sourceTempSku !== '' &&
+                stripos($sourceTempSku, 'WF-TMP-') === 0 &&
+                $sourceTempSku !== $sku
+            ) {
+                wf_migrate_temp_sku_records($sourceTempSku, $sku);
             }
             Response::success([
                 'message' => $alreadyExists ? 'Item updated successfully' : 'Item added successfully',

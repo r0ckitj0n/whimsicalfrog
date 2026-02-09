@@ -109,6 +109,7 @@ export const useInventoryItemForm = ({
 
     const [isDirty, setIsDirty] = useState(false);
     const [localSku, setLocalSku] = useState(sku || '');
+    const [sourceTempSku, setSourceTempSku] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [lockedFields, setLockedFields] = useState<Record<string, boolean>>({});
     const [lockedWords, setLockedWords] = useState<Record<string, string>>({});
@@ -118,6 +119,7 @@ export const useInventoryItemForm = ({
     const { populateFromSuggestion: populatePrice } = usePriceBreakdown(localSku);
     const isDirtyRef = useRef(isDirty);
     const isSavingRef = useRef(isSaving);
+    const skuPromotionInFlightRef = useRef(false);
 
     useEffect(() => {
         isDirtyRef.current = isDirty;
@@ -248,9 +250,38 @@ export const useInventoryItemForm = ({
     const generateSku = async () => {
         const fallbackSku = makeFallbackSku();
         setLocalSku(fallbackSku);
+        setSourceTempSku('');
         setIsDirty(true);
         window.WFToast?.info?.('Temporary SKU assigned. Final category SKU is generated when saving.');
     };
+
+    const promoteTempSkuForCategory = useCallback(async (resolvedCategory: string) => {
+        if (!isAdding) return;
+        if (!localSku || !localSku.startsWith('WF-TMP-')) return;
+        if (!resolvedCategory || skuPromotionInFlightRef.current) return;
+
+        skuPromotionInFlightRef.current = true;
+        try {
+            const response = await ApiClient.get<{
+                success?: boolean;
+                sku?: string;
+                data?: { sku?: string };
+                error?: string;
+            }>('/api/next_sku.php', { category: resolvedCategory });
+
+            const nextSku = String(response?.data?.sku || response?.sku || '').trim();
+            if (!nextSku || nextSku === localSku) return;
+
+            setSourceTempSku(prev => prev || localSku);
+            setLocalSku(nextSku);
+            setIsDirty(true);
+            window.WFToast?.success?.(`SKU assigned: ${nextSku}`);
+        } catch (_err) {
+            // Keep temp SKU if next_sku is unavailable; save endpoint still finalizes SKU safely.
+        } finally {
+            skuPromotionInFlightRef.current = false;
+        }
+    }, [isAdding, localSku]);
 
     const triggerGenerationChain = async () => {
         if (!localSku) {
@@ -303,6 +334,10 @@ export const useInventoryItemForm = ({
 
                     if (changedDimensions.length > 0) {
                         window.WFToast?.info?.(`📦 Dimensions updated by AI: ${changedDimensions.join(', ')}`);
+                    }
+
+                    if (isAdding && context.category) {
+                        void promoteTempSkuForCategory(context.category);
                     }
                 }
 
@@ -423,6 +458,10 @@ export const useInventoryItemForm = ({
             setCachedMarketingData(result.marketingData);
         }
 
+        if (isAdding && result.category) {
+            await promoteTempSkuForCategory(result.category);
+        }
+
         window.WFToast?.success?.('Generated item information and marketing');
     };
 
@@ -445,6 +484,7 @@ export const useInventoryItemForm = ({
                 const res = await addItem({
                     ...formData,
                     sku: localSku,
+                    source_temp_sku: sourceTempSku || undefined,
                     stock_quantity: formData.stock_level
                 });
                 if (res.success) {
@@ -546,6 +586,7 @@ export const useInventoryItemForm = ({
         isSaving,
         isAdding,
         localSku,
+        sourceTempSku,
         item,
         formData,
         addItem,
@@ -620,6 +661,7 @@ export const useInventoryItemForm = ({
         handleBreakdownApplied,
         isReadOnly,
         isAdding,
+        sourceTempSku,
         lockedFields,
         toggleFieldLock,
         lockedWords,

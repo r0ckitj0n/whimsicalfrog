@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useAIPromptTemplates } from '../../../../hooks/admin/useAIPromptTemplates.js';
 import type { IAIPromptTemplate } from '../../../../types/ai-prompts.js';
 import { RoomPromptDropdownOptionsEditor } from './RoomPromptDropdownOptionsEditor.js';
-import { PromptVariablesEditor } from './PromptVariablesEditor.js';
 
 const slugifyKey = (value: string) =>
     value
@@ -24,8 +23,7 @@ export const SystemPromptsTab: React.FC = () => {
         fetchDropdownOptions,
         saveTemplate,
         deleteTemplate,
-        saveDropdownOptions,
-        saveVariables
+        saveDropdownOptions
     } = useAIPromptTemplates();
 
     const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
@@ -252,13 +250,6 @@ export const SystemPromptsTab: React.FC = () => {
                     </div>
 
                     <div className="xl:col-span-5 space-y-4">
-                        <PromptVariablesEditor
-                            variables={variables}
-                            optionsByVariable={dropdownOptionsByVariable}
-                            isLoading={isLoading}
-                            onSave={saveVariables}
-                        />
-
                         <RoomPromptDropdownOptionsEditor
                             variables={variables}
                             optionsByVariable={dropdownOptionsByVariable}

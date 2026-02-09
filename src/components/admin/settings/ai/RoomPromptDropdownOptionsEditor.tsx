@@ -14,6 +14,7 @@ interface RoomPromptDropdownOptionsEditorProps {
 }
 
 const buildDraftText = (options: string[]): string => options.join('\n');
+const EXCLUDED_VARIABLE_KEYS = new Set(['room_number', 'display_order']);
 
 const parseDraftText = (raw: string): string[] => {
     const seen = new Set<string>();
@@ -38,7 +39,9 @@ export const RoomPromptDropdownOptionsEditor: React.FC<RoomPromptDropdownOptions
     const [drafts, setDrafts] = useState<Record<string, string>>({});
 
     const variableOrder = useMemo(
-        () => [...variables].sort((a, b) => String(a.display_name || a.variable_key).localeCompare(String(b.display_name || b.variable_key))),
+        () => [...variables]
+            .filter((variable) => !EXCLUDED_VARIABLE_KEYS.has(variable.variable_key))
+            .sort((a, b) => String(a.display_name || a.variable_key).localeCompare(String(b.display_name || b.variable_key))),
         [variables]
     );
 

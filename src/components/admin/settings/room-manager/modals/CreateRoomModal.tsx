@@ -4,8 +4,7 @@ import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemp
 import type { IRoomData } from '../../../../../types/room.js';
 import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 import {
-    AUTOGENERATE_LABEL,
-    ROOM_PROMPT_DROPDOWN_DEFAULTS
+    AUTOGENERATE_LABEL
 } from '../../ai/roomPromptDropdownDefaults.js';
 
 interface CreateRoomModalProps {
@@ -39,7 +38,7 @@ const defaultFormState: CreateRoomFormState = {
     door_label: '',
     display_order: 0,
     description: '',
-    room_theme: '',
+    room_theme: AUTOGENERATE_LABEL,
     display_furniture_style: AUTOGENERATE_LABEL,
     thematic_accent_decorations: AUTOGENERATE_LABEL,
     frog_action: AUTOGENERATE_LABEL,
@@ -88,11 +87,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
     const {
         templates,
         variables,
-        dropdownOptionsByVariable,
         isLoading: templatesLoading,
         fetchTemplates,
-        fetchVariables,
-        fetchDropdownOptions
+        fetchVariables
     } = useAIPromptTemplates();
 
     const roomTemplates = useMemo(
@@ -121,7 +118,6 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             }
             return trimmed;
         };
-        const roomTheme = form.room_theme.trim() || form.room_name.trim() || form.description.trim() || 'cozy boutique';
         return {
             ...variableDefaults,
             room_number: form.room_number.trim(),
@@ -129,7 +125,10 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             door_label: form.door_label.trim(),
             display_order: String(form.display_order || 0),
             room_description: form.description.trim(),
-            room_theme: roomTheme,
+            room_theme: normalizeAutoValue(
+                form.room_theme,
+                'Invent a custom room theme that fits the room name and description; do not pick from preset dropdown examples'
+            ),
             display_furniture_style: normalizeAutoValue(
                 form.display_furniture_style,
                 'Invent a custom display furniture style specifically for this room context; do not pick from preset dropdown examples'
@@ -174,7 +173,6 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         if (!isOpen) return;
         void fetchTemplates();
         void fetchVariables();
-        void fetchDropdownOptions();
         void ApiClient.get<{ success?: boolean; settings?: { room_generation_template_key?: string } }>(
             '/api/ai_settings.php',
             { action: 'get_settings' }
@@ -184,7 +182,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
         }).catch(() => {
             // Optional preference key; ignore if unavailable.
         });
-    }, [isOpen, fetchTemplates, fetchVariables, fetchDropdownOptions]);
+    }, [isOpen, fetchTemplates, fetchVariables]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -193,6 +191,21 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
 
     useEffect(() => {
         if (!isOpen) return;
+        const getFirstAvailableNumber = (values: Array<string | number | null | undefined>): number => {
+            const used = new Set<number>(
+                values
+                    .map((value) => String(value ?? '').trim())
+                    .filter((value) => /^\d+$/.test(value))
+                    .map((value) => parseInt(value, 10))
+                    .filter((value) => value >= 1)
+            );
+            let candidate = 1;
+            while (used.has(candidate)) {
+                candidate += 1;
+            }
+            return candidate;
+        };
+
         const numericRooms = roomsData
             .map((r) => String(r.room_number || '').trim())
             .filter((val) => /^\d+$/.test(val))
@@ -203,9 +216,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
             candidateRoomNumber += 1;
         }
         const nextRoomNumber = String(candidateRoomNumber);
-        const nextDisplayOrder = roomsData.length > 0
-            ? Math.max(...roomsData.map((r) => Number(r.display_order || 0))) + 1
-            : 1;
+        const nextDisplayOrder = getFirstAvailableNumber(roomsData.map((room) => room.display_order));
 
         setForm((prev) => ({
             ...prev,
@@ -223,39 +234,6 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
 
     const updateForm = <K extends keyof CreateRoomFormState>(key: K, value: CreateRoomFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
-    };
-
-    const renderEditableDropdown = (
-        label: string,
-        field: keyof CreateRoomFormState,
-        value: string,
-        options: string[]
-    ) => {
-        const listId = `create-room-${String(field)}-options`;
-        return (
-            <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{label}</label>
-                <input
-                    list={listId}
-                    value={value}
-                    onChange={(e) => updateForm(field, e.target.value as CreateRoomFormState[typeof field])}
-                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
-                />
-                <datalist id={listId}>
-                    {options.map((opt) => (
-                        <option key={`${listId}-${opt}`} value={opt} />
-                    ))}
-                </datalist>
-            </div>
-        );
-    };
-
-    const getOptionsForVariable = (variableKey: string): string[] => {
-        const apiOptions = dropdownOptionsByVariable[variableKey];
-        if (Array.isArray(apiOptions) && apiOptions.length > 0) {
-            return apiOptions;
-        }
-        return ROOM_PROMPT_DROPDOWN_DEFAULTS[variableKey] || [AUTOGENERATE_LABEL];
     };
 
     const handleCopyPrompt = async () => {
@@ -396,7 +374,7 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                         </div>
 
                         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
-                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-600">Prompt Template & Variables</h4>
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-600">Prompt Template</h4>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="md:col-span-2">
@@ -434,19 +412,9 @@ export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Room Theme</label>
-                                    <input value={form.room_theme} onChange={(e) => updateForm('room_theme', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
-                                </div>
-                                {renderEditableDropdown('Furniture Style', 'display_furniture_style', form.display_furniture_style, getOptionsForVariable('display_furniture_style'))}
-                                {renderEditableDropdown('Accent Decor', 'thematic_accent_decorations', form.thematic_accent_decorations, getOptionsForVariable('thematic_accent_decorations'))}
-                                {renderEditableDropdown('Frog Action', 'frog_action', form.frog_action, getOptionsForVariable('frog_action'))}
-                                {renderEditableDropdown('Vibe', 'vibe_adjectives', form.vibe_adjectives, getOptionsForVariable('vibe_adjectives'))}
-                                {renderEditableDropdown('Color Scheme', 'color_scheme', form.color_scheme, getOptionsForVariable('color_scheme'))}
-                            </div>
-
-                            {renderEditableDropdown('Background Elements', 'background_thematic_elements', form.background_thematic_elements, getOptionsForVariable('background_thematic_elements'))}
+                            <p className="text-[11px] text-slate-500">
+                                Prompt variable fields default to <span className="font-mono">{AUTOGENERATE_LABEL}</span> for new rooms.
+                            </p>
                         </div>
                     </div>
 

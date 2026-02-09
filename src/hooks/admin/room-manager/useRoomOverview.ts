@@ -159,6 +159,34 @@ export const useRoomOverview = (): IRoomOverviewHook => {
         }
     }, [roomsData, isProtectedRoom, confirmModal, fetchAllRooms]);
 
+    const createRoom = useCallback(async (room: Partial<IRoomData>): Promise<{ success: boolean; error?: string; room_number?: string }> => {
+        const roomNumber = String(room.room_number || '').trim();
+        const roomName = String(room.room_name || '').trim();
+        const doorLabel = String(room.door_label || '').trim();
+        if (!roomNumber || !roomName || !doorLabel) {
+            return { success: false, error: 'Room Number, Room Name, and Door Label are required.' };
+        }
+        try {
+            const data = await ApiClient.post<IRoomSettingsResponse>('/api/room_settings.php', {
+                action: 'create_room',
+                room_number: roomNumber,
+                room_name: roomName,
+                door_label: doorLabel,
+                description: String(room.description || ''),
+                display_order: Number(room.display_order) || 0,
+                is_active: room.is_active === undefined ? true : Boolean(room.is_active)
+            });
+            if (data?.success) {
+                await fetchAllRooms();
+                return { success: true, room_number: roomNumber };
+            }
+            return { success: false, error: data?.error || 'Failed to create room' };
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Network error';
+            return { success: false, error: message };
+        }
+    }, [fetchAllRooms]);
+
     return {
         roomsData,
         editingRoom,
@@ -172,6 +200,7 @@ export const useRoomOverview = (): IRoomOverviewHook => {
         handleSaveRoom,
         handleChangeRoomRole,
         handleDeleteRoom,
+        createRoom,
         isProtectedRoom
     };
 };

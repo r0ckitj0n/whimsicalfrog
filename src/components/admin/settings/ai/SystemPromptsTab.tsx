@@ -104,7 +104,7 @@ export const SystemPromptsTab: React.FC = () => {
 
         const res = await saveTemplate(payload);
         if (res.success) {
-            window.WFToast?.success?.('System prompt saved');
+            window.WFToast?.success?.('Prompt template saved');
         } else {
             window.WFToast?.error?.(res.error || 'Failed to save template');
         }
@@ -180,7 +180,7 @@ export const SystemPromptsTab: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2 space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">AI Template</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Prompt Template</label>
                     <select
                         value={selectedTemplateId ?? ''}
                         onChange={(e) => {

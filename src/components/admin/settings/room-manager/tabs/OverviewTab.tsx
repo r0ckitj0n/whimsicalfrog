@@ -1,6 +1,8 @@
 import React from 'react';
 import { IRoomData, IRoomOverview } from '../../../../../types/index.js';
 import { OverviewCategoryEditor } from '../../../categories/partials/OverviewCategoryEditor.js';
+import { CreateRoomModal } from '../modals/CreateRoomModal.js';
+import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
 
 interface OverviewTabProps {
     roomsData: IRoomData[];
@@ -14,8 +16,9 @@ interface OverviewTabProps {
     onToggleActive: (roomNumber: string, currentActive: boolean | number) => Promise<void>;
     onChangeRoomRole: (roomNumber: string, newRole: IRoomData['room_role']) => Promise<void>;
     onStartEdit: (room: IRoomData) => void;
-    onStartCreate: () => void;
     onCancelEdit: () => void;
+    onCreateRoom: (room: Partial<IRoomData>) => Promise<{ success: boolean; error?: string; room_number?: string }>;
+    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; error?: string }>;
     isProtectedRoom: (room: IRoomData) => boolean;
 }
 
@@ -31,10 +34,13 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     onToggleActive,
     onChangeRoomRole,
     onStartEdit,
-    onStartCreate,
     onCancelEdit,
+    onCreateRoom,
+    onGenerateBackground,
     isProtectedRoom
 }) => {
+    const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+
     return (
         <div className="h-full flex flex-col min-h-0 overflow-hidden">
             <div className="p-6 overflow-y-auto flex-1">
@@ -42,7 +48,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest">All Rooms</h3>
                     {!isCreating && !editingRoom && (
                         <button
-                            onClick={onStartCreate}
+                            onClick={() => setIsCreateModalOpen(true)}
                             className="btn btn-text-primary"
                             data-help-id="room-create-btn"
                         >
@@ -234,6 +240,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                     </table>
                 </div>
             </div>
+
+            <CreateRoomModal
+                isOpen={isCreateModalOpen}
+                roomsData={roomsData}
+                onClose={() => setIsCreateModalOpen(false)}
+                onCreateRoom={onCreateRoom}
+                onGenerateBackground={onGenerateBackground}
+            />
         </div>
     );
 };

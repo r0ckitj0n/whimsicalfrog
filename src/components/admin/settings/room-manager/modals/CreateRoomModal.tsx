@@ -1,0 +1,457 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { ApiClient } from '../../../../../core/ApiClient.js';
+import { useAIPromptTemplates } from '../../../../../hooks/admin/useAIPromptTemplates.js';
+import type { IRoomData } from '../../../../../types/room.js';
+import type { IRoomImageGenerationRequest } from '../../../../../types/room-generation.js';
+
+interface CreateRoomModalProps {
+    isOpen: boolean;
+    roomsData: IRoomData[];
+    onClose: () => void;
+    onCreateRoom: (room: Partial<IRoomData>) => Promise<{ success: boolean; error?: string; room_number?: string }>;
+    onGenerateBackground: (request: IRoomImageGenerationRequest) => Promise<{ success: boolean; error?: string }>;
+}
+
+interface CreateRoomFormState {
+    room_number: string;
+    room_name: string;
+    door_label: string;
+    display_order: number;
+    description: string;
+    room_theme: string;
+    display_furniture_style: string;
+    thematic_accent_decorations: string;
+    frog_action: string;
+    vibe_adjectives: string;
+    color_scheme: string;
+    background_thematic_elements: string;
+    image_size: '1024x1024' | '1536x1024' | '1024x1536';
+    generate_image: boolean;
+}
+
+const defaultFormState: CreateRoomFormState = {
+    room_number: '',
+    room_name: '',
+    door_label: '',
+    display_order: 0,
+    description: '',
+    room_theme: '',
+    display_furniture_style: 'tiered light-wood shelving units',
+    thematic_accent_decorations: 'tiny potted succulents and miniature ceramic milk jugs',
+    frog_action: 'wiping down the empty counter with a cloth',
+    vibe_adjectives: 'refreshing and bright',
+    color_scheme: "robin's egg blue and soft orange",
+    background_thematic_elements: 'giant floating fruit shapes',
+    image_size: '1536x1024',
+    generate_image: true
+};
+
+const parsePlaceholderKeys = (prompt: string): string[] => {
+    const out = new Set<string>();
+    const regex = /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g;
+    let match = regex.exec(prompt);
+    while (match) {
+        out.add(match[1]);
+        match = regex.exec(prompt);
+    }
+    return Array.from(out);
+};
+
+export const CreateRoomModal: React.FC<CreateRoomModalProps> = ({
+    isOpen,
+    roomsData,
+    onClose,
+    onCreateRoom,
+    onGenerateBackground
+}) => {
+    const [form, setForm] = useState<CreateRoomFormState>(defaultFormState);
+    const [selectedTemplateKey, setSelectedTemplateKey] = useState('room_staging_empty_shelves_v1');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPromptPreview, setShowPromptPreview] = useState(false);
+    const [settingsTemplateKey, setSettingsTemplateKey] = useState<string>('');
+    const {
+        templates,
+        variables,
+        isLoading: templatesLoading,
+        fetchTemplates,
+        fetchVariables
+    } = useAIPromptTemplates();
+
+    const roomTemplates = useMemo(
+        () => templates.filter((t) => t.context_type === 'room_generation' && Boolean(t.is_active)),
+        [templates]
+    );
+
+    const selectedTemplate = useMemo(
+        () => roomTemplates.find((t) => t.template_key === selectedTemplateKey) || null,
+        [roomTemplates, selectedTemplateKey]
+    );
+
+    const variableDefaults = useMemo(() => {
+        const map: Record<string, string> = {};
+        for (const v of variables) {
+            map[v.variable_key] = String(v.sample_value || '');
+        }
+        return map;
+    }, [variables]);
+
+    const resolvedVariables = useMemo(() => {
+        const roomTheme = form.room_theme.trim() || form.room_name.trim() || form.description.trim() || 'cozy boutique';
+        return {
+            ...variableDefaults,
+            room_number: form.room_number.trim(),
+            room_name: form.room_name.trim(),
+            door_label: form.door_label.trim(),
+            display_order: String(form.display_order || 0),
+            room_description: form.description.trim(),
+            room_theme: roomTheme,
+            display_furniture_style: form.display_furniture_style.trim(),
+            thematic_accent_decorations: form.thematic_accent_decorations.trim(),
+            frog_action: form.frog_action.trim(),
+            vibe_adjectives: form.vibe_adjectives.trim(),
+            color_scheme: form.color_scheme.trim(),
+            background_thematic_elements: form.background_thematic_elements.trim()
+        };
+    }, [form, variableDefaults]);
+
+    const generatedPromptText = useMemo(() => {
+        const basePrompt = selectedTemplate?.prompt_text || '';
+        if (!basePrompt) return '';
+        const expectedKeys = parsePlaceholderKeys(basePrompt);
+        const values: Record<string, string> = resolvedVariables;
+        let prompt = basePrompt;
+        for (const key of expectedKeys) {
+            const value = values[key] ?? '';
+            prompt = prompt.replaceAll(`{{${key}}}`, value);
+        }
+        return prompt;
+    }, [selectedTemplate?.prompt_text, resolvedVariables]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        void fetchTemplates();
+        void fetchVariables();
+        void ApiClient.get<{ success?: boolean; settings?: { room_generation_template_key?: string } }>(
+            '/api/ai_settings.php',
+            { action: 'get_settings' }
+        ).then((res) => {
+            const key = String(res?.settings?.room_generation_template_key || '').trim();
+            if (key) setSettingsTemplateKey(key);
+        }).catch(() => {
+            // Optional preference key; ignore if unavailable.
+        });
+    }, [isOpen, fetchTemplates, fetchVariables]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        setForm(defaultFormState);
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const numericRooms = roomsData
+            .map((r) => String(r.room_number || '').trim())
+            .filter((val) => /^\d+$/.test(val))
+            .map((val) => parseInt(val, 10));
+        const nextRoomNumber = numericRooms.length > 0 ? String(Math.max(...numericRooms) + 1) : '1';
+        const nextDisplayOrder = roomsData.length > 0
+            ? Math.max(...roomsData.map((r) => Number(r.display_order || 0))) + 1
+            : 1;
+
+        setForm((prev) => ({
+            ...prev,
+            room_number: nextRoomNumber,
+            display_order: nextDisplayOrder
+        }));
+    }, [isOpen, roomsData]);
+
+    useEffect(() => {
+        if (!isOpen || roomTemplates.length === 0) return;
+        const preferred = settingsTemplateKey || 'room_staging_empty_shelves_v1';
+        const foundPreferred = roomTemplates.find((t) => t.template_key === preferred);
+        setSelectedTemplateKey(foundPreferred?.template_key || roomTemplates[0].template_key);
+    }, [isOpen, roomTemplates, settingsTemplateKey]);
+
+    useEffect(() => {
+        setForm((prev) => {
+            const nextTheme = prev.room_theme.trim() !== '' ? prev.room_theme : prev.room_name;
+            return {
+                ...prev,
+                room_theme: nextTheme
+            };
+        });
+    }, [form.room_name]);
+
+    const updateForm = <K extends keyof CreateRoomFormState>(key: K, value: CreateRoomFormState[K]) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const handleCopyPrompt = async () => {
+        try {
+            await navigator.clipboard.writeText(generatedPromptText || '');
+            window.WFToast?.success?.('Prompt copied to clipboard');
+        } catch (_err) {
+            window.WFToast?.error?.('Failed to copy prompt');
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!form.room_number.trim() || !form.room_name.trim() || !form.door_label.trim()) {
+            window.WFToast?.error?.('Room Number, Room Name, and Door Label are required');
+            return;
+        }
+        if (!selectedTemplateKey && form.generate_image) {
+            window.WFToast?.error?.('Select a prompt template before generating a room image');
+            return;
+        }
+
+        setIsSubmitting(true);
+        const createRes = await onCreateRoom({
+            room_number: form.room_number.trim(),
+            room_name: form.room_name.trim(),
+            door_label: form.door_label.trim(),
+            display_order: form.display_order,
+            description: form.description,
+            is_active: true
+        });
+
+        if (!createRes.success) {
+            setIsSubmitting(false);
+            window.WFToast?.error?.(createRes.error || 'Failed to create room');
+            return;
+        }
+
+        if (form.generate_image) {
+            const genRes = await onGenerateBackground({
+                room_number: form.room_number.trim(),
+                template_key: selectedTemplateKey,
+                variables: resolvedVariables,
+                provider: 'openai',
+                size: form.image_size,
+                background_name: `${form.room_number.trim()} - ${form.room_name.trim()}`
+            });
+            if (!genRes.success) {
+                window.WFToast?.error?.(genRes.error || 'Room created, but image generation failed');
+                setIsSubmitting(false);
+                return;
+            }
+        }
+
+        window.WFToast?.success?.(form.generate_image ? 'Room created and image generated' : 'Room created');
+        setIsSubmitting(false);
+        setShowPromptPreview(false);
+        onClose();
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <>
+            <div className="fixed inset-0 z-[var(--z-overlay-modal)] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="w-full max-w-5xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <h3 className="text-sm font-black uppercase tracking-widest text-slate-700">Create Room</h3>
+                            <p className="text-[11px] text-slate-500 mt-1">Set room details and optionally generate the initial room background.</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                className="admin-action-btn btn-icon--edit"
+                                onClick={() => setShowPromptPreview(true)}
+                                data-help-id="room-create-open-prompt-preview"
+                            />
+                            <button
+                                type="button"
+                                className="admin-action-btn btn-icon--close"
+                                onClick={onClose}
+                                data-help-id="common-close"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="p-5 max-h-[70vh] overflow-y-auto space-y-5">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Room Number</label>
+                                <input
+                                    value={form.room_number}
+                                    onChange={(e) => updateForm('room_number', e.target.value)}
+                                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Room Name</label>
+                                <input
+                                    value={form.room_name}
+                                    onChange={(e) => updateForm('room_name', e.target.value)}
+                                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Door Label</label>
+                                <input
+                                    value={form.door_label}
+                                    onChange={(e) => updateForm('door_label', e.target.value)}
+                                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Display Order</label>
+                                <input
+                                    type="number"
+                                    value={form.display_order}
+                                    onChange={(e) => updateForm('display_order', parseInt(e.target.value, 10) || 0)}
+                                    className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Description</label>
+                            <textarea
+                                value={form.description}
+                                onChange={(e) => updateForm('description', e.target.value)}
+                                rows={2}
+                                className="w-full text-sm p-2.5 border border-slate-200 rounded-lg"
+                            />
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-4">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-600">Prompt Template & Variables</h4>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="md:col-span-2">
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Prompt Template</label>
+                                    <select
+                                        value={selectedTemplateKey}
+                                        onChange={(e) => setSelectedTemplateKey(e.target.value)}
+                                        className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
+                                        disabled={templatesLoading}
+                                    >
+                                        <option value="">Select template...</option>
+                                        {roomTemplates.map((template) => (
+                                            <option key={template.id} value={template.template_key}>
+                                                {template.template_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Image Size</label>
+                                    <select
+                                        value={form.image_size}
+                                        onChange={(e) => updateForm('image_size', e.target.value as CreateRoomFormState['image_size'])}
+                                        className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white"
+                                    >
+                                        <option value="1536x1024">Landscape (1536x1024)</option>
+                                        <option value="1024x1024">Square (1024x1024)</option>
+                                        <option value="1024x1536">Portrait (1024x1536)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Room Theme</label>
+                                    <input value={form.room_theme} onChange={(e) => updateForm('room_theme', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Furniture Style</label>
+                                    <input value={form.display_furniture_style} onChange={(e) => updateForm('display_furniture_style', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Accent Decor</label>
+                                    <input value={form.thematic_accent_decorations} onChange={(e) => updateForm('thematic_accent_decorations', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Frog Action</label>
+                                    <input value={form.frog_action} onChange={(e) => updateForm('frog_action', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Vibe</label>
+                                    <input value={form.vibe_adjectives} onChange={(e) => updateForm('vibe_adjectives', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Color Scheme</label>
+                                    <input value={form.color_scheme} onChange={(e) => updateForm('color_scheme', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Background Elements</label>
+                                <input value={form.background_thematic_elements} onChange={(e) => updateForm('background_thematic_elements', e.target.value)} className="w-full text-sm p-2.5 border border-slate-200 rounded-lg bg-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="px-5 py-4 border-t border-slate-100 bg-slate-50/70 flex items-center justify-between">
+                        <label className="inline-flex items-center gap-2 text-xs font-bold text-slate-600">
+                            <input
+                                type="checkbox"
+                                checked={form.generate_image}
+                                onChange={(e) => updateForm('generate_image', e.target.checked)}
+                                className="h-4 w-4 rounded border-slate-300"
+                            />
+                            Generate room image after create
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                className="px-4 py-2 text-xs font-black uppercase tracking-widest rounded-lg border border-slate-300 text-slate-600 bg-white"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => void handleSubmit()}
+                                disabled={isSubmitting}
+                                className="btn btn-primary px-4 py-2 text-xs font-black uppercase tracking-widest"
+                            >
+                                {isSubmitting ? 'Working...' : form.generate_image ? 'Create Room + Generate Image' : 'Create Room'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {showPromptPreview && (
+                <div className="fixed inset-0 z-[var(--z-overlay-topmost)] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="w-full max-w-4xl bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
+                        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <h4 className="text-sm font-black uppercase tracking-widest text-slate-700">Prompt Preview</h4>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    className="admin-action-btn btn-icon--copy"
+                                    onClick={() => void handleCopyPrompt()}
+                                    data-help-id="common-copy"
+                                />
+                                <button
+                                    type="button"
+                                    className="admin-action-btn btn-icon--close"
+                                    onClick={() => setShowPromptPreview(false)}
+                                    data-help-id="common-close"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-5 space-y-2">
+                            <div className="text-[11px] text-slate-500">
+                                Template: <span className="font-bold text-slate-700">{selectedTemplate?.template_name || 'None selected'}</span>
+                            </div>
+                            <textarea
+                                value={generatedPromptText}
+                                readOnly
+                                rows={16}
+                                className="w-full text-xs font-mono p-3 border border-slate-200 rounded-lg bg-slate-50"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+};
+
+export default CreateRoomModal;

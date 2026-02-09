@@ -203,7 +203,7 @@ export const AISettingsManager: React.FC<AISettingsManagerProps> = ({ onClose, t
                             onClick={() => setActiveTab('prompts')}
                             className={`wf-tab ${activeTab === 'prompts' ? 'is-active' : ''}`}
                         >
-                            System Prompts
+                            Prompt Templates
                         </button>
                     </div>
                 </div>

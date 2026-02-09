@@ -61,7 +61,13 @@ function wf_ai_prompt_tables_init(): void
 function wf_ai_prompt_seed_defaults(): void
 {
     $defaultTemplate = <<<'PROMPT'
-A high-quality 3D cartoon render of a themed {{room_theme}} corner inside the whimsical frog’s cottage.
+A high-quality 3D cartoon render for room {{room_number}}.
+Room name: {{room_name}}.
+Door label: {{door_label}}.
+Display order: {{display_order}}.
+Room description/context: {{room_description}}.
+
+Create a themed {{room_theme}} corner inside the whimsical frog’s cottage.
 
 The area features prominent {{display_furniture_style}} intended for future product placement.
 CRITICAL CONSTRAINT: The main surfaces of these displays must remain completely flat and empty.
@@ -83,7 +89,6 @@ PROMPT;
         "INSERT INTO ai_prompt_templates (template_key, template_name, description, context_type, prompt_text, is_active)
          VALUES (?, ?, ?, ?, ?, 1)
          ON DUPLICATE KEY UPDATE
-            template_name = VALUES(template_name),
             description = VALUES(description),
             context_type = VALUES(context_type),
             prompt_text = VALUES(prompt_text),
@@ -98,6 +103,11 @@ PROMPT;
     );
 
     $variables = [
+        ['room_number', 'Room Number', 'Room identifier that the generated image belongs to.', '7'],
+        ['room_name', 'Room Name', 'Human-friendly room name from the room setup form.', 'Holiday Collection'],
+        ['door_label', 'Door Label', 'Short label displayed on the room door.', 'Holidays'],
+        ['display_order', 'Display Order', 'Room order index in navigation.', '10'],
+        ['room_description', 'Room Description', 'Freeform room description from room setup.', 'A cozy holiday gift room with warm seasonal accents.'],
         ['room_theme', 'Room Theme / Business Type', 'General room purpose (cozy cafe, magical apothecary, artisan bakery).', 'cozy cafe'],
         ['display_furniture_style', 'Display Furniture Style', 'Type of empty display structures used in the room.', 'tiered light-wood shelving units'],
         ['thematic_accent_decorations', 'Thematic Accent Decorations', 'Small non-product separators/bookends placed intermittently.', 'tiny potted succulents and miniature ceramic milk jugs'],

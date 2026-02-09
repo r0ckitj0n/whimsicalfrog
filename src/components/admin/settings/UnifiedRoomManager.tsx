@@ -73,8 +73,8 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
         handleDetectConnections,
         isProtectedRoom,
         startEditRoom,
-        startCreateRoom,
         cancelRoomEdit,
+        createRoom,
         getImageUrl
     } = useUnifiedRoomManager({ onClose, initialTab });
 
@@ -160,8 +160,9 @@ export const UnifiedRoomManager: React.FC<UnifiedRoomManagerProps> = ({
                             onToggleActive={handleToggleActive}
                             onChangeRoomRole={handleChangeRoomRole}
                             onStartEdit={startEditRoom}
-                            onStartCreate={startCreateRoom}
                             onCancelEdit={cancelRoomEdit}
+                            onCreateRoom={createRoom}
+                            onGenerateBackground={handleGenerateBackground}
                             isProtectedRoom={isProtectedRoom}
                         />
                     ) : activeTab === 'navigation' ? (

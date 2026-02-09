@@ -284,6 +284,7 @@ export interface IRoomOverviewHook {
     handleSaveRoom: (onSaveSuccess?: () => void) => Promise<void>;
     handleChangeRoomRole: (roomNumber: string, newRole: IRoomData['room_role']) => Promise<void>;
     handleDeleteRoom: (roomNumber: string) => Promise<void>;
+    createRoom: (room: Partial<IRoomData>) => Promise<{ success: boolean; error?: string; room_number?: string }>;
     isProtectedRoom: (room: IRoomData) => boolean;
 }
 
